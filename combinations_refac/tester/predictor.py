@@ -216,9 +216,10 @@ class Predictor:
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
         self.log ( "received r values %s" % srs )
         protomodel.rvalues = rvalues[:]
+        print('\t\t predictor:setting rmax to',rvalues[0])
         protomodel.rmax = rvalues[0]
         protomodel.r2 = rvalues[1]
-        protomodel.excluded = protomodel.rmax > self.rthreshold
+        protomodel.excluded = 0.99*protomodel.rmax > self.rthreshold #The 0.99 deals with the case rmax = threshold
         protomodel.tpList = tpList[:]
 
     def getMaxAllowedMu(self, protomodel):
@@ -229,6 +230,7 @@ class Predictor:
         mumax = float("inf")
         if protomodel.rmax > 0.:
             mumax = self.rthreshold / protomodel.rmax
+            print('\t\t\t rmax = ',protomodel.rmax,'threshold = ',self.rthreshold,'mumax = ',mumax)
 
         return mumax
 
@@ -238,8 +240,6 @@ class Predictor:
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
         mumax = protomodel.mumax
-        protomodel.rmax = protomodel.rmax * mumax
-        protomodel.r2 = protomodel.r2 * mumax
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy,
                                                 expected=False, mumax = mumax )
         prior = combiner.computePrior ( protomodel )

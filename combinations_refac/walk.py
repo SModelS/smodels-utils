@@ -24,7 +24,11 @@ if __name__ == "__main__":
                         type=int, default=10000 )
     argparser.add_argument ( '-e', '--nevents', nargs='?', help='number of MC events for computing cross-sections [10000]',
                         type=int, default=10000 )
+    argparser.add_argument ( '-s','--seed',
+            help='seed the random number generators [None]',
+            type=int, default=None )
+
 
     args=argparser.parse_args()
     main( args.nmin, args.nmax, args.cont, cheatcode = args.cheat,
-            rundir = args.rundir, maxsteps = args.maxsteps, nevents = args.nevents)
+            rundir = args.rundir, maxsteps = args.maxsteps, nevents = args.nevents, seed = args.seed )

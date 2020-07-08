@@ -113,6 +113,21 @@ class ProtoModel:
         ## the LSP we need from the beginning
         self.masses[ProtoModel.LSP]=random.uniform(200,500)
 
+    def __str__(self):
+        """ return basic information on model
+        """
+
+        pNames = [helpers.getParticleName ( pid ) for pid in self.unFrozenParticles()]
+        pNames = ','.join(pNames)
+        pStr = 'ProtoModel (%s): K = %1.2f, Z = %1.2f' %(pNames,self.K,self.Z)
+        return pStr
+
+    def __repr__(self):
+        """ shorted version of __str__"""
+
+        pStr = 'ProtoModel (%1.2f, %1.2f)' %(self.K,self.Z)
+        return pStr
+
     def hasAntiParticle ( self, pid ):
         """ for a given pid, do i also have to consider its antiparticle
             -pid in the signal strength multipliers? """
@@ -149,6 +164,38 @@ class ProtoModel:
         self.computeXSecs(nevents = self.nevents)
 
         return self._stored_xsecs
+
+    def getOpenChannels(self,pid):
+        """get the list of open decay channels for particle pid. Open channels are
+        the decays to unfrozen particles and to lighter particles.
+
+        :param pid: PID for particle
+
+        :return: List with the daughter pids for each decay channel
+        """
+
+        #Get list of possible decay channels:
+        openChannels = set()
+        unfrozen = self.unFrozenParticles()
+        for dpid in self.possibledecays[pid]:
+            #Get the list of BSM particles in the decay:
+            if isinstance(dpid,(list,tuple)):
+                pidList = [abs(p) for p in dpid if p in self.masses]
+            else:
+                pidList = [abs(dpid)]
+            #Skip decays to unfrozen particles
+            if not all([dp in unfrozen for dp in pidList]):
+                continue
+            #Get total daughter mass (it should only be a single mass)
+            mdaughter = sum([self.masses[p] for p in pidList])
+            #Skip decays to heavier particles
+            if mdaughter >= self.masses[pid]:
+                continue
+            openChannels.add ( dpid )
+
+        openChannels = sorted(list(openChannels))
+
+        return openChannels
 
     def setSSM ( self, pids, value=1., overwrite=True ):
         """ set the signal strength multiplier of pids to value.
@@ -330,6 +377,7 @@ class ProtoModel:
         if not hasattr ( self, "currentSLHA" ):
             self.createNewSLHAFileName()
 
+        unfrozen = self.unFrozenParticles()
         outputSLHA = self.currentSLHA
         if os.path.exists ( outputSLHA ):
             cmd = "cp %s %s" % ( outputSLHA, outputSLHA.replace(".cur",".old" ) )
@@ -340,10 +388,11 @@ class ProtoModel:
                 for m,v in self.masses.items():
                     line=line.replace("M%d" % m,"%.1f" % v )
                     if not m in self.decays:
-                        if m != self.LSP:
+                        if m != self.LSP and m in unfrozen:
                             self.highlight ( "red", "could not find %s in decays. keys are %s." % ( m, list(self.decays.keys()) ) )
-                        ## FIXME what is this???
+                        #Assign dummy BR if None found
                         self.decays[m]={ self.LSP: 1.0 }
+
                     for dpid,dbr in self.decays[m].items():
                         if type(dpid)==tuple:
                             line=line.replace("D%d_%d_%d" % ( m, dpid[0],dpid[1]), "%.5f" % dbr )

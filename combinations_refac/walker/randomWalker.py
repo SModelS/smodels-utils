@@ -80,7 +80,7 @@ class RandomWalker:
             self.currentK = -20.0
         else:
             self.manipulator.cheat ( cheatcode )
-            self.predictor.predict()
+            self.predictor.predict(self.protomodel)
             self.pprint ( "Cheat model gets Z=%.2f, K=%.2f" % \
                           ( self.manipulator.M.Z, self.manipulator.M.K ) )
             self.manipulator.backupModel()
@@ -198,10 +198,21 @@ class RandomWalker:
 
         #Now keep the model with highest score:
         if protomodelSimp and (protomodelSimp.Z > self.manipulator.M.Z):
+            print('\t\t Changing model to simp (rmax=)',protomodelSimp.rmax)
             self.manipulator.M = protomodelSimp
 
         #the muhat multiplier gets multiplied into the signal strengths
+        print('\t\t Protomodel r-max (before rescaling) = ',self.protomodel.rmax)
+        print('\t\t Protomodel mumax (before rescaling) = ',self.protomodel.mumax)
+        print('\t\t Protomodel muhat (before rescaling) = ',self.protomodel.muhat)
         self.manipulator.rescaleByMuHat()
+        print('\t\t Protomodel r-max (after rescaling) = ',self.protomodel.rmax)
+        print('\t\t Protomodel mumax (after rescaling) = ',self.protomodel.mumax)
+        print('\t\t Protomodel muhat (after rescaling) = ',self.protomodel.muhat)
+
+        #Check if the model is excluded (it shouldn't be after rescaling):
+        #(the 0.99 factor deals with the case rmax = threshold, which ofter happes after rescaling)
+        self.protomodel.excluded = 0.99*self.protomodel.rmax > self.predictor.rthreshold
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
 
@@ -312,23 +323,25 @@ class RandomWalker:
     def walk ( self ):
         """ Now perform the random walk """
         self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
+        self.manipulator.backupModel()
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
 
-            try:
-                self.onestep()
-            except Exception as e:
-                # https://bioinfoexpert.com/2016/01/18/tracing-exceptions-in-multiprocessing-in-python/
-                self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
-                import traceback
-                traceback.print_stack( limit=None )
-                except_type, except_class, tb = sys.exc_info()
-                extracted = traceback.extract_tb(tb)
-                for point in extracted:
-                    self.pprint ( "extracted: %s" % point )
-                with open("%s/exceptions.log" % self.rundir,"a") as f:
-                    f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
-                    f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
-                sys.exit(-1)
+            self.onestep()
+            # try:
+            #     self.onestep()
+            # except Exception as e:
+            #     # https://bioinfoexpert.com/2016/01/18/tracing-exceptions-in-multiprocessing-in-python/
+            #     self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
+            #     import traceback
+            #     traceback.print_stack( limit=None )
+            #     except_type, except_class, tb = sys.exc_info()
+            #     extracted = traceback.extract_tb(tb)
+            #     for point in extracted:
+            #         self.pprint ( "extracted: %s" % point )
+            #     with open("%s/exceptions.log" % self.rundir,"a") as f:
+            #         f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
+            #         f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
+            #     sys.exit(-1)
             if self.protomodel.excluded:
                 tp = self.protomodel.tpList[0][2]
                 masses = []

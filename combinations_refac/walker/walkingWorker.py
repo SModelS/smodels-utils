@@ -4,7 +4,7 @@ import os
 
 def main( nmin, nmax, cont,
           dbpath = "<rundir>/database.pcl",
-          cheatcode = 0, dump_training = False, rundir=None, maxsteps = 10000, nevents = 100000 ):
+          cheatcode = 0, dump_training = False, rundir=None, maxsteps = 10000, nevents = 100000, seed = None ):
     """ a worker node to set up to run walkers
     :param nmin: the walker id of the first walker
     :param nmax: the walker id of the last walker (?)
@@ -14,7 +14,12 @@ def main( nmin, nmax, cont,
     :param rundir: overrride default rundir, if None use default
     :param maxsteps: maximum number of steps to be taken
     :param nevents: number of MC events when computing cross-sections
+    :param seed: random seed number (optional)
     """
+
+    if seed is not None:
+        from tools import helpers
+        helpers.seedRandomNumbers( seed )
 
     if rundir != None and "<rundir>" in dbpath:
         dbpath=dbpath.replace("<rundir>","%s/" % rundir )

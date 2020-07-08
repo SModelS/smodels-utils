@@ -29,9 +29,20 @@
     * Added getXsecs(), _stored_xsecs, _xsecMasses and _xsecSSMs to ProtoModel. Now all access to the cross-sections should be through ProtoModel.getXsecs()
     * ProtoModel.computeXSecs now automatically stores the xsecs, masses and SSMs used in the ProtoModel attributes.
     * Now RandomWalker keeps track of current (old) K and Z values (instead of ProtoModel)
+    * Rewrote how branching ratios are modified. 
+      * Added ProtoModel.getOpenChannels to find which decay channels are (kinematically) allowed (uses ProtoModel.possibledecays)
+      * All decays are created from ProtoModel.possibledecays, so ProtoModel.decays does not have to contain closed decay channels or channels with zero BR
+      * Added Manipulator.setRandomBranchings (to assign random BRs when unfreezing particles)
+      * Modified Manipulator.normalizeBranchings (now it only normalizes the BRs, so the total is 1)
+      * Modified Manipulator.removeAllOffshell (now it removed all kinematically forbidden/frozen channels and rescale BRs)
+      * Changed a bit the behavior of randomlyChangeBranchingOfPid (how random changes are made). All new decays are created using ProtoModel.getOpenChannels
+    * Rewrote how signal strength multipliers are merged (replaced computeNewSSMs by mergeSSMs)
+    * Added __str__ and __repr__ methods to ProtoModel
+    * Manipulator.freezePidsNotInBestCombo always keeps at least 2 particles (LSP + 1)
 
 ## Refactoring ToDo:
 
+  *Track down rmax rescaling in old version (is rmax being rescaled twice? once at ProtoModel.predict and another at Manipilator.predict->resolveMuhat?)
   * implement unit tests
   * minimize deepcopies 
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)

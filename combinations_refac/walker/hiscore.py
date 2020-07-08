@@ -97,7 +97,7 @@ class Hiscore:
             return ## just to be sure, should be taken care of above, though
         if m.M.K > 5.:
             ## for values > 2.5 we now predict again with larger statistics.
-            m.predict ()
+            self.predictor.predict (m.M)
 
         Kold = self.globalMaxK()
         if m.M.K > Kold:

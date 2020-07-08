@@ -2,14 +2,13 @@
 
 """ script used to produce the likelihood scans """
 
-import pickle, os, sys, multiprocessing, time, numpy, subprocess, copy
+import os, sys, multiprocessing, time, numpy, subprocess, copy
 sys.path.insert(0,"./")
 from smodels.tools.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
 from csetup import setup
 from combiner import Combiner
-from protomodel.manipulator import Manipulator
-from protomodel.protomodel import predictor as P
+from tester.predictor import Predictor as P
 from plotHiscore import obtain
 
 class LlhdThread:
@@ -46,13 +45,13 @@ class LlhdThread:
         if max(self.M.masses)>2000:
             sigmacut=.001*fb
         ## first get rmax
-        predsforexcl = P[0].predict ( self.M.currentSLHA, allpreds=False,
+        predsforexcl = P.predict ( self.M.currentSLHA, allpreds=False,
                                       llhdonly=False )
         robs = self.M.checkForExcluded ( predsforexcl )
 
         ## now get the likelihoods
         llhds={}
-        predictions = P[0].predict ( self.M.currentSLHA, allpreds=True,
+        predictions = P.predict ( self.M.currentSLHA, allpreds=True,
                                      llhdonly=True, sigmacut=sigmacut )
         for mu in numpy.arange(.4,1.8,.05):
             llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )

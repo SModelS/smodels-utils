@@ -32,7 +32,6 @@ class Manipulator:
                                     ( 1000005, 2000005 ), (1000006, 2000006),
                                     ( 1000024, 1000037 ), ( 1000023, 1000025 )  ]
 
-
     def getClosestPair ( self, pids ):
         """ of <n> PIDs, identify the two that are closest in mass """
         if len(pids)<2:
@@ -192,29 +191,6 @@ class Manipulator:
         with open( "walker%d.log" % self.M.walkerid, "a" ) as f:
             f.write ( "[manipulator:%d - %s] %s\n" % ( self.M.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def checkForOffshell ( self ):
-        """ check for offshell decays
-        :returns: a list of tuples (motherpid, daughterpid) """
-        offshell = []
-        for pid,decays in self.M.decays.items():
-            mmother = self.M.masses[pid]
-            if mmother > 9e5:
-                continue
-            for dpid,dbr in decays.items():
-                mdaughter = -1.
-                if dpid in self.M.masses:
-                    mdaughter = self.M.masses[dpid]
-                if type(dpid) == tuple and dpid[0] in self.M.masses:
-                    mdaughter = self.M.masses[dpid[0]]
-                if mdaughter < 0.:
-                    self.M.log ( "this is weird, cannot get mass for dpid %s?" % dpid )
-                if mdaughter > mmother and dbr > 1e-5:
-                    self.M.log ( "decay %s(%d) -> %s(%d) is offshell (%.3f)" % \
-                               ( helpers.getParticleName( pid ), mmother,
-                                 helpers.getParticleName ( dpid ), mdaughter, dbr ) )
-                    offshell.append ( ( pid, dpid ) )
-        return offshell
-
     def checkForNans ( self ):
         """ check protomodel for NaNs, for debugging only """
         for pid,m in self.M.masses.items():
@@ -242,73 +218,99 @@ class Manipulator:
             print ( " `- %s:%s:%s %s" % \
               ( i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs))))
 
-    def removeAllOffshell ( self ):
-        """ remove all offshell decays, renormalize all branchings """
-        offshell = self.checkForOffshell()
-        for dpd in offshell:
-            self.M.log ( "removing offshell decay %s" % helpers.getParticleName ( dpd ) )
-        for (mpid,dpid) in offshell:
-            assert ( mpid in self.M.decays )
-            assert ( dpid in self.M.decays[mpid] )
-            self.M.decays[mpid][dpid]=0.
-            # self.M.decays[mpid].pop ( dpid ) dont pop, we need it!
-        self.normalizeAllBranchings()
+    def removeAllOffshell ( self, rescaleSSMs=False ):
+        """ remove all offshell decays and decays of frozen particles. Renormalize all branchings """
 
-    def normalizeBranchings ( self, pid, fixSSMs=True, protomodel=None ):
-        """ normalize branchings of a particle, after freezing and unfreezing
-            particles. while we are at it, remove zero branchings also.
-        :param fixSSMs: if True, adapt also signal strength multipliers,
-                        i.e. multiply them with S < 0. so that sigma x br of
-                        the remaining channels stays the same.
+        for pid in self.M.frozenParticles():
+            if pid in self.M.decays:
+                self.M.decays.pop(pid)
+
+        #Loop over all decays:
+        for pid in self.M.decays:
+            #Get allowed decay channels:
+            openChannels = self.M.getOpenChannels(pid)
+            #Check if any of the existing decays are forbidden:
+            delDecays = [dpid for dpid in self.M.decays[pid]
+                            if not  dpid in openChannels]
+            for dpid in delDecays:
+                self.M.decays[pid].pop(dpid)
+
+            #Make sure to normalize the branchings
+            self.normalizeBranchings(pid, rescaleSSMs=rescaleSSMs)
+
+    def setRandomBranchings ( self, pid, protomodel=None):
+        """Assign random BRs to particle.
         """
+
+        if not protomodel:
+            protomodel = self.M
+
+        #Do not modify the LSP decays
+        if pid == protomodel.LSP:
+            return
+
+        #Erase BRs (if any has been stored)
+        protomodel.decays[pid] = {}
+
+        #Get the allowed decay channels:
+        openChannels = self.M.getOpenChannels(pid)
+        nitems = len(openChannels)
+        for dpid in openChannels:
+            br = random.gauss ( 1. / nitems, numpy.sqrt ( .5 / nitems )  )
+            br = max ( 0., br )
+            protomodel.decays[pid][dpid] = br
+
+        #Make sure there is at least one open channel:
+        BRtot = sum(self.M.decays[pid].values())
+        if BRtot == 0.0:
+            chan = random.choice(list(openChannels))
+            self.M.decays[pid][chan] = 1.0
+            BRtot = 1.0
+
+        #Make sure to normalize the branchings:
+        self.normalizeBranchings(pid, protomodel=protomodel)
+
+    def normalizeBranchings ( self, pid, rescaleSSMs=False, protomodel=None ):
+        """ normalize branchings of a particle if the total BR is differs from 1.0.
+
+        :param pid: Particle to have their branchings normalized. If pid = None, normalize all decays.
+        :param rescaleSSMs: if True, rescale the corresponding signal strength multipliers,
+                         so that sigma x br stays the same.
+        """
+
         if not protomodel:
             protomodel = self.M
 
         if not pid in protomodel.decays:
             protomodel.pprint ( "when attempting to normalize: %d not in decays" % pid )
             return
-        S=0.
-        for dpid,br in protomodel.decays[pid].items():
-            S+=br
-        nitems = len ( protomodel.decays[pid].items() )
-        while S <= 0.:
-            protomodel.pprint ( "sum of branchings of %d was found to be %s: randomize them, while normalizing." % ( pid, S ) )
-            for dpid,br in protomodel.decays[pid].items():
-                br = random.gauss ( 1. / nitems, numpy.sqrt ( .5 / nitems )  )
-                br = max ( 0., br )
-                protomodel.decays[pid][dpid]=br
-                S+=br
-        brs = []
-        for dpid,br in protomodel.decays[pid].items():
-                tmp = protomodel.decays[pid][dpid] / S
-                protomodel.decays[pid][dpid] = tmp
-                if tmp < .99999:
-                    brs.append ( tmp )
-        if len(brs)>0 and numpy.std ( brs ) > 0.001:
-            protomodel.log( "normalize branchings of %s with=%.2f, they are at %.2f +/- %.2f" % ( helpers.getParticleName ( pid ), S, numpy.mean ( brs ), numpy.std ( brs )  ) )
+
+        BRtot = sum(protomodel.decays[pid].values())
+        if BRtot == 0:
+            if pid != protomodel.LSP:
+                protomodel.pprint ( "when attempting to normalize: total BR (%d) is zero" % pid )
+            return
+
+        if abs(BRtot-1.0) < 1e-4:
+            #BRs are already normalized.
+            return
+
+        for dpid in protomodel.decays[pid]:
+            protomodel.decays[pid][dpid] *= 1/BRtot
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
-        if not fixSSMs:
+        if not rescaleSSMs:
             return
+
         for pidpair,ssm in protomodel.ssmultipliers.items():
             if pidpair in [ (pid,pid),(-pid,-pid),(-pid,pid),(pid,-pid) ]:
-                newssm = ssm*S*S
-                if newssm > 10000.:
-                    newssm = 10000.
-                protomodel.ssmultipliers[pidpair]= newssm
+                newssm = min(1e5,ssm*BRtot*BRtot) #Rescale pair production by BRtot^2
+            elif (pid in pidpair) or (-pid in pidpair):
+                newssm = min(1e5,ssm*BRtot) #Rescale associated production by BRtot
+            else:
                 continue
-            if (pid in pidpair) or (-pid in pidpair):
-                newssm = ssm*S
-                if newssm > 10000.:
-                    newssm = 10000.
-                protomodel.ssmultipliers[pidpair]=newssm
-
-    def normalizeAllBranchings ( self ):
-        """ normalize all branchings, after freezing or unfreezing particles """
-        for pid in self.M.masses.keys():
-            if not pid == self.M.LSP:
-                self.normalizeBranchings ( pid )
+            protomodel.ssmultipliers[pidpair]=newssm
 
     def rescaleByMuHat ( self ):
         """ multiply the signal strength multipliers with muhat"""
@@ -400,12 +402,14 @@ class Manipulator:
 
         #Randomly select mass of unfrozen particle:
         self.M.masses[pid] = random.uniform ( minMass, maxMass )
-        ## when unfreezing, nothing can go offshell, right?
-        self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
+
+        #Set random branchings
+        self.setRandomBranchings(pid)
+
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
         return 1
 
-    def randomlyChangeBranchings ( self, prob=0.2 ):
+    def randomlyChangeBranchings ( self, prob=0.2, zeroBRprob = 0.05, singleBRprob = 0.05 ):
         """ randomly change the branchings of a single particle
 
         :param prob: Probability for changing a branching ratio
@@ -424,68 +428,61 @@ class Manipulator:
         if not p in self.M.decays.keys():
             self.M.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.M.decays.keys() ) )
             # we dont know about this decay? we initialize with the default!
-        return self.randomlyChangeBranchingOfPid ( p )
 
-    def randomlyChangeBranchingOfPid ( self, pid ):
+        return self.randomlyChangeBranchingOfPid ( p, zeroBRprob, singleBRprob )
+
+    def randomlyChangeBranchingOfPid ( self, pid, zeroBRprob = 0.05, singleBRprob = 0.05):
         """ randomly change the branching a particle pid """
-        openChannels = set()
-        for dpid,br in self.M.decays[pid].items():
-            if not numpy.isfinite ( br ):
-                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( pid, dpid, br ) )
-                self.M.decays[pid][dpid]=0.
-            if type(dpid) not in [ tuple, list] and dpid in self.M.unFrozenParticles():
-                openChannels.add ( dpid )
-            if type(dpid) in [ tuple, list ] and dpid[0] in self.M.unFrozenParticles():
-                openChannels.add ( dpid )
-        for dpid in self.M.possibledecays[pid]:
-            openChannels.add ( dpid )
+
+        openChannels = self.M.getOpenChannels(pid)
+
         # print ( "the open channels are", openChannels )
         if len(openChannels) < 2:
             self.M.pprint ( "number of open channels of %d is %d: cannot change branchings." % (pid, len(openChannels) ) )
             # not enough channels open to tamper with branchings!
             return 0
-        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
-        S=0.
-        for c_,i in enumerate(openChannels):
+
+        dx = 0.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
+
+        #Keep only one channel (with probability singleBRprob)
+        uSingle = random.uniform( 0., 1. )
+        if uSingle < singleBRprob:
+            #Choose random channel:
+            chan = random.choice(list(openChannels))
+            self.M.decays[pid] = {chan: 1.0}
+            return 1
+
+        #Otherwise randomly change each channel (based on the current BR)
+        for dpid in openChannels:
             oldbr = 0.
-            if i in self.M.decays[pid]:
-                oldbr = self.M.decays[pid][i]
-            if not numpy.isfinite ( oldbr ):
-                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( pid, i, oldbr ) )
-                oldbr = 0.
+            #Check if decay already existed:
+            if dpid in self.M.decays[pid]:
+                oldbr = self.M.decays[pid][dpid]
+
+            #Close channel (with zeroBRprob probability)
+            if oldbr > 0:
+                uZero = random.uniform( 0., 1. )
+                if uZero < zeroBRprob:
+                    self.M.decays[pid][dpid] = 0.
+                    continue
+
+            #Randomly change BR around old value
             Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
             br = random.uniform ( Min, Max )
-            ## with some small chance set it simply to zero
-            a = random.uniform ( 0., 1. )
-            if a > 0.95:
-                br = 0.
-            ## with some small chance set it to equal another random br
-            if a < 0.05:
-                c = random.choice(list(openChannels))
-                if pid in self.M.decays and c in self.M.decays[pid]:
-                    br = self.M.decays[pid][c]
-            self.M.decays[pid][i]=br
-            S+=br
-        if S == 0.: ## all at zero?
-            c = random.choice(list(openChannels))
-            if pid in self.M.decays:
-                self.M.decays[pid][c] = 1.
-                S = 1.
-        if S > 0.: ## correct for too large sums
-            for i,v in self.M.decays[pid].items():
-                self.M.decays[pid][i] = v / S
-            S = 1.
-        control = sum ( [  x for x in self.M.decays[pid].values() ] )
-        if abs ( control - 1.0 ) > 1e-5 or not numpy.isfinite ( control ):
-            self.M.pprint ( "ATTENTION control %s" % control )
-        #    sys.exit(-5)
-        brvec=[]
-        for x in self.M.decays[pid].values():
-            if x<1e-5:
-                brvec.append("")
-            else:
-                brvec.append("%.2f" % x )
-        self.M.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(pid), ",".join( brvec  ), control ) )
+            self.M.decays[pid][dpid] = br
+
+
+        #Make sure there is at least one open channel:
+        BRtot = sum(self.M.decays[pid].values())
+        if BRtot == 0.0:
+            chan = random.choice(list(openChannels))
+            self.M.decays[pid][chan] = 1.0
+            BRtot = 1.0
+
+        #Make sure BRs add up to 1:
+        self.normalizeBranchings(pid)
+
+        self.M.log ( "changed branchings of %s" % (helpers.getParticleName(pid) ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self, prob=0.25, probSingle=0.8, ssmSigma=0.1):
@@ -627,6 +624,7 @@ class Manipulator:
 
     def freezeMostMassiveParticle ( self ):
         """ freezes the most massive unfrozen particle """
+
         unfrozen = self.M.unFrozenParticles( withLSP=False )
         if len(unfrozen)<2:
             return 0 ## freeze only if at least 3 unfrozen particles exist
@@ -647,11 +645,14 @@ class Manipulator:
         :param pid: PID to be frozen
         :param force: If False, will only freeze the particle if it does not violate
                       the canonical order (e.g. will not freeze stop1 if stop2 is unfrozen)
+                      and the model contain at least 3 particles.
         """
 
         #Check for canonical ordering.
         if not force:
             unfrozen = self.M.unFrozenParticles( withLSP=False )
+            if len(unfrozen) < 2:
+                return
             #If pid matches the lighter state and the heavier state is unfrozen,
             #do not freeze the particle
             for pids in self.canonicalOrder:
@@ -659,8 +660,8 @@ class Manipulator:
                     return
 
         self.M.masses[pid]=1e6
-        self.normalizeAllBranchings()
-        self.removeAllOffshell()
+        #Fix branching ratios and rescale signal strenghts, so other channels are not affected
+        self.removeAllOffshell(rescaleSSMs=True)
 
     def randomlyChangeMasses ( self, prob = 0.05, dx = 200.0 ):
         """ take a random step in mass space for a single unfrozen particle
@@ -696,7 +697,9 @@ class Manipulator:
 
         ret = self.randomlyChangeMassOf ( pid, dx=dx, minMass=minMass, maxMass=maxMass )
 
-        self.removeAllOffshell()
+        #Fix branching ratios and rescale signal strenghts, so other channels are not affected
+        self.removeAllOffshell(rescaleSSMs=True)
+
         return ret
 
     def randomlyChangeMassOf ( self, pid, dx=None, minMass = None, maxMass = None ):
@@ -784,6 +787,9 @@ class Manipulator:
                     pidB = pB
 
         if pidA is not None:
+            if self.M.masses[pidA] > self.M.masses[pidB]:
+                self.pprint("can not merge particles with wrong mass hierarchy (%d > %d)" %(pidA,pidB))
+                return False
             self.merge((pidA,pidB),protomodel)
             return True
         else:
@@ -801,6 +807,13 @@ class Manipulator:
         if not protomodel:
             protomodel = self.M
 
+        ## Store original decays
+        olddecays = {}
+        for mpid,decays in protomodel.decays.items():
+            olddecays[mpid] = dict([[dpids,br] for dpids,br in decays.items()])
+        ## Store orignal xsecs (needed for rescaling the SSMs)
+        oldxsecs = protomodel.getXsecs()[0]
+
         pair = list(pair)
         pair.sort()
         p1,p2 = pair[0], pair[1]
@@ -812,24 +825,29 @@ class Manipulator:
         protomodel.masses[ p1 ] = avgM ## set this one to the avg mass
         protomodel.masses[ p2 ] = 1e6 ## freeze that one!
 
-        ## add the decays from pid2 to pid1
-        for pids,br in protomodel.decays [ p2 ].items():
+        #Remove p2 from (active) decays:
+        p2decays = protomodel.decays.pop(p2)
+
+        #Get allowed decay channels for p1:
+        openChannels = self.M.getOpenChannels(p1)
+        ## add the decays from pid2 to pid1 if decay is allowed:
+        for pids,br in p2decays.items():
+            if not pids in openChannels:
+                continue
             if pids in protomodel.decays[p1]:
                 if br > 0.001:
                     self.log ( "add to decays %s/%s: %.2f" % ( p1, pids, br ) )
-                protomodel.decays[p1][pids] = protomodel.decays[p1][pids] + br
+                protomodel.decays[p1][pids] += br
             else:
                 self.log ( "set decays of %s/%s to %.2f" % ( p1, pids, br ) )
                 protomodel.decays[p1][pids] = br
 
         self.log ( "now normalize branchings of %d" % p1 )
-        self.normalizeBranchings (p1, fixSSMs = False, protomodel=protomodel )
+        self.normalizeBranchings ( p1, protomodel=protomodel )
 
-        ## Store original decays
-        olddecays = {}
-        for mpid,decays in protomodel.decays.items():
-            olddecays[mpid] = dict([[dpids,br] for dpids,br in decays.items()])
-
+        #Now replace all decays to p2 by decays to p1
+        #(since the new (average) p1 mass is always smaller than the p2 mass,
+        #there is no chance of running into offshell decays)
         for mpid,decays in olddecays.items():
             for dpids,br in decays.items():
                 newpids = dpids
@@ -841,17 +859,25 @@ class Manipulator:
                 elif isinstance(dpids,int) and abs(dpids) == abs(p2):
                     newpids = p1*dpids/abs(dpids)
 
+                #If original channel did not contain p2, do nothing
+                if newpids == dpids:
+                    continue
+                #Print log message for non-negligible BRs:s
                 if br > 0.0001:
                     self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
                                ( mpid, dpids, newpids, br ) )
+
+                #If new channel was already present, simply add to BR:
+                if newpids in protomodel.decays[mpid]:
+                    br += protomodel.decays[mpid][newpids]
+
+                #Remove original decay:
                 protomodel.decays[mpid].pop ( dpids )
+                #Add new channel:
                 protomodel.decays[mpid][newpids]=br
 
-        ## ssmultipliers get added up, too
-        newssms = self.computeNewSSMs( pair, protomodel=protomodel )
-        protomodel.ssmultipliers = newssms
-        # Make sure xsecs are re-computed:
-        protomodel.getXsecs()
+        ## merge the signal strength multipliers:
+        self.mergeSSMs( pair, oldXsecs = oldxsecs, protomodel=protomodel )
 
         return protomodel
 
@@ -865,75 +891,74 @@ class Manipulator:
             ret+=self.M.masses[pid]
         return ret / len(pids)
 
-    def computeNewSSMs ( self, pair, protomodel=None ):
-        """ compute the new ssms after the merger """
+    def mergeSSMs ( self, pair, oldXsecs, protomodel=None ):
+        """ merge signal strength multipliers for particles in pair. The cross-selections
+            involving the merged particles are assumed to be added and the corresponding
+            signal strengths are rescaled.
+
+        :param pair: pair of particle PIDs being merged
+        :param oldXsecs: cross-sections before the merge
+        :param protomodel: protomodel to be modified. If not defined, use self.M
+        """
 
         if not protomodel:
             protomodel = self.M
 
-        newssms = copy.deepcopy ( protomodel.ssmultipliers )
-        p1, p2 = pair[0], pair[1]
+        #Get updated list of unfrozen particles
+        unfrozen = protomodel.unFrozenParticles()
+        pair = list(pair)
+        pair.sort()
+        p1,p2 = pair[0], pair[1]
 
-        ## dont add for the frozen particles
-        frozen = protomodel.frozenParticles()
+        #Build dictionary with original cross-sections
+        #(only select LO cross-sections at 13 TeV)
+        oldxsecDict = dict([[xsec.pid,xsec.value.asNumber(fb)] for xsec in oldXsecs
+                            if xsec.info.sqrts > 10.*TeV and xsec.info.order <= 0])
 
-        #for pids, ssm in protomodel.ssmultipliers.items():
-        modelXsecs = protomodel.getXsecs()[0]
-        for sxsecs in modelXsecs:
-            if sxsecs.info.sqrts < 10.*TeV or sxsecs.info.order > 0:
-                continue
-            pids = sxsecs.pid
-            ssm = 1.0
-            if pids in protomodel.ssmultipliers:
-                ssm = protomodel.ssmultipliers[pids]
+        #Find cross-sections PIDs containing p2 or -p2
+        #and build the new PIDs (with p2 replaced by p1)
+        p2Xsecs = {}
+        procDict = {}
+        for pids,xsec in oldxsecDict.items():
             if not p2 in pids and not -p2 in pids:
                 continue
-            addxsec = 0. * fb
-            for xsec in modelXsecs:
-                if pids == xsec.pid:
-                    addxsec = xsec.value
-            self.log ( "xsecs of dissolving production %s: %s (ssm %s)" % \
-                       ( pids, addxsec, ssm ) )
-            if addxsec < 0.001 * fb:
+            newpids = [pid if abs(pid) != abs(p2) else p1*p2/abs(p2) for pid in pids ]
+            newpids = tuple(sorted(newpids))
+            #Skip processes containing frozen particles:
+            if not all([abs(pid) in unfrozen for pid in newpids]):
                 continue
-            newpids = []
-            for pid in pids:
-                if pid in [ p2, -p2 ]:
-                    newpids.append ( int ( math.copysign ( p1, pid ) ) )
-                else:
-                    newpids.append ( pid )
-            newpids = tuple(newpids)
-            # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
-            if newpids in protomodel.ssmultipliers:
-                hasFrozenPid=False
-                for pid in newpids: ## skip the frozen stuff
-                    if abs(pid) in frozen:
-                        hasFrozenPid=True
-                if hasFrozenPid:
-                    continue
-                if ssm > 0.:
-                    toxsec = 0. * fb
-                    for xsec in modelXsecs:
-                        if newpids == xsec.pid:
-                            toxsec = xsec.value
-                    oldssm = newssms[newpids]
-                    self.log ( "xsec of to-be-kept production %s: %s, ssm=%s" % ( newpids, toxsec, oldssm ) )
-                    newxsec = addxsec + toxsec
-                    if toxsec > 0.*fb:
-                        newssm = oldssm * newxsec.asNumber(fb)/toxsec.asNumber(fb)
-                        self.log ( "adding ssm from %s to %s: ssm of addition is %.2f, ssm of keeper is %.2f, xsec of addition %s, xsec of keeper is %s. newssm is %.2f" % ( pids, newpids, ssm, oldssm, addxsec, toxsec, newssm ) )
-                    ## FIXME what I didnt take into account here, is that the
-                    ## xsec of the "to" particle is changing, also!
-                        newssms[newpids]=newssm
-            else:
-                self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
-                newssms[newpids]=ssm
-        ## clean up, remove all pid2 ssms
-        newms={}
-        for pids,ssm in newssms.items():
-            if not p2 in pids and not -p2 in pids:
-                newms[pids]=ssm
-        return newms
+            p2Xsecs[pids] = xsec
+            procDict[pids] = newpids
+
+        #Now compute the new SSMs assuming that the cross-sections will be added:
+        newSSMs= {}
+        for oldpid,newpid in procDict.items():
+           #Get xsec value for the process containing p2:
+           value = p2Xsecs[oldpid]
+           oldvalue = None
+           #Check if the new process (with p2->p1) already existed
+           if newpids in oldxsecDict:
+               oldvalue = oldxsecDict[newpids]
+               value += oldvalue #Combine xsec values
+
+           #If the new process (with p2->p1) already existed, rescale SSM:
+           if oldvalue:
+               #Check if the SSM already existed (if not, take SSM = 1.0)
+               oldssm = 1.0
+               if newpids in protomodel.ssmultipliers:
+                   oldssm = protomodel.ssmultipliers[newpids]
+               #The new SSM is going to be the ratio of old and new cross-sections times the old SSM:
+               newSSMs[newpids] = oldssm*(oldvalue/value)
+           #If the new process does not exist take the SSM for the (old) process containing p2
+           else:
+               oldssm = 1.0
+               if oldpid in protomodel.ssmultipliers:
+                   oldssm = protomodel.ssmultipliers[oldpid]
+               newSSMs[newpids] = oldssm
+
+        #Now replace the SSMs in protomodel:
+        for pid,ssm in newSSMs.items():
+           protomodel.ssmultipliers[pid] = ssm
 
     def simplifyMasses ( self ):
         """ return the masses only of the unfrozen particles """
@@ -1047,6 +1072,7 @@ class Manipulator:
         ret = {}
         frozen = self.M.frozenParticles()
         modelXSecs = self.M.getXsecs()[0]
+
         for pids,v in self.M.ssmultipliers.items():
             if removeOnes and abs(v-1.)<1e-5:
                 continue
@@ -1125,6 +1151,8 @@ class Manipulator:
         if not hasattr ( self, "_backup" ):
             raise Exception ( "no backup available" )
         for k,v in self._backup.items():
+            if k == 'rmax':
+                print('\t\t\t (restoreModel) setting rmax to',v)
             setattr ( self.M, k, v )
 
     def delBackup ( self ):
