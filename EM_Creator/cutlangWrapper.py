@@ -12,12 +12,13 @@
     EM_Creator --┬-CutLang---------┬-runs ~ dir with running script (CLA.sh)
                  |                 +-CLA  ~ dir with executable (CLA.exe)
                  |                 + ADLLHCAnalysis ~ contains adl files for analyses
-                 +-cutlang_wrapper-┬-ANA_*-┬-output-┬-efficiencies.embaked
-                 |                 |       |        +-detected.root
-                 |                 |       |        +-CL_output_summary.dat
-                 |                 |       |        +-log_<time>.txt
-                 |                 |       +-temp---┬-hepmcfile.hepmc ~ if it was gzipped
-                 |                 +-logs--+log_<time>.txt
+                 +-cutlang_results-┬-ANA_*-┬-output-┬-efficiencies.embaked ~ after running join_embaked
+                 |                         |        +-<analysis>_<topo>_mass_<mass>.embaked
+                 |                         |        +-CL_output_summary.dat
+                 |                         |        +-delphes_out_*.root
+                 |                         |        +-log_<time>.txt
+                 |                         +-temp---┬-hepmcfile.hepmc ~ if it was gzipped
+                 |                                  +-log_<time>.txt
                  +-Delphes---------┬-DelphesHepMC ~ delphes executable
                                    +-cards ~ dir with delphes configuration cards
 """
@@ -31,6 +32,8 @@
 # FIXME: Print only last n lines of exe output.
 # FIXME: Instead of exiting, raise exceptions?
 # FIXME: Adapt the getmasses scheme to CLA wrapper
+# FIXME: Delphes & Cutlang return codes.
+
 
 
 # Standard library imports
@@ -75,9 +78,12 @@ class CutLangWrapper:
         self.auto_confirm = auto_confirm
 
 
-        # base output directory
-        self.base_dir = Directory(f"cutlang_wrapper/{self.analyses}", make = True)
-        self.tmp_dir = Directory(os.path.join(self.base_dir.get(), "temp"), make = True)
+        # make auxiliary directories
+        self.base_dir = Directory(f"cutlang_results/{self.analyses}", make = True)
+        dirname = f"{self.topo}_{self.njets}jet"
+        self.ana_dir = Directory(os.path.join(self.base_dir.get(), f"ANA_{dirname}"), make = True)
+        self.out_dir = Directory(os.path.join(self.ana_dir.get(), "output"), make = True)
+        self.tmp_dir = Directory(os.path.join(self.ana_dir.get(), "temp"), make = True)
         time = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         self.initlog = os.path.join(self.tmp_dir.get(), "log_" + time + ".txt")
         self.__delete_dir(self.initlog)
@@ -86,7 +92,7 @@ class CutLangWrapper:
         self.cutlanginstall = "./CutLang/"
         self.cutlang_executable = "./CutLang/CLA/CLA.exe"
         self.cutlang_run_dir = "./CutLang/runs" # Directory where the CutLang will run
-        self.cutlang_script = "CLA.sh"
+        self.cutlang_script = "./CLA.sh"
 
         # ADLLHCAnalysis vars
         self.adllhcanalyses = "./CutLang/ADLLHCanalyses"
@@ -174,8 +180,8 @@ class CutLangWrapper:
         a_name = a_name.replace("_", "-")
         cla_path = os.path.join(self.adllhcanalyses, a_name.upper(), a_name.upper() + "_CutLang.adl")
         if os.path.isfile(cla_path):
-            self.__msg(f"Using CutLang file {cla_path}.")
             return os.path.abspath(cla_path)
+            self.__msg(f"Using CutLang file {cla_path}.")
         else:
             raise Exception(f"No analysis file found for analysis {a_name} found at: \n" + cla_path)
 
@@ -253,9 +259,9 @@ class CutLangWrapper:
             self.__error(f"No efficiencies found in file {cla_out}.")
         return entries, nevents
 
-    def get_cla_out_filename(self, inputname):
+    def get_cla_out_filename(self, cla_run_dir, inputname):
         """ Returns the name of CLA output file"""
-        outfile = os.path.join(self.cutlang_run_dir,
+        outfile = os.path.join(cla_run_dir,
                                "histoOut-" + os.path.basename(inputname).split(".")[0] + ".root")
         self.__info(f"Searching for CLA output at:\n{outfile}")
         if os.path.isfile(outfile):
@@ -265,29 +271,30 @@ class CutLangWrapper:
             # sys.exit()
 
     def run(self, mass, hepmcfile, pid=None):
-        """ TODO: Write some commentary.
+        """ Gives efficiency values for the given hepmc file.
 
 
             input.hepmc --> Delphes --> output.root --┬-> CutLang --> eff.embaked
                                         CutLang.edl --┘
+            error values:
+                -1:   Cannot find hepmc file
         """
-        dirname = f"{self.topo}_{self.njets}jet"
-        ana_dir = Directory(os.path.join(self.base_dir.get(), f"ANA_{dirname}"), make = True)
-        out_dir = Directory(os.path.join(ana_dir.get(), "output"), make = True)
-        tmp_dir = Directory(os.path.join(ana_dir.get(), "temp"), make = True)
         time = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-        logfile = os.path.join(tmp_dir.get(), "log_" + time + ".txt")
+        time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        logfile = os.path.join(self.tmp_dir.get(), "log_" + time + ".txt")
         self.__delete_dir(logfile)
+        mass_stripped = str(mass).replace("(","").replace(")","").replace(",","_")
 
-        self.__info(f"Writing output into directory {ana_dir.get()} .")
+        self.__info(f"Writing output into directory {self.ana_dir.get()} .")
         self.__info(f"Masses are {mass}")
 
         # Decompress hepmcfile if necessary
         if ".gz" in hepmcfile:
-            hepmcfile = self.__decompress(hepmcfile, tmp_dir.get())
+            hepmcfile = self.__decompress(hepmcfile, self.tmp_dir.get())
+
 
         # Check if the analysis has been done already
-        summaryfile = os.path.join(out_dir.get(), "CL_output_summary.dat")
+        summaryfile = os.path.join(self.out_dir.get(), "CL_output_summary.dat")
         if os.path.exists ( summaryfile ):
             if os.stat(summaryfile).st_size>10:
                 self.__msg (f"It seems like there is already a summary file {summaryfile}")
@@ -318,13 +325,11 @@ class CutLangWrapper:
         # ======================
         # set input/output paths
         if not os.path.isfile(hepmcfile):
-            self.__error (f"cannot find hepmc file {hepmcfile}, exiting.")
-            sys.exit()
+            self.__error (f"cannot find hepmc file {hepmcfile}.")
+            return -0x01
         self.__msg ("Found hepmcfile at", hepmcfile)
         delphes_card = self.__pick_delphes_card()
-        # delph_out = os.path.join(tmp_dir.get(), "-".join([self.analyses, str(mass), "delphes-out"])+".root")
-        # FIXME: put this to tmp_dir
-        delph_out = os.path.join(tmp_dir.get(), "delphes_out.root")
+        delph_out = os.path.join(self.out_dir.get(), f"delphes_out_{mass_stripped}.root")
 
         # Remove output file if already exists
         if os.path.exists(delph_out):
@@ -334,49 +339,55 @@ class CutLangWrapper:
 
 
         # run delphes
-        self.__info("Running delphes.")
+        self.__debug("Running delphes.")
         args = [self.delphes_exe, delphes_card, delph_out, hepmcfile]
         self.exe(args, logfile = logfile)
-        self.__info("Delphes finished.")
+        self.__debug("Delphes finished.")
 
         # ======================
         #        CutLang
         # ======================
         # Prepare input/output paths
         cla_input = os.path.abspath(delph_out)
-        self.cutlang_script = os.path.abspath("./CutLang/runs/CLA.sh")
         cutlangfile = self.pickCutLangFile(self.analyses)
+
+        # copy cutlang to a temporary directory
+        cla_temp = Directory(os.path.join(self.tmp_dir.get(), f"CLA_{mass_stripped}_{time}"), make=True)
+        cmd = ["cp", "-r", self.cutlanginstall, cla_temp.get()]
+        self.exe(cmd, logfile = logfile)
+        cla_run_dir = os.path.join(cla_temp.get(), self.cutlang_run_dir)
+        #cla_run_dir = self.cutlang_run_dir
+
 
         # run CutLang
         cmd = [self.cutlang_script, cla_input, "DELPHES", "-i", cutlangfile]
-        self.__info("Running CLA")
-        self.exe(cmd, cwd=self.cutlang_run_dir, logfile = logfile)
-        self.__info("CLA finished.")
+        self.__debug("Running CLA")
+        self.exe(cmd, cwd=cla_run_dir, logfile = logfile)
+        self.__debug("CLA finished.")
+
 
         # ====================
         #  Postprocessing
         # ====================
         # efficiency file
-        effi_file = os.path.join(out_dir.get(), self.__get_embaked_name(self.analyses, self.topo))
+        effi_file = os.path.join(self.out_dir.get(), self.__get_embaked_name(self.analyses, self.topo, mass_stripped))
+        self.__info(f"Writing partial efficiencies into file: {effi_file}")
         # CLA results in .root filE
-        CLA_output = self.get_cla_out_filename(cutlangfile)
+        # CLA_output = self.get_cla_out_filename(cla_run_dir,  cutlangfile)
         nevents = []
         entries = ""
-        for filename in os.listdir(self.cutlang_run_dir):
+        for filename in os.listdir(cla_run_dir):
             if filename.startswith("histoOut-BP") and filename.endswith(".root"):
-                filename = os.path.join(self.cutlang_run_dir, filename)
+                filename = os.path.join(cla_run_dir, filename)
                 tmp_entries, tmp_nevents = self.extract_efficiencies(filename, cutlangfile)
                 nevents += tmp_nevents
                 entries += tmp_entries
-                shutil.move(filename, os.path.join(tmp_dir.get(), os.path.basename(filename)))
+                shutil.move(filename, os.path.join(self.tmp_dir.get(), os.path.basename(filename)))
         self.__debug(f"Nevents: {nevents}")
         if len(set(nevents)) > 1:
             self.__error("Number of events before selection is not constant in all regions:")
             self.__error(f"Numbers of events: {nevents}")
             self.__error(f"Using the value: {nevents[0]}")
-        if not os.path.exists ( effi_file ):
-            with open(effi_file, "at") as f:
-                f.write("{ # EM-Baked %s.\n" % time )
         if len(nevents)>0:
             print ( "WRITING %s to %s" % ( str(mass), effi_file ) )
             with open(effi_file, "at") as f:
@@ -384,8 +395,27 @@ class CutLangWrapper:
                 f.write(entries)
                 f.write(f"'__t__':'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}', ")
                 f.write(f"'__nevents__':{nevents[0]}")
-                f.write("},\n")
-                # f.write("}")
+                f.write("}")
+        return 0
+
+    @classmethod
+    def get_effi_name(mass):
+        mass_stripped = str(mass).replace("(","").replace(")","")
+        return os.path.join(self.out_dir.get(), self.__get_embaked_name(self.analyses, self.topo, mass_stripped))
+
+    @staticmethod
+    def join_embaked(out_dir, effi_name):
+        effi_file = os.path.join(out_dir, effi_name)
+        with open(effi_file, "w") as f:
+            self.info(f"Writing joint efficiencies into {effi_file}")
+            f.write("{ # EM-Baked %s.\n" % time )
+            for filename in os.listdir(out_dir):
+                if filename.endswith(".embaked"):
+                    filename = os.path.join(self.out_dir, filename)
+                    with open(filename, "r") as g:
+                        f.write(g.read() + ",\n")
+            f.write("}")
+
 
     def exe(self, cmd, logfile = None, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell
@@ -404,6 +434,7 @@ class CutLangWrapper:
         proc.wait()
         if not logfile == None:
             with open(logfile, "a") as log:
+                log.write( f'exec: {directory} $$ {" ".join(cmd)}' )
                 log.write(out.decode('utf-8'))
                 log.write(err.decode('utf-8'))
         if not (proc.returncode == 0):
@@ -412,6 +443,7 @@ class CutLangWrapper:
                        f"value {proc.returncode}.")
             if exit_on_fail == True:
                 sys.exit()
+        return proc.returncode
         # out = out.strip()
         # if len(out)==0:
         #     pass
@@ -501,9 +533,9 @@ class CutLangWrapper:
         # return bin_names
         return []
 
-    def __get_embaked_name(self, analysis, topo):
-        retval = ".".join([analysis.lower().replace("-","_"), topo, "embaked"])
-        self.__info(f"Embaked file will be saved : {retval}.")
+    def __get_embaked_name(self, analysis, topo, mass):
+        retval = "_".join([analysis.lower().replace("-","_"), topo,"mass", mass])
+        retval = ".".join([retval, "embaked"])
         return retval
 
     def __pick_delphes_card(self):

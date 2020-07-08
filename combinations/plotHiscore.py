@@ -776,7 +776,7 @@ def runPlotting ( args ):
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
         dest = "%s/smodels.github.io/protomodels/" % destdir
-    if upload in [ "interesting", "anomaly", "latest" ]:
+    if upload in [ "interesting", "anomaly", "latest", "latestsignal" ]:
         dest = "%s/smodels.github.io/protomodels/%s/" % ( destdir, upload )
     if "paper" in upload:
         dest = "%s/smodels.github.io/protomodels/%s/" % ( destdir, upload )
@@ -870,10 +870,10 @@ def main ():
             help='horizontal, not vertical ruler plot?',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
-            help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more',
+            help='upload to one of the following destinations: none, gpu, github, anomaly, latest, latestsignal, interesting [none]. run --destinations to learn more',
             type=str, default="" )
     argparser.add_argument ( '-c', '--commit',
-            help='also commit and push to smodels.github.io (works only with -u github, anomaly, latest, or interesting)',
+            help='also commit and push to smodels.github.io (works only with -u github, anomaly, latest, latestsignal, or interesting)',
             action="store_true" )
     argparser.add_argument ( '--rundir',
             help='override the default rundir [None]',
