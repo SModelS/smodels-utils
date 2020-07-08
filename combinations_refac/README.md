@@ -39,16 +39,21 @@
     * Rewrote how signal strength multipliers are merged (replaced computeNewSSMs by mergeSSMs)
     * Added __str__ and __repr__ methods to ProtoModel
     * Manipulator.freezePidsNotInBestCombo always keeps at least 2 particles (LSP + 1)
+    * If no combination was found, the Z and K values are set to None and the step is reverted
 
 ## Refactoring ToDo:
 
-  *Track down rmax rescaling in old version (is rmax being rescaled twice? once at ProtoModel.predict and another at Manipilator.predict->resolveMuhat?)
+  * Guarantee the synch between the SLHA and stored_xsecs are in synch (create before runSModelS)
   * implement unit tests
   * minimize deepcopies 
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)
   * change hiscore pickle file extension (to .hi?)
 
 
+
+## Refactoring Behavior Changes
+  * Set random BRs and ssmmultipliers to 1.0 when unfreezing particle (no previous information is used)
+  * 
 
 ## Profiling:
 

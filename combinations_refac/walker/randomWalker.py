@@ -13,8 +13,6 @@ try:
 except:
     from tools import setPath
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
-from smodels.tools.runtime import nCPUs
-from smodels.tools.physicsUnits import GeV
 from walker.hiscore import Hiscore
 from builder.protomodel import ProtoModel
 from builder.manipulator import Manipulator
@@ -197,22 +195,24 @@ class RandomWalker:
                 self.predictor.predict(protomodelSimp)
 
         #Now keep the model with highest score:
-        if protomodelSimp and (protomodelSimp.Z > self.manipulator.M.Z):
-            print('\t\t Changing model to simp (rmax=)',protomodelSimp.rmax)
-            self.manipulator.M = protomodelSimp
+        if protomodelSimp:
+            if self.manipulator.M.Z is None or (protomodelSimp.Z is not None
+                        and (protomodelSimp.Z > self.manipulator.M.Z)):
+                self.manipulator.M = protomodelSimp
+
+        #If no combination could be found, return
+        if self.manipulator.M.Z is None:
+            return
 
         #the muhat multiplier gets multiplied into the signal strengths
-        print('\t\t Protomodel r-max (before rescaling) = ',self.protomodel.rmax)
-        print('\t\t Protomodel mumax (before rescaling) = ',self.protomodel.mumax)
-        print('\t\t Protomodel muhat (before rescaling) = ',self.protomodel.muhat)
         self.manipulator.rescaleByMuHat()
-        print('\t\t Protomodel r-max (after rescaling) = ',self.protomodel.rmax)
-        print('\t\t Protomodel mumax (after rescaling) = ',self.protomodel.mumax)
-        print('\t\t Protomodel muhat (after rescaling) = ',self.protomodel.muhat)
 
-        #Check if the model is excluded (it shouldn't be after rescaling):
-        #(the 0.99 factor deals with the case rmax = threshold, which ofter happes after rescaling)
-        self.protomodel.excluded = 0.99*self.protomodel.rmax > self.predictor.rthreshold
+        #Sanity check (the model should never be excluded after rescaling):
+        self.protomodel.excluded = self.protomodel.rmax > self.predictor.rthreshold
+        if self.protomodel.excluded:
+            self.highlight ( "info", "rmax=%.2f, excluded = %s (r2=%.2f): should never happen." % \
+                ( self.protomodel.rmax, self.protomodel.excluded, self.protomodel.r2 ) )
+            sys.exit(-2)
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
 
@@ -322,6 +322,7 @@ class RandomWalker:
 
     def walk ( self ):
         """ Now perform the random walk """
+
         self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
         self.manipulator.backupModel()
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
@@ -342,17 +343,9 @@ class RandomWalker:
             #         f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
             #         f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
             #     sys.exit(-1)
-            if self.protomodel.excluded:
-                tp = self.protomodel.tpList[0][2]
-                masses = []
-                try:
-                    masses = [ int(y.asNumber(GeV)) for y in tp.mass[0] ]
-                except:
-                    pass
-                ana="%s(%s,%s,m=%s)" % \
-                     ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True), masses )
-                self.highlight ( "info", "rmax[%s]=%.2f, excluded = %s (r2=%.2f): revert." % \
-                        ( ana, self.protomodel.rmax, self.protomodel.excluded, self.protomodel.r2 ) )
+
+            #If no combination was found, go back
+            if self.protomodel.K is None:
                 self.manipulator.restoreModel()
                 continue
 
@@ -362,7 +355,11 @@ class RandomWalker:
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )
 
-def _run ( walker, catchem ):
+def _run ( walker, catchem, seed=None ):
+
+    #Set random seed
+    if seed is not None:
+        helpers.seedRandomNumbers(seed)
     if not catchem:
         walker.walk()
         return
@@ -378,139 +375,13 @@ def _run ( walker, catchem ):
         import colorama
         print ( "%swalker %d threw: %s%s\n" % ( colorama.Fore.RED, walker.walkerid, e, colorama.Fore.RESET ) )
 
-def startWalkers ( walkers ):
+def startWalkers ( walkers, seed=None ):
     catchem=False
     processes=[]
+
     for walker in walkers:
-        p = multiprocessing.Process ( target=_run, args=( walker, catchem ) )
+        p = multiprocessing.Process ( target=_run, args=( walker, catchem, seed ) )
         p.start()
         processes.append(p)
     for p in processes:
         p.join()
-
-if __name__ == "__main__":
-    print ( "[walk] ramping up" )
-    import argparse
-    argparser = argparse.ArgumentParser(
-            description='model walker. builds BSM models of interest')
-    argparser.add_argument ( '-s', '--strategy',
-            help='combination strategy [aggressive]',
-            type=str, default="aggressive" )
-    argparser.add_argument ( '--seed',
-            help='seed the random number generators [None]',
-            type=int, default=None )
-    argparser.add_argument ( '-S', '--select',
-            help='select only a subset of results (all,ul,em) [all]',
-            type=str, default="all" )
-    argparser.add_argument ( '-d', '--database',
-            help='path to database [<rundir>/database.pcl]',
-            type=str, default="<rundir>/database.pcl" )
-    argparser.add_argument ( '-v', '--verbosity',
-            help='verbosity -- debug,info,warn,error [info]',
-            type=str, default="info" )
-    argparser.add_argument ( '-n', '--nsteps',
-            help='number of steps, negative means infinity [-1]',
-            type=int, default=-1 )
-    argparser.add_argument ( '-p', '--ncpus',
-            help='number of CPUs. -1 means all. [1]',
-            type=int, default=1 )
-    argparser.add_argument ( '-E', '--no_catch',
-            help='do not catch exceptions', action='store_true' )
-    argparser.add_argument ( '-D', '--no_dump_training',
-            help='do not dump data for training', action='store_true' )
-    argparser.add_argument ( '-e', '--expected',
-            help='run only with expected values', action='store_true' )
-    argparser.add_argument ( '-C', '--cheat',
-            help='cheat mode, 0 means, dont cheat. Disregarded, if --cont. [0]',
-            type=int, default=0 )
-    argparser.add_argument ( '-f', '-c', '--cont',
-            help='continue with saved states [""]',
-            type=str, default="" )
-    args = argparser.parse_args()
-    if args.seed != None:
-        helpers.seedRandomNumbers ( args.seed )
-
-    cleanDirectory()
-    select = args.select.lower()
-    catchem = not args.no_catch ## catch exceptions?
-    if "efficien" in select:
-        select = "em"
-    if "upper" in select:
-        select = "ul"
-    if "none" in select:
-        select = "all"
-    if select == "":
-        select = "all"
-    dump_training = not args.no_dump_training
-    ncpus = args.ncpus
-    if ncpus < 0:
-        ncpus = nCPUs() + ncpus + 1
-    walkers = []
-
-    contfile = args.cont
-    if contfile == "default":
-        # contfile = "./states.pcl"
-        contfile = "./states.dict"
-    if contfile!="" and not(os.path.exists ( contfile )):
-        print ( "[walker] ERROR contfile %s supplied but does not exist" % contfile )
-        sys.exit()
-    if contfile!="" and os.stat( contfile ).st_size <= 100:
-        print ( "[walker] ERROR contfile %s supplied but seems empty" % contfile )
-        sys.exit()
-    if contfile!="" and os.path.exists ( contfile ) and \
-                   os.stat( contfile ).st_size > 100:
-        states = []
-        if contfile.endswith ( ".pcl" ):
-            with open( contfile, "rb" ) as f:
-                states = pickle.load ( f )
-        if contfile.endswith ( ".dict" ):
-            with open( contfile, "rt" ) as f:
-                states = eval ( f.read() )
-        ctr=0
-        while len(walkers)<ncpus:
-            for v in states: # .items()):
-                if ctr >= ncpus:
-                    break
-                if v == None:
-                    # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy,
-                                           dump_training = dump_training,
-                                           cheatcode = args.cheat,
-                                           dbpath = args.database,
-                                           expected = args.expected,
-                                           select = select,
-                                           catch_exceptions = catchem )
-                    walker.takeStep()
-                    walkers.append ( walker )
-                    continue
-                if type(v) == dict:
-                    walkers.append ( RandomWalker.fromDictionary ( v, walkerid = ctr+1,
-                                dump_training = dump_training, dbpath = args.database,
-                                expected = args.expected, select = select,
-                                catch_exceptions = catchem,
-                                keep_meta = True ) )
-                else:
-                    v2 = copy.deepcopy ( v )
-                    v2.createNewSLHAFileName()
-                    v2.walkerid = ctr+1
-                    walkers.append ( RandomWalker.fromProtoModel ( v2, walkerid = ctr+1,
-                                dump_training = dump_training, dbpath = args.database,
-                                expected = args.expected, select = select,
-                                catch_exceptions = catchem,
-                                keep_meta = True ) )
-                walkers[-1].setWalkerId ( ctr+1 )
-                walkers[-1].takeStep() # make last step a taken one
-                ctr+=1
-    else:
-        for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr+1, args.nsteps,
-                                    strategy = args.strategy,
-                                    dump_training = dump_training,
-                                    cheatcode = args.cheat,
-                                    dbpath = args.database,
-                                    expected = args.expected,
-                                    select = select,
-                                    catch_exceptions = catchem ) )
-
-    print ( "[walk] starting %d walkers" % len(walkers) )
-    startWalkers ( walkers )

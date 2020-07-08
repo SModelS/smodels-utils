@@ -9,7 +9,7 @@
 """
 
 from tools import helpers
-import copy, random, numpy, time, math, os, sys, itertools
+import copy, random, numpy, time, os, sys, itertools
 from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.crossSection import LO
 
@@ -1151,8 +1151,6 @@ class Manipulator:
         if not hasattr ( self, "_backup" ):
             raise Exception ( "no backup available" )
         for k,v in self._backup.items():
-            if k == 'rmax':
-                print('\t\t\t (restoreModel) setting rmax to',v)
             setattr ( self.M, k, v )
 
     def delBackup ( self ):

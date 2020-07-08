@@ -197,28 +197,6 @@ class Combiner:
                       ( len(combinations), len(ret) ) )
         return ret
 
-    def findBestCombo ( self, combinations ):
-        """ find the best combo, by computing CLsb values """
-        combinations = self.sortOutSubsets ( combinations )
-        # combinations.sort ( key=len, reverse=True ) ## sort them first be length
-        # compute CLsb for all combinations
-        lowestv,lowest=float("inf"),""
-        # alreadyDone = [] ## list of combos that have already been looked at.
-        ## we will not look at combos that are subsets.
-        for c in combinations:
-            #if self.isSubsetOf ( c, alreadyDone ):
-                # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
-            #    continue
-            cl_mu = self.get95CL ( c, expected=True )
-            if cl_mu == None:
-                continue
-            # self.pprint ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
-            if cl_mu < lowestv:
-                lowestv = cl_mu
-                lowest = c
-            #alreadyDone.append ( c )
-        return lowest,lowestv
-
     def getLetters( self, predictions ):
         letters={}
         if predictions is None:
@@ -278,7 +256,7 @@ class Combiner:
         combinations = self.sortOutSubsets ( combinations )
         # combinations.sort ( key=len, reverse=True ) ## sort them first by length
         # compute CLsb for all combinations
-        highestZ,highest,muhat=0.,"",1.
+        highestZ,highest,muhat=None,"",mumax
         ## we will not look at combos that are subsets.
         doProgress=True
         try:
@@ -302,7 +280,7 @@ class Combiner:
             if Z == None:
                 continue
             # self.pprint ( "[combine] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
-            if Z > highestZ:
+            if highestZ is None or Z > highestZ:
                 highestZ = Z
                 highest = c
                 muhat = muhat_

@@ -193,7 +193,7 @@ class ProtoModel:
                 continue
             openChannels.add ( dpid )
 
-        openChannels = sorted(list(openChannels))
+        openChannels = list(openChannels)
 
         return openChannels
 

@@ -17,10 +17,6 @@ def main( nmin, nmax, cont,
     :param seed: random seed number (optional)
     """
 
-    if seed is not None:
-        from tools import helpers
-        helpers.seedRandomNumbers( seed )
-
     if rundir != None and "<rundir>" in dbpath:
         dbpath=dbpath.replace("<rundir>","%s/" % rundir )
     pfile, states = None, None
@@ -72,4 +68,4 @@ def main( nmin, nmax, cont,
                     walkerid = i, nsteps = maxsteps, dump_training=dump_training, expected = False,
                     dbpath = dbpath, rundir = rundir, nevents = nevents )
             walkers.append ( w )
-    startWalkers ( walkers )
+    startWalkers ( walkers, seed=seed )

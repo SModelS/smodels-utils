@@ -136,7 +136,12 @@ class Predictor:
                                                llhdonly=True )
         # Compute significance and store in the model:
         self.computeSignificance( protomodel, predictions, strategy )
-        self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( protomodel.Z, protomodel.muhat ) )
+        if protomodel.Z is None:
+            self.log ( "done with prediction. Could not find combinations (Z=%s)" % ( protomodel.Z) )
+            return False
+        else:
+            self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( protomodel.Z, protomodel.muhat ) )
+
         protomodel.cleanBestCombo()
 
         #Recompute predictions with higher accuracy for high score models:
@@ -216,10 +221,9 @@ class Predictor:
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
         self.log ( "received r values %s" % srs )
         protomodel.rvalues = rvalues[:]
-        print('\t\t predictor:setting rmax to',rvalues[0])
         protomodel.rmax = rvalues[0]
         protomodel.r2 = rvalues[1]
-        protomodel.excluded = 0.99*protomodel.rmax > self.rthreshold #The 0.99 deals with the case rmax = threshold
+        protomodel.excluded = protomodel.rmax > self.rthreshold #The 0.99 deals with the case rmax = threshold
         protomodel.tpList = tpList[:]
 
     def getMaxAllowedMu(self, protomodel):
@@ -229,8 +233,8 @@ class Predictor:
 
         mumax = float("inf")
         if protomodel.rmax > 0.:
-            mumax = self.rthreshold / protomodel.rmax
-            print('\t\t\t rmax = ',protomodel.rmax,'threshold = ',self.rthreshold,'mumax = ',mumax)
+            #Set mumax slightly below threshold, so the model is never excluded
+            mumax = 0.999*self.rthreshold / protomodel.rmax
 
         return mumax
 
@@ -239,6 +243,7 @@ class Predictor:
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
+        #(set mumax just slightly below its value, so muhat is always below)
         mumax = protomodel.mumax
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy,
                                                 expected=False, mumax = mumax )
@@ -248,7 +253,10 @@ class Predictor:
         else:
             protomodel.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         protomodel.Z = Z
-        protomodel.K = combiner.computeK ( Z, prior )
+        if Z is not None: # Z is None when no combination was found
+            protomodel.K = combiner.computeK ( Z, prior )
+        else:
+            protomodel.K = None
         protomodel.llhd = llhd
         protomodel.muhat = muhat
         protomodel.letters = combiner.getLetterCode(protomodel.bestCombo)
