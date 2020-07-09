@@ -8,7 +8,6 @@ from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV, fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 sys.path.insert(0,"../" )
-import smodels_utils.helper.sparticleNames
 import smodels_utils.SModelSUtils
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
