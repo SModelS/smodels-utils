@@ -3,7 +3,7 @@
 """ plots a time series of (for now) the masses, as a function of MCMC step """
 
 from matplotlib import pyplot as plt
-import helpers
+import helpers, os
 
 class TimeSeries:
 
@@ -44,15 +44,8 @@ class TimeSeries:
                     mass = model["masses"][pid]
                 M[pid].append ( mass )
         xticks = list(range(1,1+len(M[pids[0]] ) ))
-        """
-        if len(xticks)>20:
-            for i in range(len(xticks)):
-                print ( "xt", xticks[i] )
-                if xticks[i] %2 != 0:
-                    xticks[i]=0
-        """
         for pid in pids:
-            label = helpers.toLatex(pid, addDollars=True )+" ["+str(pid)+"]"
+            label = helpers.toLatex(pid, addDollars=True ) # +" ["+str(pid)+"]"
             # print ( "M", pid, M[pid] )
             plt.plot ( xticks, M[pid], label=label )
         plt.xticks ( xticks )
@@ -66,8 +59,9 @@ def create( dictfile, filepath ):
     """ create history dict file from files in filepath """
     import glob
     if filepath.endswith ( "/" ) or os.path.isdir ( filepath ):
-        filepath += "/pmodel*.py"
+        filepath += "/pmodel-*.py"
     files = glob.glob ( filepath )
+    files.sort()
     with open ( dictfile, "wt" ) as g:
         g.write ( "[" )
         for f in files:
