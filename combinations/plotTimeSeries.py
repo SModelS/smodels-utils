@@ -3,7 +3,7 @@
 """ plots a time series of (for now) the masses, as a function of MCMC step """
 
 from matplotlib import pyplot as plt
-import helpers, os
+import helpers, os, time
 
 class TimeSeries:
 
@@ -37,22 +37,34 @@ class TimeSeries:
         M = {}
         for pid in pids:
             M[pid]=[]
-        for model in self.models:
+        xticks = []
+        for i,model in enumerate(self.models):
             for pid in pids:
                 mass = float("nan")
                 if pid in model["masses"]:
                     mass = model["masses"][pid]
                 M[pid].append ( mass )
+            if i % 2 == 0:
+                xticks.append ( str(model["step"]) )
+                # xticks.append ( str(i) )
+            else:
+                xticks.append ( "" )
+        """
         xticks = list(range(1,1+len(M[pids[0]] ) ))
+        """
+        fig, ax = plt.subplots()
         for pid in pids:
             label = helpers.toLatex(pid, addDollars=True ) # +" ["+str(pid)+"]"
             # print ( "M", pid, M[pid] )
-            plt.plot ( xticks, M[pid], label=label )
-        plt.xticks ( xticks )
+            plt.plot ( M[pid], label=label )
+        ax.set_xticklabels ( xticks )
         plt.legend()
         plt.title("Evolution of masses over the MCMC walk" )
         plt.xlabel( "MCMC step" )
         plt.ylabel( "m [GeV]" )
+        timestamp = time.asctime()
+        plt.text( .75, -.1, timestamp, c="gray", transform=ax.transAxes )
+        # plt.text( max(x)-.37*dx,min(y)-.11*dy,self.timestamp, c="gray" )
         plt.savefig ( "masses.png" )
 
 def create( dictfile, filepath ):
