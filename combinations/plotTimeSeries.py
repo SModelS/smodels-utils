@@ -8,24 +8,32 @@ import helpers
 class TimeSeries:
 
     def fetchModels( self ):
-        with open("states.dict","rt") as f:
+        with open( self.dictfile,"rt") as f:
             models=eval(f.read())
             self.models = models
             return models
 
-    def __init__ ( self ):
+    def __init__ ( self, dictfile ):
+        self.dictfile = dictfile
         self.fetchModels()
 
     def getPids ( self ):
-        # return [ 1000006, 1000022 ]
         ret = set()
+        lastModel = set()
         for model in self.models:
-            for pid in model["masses"]:
-                ret.add ( pid )
+            thisModel = set()
+            for pid,mass in model["masses"].items():
+                if mass < 1e5:
+                    thisModel.add ( pid )
+            for pid in thisModel:
+                if pid in lastModel:
+                    ret.add ( pid )
+            lastModel = thisModel
         return list(ret)
         
     def plot ( self ):
         pids = self.getPids()
+        print ( "[plotTimeSeries] masses %s" % pids )
         M = {}
         for pid in pids:
             M[pid]=[]
@@ -35,9 +43,18 @@ class TimeSeries:
                 if pid in model["masses"]:
                     mass = model["masses"][pid]
                 M[pid].append ( mass )
-        xticks = range(len(M[pids[0]] ) )
+        xticks = list(range(1,1+len(M[pids[0]] ) ))
+        """
+        if len(xticks)>20:
+            for i in range(len(xticks)):
+                print ( "xt", xticks[i] )
+                if xticks[i] %2 != 0:
+                    xticks[i]=0
+        """
         for pid in pids:
-            plt.plot ( xticks, M[pid], label=helpers.toLatex(pid, addDollars=True ) )
+            label = helpers.toLatex(pid, addDollars=True )+" ["+str(pid)+"]"
+            # print ( "M", pid, M[pid] )
+            plt.plot ( xticks, M[pid], label=label )
         plt.xticks ( xticks )
         plt.legend()
         plt.title("Evolution of masses over the MCMC walk" )
@@ -45,8 +62,39 @@ class TimeSeries:
         plt.ylabel( "m [GeV]" )
         plt.savefig ( "masses.png" )
 
+def create( dictfile, filepath ):
+    """ create history dict file from files in filepath """
+    import glob
+    if filepath.endswith ( "/" ) or os.path.isdir ( filepath ):
+        filepath += "/pmodel*.py"
+    files = glob.glob ( filepath )
+    with open ( dictfile, "wt" ) as g:
+        g.write ( "[" )
+        for f in files:
+            if not "pmodel" in f:
+                continue
+            if not f.endswith (".py"):
+                continue
+            with open ( f, "rt" ) as fh:
+                D = eval ( fh.read() )
+                g.write ( str(D) + ",\n" )
+        g.write ( "]\n" )
+        g.close()
+
 def main():
-    plotter = TimeSeries()
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='history time series plotter')
+    argparser.add_argument ( '-f', '--dictfile',
+            help='history file to plot [history.dict]',
+            type=str, default="history.dict"  )
+    argparser.add_argument ( '-c', '--create',
+            help='create history from pmodels (give unix filepath)',
+            type=str, default=None  )
+    args = argparser.parse_args()
+    if args.create != None:
+        create ( args.dictfile, args.create )
+    plotter = TimeSeries( args.dictfile )
     plotter.plot()
 
 if __name__ == "__main__":
