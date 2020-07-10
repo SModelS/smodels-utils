@@ -707,7 +707,7 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
     protomodel = obtain ( number, picklefile )
     if hasattr ( protomodel, "currentSLHA" ):
         del protomodel.currentSLHA
-    # protoslha = protomodel.createSLHAFile ( nevents=100000 )
+    
     protoslha = protomodel.createSLHAFile ()
     # print ( "wrote", protoslha )
     subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )

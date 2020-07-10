@@ -2,7 +2,7 @@
 
 """ a first start at the random walk idea """
 
-import random, copy, pickle, sys, os, time, math, socket
+import random, pickle, sys, time, math, socket
 if sys.version_info[0]==2:
     import commands as subprocess # python2.7
 else:
@@ -165,9 +165,6 @@ class RandomWalker:
         self.protomodel.cleanBestCombo()
         #Add one step
         self.protomodel.step+=1
-        nUnfrozen = len( self.protomodel.unFrozenParticles() )
-        nTotal = len ( self.protomodel.masses.keys() )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.protomodel.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.protomodel.unFrozenParticles() ) ) ) )
         printMemUsage = False
         if printMemUsage:
             self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d" %\
@@ -176,10 +173,15 @@ class RandomWalker:
         #Take a step in the model space:
         self.manipulator.randomlyChangeModel()
 
+        nUnfrozen = len( self.protomodel.unFrozenParticles() )
+        nTotal = len ( self.protomodel.particles )
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.protomodel.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.protomodel.unFrozenParticles() ) ) ) )
+
         #Try to create a simpler model
         #(merge pre-defined particles of their mass difference is below dm)
         protomodelSimp = self.manipulator.simplifyModel(dm=200.0)
 
+        self.predictor.predict(self.manipulator.M)
         if self.catch_exceptions:
             try:
                 self.predictor.predict(self.manipulator.M)
@@ -320,29 +322,31 @@ class RandomWalker:
         with open( "%s/walker%d.log" % ( self.rundir, self.walkerid ), "a" ) as f:
             f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def walk ( self ):
+    def walk ( self, catchem=False ):
         """ Now perform the random walk """
 
         self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
         self.manipulator.backupModel()
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
 
-            self.onestep()
-            # try:
-            #     self.onestep()
-            # except Exception as e:
-            #     # https://bioinfoexpert.com/2016/01/18/tracing-exceptions-in-multiprocessing-in-python/
-            #     self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
-            #     import traceback
-            #     traceback.print_stack( limit=None )
-            #     except_type, except_class, tb = sys.exc_info()
-            #     extracted = traceback.extract_tb(tb)
-            #     for point in extracted:
-            #         self.pprint ( "extracted: %s" % point )
-            #     with open("%s/exceptions.log" % self.rundir,"a") as f:
-            #         f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
-            #         f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
-            #     sys.exit(-1)
+            if not catchem:
+                self.onestep()
+            else:
+                try:
+                    self.onestep()
+                except Exception as e:
+                    # https://bioinfoexpert.com/2016/01/18/tracing-exceptions-in-multiprocessing-in-python/
+                    self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
+                    import traceback
+                    traceback.print_stack( limit=None )
+                    except_type, except_class, tb = sys.exc_info()
+                    extracted = traceback.extract_tb(tb)
+                    for point in extracted:
+                        self.pprint ( "extracted: %s" % point )
+                    with open("%s/exceptions.log" % self.rundir,"a") as f:
+                        f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
+                        f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
+                    sys.exit(-1)
 
             #If no combination was found, go back
             if self.protomodel.K is None:
@@ -364,7 +368,7 @@ def _run ( walker, catchem, seed=None ):
         walker.walk()
         return
     try:
-        walker.walk()
+        walker.walk(catchem)
     except Exception as e:
         import time
         with open("exceptions.log","a") as f:
@@ -375,10 +379,9 @@ def _run ( walker, catchem, seed=None ):
         import colorama
         print ( "%swalker %d threw: %s%s\n" % ( colorama.Fore.RED, walker.walkerid, e, colorama.Fore.RESET ) )
 
-def startWalkers ( walkers, seed=None ):
-    catchem=False
-    processes=[]
+def startWalkers ( walkers, seed=None,  catchem=False):
 
+    processes=[]
     for walker in walkers:
         p = multiprocessing.Process ( target=_run, args=( walker, catchem, seed ) )
         p.start()

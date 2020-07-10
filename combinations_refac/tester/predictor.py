@@ -121,8 +121,11 @@ class Predictor:
         :returns: True
         """
 
+        #Create SLHA file (for running SModelS)
+        slhafile = protomodel.createSLHAFile()
+
         #First run SModelS using all results and considering only the best signal region.
-        bestpreds = self.runSModelS( protomodel.currentSLHA, sigmacut,  allpreds=False,
+        bestpreds = self.runSModelS( slhafile, sigmacut,  allpreds=False,
                                            llhdonly=False )
         #Extract  the relevant prediction information and store in the protomodel:
         self.updateModelPredictions(protomodel,bestpreds)
@@ -132,7 +135,7 @@ class Predictor:
         protomodel.mumax = self.getMaxAllowedMu(protomodel)
 
         # now use all prediction with likelihood values to compute the Z of the model
-        predictions = self.runSModelS( protomodel.currentSLHA, sigmacut, allpreds=True,
+        predictions = self.runSModelS( slhafile, sigmacut, allpreds=True,
                                                llhdonly=True )
         # Compute significance and store in the model:
         self.computeSignificance( protomodel, predictions, strategy )
@@ -147,7 +150,7 @@ class Predictor:
         #Recompute predictions with higher accuracy for high score models:
         if protomodel.Z > 2.7 and protomodel.nevents < 55000:
             protomodel.nevents = 100000
-            protomodel.createSLHAFile()
+            protomodel.computeXSecs()
             self.predict(protomodel,sigmacut=sigmacut, strategy= strategy)
 
         return True

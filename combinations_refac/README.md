@@ -29,7 +29,7 @@
     * Added getXsecs(), _stored_xsecs, _xsecMasses and _xsecSSMs to ProtoModel. Now all access to the cross-sections should be through ProtoModel.getXsecs()
     * ProtoModel.computeXSecs now automatically stores the xsecs, masses and SSMs used in the ProtoModel attributes.
     * Now RandomWalker keeps track of current (old) K and Z values (instead of ProtoModel)
-    * Rewrote how branching ratios are modified. 
+    * Rewrote how branching ratios are modified.
       * Added ProtoModel.getOpenChannels to find which decay channels are (kinematically) allowed (uses ProtoModel.possibledecays)
       * All decays are created from ProtoModel.possibledecays, so ProtoModel.decays does not have to contain closed decay channels or channels with zero BR
       * Added Manipulator.setRandomBranchings (to assign random BRs when unfreezing particles)
@@ -40,12 +40,15 @@
     * Added __str__ and __repr__ methods to ProtoModel
     * Manipulator.freezePidsNotInBestCombo always keeps at least 2 particles (LSP + 1)
     * If no combination was found, the Z and K values are set to None and the step is reverted
+    * Moved cross-section calculation methods to ProtoModel (now the cross-sections calculation and SLHA creation are independent steps)
+    * Removed protoxsecs.py
+    * Only information about unfrozen particles is kept in Protomodel.decays, Protomodel.masses and Protomodel.ssmultipliers (so total number of particles is given by ProtoModel.particles)
+    * Frozen particles are no longer assigned decoupled masses (except when writing to the SLHA file)
 
 ## Refactoring ToDo:
 
-  * Guarantee the synch between the SLHA and stored_xsecs are in synch (create before runSModelS)
   * implement unit tests
-  * minimize deepcopies 
+  * minimize deepcopies
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)
   * change hiscore pickle file extension (to .hi?)
 
@@ -53,7 +56,7 @@
 
 ## Refactoring Behavior Changes
   * Set random BRs and ssmmultipliers to 1.0 when unfreezing particle (no previous information is used)
-  * 
+  * Cross-sections are no longer kept in the SLHA file.
 
 ## Profiling:
 

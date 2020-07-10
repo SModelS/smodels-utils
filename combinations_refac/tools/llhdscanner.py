@@ -35,8 +35,7 @@ class LlhdThread:
 
     def getPredictions ( self, recycle_xsecs = True ):
         """ get predictions, return likelihoods """
-        self.M.createSLHAFile( nevents = self.nevents,
-                recycle_xsecs = recycle_xsecs )
+        self.M.createSLHAFile( )
         sigmacut=.02*fb
         if max(self.M.masses)>1600:
             sigmacut=.01*fb

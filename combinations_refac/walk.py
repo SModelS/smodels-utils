@@ -27,13 +27,13 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s','--seed',
             help='seed the random number generators [None]',
             type=int, default=None )
+    argparser.add_argument ( '-E', '--no_catch',
+            help='if set, do not catch exceptions', action='store_true' )
 
     args=argparser.parse_args()
 
-    if args.seed is not None:
-        from tools import helpers
-        helpers.seedRandomNumbers( args.seed )
-
+    catchem = not args.no_catch
 
     main( args.nmin, args.nmax, args.cont, cheatcode = args.cheat,
-            rundir = args.rundir, maxsteps = args.maxsteps, nevents = args.nevents, seed = args.seed )
+            rundir = args.rundir, maxsteps = args.maxsteps, nevents = args.nevents,
+            seed = args.seed, catchem = catchem )

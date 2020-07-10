@@ -166,7 +166,6 @@ class Hiscore:
 
             #Remove particle and recompute SLHA file:
             manipulator.freezeParticle(pid)
-            protomodel.createSLHAFile()
             self.predictor.predict( protomodel )
             percK = 0.
             if oldK > 0.:

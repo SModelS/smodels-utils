@@ -507,7 +507,10 @@ class Combiner:
         bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected,
                                                  mumax = mumax )
         ## compute a likelihood equivalent for Z
-        llhd = stats.norm.pdf(Z)
+        if Z is not None:
+            llhd = stats.norm.pdf(Z)
+        else:
+            llhd = None
         # self.pprint ( "bestCombo %s, %s, %s " % ( Z, llhd, muhat ) )
         return bestCombo,Z,llhd,muhat
 

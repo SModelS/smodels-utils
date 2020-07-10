@@ -218,25 +218,29 @@ class Manipulator:
             print ( " `- %s:%s:%s %s" % \
               ( i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs))))
 
-    def removeAllOffshell ( self, rescaleSSMs=False ):
+    def removeAllOffshell ( self, rescaleSSMs=False, protomodel = None ):
         """ remove all offshell decays and decays of frozen particles. Renormalize all branchings """
 
-        for pid in self.M.frozenParticles():
-            if pid in self.M.decays:
-                self.M.decays.pop(pid)
+        if protomodel is None:
+            protomodel = self.M
+
+        for pid in protomodel.frozenParticles():
+            if pid in protomodel.decays:
+                protomodel.decays.pop(pid)
 
         #Loop over all decays:
-        for pid in self.M.decays:
+        for pid in protomodel.decays:
             #Get allowed decay channels:
-            openChannels = self.M.getOpenChannels(pid)
+            openChannels = protomodel.getOpenChannels(pid)
             #Check if any of the existing decays are forbidden:
-            delDecays = [dpid for dpid in self.M.decays[pid]
+            delDecays = [dpid for dpid in protomodel.decays[pid]
                             if not  dpid in openChannels]
             for dpid in delDecays:
-                self.M.decays[pid].pop(dpid)
+                protomodel.decays[pid].pop(dpid)
 
             #Make sure to normalize the branchings
-            self.normalizeBranchings(pid, rescaleSSMs=rescaleSSMs)
+            self.normalizeBranchings(pid, rescaleSSMs=rescaleSSMs,
+                                        protomodel=protomodel)
 
     def setRandomBranchings ( self, pid, protomodel=None):
         """Assign random BRs to particle.
@@ -312,6 +316,30 @@ class Manipulator:
                 continue
             protomodel.ssmultipliers[pidpair]=newssm
 
+    def setSSMFor(self, pid):
+
+        unfrozen = self.M.unFrozenParticles()
+        #Set SSM multipliers to 1 (for pair production of particle/anti-particle):
+        pBlist = [pid]
+        if self.M.hasAntiParticle(pid):
+            pBlist.append(-pid)
+        for pidpair in itertools.product(pBlist,pBlist):
+            ppair = tuple(sorted(pidpair))
+            if not ppair in self.M.ssmultipliers:
+                self.M.ssmultipliers[ppair] = 1.0
+
+        #Set SSM multipliers to 1 for all associated productions with pid
+        for pA in unfrozen:
+            if abs(pA) == abs(pid):
+                continue
+            pAlist = [pA]
+            if self.M.hasAntiParticle(pA):
+                pAlist.append(-pA)
+            for pidpair in itertools.product(pAlist,pBlist):
+                ppair = tuple(sorted(pidpair))
+                if not ppair in self.M.ssmultipliers:
+                    self.M.ssmultipliers[ppair] = 1.0
+
     def rescaleByMuHat ( self ):
         """ multiply the signal strength multipliers with muhat"""
         if not hasattr ( self.M, "muhat" ):
@@ -352,8 +380,8 @@ class Manipulator:
         else: #Change masses with 5% probability
             nChanges+=self.randomlyChangeMasses(prob = probMass, dx = dx)
 
-        #Update the SLHA file
-        self.M.createSLHAFile()
+        #Update cross-sections (if needed)
+        self.M.getXsecs()
 
     def randomlyUnfreezeParticle ( self, sigma=0.5, force = False ):
         """ Unfreezes a (random) frozen particle according to gaussian distribution with width sigma.
@@ -366,7 +394,7 @@ class Manipulator:
         #(always unfreeze if the model only has one particle)
         nUnfrozen = len( self.M.unFrozenParticles() )
         if (not force) and nUnfrozen > 1:
-            nTotal = len ( self.M.masses.keys() )
+            nTotal = len ( self.M.particles )
             denom = self.M.Z+1.
             if denom < 1.:
                 denom = 1.
@@ -405,6 +433,9 @@ class Manipulator:
 
         #Set random branchings
         self.setRandomBranchings(pid)
+
+        #Add pid pair production and associated production to self.M.ssmmultipliers:
+        self.setSSMFor(pid)
 
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
         return 1
@@ -519,7 +550,8 @@ class Manipulator:
         if newSSM < 0.:
             newSSM = 0.
         self.changeSSM(pair,newSSM)
-        self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
+        self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]),
+                        helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
     def randomlyChangeSSOfOneParticle ( self, pid = None ):
@@ -527,6 +559,7 @@ class Manipulator:
         :param pid: change for this pid. If None, change of a random pid.
         """
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
+
         if len(unfrozenparticles)<2:
             self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
@@ -542,7 +575,7 @@ class Manipulator:
             randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
             self.M.ssmultipliers[randomProd]=1.
             return 1
-        if .1 < a < .2: ## sometimes, just try to set to ssm of differnt particle
+        if .1 < a < .2: ## sometimes, just try to set to ssm of different particle
             randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
             v = random.choice ( list ( self.M.ssmultipliers.values() ) )
             self.M.ssmultipliers[randomProd]=v
@@ -597,7 +630,7 @@ class Manipulator:
         if nUnfrozen <= 2:
             return 0
 
-        nTotal = len ( self.M.masses.keys() )
+        nTotal = len ( self.M.particles )
         denom = self.M.Z+1.
         if denom < 1.:
             denom = 1.
@@ -622,23 +655,26 @@ class Manipulator:
         self.freezeParticle ( pid )
         return 1
 
-    def freezeMostMassiveParticle ( self ):
+    def freezeMostMassiveParticle ( self, protomodel=None ):
         """ freezes the most massive unfrozen particle """
 
-        unfrozen = self.M.unFrozenParticles( withLSP=False )
+        if protomodel is None:
+            protomodel = self.M
+
+        unfrozen = protomodel.unFrozenParticles( withLSP=False )
         if len(unfrozen)<2:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         pid,minmass=0,0
         for i in unfrozen:
-            if self.M.masses[i]>minmass:
-                minmass = self.M.masses[i]
+            if protomodel.masses[i]>minmass:
+                minmass = protomodel.masses[i]
                 pid = i
         # p = random.choice ( unfrozen )
-        self.M.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
-        self.freezeParticle ( pid )
+        protomodel.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        self.freezeParticle ( pid, protomodel = protomodel )
         return 1
 
-    def freezeParticle ( self, pid, force = False ):
+    def freezeParticle ( self, pid, force = False, protomodel = None ):
         """ freeze particle pid, take care of offshell removal, and
             branching normalization
 
@@ -648,9 +684,12 @@ class Manipulator:
                       and the model contain at least 3 particles.
         """
 
+        if protomodel is None:
+            protomodel = self.M
+
         #Check for canonical ordering.
+        unfrozen = protomodel.unFrozenParticles( withLSP=False )
         if not force:
-            unfrozen = self.M.unFrozenParticles( withLSP=False )
             if len(unfrozen) < 2:
                 return
             #If pid matches the lighter state and the heavier state is unfrozen,
@@ -658,10 +697,17 @@ class Manipulator:
             for pids in self.canonicalOrder:
                 if pid == pids[0] and pids[1] in unfrozen:
                     return
+        #Remove pid from masses, decays and signal multipliers:
+        if  pid in protomodel.masses:
+            protomodel.masses.pop(pid)
+        if  pid in protomodel.decays:
+            protomodel.decays.pop(pid)
+        removeSSM = [pids for pids in protomodel.ssmultipliers if (pid in pids or -pid in pids)]
+        for pids in removeSSM:
+            protomodel.ssmultipliers.pop(pids)
 
-        self.M.masses[pid]=1e6
         #Fix branching ratios and rescale signal strenghts, so other channels are not affected
-        self.removeAllOffshell(rescaleSSMs=True)
+        self.removeAllOffshell(rescaleSSMs=True, protomodel=protomodel)
 
     def randomlyChangeMasses ( self, prob = 0.05, dx = 200.0 ):
         """ take a random step in mass space for a single unfrozen particle
@@ -750,8 +796,8 @@ class Manipulator:
             nMerges += merged #Count number of mergers
 
         if nMerges > 0:
-            #Re-compute cross-sections (if needed) and update SLHA file
-            newModel.createSLHAFile()
+            #Update cross-sections (if needed)
+            newModel.getXsecs()
             return newModel
         else:
             return None
@@ -823,11 +869,10 @@ class Manipulator:
         avgM = self.computeAvgMass ( pair )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         protomodel.masses[ p1 ] = avgM ## set this one to the avg mass
-        protomodel.masses[ p2 ] = 1e6 ## freeze that one!
 
-        #Remove p2 from (active) decays:
-        p2decays = protomodel.decays.pop(p2)
 
+        #Get p2 decays:
+        p2decays = protomodel.decays[p2]
         #Get allowed decay channels for p1:
         openChannels = self.M.getOpenChannels(p1)
         ## add the decays from pid2 to pid1 if decay is allowed:
@@ -878,6 +923,9 @@ class Manipulator:
 
         ## merge the signal strength multipliers:
         self.mergeSSMs( pair, oldXsecs = oldxsecs, protomodel=protomodel )
+
+        ## finally freeze p2:
+        self.freezeParticle(p2,protomodel=protomodel)
 
         return protomodel
 

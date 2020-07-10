@@ -2,8 +2,9 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, time, colorama, subprocess, copy
-from builder.protoxsecs import ProtoModelXSecs
+import random, tempfile, os, time, colorama, copy
+from smodels.tools.xsecComputer import XSecComputer, NLL
+from smodels.tools.physicsUnits import TeV
 from tester.combiner import Combiner
 from tools import helpers
 
@@ -56,13 +57,6 @@ class ProtoModel:
                 self.templateSLHA = "templates/template2g.slha"
             # self.templateSLHA = "templates/template_many.slha"
         self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
-        self.possibledecays = {} ## list all possible decay channels
-        self.decays = {} ## the actual branchings
-        self.masses = {}
-        self._stored_xsecs = () #Store cross-sections. It should only be accesses through getXsecs()!
-        self._xsecMasses = {} #Store the masses used for computing the cross-sections
-        self._xsecSSMs = {} #Store the signal strenght multiplier used for computing the cross-sections
-        self.ssmultipliers = {} ## signal strength multipliers
         self.rvalues = [] ## store the r values of the exclusion attempt
         self.tpList = [] ## store information about the theory predictions
         self.llhd=0.
@@ -73,45 +67,58 @@ class ProtoModel:
         self.letters = ""
         self.description = ""
         self.bestCombo = None
+        self.computer = XSecComputer ( NLL, self.nevents, 8 )
 
-        with open ( self.templateSLHA ) as slhaf:
-            tmp = slhaf.readlines()
-            slhalines = []
-            for line in tmp:
-                p = line.find("#" )
-                if p > -1:
-                    line = line[:p]
-                if "D" in line and not "DECAY" in line:
-                    slhaline = line.strip().split(" ")[0]
-                    # print ( "slhaline", slhaline )
-                    slhalines.append ( slhaline )
+        self.initializeModel()
 
-        self.initializeSSMs( overwrite = True )
-        for p in self.particles:
-            self.masses[p]=1e6
-            decays = []
-            self.decays[p]={}
-            for line in slhalines:
-                if "D%s" % p in line:
-                    p1 = line.find("_")+1
-                    dpid = int ( line[p1:] )
-                    dpid2 = None
-                    if line.count("_")==2:
-                        p2 = line.rfind("_")
-                        dpid = int ( line[p1:p2] )
-                        dpid2 = int(line[p2+1:])
-                    dpd = dpid
-                    if dpid2 != None:
-                        dpd = (dpid,dpid2)
-                    decays.append ( dpd )
-                    self.decays[p][dpd]=0.
-                    # print ( "p", p, "dpid", dpid, "dpid2", dpid2, "line", line )
-                    if dpid == ProtoModel.LSP and sum(self.decays[p].values())<.5:
-                        self.decays[p][dpd]=1.
-            self.possibledecays[p]=decays
+    def initializeModel(self):
+            """Use the template SLHA file to store possible decays and initialize the LSP"""
 
-        ## the LSP we need from the beginning
-        self.masses[ProtoModel.LSP]=random.uniform(200,500)
+            #Make sure the masses, decays and multipliers are empty
+            self.decays = {} ## the actual branchings
+            self.masses = {}
+            self.possibledecays = {} ## list all possible decay channels
+            self._stored_xsecs = () #Store cross-sections. It should only be accesses through getXsecs()!
+            self._xsecMasses = {} #Store the masses used for computing the cross-sections
+            self._xsecSSMs = {} #Store the signal strenght multiplier used for computing the cross-sections
+            self.ssmultipliers = {} ## signal strength multipliers
+            ## Inititiaze LSP
+            self.masses[ProtoModel.LSP]=random.uniform(200,500)
+            self.decays[ProtoModel.LSP]= {}
+            pids = [(self.LSP,self.LSP)]
+            if self.hasAntiParticle(self.LSP):
+                pids += [(self.LSP,-self.LSP),(-self.LSP,-self.LSP)]
+            for pidpair in pids:
+                self.ssmultipliers[tuple(sorted(pidpair))]= 1.0
+
+            with open ( self.templateSLHA ) as slhaf:
+                tmp = slhaf.readlines()
+                slhalines = []
+                for line in tmp:
+                    p = line.find("#" )
+                    if p > -1:
+                        line = line[:p]
+                    if "D" in line and not "DECAY" in line:
+                        slhaline = line.strip().split(" ")[0]
+                        # print ( "slhaline", slhaline )
+                        slhalines.append ( slhaline )
+
+            for p in self.particles:
+                decays = []
+                for line in slhalines:
+                    if "D%s" % p in line:
+                        p1 = line.find("_")+1
+                        dpid = int ( line[p1:] )
+                        dpid2 = None
+                        if line.count("_")==2:
+                            p2 = line.rfind("_")
+                            dpid = int ( line[p1:p2] )
+                            dpid2 = int(line[p2+1:])
+                        dpd = dpid
+                        if dpid2 != None:
+                            dpd = (dpid,dpid2)
+                        decays.append ( dpd )
+                self.possibledecays[p]=decays
 
     def __str__(self):
         """ return basic information on model
@@ -197,31 +204,6 @@ class ProtoModel:
 
         return openChannels
 
-    def setSSM ( self, pids, value=1., overwrite=True ):
-        """ set the signal strength multiplier of pids to value.
-            if overwrite = false, then do this onle if ssm is not defined """
-        if overwrite:
-            self.ssmultipliers [ pids ] = value
-            return
-        if not pids in self.ssmultipliers:
-            self.ssmultipliers[pids] = value
-
-    def initializeSSMs ( self, overwrite ):
-        """ initialize signal strength multipliers, set them all to unity
-        :param overwrite: if true, always set to one. if false, then initialize
-                          only if not yet defined.
-        """
-        for p in self.particles:
-            for q in self.particles:
-                self.setSSM ( self.toTuple(p,q), 1., overwrite )
-                if self.hasAntiParticle ( q ):
-                    self.setSSM ( self.toTuple(p,-q), 1., overwrite )
-            if self.hasAntiParticle ( p ):
-                for q in self.particles:
-                    self.setSSM ( self.toTuple(-p,q), 1., overwrite )
-                    if self.hasAntiParticle ( q ):
-                        self.setSSM ( self.toTuple ( -p, -q ), 1., overwrite )
-
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
@@ -249,10 +231,9 @@ class ProtoModel:
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen
             (ie mass greater than 1e5 GeV) """
-        ret = []
-        for m,v in self.masses.items():
-            if abs(v)>1e5:
-                ret.append(m)
+
+        unfrozen = self.unFrozenParticles()
+        ret = [pid for pid in self.particles if not pid in unfrozen]
         return ret
 
     def cleanBestCombo ( self ):
@@ -321,15 +302,61 @@ class ProtoModel:
         return True
 
     def unFrozenParticles ( self, withLSP=True ):
-        """ returns a list of all particles that can be regarded as unfrozen
-            (ie mass less than 5e3 GeV) """
+        """ returns a list of all particles in self.masses with
+            mass less than 100 TeV """
+
         ret = []
         for m,v in self.masses.items():
-            if abs(v)<5e3:
+            if abs(v)<1e5:
                 ret.append(m)
         if not withLSP and self.LSP in ret:
             ret.remove(self.LSP)
         return ret
+
+    def printMasses( self ):
+        """ convenience function to print masses with particle names """
+        particles = []
+        for pid,m in self.masses.items():
+            if m > 99000:
+                continue
+            particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
+        print ( ", ".join ( particles ) )
+
+    def computeXSecs ( self, nevents = None ):
+        """ compute xsecs given the masses and signal strenght multipliers of the model.
+         The results are stored in self._stored_xsecs and should be accessed through getXsecs.
+        :param nevents: If defined, cross-sections will be computed with this number of MC events,
+                        if None, the value used is self.nevents.
+
+        """
+
+        if not nevents:
+            nevents = self.nevents
+
+
+        xsecs = []
+        try:
+            #Create temporary file with the current model (without cross-sections)
+            tmpSLHA = tempfile.mktemp( prefix=".%s_xsecfile" % ( self.walkerid ),
+                                                suffix=".slha",dir="./")
+            tmpSLHA = self.createSLHAFile(tmpSLHA, addXsecs = False)
+            for sqrts in [8, 13]:
+                self.computer.compute( sqrts*TeV, tmpSLHA, unlink=True,
+                                loFromSlha=False, ssmultipliers = self.ssmultipliers )
+                for x in self.computer.loXsecs:
+                    xsecs.append ( x )
+                for x in self.computer.xsecs:
+                    xsecs.append ( x )
+
+            comment = "produced at step %d" % ( self.step )
+            self.log ( "done computing %d xsecs" % len(xsecs) )
+            self._stored_xsecs = ( xsecs, comment )
+            self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
+            self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
+            #Remove temp file
+            os.remove(tmpSLHA)
+        except Exception as e:
+            self.log("error computing cross-sections: %s" %e)
 
     def createNewSLHAFileName ( self, prefix = "cur" ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
@@ -344,73 +371,71 @@ class ProtoModel:
                     self.templateSLHA = trySLHA
                     return
 
-    def printMasses( self ):
-        """ convenience function to print masses with particle names """
-        particles = []
-        for pid,m in self.masses.items():
-            if m > 99000:
-                continue
-            particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
-        print ( ", ".join ( particles ) )
+    def createSLHAFile ( self, outputSLHA = None, addXsecs = True ):
+        """ Creates the SLHA file with the masses, decays and cross-sections stored in the model.
 
-    def createSLHAFile ( self, nevents = None ):
-        """ from the template.slha file, create the slha file of the current
-            model.
-        :param nevents: If defined, cross-sections will be computed with this number of MC events,
-                        if None, the value is chosen according to self.minevents and self.Z.
+        :param outputSLHA: Name of the SLHA file to be created. If None a tempfile will be created and
+                           its name will be stored in self.currentSLHA.
+        :param addXsecs: If True, include cross-sections in the file, else only write spectrum and decays.
+
+        :return: Name of the SLHA file created
         """
 
-        #If number of events has not been specified, use Z value to estimate the
-        #required number and update self.nevents:
-        if not nevents:
-            if self.Z > 2.5:
-                self.nevents = max(self.minevents,50000)
-            elif self.Z > 2.7:
-                self.nevents = max(self.minevents,100000)
-        else:
-            self.nevents = nevents
+        #If output is not defined, create file and store in self.currentSLHA
+        if outputSLHA is None:
+            self.createNewSLHAFileName()
+            outputSLHA = self.currentSLHA
 
-        self.log ( "now create slha file via with %d events" % self.nevents )
+        #Set template file (if not yet defined)
         self.checkTemplateSLHA()
+
+        #Get template data:
         with open( self.templateSLHA ) as f:
             lines=f.readlines()
-        if not hasattr ( self, "currentSLHA" ):
-            self.createNewSLHAFileName()
 
+        #Replace masses and decays with values for the unFrozenParticles:
         unfrozen = self.unFrozenParticles()
-        outputSLHA = self.currentSLHA
-        if os.path.exists ( outputSLHA ):
-            cmd = "cp %s %s" % ( outputSLHA, outputSLHA.replace(".cur",".old" ) )
-            subprocess.getoutput ( cmd )
-        self.log ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
-        with open(outputSLHA,"w") as f:
-            for line in lines:
-                for m,v in self.masses.items():
-                    line=line.replace("M%d" % m,"%.1f" % v )
-                    if not m in self.decays:
-                        if m != self.LSP and m in unfrozen:
-                            self.highlight ( "red", "could not find %s in decays. keys are %s." % ( m, list(self.decays.keys()) ) )
-                        #Assign dummy BR if None found
-                        self.decays[m]={ self.LSP: 1.0 }
+        outF = open(outputSLHA,'w')
+        for i,l in enumerate(lines):
+            for pid in self.particles:
+                #Skip lines which have no mass or decay tags
+                if not "M%d" % pid in l and not "D%d" %pid in l:
+                    continue
 
-                    for dpid,dbr in self.decays[m].items():
-                        if type(dpid)==tuple:
-                            line=line.replace("D%d_%d_%d" % ( m, dpid[0],dpid[1]), "%.5f" % dbr )
-                        else:
-                        # print ( "dpid", dpid )
-                            line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
-                    D_ = "D%d_" % m
-                    if D_ in line and not line[0]=="#":
-                        p1= line.find(D_)
-                        p2 = line[p1+1:].find(" ")
-                        if not "D" in line[p1:p1+p2+1]:
-                            self.pprint ( "remaining token %s set to zero." % \
-                                    line[p1:p1+p2+1] )
-                        line=line.replace( line[p1:p1+p2+1], "0." )
-                f.write ( line )
+                #Get information for particle
+                if pid in unfrozen:
+                    mass = self.masses[pid]
+                    decays = self.decays[pid]
+                else:
+                    mass = 1e6 #decoupled mass
+                    decays = {} #no decays to frozen particles
 
-        #Compute the cross-sections (if necessary) and store them to the file:
-        self.getXsecs()
+                #Replace mass tag:
+                if "M%d" % pid in l:
+                    l = l.replace("M%d" % pid,"%.1f" % mass )
+                else:
+                    decayTag = l.strip().split()[0]
+                    decayPids = decayTag.replace('D','').split('_')
+                    dpids = tuple([int(p) for p in decayPids[1:]]) #daughter pids
+                    if len(dpids) == 1:
+                        dpids = dpids[0]
+                    if dpids in decays:
+                        br = decays[dpids]
+                        l = l.replace(decayTag, "%.5f" %br)
+                    else:
+                        l = ""
+
+            #Only write line if it is not empty
+            if l:
+                outF.write(l)
+        outF.close()
+
+        #Add cross-sections:
+        if addXsecs:
+            xsecs = self.getXsecs() #Cross-sections will be computed if something has changed
+            self.computer.addXSecToFile( xsecs[0], outputSLHA )
+            self.computer.addMultipliersToFile ( self.ssmultipliers, outputSLHA )
+            self.computer.addCommentToFile ( xsecs[1], outputSLHA )
 
         return outputSLHA
 
@@ -452,34 +477,6 @@ class ProtoModel:
         self._stored_xsecs = ()
         self._xsecMasses = {}
         self._xsecSSMs = {}
-
-    def computeXSecs ( self, nevents = None ):
-        """ compute xsecs for current.slha. The results are stored in the SLHA file and self._stored_xsecs.
-        :param nevents: If defined, cross-sections will be computed with this number of MC events,
-                        if None, the value used is self.nevents.
-
-        """
-
-        if not nevents:
-            nevents = self.nevents
-        if not hasattr ( self, "currentSLHA" ) or not os.path.exists ( self.currentSLHA ):
-            self.pprint ( "compute xsecs called, but no slha file exists. I assume you meant to call createSLHAFile instead." )
-            self.createSLHAFile(nevents = nevents )
-            return
-
-        computer = ProtoModelXSecs( self.walkerid, nevents, self.currentSLHA,
-                                     self.relevantSSMultipliers(), self.step )
-        try:
-            computer.checkIfReadable()
-        except Exception:
-            pass
-        try:
-            xsecs,comment = computer.compute()
-            self._stored_xsecs = ( xsecs, comment )
-            self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
-            self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
-        except Exception:
-            pass
 
     def copy(self, cp_predictions = False):
         """
