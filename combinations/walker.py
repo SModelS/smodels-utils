@@ -230,12 +230,6 @@ class RandomWalker:
         if nChanges == 0 or uMass > .95:
             self.log ( "take random mass step" )
             nChanges+=self.manipulator.randomlyChangeMasses()
-            
-        
-        with open('protomodel_%i_orig.pcl'%self.protomodel.step,'wb') as f:
-                pickle.dump(self.protomodel,f)
-            
-            
         if self.catch_exceptions: 
             try:
                 self.manipulator.predict()
@@ -246,12 +240,7 @@ class RandomWalker:
         else:
             self.manipulator.predict ()
 
-        self.log ( "found highest Z: %.2f" % self.protomodel.Z )
-        
-        if self.protomodel.rvalues:
-            with open('protomodel_%i_before.pcl'%self.protomodel.step,'wb') as f:
-                    pickle.dump(self.protomodel,f)
-        
+        self.log ( "found highest Z: %.2f" % self.protomodel.Z )       
         
         # self.train ()
         nUnfrozen = len ( self.protomodel.unFrozenParticles() )
@@ -273,12 +262,6 @@ class RandomWalker:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
-            
-            if self.protomodel.rvalues:            
-                with open('protomodel_%i_after.pcl'%self.protomodel.step,'wb') as f:
-                        pickle.dump(self.protomodel,f)
-                import sys
-                sys.exit(-2)
             
 
     def train ( self ):
