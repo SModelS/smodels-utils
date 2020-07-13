@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import graphviz
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb
+from sympy import sympify, pprint, Add, Mul, Lambda, Symbol, exp, re, expand, simplify
+from sympy.abc import x, y
 
 class Regressor:
     def __init__ ( self, load ):
@@ -47,22 +49,29 @@ class Regressor:
             mlsp = mmother + 1
             while mlsp > mmother:
                 mlsp = random.uniform ( 0, 1500 )
-            ul = self.getULFor ( mmother, mlsp )
+            ul = self.getULFor ( mmother, mlsp, reporttime=False )
             if type(ul) == type(None):
                 continue
             X_train.append ( ( mmother, mlsp ) )
-            y_train.append ( ul.asNumber(fb) )
+            y_train.append ( ul )
         return X_train, y_train
 
-    def getULFor ( self, mmother, mlsp ):
-        """ get upper limit for mother, lsp """
+    def getULFor ( self, mmother, mlsp, reporttime=False ):
+        """ get upper limit for mother, lsp
+        :param reporttime: report also time spent?
+        """
         mv = [ [ mmother*GeV, mlsp*GeV], [ mmother*GeV, mlsp*GeV ] ]
         t0 = time.time()
         ul = self.txn.getULFor ( mv )
         dt = time.time() - t0
         if type(ul) == type(None):
-            return None,dt
-        return ul.asNumber(fb),dt
+            if reporttime:
+                return None,dt
+            else:
+                return None
+        if reporttime:
+            return ul.asNumber(fb),dt
+        return ul.asNumber(fb)
 
     def log ( self, *args ):
         print ( "[symbolic] " + " ".join ( map(str,args ) ) )
@@ -105,26 +114,27 @@ class Regressor:
         self.est_gp.fit(X_train, y_train)
         # print ( self.est_gp._program )
 
-        from sympy import sympify, pprint, Add, Mul, Lambda, Symbol, exp, re, expand, simplify
+        self.sympify ()
+        self.log ( "end training" )
 
-        x,y = Symbol("x"), Symbol("y")
-
-        locals = {
+    def sympify ( self ):
+        self.locals = {
             "add": Add,
             "mul": Mul,
             "exp": exp,
             "sub": Lambda((x, y), x - y),
-            "div": Lambda((x, y), x/y)
+            "div": Lambda((x, y), x/y),
+            "X0": x,
+            "X1": y,
         }
 
         self.log ( "sympify" )
-        expr = sympify( str ( self.est_gp._program ), locals=locals )
+        expr = sympify( str ( self.est_gp._program ), locals=self.locals )
         self.log ( "expand, simplify" )
         # expr = expand ( simplify ( expr ) )
         print ()
         pprint ( expr )
         self.expr = expr
-        self.log ( "end training" )
 
     def interact ( self ):
         IPython.embed ( using=False )
@@ -132,11 +142,20 @@ class Regressor:
         ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))
         return ret[0],time.time()-t0
 
+    def predict ( self, x, y, reporttime=False ):
+        """ predict! """
+        t0 = time.time()
+        ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))[0]
+        dt = time.time()-t0
+        if reporttime:
+            return ret,dt
+        return ret
+
     def compare ( self, x=600, y=200 ):
         """ compare predicted with interpolated """
-        spred,st = self.predict ( x, y )
-        upred,ut = self.getULFor ( x, y )
-        D={ "spred": spred, "stime": st, "upred": upred, 
+        spred,st = self.predict ( x, y, reporttime=True )
+        upred,ut = self.getULFor ( x, y, reporttime=True )
+        D={ "spred": spred, "stime": st, "upred": upred,
             "ut": ut }
         return D
 
