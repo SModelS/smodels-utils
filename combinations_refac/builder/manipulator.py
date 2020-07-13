@@ -17,7 +17,7 @@ class Manipulator:
     """ contains the protomodel manipulation algorithms. """
     def __init__ ( self, protomodel, strategy: str = "aggressive",
                    verbose = False ):
-        self.M = copy.copy ( protomodel  ) # shallow copy
+        self.M = protomodel
         self.strategy = strategy
         self.verbose = verbose
         #Store a canonical order for the masses. So the ordering in each
@@ -380,7 +380,6 @@ class Manipulator:
                 if hasattr(tp,'chi2'):
                     del tp.chi2
 
-
     def randomlyChangeModel(self,sigmaUnFreeze = 0.5, probBR = 0.2, probSS = 0.25,
                                 probSSingle=0.8, ssmSigma=0.1,
                                 probMerge = 0.05, sigmaFreeze = 0.5, probMassive = 0.3,
@@ -439,31 +438,12 @@ class Manipulator:
         #If pid matches the heavier state and the lighter state is frozen,
         #unfreeze the lighter state instead
         for pids in self.canonicalOrder:
-            if pid == pids[1] and pids[0] in frozen:
+            if pid == pids[1] and (pids[0] in frozen):
                 pid = pids[0] #Unfreeze the lighter state
                 break
 
-        #Absolute mass range:
-        maxMass = self.M.maxMass
-        minMass = self.M.masses[self.M.LSP]
-        #Redefine mass range if necessary to make sure the mass ordering is respected:
-        for pids in self.canonicalOrder:
-            if pid == pids[0] and not (pids[1] in frozen):
-                maxMass = self.M.masses[pids[1]] #Do not allow for masses above the heavier state
-            elif pid == pids[1]:
-                minMass = self.M.masses[pids[0]] #Do not allow for masses below the ligher state
-
-        #Randomly select mass of unfrozen particle:
-        self.M.masses[pid] = random.uniform ( minMass, maxMass )
-
-        #Set random branchings
-        self.setRandomBranchings(pid)
-
-        #Add pid pair production and associated production to self.M.ssmmultipliers:
-        self.setSSMFor(pid)
-
-        self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
-        return 1
+        self.M.log ( "Unfreezing %s:" % ( helpers.getParticleName(pid) ) )
+        return self.unFreezeParticle(pid)
 
     def randomlyChangeBranchings ( self, prob=0.2, zeroBRprob = 0.05, singleBRprob = 0.05 ):
         """ randomly change the branchings of a single particle
@@ -733,6 +713,47 @@ class Manipulator:
 
         #Fix branching ratios and rescale signal strenghts, so other channels are not affected
         self.removeAllOffshell(rescaleSSMs=True, protomodel=protomodel)
+
+    def unFreezeParticle (self, pid, force = False, protomodel = None):
+        """ unfreeze particle pid, assign masses, BRs and signal strength multipliers.
+
+        :param pid: PID to be unfrozen
+        :param force: If False, will only unfreeze the particle if it does not violate
+                      the canonical order (e.g. will not unfreeze stop2 if stop1 is frozen).
+        """
+
+        if protomodel is None:
+            protomodel = self.M
+
+        #Check for canonical ordering.
+        frozen = protomodel.frozenParticles( )
+        if not force:
+            #If pid matches the heavier state and the lighter state is frozen,
+            #do not unfreeze the particle
+            for pids in self.canonicalOrder:
+                if pid == pids[1] and pids[0] in frozen:
+                    return 0
+
+        #Absolute mass range:
+        maxMass = protomodel.maxMass
+        minMass = protomodel.masses[protomodel.LSP]
+        #Redefine mass range if necessary to make sure the mass ordering is respected:
+        for pids in self.canonicalOrder:
+            if pid == pids[0] and not (pids[1] in frozen):
+                maxMass = protomodel.masses[pids[1]] #Do not allow for masses above the heavier state
+            elif pid == pids[1] and not (pids[0] in frozen):
+                minMass = protomodel.masses[pids[0]] #Do not allow for masses below the ligher state
+
+        #Randomly select mass of unfrozen particle:
+        protomodel.masses[pid] = random.uniform ( minMass, maxMass )
+
+        #Set random branchings
+        self.setRandomBranchings(pid)
+
+        #Add pid pair production and associated production to protomodel.ssmmultipliers:
+        self.setSSMFor(pid)
+
+        return 1
 
     def randomlyChangeMasses ( self, prob = 0.05, dx = 200.0 ):
         """ take a random step in mass space for a single unfrozen particle

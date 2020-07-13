@@ -224,7 +224,7 @@ class Predictor:
         rvalues.sort(reverse = True )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
         self.log ( "received r values %s" % srs )
-        protomodel.rvalues = rvalues[:]
+        protomodel.rvalues = rvalues[:-2] #Do not include initial zero values
         protomodel.rmax = rvalues[0]
         protomodel.r2 = rvalues[1]
         protomodel.excluded = protomodel.rmax > self.rthreshold #The 0.99 deals with the case rmax = threshold

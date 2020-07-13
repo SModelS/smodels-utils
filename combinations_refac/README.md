@@ -49,6 +49,7 @@
     * Small refactoring of ProtoModel.initializeModel
     * Small refactoring of Hiscore.computeParticleContributions
     * freezePidsNotInBestCombo has been moved to the beginning of each step (the model is no longer trimmed at the end of each step)
+    * Moved part of Manipulator.randomlyUnfreezeParticle to Manipulator.unFreezeParticle
 
 ## Refactoring ToDo:
 

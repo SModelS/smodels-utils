@@ -330,7 +330,6 @@ class ProtoModel:
         if not nevents:
             nevents = self.nevents
 
-
         xsecs = []
         try:
             #Create temporary file with the current model (without cross-sections)
@@ -524,6 +523,7 @@ class ProtoModel:
         newmodel.muhat = self.muhat
         newmodel.mumax = self.mumax
         newmodel.Z = self.Z
+        newmodel.K = self.K
         newmodel.rmax = self.rmax
         newmodel.letters = self.letters[:]
         newmodel.description = self.description[:]
