@@ -3,6 +3,7 @@
 import IPython
 import pickle
 import sys
+import time
 import random
 import numpy as np
 from gplearn.genetic import SymbolicRegressor
@@ -16,29 +17,6 @@ import graphviz
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb
 
-def fetchEfficiencyMap():
-    """ fetch our efficiency map from the database """
-    db = Database ( "unittest" )
-    aId = [ "CMS-SUS-16-039" ]
-    expres = db.getExpResults(analysisIDs = aId )[0]
-    ds = expres.datasets[0]
-    txn = ds.txnameList[4]
-    return txn
-
-def createArtificialSample ():
-    rng = check_random_state(0)
-
-    # Training samples
-    X_train = rng.uniform(-1, 1, 100).reshape(50, 2)
-    # y_train = X_train[:, 0]**2 - X_train[:, 1]**2 + X_train[:, 1] - 1
-    y_train = 4 * np.exp ( -2 * X_train[:, 0] ) * X_train[:, 1] - 2 + rng.uniform ( -.1, 1, 50 )
-
-    # Testing samples
-    X_test = rng.uniform(-1, 1, 100).reshape(50, 2)
-    # y_test = X_test[:, 0]**2 - X_test[:, 1]**2 + X_test[:, 1] - 1
-    y_test = 4 * np.exp ( -2 * X_test[:, 0] ) * X_test[:, 1] - 2
-    return X_train, y_train, X_test, y_test
-
 class Regressor:
     def __init__ ( self, load ):
         """
@@ -49,10 +27,19 @@ class Regressor:
         else:
             self.instantiateRegressor()
 
+    def fetchEfficiencyMap( self ):
+        """ fetch our efficiency map from the database """
+        db = Database ( "unittest" )
+        aId = [ "CMS-SUS-16-039" ]
+        expres = db.getExpResults(analysisIDs = aId )[0]
+        ds = expres.datasets[0]
+        txn = ds.txnameList[4]
+        self.txn = txn
+
     def createSample( self, npoints=1000 ):
         """ create a training sample of npoints points
         """
-        txn = fetchEfficiencyMap()
+        self.fetchEfficiencyMap()
         X_train, y_train = [], []
         npoints = 1000
         while len(X_train)< npoints:
@@ -60,16 +47,25 @@ class Regressor:
             mlsp = mmother + 1
             while mlsp > mmother:
                 mlsp = random.uniform ( 0, 1500 )
-            mv = [ [ mmother*GeV, mlsp*GeV], [ mmother*GeV, mlsp*GeV ] ]
-            ul = txn.getULFor ( mv )
+            ul = self.getULFor ( mmother, mlsp )
             if type(ul) == type(None):
                 continue
             X_train.append ( ( mmother, mlsp ) )
             y_train.append ( ul.asNumber(fb) )
         return X_train, y_train
 
+    def getULFor ( self, mmother, mlsp ):
+        """ get upper limit for mother, lsp """
+        mv = [ [ mmother*GeV, mlsp*GeV], [ mmother*GeV, mlsp*GeV ] ]
+        t0 = time.time()
+        ul = self.txn.getULFor ( mv )
+        dt = time.time() - t0
+        if type(ul) == type(None):
+            return None,dt
+        return ul.asNumber(fb),dt
+
     def log ( self, *args ):
-        print ( "[symbolic] " + "".join ( map(str,args ) ) )
+        print ( "[symbolic] " + " ".join ( map(str,args ) ) )
 
     def instantiateRegressor( self ):
         def _protected_exp(x1):
@@ -90,6 +86,7 @@ class Regressor:
     def storeToPickle ( self ):
         with open ( "expr.pcl", "wb" ) as f:
             pickle.dump ( self.est_gp, f )
+            pickle.dump ( self.txn, f )
             #pickle.dump ( self.est_gp._program, f )
             #pickle.dump ( self.est_gp.n_features_, f )
             f.close()
@@ -97,6 +94,7 @@ class Regressor:
     def loadFromPickle ( self ):
         with open ( "expr.pcl", "rb" ) as f:
             self.est_gp = pickle.load ( f )
+            self.txn = pickle.load ( f )
             #self.est_gp._program = pickle.load ( f )
             #self.est_gp.n_features_ = pickle.load ( f )
             f.close()
@@ -131,14 +129,16 @@ class Regressor:
     def interact ( self ):
         IPython.embed ( using=False )
 
-    def predict ( self, x, y ):
-        """ predict for x and y """
         ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))
-        return ret[0]
+        return ret[0],time.time()-t0
 
-    def compare ( self, x=4, y=3 ):
+    def compare ( self, x=600, y=200 ):
         """ compare predicted with interpolated """
-        spred = self.predict ( x, y )
+        spred,st = self.predict ( x, y )
+        upred,ut = self.getULFor ( x, y )
+        D={ "spred": spred, "stime": st, "upred": upred, 
+            "ut": ut }
+        return D
 
 if __name__ == "__main__":
     import argparse
