@@ -68,7 +68,7 @@ class ProtoModel:
         self.letters = ""
         self.description = ""
         self.bestCombo = None
-        self.computer = XSecComputer ( NLL, self.nevents, 8 )
+        self.computer = XSecComputer ( NLL, self.nevents, pythiaVersion=8 )
 
         self.initializeModel()
 

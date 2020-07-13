@@ -48,6 +48,7 @@
     * Added ProtoModel.rescaleXSecsBy to rescale the cross-sections stored in _stored_xsecs and the signal strength multipliers
     * Small refactoring of ProtoModel.initializeModel
     * Small refactoring of Hiscore.computeParticleContributions
+    * freezePidsNotInBestCombo has been moved to the beginning of each step (the model is no longer trimmed at the end of each step)
 
 ## Refactoring ToDo:
 

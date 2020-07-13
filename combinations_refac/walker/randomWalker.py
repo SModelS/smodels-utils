@@ -168,6 +168,11 @@ class RandomWalker:
             self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d" %\
                     ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024 ))
 
+        #Trim the model, so we start only with the relevant particles for the
+        #best combination in the previous step:
+        self.log ( "freeze pids that arent in best combo, we dont need them" )
+        self.manipulator.freezePidsNotInBestCombo()
+
         #Take a step in the model space:
         self.manipulator.randomlyChangeModel()
 
@@ -229,10 +234,7 @@ class RandomWalker:
             # if we teleport the rest becomes irrelevant
             return
 
-        self.log ( "freeze pids that arent in best combo, we dont need them" )
-        self.manipulator.freezePidsNotInBestCombo()
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
-
 
         self.log ( "check if result goes into hiscore list" )
         self.hiscoreList.newResult ( self.protomodel ) ## add to high score list

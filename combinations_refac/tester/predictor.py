@@ -137,6 +137,7 @@ class Predictor:
         # now use all prediction with likelihood values to compute the Z of the model
         predictions = self.runSModelS( slhafile, sigmacut, allpreds=True,
                                                llhdonly=True )
+
         # Compute significance and store in the model:
         self.computeSignificance( protomodel, predictions, strategy )
         if protomodel.Z is None:
@@ -256,6 +257,7 @@ class Predictor:
         else:
             protomodel.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         protomodel.Z = Z
+
         if Z is not None: # Z is None when no combination was found
             protomodel.K = combiner.computeK ( Z, prior )
         else:
