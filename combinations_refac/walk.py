@@ -34,6 +34,11 @@ if __name__ == "__main__":
 
     catchem = not args.no_catch
 
+    if args.seed is not None:
+        from tools import helpers
+        helpers.seedRandomNumbers(args.seed)
+
+
     main( args.nmin, args.nmax, args.cont, cheatcode = args.cheat,
             rundir = args.rundir, maxsteps = args.maxsteps, nevents = args.nevents,
             seed = args.seed, catchem = catchem )

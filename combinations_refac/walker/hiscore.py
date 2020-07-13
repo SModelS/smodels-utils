@@ -90,14 +90,10 @@ class Hiscore:
     def addResult ( self, protomodel ):
         """ add a result to the list """
         m = Manipulator ( protomodel )
-        m.rescaleByMuHat() ## add only with resolved muhats
         if m.M.K <= self.currentMinK( zeroIsMin = True ):
             return ## doesnt pass minimum requirement
         if m.M.K == 0.:
             return ## just to be sure, should be taken care of above, though
-        if m.M.K > 5.:
-            ## for values > 2.5 we now predict again with larger statistics.
-            self.predictor.predict (m.M)
 
         Kold = self.globalMaxK()
         if m.M.K > Kold:
@@ -139,23 +135,13 @@ class Hiscore:
         unfrozen = protomodel.unFrozenParticles( withLSP=False )
         oldZ = protomodel.Z
         oldK = protomodel.K
-        protomodel.particleContributions = {} ## save the scores for the non-discarded particles.
-        protomodel.particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
+        particleContributions = {} ## save the scores for the non-discarded particles.
+        particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
 
         #Make sure predictor is accesible
         if not self.predictor:
             self.pprint( "asked to compute particle contributions to score, but predictor has not been set")
             return
-
-        ## aka: what would happen to the score if I removed particle X?
-        frozen = protomodel.frozenParticles()
-
-        for pid in frozen:
-            ## remove ssmultipliers for frozen particles
-            if pid in protomodel.ssmultipliers:
-                protomodel.ssmultipliers.pop(pid)
-            protomodel.masses[pid]=1e6 ## renormalize
-
 
         pidsnmasses = [ (x,protomodel.masses[x]) for x in unfrozen ]
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
@@ -166,6 +152,8 @@ class Hiscore:
 
             #Remove particle and recompute SLHA file:
             manipulator.freezeParticle(pid)
+            #Recompute cross-secions:
+            protomodel.getXsecs()
             self.predictor.predict( protomodel )
             percK = 0.
             if oldK > 0.:
@@ -174,10 +162,13 @@ class Hiscore:
                     ( helpers.getParticleName(pid), oldK, protomodel.K, 100.*percK, "%", oldZ,protomodel.Z, protomodel.nevents ) )
 
             #Store the new Z and K values in the original model:
-            protomodel.particleContributions[pid]=manipulator.M.K
-            protomodel.particleContributionsZ[pid]=manipulator.M.Z
+            particleContributions[pid]=manipulator.M.K
+            particleContributionsZ[pid]=manipulator.M.Z
             #Make sure to restore the model to its initial (full particle content) state
             manipulator.restoreModel()
+            #Store contributions in the protomodel:
+            protomodel.particleContributions = particleContributions
+            protomodel.particleContributionsZ = particleContributionsZ
 
         self.pprint ( "stored %d particl contributions" % len(protomodel.particleContributions) )
 
@@ -187,22 +178,19 @@ class Hiscore:
                   .analysisContributions
         """
 
-        #Make sure the protomodel is backed up
-        manipulator.backupModel()
         protomodel = manipulator.M
         self.pprint ( "Now computing analysis contributions" )
-        self.pprint ( "step 1: Recompute the score. Old one at K=%.2f, Z=%.2f" % \
+        self.pprint ( "Recompute the score. Old one at K=%.2f, Z=%.2f" % \
                       ( protomodel.K, protomodel.Z ) )
-        protomodel.createNewSLHAFileName ( prefix="acc" )
         contributionsZ = {}
         contributionsK = {}
         combiner = Combiner()
         dZtot, dKtot = 0., 0.
         bestCombo = copy.deepcopy ( protomodel.bestCombo )
+        prior = combiner.computePrior ( protomodel )
         for ctr,pred in enumerate(bestCombo):
             combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
             Z, muhat_ = combiner.getSignificance ( combo )
-            prior = combiner.computePrior ( protomodel )
             K = combiner.computeK ( Z, prior )
             dZ = protomodel.Z - Z
             dK = protomodel.K - K
@@ -285,7 +273,7 @@ class Hiscore:
         for ctr,h in enumerate(self.hiscores[1:]):
             if h != None:
                 m=Manipulator ( h )
-                m.rescaleByMuHat()
+                m.rescaleSignalBy(m.M.muhat)
                 m.delBackup ( )
                 m.M.cleanBestCombo ()
                 self.hiscores[ctr+1]=m.M

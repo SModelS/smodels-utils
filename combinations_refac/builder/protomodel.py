@@ -61,6 +61,7 @@ class ProtoModel:
         self.tpList = [] ## store information about the theory predictions
         self.llhd=0.
         self.muhat = 1.
+        self.mumax = None
         self.Z = 0.0
         self.K = None
         self.rmax = 0.
@@ -72,53 +73,53 @@ class ProtoModel:
         self.initializeModel()
 
     def initializeModel(self):
-            """Use the template SLHA file to store possible decays and initialize the LSP"""
+        """Use the template SLHA file to store possible decays and initialize the LSP"""
 
-            #Make sure the masses, decays and multipliers are empty
-            self.decays = {} ## the actual branchings
-            self.masses = {}
-            self.possibledecays = {} ## list all possible decay channels
-            self._stored_xsecs = () #Store cross-sections. It should only be accesses through getXsecs()!
-            self._xsecMasses = {} #Store the masses used for computing the cross-sections
-            self._xsecSSMs = {} #Store the signal strenght multiplier used for computing the cross-sections
-            self.ssmultipliers = {} ## signal strength multipliers
-            ## Inititiaze LSP
-            self.masses[ProtoModel.LSP]=random.uniform(200,500)
-            self.decays[ProtoModel.LSP]= {}
-            pids = [(self.LSP,self.LSP)]
-            if self.hasAntiParticle(self.LSP):
-                pids += [(self.LSP,-self.LSP),(-self.LSP,-self.LSP)]
-            for pidpair in pids:
-                self.ssmultipliers[tuple(sorted(pidpair))]= 1.0
+        #Make sure the masses, decays and multipliers are empty
+        self.decays = {} ## the actual branchings
+        self.masses = {}
+        self.possibledecays = {} ## list all possible decay channels
+        self._stored_xsecs = () #Store cross-sections. It should only be accesses through getXsecs()!
+        self._xsecMasses = {} #Store the masses used for computing the cross-sections
+        self._xsecSSMs = {} #Store the signal strenght multiplier used for computing the cross-sections
+        self.ssmultipliers = {} ## signal strength multipliers
+        ## Inititiaze LSP
+        self.masses[ProtoModel.LSP]=random.uniform(200,500)
+        self.decays[ProtoModel.LSP]= {}
+        pids = [(self.LSP,self.LSP)]
+        if self.hasAntiParticle(self.LSP):
+            pids += [(self.LSP,-self.LSP),(-self.LSP,-self.LSP)]
+        for pidpair in pids:
+            self.ssmultipliers[tuple(sorted(pidpair))]= 1.0
 
-            with open ( self.templateSLHA ) as slhaf:
-                tmp = slhaf.readlines()
-                slhalines = []
-                for line in tmp:
-                    p = line.find("#" )
-                    if p > -1:
-                        line = line[:p]
-                    if "D" in line and not "DECAY" in line:
-                        slhaline = line.strip().split(" ")[0]
-                        # print ( "slhaline", slhaline )
-                        slhalines.append ( slhaline )
+        with open ( self.templateSLHA ) as slhaf:
+            tmp = slhaf.readlines()
+            slhalines = []
+            for line in tmp:
+                p = line.find("#" )
+                if p > -1:
+                    line = line[:p]
+                if "D" in line and not "DECAY" in line:
+                    slhaline = line.strip().split(" ")[0]
+                    # print ( "slhaline", slhaline )
+                    slhalines.append ( slhaline )
 
-            for p in self.particles:
-                decays = []
-                for line in slhalines:
-                    if "D%s" % p in line:
-                        p1 = line.find("_")+1
-                        dpid = int ( line[p1:] )
-                        dpid2 = None
-                        if line.count("_")==2:
-                            p2 = line.rfind("_")
-                            dpid = int ( line[p1:p2] )
-                            dpid2 = int(line[p2+1:])
-                        dpd = dpid
-                        if dpid2 != None:
-                            dpd = (dpid,dpid2)
-                        decays.append ( dpd )
-                self.possibledecays[p]=decays
+        for p in self.particles:
+            decays = []
+            for line in slhalines:
+                if "D%s" % p in line:
+                    p1 = line.find("_")+1
+                    dpid = int ( line[p1:] )
+                    dpid2 = None
+                    if line.count("_")==2:
+                        p2 = line.rfind("_")
+                        dpid = int ( line[p1:p2] )
+                        dpid2 = int(line[p2+1:])
+                    dpd = dpid
+                    if dpid2 != None:
+                        dpd = (dpid,dpid2)
+                    decays.append ( dpd )
+            self.possibledecays[p]=decays
 
     def __str__(self):
         """ return basic information on model
@@ -229,8 +230,8 @@ class ProtoModel:
             f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def frozenParticles ( self ):
-        """ returns a list of all particles that can be regarded as frozen
-            (ie mass greater than 1e5 GeV) """
+        """ returns a list of all particles that can be regarded as frozen, i.e.
+        are not in the unfrozen list."""
 
         unfrozen = self.unFrozenParticles()
         ret = [pid for pid in self.particles if not pid in unfrozen]
@@ -246,18 +247,14 @@ class ProtoModel:
 
     def almostSameAs ( self, other ):
         """ check if a model is essentially the same as <other> """
-        if len ( self.masses.keys() ) != len ( other.masses.keys() ):
+
+        if self.masses.keys() != other.masses.keys():
             return False
-        ## check the masses
-        for pid,m in self.masses.items():
-            om = other.masses[pid]
-            if m == 0.:
-                if om == 0.:
-                    continue
-                else:
-                    return False
-            if abs ( om - m ) / m > 1e-5:
-                return False
+
+        massDiff = [abs(m-other.masses[pid])/m for pid,m in self.masses.items() if m]
+        if max(massDiff) > 1e-5:
+            return False
+
         ## now check ssmultipliers
         pidpairs = set ( self.ssmultipliers.keys() )
         pidpairs = pidpairs.union ( set ( other.ssmultipliers.keys() ) )
@@ -357,6 +354,21 @@ class ProtoModel:
             os.remove(tmpSLHA)
         except Exception as e:
             self.log("error computing cross-sections: %s" %e)
+
+    def rescaleXSecsBy(self, s):
+        """rescale the stored cross-sections by a factor s"""
+
+        #Before rescaling, make sure we get the latest cross-sections:
+        x = self.getXsecs()
+        xsecs = x[0]
+        comment = x[1]
+        for xsec in xsecs:
+            xsec.value *= s
+        for k,v in self.ssmultipliers.items():
+            self.ssmultipliers[k] = v * s
+
+        self._stored_xsecs = (xsecs,comment)
+        self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
 
     def createNewSLHAFileName ( self, prefix = "cur" ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
@@ -510,6 +522,7 @@ class ProtoModel:
         newmodel.rvalues = self.rvalues[:]
         newmodel.llhd = self.llhd
         newmodel.muhat = self.muhat
+        newmodel.mumax = self.mumax
         newmodel.Z = self.Z
         newmodel.rmax = self.rmax
         newmodel.letters = self.letters[:]

@@ -33,7 +33,7 @@ def cleanDirectory ():
 class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive",
                    dump_training = False, cheatcode = 0,
-                   dbpath = "<rundir>/database.pcl", expected = False,
+                   dbpath = "./database.pcl", expected = False,
                    select = "all", catch_exceptions = True,
                    rundir = None, nevents = 100000 ):
         """ initialise the walker
@@ -58,7 +58,7 @@ class RandomWalker:
                               expected=expected, select=select )
 
         #Initialize Hiscore (with access to the predictor)
-        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( rundir, walkerid ),
+        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( self.rundir, walkerid ),
                                      backup=False, predictor=self.predictor )
         self.hiscoreList.nkeep = 1
 
@@ -114,8 +114,6 @@ class RandomWalker:
                    catch_exceptions = catch_exceptions, rundir = rundir )
         ret.manipulator.M = protomodel
         ret.manipulator.setWalkerId ( walkerid )
-        ret.manipulator.M.createNewSLHAFileName()
-        ret.manipulator.M.initializeSSMs ( overwrite = False )
         ret.manipulator.backupModel()
         if dump_training:
             ## we use the accelerator only to dump the training data
@@ -207,7 +205,7 @@ class RandomWalker:
             return
 
         #the muhat multiplier gets multiplied into the signal strengths
-        self.manipulator.rescaleByMuHat()
+        self.manipulator.rescaleSignalBy(self.protomodel.muhat)
 
         #Sanity check (the model should never be excluded after rescaling):
         self.protomodel.excluded = self.protomodel.rmax > self.predictor.rthreshold
@@ -235,9 +233,11 @@ class RandomWalker:
         self.manipulator.freezePidsNotInBestCombo()
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
+
         self.log ( "check if result goes into hiscore list" )
         self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
         self.log ( "done check for result to go into hiscore list" )
+
 
     def checkIfToTeleport ( self, pmax=0.1, norm = 10.0 ):
         """ check if we should teleport to a high score model. If we should then also
