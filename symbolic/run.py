@@ -25,26 +25,6 @@ def fetchEfficiencyMap():
     txn = ds.txnameList[4]
     return txn
 
-def createSample( npoints=1000 ):
-    """ create a training sample of npoints points
-    """
-    txn = fetchEfficiencyMap()
-    X_train, y_train = [], []
-    npoints = 1000
-    while len(X_train)< npoints:
-        mmother = random.uniform ( 200, 2000 )
-        mlsp = mmother + 1
-        while mlsp > mmother:
-            mlsp = random.uniform ( 0, 1500 )
-        mv = [ [ mmother*GeV, mlsp*GeV], [ mmother*GeV, mlsp*GeV ] ]
-        ul = txn.getULFor ( mv )
-        if type(ul) == type(None):
-            continue
-        X_train.append ( ( mmother, mlsp ) )
-        y_train.append ( ul.asNumber(fb) )
-    return X_train, y_train
-
-
 def createArtificialSample ():
     rng = check_random_state(0)
 
@@ -61,12 +41,35 @@ def createArtificialSample ():
 
 class Regressor:
     def __init__ ( self, load ):
+        """
+        :param load: load from pickle file
+        """
         if load:
             self.loadFromPickle()
-        self.instantiateRegressor()
+        else:
+            self.instantiateRegressor()
+
+    def createSample( self, npoints=1000 ):
+        """ create a training sample of npoints points
+        """
+        txn = fetchEfficiencyMap()
+        X_train, y_train = [], []
+        npoints = 1000
+        while len(X_train)< npoints:
+            mmother = random.uniform ( 200, 2000 )
+            mlsp = mmother + 1
+            while mlsp > mmother:
+                mlsp = random.uniform ( 0, 1500 )
+            mv = [ [ mmother*GeV, mlsp*GeV], [ mmother*GeV, mlsp*GeV ] ]
+            ul = txn.getULFor ( mv )
+            if type(ul) == type(None):
+                continue
+            X_train.append ( ( mmother, mlsp ) )
+            y_train.append ( ul.asNumber(fb) )
+        return X_train, y_train
 
     def log ( self, *args ):
-        print ( "[symbolic] " + "".join ( *args ) )
+        print ( "[symbolic] " + "".join ( map(str,args ) ) )
 
     def instantiateRegressor( self ):
         def _protected_exp(x1):
@@ -87,15 +90,17 @@ class Regressor:
     def storeToPickle ( self ):
         with open ( "expr.pcl", "wb" ) as f:
             pickle.dump ( self.est_gp, f )
-            pickle.dump ( self.est_gp._program, f )
+            #pickle.dump ( self.est_gp._program, f )
+            #pickle.dump ( self.est_gp.n_features_, f )
             f.close()
 
     def loadFromPickle ( self ):
         with open ( "expr.pcl", "rb" ) as f:
             self.est_gp = pickle.load ( f )
-            self.program = pickle.load ( f )
+            #self.est_gp._program = pickle.load ( f )
+            #self.est_gp.n_features_ = pickle.load ( f )
             f.close()
-        print ( "loaded", self.est_gp._program )
+        self.log ( "loaded", self.est_gp._program )
 
     def train ( self, X_train, y_train ):
         self.log ( "start training" )
@@ -125,9 +130,15 @@ class Regressor:
 
     def interact ( self ):
         IPython.embed ( using=False )
-        
+
+    def predict ( self, x, y ):
+        """ predict for x and y """
+        ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))
+        return ret[0]
+
     def compare ( self, x=4, y=3 ):
-        self.est_gp.predict(np.array([x,y]).reshape(1,-1))
+        """ compare predicted with interpolated """
+        spred = self.predict ( x, y )
 
 if __name__ == "__main__":
     import argparse
@@ -139,9 +150,9 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     if args.train:
-        X_train, y_train = createSample( 1000 )
-        # X_test, y_test = createSample()
         regressor = Regressor( False )
+        X_train, y_train = regressor.createSample( 1000 )
+        # X_test, y_test = createSample()
         regressor.train( X_train, y_train )
         regressor.storeToPickle()
     else:
