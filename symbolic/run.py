@@ -16,8 +16,9 @@ import matplotlib.pyplot as plt
 import graphviz
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb
-from sympy import sympify, pprint, Add, Mul, Lambda, Symbol, exp, re, expand, simplify
+from sympy import sympify, pprint, Add, Mul, Lambda, Symbol, exp, re, expand, simplify, log
 from sympy.abc import x, y
+from sympy.utilities.autowrap import autowrap
 
 class Regressor:
     def __init__ ( self, load ):
@@ -43,7 +44,6 @@ class Regressor:
         """
         self.fetchEfficiencyMap()
         X_train, y_train = [], []
-        npoints = 1000
         while len(X_train)< npoints:
             mmother = random.uniform ( 200, 2000 )
             mlsp = mmother + 1
@@ -90,11 +90,12 @@ class Regressor:
                                    p_crossover=0.7, p_subtree_mutation=0.1,
                                    p_hoist_mutation=0.05, p_point_mutation=0.1,
                                    max_samples=0.9, verbose=1, function_set = function_set,
-                                   parsimony_coefficient=0.01, random_state=0)
+                                   parsimony_coefficient=0.3, random_state=0)
 
     def storeToPickle ( self ):
         with open ( "expr.pcl", "wb" ) as f:
             pickle.dump ( self.est_gp, f )
+            pickle.dump ( self.expr, f )
             pickle.dump ( self.txn, f )
             #pickle.dump ( self.est_gp._program, f )
             #pickle.dump ( self.est_gp.n_features_, f )
@@ -103,10 +104,10 @@ class Regressor:
     def loadFromPickle ( self ):
         with open ( "expr.pcl", "rb" ) as f:
             self.est_gp = pickle.load ( f )
+            self.expr = pickle.load ( f )
             self.txn = pickle.load ( f )
-            #self.est_gp._program = pickle.load ( f )
-            #self.est_gp.n_features_ = pickle.load ( f )
             f.close()
+        self.createFunc()
         self.log ( "loaded", self.est_gp._program )
 
     def train ( self, X_train, y_train ):
@@ -119,11 +120,14 @@ class Regressor:
 
     def sympify ( self ):
         self.locals = {
-            "add": Add,
-            "mul": Mul,
-            "exp": exp,
-            "sub": Lambda((x, y), x - y),
-            "div": Lambda((x, y), x/y),
+            'sub': lambda x, y : x - y,
+            'div': lambda x, y : x/y,
+            'mul': lambda x, y : x*y,
+            'add': lambda x, y : x + y,
+            'neg': lambda x    : -x,
+            'pow': lambda x, y : x**y,
+#            "exp": lambda x: exp(abs(x)),
+            "log": lambda x: log(abs(x)),
             "X0": x,
             "X1": y,
         }
@@ -135,12 +139,19 @@ class Regressor:
         print ()
         pprint ( expr )
         self.expr = expr
+        self.createFunc()
+
+    def createFunc( self):
+        self.func = autowrap(self.expr, tempdir="/tmp/me", verbose=True )
+        # self.func = autowrap(self.expr)
+
+    def pprint ( self ):
+        print ( str(regressor.est_gp) )
 
     def interact ( self ):
         IPython.embed ( using=False )
-
-        ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))
-        return ret[0],time.time()-t0
+        #ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))
+        #return ret[0],time.time()-t0
 
     def predict ( self, x, y, reporttime=False ):
         """ predict! """
@@ -151,12 +162,22 @@ class Regressor:
             return ret,dt
         return ret
 
+    def predictSympy ( self, x, y, reporttime=False ):
+        """ predict via sympy func """
+        t0=time.time()
+        r=self.func(x,y)
+        dt= time.time()-t0
+        if reporttime:
+            return r,dt
+        return r
+
     def compare ( self, x=600, y=200 ):
         """ compare predicted with interpolated """
-        spred,st = self.predict ( x, y, reporttime=True )
-        upred,ut = self.getULFor ( x, y, reporttime=True )
-        D={ "spred": spred, "stime": st, "upred": upred,
-            "ut": ut }
+        gppred,gpt = self.predict ( x, y, reporttime=True )
+        origpred,origt = self.getULFor ( x, y, reporttime=True )
+        spred,stime = self.predictSympy ( x, y, reporttime=True )
+        D={ "gppred": gppred, "gptime": gpt, "origpred": origpred,
+            "origtime": origt, "spred": spred, "stime": stime }
         return D
 
 if __name__ == "__main__":
@@ -170,7 +191,7 @@ if __name__ == "__main__":
 
     if args.train:
         regressor = Regressor( False )
-        X_train, y_train = regressor.createSample( 1000 )
+        X_train, y_train = regressor.createSample( 100 )
         # X_test, y_test = createSample()
         regressor.train( X_train, y_train )
         regressor.storeToPickle()
