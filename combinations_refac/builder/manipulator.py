@@ -340,21 +340,46 @@ class Manipulator:
                 if not ppair in self.M.ssmultipliers:
                     self.M.ssmultipliers[ppair] = 1.0
 
-    def rescaleByMuHat ( self ):
+    def rescaleSignalBy ( self, s ):
         """ multiply the signal strength multipliers with muhat"""
-        if not hasattr ( self.M, "muhat" ):
+
+        if s == 0.:
+            self.M.pprint ( "rescaling by zero? Ignore." )
             return
-        if self.M.muhat == 0.:
-            self.M.pprint ( "muhat is exactly zero??? set to one." )
-            self.M.muhat = 1.
-        if abs ( self.M.muhat - 1.0 ) < 1e-5:
+        if abs ( s - 1.0 ) < 1e-5:
             return
-        self.M.log ( "rescaling signal by muhat of %.2f" % self.M.muhat )
-        self.M.rmax = self.M.rmax * self.M.muhat
-        self.M.r2 = self.M.r2 * self.M.muhat
-        for k,v in self.M.ssmultipliers.items():
-            self.M.ssmultipliers[k] = v * self.M.muhat
-        self.M.muhat = 1.
+        self.M.log ( "rescaling signal by muhat of %.2f" % s )
+        self.M.rmax = self.M.rmax *s
+        self.M.r2 = self.M.r2 *s
+        self.M.rvalues = [r*s for r in self.M.rvalues[:]]
+        self.M.muhat *= 1./s
+        self.M.mumax *= 1./s
+        self.M.rescaleXSecsBy(s)
+
+        if hasattr(self.M,'tpList'):
+            for i,tp in enumerate(self.M.tpList[:]):
+                rnew = tp[0]*s
+                if tp[1]:
+                    rexpnew = tp[1]*s
+                else:
+                    rexpnew = tp[1]
+                tpNew = tp[2]
+                tpNew.xsection.value *= s #rescale theoryPrediction
+                #Remove likelihood and chi2, since they are no longer valid
+                if hasattr(tpNew,'likelihood'):
+                    del tpNew.likelihood
+                if hasattr(tpNew,'chi2'):
+                    del tpNew.chi2
+                self.M.tpList[i] = (rnew,rexpnew,tpNew)
+        if hasattr(self.M,'bestCombo'):
+            for tp in self.M.bestCombo:
+                tp.xsection.value *= s #rescale theoryPrediction
+                #Remove likelihood and chi2, since they are no longer valid
+                if hasattr(tp,'likelihood'):
+                    del tp.likelihood
+                if hasattr(tp,'chi2'):
+                    del tp.chi2
+
 
     def randomlyChangeModel(self,sigmaUnFreeze = 0.5, probBR = 0.2, probSS = 0.25,
                                 probSSingle=0.8, ssmSigma=0.1,
@@ -423,7 +448,7 @@ class Manipulator:
         minMass = self.M.masses[self.M.LSP]
         #Redefine mass range if necessary to make sure the mass ordering is respected:
         for pids in self.canonicalOrder:
-            if pid == pids[0] and (not pids[1] in frozen):
+            if pid == pids[0] and not (pids[1] in frozen):
                 maxMass = self.M.masses[pids[1]] #Do not allow for masses above the heavier state
             elif pid == pids[1]:
                 minMass = self.M.masses[pids[0]] #Do not allow for masses below the ligher state

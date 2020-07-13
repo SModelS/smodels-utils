@@ -165,7 +165,6 @@ class Combiner:
             v=llhds[k]
             self.pprint ( "%.2f: %.3g" % ( k, v ) )
 
-
     def isSubset ( self, small, big ):
         """ is the small combo a subset of the big combo? """
         for s in small:
@@ -209,7 +208,6 @@ class Combiner:
             # self.pprint ( "[combine] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
             letter+=1
         return letters
-
 
     def getComboDescription ( self, combination ):
         def describe ( x ):
@@ -390,12 +388,12 @@ class Combiner:
         :param name: name of prior (expo1, gauss1, etc). See self.priorForNDF.
         """
 
-        particles = protomodel.unFrozenParticles ( withLSP=True )
-        nparticles = len ( particles )
+        unfrozen = protomodel.unFrozenParticles ( withLSP=True )
+        nUnfrozen = len ( unfrozen )
         nbr = 0
         ## every non-trivial branching costs something
         for mpid,decays in protomodel.decays.items():
-            if not mpid in particles or mpid == protomodel.LSP:
+            if not mpid in unfrozen or mpid == protomodel.LSP:
                 continue ## frozen particles dont count
             memBRs = set() ## memorize branchings, similar branchings count only once
             for dpid,br in decays.items():
@@ -409,7 +407,7 @@ class Combiner:
         pun1 = 0. # punishment for ssm=1, we prefer zeroes!
         modelXSecs = protomodel.getXsecs()[0]
         for pids,ssm in protomodel.ssmultipliers.items():
-            if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
+            if (abs(pids[0]) not in unfrozen) or (abs(pids[1]) not in unfrozen):
                 continue
             ## ignore non-existant xsecs
             hasXSec=False
@@ -434,7 +432,7 @@ class Combiner:
         # print ( "cssms", cssms )
         pun1 += .1 * ( sum(cssms.values()) - len(cssms) ) ## small additional punishments for all non-zeros
         nssms = len( cssms )+pun1
-        ret = self.priorForNDF ( nparticles, nbr, nssms, name, verbose )
+        ret = self.priorForNDF ( nUnfrozen, nbr, nssms, name, verbose )
         if nll:
             return - math.log ( ret )
         return ret

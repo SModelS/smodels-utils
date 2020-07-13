@@ -44,6 +44,10 @@
     * Removed protoxsecs.py
     * Only information about unfrozen particles is kept in Protomodel.decays, Protomodel.masses and Protomodel.ssmultipliers (so total number of particles is given by ProtoModel.particles)
     * Frozen particles are no longer assigned decoupled masses (except when writing to the SLHA file)
+    * Changed resolveMuHat->rescaleBy->rescaleSignalBy. The rescaling now also takes care of the signal values in ProtoModel.tpList, ProtoModel.bestCombo and _stored_xsecs
+    * Added ProtoModel.rescaleXSecsBy to rescale the cross-sections stored in _stored_xsecs and the signal strength multipliers
+    * Small refactoring of ProtoModel.initializeModel
+    * Small refactoring of Hiscore.computeParticleContributions
 
 ## Refactoring ToDo:
 
