@@ -28,6 +28,7 @@ class Predictor:
             force_load = "pcl"
         self.database=Database( dbpath, force_load = force_load )
         self.fetchResults()
+        self.combiner = Combiner(self.walkerid)
 
     def filterForAnaIdsTopos ( self, anaIds, topo ):
         """ filter the list of expRes, keep only anaIds """
@@ -212,14 +213,13 @@ class Predictor:
 
         rvalues = [0.0,0.0] #If there are no predictions set rmax and r2 to 0
         tpList = []
-        combiner = Combiner( self.walkerid )
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
                 r = 23.
             rexp = theorypred.getRValue(expected=True)
-            tpList.append( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
+            tpList.append( (r, rexp, self.combiner.removeDataFromTheoryPred ( theorypred ) ) )
             rvalues.append(r)
         rvalues.sort(reverse = True )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
@@ -244,11 +244,11 @@ class Predictor:
 
     def computeSignificance(self, protomodel, predictions, strategy):
 
-        combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
         #(set mumax just slightly below its value, so muhat is always below)
         mumax = protomodel.mumax
+        combiner = self.combiner
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy,
                                                 expected=False, mumax = mumax )
         prior = combiner.computePrior ( protomodel )

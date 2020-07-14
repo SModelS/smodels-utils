@@ -119,11 +119,6 @@ class Combiner:
     def error ( self, *args ):
         self.highlight ( "error", *args )
 
-    def highlight( self, msgType = "info", *args ):
-        """ logging, hilit """
-        col = colorama.Fore.GREEN
-        print ( "%s[combine:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
-
     def pprint ( self, *args ):
         """ logging """
         print ( "[combine:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
@@ -311,6 +306,7 @@ class Combiner:
         # self.printLLhds ( llhds )
         Sm = sum ( llhds.values() )
         C = 0.
+        xold = 0.0
         for x,v in llhds.items():
             Cold = C
             C+=v/Sm

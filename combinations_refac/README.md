@@ -52,6 +52,7 @@
     * Moved part of Manipulator.randomlyUnfreezeParticle to Manipulator.unFreezeParticle
     * Added basic unit tests
     * Moved _run and startWalkers from randomWalker.py to walkingWorker.py
+    * Added Combiner object to Predictor.combiner
 
 ## Refactoring ToDo:
 
