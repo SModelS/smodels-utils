@@ -8,6 +8,7 @@ from line_profiler import LineProfiler
 from walker import RandomWalker
 import helpers
 import time,os
+import protomodel
 
 
 t0 = time.time()
@@ -28,7 +29,7 @@ walker = RandomWalker(0,nsteps,dbpath='./run_test/database.pcl',
                         catch_exceptions=False, rundir='./run_test')
 
 walker.protomodel.nevents = nevents
-
+protomodel.maxevents = [nevents]
 # %% Set the profiler
 prof = LineProfiler()
 # %% Add functions to be profiled
