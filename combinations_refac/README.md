@@ -51,6 +51,7 @@
     * freezePidsNotInBestCombo has been moved to the beginning of each step (the model is no longer trimmed at the end of each step)
     * Moved part of Manipulator.randomlyUnfreezeParticle to Manipulator.unFreezeParticle
     * Added basic unit tests
+    * Moved _run and startWalkers from randomWalker.py to walkingWorker.py
 
 ## Refactoring ToDo:
 

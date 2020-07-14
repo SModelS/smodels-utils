@@ -23,7 +23,7 @@ if os.path.isfile('./run_test/walker0.log'):
     os.remove('./run_test/walker0.log')
 
 # %% Set the walker
-nsteps = 10
+nsteps = 100
 nevents = 10000
 walker = RandomWalker(0,nsteps,dbpath='./run_test/database.pcl',
                         catch_exceptions=False, rundir='./run_test')

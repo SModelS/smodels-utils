@@ -9,12 +9,12 @@
 
 """
 
-import sys,os
+import sys,os,glob
 sys.path.insert(0,"../")
 import unittest
 from walker.randomWalker import RandomWalker
 from tools import helpers
-helpers.seedRandomNumbers ( 1 )
+
 
 class VerticalTest(unittest.TestCase):
 
@@ -22,7 +22,7 @@ class VerticalTest(unittest.TestCase):
 
         if os.path.isfile('H0.pcl'):
             os.remove('H0.pcl')
-
+        helpers.seedRandomNumbers ( 1 )
         walker = RandomWalker ( nsteps=11, dbpath="./database.pcl", nevents = 10000 )
         walker.walk()
         # for p in walker.hiscoreList.hiscores: print(p,'\n',p.step,p.K,p.Z)
@@ -31,16 +31,14 @@ class VerticalTest(unittest.TestCase):
         self.assertEqual ( len(walker.hiscoreList.hiscores), 1 )
         self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].Z, 2.4388,2 )
         self.assertEqual ( walker.hiscoreList.hiscores[0].step, 1 )
-        # print(walker.protomodel.K)
-        # print(len(walker.hiscoreList.hiscores))
-        # print(walker.hiscoreList.hiscores[0].Z)
-        # print(walker.hiscoreList.hiscores[0].step)
-        # print( walker.protomodel.masses)
-        # print( walker.hiscoreList.hiscores[0].masses)
         self.assertAlmostEqual ( walker.protomodel.masses[1000004], 420.069, 2 )
         self.assertAlmostEqual ( walker.protomodel.masses[1000022], 240.309, 2 )
         self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].masses[1000022], 240.309, 2 )
         self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].masses[1000016], 1943.707, 2 )
+
+        #Remove files generated during run
+        for f in glob.glob('.cur*slha'):
+            os.remove(f)
 
 if __name__ == "__main__":
     unittest.main()

@@ -19,10 +19,6 @@ from builder.manipulator import Manipulator
 from tester.predictor import Predictor
 from tools import helpers
 from pympler.asizeof import asizeof
-try:
-    from torch import multiprocessing
-except:
-    import multiprocessing
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -358,33 +354,3 @@ class RandomWalker:
             # self.gradientAscent()
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )
-
-def _run ( walker, catchem, seed=None ):
-
-    #Set random seed
-    if seed is not None:
-        helpers.seedRandomNumbers(seed)
-    if not catchem:
-        walker.walk()
-        return
-    try:
-        walker.walk(catchem)
-    except Exception as e:
-        import time
-        with open("exceptions.log","a") as f:
-            f.write ( "time %s\n" % time.asctime() )
-            f.write ( "walker %d threw: %s\n" % ( walker.walkerid, e ) )
-            if hasattr ( walker.model, "currentSLHA" ):
-                f.write ("slha file was %s\n" % walker.model.currentSLHA )
-        import colorama
-        print ( "%swalker %d threw: %s%s\n" % ( colorama.Fore.RED, walker.walkerid, e, colorama.Fore.RESET ) )
-
-def startWalkers ( walkers, seed=None,  catchem=False):
-
-    processes=[]
-    for walker in walkers:
-        p = multiprocessing.Process ( target=_run, args=( walker, catchem, seed ) )
-        p.start()
-        processes.append(p)
-    for p in processes:
-        p.join()

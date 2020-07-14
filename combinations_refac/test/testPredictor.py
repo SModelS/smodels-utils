@@ -8,7 +8,7 @@
 
 """
 
-import sys
+import sys,os,glob
 sys.path.insert(0,"../")
 try:
     import smodels
@@ -74,6 +74,11 @@ class PredictionsTest(unittest.TestCase):
 
 
         self.assertEqual(protomodel.excluded,pNew.excluded)
+
+        #Remove files generated during run
+        for f in glob.glob('.cur*slha'):
+            os.remove(f)
+
 
 
 if __name__ == "__main__":

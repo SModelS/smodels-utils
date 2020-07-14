@@ -1,6 +1,43 @@
 #!/usr/bin/env python3
 
 import os
+try:
+    from torch import multiprocessing
+except:
+    import multiprocessing
+from tools import helpers
+from walker.randomWalker import RandomWalker
+
+def _run ( walker, catchem, seed=None ):
+
+    #Set random seed
+    if seed is not None:
+        helpers.seedRandomNumbers(seed)
+    if not catchem:
+        walker.walk()
+        return
+    try:
+        walker.walk(catchem)
+    except Exception as e:
+        import time
+        with open("exceptions.log","a") as f:
+            f.write ( "time %s\n" % time.asctime() )
+            f.write ( "walker %d threw: %s\n" % ( walker.walkerid, e ) )
+            if hasattr ( walker.model, "currentSLHA" ):
+                f.write ("slha file was %s\n" % walker.model.currentSLHA )
+        import colorama
+        print ( "%swalker %d threw: %s%s\n" % ( colorama.Fore.RED, walker.walkerid, e, colorama.Fore.RESET ) )
+
+def startWalkers ( walkers, seed=None,  catchem=False):
+
+    processes=[]
+    for walker in walkers:
+        p = multiprocessing.Process ( target=_run, args=( walker, catchem, seed ) )
+        p.start()
+        processes.append(p)
+    for p in processes:
+        p.join()
+
 
 def main( nmin, nmax, cont,
           dbpath = "<rundir>/database.pcl",
@@ -45,7 +82,6 @@ def main( nmin, nmax, cont,
     # print ( "[walkingWorker] called main with cont='%s', pfile='%s'." % ( cont, pfile ) )
 
     # print ( "[walkingWorker] I am already inside the python script! Hostname is", socket.gethostname()  )
-    from walker.randomWalker import RandomWalker,startWalkers
     walkers = []
     for i in range(nmin,nmax):
         if pfile is None:
