@@ -3,15 +3,19 @@
 """
 .. module:: runCompleteTestSuite
    :synopsis: Runs all test suites.
-    
+
 .. moduleauthor:: Wolfgang Magerl <wolfgang.magerl@gmail.com>
-.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com> 
-    
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
 """
 
 from __future__ import print_function
 import sys
 sys.path.insert(0,"../")
+try:
+    import smodels
+except:
+    from tools import setPath
 from smodels.tools.colors import colors
 colors.on = True
 
@@ -31,7 +35,7 @@ def run():
     unittest.TextTestRunner().run( unittest.TestLoader().discover("./") )
 
 def verbose_run( flter ):
-    alltests = unittest.TestLoader().discover("./") 
+    alltests = unittest.TestLoader().discover("./")
     n_tests, n_failed = 0, 0
     for series in alltests:
         for test in series:
@@ -50,7 +54,7 @@ def verbose_run( flter ):
                     print ( "%s FAILED: %s,%s%s" % \
                             ( colors.error, type(e), str(e), colors.reset ) )
                     continue
-                print ( "%sok%s" % ( colors.info, colors.reset ) ) 
+                print ( "%sok%s" % ( colors.info, colors.reset ) )
 
                 #a=t.run() ## python3
                 # print ( "a=",a )
@@ -68,7 +72,7 @@ def parallel_run ( verbose ):
         print ( "pip install --user concurrencytest" )
         return
     from smodels.tools import runtime
-    suite = unittest.TestLoader().discover("./") 
+    suite = unittest.TestLoader().discover("./")
     ncpus = runtime.nCPUs()
     ## "shuffle" the tests, so that the heavy tests get distributed
     ## more evenly among threads (didnt help, so I commented it out)

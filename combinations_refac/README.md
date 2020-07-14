@@ -50,10 +50,10 @@
     * Small refactoring of Hiscore.computeParticleContributions
     * freezePidsNotInBestCombo has been moved to the beginning of each step (the model is no longer trimmed at the end of each step)
     * Moved part of Manipulator.randomlyUnfreezeParticle to Manipulator.unFreezeParticle
+    * Added basic unit tests
 
 ## Refactoring ToDo:
 
-  * implement unit tests
   * minimize deepcopies
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)
   * change hiscore pickle file extension (to .hi?)

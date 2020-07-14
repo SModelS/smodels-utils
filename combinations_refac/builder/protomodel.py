@@ -127,7 +127,16 @@ class ProtoModel:
 
         pNames = [helpers.getParticleName ( pid ) for pid in self.unFrozenParticles()]
         pNames = ','.join(pNames)
-        pStr = 'ProtoModel (%s): K = %1.2f, Z = %1.2f' %(pNames,self.K,self.Z)
+        pStr = 'ProtoModel (%s):' %(pNames)
+        if self.K:
+            pStr += ' K = %1.2f' %self.K
+        else:
+            pStr += ' K = %s' %self.K
+        if self.Z:
+            pStr += ', Z = %1.2f' %self.Z
+        else:
+            pStr += ', Z = %s' %self.Z
+
         return pStr
 
     def __repr__(self):

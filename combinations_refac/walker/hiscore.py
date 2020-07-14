@@ -155,15 +155,20 @@ class Hiscore:
             #Recompute cross-secions:
             protomodel.getXsecs()
             self.predictor.predict( protomodel )
-            percK = 0.
-            if oldK > 0.:
+            if protomodel.K is None:
+                self.pprint ( "when removing %s, K could not longer be computed. Setting to zero"% ( helpers.getParticleName(pid)))
+                protomodel.K = 0.0
+                protomodel.Z = 0.0
+            if oldK <= 0:
+                percK = 0.
+            else:
                 percK = ( protomodel.K - oldK ) / oldK
-            self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
+                self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
                     ( helpers.getParticleName(pid), oldK, protomodel.K, 100.*percK, "%", oldZ,protomodel.Z, protomodel.nevents ) )
 
             #Store the new Z and K values in the original model:
-            particleContributions[pid]=manipulator.M.K
-            particleContributionsZ[pid]=manipulator.M.Z
+            particleContributions[pid]=protomodel.K
+            particleContributionsZ[pid]=protomodel.Z
             #Make sure to restore the model to its initial (full particle content) state
             manipulator.restoreModel()
             #Store contributions in the protomodel:
