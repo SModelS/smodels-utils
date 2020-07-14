@@ -184,7 +184,6 @@ class RandomWalker:
         #(merge pre-defined particles of their mass difference is below dm)
         protomodelSimp = self.manipulator.simplifyModel(dm=200.0)
 
-        self.predictor.predict(self.manipulator.M)
         if self.catch_exceptions:
             try:
                 self.predictor.predict(self.manipulator.M)
@@ -239,7 +238,6 @@ class RandomWalker:
         self.log ( "check if result goes into hiscore list" )
         self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
         self.log ( "done check for result to go into hiscore list" )
-
 
     def checkIfToTeleport ( self, pmax=0.1, norm = 10.0 ):
         """ check if we should teleport to a high score model. If we should then also
