@@ -10,6 +10,7 @@ from smodels.theory.model import Model
 from tester import analysisCombiner
 import numpy, math, colorama, copy, sys
 from scipy import optimize, stats
+from scipy.special import erf
 # import IPython
 
 class Combiner:
@@ -217,7 +218,16 @@ class Combiner:
         """
         if len(combo)==0.:
             return 0.,0.
-        muhat = self.findMuHat ( combo )
+
+        #Check if gaussian approximation is valid for the likelihood:
+        minEvt = min([tp.dataset.dataInfo.expectedBG for tp in combo
+                        if tp.dataset.dataInfo.dataType == 'efficiencyMap'])
+
+        if minEvt > 15: #15 events keeps the approximation error ~under 20%
+            muhat = self.findMuHatApprox ( combo ) #Use gaussian approximation
+        else:
+            muhat = self.findMuHat ( combo ) #Compute exactly
+
         if mumax is None:
             mumax = float("inf")
         if muhat is None:
@@ -318,12 +328,111 @@ class Combiner:
             xold = x
         return 1.
 
+    def root_func (self, x, a ):
+        """Auxiliary function for finding mumax when computing events from limits"""
+
+        return (erf((a-x))+erf(x)) / ( 1. + erf(x)) - .95
+
+    def mmaxFit(self,a):
+        """Auxiliary function which gives the root (x) to root_func"""
+
+        if a < 1.38:
+            return 0.0
+        elif a < 1.5:
+            c0,c1,c2 = -2.04738814,  1.50637722, -0.02005543
+        elif a < 2.:
+            c0,c1,c2 = -2.58981055, 2.28286693, -0.2972251
+        else:
+            c0,c1,c2 = -1.20,1.0,0
+
+        return c0 + c1*a + c2*a**2
+
+    def getEventsFromLimits(self, upperLimit, expectedUpperLimit, maxdiff = 0.4 ):
+        """Using the gaussian limit, extract the (normalized) number of expected BG events,
+        and the number of observed events. The normalization is such that the corresponding
+        number of signal events is the total production cross-section."""
+
+        dr = ( expectedUpperLimit - upperLimit ) / ( expectedUpperLimit + upperLimit )
+        if abs(dr)>maxdiff:
+            self.pprint ("asking for likelihood from limit but difference between oUL(%.2f) and eUL(%.2f) is too large (dr=%.2f)" % ( upperLimit, expectedUpperLimit, dr ) )
+            return None
+
+        sigma_exp = expectedUpperLimit / 1.96 # the expected scale, eq 3.24 in arXiv:1202.3415
+        if upperLimit < expectedUpperLimit:
+            ## underfluctuation. mumax = 0., nobs=nbg
+            #Approximation for number of BG events (gaussian limit):
+            nbg = sigma_exp**2
+            nobs = nbg
+            return (nobs,nbg)
+
+        #Rescale everything by denominator:
+        denominator = numpy.sqrt(2.) * sigma_exp
+        a = upperLimit/denominator
+        if numpy.sign(self.root_func(0.,a)*self.root_func(a,a)) > 0.:
+            self.pprint ( "when computing likelihood: fA and fB have same sign")
+            return None
+        xmax = self.mmaxFit(a)
+
+        #Approximation for number of signal events (gaussian limit) which maximizes the likelihood:
+        mumax = xmax*denominator
+        #Approximation for number of BG events (gaussian limit):
+        nbg = sigma_exp**2
+        #Approximation for number of observed events (gaussian limit):
+        nobs = mumax + nbg
+
+        return (nobs,nbg)
+
+    def findMuHatApprox ( self, combination ):
+        """ find the maximum likelihood estimate for the signal strength mu in the gaussian limit"""
+
+        nobs = []
+        nbg = []
+        bgerr = []
+        ns = []
+        for tp in combination:
+            if tp.dataset.dataInfo.dataType == 'upperLimit':
+                upperLimit = tp.upperLimit.asNumber(fb)
+                expectedUL = tp.expectedUL.asNumber(fb)
+                n = self.getEventsFromLimits(upperLimit,expectedUL)
+                if not n: continue #Could not get events
+                observedN,expectedBG = n
+                bgError = 0.0 #In this case we ignore systematics
+                Nsig = tp.xsection.value.asNumber(fb) #Arbitrary normalization (does not affect muhat)
+            else:
+                observedN = tp.dataset.dataInfo.observedN
+                expectedBG = tp.dataset.dataInfo.expectedBG
+                bgError = tp.dataset.dataInfo.bgError
+                Nsig = tp.xsection.value*tp.expResult.globalInfo.lumi
+                Nsig = Nsig.asNumber()
+            nobs.append(observedN)
+            nbg.append(expectedBG)
+            bgerr.append(bgError)
+            ns.append(Nsig)
+
+        if not ns:
+            return 1.0
+        ns = numpy.array(ns)
+        nobs = numpy.array(nobs)
+        nbg = numpy.array(nbg)
+        bgerr = numpy.array(bgerr)
+        sigma2 = nbg+bgerr**2 #total error^2 (systematics + statistics)
+
+        num = numpy.sum(ns*(nobs-nbg)/sigma2)
+        if num <= 0:
+            return 0.0
+        den = numpy.sum(ns*ns/sigma2)
+
+        mu = num/den
+        return mu
+
     def findMuHat ( self, combination ):
         """ find the maximum likelihood estimate for the signal strength mu """
         def getNLL ( mu ):
             ret = self.getCombinedLikelihood ( combination, mu, nll=True )
             return ret
-        for start in [ 0., 1., .1, 10., 1e-2, 1e-3 ]:
+        #Quick guess for muhat:
+        mustart = self.findMuHatApprox(combination)
+        for start in [mustart,0.,1.0,0.1,10.,1e-2,1e-3]:
             ret = optimize.minimize ( getNLL, start, bounds=[(0.,None)] )
             # print ( "findMuHat combo %s start=%f, ret=%s" % ( combination, start, ret.fun ) )
             if ret.status==0:
