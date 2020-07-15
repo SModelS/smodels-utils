@@ -57,7 +57,7 @@ class Manipulator:
             rundir = setup()
             fname = rundir + "/states.dict"
             if not os.path.exists ( fname ):
-                self.pprint ( "could not find states.dict!!" )
+                self.pprint ( "no other walkers found (could not find states.dict)" )
                 return
         try:
             with open ( fname, "rt" ) as f:

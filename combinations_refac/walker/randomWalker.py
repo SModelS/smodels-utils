@@ -97,9 +97,6 @@ class RandomWalker:
         if self.accelerator != None:
             self.accelerator.walkerid = Id
 
-    #def turnOnRegress ( self, accelerator=None ):
-    #    self.accelerator = accelerator
-
     @classmethod
     def fromProtoModel( cls, protomodel, nsteps=10000, strategy="aggressive",
                    walkerid=0, dump_training = False,
