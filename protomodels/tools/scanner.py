@@ -14,9 +14,9 @@ def getHiscore( force_copy = False, rundir = None ):
     """
     import hiscore
     # spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
-    picklefile =rundir + "hiscore2.pcl" # % spids
-    backupfile = rundir+"hiscore.pcl"
-    # picklefile =rundir + "hiscore.pcl" # % spids
+    picklefile =rundir + "hiscore2.hi" # % spids
+    backupfile = rundir+"hiscore.hi"
+    # picklefile =rundir + "hiscore.hi" # % spids
     ## do this always
     h2Outdated = False
     if os.path.exists ( picklefile ) and os.path.exists ( backupfile ):
@@ -443,7 +443,7 @@ if __name__ == "__main__":
             help='interactive mode, starts ipython (only works with -d, and not in bulk mode)',
             action="store_true" )
     argparser.add_argument ( '-F', '--force_copy',
-            help='force copying the hiscore.pcl file',
+            help='force copying the hiscore.hi file',
             action="store_true" )
     argparser.add_argument ( '-c', '--copy',
             help='copy plots to ~/git/smodels.github.io/protomodels/latest/',

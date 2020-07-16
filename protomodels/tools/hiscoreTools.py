@@ -27,7 +27,7 @@ def storeList ( protomodels, savefile ):
     h.hiscores = protomodels
     print ( "[hiscore] saving %d protomodels to %s" % \
             ( count(protomodels), savefile ) )
-    if savefile.endswith ( ".pcl" ):
+    if savefile.endswith ( ".pcl" ) or savefile.endswith( ".hi" ):
         h.writeListToPickle ( check=False )
         if "states" in savefile: ## do both for the states
             h.writeListToDictFile()
@@ -70,10 +70,10 @@ def pprintEvs ( protomodel ):
     return str(protomodel.nevents)+ " evts"
 
 def compileList( nmax ):
-    """ compile the list from individual hi*pcl
+    """ compile the list from individual H*hi
     """
     import glob
-    files = glob.glob ( "H*.pcl" )
+    files = glob.glob ( "H*.hi" )
     allprotomodels=[]
     import progressbar
     pb = progressbar.ProgressBar(widgets=["file #",progressbar.Counter(),
@@ -106,7 +106,7 @@ def compileList( nmax ):
     return allprotomodels
 
 def main ( args ):
-    """ the function that updates the hiscore.pcl file
+    """ the function that updates the hiscore.hi file
     :param args: detailed, outfile, infile, print, fetch, nmax,
                  check, interactive, nevents.
                  see "if __main__" part below.
@@ -128,21 +128,21 @@ def main ( args ):
         trundir = args.rundir
     rundir = setup( trundir )
     if infile == "default":
-        infile = "%s/hiscore.pcl" % rundir
+        infile = "%s/hiscore.hi" % rundir
     if args.outfile == infile:
         print ( "[hiscore] outputfile is same as input file. will assume that you do not want me to write out at all." )
         args.outfile = None
 
     if args.fetch:
         import subprocess
-        cmd = "scp gpu:/local/wwaltenberger/git/sprotomodels-utils/combinations/H*.pcl ."
+        cmd = "scp gpu:/local/wwaltenberger/git/sprotomodels-utils/combinations/H*.hi ."
         print ( "[hiscore] %s" % cmd )
         out = subprocess.getoutput ( cmd )
         print ( out )
 
     if infile is None:
         print ( "[hiscore] compiling a hiscore list with %d protomodels" % args.nmax )
-        protomodels = compileList( args.nmax ) ## compile list from H<n>.pcl files
+        protomodels = compileList( args.nmax ) ## compile list from H<n>.hi files
     else:
         with open(infile,"rb") as f:
             try:
@@ -163,7 +163,7 @@ def main ( args ):
 
     sin = infile
     if sin == None:
-        sin = "H*.pcl"
+        sin = "H*.hi"
     pevs = pprintEvs ( protomodels[0] )
     print ( "[hiscore] hiscore from %s[%d] is at K=%.3f, Z=%.3f (%s)" % \
             ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs ) )
@@ -174,7 +174,7 @@ def main ( args ):
         protomodels = protomodels[:args.nmax]
 
     # print ( "we are here", args.outfile, hasattr ( protomodels[0], "analysisContributions" ) )
-    if type(args.outfile)==str and ".pcl" in args.outfile:
+    if type(args.outfile)==str and (".pcl" in args.outfile or ".hi" in args.outfile ):
         if not hasattr ( protomodels[0], "analysisContributions" ):
             print ( "[hiscore] why does the winner not have analysis contributions?" )
             # ma = Manipulator ( protomodels[0] )

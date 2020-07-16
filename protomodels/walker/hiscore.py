@@ -12,7 +12,7 @@ from tools.csetup import setup
 
 class Hiscore:
     """ encapsulates the hiscore list. """
-    def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl",
+    def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.hi",
                    backup=True, hiscores=None, predictor = None ):
         """ the constructor
         :param save_hiscores: if true, then assume you want to save, not just read.

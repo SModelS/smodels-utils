@@ -3,7 +3,7 @@
 import pickle, os, sys, subprocess, time, glob, colorama, math
 from csetup import setup
 sys.path.insert(0,"../")
-from protomodels.manipulator import Manipulator
+from builder.manipulator import Manipulator
 from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 sys.path.insert(0,"../" )
@@ -23,7 +23,7 @@ def obtain ( number, picklefile ):
         args = Namespace()
         args.detailed = False
         args.print = False
-        args.outfile = "hiscore.pcl"
+        args.outfile = "hiscore.hi"
         args.infile = picklefile
         args.fetch = False
         args.maxloss = 0.005
@@ -834,7 +834,7 @@ def main ():
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [<rundir>/hiscore.pcl]',
+            help='pickle file to draw from [<rundir>/hiscore.hi]',
             type=str, default="default"  )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
@@ -889,7 +889,7 @@ def main ():
         args.predictions = True
         args.tex = True
     if args.picklefile == "default":
-        args.picklefile = "%s/hiscore.pcl" % rundir
+        args.picklefile = "%s/hiscore.hi" % rundir
     runPlotting ( args )
     if args.test:
         compileTestText()

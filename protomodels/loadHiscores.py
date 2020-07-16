@@ -12,7 +12,7 @@ if __name__ == "__main__":
             description='hiscore class as a commandline tool it allows for '
                         'merging, printing, and checking of hiscore list' )
     argparser.add_argument ( '-i', '--infile',
-            help='Specify the input pickle file to start with. If none, start with H<n>.pcl. [None]',
+            help='Specify the input pickle file to start with. If none, start with H<n>.hi. [None]',
             type=str, default=None )
     argparser.add_argument ( '-o', '--outfile',
             help='pickle file with hiscores. If none, dont pickle. [none]',
@@ -24,7 +24,7 @@ if __name__ == "__main__":
             help='check if we can reproduce Z value of first entry',
             action="store_true" )
     argparser.add_argument ( '-f', '--fetch',
-            help='fetch H<n>.pcl from gpu server',
+            help='fetch H<n>.hi from clip server',
             action="store_true" )
     argparser.add_argument ( '-p', '--print',
             help='print list to stdout', action="store_true" )

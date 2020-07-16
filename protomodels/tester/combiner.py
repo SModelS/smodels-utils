@@ -219,9 +219,13 @@ class Combiner:
         if len(combo)==0.:
             return 0.,0.
 
-        #Check if gaussian approximation is valid for the likelihood:
-        minEvt = min([tp.dataset.dataInfo.expectedBG for tp in combo
-                        if tp.dataset.dataInfo.dataType == 'efficiencyMap'])
+        effCombo = [tp.dataset.dataInfo.expectedBG for tp in combo
+                    if tp.dataset.dataInfo.dataType == 'efficiencyMap']
+
+        minEvt = 0.
+        if len(effCombo) > 0:
+            #Check if gaussian approximation is valid for the likelihood:
+            minEvt = min(effCombo)
 
         if minEvt > 15: #15 events keeps the approximation error ~under 20%
             muhat = self.findMuHatApprox ( combo ) #Use gaussian approximation
