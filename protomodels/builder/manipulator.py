@@ -154,6 +154,9 @@ class Manipulator:
         if "comment" in D:
                 scom = ": " + D["comment"]
         self.M.highlight ( "green", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
+        #Reset all model attributes:
+        self.M.initializeModel()
+        #Set attributes to dictionary values:
         for k,v in D["masses"].items():
             self.M.masses[k]=v
         for k,v in D["ssmultipliers"].items():
@@ -165,8 +168,6 @@ class Manipulator:
                 self.M.decays[mpid][dpid]=v
         if "step" in D: ## keep track of number of steps
             self.M.step = D["step"]
-        ## add also the unused SSMs, set them to 1.
-        self.M.initializeSSMs ( overwrite = False )
 
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
