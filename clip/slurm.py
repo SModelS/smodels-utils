@@ -46,7 +46,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/combinations')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
         f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s' )\n" % \
@@ -86,7 +87,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
+            f.write ("%s/protomodels/tools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -101,7 +102,7 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
+            f.write ("%s/protomodels/tools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
                      ( codedir, nprocs, rundir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
@@ -292,7 +293,8 @@ def runUpdater( dry_run, time, rundir ):
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/combinations')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/protomodels/tools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
         f.write ( "updateHiscores.main ( rundir='%s' )\n" % \

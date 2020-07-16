@@ -7,6 +7,7 @@ expected from background, by sampling the background model. """
 # https://link.springer.com/content/pdf/10.1007/JHEP02(2015)004.pdf
 
 import copy, os, sys, time, subprocess, math
+sys.path.insert(0,"..")
 from scipy import stats
 from builder.protomodel import ProtoModel
 from builder.manipulator import Manipulator

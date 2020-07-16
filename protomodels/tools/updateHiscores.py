@@ -10,7 +10,7 @@ def setup( rundir = None ):
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/protomodels/" % codedir )
     if rundir != None:
         rundir = rundir.replace ( "~", os.environ["HOME"] )
         os.chdir ( rundir )
@@ -41,12 +41,12 @@ def updateHiscores( rundir=None ):
     args.rundir = rundir
     # args.maxloss = .01
     # args.nevents = 50000
-    import hiscore
+    import hiscoreTools 
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[updateHiscores] now update %s on %s:%s" % \
             ( args.outfile, hostname, rundir ) )
-    D = hiscore.main ( args )
+    D = hiscoreTools.main ( args )
     return D
 
 def updateStates( rundir=None):
@@ -64,15 +64,15 @@ def updateStates( rundir=None):
     args.infile = None
     # args.maxloss = .003
     # args.nevents = 50000
-    import hiscore
+    import hiscoreTools
     print ( )
     print ( "[updateHiscores] now update %s" % args.outfile )
-    hiscore.main ( args )
+    hiscoreTools.main ( args )
     print ( "[updateHiscores] done updating %s" % args.outfile )
     print ( )
 
 def plot( Z, K, rundir ):
-    import plotHiscore
+    from plotting import plotHiscore
     from argparse import Namespace
     args = Namespace()
     args.upload = "latest"
@@ -113,7 +113,7 @@ def main( rundir = None ):
         Z,step,model,K = D["Z"],D["step"],D["model"],D["K"]
         if K > Kold + .001:
         #if Z > Zold*1.0001:
-            from manipulator import Manipulator
+            from builder.manipulator import Manipulator
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s\n" % str(Z) )
                 f.close()
