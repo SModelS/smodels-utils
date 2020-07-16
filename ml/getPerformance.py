@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse, logging
 from configparser import ConfigParser
+from readParameter import readParameterFile
+from smodels.tools.physicsUnits import GeV, fb
+from smodels.theory.auxiliaryFunctions import unscaleWidth
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -15,24 +18,43 @@ logger = logging.getLogger(__name__)
 
 class Performance():
 
-	def __init__(self, expres, txName, SR, sampleSize, massRange, netType, showPlots = True, savePlots = True):
+	def __init__(self, parameters, netType, showPlots = True, savePlots = True):
 
 		"""
 
 
 		"""
+
+		self.paramPath = parameters["path"]
+		self.paramDatabase = parameters["database"]
+		self.paramDataset = parameters["dataset"]
+		self.paramDevice = parameters["device"]
+		self.paramAnalysis = parameters["analysis"]
+
+		analysis 		= self.paramDatabase["analysisID"]
+		txName 			= self.paramDatabase["txName"]
+		dataSelector 	= self.paramDatabase["dataSelector"]
+
+		db = Database(self.paramPath["database"])
+		expres = db.getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
+
+		txList = expres.getDataset(self.paramDatabase["signalRegion"]).txnameList
+		for tx in txList:
+			if str(tx) == self.paramDatabase["txName"]:
+				txNameData = tx.txnameData
+				break
+
+		self.paramDatabase["expres"] = expres
+		self.paramDatabase["txNameData"] = txNameData
 
 		self.expres = expres
 		self.txName = txName
 		#self.dataselector = dataselector
-		self.SR = SR
-		self.showPlots = showPlots
-		self.savePlots = savePlots
+		self.SR = parameters["database"]["signalRegion"]
+		self.showPlots = True
+		self.savePlots = True
 		self.netType = netType
 		self.model = loadModel(expres, txName)[netType]
-
-		print(loadModel(expres, txName)["regression"])
-		print(loadModel(expres, txName)["classification"])
 
 		# TEMPORARY replace databasePath
 		dbPath = expres.path
@@ -44,7 +66,8 @@ class Performance():
 		if not os.path.exists(self.savePath): os.makedirs(self.savePath)
 		# ---
 
-		self.validationSet = generateDataset(expres, txName, SR, massRange, sampleSize, netType, "cpu")
+		datasetbuilder = DatasetBuilder(logger, self.paramDatabase, self.paramDataset, self.paramDevice["device"])
+		self.validationSet = datasetbuilder.generateNewSet(netType, sampleSize = 2000)
 
 
 	def evaluate(self):
@@ -158,26 +181,59 @@ class Performance():
 		if self.validationSet.inputDimension > 4:
 			if max(self.validationSet.inputs[2]) - min(self.validationSet.inputs[2]) > 20:
 				yaxis = 2
+		yaxis = 1 
+		'''REMOVE'''
 
-		X = [inputs[0].item() for inputs in self.validationSet.inputs]
-		Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
+		X = [np.exp(inputs[0].item()) for inputs in self.validationSet.inputs]
+		Y = [np.exp(inputs[yaxis].item()) for inputs in self.validationSet.inputs]
+
+		
+		E2 = []
+		for n in range(len(labels)):
+			l = labels[n].item()
+			p = predictions[n].item()
+			#l = unscaleWidth(l - 0.1).asNumber(GeV)
+			#p = unscaleWidth(p - 0.1).asNumber(GeV)
+			l -= 1e-5
+			p -= 1e-5
+			if l < 1e-4: l = 0
+			if p < 1e-4: p = 0
+			print(l, p)
+			#print("---")
+			if l > 0:
+				e = np.sqrt((( p - l ) / l)**2)
+			else: e = p
+			#e = np.sqrt((l - p)**2)
+			if e > 1.: print(l,p)
+			E2.append(e)
+
+		meanError2 = np.mean(E2)* 100.
+		
+		#X = [inputs[0].item() for inputs in self.validationSet.inputs]
+		#Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
 		E = [e.item() for e in self.error]
 
+		
+
 		plt.figure(2)
-		plt.title('id: {}, tx: {}, relError: {:4.2f}%  (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.meanError*100.), fontsize=14)
-		plt.xlabel('mass mother [GeV]')
-		plt.ylabel('mass daughter [GeV]')
-		plt.scatter(X,Y, c=E, cmap='rainbow', vmin=0, vmax=1)
-		plt.colorbar()
+		#plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, self.meanError*100.), fontsize=14)
+		plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, meanError2), fontsize=14)
+		plt.xlabel("mass mother [GeV]")
+		#plt.ylabel("mass daughter [GeV]")
+		plt.ylabel("relative error")
+		plt.scatter(X,E2)
+		#plt.scatter(X,Y, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		#plt.colorbar()
 		plt.tight_layout()
 
 		fileName = self.txName + "_regression_scatterPlot.eps"
 		if self.savePlots:plt.savefig(self.savePath + fileName)
 	
-		origPoints = getExpresData(self.expres, self.txName, self.SR)
+		#origPoints = getExpresData(self.expres, self.txName, self.SR)
+		#origPoints = getOrigExpresData(self.paramDatabase, stripUnits = True)
 		
-		X0 = [oP[0] for oP in origPoints]
-		Y0 = [oP[1] for oP in origPoints]
+		#X0 = [oP[0] for oP in origPoints]
+		#Y0 = [oP[1] for oP in origPoints]
 		#plt.scatter(X0,Y0, marker="x", c="black", s=32)
 
 
@@ -233,23 +289,38 @@ class Performance():
 
 
 		plt.figure(0)
-		plt.title('id: {}, tx: {} error: {}% (delimiter: {})'.format(self.expres.globalInfo.getInfo('id'),self.txName, error, delim), fontsize=14)
+		plt.title('id: {}, tx: {}, sr: {},  error: {}% (delimiter: {})'.format(self.expres.globalInfo.getInfo('id'),self.txName, self.SR, error, delim), fontsize=14)
 		plt.xlabel('mass mother [GeV]')
 		plt.ylabel('mass daughter [GeV]')
-		plt_cor_on = plt.scatter([oH[0].item() for oH in onHull_correct], [oH[1].item() for oH in onHull_correct], color = 'green')
-		plt_cor_off = plt.scatter([oH[0].item() for oH in offHull_correct], [oH[1].item() for oH in offHull_correct], color = 'blue')
-		plt_wrg_on = plt.scatter([oH[0].item() for oH in onHull_wrong], [oH[1].item() for oH in onHull_wrong], color = 'red')
-		plt_wrg_off = plt.scatter([oH[0].item() for oH in offHull_wrong], [oH[1].item() for oH in offHull_wrong], color = 'orange')
+
+		x = 0
+		y = 1
+
+		#plt_cor_on = plt.scatter([oH[0].item() for oH in onHull_correct], [oH[1].item() for oH in onHull_correct], color = 'green')
+		#plt_cor_off = plt.scatter([oH[0].item() for oH in offHull_correct], [oH[1].item() for oH in offHull_correct], color = 'blue')
+		#plt_wrg_on = plt.scatter([oH[0].item() for oH in onHull_wrong], [oH[1].item() for oH in onHull_wrong], color = 'red')
+		#plt_wrg_off = plt.scatter([oH[0].item() for oH in offHull_wrong], [oH[1].item() for oH in offHull_wrong], color = 'orange')
+
+
+		#plt_cor_on = plt.scatter([np.exp(oH[x].item()) for oH in onHull_correct], [unscaleWidth(oH[y].item()).asNumber(GeV) for oH in onHull_correct], color = 'green')
+		#plt_cor_off = plt.scatter([np.exp(oH[x].item()) for oH in offHull_correct], [unscaleWidth(oH[y].item()).asNumber(GeV) for oH in offHull_correct], color = 'blue')
+		#plt_wrg_on = plt.scatter([np.exp(oH[x].item()) for oH in onHull_wrong], [unscaleWidth(oH[y].item()).asNumber(GeV) for oH in onHull_wrong], color = 'red')
+		#plt_wrg_off = plt.scatter([np.exp(oH[x].item()) for oH in offHull_wrong], [unscaleWidth(oH[y].item()).asNumber(GeV) for oH in offHull_wrong], color = 'orange')
+
+
+		plt_cor_on = plt.scatter([np.exp(oH[x].item()) for oH in onHull_correct], [np.exp(oH[y].item()) for oH in onHull_correct], color = 'green')
+		plt_cor_off = plt.scatter([np.exp(oH[x].item()) for oH in offHull_correct], [np.exp(oH[y].item()) for oH in offHull_correct], color = 'blue')
+		plt_wrg_on = plt.scatter([np.exp(oH[x].item()) for oH in onHull_wrong], [np.exp(oH[y].item()) for oH in onHull_wrong], color = 'red')
+		plt_wrg_off = plt.scatter([np.exp(oH[x].item()) for oH in offHull_wrong], [np.exp(oH[y].item()) for oH in offHull_wrong], color = 'orange')
 		plt.legend((plt_cor_on, plt_cor_off, plt_wrg_on, plt_wrg_off), ('on hull correct', 'off hull correct', 'should be on hull', 'should be off hull'), scatterpoints=1, loc='upper right', ncol=1, fontsize=8)
 
-
-		origPoints = getExpresData(self.expres, self.txName)
+		#origPoints = getExpresData(self.expres, self.txName, self.SR)
 		
-		X0 = [oP[0] for oP in origPoints]
-		Y0 = [oP[1] for oP in origPoints]
+		#X0 = [oP[x] for oP in origPoints]
+		#Y0 = [oP[y] for oP in origPoints]
 		#plt.scatter(X0,Y0, marker="x", c="black", s=32)
 
-		fileName = txName + "_classification_scatterPlot.eps"
+		fileName = self.txName + "_classification_scatterPlot.eps"
 		if self.savePlots:plt.savefig(self.savePath + fileName)
 		plt.show()
 
@@ -257,77 +328,46 @@ class Performance():
 
 if __name__=='__main__':
 
-	ap = argparse.ArgumentParser(description="Trains and finds best performing neural networks for database analyses via hyperparameter search")
+	ap = argparse.ArgumentParser(description="Evaluates performance of generated neural networks")
 	ap.add_argument('-p', '--parfile', 
-			help='parameter file specifying the plots to be checked', default='nn_parameters.ini')
+			help='parameter file', default='nn_parameters.ini')
 	ap.add_argument('-l', '--log', 
 			help='specifying the level of verbosity (error, warning, info, debug)',
 			default = 'info', type = str)
+	ap.add_argument('-n', '--netType', 
+			help='which neural network to test (regression or classification)',
+			default = 'regression', type = str)
            
 	args = ap.parse_args()
+	numeric_level = getattr(logging,args.log.upper(), None)
+	logger.setLevel(level=numeric_level)
     
 	if not os.path.isfile(args.parfile):
 		logger.error("Parameters file %s not found" %args.parfile)
 	else:
 		logger.info("Reading validation parameters from %s" %args.parfile)
 
+	fileParameters = readParameterFile(logger, args.parfile)
 
-	parser = ConfigParser( inline_comment_prefixes=( ';', ) )
-	parser.read(args.parfile)
+	parameters = {}
+	parameters["database"] 		 = {}
+	parameters["path"] 			 = fileParameters["path"]
+	parameters["dataset"] 		 = fileParameters["dataset"]
+	parameters["device"] 		 = fileParameters["device"]
+	parameters["analysis"] 		 = fileParameters["analysis"]
+	parameters["hyperParameter"] = fileParameters["hyperParameter"]
 
-	#Control output level:
-	numeric_level = getattr(logging,args.log.upper(), None)
-	logger.setLevel(level=numeric_level)
-    
-	#Add smodels and smodels-database to path
-	smodelsPath = parser.get("path", "smodelsPath")
-	databasePath = parser.get("path", "databasePath")
-	sys.path.append(smodelsPath)
-	sys.path.append(databasePath)
-	from smodels.experiment.databaseObj import Database
+	for analysisID in fileParameters["database"]["analysisID"]:
+		for txName in fileParameters["database"]["txName"]:
+			for daSel in fileParameters["database"]["dataselector"]:
+				for signalRegion in fileParameters["database"]["signalRegion"]:
 
-	#Select analysis and topologies for training
-	analysisID = parser.get("database", "analysis")
-	txNames = parser.get("database", "txNames").split(",")[0]
-	dataselector = parser.get("database", "dataselector")
+					parameters["database"]["analysisID"]   = analysisID
+					parameters["database"]["txName"]	   = txName
+					parameters["database"]["dataSelector"] = daSel
+					parameters["database"]["signalRegion"] = signalRegion
 
-	#Configure dataset generated for training
-	sampleSize = 4000 #int(parser.get("dataset", "sampleSize"))
-	massRange = parser.get("dataset", "massRange").split(",")
-	massRange = [float(mR) for mR in massRange]
+					validater = Performance(parameters, args.netType)
+					validater.evaluate()
 
-	"""
-	#Choose wether to run on CPU or GPU
-	whichDevice = float(parser.get("options", "device"))
-	deviceCount = torch.cuda.device_count()
-	if torch.cuda.is_available() and int(whichDevice) >= 0 and whichDevice <= deviceCount:
-		device = torch.device('cuda:' + str(whichDevice))
-		logger.info("Running on GPU:%d" %deviceCount)
-	else:
-		device = torch.device('cpu')
-		logger.info("Running on CPU")
-	"""
-	
-
-	#Select which NNs to train
-	netType = parser.get("options", "whichNN")
-	if not ( netType == "regression" or netType == "classification"):
-		logger.error("Parameter nettype: for performance, only 'regression' or 'classification' allowed")
-		netType = "regression" #"classification"
-
-	#expres = Database(databasePath, progressbar = True)
-	#expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
-
-	db = Database(databasePath)
-	expres = db.getExpResults(analysisIDs = analysisID, txnames = txNames, dataTypes = dataselector, useSuperseded = True, useNonValidated = True)[0]
-
-	SR = None
-	if dataselector == "efficiencyMap":
-		IDS = [d.getID() for d in expres.datasets]
-		while SR not in IDS:
-			SR = input("available SR: %s\nselect which to train: " %expres.datasets)
-
-
-	validater = Performance(expres, txNames, SR, sampleSize, massRange, netType)
-	validater.evaluate()
 
