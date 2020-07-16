@@ -2,7 +2,8 @@
 
 import pickle, os, sys, subprocess, time, glob, colorama, math
 from csetup import setup
-from protomodel.manipulator import Manipulator
+sys.path.insert(0,"../")
+from protomodels.manipulator import Manipulator
 from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 sys.path.insert(0,"../" )

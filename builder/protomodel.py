@@ -2,11 +2,12 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, time, colorama, copy
+import random, tempfile, os, time, colorama, copy, sys
+from tester.combiner import Combiner
+sys.path.insert(0,"../")
+from tools import helpers
 from smodels.tools.xsecComputer import XSecComputer, NLL
 from smodels.tools.physicsUnits import TeV
-from tester.combiner import Combiner
-from tools import helpers
 
 
 class ProtoModel:

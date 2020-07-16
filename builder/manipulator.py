@@ -740,9 +740,11 @@ class Manipulator:
         #Redefine mass range if necessary to make sure the mass ordering is respected:
         for pids in self.canonicalOrder:
             if pid == pids[0] and not (pids[1] in frozen):
-                maxMass = protomodel.masses[pids[1]] #Do not allow for masses above the heavier state
+                if pids[1] in protomodel.masses:
+                    maxMass = protomodel.masses[pids[1]] #Do not allow for masses above the heavier state
             elif pid == pids[1] and not (pids[0] in frozen):
-                minMass = protomodel.masses[pids[0]] #Do not allow for masses below the ligher state
+                if pids[0] in protomodel.masses:
+                    minMass = protomodel.masses[pids[0]] #Do not allow for masses below the ligher state
 
         #Randomly select mass of unfrozen particle:
         protomodel.masses[pid] = random.uniform ( minMass, maxMass )

@@ -22,7 +22,7 @@ def sortByK ( protomodels ):
 
 def storeList ( protomodels, savefile ):
     """ store the best protomodels in another hiscore file """
-    from hiscore import Hiscore
+    from walker.hiscore import Hiscore
     h = Hiscore ( 0, True, savefile, backup=True, hiscores = protomodels )
     h.hiscores = protomodels
     print ( "[hiscore] saving %d protomodels to %s" % \
