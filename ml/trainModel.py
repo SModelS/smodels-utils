@@ -9,31 +9,292 @@
 """
 
 import logging,sys,os
-#import subprocess
-import copy
-from time import time
+import numpy,argparse
+import torch,random,copy
 import matplotlib.pyplot as plt
-#plt.switch_backend('agg')
-import torch
-from torch.utils.data import DataLoader as DataLoader
-#from math import sqrt as sqrt
-#from system.analysis import *
 from system.dataset import *
 from system.initnet import *
 from getPerformance import *
 from system.getTimings import *
 from system.getInterpolationError import *
+from time import time
+from readParameter import readParameterFile
 from scipy.optimize import minimize
-#torch.multiprocessing.set_start_method("spawn")
-import numpy
-import argparse
 from configparser import ConfigParser
+from smodels.theory.auxiliaryFunctions import unscaleWidth
+from torch.utils.data import DataLoader as DataLoader
 from datetime import datetime
-#import string
-#import random
+
+#import subprocess
+#plt.switch_backend('agg')
+#torch.multiprocessing.set_start_method("spawn")
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
+
+
+def makeHeuristicPredictions(database):
+	print("PLACEHOLDER")
+	return None
+
+
+class TrainerWrapper():
+
+	"""
+	Wrapper for regression and classification trainer.
+	Handles heuristics, dataset generation and combines finished networks for a single analysis map.
+
+	:ivar parameters: (vtype: dict >> string/int/f32)
+	:ivar modelTrainer: Holds Trainer classes for individual network types (vtype: dict >> Trainer)
+
+	"""
+
+
+	def __init__(self, parameters): #, dataset = None):
+
+		"""
+
+
+
+		"""
+
+		self.paramPath = parameters["path"]
+		self.paramDatabase = parameters["database"]
+		self.paramDataset = parameters["dataset"]
+		self.hyperParameterRaw = copy.deepcopy(parameters["hyperParameter"])
+		self.paramDevice = parameters["device"]
+		self.paramAnalysis = parameters["analysis"]
+
+		analysis 		= self.paramDatabase["analysisID"]
+		txName 			= self.paramDatabase["txName"]
+		dataSelector 	= self.paramDatabase["dataSelector"]
+
+		db = Database(self.paramPath["database"])
+		expres = db.getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
+
+		txList = expres.getDataset(self.paramDatabase["signalRegion"]).txnameList
+		for tx in txList:
+			if str(tx) == self.paramDatabase["txName"]:
+				txNameData = tx.txnameData
+				break
+
+		self.paramDatabase["expres"] = expres
+		self.paramDatabase["txNameData"] = txNameData
+
+		self.modelTrainer = {}
+		self.hyperParameter = {}
+		self.outputDir = {}
+
+		self._setOutputPaths()
+
+	
+	def _setOutputPaths(self):
+
+		"""
+		Set directories for any training outputs including the final model.
+		If 'outputPath' in parameter file was left blank, default expres database location
+		will be used as root folder.
+		"""
+
+		###################################################
+		#		  Storage location for output 			  #
+		###################################################
+		self.outputDir["model"]		  = "/models/"		  #
+		self.outputDir["log"]		  = "/logs/"		  #
+		self.outputDir["loss"] 		  = "/performance/"	  #
+		self.outputDir["performance"] = "/performance/"   #
+		###################################################
+
+		if self.paramPath["outputPath"] != None:
+			dbPath = self.paramDatabase["expres"].path
+			for i in range(len(dbPath)):
+				if dbPath[i:i+8] == "database":
+					dbPath = dbPath[i+8:]
+					break
+			outputDir = os.path.join(os.path.abspath(self.paramPath["outputPath"]) + dbPath)
+		else: outputDir = expres.path
+
+		for key, value in self.outputDir.items():
+			self.outputDir[key] = os.path.join(outputDir + value)
+			if not os.path.exists(self.outputDir[key]):
+				try: os.makedirs(self.outputDir[key])
+				except: logger.error("Insufficient user rights! Failed to create output directory.")
+
+
+	def _makeHeuristicPredictions(self):
+
+		"""
+		If some hyper-parameters in the parameter config file have been set to 'None' a script
+		will now try and predict fitting parameters for the given analysis map.
+		Ideally this will circumvent a hyper-parameter search with multiple combinations and instead give a targeted
+		prediction about optimal hyper-parameters to use.
+		Note that this method is still a WIP and unfathomably slow for large orig datafiles.
+		See the actual prediction method for more information.
+
+		"""
+
+		heuristicParameters = {}
+		missingParameters = False
+
+		for netType in ["regression", "classification"]:
+			for key, value in self.hyperParameterRaw[netType].items():
+				if value == None:
+					missingParameters = True
+					break
+
+		if missingParameters:
+			timestamp = time()
+			logger.info("Missing hyperparameters found. Predicting optimal model architectures..")
+			heuristicParameters = makeHeuristicPredictions(self.database)
+			logger.info("Done. (%ss)" % (round(time() - timestamp, 3)))
+
+		for netType in ["regression", "classification"]:
+			for key, value in heuristicParameters.items():
+				if self.hyperParameterRaw[netType][key] == None:
+					self.hyperParameterRaw[netType][key] = value
+
+
+	def _formatHyperParameter(self, netType):
+		self.hyperParameter[netType] = HyperParameter(self.hyperParameterRaw[netType])
+
+
+	def _loadDatasetBuilder(self):
+		self.datasetBuilder = DatasetBuilder(logger, self.paramDatabase, self.paramDataset, self.paramDevice["device"])
+
+
+	def _generateDataset(self, netType):
+
+		self.dataset = {}
+
+		# TEMPORARY BAND-AID TO ONLY FOCUS ON ONE MODEL
+		if netType == "classification":
+			datasetFull = self.datasetBuilder.generateNewSet(netType, sampleSize = 100)
+		else:
+			datasetFull = self.datasetBuilder.generateNewSet(netType)
+
+		splitSet = datasetFull.split(self.paramDataset["sampleSplit"])
+		
+		self.dataset["full"] 		= datasetFull
+		self.dataset["training"] 	= splitSet[0]
+		self.dataset["testing"] 	= splitSet[1]
+		self.dataset["validation"] 	= splitSet[2]
+
+
+	def generateNeuralNetwork(self):
+
+		"""
+
+
+		"""
+
+		t0 = time()
+		
+		self._loadDatasetBuilder()
+		self._makeHeuristicPredictions()
+
+		for netType in ["regression", "classification"]:
+
+			self._formatHyperParameter(netType)
+			logger.info("%s hyperparameter combination(s) loaded.." % len(self.hyperParameter[netType]))
+
+			timestamp = time()
+			logger.info("Generating %s dataset with %s samples.." % (netType, self.paramDataset["sampleSize"]))
+			self._generateDataset(netType)
+			logger.info("Done. (%ss)" % (round(time() - timestamp, 3)))
+
+			self.modelTrainer[netType] = Trainer(self.paramDatabase, self.hyperParameter[netType], self.dataset, self.paramDevice, netType)
+			timestamp = time()
+
+			self.modelTrainer[netType].findBestModel()
+
+			if self.paramAnalysis["logFile"]:
+				self.saveResultsToLog(netType)
+			if self.paramAnalysis["lossPlot"]:
+				self.createLossPlot(netType)
+
+		self.combinedModel = NN_combined(self.modelTrainer["regression"].winner["model"], self.modelTrainer["classification"].winner["model"])
+
+		logger.info("All done! Final network generated after %ss." % round(time()-t0, 3))
+
+		self.saveModel()
+
+		existingModel = None # LoadModel(...)
+
+		#speedFactor = getSpeed(bestModel, expres, txName, trainerRegression.fullDataset)
+		#bestModel.setSpeedFactor(speedFactor)
+
+		#if runPerformance:
+			#validateModel(model, expres, txName, massRange, sampleSize, netType, validationSet)
+
+
+	
+	def createLossPlot(self, netType):
+
+		"""
+
+
+
+		"""
+
+		fullPath = self.outputDir["loss"] + self.paramDatabase["txName"] + "_" + netType + "_lossPlot.png" #.eps
+
+		x = [e+1 for e in range(len(self.modelTrainer[netType].winner["plotData"]["training"]))]
+		y = self.modelTrainer[netType].winner["plotData"]["training"]
+		z = self.modelTrainer[netType].winner["plotData"]["testing"]
+
+		ID = self.paramDatabase["analysisID"]
+		tx = self.paramDatabase["txName"]
+		sr = self.paramDatabase["signalRegion"]
+		loss = self.modelTrainer[netType].winner["config"]["lossFunction"]
+		title = title = "Loss Per Epoch (loss func = %s) (%s) \nid = %s, tx = %s" % (loss, netType, ID, tx)
+
+		if sr != None:
+			title += ", sr = %s" % sr
+
+		if netType == "regression": figId = 55
+		else: figId = 54
+
+		plt.figure(figId)
+		plt.title(title, fontsize=20)
+		plt.xlabel("Epochs")
+		plt.ylabel("Loss")
+		plt.plot(x, y, label = "training set")
+		plt.plot(x, z, label = "testing set")
+		plt.legend()
+		plt.savefig(fullPath)
+		logger.info("Lossplot saved in %s." % fullPath)
+
+
+	def saveResultsToLog(self, netType):
+
+		"""
+
+
+
+		"""
+
+		date = datetime.now()
+
+		logData = sorted(self.modelTrainer[netType].logData, key=lambda lD: lD[0])
+
+		fullPath = self.outputDir["log"] + self.paramDatabase["txName"] + "_" + netType + "_" + date.strftime("%d.%m.%Y-%H:%M:%S") + ".info"
+
+		with open(fullPath, "a+") as file:
+			for lD in logData:
+				file.write("loss: %s\t%s\n" %(lD[0], str(lD[1])))
+
+		logger.info("Logfile has been created. (%s)" % fullPath)
+
+
+	def saveModel(self):
+
+		fullPath = self.outputDir["model"] + self.paramDatabase["txName"] + ".pth"
+
+		torch.save(self.combinedModel, fullPath)
+		logger.info("Best performing model has been saved. (%s)" % fullPath)
+
+
+
 
 
 class Trainer():
@@ -53,7 +314,8 @@ class Trainer():
 
 	"""
 
-	def __init__(self, expres, txName, dataset, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogfile, saveLossPlot, replaceExistingModel, netType):
+
+	def __init__(self, paramDatabase, hyperParameter, dataset, paramDevice, netType):
 
 		"""
 
@@ -61,153 +323,66 @@ class Trainer():
 
 		"""
 
-		# global information
-		self.expres = expres
-		self.txName = txName
-		self.dataset = dataset
-		self.netType = netType
-		self.device = device
-		#self.savePath = expres.path
-
-		# TEMPORARY replace databasePath
-		dbPath = expres.path
-		for i in range(len(dbPath)):
-			if dbPath[i:i+8] == 'database':
-				dbPath = dbPath[i:]
-				break
-		self.savePath = os.getcwd() + "/" + dbPath
-		# ---
-
-		# generate datasets
-		timestamp = time()
-
-		self.fullDataset = {}
-		logger.info("Building Trainer - generating dataset..")
-
-		
-		self.fullDataset = generateDataset(self.expres, self.txName, self.dataset, 0., sampleSize, self.netType, self.device)
-		splitData = self.fullDataset.split(sampleSplit)
-		self.inputDimension = self.fullDataset.inputDimension
-		self.trainingSet = splitData[0]
-		self.testSet = splitData[1]
-		self.validationSet = splitData[2]
-
-		logger.info("Done. (%ss)" % (round(time() - timestamp, 3)))
-
-		#self.heuristicData = getInterpolationError(expres, txName)
+		self.paramDatabase = paramDatabase
 
 		self.hyperParameter = hyperParameter
-		self.totalHyperParamCombinations = len(self.hyperParameter)
-		# current hyperparam configuration for each training run
 		self.currentHyperParamConfig = None
 
-		logger.info("%s Hyperparameter combinations have been loaded." % (self.totalHyperParamCombinations) )
+		self.datasetFull 	= dataset["full"]
+		self.trainingSet 	= dataset["training"]
+		self.testSet 		= dataset["testing"]
+		self.validationSet 	= dataset["validation"]
+		self.inputDimension = self.datasetFull.inputDimension
 
-		self.saveLogfile  = saveLogFile
-		self.saveLossPlot = saveLossPlot
-		self.replaceExistingModel = replaceExistingModel
+		self.device = paramDevice["device"]
+		self.cores = paramDevice["cores"]
+		self.netType = netType
 
-		# current best model over all parameter configurations
-		self.bestModelGlobal = None
-		self.bestLossGlobal = 1e5
-		self.bestHyperParamConfig = None
-
-		# list of mean losses and hyperparam configurations for each model
 		self.logData = []
-
+		self.winner = {"error": 1e5}
+		
 
 	def findBestModel(self):
 
 		"""
-
-
-
+		Loops over all hyperparameter configurations 
+		and keeps track of the best current model.
 		"""
 
-		logger.info("Starting grid search for %s: %s (%s)" % (self.expres.globalInfo.getInfo('id'), self.txName, self.netType) )
+		logger.info("Starting grid search for %s: %s (%s)" % (self.paramDatabase["analysisID"], self.paramDatabase["txName"], self.netType))
 
-		for n in range(self.totalHyperParamCombinations):
-			self.currentHyperParamConfig = self.hyperParameter[n]
-			self.runCurrentConfiguration()
+		for n in range(len(self.hyperParameter)):
 
-			#if self.saveLossPlot:
-			#	self.createLossPlot()
-
-		#if self.saveLogfile:
-		#	self.saveResultsToLog()
-
-		#if self.replaceExistingModel == "outperforming":
-		#	oldModel = loadModel(self.expres, self.txName, self.netType)
-		#	if oldModel == None: 
-		#		saveNewModel = True
-		#	else: 
-		#		saveNewModel = MSErel(oldModel(self.validationSet.inputs), self.validationSet.labels) > self.bestLossGlobal
-		#else: saveNewModel = self.replaceExistingModel == "always"
-
-		#if True: #saveNewModel:
-		#	self.saveModel()
-
-
-	def runCurrentConfiguration(self):
-
-		"""
-
-
-
-		"""
-
-
-		if self.currentHyperParamConfig == None:
-			logger.error("No hyperparameter configuration specified for training.")
-			return
-
-
-		logger.info("Training model %d/%d .." %(self.currentHyperParamConfig["index"] + 1, self.totalHyperParamCombinations))
-
-		if self.saveLossPlot:
 			self.lossPerEpoch = {'training':[],'testing':[]}
 
-		self.model = createNet(self.currentHyperParamConfig, self.fullDataset, self.netType).to(device)
-		self.trainModel()
+			self.currentHyperParamConfig = self.hyperParameter[n]
+			logger.info("Training model %d/%d .." %(self.currentHyperParamConfig["index"] + 1, len(self.hyperParameter)))
+			self.runCurrentConfiguration()
 
+			if self.winner["error"] > self.meanError:
 
-		if self.netType == "regression":
+				self.winner["model"]	= copy.deepcopy(self.model)
+				self.winner["error"]   	= self.meanError
+				self.winner["config"]  	= self.currentHyperParamConfig
+				self.winner["logData"] 	= self.logData
+				self.winner["plotData"]	= self.lossPerEpoch
 
-			meanError = MSErel(self.model(self.validationSet.inputs), self.validationSet.labels)
-			logger.info("\rDone! Total relative error on validation set: %s" %round(meanError.item(), 3))
-
-			if False:
-				newDataset = self._getWrongPredictionsSubset()		
-
-				logger.info("Rerunning training with new dataset: %s points" %len(newDataset))
-				trainingNew, testNew = newDataset.split([0.8,0.2])
-				optimizer = loadOptimizer(self.currentHyperParamConfig["optimizer"], self.model, self.currentHyperParamConfig["learnRate"]*0.1)
-
-
-				self.trainModel(optimizer, MSErel, epochNum = int(self.currentHyperParamConfig["epochNum"]*0.5), trainingSet = trainingNew, testSet = testNew)
-
-				meanError = MSErel(self.model(self.validationSet.inputs), self.validationSet.labels)
-				logger.info("\rSecond run: Done! Total relative error on validation set: %s" %round(meanError.item(), 3))
-
-		else:
-
-			self.model._delimiter = minimize(self._findDelimiter, 0.5, args=(self.model(self.validationSet.inputs).detach().numpy(), self.validationSet.labels.detach().numpy()), method="Powell").x.tolist()
-			lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
-			meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
-			logger.info("\rDone! Mean error on validation set: %s" %round(meanError.item(), 3))
+				self.winner["model"].setValidationLoss(self.winner["error"])
 
 
 
-		
-		#if self.bestModelGlobal == None or meanError < self.bestModelGlobal[self.netType].getValidationError():
-		if meanError < self.bestLossGlobal:
-			self.bestLossGlobal  		= meanError
-			self.bestModelGlobal 		= copy.deepcopy(self.model)
-			self.bestHyperParamConfig 	= self.currentHyperParamConfig
-			self.bestModelGlobal.setValidationLoss(meanError)
+	def _rerunWithWrongPredictionSubset(self, subset):
 
-		if self.saveLogfile:
-			self.logData.append([round(meanError.item(), 3), self.currentHyperParamConfig])
+		"""
+		Second training run with with 'subset' dataset. Mainly used for regression
+
+		"""
+
+		training, testing = subset.split([0.8,0.2])
+		#self.trainModel(trainingSet = training, testSet = testing)
+
+		#optimizer = loadOptimizer(self.currentHyperParamConfig["optimizer"], self.model, self.currentHyperParamConfig["learnRate"]) #*0.1
+		self.trainModel(epochNum = int(self.currentHyperParamConfig["epochNum"]*0.5), trainingSet = training, testSet = testing) #MSErel
 
 
 	def _getWrongPredictionsSubset(self, tolerance = 0.05):
@@ -219,6 +394,51 @@ class Trainer():
 		:param tolerance: relative error threshold for which a given point is considered as wrongly predicted
 
 		"""
+
+		if self.netType == "classification":
+
+			subset = []
+
+			for n in range(len(self.datasetFull.labels)):
+
+				l = self.datasetFull.labels[n].item()
+				p = self.model(self.datasetFull.inputs[n]).item()
+
+				if not ((p < 0.5 and l == 0) or (p >= 0.5 and l == 1)):
+
+					newPoint = [inputs.item() for inputs in self.datasetFull.inputs[n]]
+					newPoint.append(self.datasetFull.labels[n].item())
+					subset.append(newPoint)
+
+			newDataset = Data(subset, self.inputDimension, self.device)
+			return newDataset
+			
+
+		### TEMPORARY LLP FIX FOR RESCALED LABELS
+	
+		subset = []
+		
+		for n in range(len(self.datasetFull.labels)):
+
+			#l = unscaleWidth(self.fullDataset.labels[n].item() - 0.1).asNumber(GeV)
+			#p = unscaleWidth(self.model(self.fullDataset.inputs[n]).item() - 0.1).asNumber(GeV)
+			l = self.datasetFull.labels[n].item()
+			p = self.model(self.datasetFull.inputs[n]).item()
+			if l < 1e-5: l = 0
+			if p < 1e-5: p = 0
+			if l > 0: e = np.sqrt((( p - l ) / l)**2)
+			else: e = p
+
+
+			if e > 0.05 or random.random() < 0.1:
+				newPoint = [inputs.item() for inputs in self.datasetFull.inputs[n]]
+				newPoint.append(self.datasetFull.labels[n].item())
+				subset.append(newPoint)
+
+		newDataset = Data(subset, self.inputDimension, self.device)
+		return newDataset
+
+		###
 
 		relError = MSErel(self.model(self.fullDataset.inputs), self.fullDataset.labels, reduction = None)
 
@@ -233,11 +453,51 @@ class Trainer():
 		return newDataset
 
 
-	def trainModel(self, optimizer = None, lossFunction = None, batchSize = 0, epochNum = 0, trainingSet = None, testSet = None):
+	def runCurrentConfiguration(self, secondRun = True):
+
+		"""
+		Parent method of actual training. Handles training differencies between
+		regression and classification and keeps track of current model's error on
+		the validation set.
 
 		"""
 
+		if self.currentHyperParamConfig == None:
+			logger.error("No hyperparameter configuration specified for training.")
+			return
 
+		self.model = createNet(self.currentHyperParamConfig, self.datasetFull, self.netType).to(self.device)
+		self.trainModel()
+
+		if secondRun:
+			subset = self._getWrongPredictionsSubset()
+			logger.info("Rerunning training with new dataset: %s points" %len(subset))
+			self._rerunWithWrongPredictionSubset(subset)
+
+
+		if self.netType == "regression":
+			self.meanError = MSErel(self.model(self.validationSet.inputs), self.validationSet.labels)
+
+		else:
+
+			predictions, labels = self.model(self.validationSet.inputs).detach().numpy(), self.validationSet.labels.detach().numpy()
+			self.model._delimiter = minimize(self._findDelimiter, 0.5, args=(predictions, labels), method="Powell").x.tolist()
+			lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
+			self.meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
+		
+		logger.info("Done! Mean error on validation set: %s" %round(self.meanError.item(), 3))
+		self.logData.append([round(self.meanError.item(), 3), self.currentHyperParamConfig])
+
+
+
+
+
+	def trainModel(self, optimizer = None, lossFunction = None, batchSize = 0, epochNum = 0, trainingSet = None, testSet = None):
+
+		"""
+		Core training method. Loads necessary torch classes and training parameters and
+		updates the models' weights and biases via back propagation.
+		Will save the model with the lowest error on the test set over all training epochs.
 
 		"""
 
@@ -248,7 +508,7 @@ class Trainer():
 		if optimizer == None: 	 optimizer 	  = loadOptimizer(self.currentHyperParamConfig["optimizer"], self.model, self.currentHyperParamConfig["learnRate"])
 		if lossFunction == None: lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
 
-		trainloader = DataLoader(trainingSet, batch_size = batchSize, shuffle = True, num_workers = 6)
+		trainloader = DataLoader(trainingSet, batch_size = batchSize, shuffle = True, num_workers = self.cores)
 
 		bestLossLocal, bestEpochLocal, bestModelLocal  = 1e5, 0, copy.deepcopy(self.model)
 
@@ -264,7 +524,6 @@ class Trainer():
 				loss.backward()
 				optimizer.step()
 
-
 			self.model.eval()
 
 			with torch.no_grad():
@@ -272,9 +531,8 @@ class Trainer():
 				trainingLoss = lossFunction(self.model(trainingSet.inputs), trainingSet.labels)
 				testLoss = lossFunction(self.model(testSet.inputs), testSet.labels)
 							
-				if self.saveLossPlot:
-					self.lossPerEpoch['training'].append(trainingLoss)
-					self.lossPerEpoch['testing'].append(testLoss)
+				self.lossPerEpoch['training'].append(trainingLoss.item())
+				self.lossPerEpoch['testing'].append(testLoss.item())
 									
 				if testLoss < bestLossLocal:
 					bestLossLocal  = testLoss
@@ -282,59 +540,10 @@ class Trainer():
 					#bestEpochLocal = epoch
 			
 
-			print("\repoch: %d/%d | testloss: %s" %(epoch+1,epochNum, round(testLoss.item(), 3)), end = "", flush = True)
+			if logger.level <= 20:
+				print("\repoch: %d/%d | testloss: %s" %(epoch+1,epochNum, round(testLoss.item(), 5)), end = "" if epoch+1 < epochNum else "\n")
 
 		self.model = bestModelLocal
-
-
-
-	def createLossPlot(self):
-
-		"""
-
-
-
-		"""
-
-		savePath = self.savePath + "/performance/"
-		if not os.path.exists(savePath): os.makedirs(savePath)
-			
-		fileName = txName + "_" + netType + "_lossPlot.eps"
-
-		plt.figure(5)
-		plt.title('Loss Function', fontsize=20)
-		plt.xlabel('Epochs')
-		plt.ylabel('Error')
-		plt.plot([e for e in range(len(self.lossPerEpoch['training']))], self.lossPerEpoch['training'], label = 'Train Loss')
-		plt.plot([e for e in range(len(self.lossPerEpoch['testing']))], self.lossPerEpoch['testing'], label = 'Test Loss')
-		plt.legend()
-		plt.savefig(savePath + fileName)
-		logger.info("Lossplot has been created. (%s)" %(savePath + fileName))
-
-
-	def saveResultsToLog(self):
-
-		"""
-
-
-
-		"""
-
-		date = datetime.now()
-
-		self.logData = sorted(self.logData, key=lambda lD: lD[0])
-
-		savePath = self.savePath + "/logs/"
-		if not os.path.exists(savePath): os.makedirs(savePath)
-
-		fileName = self.txName + "_" + self.netType + "_" + date.strftime("%d.%m.%Y-%H:%M:%S")
-
-		with open(savePath + fileName, "a+") as file:
-			for lD in self.logData:
-				file.write("loss: %s\t%s\n" %(lD[0], str(lD[1])))
-
-		logger.info("Logfile has been created. (%s)" %(savePath + fileName))
-
 
 
 	def _findDelimiter(self, delimiter, predictions, labels):
@@ -358,70 +567,6 @@ class Trainer():
 				wrong += 1
 
 		return float(wrong)/float(right+wrong)
-
-
-	def combineModel(otherReg, otherCla):
-
-		modelReg = otherReg.bestModelGlobal
-		modelCla = otherCla.bestModelGlobal
-
-		finalModel = NN_combined(modelReg, modelCla)
-
-		return finalModel
-
-
-	def saveModel(other, finalModel):
-
-		
-		path = other.savePath + "/models/"
-		fName = other.txName + ".pth"
-		if not os.path.exists(path): os.makedirs(path)
-		fullPath = path + fName
-
-
-		torch.save(finalModel, fullPath)
-		logger.info("Best performing model has been saved. (%s)" % fullPath)
-
-		return finalModel
-
-
-
-	def saveModelX(self):
-
-		"""
-
-
-
-		"""
-
-		self.finalModel = NN_combined(self.bestModelGlobal["regression"], self.bestModelGlobal["classification"])
-
-		savePathModel = self.savePath + "/models/"
-		fileNameModel = self.txName + '.pth'
-		if not os.path.exists(savePathModel): os.makedirs(savePathModel)
-
-		#torch.save(self.bestModelGlobal.state_dict(), savePathModel + fileNameModel)
-		torch.save(self.finalModel, savePathModel + fileNameModel)
-		logger.info("Best performing model has been saved. (%s)" %(savePathModel + fileNameModel))
-
-		"""
-		savePathInfo = self.savePath + "/"
-		fileNameInfo = self.txName + "_" + self.netType + ".info"
-		if not os.path.exists(savePathInfo): os.makedirs(savePathInfo)
-
-		with open(savePathInfo + fileNameInfo, "w+") as file:
-
-			date = datetime.now()
-			file.write("created on:\t%s\n" %(date.strftime("%d.%m.%Y-%H:%M:%S")))
-			file.write("implemented by:\t%s\n" %("Philipp Neuhuber")) # NYI
-			file.write("relative error:\t%s%%\n\n" %(round(self.bestLossGlobal.item()*100., 3)))
-			file.write("%s\n\n" % str(self.bestModelGlobal))
-			file.write("hyperParameters:\n---\n")
-			for key in self.bestHyperParamConfig: file.write("%s: %s\n" %(key, self.bestHyperParamConfig[key]))
-			file.write("---")
-			
-		logger.info("Model.info file has been created. (%s)" %(savePathInfo + fileNameInfo))
-		"""
 	
 					
 
@@ -429,162 +574,42 @@ if __name__=='__main__':
 
 	ap = argparse.ArgumentParser(description="Trains and finds best performing neural networks for database analyses via hyperparameter search")
 	ap.add_argument('-p', '--parfile', 
-			help='parameter file specifying the plots to be checked', default='nn_parameters.ini')
+			help='parameter file', default='nn_parameters.ini')
 	ap.add_argument('-l', '--log', 
 			help='specifying the level of verbosity (error, warning, info, debug)',
 			default = 'info', type = str)
            
 	args = ap.parse_args()
+	numeric_level = getattr(logging,args.log.upper(), None)
+	logger.setLevel(level=numeric_level)
     
 	if not os.path.isfile(args.parfile):
 		logger.error("Parameters file %s not found" %args.parfile)
 	else:
 		logger.info("Reading validation parameters from %s" %args.parfile)
 
+	fileParameters = readParameterFile(logger, args.parfile)
 
-	parser = ConfigParser( inline_comment_prefixes=( ';', ) )
-	parser.read(args.parfile)
+	parameters = {}
+	parameters["database"] 		 = {}
+	parameters["path"] 			 = fileParameters["path"]
+	parameters["dataset"] 		 = fileParameters["dataset"]
+	parameters["device"] 		 = fileParameters["device"]
+	parameters["analysis"] 		 = fileParameters["analysis"]
+	parameters["hyperParameter"] = fileParameters["hyperParameter"]
 
+	for analysisID in fileParameters["database"]["analysisID"]:
+		for txName in fileParameters["database"]["txName"]:
+			for daSel in fileParameters["database"]["dataselector"]:
+				for signalRegion in fileParameters["database"]["signalRegion"]:
 
-	#Control output level:
-	numeric_level = getattr(logging,args.log.upper(), None)
-	logger.setLevel(level=numeric_level)
-    
-	#Add smodels and smodels-database to path
-	smodelsPath = parser.get("path", "smodelsPath")
-	databasePath = parser.get("path", "databasePath")
-	sys.path.append(smodelsPath)
-	sys.path.append(databasePath)
-	from smodels.experiment.databaseObj import Database
-	
+					parameters["database"]["analysisID"]   = analysisID
+					parameters["database"]["txName"]	   = txName
+					parameters["database"]["dataSelector"] = daSel
+					parameters["database"]["signalRegion"] = signalRegion
+					
+					modelTrainer = TrainerWrapper(parameters)
+					modelTrainer.generateNeuralNetwork()
 
-	#Select analysis and topologies for training
-	analysisID = parser.get("database", "analysis")
-	txNames = parser.get("database", "txNames").split(",")
-	dataselector = parser.get("database", "dataselector")
-
-	db = Database(databasePath)
-	expres = db.getExpResults(analysisIDs = analysisID, txnames = txNames, dataTypes = dataselector, useSuperseded = True, useNonValidated = True)[0]
-
-	signalRegion = None
-	if dataselector == "efficiencyMap":
-		signalRegion = parser.get("database", "signalRegion")
-
-		IDS = [d.getID() for d in expres.datasets]
-
-		while signalRegion not in IDS:
-			signalRegion = input("available SR: %s\nselect which to train: " % expres.datasets)
-
-
-	#Configure dataset generated for training
-	sampleSize = int(parser.get("dataset", "sampleSize"))
-	massRange = parser.get("dataset", "massRange").split(",")
-	massRange = [float(mR) for mR in massRange]
-	sampleSplit = parser.get("dataset", "sampleSplit").split(",")
-	sampleSplit = [float(sS) for sS in sampleSplit]
-
-
-	#Choose wether to run on CPU or GPU
-	whichDevice = float(parser.get("options", "device"))
-	deviceCount = torch.cuda.device_count()
-	if torch.cuda.is_available() and int(whichDevice) >= 0 and whichDevice <= deviceCount:
-		device = torch.device('cuda:' + str(whichDevice))
-		logger.info("Running on GPU:%d" %deviceCount)
-	else:
-		device = torch.device('cpu')
-		logger.info("Running on CPU")
-
-	#Select which NNs to train
-	whichNN = parser.get("options", "whichNN")
-	if whichNN == "both": whichNN = ["regression", "classification"]
-	elif whichNN == "regression" or whichNN == "classification":
-		whichNN = [whichNN]
-	else:
-		logger.error("Invalid NN type selected. Allowed options: 'regression'  'classification' and 'both'")
-
-
-	#Check wether you want to override old NN with new results
-	overwrite = parser.get("options", "overwrite")
-	if not (overwrite == "always" or overwrite == "never" or overwrite == "outperforming"):
-		logger.error("Invalid overwrite parameter. Allowed options: 'always' 'never' and 'outperforming'")
-
-
-	#Check analysis options
-	saveLogFile = parser.getboolean("analysis", "logFile")
-	saveLossPlot = parser.getboolean("analysis", "lossPlot")
-	runPerformance = parser.getboolean("analysis", "runPerformance")
-	
-	
-		#dataset = SR#expres.getDataset(SR)
-	#else: dataset = None
-
-
-	#expres_T2tt = Database(databasePath).getExpResults(txnames = txNames, dataTypes = "upperLimit", useSuperseded = True, useNonValidated = True)
-	#for e in expres_T2tt:
-	#	print(e)
-
-	
-	#exit()
-
-	hyperParameter = {}
-
-	for netType in whichNN:
-
-		optimizers = parser.get(netType, "optimizer").split(",")
-		lossFunctions = parser.get(netType, "lossFunc").split(",")
-		batchSizes = parser.get(netType, "batchSize").split(",")
-		batchSizes = [int(bS) for bS in batchSizes]
-		activationFunctions = parser.get(netType, "activFunc").split(",")
-		epochNums = parser.get(netType, "epochs").split(",")
-		epochNums = [int(eN) for eN in epochNums]
-		learnRates = parser.get(netType, "learnRate").split(",")
-		learnRates = [float(lN) for lN in learnRates]
-		layers = parser.get(netType, "layer").split(",")
-		layers = [int(l) for l in layers]
-		nodes = parser.get(netType, "nodes").split(",")
-		nodes = [int(n) for n in nodes]
-		shapes = parser.get(netType, "shape").split(",")
-		try: rescaleMethods = parser.get(netType, "rescaleData").split(",")
-		except: rescaleMethods = [None]
-
-		hP = {}
-		hP["optimizer"] = optimizers
-		hP["lossFunction"] = lossFunctions
-		hP["batchSize"] = batchSizes
-		hP["activationFunction"] = activationFunctions
-		hP["epochNum"] = epochNums
-		hP["learnRate"] = learnRates
-		hP["layer"] = layers
-		hP["nodes"] = nodes
-		hP["shape"] = shapes
-		hP["rescaleMethod"] = rescaleMethods
-		hP = HyperParameter(hP)
-		hyperParameter[netType] = hP
-
-	for txName in txNames:
-		#if GetModel(expres, txName, netType) == None or overwrite != 'never':
-
-		trainerRegression = Trainer(expres, txName, signalRegion, hyperParameter["regression"], sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite, "regression")
-		trainerRegression.findBestModel()
-
-		trainerClassification = Trainer(expres, txName, signalRegion, hyperParameter["classification"], sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite, "classification")
-		trainerClassification.findBestModel()
-
-		bestModel = Trainer.combineModel(trainerRegression, trainerClassification)
-
-		speedFactor = getSpeed(bestModel, expres, txName, trainerRegression.fullDataset)
-		bestModel.setSpeedFactor(speedFactor)
-
-		Trainer.saveModel(trainerRegression, bestModel)
-
-			
-
-			#bestModel[netType] = modelTrainer.bestModelGlobal
-
-			#if runPerformance:
-				#validateModel(model, expres, txName, massRange, sampleSize, netType, validationSet)
-				#getPerformanceOfModel()
-				
-				
 	
 

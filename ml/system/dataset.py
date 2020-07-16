@@ -3,9 +3,14 @@
 #sys.path.append('../../../smodels-utils/')
 
 import os, torch, unum, random, copy
+try:
+	from system.readOrigData import *
+except:
+	from system.readOrigData import *
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb
 from smodels.tools.stringTools import concatenateLines
+from smodels.theory.auxiliaryFunctions import rescaleWidth
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
@@ -13,15 +18,35 @@ import numpy as np
 from random import shuffle
 
 
-def MSErel(input, label, reduction = "mean"):
+def MSErel(predicted, label, reduction = "mean"):
 	#loss = torch.abs((input-label)/label)
 	#if reduction == "mean": loss = torch.mean(loss)
 	#if label != 0.:
 	#	loss = ((input-label)/label)**2
 	#else: loss = input**2
-	loss = ((input-label)/label)**2
+	#print(predicted)
+	#print(label)
+	#print("---")
+	loss = ((predicted-label)/label)**2
 	if reduction == "mean": loss = torch.sqrt(torch.mean(loss))
 	return loss
+"""
+
+def MSErel(predicted, label, reduction = "mean"):
+	loss = torch.abs(torch.log(predicted/label))
+	#print(predicted)
+	#print(label)
+	#print("---")
+	if reduction == "mean": loss = torch.mean(loss)
+	return loss
+
+
+def MSErel(predicted, label, reduction = "mean"):
+
+	loss = ( (predicted-label)/(predicted+label) )**2
+	if reduction == "mean": loss = torch.sqrt(torch.mean(loss))
+	return loss
+"""
 
 def loadOptimizer(optimizerName, model, learnRate):
 	if optimizerName == "Adam":
@@ -163,325 +188,355 @@ class Data(Dataset):
 
 
 
-#quick hack to load datapoints from data/txName.txt file
-def getExpresData(expres, txName, SR):
-
-	if SR == None:
-		path = expres.path + '/data/' + txName + '.txt'
-		key = 'upperLimits:'
-	else:
-		path = expres.path + '/' + SR + '/' + txName + '.txt'
-		key = 'efficiencyMap:'
-	keL = len(key)
-		
-	with open(path, "r") as file:
-		data = file.readlines()
-
-	for n in range(len(data)):
-		if data[n][0:keL] == key:
-			data[n] = data[n].replace(key,"")
-			data = data[n:len(data)]
-			break
-
-	
-	vals = []
-
-	expresData = []
-	for line in data:
-		if line[0:8] == "expected":
-			break
-		line = line.replace(',','')
-		line = line.replace('[[[','')
-		line = line.replace('][','')
-		line = line.replace(']]','')
-		line = line.replace('[','')
-		line = line.replace(']','')
-		line = line.replace('\n','')
-		line = line.replace(' ','')
-		values = line.split('*GeV')
-		new = []
-		
-		vals.append(float(values[-1].replace("*fb", "").replace("*pb", "")))
 
 
-		for v in values[:-1]:
-			new.append(float(v))
-		expresData.append(new)
+class DatasetBuilder():
 
-	vals = sorted(vals)
-	m1 = np.mean(vals)
-	m2 = np.mean(vals[:int(-len(vals)*0.95)])
-	#print(m1/m2)
-
-	expresData = np.array(expresData)
-	return expresData
+	"""
 
 
-def getAxesData(axes):
 
-	axes = axes.replace("[[","")
-	axes = axes.replace("]]","")
-	axes = axes.replace(" ","")
-	axes = axes.split("],[")
+	"""
 
-	if axes[0] == axes[1]:
-		axes = axes[0]
-	
-	axes = axes.split(",")
+	def __init__(self, logger, paramDatabase, paramDataset, device):
 
-	
-	#read x and y from raw axes for mass dependancies
-	for n in range(len(axes)):
+		self.paramDatabase = paramDatabase
+		self.paramDataset = paramDataset
+		self.device = device
+		self.logger = logger
 
-		noX = axes[n].replace("x", "")
-		noY = axes[n].replace("y", "")
+		self.txNameData = self.paramDatabase["txNameData"]
 
-		if noX == "": x = n
-		elif noY == "": y = n
-		
+		self.axesDependancies	= self._getAxes()
+		self.origData, self.origValues, self.units	= self._getOrigData()
+		self.origDataMean		= np.mean(self.origData, axis = 0)
+		self.origDataStd		= np.std(self.origData, axis = 0)
+		self.inputDimension 	= self.txNameData.full_dimensionality
+		self.inputDimensionHalf = int(0.5*self.inputDimension)
+		self.convexHullMin 		= np.min(self.origData, axis=0)
+		self.convexHullMax 		= np.max(self.origData, axis=0)
 
-	mod = []
-	dep = []
-
-	for axis in axes:
-
-		noX = axis.replace("x", "")
-		noY = axis.replace("y", "")
-
-		if noX == noY:
-			try: 
-				f = float(axis)
-				d = -1
-			except: print("unrecognized axis")
-
-		elif axis != noX and axis != noY:
-			# should be arithemtic mean, both x, y are present in axis
-			f = 0
-			d = [x,y]
-
-		elif axis == noY:
-			#only x present:
-			if noX == "":
-				f = 0
-				d = -1
-			else:
-				f = float(noX)
-				d = x
-		elif axis == noX:
-			if noY == "":
-				f = 0
-				d = -1
-			else:
-				f = float(noY)
-				d = y
-
-		mod.append({"dependancy": d, "offset": f})
-
-	#print(mod)
-	return mod
+		isSymmetric = True
+		for line in self.origData:
+			if not line[0:self.inputDimensionHalf] == line[self.inputDimensionHalf:self.inputDimension]:
+				isSymmetric = False
+				break
+		self.symmetric = isSymmetric
 
 
-def generateDataset(expres, topo, SR, massRange, sampleSize, netType, device, shuffleData=True):
+	def _getOrigData(self):
+		return getOrigExpresData(self.paramDatabase, stripUnits = True)
 
-	analysis = expres.getDataset(SR)
 
-	for tx in analysis.txnameList: 
-		if tx == topo or tx.txName == topo:
+	def _getAxes(self):
+		return getAxesData(self.logger, self.paramDatabase)
 
-			#gather information for topology we are training on
-			#so we can create an efficient dataset
 
-			expresData 			= getExpresData(expres, topo, SR)
-			expresDataMean		= np.mean(expresData, axis = 0)
-			expresDataStd		= np.std(expresData, axis = 0)
-			inputDimension 		= tx.txnameData.full_dimensionality
-			inputDimensionHalf 	= int(0.5*inputDimension)
-			convexHullMin 		= np.min(expresData, axis=0)
-			convexHullMax 		= np.max(expresData, axis=0)
+	def generateNewSet(self, netType, sampleSize = None, shuffleData = True):
 
-			txtFile = open(expres.path + "/data/" + topo + ".txt", "r")
-			txdata = txtFile.read()
-			txtFile.close()
-			content = concatenateLines(txdata.split("\n"))
+		if sampleSize == None: sampleSize = self.paramDataset["sampleSize"]
+
+		dataset = []
+		particles = [0 for _ in range(self.inputDimension)]
+
+		samplesLeft = sampleSize
+
+		if netType == 'regression':
+
+			# Create dataset for our regression network
+			# Draw random number between convex hull minima and maxima for each axis
+			# If branches are symmetric, masses drawn for 1st branch are copied to 2nd
 			
-			tags = [line.split(":", 1)[0].strip() for line in content]
-			#data = None
-			#dataType = None
-			for i,tag in enumerate(tags):
-				if not tag: continue
-				line = content[i]
-				value = line.split(':',1)[1].strip()
-				if ";" in value: value = value.split(";")
-				#if tag == "upperLimits":
-					#data = value
-					#dataType = "upperLimit"
-					#masses, uls, units = getExpresDataFormatted(data)
-				if tag == "axes":
-					axes = value
-					break
+			### MANUALLY ADD ORIG GRID POINTS != 0 (USED FOR WIDTH MAPS)
 
-			axesInfo = getAxesData(axes)
+			
+			for n, e in enumerate(self.origData):
 
-			isSymmetric = True
-			for entry in expresData:
-				if not all(entry[0:inputDimensionHalf] == entry[inputDimensionHalf:inputDimension]):
-					isSymmetric = False
-					break
-			break
+				m = [e[0]*GeV, (e[1]*GeV, e[2]*GeV)]
+				masses = [m, m]
 
-	samplesLeft = sampleSize
-	dataset = []
-	particles = [0 for _ in range(inputDimension)]
+				#print("input:")
+				#print(masses)
+				#print("data -> coordinates:")
+				#zguz = tx.txnameData.dataToCoordinates(masses)
+				#print(zguz)
+				#print("coordinates -> data:")
+				#zguz = tx.txnameData.coordinatesToData(zguz)
+				#print(zguz)		
 
-	if netType == 'regression':
+				#val = self.txNameData.getValueFor(masses)
+				val = self.origValues[n]
+				if val > 0.:
+					new = [np.log(e[0]), rescaleWidth(e[1]), np.log(e[0]), rescaleWidth(e[1])]
+					#new = [np.log(e[0]), np.log(e[1]), rescaleWidth(e[2]), np.log(e[0]), np.log(e[1]), rescaleWidth(e[2])]
+					new.append(val+1e-5)
+					dataset.append(new)
+			
+			###############################################
+			
+			self.convexHullMax[1] = 1e-14
+			self.convexHullMax[3] = 1e-14
+			self.axesDependancies[0][1]["dependancy"] = None
+			self.axesDependancies[0][1]["constant"] = False
+			self.axesDependancies[0][1]["offset"] = 0
 
-		#create dataset for our regression network
-		#draw random number between convex hull minima and maxima for each axis
-		#if branches are symmetric, masses drawn for 1st branch are copied to 2nd
+			while(samplesLeft>0):
+
+				print("sleft:", samplesLeft)
+
+				if self.symmetric:
+					for n in range(self.inputDimensionHalf):
+						particles[n] = random.uniform(self.convexHullMin[n], self.convexHullMax[n])
+					for n in range(self.inputDimensionHalf):
+						particles[self.inputDimensionHalf+n] = particles[n]
+				else:
+					for n in range(self.inputDimension):
+						particles[n] = random.uniform(self.convexHullMin[n], self.convexHullMax[n])
+
+				if self.symmetric:
+					for n in range(self.inputDimensionHalf):
+
+						dep = self.axesDependancies[0][n]["dependancy"]
+						con = self.axesDependancies[0][n]["constant"]
+						off = self.axesDependancies[0][n]["offset"]
+
+						if type(dep) == list:
+							particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
+						elif dep != None:
+							particles[n] = particles[dep] + off
+						elif con:
+							particles[n] = off
+
+						#if n == 2:
+						#	particles[n] = 10**(random.uniform(-22,2))
+					
+				'''REMOVE'''
+				
+				#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]]
+				#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
+				mx = [(particles[0]*GeV, particles[1]*GeV)] 
+				#mx = [[p*GeV for p in particles[0:self.inputDimensionHalf]], [p*GeV for p in particles[self.inputDimensionHalf:self.inputDimension]]]
+				masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]		
+
+
+				val = self.txNameData.getValueFor(masses)
+
+				if type(val) != type(None) and val < 1e-6: val = 0
+				if type(val) != type(None) and ( val != 0 or random.random() < 0.05 ): #val != 0.0:
+			
+					if type(val) != float and type(val) != int: val = val.asNumber(fb) # IMPLEMENT FB AND PB
+
+					#new = [p for p in particles]
+					#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
+					new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
+
+					#new.append(0.1 + rescaleWidth(eff))
+					#new.append(( eff + 1e-5 ) * 1e3) #LLP OFFSET
+					new.append(val + 1e-5)
+
+					dataset.append(new)
+					samplesLeft -= 1
+					
+						
+		else:
+
+			
+			# Particle widths (at least for 2016-32-eff) range from 1e-22 - 1e+6 and thus will always be on shell
+			#widthPos = 2
+			#self.axesDependancies[0][widthPos]["dependancy"] = None
+			#self.axesDependancies[0][widthPos]["constant"] = True
+			#self.axesDependancies[0][widthPos]["offset"] = 0
+
+			# Create dataset for our classification network
+			# First we generate a rough estimate of our convex hull with "massesHull"
+			# Then we draw points around the hull and finish populating our dataset with
+			# random points drawn around the center of our hull
+			
+			massesSorted = [sorted(self.origData,key=lambda l:l[n]) for n in range(len(self.origData[0]))]
+			massesHull = []
+
+			for k in range(len(massesSorted)):
+
+				#if k == widthPos:
+				#	continue
+
+				massesSortedReduced = []
+				lastMass = 0.
+				totalMasses = len(massesSorted[k])
+
+				for n in range(totalMasses):
+					subset = []
+					currentMass = massesSorted[k][n][k]
+					if lastMass == currentMass:
+						continue
+					lastMass = currentMass
+					for i in range(n, totalMasses):
+						if massesSorted[k][i][k] == currentMass:
+							subset.append(massesSorted[k][i])
+						else: break
+
+					massesSortedReduced.append(np.max(subset, axis=0))
+					#massesSortedReduced.append(max(subset, key=lambda x:x[k])) this should work but doesnt for some reason?
+
+				massesHull.append(massesSortedReduced)
+
+
+			numOfHullPoints = 0
+			for axisPoints in massesHull:
+				numOfHullPoints += len(axisPoints)
+			samplesPerHullPoint = int(( sampleSize / numOfHullPoints ) * 0.15) #0.75)
+				
+			for currentMassHull in massesHull:
+
+				for point in currentMassHull:
+
+					samplesPerHullPointLeft = samplesPerHullPoint
+
+					#isMin = point[0] == self.convexHullMin[0] or point[1] == self.convexHullMin[1]
+					#isMax = point[0] == self.convexHullMax[0] or point[1] == self.convexHullMax[1]
+
+					#if isMin or isMax:
+					#	samplesPerHullPointLeft *= 5
+
+					while(samplesPerHullPointLeft > 0):
+
+						for n in range(self.inputDimension):
+
+							if ( self.symmetric and n == self.inputDimensionHalf - 1 ) or ( not self.symmetric and n == self.inputDimension - 1 ):
+								std = 25. #45.
+							else:
+								std = 25. #abs(point[n] - point[n+1]) * 0.15 #0.25
+							mean = point[n]
+
+							particles[n] = abs(np.random.normal(mean, std, 1)[0])
+
+						if self.symmetric:
+							for n in range(self.inputDimensionHalf):
+
+								dep = self.axesDependancies[0][n]["dependancy"]
+								con = self.axesDependancies[0][n]["constant"]
+								off = self.axesDependancies[0][n]["offset"]
+
+								if type(dep) == list:
+									particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
+								elif dep != None:
+									particles[n] = particles[dep] + off
+								elif con:
+									particles[n] = off
+
+								particles[self.inputDimensionHalf+n] = particles[n]
+
+
+						'''REMOVE'''
+						#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
+						#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]] # [[(x,w)], [(x,w)]]
+						mx = [(particles[0]*GeV, particles[1]*GeV)] 
+						#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
+						masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]
+
+						res = self.txNameData.getValueFor(masses)
+
+						#if SR == None:
+						#	res = expres.getUpperLimitFor(txname=topo, mass=masses)
+						#else:
+						#	res = expres.getEfficiencyFor(txname=topo, mass=masses, dataset=SR)
+
+						'''REMOVE'''
+						# 2dim
+						#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
+						new = [np.log(particles[0]), np.log(particles[1]), 0, np.log(particles[0]), np.log(particles[1]), 0]
+
+						# 1dim
+						#new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
+						#new = [np.log(particles[0]), 0, np.log(particles[0]), 0]
+
+						#new = [np.log(p) if p != 0 else p for p in particles] 
+						if type(res) != type(None): new.append(1.)
+						else: new.append(0.)
+					
+						dataset.append(new)
+						samplesLeft -= 1
+						samplesPerHullPointLeft -= 1
+
+
+						#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
+						#ul	   = expres.getUpperLimitFor(txname=topo, mass=masses)
+
+						#new = [p for p in particles]
+						#if type(ul) != type(None): new.append(1.)
+						#else: new.append(0.)
+					
+						#dataset.append(new)
+						#samplesLeft -= 1
+						#samplesPerHullPointLeft -= 1
+
 		
+
 		while(samplesLeft>0):
 
-			if isSymmetric:
-				for n in range(inputDimensionHalf):
-					particles[n] = random.uniform(convexHullMin[n], convexHullMax[n])
-				for n in range(inputDimensionHalf):
-					particles[inputDimensionHalf+n] = particles[n]
-			else:
-				for n in range(inputDimension):
-					particles[n] = random.uniform(convexHullMin[n], convexHullMax[n])
+			#print("sleft:", samplesLeft)
 
-			if isSymmetric:
-				for n in range(inputDimensionHalf):
+			if self.symmetric:
+				for n in range(self.inputDimensionHalf):
+					particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n]*2., 1)[0])
 
-					dep = axesInfo[n]["dependancy"]
-					off = axesInfo[n]["offset"]
+
+				for n in range(self.inputDimensionHalf):
+
+					dep = self.axesDependancies[0][n]["dependancy"]
+					con = self.axesDependancies[0][n]["constant"]
+					off = self.axesDependancies[0][n]["offset"]
 
 					if type(dep) == list:
 						particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
-					elif dep > -1:
+					elif dep != None:
 						particles[n] = particles[dep] + off
-				
-			
-			masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-			
-			if SR == None:
+					elif con:
+						particles[n] = off
 
-				ul = expres.getUpperLimitFor(txname=topo, mass=masses)
-
-				if type(ul) != type(None):
-					new = [p for p in particles]
-					new.append(ul.asNumber(fb))
-					dataset.append(new)
-					samplesLeft -= 1
-				
+					particles[self.inputDimensionHalf+n] = particles[n]
 
 			else:
+				for n in range(self.inputDimension):
+					particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n], 1)[0])
+				
 
-				eff = expres.getEfficiencyFor(txname=topo, mass=masses, dataset=SR)
+			'''REMOVE'''
+			#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
+			#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]]
 
-				if eff != 0.0:
-					new = [p for p in particles]
-					new.append(eff)
-					dataset.append(new)
-					samplesLeft -= 1
-	else:
+			#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
+			mx = [(particles[0]*GeV, particles[1]*GeV)] 
+			masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]		
 
-		#create dataset for our classification network
-		#first we generate a rough estimate of our convex hull with "massesHull"
-		#then we draw points around the hull and finish populating our dataset with
-		#random points drawn around the center of our hull
+			res = self.txNameData.getValueFor(masses)
 
-		massesSorted = [sorted(expresData,key=lambda l:l[n]) for n in range(len(expresData[0]))]
-		massesHull = []
+			'''REMOVE'''
+			# 2dim
+			#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
+			#new = [np.log(particles[0]), np.log(particles[1]), 0, np.log(particles[0]), np.log(particles[1]), 0]
 
-		for k in range(len(massesSorted)):
+			# 1dim
+			#new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
+			new = [np.log(particles[0]), 0, np.log(particles[0]), 0]
 
-			massesSortedReduced = []
-			lastMass = 0.
-			totalMasses = len(massesSorted[k])
-
-			for n in range(totalMasses):
-				subset = []
-				currentMass = massesSorted[k][n][k]
-				if lastMass == currentMass:
-					continue
-				lastMass = currentMass
-				for i in range(n, totalMasses):
-					if massesSorted[k][i][k] == currentMass:
-						subset.append(massesSorted[k][i])
-					else: break
-
-				massesSortedReduced.append(np.max(subset, axis=0))
-				#massesSortedReduced.append(max(subset, key=lambda x:x[k])) this should work but doesnt for some reason?
-
-			massesHull.append(massesSortedReduced)
-
-
-		numOfHullPoints = 0
-		for axisPoints in massesHull:
-			numOfHullPoints += len(axisPoints)
-		samplesPerHullPoint = int(( sampleSize / numOfHullPoints ) * 0.75)
+			#new = [np.log(p) if p != 0 else p for p in particles] 
+			if type(res) != type(None): new.append(1.)
+			else: new.append(0.)
 			
-		for currentMassHull in massesHull:
-			for point in currentMassHull:
-				samplesPerHullPointLeft = samplesPerHullPoint
-				while(samplesPerHullPointLeft > 0):
-					for n in range(inputDimension):
+			#if type(res) == type(None) or random.random() < 0.25:
+			dataset.append(new)
+			samplesLeft -= 1
+				#print(samplesLeft)
 
-						if ( isSymmetric and n == inputDimensionHalf - 1 ) or ( not isSymmetric and n == inputDimension - 1 ):
-							std = 25. #45.
-						else:
-							std = 25. #abs(point[n] - point[n+1]) * 0.15 #0.25
-						mean = point[n]
+		#import matplotlib.pyplot as plt
+		#plt.figure(99)
+		#plt_dots = plt.scatter([m[0] for m in expresData],[m[1] for m in expresData], color = 'gray', alpha=0.5)
+		#plt_dots = plt.scatter([m[0] for m in massesHull[0]],[m[1] for m in massesHull[0]], color = 'green')
+		#plt_dots = plt.scatter([m[0] for m in massesHull[1]],[m[1] for m in massesHull[1]], color = 'blue')
+		#plt.show()
 
-						particles[n] = abs(np.random.normal(mean, std, 1)[0])
-
-						if isSymmetric and n == inputDimensionHalf - 1:
-							for k in range(inputDimensionHalf):
-								particles[inputDimensionHalf+k] = particles[k]
-							break
-
-					masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-					ul	   = expres.getUpperLimitFor(txname=topo, mass=masses)
-
-					new = [p for p in particles]
-					if type(ul) != type(None): new.append(1.)
-					else: new.append(0.)
-				
-					dataset.append(new)
-					samplesLeft -= 1
-					samplesPerHullPointLeft -= 1
-
-	while(samplesLeft>0):
-
-		if isSymmetric:
-			for n in range(inputDimensionHalf):
-				particles[n] = abs(np.random.normal(expresDataMean[n], expresDataStd[n], 1)[0])
-			for n in range(inputDimensionHalf):
-				particles[inputDimensionHalf+n] = particles[n]
-		else:
-			for n in range(inputDimension):
-				particles[n] = abs(np.random.normal(expresDataMean[n], expresDataStd[n], 1)[0])
-
-		masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-		ul	   = expres.getUpperLimitFor(txname=topo, mass=masses)
-
-		new = [p for p in particles]
-		if type(ul) != type(None): new.append(1.)
-		else: new.append(0.)
-				
-		dataset.append(new)
-		samplesLeft -= 1
-		
-
-	#import matplotlib.pyplot as plt
-	#plt.figure(99)
-	#plt_dots = plt.scatter([m[0] for m in expresData],[m[1] for m in expresData], color = 'gray', alpha=0.5)
-	#plt_dots = plt.scatter([m[0] for m in massesHull[0]],[m[1] for m in massesHull[0]], color = 'green')
-	#plt_dots = plt.scatter([m[0] for m in massesHull[1]],[m[1] for m in massesHull[1]], color = 'blue')
-	#plt.show()
-
-	if shuffleData: shuffle(dataset)
-	dataSet = Data(dataset, inputDimension, device)
-	return dataSet
+		if shuffleData: shuffle(dataset)
+		dataSet = Data(dataset, self.inputDimension, self.device)
+		return dataSet
 

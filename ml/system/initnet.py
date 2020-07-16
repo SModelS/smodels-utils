@@ -266,7 +266,7 @@ class Net_cla(nn.Module):
 
 	def forward(self, x):#input_):
 
-		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
+		#x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
 		
 		if not self.training and self._delimiter != 0.:
@@ -303,6 +303,10 @@ class Net_reg(nn.Module):
 
 			if activFunc == "lrel" and i != lastLayer:
 				self.seq.add_module('lrel{}'.format(i), nn.LeakyReLU()) 
+
+			# REMOVE -> testing for LLP (width) maps with BCE loss
+			#if i == lastLayer:
+			#	self.seq.add_module('sgm{}'.format(i), nn.Sigmoid())
     	
 		self._rescaleParameter = rescaleParameter
 
@@ -327,8 +331,10 @@ class Net_reg(nn.Module):
 		#	std = self.rescaleParameter["parameter"]["std"]
 		#	x = ( x - mean ) / std
 
+		#x = np.log(x)
 		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
+		#x = torch.abs(x)
 
 		return x
 	
