@@ -54,7 +54,7 @@ class RandomWalker:
                               expected=expected, select=select )
 
         #Initialize Hiscore (with access to the predictor)
-        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( self.rundir, walkerid ),
+        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.hi" % ( self.rundir, walkerid ),
                                      backup=False, predictor=self.predictor )
         self.hiscoreList.nkeep = 1
 

@@ -35,14 +35,14 @@ def main():
     argparser.add_argument ( '-R', '--rundir', help='name of remote rundir folder [rundir]', 
                              type=str, default="rundir" )
     args = argparser.parse_args()
-    # files= [ "hiscore.pcl" ]
+    # files= [ "hiscore.hi" ]
     files = set()
     store = { "scan": [ "scanM*.pcl", "ssm*.pcl" ], 
               "states": [ "states.dict" ],
               "llhds": [ "llhd*pcl", "mp*pcl" ],
-              "two": [ "hiscore2.pcl" ],
+              "two": [ "hiscore2.hi" ],
               "fake": [ "fake*.pcl", "signal*.pcl" ],
-              "copy": [ "hiscoreCopy.pcl" ],
+              "copy": [ "hiscoreCopy.hi" ],
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
               "ssms": [ "ssm*.pcl" ]
@@ -53,7 +53,7 @@ def main():
                 for f in store[k]:
                     files.add ( f )
     if len(files) == 0 or args.all: ## the default
-        files.add ( "hiscore.pcl" )
+        files.add ( "hiscore.hi" )
     fetch ( files, args.rundir )
 
 if __name__ == "__main__":

@@ -34,9 +34,9 @@ def updateHiscores( rundir=None ):
     args.fetch = False
     args.check = False
     args.nmax = 1
-    args.outfile = "hiscore.pcl"
+    args.outfile = "hiscore.hi"
     if rundir != None:
-        args.outfile = "%s/hiscore.pcl" % rundir
+        args.outfile = "%s/hiscore.hi" % rundir
     args.infile = None
     args.rundir = rundir
     # args.maxloss = .01
@@ -79,8 +79,8 @@ def plot( Z, K, rundir ):
     args.number = 0
     args.detailed = False
     args.destinations = False
-    args.picklefile = "%shiscore.pcl" % rundir 
-    args.dbpath = "%s/database.pcl" % rundir
+    args.picklefile = "%shiscore.hi" % rundir 
+    args.dbpath = "%s/default.pcl" % rundir
     args.verbosity = "info"
     args.horizontal = False
     args.html = True
@@ -95,7 +95,7 @@ def plot( Z, K, rundir ):
     plotHiscore.runPlotting ( args )
 
 def main( rundir = None ):
-    """ eternal loop that updates hiscore.pcl and states.dict """
+    """ eternal loop that updates hiscore.hi and states.dict """
     rundir = setup( rundir )
     i = 0
     Z, Zold, step, K, Kold = 0., 0., 0, -90., -90.
