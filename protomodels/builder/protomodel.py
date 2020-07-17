@@ -382,13 +382,17 @@ class ProtoModel:
         self._stored_xsecs = (xsecs,comment)
         self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
 
-    def createNewSLHAFileName ( self, prefix = "cur" ):
-        """ create a new SLHA file name. Needed when e.g. unpickling """
+    def delCurrentSLHA ( self ):
+        """ remove current slha file, if it exists """
         if hasattr ( self, "currentSLHA" ) and type(self.currentSLHA)==str and \
             os.path.exists ( self.currentSLHA ):
             os.unlink ( self.currentSLHA )
-        self.currentSLHA = tempfile.mktemp( prefix=".%s%s_" % ( prefix, self.walkerid ),
-                                            suffix=".slha",dir="./")
+
+    def createNewSLHAFileName ( self, prefix = "cur" ):
+        """ create a new SLHA file name. Needed when e.g. unpickling """
+        self.delCurrentSLHA()
+        self.currentSLHA = tempfile.mktemp( prefix=".%s%s_" % \
+                              ( prefix, self.walkerid ), suffix=".slha",dir="./")
 
     def checkTemplateSLHA ( self ):
         if not os.path.exists ( self.templateSLHA ):
