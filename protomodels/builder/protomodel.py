@@ -16,11 +16,13 @@ class ProtoModel:
     """
     LSP = 1000022 ## the LSP is hard coded
 
-    def __init__ ( self, walkerid, keep_meta = True, nevents = 10000 ):
+    def __init__ ( self, walkerid, keep_meta = True, nevents = 10000,
+                   dbversion = "????" ):
         """
         :param keep_meta: If True, keep also all the data in best combo (makes
                           this a heavyweight object)
         :param nevents: minimum number of MC events when computing cross-sections
+        :param dbversion: the version of the database, to track provenance
         """
         self.walkerid = walkerid
         self.keep_meta = keep_meta ## keep all meta info? big!
@@ -29,6 +31,7 @@ class ProtoModel:
         self.minevents = nevents #Minimum number of events for computing xsecs
         self.nevents = nevents #Initial number of events for computing xsecs
         self.step = 0 ## count the steps
+        self.dbversion = dbversion ## keep track of the database version
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
                   1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
                   2000011, 1000012, 1000013, 2000013, 1000014, 1000015, 2000015,
@@ -381,6 +384,9 @@ class ProtoModel:
 
     def createNewSLHAFileName ( self, prefix = "cur" ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
+        if hasattr ( self, "currentSLHA" ) and type(self.currentSLHA)==str and \
+            os.path.exists ( self.currentSLHA ):
+            os.unlink ( self.currentSLHA )
         self.currentSLHA = tempfile.mktemp( prefix=".%s%s_" % ( prefix, self.walkerid ),
                                             suffix=".slha",dir="./")
 
