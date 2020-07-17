@@ -352,7 +352,7 @@ if __name__ == "__main__":
             type=str, default="" )
     argparser.add_argument ( '-v', '--verbose',
             help='print results to stdout', action='store_true' )
-    argparser.add_argument ( '-i', '--interact',
+    argparser.add_argument ( '-I', '--interactive',
             help='interactive mode', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
