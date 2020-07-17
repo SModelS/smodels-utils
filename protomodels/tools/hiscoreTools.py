@@ -3,8 +3,9 @@
 """ A class that centralizes access to the hiscore list over multiple threads.
 """
 
-import pickle, subprocess, colorama
+import pickle, subprocess, colorama, sys
 from scipy import stats
+sys.path.insert(0,"../")
 from builder.manipulator import Manipulator
 from tools.csetup import setup
 
@@ -135,7 +136,7 @@ def main ( args ):
 
     if args.fetch:
         import subprocess
-        cmd = "scp gpu:/local/wwaltenberger/git/sprotomodels-utils/combinations/H*.hi ."
+        cmd = "scp gpu:/local/wwaltenberger/git/smodels-utils/protomodels/H*.hi ."
         print ( "[hiscore] %s" % cmd )
         out = subprocess.getoutput ( cmd )
         print ( out )
@@ -197,24 +198,6 @@ def main ( args ):
     if args.print:
         printProtoModels ( protomodels, args.detailed, min ( 10, args.nmax ) )
 
-    if args.interactive:
-        # from builder import trimmer
-        # from smodels.tools.physicsUnits import fb, pb, GeV, TeV
-        # from smodels.theory.crossSection import LO, NLO, NLL
-        ma = Manipulator ( protomodels[0] )
-        ma.M.createNewSLHAFileName()
-        print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
-                ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                                 Modules: %smanipulator, hiscore, combiner, trimmer%s" % \
-                ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                          Instantiations: %sma, co, tr%s" % \
-                ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        import combiner
-        co = combiner.Combiner() #Keep it for convenience
-        import hiscore #Keep it for convenience
-        import IPython
-        IPython.embed( using=False )
-
     if len(protomodels)>0 and protomodels[0] != None:
         ret["Z"]=protomodels[0].Z
         ret["K"]=protomodels[0].K
@@ -222,3 +205,29 @@ def main ( args ):
         ret["model"]=protomodels[0]
         return ret
     return ret
+
+if __name__ == "__main__":
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='interactive session with hiscore list loaded' )
+    argparser.add_argument ( '-f', '--infile',
+            help='Hiscore file. [hiscore.hi]',
+            type=str, default="hiscore.hi" )
+    args = argparser.parse_args()
+    import pickle
+    f = open ( args.infile, "rb" )
+    protomodels = pickle.load(f)
+    ma = Manipulator ( protomodels[0] )
+    ma.M.createNewSLHAFileName()
+    print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
+            ( colorama.Fore.RED, colorama.Fore.RESET ) )
+    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, trimmer%s" % \
+            ( colorama.Fore.RED, colorama.Fore.RESET ) )
+    print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
+            ( colorama.Fore.RED, colorama.Fore.RESET ) )
+    from tester import combiner
+    co = combiner.Combiner() #Keep it for convenience
+    # import hiscore #Keep it for convenience
+
+    import IPython
+    IPython.embed( using=False )
