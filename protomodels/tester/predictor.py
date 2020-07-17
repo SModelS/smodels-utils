@@ -130,7 +130,7 @@ class Predictor:
                                            llhdonly=False )
         #Extract  the relevant prediction information and store in the protomodel:
         self.updateModelPredictions(protomodel,bestpreds)
-        self.log ( "model is excluded? %s" % str(protomodel.excluded) )
+        # self.log ( "model is excluded? %s" % str(protomodel.excluded) )
 
         #Compute the maximum allowed (global) mu value given the r-values stored in protomodel
         protomodel.mumax = self.getMaxAllowedMu(protomodel)

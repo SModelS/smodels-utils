@@ -164,8 +164,9 @@ class RandomWalker:
 
         #Trim the model, so we start only with the relevant particles for the
         #best combination in the previous step:
-        self.log ( "freeze pids that arent in best combo, we dont need them" )
-        self.manipulator.freezePidsNotInBestCombo()
+        self.log ( "freeze pids that arent in best combo, we dont need them:" )
+        nfrozen = self.manipulator.freezePidsNotInBestCombo()
+        self.log ( " `- froze %d particles not in best combo" % nfrozen )
 
         #Take a step in the model space:
         self.manipulator.randomlyChangeModel()
