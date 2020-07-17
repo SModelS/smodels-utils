@@ -387,7 +387,7 @@ class ProtoModel:
         """ remove current slha file, if it exists """
         if hasattr ( self, "currentSLHA" ) and type(self.currentSLHA)==str and \
                 os.path.exists ( self.currentSLHA ):
-            print ( "[protomodel] del", self.currentSLHA )
+            # print ( "[protomodel] del", self.currentSLHA )
             os.unlink ( self.currentSLHA )
 
     def createNewSLHAFileName ( self, prefix = "cur" ):
