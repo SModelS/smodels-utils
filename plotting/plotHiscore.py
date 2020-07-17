@@ -716,7 +716,7 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
     
     protoslha = protomodel.createSLHAFile ()
     # print ( "wrote", protoslha )
-    subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
+    subprocess.getoutput ( "mv %s hiscore.slha" % protoslha )
     m = Manipulator ( protomodel )
     print ( "[plotHiscore] now write pmodel.py" )
     m.writeDictFile()
