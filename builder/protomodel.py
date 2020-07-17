@@ -363,9 +363,10 @@ class ProtoModel:
             self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
             self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
             #Remove temp file
-            os.remove(tmpSLHA)
         except Exception as e:
             self.log("error computing cross-sections: %s" %e)
+        if os.path.exists ( tmpSLHA ): ## always remove
+            os.remove( tmpSLHA )
 
     def rescaleXSecsBy(self, s):
         """rescale the stored cross-sections by a factor s"""
@@ -385,7 +386,8 @@ class ProtoModel:
     def delCurrentSLHA ( self ):
         """ remove current slha file, if it exists """
         if hasattr ( self, "currentSLHA" ) and type(self.currentSLHA)==str and \
-            os.path.exists ( self.currentSLHA ):
+                os.path.exists ( self.currentSLHA ):
+            print ( "[protomodel] del", self.currentSLHA )
             os.unlink ( self.currentSLHA )
 
     def createNewSLHAFileName ( self, prefix = "cur" ):

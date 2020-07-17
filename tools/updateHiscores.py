@@ -114,12 +114,6 @@ def main( rundir = None ):
         if K > Kold + .001:
         #if Z > Zold*1.0001:
             from builder.manipulator import Manipulator
-            with open ( Zfile, "wt" ) as f:
-                f.write ( "%s\n" % str(Z) )
-                f.close()
-            with open ( Kfile, "wt" ) as f:
-                f.write ( "%s\n" % str(K) )
-                f.close()
             m = Manipulator ( model )
             T=str(int(time.time()))
             m.writeDictFile ( "pmodel-%s.py" % T, comment="history keeper" )
@@ -127,6 +121,12 @@ def main( rundir = None ):
                 f.write ( "%s, step=%d, Z=%.4f, K=%.4f, t=%s\n" % ( time.asctime(),step,Z,K,T) )
                 f.close()
             plot ( Z, K, rundir )
+            with open ( Zfile, "wt" ) as f:
+                f.write ( "%s\n" % str(Z) )
+                f.close()
+            with open ( Kfile, "wt" ) as f:
+                f.write ( "%s\n" % str(K) )
+                f.close()
             Zold = Z
             Kold = K
         updateStates( rundir )

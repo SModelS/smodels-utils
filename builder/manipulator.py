@@ -657,7 +657,6 @@ class Manipulator:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         pid = random.choice ( unfrozen )
 
-        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(pid) ) )
         self.freezeParticle ( pid )
         return 1
 
@@ -687,7 +686,7 @@ class Manipulator:
         :param pid: PID to be frozen
         :param force: If False, will only freeze the particle if it does not violate
                       the canonical order (e.g. will not freeze stop1 if stop2 is unfrozen)
-                      and the model contain at least 3 particles.
+                      and the model contains at least 3 particles.
         """
 
         if protomodel is None:
@@ -703,6 +702,7 @@ class Manipulator:
             for pids in self.canonicalOrder:
                 if pid == pids[0] and pids[1] in unfrozen:
                     return
+        protomodel.log ( "Freezing %s." % ( helpers.getParticleName(pid) ) )
         #Remove pid from masses, decays and signal multipliers:
         if  pid in protomodel.masses:
             protomodel.masses.pop(pid)

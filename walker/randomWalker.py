@@ -128,7 +128,7 @@ class RandomWalker:
         ret.manipulator.initFromDict ( dictionary )
         ret.manipulator.setWalkerId ( walkerid )
         ret.manipulator.M.createNewSLHAFileName()
-        ret.manipulator.M.initializeSSMs ( overwrite = False )
+        # ret.manipulator.M.initializeSSMs ( overwrite = False )
         ret.manipulator.backupModel()
         if dump_training:
             ## we use the accelerator only to dump the training data
@@ -257,8 +257,11 @@ class RandomWalker:
         prob = pmax*(1. - math.exp( dK ))
         a = random.uniform ( 0., 1. )
         doTP = ( a < prob ) ## do teleport, yes or no
+        sDoTP = "dont teleport."
+        if doTP:
+            sDoTP = "do teleport."
         self.log ( "check if to teleport, Kmax=%.2f, ours is=%.2f, p=%.2f, a=%.2f: %s" % \
-                   ( bestK, ourK, prob, a, str(doTP) ) )
+                   ( bestK, ourK, prob, a, sDoTP ) )
         if doTP:
             self.manipulator.teleportToHiscore()
         return doTP

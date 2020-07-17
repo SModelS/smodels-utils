@@ -102,8 +102,8 @@ def main( nmin, nmax, cont,
             nstates = len(states )
             ctr = i % nstates
             print ( "[walkingWorker] fromDict %d: loading %d/%d" % ( i, ctr, nstates ) )
-            w = RandomWalker.fromDictionary ( states[ctr], "aggressive",
-                    walkerid = i, nsteps = maxsteps, dump_training=dump_training, expected = False,
-                    dbpath = dbpath, rundir = rundir, nevents = nevents )
+            w = RandomWalker.fromDictionary ( states[ctr], nsteps = maxsteps, 
+                    strategy = "aggressive", walkerid = i, dump_training=dump_training, 
+                    dbpath = dbpath, expected = False, rundir = rundir, nevents = nevents )
             walkers.append ( w )
     startWalkers ( walkers, seed=seed, catchem=catchem )
