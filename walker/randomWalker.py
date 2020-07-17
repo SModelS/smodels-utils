@@ -59,8 +59,8 @@ class RandomWalker:
         self.hiscoreList.nkeep = 1
 
         #Initialize ProtoModel and Manipulator:
-        protomodel = ProtoModel( self.walkerid,
-                            keep_meta = True, nevents = nevents)
+        protomodel = ProtoModel( self.walkerid, keep_meta = True, 
+                nevents = nevents, dbversion = self.predictor.database.databaseVersion )
 
         self.manipulator = Manipulator ( protomodel, strategy )
         self.catch_exceptions = catch_exceptions
@@ -123,7 +123,8 @@ class RandomWalker:
                    rundir = None, nevents = 100000):
         ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected, select=select,
                    catch_exceptions = catch_exceptions, rundir = rundir, nevents = nevents )
-        ret.manipulator.M = ProtoModel( walkerid, keep_meta )
+        ret.manipulator.M = ProtoModel( walkerid, keep_meta, \
+                dbversion = ret.predictor.database.databaseVersion )
         ret.manipulator.initFromDict ( dictionary )
         ret.manipulator.setWalkerId ( walkerid )
         ret.manipulator.M.createNewSLHAFileName()

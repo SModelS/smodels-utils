@@ -101,9 +101,10 @@ class ExpResModifier:
         with open( self.logfile, "a" ) as f:
             f.write ( "[modifier] %s\n" % ( " ".join(map(str,args)) ) )
 
-    def produceProtoModel ( self, filename ):
+    def produceProtoModel ( self, filename, dbversion ):
         """ try to produce a protomodel from pmodel
         :param filename: filename of pmodel dictionary
+        :param dbversion: version of database, for tracking
         :returns: none if not succesful, else protomodel object
         """
         if filename == "":
@@ -115,7 +116,8 @@ class ExpResModifier:
         expected = False
         select = "all"
         keep_meta = True
-        M = ProtoModel ( walkerid, self.dbpath, expected, select, keep_meta )
+        # M = ProtoModel ( walkerid, self.dbpath, expected, select, keep_meta )
+        M = ProtoModel ( walkerid, keep_meta, dbversion = dbversion )
         M.createNewSLHAFileName ( prefix="erm" )
         ma = Manipulator ( M )
         with open ( filename, "rt" ) as f:
@@ -139,7 +141,7 @@ class ExpResModifier:
         db = Database ( self.dbpath )
         # listOfExpRes = db.getExpResults( useSuperseded=True, useNonValidated=True )
         listOfExpRes = db.expResultList ## seems to be the safest bet?
-        self.produceProtoModel ( pmodel )
+        self.produceProtoModel ( pmodel, db.databaseVersion )
         self.log ( "%d results before faking bgs" % len(listOfExpRes) )
         updatedListOfExpRes = self.fakeBackgrounds ( listOfExpRes )
         self.log ( "%d results after faking bgs" % len(updatedListOfExpRes) )
