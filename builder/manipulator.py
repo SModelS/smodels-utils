@@ -8,6 +8,8 @@
     -) merger, heed the changed particle mass when computing ssm.
 """
 
+#import sys
+#sys.path.insert(0,"../")
 from tools import helpers
 import copy, random, numpy, time, os, sys, itertools
 from smodels.tools.physicsUnits import fb, TeV
@@ -76,7 +78,9 @@ class Manipulator:
         self.pprint ( "teleporting, we have %d dicts" % len(dicts) )
         self.pprint ( "choosing the %dth entry, it has a K of %.2f" % \
                       ( ith, dicts[ith]["K"] ) )
+        step = self.M.step
         self.initFromDict ( dicts[ith] )
+        self.M.step = step ## continue counting!
 
     def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
                         comment = "", appendMode=False ):
@@ -687,6 +691,7 @@ class Manipulator:
         :param force: If False, will only freeze the particle if it does not violate
                       the canonical order (e.g. will not freeze stop1 if stop2 is unfrozen)
                       and the model contains at least 3 particles.
+        :returns: 1 if freezing succesful, 0 if not
         """
 
         if protomodel is None:
@@ -696,12 +701,12 @@ class Manipulator:
         unfrozen = protomodel.unFrozenParticles( withLSP=False )
         if not force:
             if len(unfrozen) < 2:
-                return
+                return 0
             #If pid matches the lighter state and the heavier state is unfrozen,
             #do not freeze the particle
             for pids in self.canonicalOrder:
                 if pid == pids[0] and pids[1] in unfrozen:
-                    return
+                    return 0
         protomodel.log ( "Freezing %s." % ( helpers.getParticleName(pid) ) )
         #Remove pid from masses, decays and signal multipliers:
         if  pid in protomodel.masses:
@@ -714,6 +719,7 @@ class Manipulator:
 
         #Fix branching ratios and rescale signal strenghts, so other channels are not affected
         self.removeAllOffshell(rescaleSSMs=True, protomodel=protomodel)
+        return 1
 
     def unFreezeParticle (self, pid, force = False, protomodel = None):
         """ unfreeze particle pid, assign masses, BRs and signal strength multipliers.
@@ -1218,9 +1224,11 @@ class Manipulator:
             unfrozen masses -- freeze them """
         okPids = self.getAllPidsOfBestCombo()
         unfrozen = self.M.unFrozenParticles( withLSP=False )
+        nfrozen = 0
         for pid in unfrozen:
             if not pid in okPids:
-                self.freezeParticle ( pid )
+                nfrozen += self.freezeParticle ( pid )
+        return nfrozen
 
     def backupModel ( self ):
         """ backup the current state """

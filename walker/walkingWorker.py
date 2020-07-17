@@ -45,7 +45,7 @@ def main( nmin, nmax, cont,
           nevents = 100000, seed = None,  catchem=True ):
     """ a worker node to set up to run walkers
     :param nmin: the walker id of the first walker
-    :param nmax: the walker id of the last walker (?)
+    :param nmax: the walker id + 1 of the last walker
     :param cont: start with protomodels given in the pickle file 'cont'
     :param cheatcode: in case we wish to start from a cheat model
     :param dump_training: dump training data for the NN
