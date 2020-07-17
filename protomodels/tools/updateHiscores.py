@@ -79,7 +79,7 @@ def plot( Z, K, rundir ):
     args.number = 0
     args.detailed = False
     args.destinations = False
-    args.picklefile = "%shiscore.hi" % rundir 
+    args.picklefile = "%s/hiscore.hi" % rundir 
     args.dbpath = "%s/default.pcl" % rundir
     args.verbosity = "info"
     args.horizontal = False

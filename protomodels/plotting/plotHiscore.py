@@ -18,7 +18,7 @@ def obtain ( number, picklefile ):
     :returns: model
     """
     if not os.path.exists ( picklefile ):
-        print ( "[plotHiscore] %s does not exist. Trying to produce now with ./hiscore.py" % picklefile )
+        print ( "[plotHiscore] %s does not exist. Trying to produce now with ./hiscore.hi" % picklefile )
         from argparse import Namespace
         args = Namespace()
         args.detailed = False
@@ -27,8 +27,8 @@ def obtain ( number, picklefile ):
         args.infile = picklefile
         args.fetch = False
         args.maxloss = 0.005
-        import hiscore
-        hiscore.main ( args )
+        from tools import hiscoreTools
+        hiscoreTools.main ( args )
 
     with open( picklefile,"rb" ) as f:
         #fcntl.flock( f, fcntl.LOCK_EX )
@@ -392,6 +392,7 @@ def writeIndexTex ( protomodel, texdoc ):
     f.write ( "Our current winner has a score of K=%.2f, Z=%.2f, " % \
               ( protomodel.K, protomodel.Z ) )
     dbver = "???"
+    dotlessv = "???"
     strategy = "aggressive"
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
@@ -399,7 +400,7 @@ def writeIndexTex ( protomodel, texdoc ):
     f.write ( " it was produced with database {\\tt v%s}, combination strategy {\\tt %s} in step %d." % \
             ( dotlessv, strategy, protomodel.step ) )
     f.write ( "\n" )
-    if hasattr ( protomodel, "rvalues" ):
+    if hasattr ( protomodel, "tpList" ):
         rvalues=protomodel.tpList
         rvalues.sort(key=lambda x: x[0],reverse=True )
         g=open("rvalues.tex","wt")
@@ -503,6 +504,7 @@ def writeIndexHtml ( protomodel ):
     f.write ( "<table><td><h1>Current best protomodel: K=%.2f, Z=%.2f</h1><td><img height=60px src=https://smodels.github.io/pics/banner.png></table>\n" % ( protomodel.K, protomodel.Z ) )
     f.write ( "</center>\n" )
     dbver = "???"
+    dotlessv = "???"
     strategy = "aggressive"
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
@@ -553,8 +555,8 @@ def writeIndexHtml ( protomodel ):
         first = False
     f.write ( "<br>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
-    if hasattr ( protomodel, "rvalues" ):
-        rvalues=protomodel.rvalues
+    if hasattr ( protomodel, "tpList" ):
+        rvalues=protomodel.tpList
         rvalues.sort(key=lambda x: x[0],reverse=True )
         f.write ( "<br><b>%d predictions available. Highest r values are:</b><br><ul>\n" % len(rvalues) )
         for rv in rvalues[:5]:
@@ -664,7 +666,10 @@ def plotRuler( protomodel, verbosity, horizontal ):
         # resultsForPIDs.union ( getPIDsOfTPred ( tpred ) )
     resultsFor = {}
     for pid,values in resultsForPIDs.items():
-        resultsFor[ protomodel.masses[pid] ] = values
+        if pid in protomodel.masses:
+            resultsFor[ protomodel.masses[pid] ] = values
+        else:
+            print ( "[plotHiscore] why is pid %s not in mass dict %s?" % ( pid, str(protomodel.masses) ) )
 
     if verbosity == "debug":
         print ( '[plotHiscore] ../smodels_utils/plotting/rulerPlotter.py -o ruler.png --hasResultsFor "%s" %s' % \

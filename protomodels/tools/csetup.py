@@ -24,6 +24,8 @@ def setup( rundir = None, codedir = None ):
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
     if rundir != None:
         os.chdir ( rundir )
+        if not rundir.endswith("/"):
+            rundir += "/"
         return rundir
     home = os.environ["HOME"]
     if os.path.exists ( "./rundir.conf" ):
