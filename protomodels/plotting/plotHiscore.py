@@ -711,12 +711,9 @@ def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
 def plot ( number, verbosity, picklefile, options, dbpath ):
     ## plot hiscore number "number"
     protomodel = obtain ( number, picklefile )
-    if hasattr ( protomodel, "currentSLHA" ):
-        del protomodel.currentSLHA
     
     protoslha = protomodel.createSLHAFile ()
-    # print ( "wrote", protoslha )
-    subprocess.getoutput ( "mv %s hiscore.slha" % protoslha )
+    subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
     m = Manipulator ( protomodel )
     print ( "[plotHiscore] now write pmodel.py" )
     m.writeDictFile()
@@ -729,6 +726,7 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
     horizontal = False
     if "horizontal" in options and options["horizontal"]:
         horizontal = True
+    print ( "slha file exists?", os.path.exists ( protomodel.currentSLHA ), protomodel.currentSLHA )
     if plotruler:
         plotRuler ( protomodel, verbosity, horizontal )
     plotdecays = options["decays"]
@@ -745,6 +743,7 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
             writeIndexTex( protomodel, texdoc )
     writeRawNumbersLatex ( protomodel )
     writeRawNumbersHtml ( protomodel )
+    protomodel.delCurrentSLHA()
 
 def runPlotting ( args ):
     if args.destinations:
