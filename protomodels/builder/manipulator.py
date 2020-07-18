@@ -81,6 +81,7 @@ class Manipulator:
         step = self.M.step
         self.initFromDict ( dicts[ith] )
         self.M.step = step ## continue counting!
+        self.M.bestCombo = None
 
     def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
                         comment = "", appendMode=False ):
@@ -1223,6 +1224,8 @@ class Manipulator:
         """ all pids that arent in best combo but have
             unfrozen masses -- freeze them """
         okPids = self.getAllPidsOfBestCombo()
+        if len(okPids)==0: ## means we dont have a best combo
+            return 0
         unfrozen = self.M.unFrozenParticles( withLSP=False )
         nfrozen = 0
         for pid in unfrozen:
