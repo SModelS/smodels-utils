@@ -4,6 +4,10 @@
     specific modules """
 
 import copy, math
+from smodels.experiment.datasetObj import DataSet
+from smodels.experiment.expResultObj import ExpResult
+from smodels.experiment.infoObj import Info
+import unum,numpy
 
 def seedRandomNumbers ( seed ):
     """ seed all random number generation """
@@ -324,3 +328,41 @@ def findLargestExcess ( db ):
     pprint ( excesses )
     print ( "[helpers.findLargestExcess] found %d eff maps" % len(results) )
     return excesses
+
+def lightObjCopy(obj,rmAttr=['elements','avgElement', 'computer', 'txnameList',
+                          'txnames','datasets','_databaseParticles',
+                          'comment','path','url','publication','contact']):
+
+    """Tries to make a light copy of an object. The attributes in rmAttr will not be copied"""
+
+    if obj is None:
+        return obj
+    elif isinstance(obj,(int,float,unum.Unum,str,numpy.float,numpy.bool_)):
+        return obj
+    elif isinstance(obj,list):
+        return [lightObjCopy(x,rmAttr=rmAttr) for x in obj]
+    elif isinstance(obj,tuple):
+        return tuple([lightObjCopy(x,rmAttr=rmAttr) for x in obj])
+    elif isinstance(obj,dict):
+        return dict([[lightObjCopy(k,rmAttr=rmAttr),lightObjCopy(v,rmAttr=rmAttr)] for k,v in obj.items()])
+    elif isinstance(obj,DataSet):
+        newDS = DataSet()
+        newDS.dataInfo = Info()
+        for key,v in obj.dataInfo.__dict__.items():
+            if key in rmAttr: continue
+            setattr(newDS.dataInfo,key,v)
+        return newDS
+    elif isinstance(obj,ExpResult):
+        newExp = ExpResult()
+        newExp.globalInfo = Info()
+        newExp.datasets = []
+        for key,v in obj.globalInfo.__dict__.items():
+            if key in rmAttr: continue
+            setattr(newExp.globalInfo,key,v)
+        return newExp
+    else:
+        newObj = obj.__class__()
+        for key,val in obj.__dict__.items():
+            if key in rmAttr: continue
+            setattr(newObj,lightObjCopy(key,rmAttr=rmAttr),lightObjCopy(val,rmAttr=rmAttr))
+        return newObj

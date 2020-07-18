@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, time, colorama, copy, sys
+import random, tempfile, os, time, colorama, copy, sys, pickle
 from tester.combiner import Combiner
 sys.path.insert(0,"../")
 from tools import helpers
@@ -16,7 +16,7 @@ class ProtoModel:
     """
     LSP = 1000022 ## the LSP is hard coded
 
-    def __init__ ( self, walkerid, keep_meta = True, nevents = 10000,
+    def __init__ ( self, walkerid = None, keep_meta = True, nevents = 10000,
                    dbversion = "????" ):
         """
         :param keep_meta: If True, keep also all the data in best combo (makes
@@ -557,6 +557,28 @@ class ProtoModel:
             newmodel.bestCombo = copy.deepcopy(self.bestCombo)
 
         return newmodel
+
+    def lightCopy(self,rmAttr=None):
+        """Makes a light copy of the model using helpers.lightObjCopy.
+        If rmAttr is None, it will remove the default attributes defined in helpers.lightObjCopy."""
+
+        if rmAttr is not None:
+            return helpers.lightObjCopy(self,rmAttr=rmAttr)
+        else:
+            return helpers.lightObjCopy(self)
+
+    def saveToFile(self,filename=None):
+
+        if filename is None:
+            filename = 'pmodel.pcl'
+
+        #Make a light version of the protomodel
+        lightModel = self.lightCopy()
+        with open(filename,'wb') as f:
+            pickle.dump(lightModel,f)
+
+        return filename
+
 
 if __name__ == "__main__":
     p = ProtoModel( 1 )
