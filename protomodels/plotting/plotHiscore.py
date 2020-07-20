@@ -510,8 +510,8 @@ def writeIndexHtml ( protomodel ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
     dt = int ( time.time() - 1593000000 )
-    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b> " % \
-            ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
+    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in walker %d step %d.</b> " % \
+            ( dotlessv, dbver, strategy, strategy, protomodel.walkerid, protomodel.step ) )
     if hasattr ( protomodel, "particleContributions" ):
         f.write ( "Z plots for: <a href=./M1000022.png?%d>%s</a>" % \
                   ( dt, helpers.toHtml(1000022) ) )
@@ -726,7 +726,7 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
     horizontal = False
     if "horizontal" in options and options["horizontal"]:
         horizontal = True
-    print ( "slha file exists?", os.path.exists ( protomodel.currentSLHA ), protomodel.currentSLHA )
+    # print ( "[plotHiscore] slha file exists?", os.path.exists ( protomodel.currentSLHA ), protomodel.currentSLHA )
     if plotruler:
         plotRuler ( protomodel, verbosity, horizontal )
     plotdecays = options["decays"]

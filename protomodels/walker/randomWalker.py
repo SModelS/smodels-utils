@@ -173,8 +173,7 @@ class RandomWalker:
 
         nUnfrozen = len( self.protomodel.unFrozenParticles() )
         nTotal = len ( self.protomodel.particles )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.protomodel.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.protomodel.unFrozenParticles() ) ) ) )
-
+        ## number of pids in best combo, as a check
         #Try to create a simpler model
         #(merge pre-defined particles of their mass difference is below dm)
         protomodelSimp = self.manipulator.simplifyModel(dm=200.0)
@@ -192,6 +191,18 @@ class RandomWalker:
             self.predictor.predict(self.manipulator.M)
             if protomodelSimp:
                 self.predictor.predict(protomodelSimp)
+
+        pidsp = self.protomodel.unFrozenParticles()
+        pidsp.sort()
+
+        prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
+        pidsm = self.manipulator.M.unFrozenParticles()
+        pidsm.sort()
+        prtclesm = ", ".join ( map ( helpers.getParticleName, pidsm ) )
+        pidsbc = self.manipulator.getAllPidsOfBestCombo()
+        pidsbc.sort()
+        prtclesbc = ", ".join ( map ( helpers.getParticleName, pidsbc ) )
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s [%s] {%s}" % ( self.protomodel.step, nUnfrozen, nTotal, prtcles, prtclesbc, prtclesm ) )
 
         #Now keep the model with highest score:
         if protomodelSimp:
