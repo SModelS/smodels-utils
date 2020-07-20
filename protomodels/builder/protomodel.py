@@ -407,7 +407,7 @@ class ProtoModel:
     def checkTemplateSLHA ( self ):
         if not os.path.exists ( self.templateSLHA ):
             if "/mnt/hephy/" in self.templateSLHA:
-                trySLHA = self.templateSLHA.replace("/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/","./" )
+                trySLHA = self.templateSLHA.replace("/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/","./" )
                 if os.path.exists ( trySLHA ):
                     self.templateSLHA = trySLHA
                     return

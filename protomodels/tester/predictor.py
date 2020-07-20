@@ -229,7 +229,7 @@ class Predictor:
             rvalues.append(r)
         rvalues.sort(reverse = True )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
-        self.log ( "top r values are: %s" % srs )
+        self.log ( "top r values before rescaling are: %s" % srs )
         protomodel.rvalues = rvalues[:-2] #Do not include initial zero values
         protomodel.rmax = rvalues[0]
         protomodel.r2 = rvalues[1]

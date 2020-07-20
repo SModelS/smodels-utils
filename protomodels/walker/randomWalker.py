@@ -12,7 +12,7 @@ try:
     import smodels
 except:
     from tools import setPath
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from walker.hiscore import Hiscore
 from builder.protomodel import ProtoModel
 from builder.manipulator import Manipulator
@@ -229,6 +229,9 @@ class RandomWalker:
 
         #the muhat multiplier gets multiplied into the signal strengths
         self.manipulator.rescaleSignalBy(self.protomodel.muhat)
+        
+        self.log ( "Top r values after rescaling are: %.2f, %.2f" % \
+                   ( self.manipulator.M.rmax, self.manipulator.M.r2 ) )
 
         self.log ( "Step %d: found highest Z: %.2f" % \
                    ( self.protomodel.step, self.protomodel.Z ) )
@@ -248,7 +251,11 @@ class RandomWalker:
 
         self.log ( "Step %d check if result goes into hiscore list" % \
                    ( self.protomodel.step ) )
+        srs = "%s" % ", ".join ( [ "%.2f" % x for x in self.protomodel.rvalues[:3] ] )
+        self.log ( "r values before calling .newResult are at %s" % srs ) )
         self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
+        srs = "%s" % ", ".join ( [ "%.2f" % x for x in self.protomodel.rvalues[:3] ] )
+        self.log ( "r values after calling .newResult are at %s" % srs )
         self.log ( "done check for result to go into hiscore list" )
         self.log ( "Step %d [%s] finished." % ( self.protomodel.step, smaxstp ) )
 
