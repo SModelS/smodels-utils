@@ -21,7 +21,7 @@ def setup( rundir = None, codedir = None ):
         codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/protomodels/" % codedir )
     if rundir != None:
         os.chdir ( rundir )
         if not rundir.endswith("/"):

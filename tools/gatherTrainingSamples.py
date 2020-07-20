@@ -7,8 +7,8 @@ def setup():
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations" )
+    sys.path.insert(0,"%ssmodels-utils/protomodels/" % codedir )
+    # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/protomodels" )
     # rundir = "/mnt/hephy/pheno/ww/rundir"
     rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     if os.path.exists ( "./rundir.conf" ):
