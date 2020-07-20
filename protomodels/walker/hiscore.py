@@ -391,4 +391,5 @@ class Hiscore:
         # logfile = "walker%d.log" % self.walkerid
         logfile = "walker%d.log" % self.walkerid
         with open( logfile, "at" ) as f:
-            f.write ( "[hiscore:%s] %s\n" % ( time.asctime(), " ".join(map(str,args)) ) )
+            tm = time.strftime("%b %d %H:%M:%S")
+            f.write ( "[hiscore-%s] %s\n" % ( tm, " ".join(map(str,args)) ) )

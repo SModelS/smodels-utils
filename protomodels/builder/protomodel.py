@@ -68,7 +68,6 @@ class ProtoModel:
         self.mumax = None
         self.Z = 0.0
         self.K = None
-        self.rmax = 0.
         self.letters = ""
         self.description = ""
         self.bestCombo = None
@@ -244,7 +243,7 @@ class ProtoModel:
         """ logging to file """
         module = "protomodel"
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
-            f.write ( "[%s:%s] %s\n" % ( module, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[%s-%s] %s\n" % ( module, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen, i.e.
@@ -555,7 +554,6 @@ class ProtoModel:
         newmodel.mumax = self.mumax
         newmodel.Z = self.Z
         newmodel.K = self.K
-        newmodel.rmax = self.rmax
         newmodel.letters = self.letters[:]
         newmodel.description = self.description[:]
         newmodel._stored_xsecs = copy.deepcopy(self._stored_xsecs)

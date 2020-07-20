@@ -107,13 +107,13 @@ class Predictor:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[predict] %s" % ( " ".join(map(str,args))) )
+        print ( "[predictor] %s" % ( " ".join(map(str,args))) )
         self.log ( *args )
 
     def log ( self, *args ):
         """ logging to file """
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
-            f.write ( "[predict:%s] %s\n" % ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[predictor-%s] %s\n" % ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def predict ( self, protomodel, sigmacut = 0.02*fb,
                   strategy = "aggressive"):
@@ -231,9 +231,7 @@ class Predictor:
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
         self.log ( "top r values before rescaling are: %s" % srs )
         protomodel.rvalues = rvalues[:-2] #Do not include initial zero values
-        protomodel.rmax = rvalues[0]
-        protomodel.r2 = rvalues[1]
-        protomodel.excluded = protomodel.rmax > self.rthreshold #The 0.99 deals with the case rmax = threshold
+        # protomodel.excluded = protomodel.rvalues[0] > self.rthreshold #The 0.99 deals with the case rmax = threshold
         protomodel.tpList = tpList[:]
 
     def getMaxAllowedMu(self, protomodel):
@@ -242,9 +240,9 @@ class Predictor:
         """
 
         mumax = float("inf")
-        if protomodel.rmax > 0.:
+        if protomodel.rvalues[0] > 0.:
             #Set mumax slightly below threshold, so the model is never excluded
-            mumax = 0.999*self.rthreshold / protomodel.rmax
+            mumax = 0.999*self.rthreshold / protomodel.rvalues[0]
 
         return mumax
 

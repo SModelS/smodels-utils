@@ -163,7 +163,7 @@ class Manipulator:
             col = colorama.Fore.GREEN
         else:
             self.highlight ( "red", "I think we called highlight without msg type" )
-        print ( "%s[%s:%s] %s%s" % ( col, module, 
+        print ( "%s[%s-%s] %s%s" % ( col, module, 
             time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
         self.log ( *args )
 
@@ -177,7 +177,7 @@ class Manipulator:
         """ logging to file """
         module = "manipulator"
         with open( "walker%d.log" % self.M.walkerid, "at" ) as f:
-            f.write ( "[%s:%s] %s\n" % ( module, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[%s-%s] %s\n" % ( module, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def initFromDict ( self, D, filename="" ):
         """ setup the protomodel from dictionary D.
@@ -215,17 +215,6 @@ class Manipulator:
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
         self.initFromDict ( m, filename )
-
-    def pprint ( self, *args ):
-        """ logging """
-        print ( "[manipulator:%d] %s" % (self.M.walkerid, " ".join(map(str,args))) )
-        self.log ( *args )
-
-    def log ( self, *args ):
-        """ logging to file """
-        with open( "walker%d.log" % self.M.walkerid, "a" ) as f:
-            f.write ( "[manipulator:%s] %s\n" % \
-                      ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def checkForNans ( self ):
         """ check protomodel for NaNs, for debugging only """
@@ -385,8 +374,6 @@ class Manipulator:
         if abs ( s - 1.0 ) < 1e-5:
             return
         self.log ( "rescaling signal by muhat of %.2f" % s )
-        self.M.rmax = self.M.rmax *s
-        self.M.r2 = self.M.r2 *s
         self.M.rvalues = [r*s for r in self.M.rvalues[:]]
         self.M.muhat *= 1./s
         self.M.mumax *= 1./s
@@ -1267,7 +1254,9 @@ class Manipulator:
         """ backup the current state """
 
         self._backup = { "llhd": self.M.llhd, "letters": self.M.letters, "Z": self.M.Z,
+                         "K": self.M.K, "muhat": self.M.muhat,
                          "description": self.M.description,
+                         "tpList": copy.deepcopy(self.M.tpList),
                          "bestCombo": copy.deepcopy(self.M.bestCombo),
                          "masses": copy.deepcopy(self.M.masses),
                          "ssmultipliers": copy.deepcopy(self.M.ssmultipliers),
@@ -1277,12 +1266,6 @@ class Manipulator:
                          "_xsecMasses" : copy.deepcopy(self.M._xsecMasses),
                          "_xsecSSMs" : copy.deepcopy(self.M._xsecSSMs),
                          }
-        if hasattr ( self.M, "muhat" ):
-            self._backup["muhat"]=self.M.muhat
-        if hasattr ( self.M, "K" ):
-            self._backup["K"]=self.M.K
-        if hasattr ( self.M, "rmax" ):
-            self._backup["rmax"]=self.M.rmax
 
     def restoreModel ( self ):
         """ restore from the backup """

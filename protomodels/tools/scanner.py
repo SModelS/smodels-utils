@@ -64,7 +64,7 @@ def predProcess ( args ):
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
                 ( i, ts, ctr, len(mrange), m, nevents ) )
         model.predict ( nevents = nevents, check_thresholds=False )
-        ret[m]=(model.Z,model.rmax,model.K)
+        ret[m]=(model.Z,model.rvalues[0],model.K)
     return ret
 
 def printCombo ( combo, comment="" ):
@@ -130,7 +130,7 @@ def ssmProcess ( args ):
                 ( i, ts, ctr, len(ssmrange), ssm, nevents ) )
         model.predict ( nevents = nevents, recycle_xsecs = True )
         print ( "[scanner:%d-%s]   `- Z=%.3f" % ( i, ts, model.Z ) )
-        ret[ssm]=(model.Z,model.rmax)
+        ret[ssm]=(model.Z,model.rvalues[0])
     return ret
 
 def produce( hi, pid=1000022, nevents = 100000, dryrun=False,

@@ -112,7 +112,6 @@ def main( rundir = None ):
         D = updateHiscores( rundir )
         Z,step,model,K = D["Z"],D["step"],D["model"],D["K"]
         if K > Kold + .001:
-        #if Z > Zold*1.0001:
             from builder.manipulator import Manipulator
             m = Manipulator ( model )
             T=str(int(time.time()))
