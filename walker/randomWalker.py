@@ -59,7 +59,7 @@ class RandomWalker:
         self.hiscoreList.nkeep = 1
 
         #Initialize ProtoModel and Manipulator:
-        protomodel = ProtoModel( self.walkerid, keep_meta = True, 
+        protomodel = ProtoModel( self.walkerid, keep_meta = True,
                 nevents = nevents, dbversion = self.predictor.database.databaseVersion )
 
         self.manipulator = Manipulator ( protomodel, strategy )
@@ -229,9 +229,9 @@ class RandomWalker:
 
         #the muhat multiplier gets multiplied into the signal strengths
         self.manipulator.rescaleSignalBy(self.protomodel.muhat)
-        
+
         self.log ( "Top r values after rescaling are: %.2f, %.2f" % \
-                   ( self.manipulator.M.rmax, self.manipulator.M.r2 ) )
+                   ( self.manipulator.M.rvalues[0], self.manipulator.M.rvalues[1] ) )
 
         self.log ( "Step %d: found highest Z: %.2f" % \
                    ( self.protomodel.step, self.protomodel.Z ) )
@@ -252,7 +252,7 @@ class RandomWalker:
         self.log ( "Step %d check if result goes into hiscore list" % \
                    ( self.protomodel.step ) )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in self.protomodel.rvalues[:3] ] )
-        self.log ( "r values before calling .newResult are at %s" % srs ) )
+        self.log ( "r values before calling .newResult are at %s" % srs )
         self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in self.protomodel.rvalues[:3] ] )
         self.log ( "r values after calling .newResult are at %s" % srs )
@@ -337,14 +337,14 @@ class RandomWalker:
     def log ( self, *args ):
         """ logging to file """
         with open( "%s/walker%d.log" % ( self.rundir, self.walkerid ), "a" ) as f:
-            f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[randomWalker-%s] %s\n" % ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def walk ( self, catchem=False ):
         """ Now perform the random walk """
         # self.printStats ( substep = 2 )
         self.manipulator.backupModel()
         if len ( self.manipulator.M.unFrozenParticles( withLSP=False ) ) < 1:
-            ## start with unfreezing a random particle 
+            ## start with unfreezing a random particle
             self.manipulator.randomlyUnfreezeParticle(force = True)
             self.manipulator.backupModel()
 
