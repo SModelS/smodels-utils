@@ -94,19 +94,19 @@ def hasSignals ( protomodel ):
     """ are there signals stored in the theory predictions? """
     for tp in protomodel.bestCombo:
         if hasattr(tp.dataset.dataInfo,"sigN" ):
-            return True
+            return "did"
         for txn in tp.dataset.txnameList:
             if hasattr ( txn, "sigmaN" ):
-                return True
-    return False
+                return "did"
+    return "did not"
 
 def writeRawNumbersHtml ( protomodel ):
     """ write out the raw numbers of the excess, as html """
     f=open("rawnumbers.html","wt")
     f.write("<table>\n" )
     f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>" )
-    hassigs = hasSignals ( protomodel )
-    print ( "[plotHiscore] protomodel has signals: %s" % hassigs )
+    didordidnot = hasSignals ( protomodel )
+    print ( f"[plotHiscore] protomodel's database {didordidnot} have fake signals." )
     if hassigs:
         f.write("<th>Signal</th>" )
     f.write("\n</tr>\n" )
