@@ -528,6 +528,7 @@ class ProtoModel:
         newmodel.minevents = self.minevents
         newmodel.nevents = self.nevents
         newmodel.step = self.step
+        newmodel.dbversion = self.dbversion
         newmodel.particles = self.particles[:]
         newmodel.onesquark = self.onesquark ## only one light squark
         newmodel.twosquark = self.twosquark  ## a few squarks, but not all
