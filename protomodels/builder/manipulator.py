@@ -11,6 +11,7 @@
 #import sys
 #sys.path.insert(0,"../")
 from tools import helpers
+import colorama
 import copy, random, numpy, time, os, sys, itertools
 from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.crossSection import LO
@@ -136,7 +137,7 @@ class Manipulator:
             D["comment"]=comment
         fname = outfile.replace("%t", str(int(time.time())) )
         if not appendMode:
-            self.M.pprint ( "writing model to %s" % fname )
+            self.pprint ( "writing model to %s" % fname )
         mode,comma = "wt",""
         if appendMode:
             mode,comma = "at",","
@@ -150,6 +151,34 @@ class Manipulator:
             return pid in lst
         return pid in lst or -pid in lst
 
+    def highlight ( self, msgType = "info", *args ):
+        """ logging, hilit """
+        module = "manipulator"
+        col = colorama.Fore.GREEN
+        if msgType.lower() in [ "error", "red" ]:
+            col = colorama.Fore.RED
+        elif msgType.lower() in [ "warn", "warning", "yellow" ]:
+            col = colorama.Fore.YELLOW
+        elif msgType.lower() in [ "green", "info" ]:
+            col = colorama.Fore.GREEN
+        else:
+            self.highlight ( "red", "I think we called highlight without msg type" )
+        print ( "%s[%s:%s] %s%s" % ( col, module, 
+            time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
+        self.log ( *args )
+
+    def pprint ( self, *args ):
+        """ logging """
+        module = "manipulator"
+        print ( "[%s] %s" % (module, " ".join(map(str,args))) )
+        self.log ( *args )
+
+    def log ( self, *args ):
+        """ logging to file """
+        module = "manipulator"
+        with open( "walker%d.log" % self.M.walkerid, "at" ) as f:
+            f.write ( "[%s:%s] %s\n" % ( module, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+
     def initFromDict ( self, D, filename="" ):
         """ setup the protomodel from dictionary D.
         :param D: dictionary, as defined in pmodel*.py files.
@@ -158,7 +187,7 @@ class Manipulator:
         scom = ""
         if "comment" in D:
                 scom = ": " + D["comment"]
-        self.M.highlight ( "green", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
+        self.highlight ( "info", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
         #Reset all model attributes:
         self.M.initializeModel()
         #Set attributes to dictionary values:
@@ -180,7 +209,7 @@ class Manipulator:
             return
         filename = "pmodel%d.py" % mode
         if not os.path.exists ( filename ):
-            self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
+            self.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
             sys.exit(-1)
         # scom = ""
         with open ( filename, "rt" ) as f:
@@ -195,7 +224,8 @@ class Manipulator:
     def log ( self, *args ):
         """ logging to file """
         with open( "walker%d.log" % self.M.walkerid, "a" ) as f:
-            f.write ( "[manipulator:%d - %s] %s\n" % ( self.M.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[manipulator:%s] %s\n" % \
+                      ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def checkForNans ( self ):
         """ check protomodel for NaNs, for debugging only """
@@ -350,11 +380,11 @@ class Manipulator:
         """ multiply the signal strength multipliers with muhat"""
 
         if s == 0.:
-            self.M.pprint ( "rescaling by zero? Ignore." )
+            self.pprint ( "rescaling by zero? Ignore." )
             return
         if abs ( s - 1.0 ) < 1e-5:
             return
-        self.M.log ( "rescaling signal by muhat of %.2f" % s )
+        self.log ( "rescaling signal by muhat of %.2f" % s )
         self.M.rmax = self.M.rmax *s
         self.M.r2 = self.M.r2 *s
         self.M.rvalues = [r*s for r in self.M.rvalues[:]]
@@ -448,7 +478,7 @@ class Manipulator:
                 pid = pids[0] #Unfreeze the lighter state
                 break
 
-        self.M.log ( "Unfreezing %s:" % ( helpers.getParticleName(pid) ) )
+        self.log ( "Unfreezing %s:" % ( helpers.getParticleName(pid) ) )
         return self.unFreezeParticle(pid)
 
     def randomlyChangeBranchings ( self, prob=0.2, zeroBRprob = 0.05, singleBRprob = 0.05 ):
@@ -464,11 +494,11 @@ class Manipulator:
         self.log ( "randomly change branchings" )
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
-            self.M.pprint ( "not enough unfrozen particles to change random branching" )
+            self.pprint ( "not enough unfrozen particles to change random branching" )
             return 0
         p = random.choice ( unfrozenparticles )
         if not p in self.M.decays.keys():
-            self.M.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.M.decays.keys() ) )
+            self.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.M.decays.keys() ) )
             # we dont know about this decay? we initialize with the default!
 
         return self.randomlyChangeBranchingOfPid ( p, zeroBRprob, singleBRprob )
@@ -480,7 +510,7 @@ class Manipulator:
 
         # print ( "the open channels are", openChannels )
         if len(openChannels) < 2:
-            self.M.pprint ( "number of open channels of %d is %d: cannot change branchings." % (pid, len(openChannels) ) )
+            self.pprint ( "number of open channels of %d is %d: cannot change branchings." % (pid, len(openChannels) ) )
             # not enough channels open to tamper with branchings!
             return 0
 
@@ -524,7 +554,7 @@ class Manipulator:
         #Make sure BRs add up to 1:
         self.normalizeBranchings(pid)
 
-        self.M.log ( "changed branchings of %s" % (helpers.getParticleName(pid) ) )
+        self.log ( "changed branchings of %s" % (helpers.getParticleName(pid) ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self, prob=0.25, probSingle=0.8, ssmSigma=0.1):
@@ -544,7 +574,7 @@ class Manipulator:
             return self.randomlyChangeSSOfOneParticle()
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
-            self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
+            self.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         #Randomly choose which process pids to change:
         p = random.choice ( unfrozenparticles )
@@ -561,7 +591,7 @@ class Manipulator:
         if newSSM < 0.:
             newSSM = 0.
         self.changeSSM(pair,newSSM)
-        self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]),
+        self.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]),
                         helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
@@ -572,7 +602,7 @@ class Manipulator:
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
 
         if len(unfrozenparticles)<2:
-            self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
+            self.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         p = random.choice ( unfrozenparticles )
         if pid != None:
@@ -592,7 +622,7 @@ class Manipulator:
             self.M.ssmultipliers[randomProd]=v
             return 1
         f = random.uniform ( .8, 1.2 )
-        self.M.log ( "randomly changing ssms of %s by a factor of %.2f" % \
+        self.log ( "randomly changing ssms of %s by a factor of %.2f" % \
                      ( helpers.getParticleName ( p ), f ) )
         ssms = []
         for dpd,v in self.M.ssmultipliers.items():
@@ -603,30 +633,30 @@ class Manipulator:
                 # self.M.ssmultipliers[dpd]= newssm
                 self.changeSSM ( dpd, newssm )
                 ssms.append ( newssm )
-        self.M.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
+        self.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
 
     def changeSSM ( self, pids, newssm ):
         """ change the signal strength multiplier of pids to newssm,
             if we have stored xsecs, we correct them, also """
         if type(pids) != tuple:
-            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple!" )
+            self.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple!" )
             return
         if len(pids)!= 2:
-            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple of two pids!" )
+            self.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple of two pids!" )
             return
         if pids[1] < pids[0]:
-            self.M.highlight ( "warn", "when changing SSMs, pids are wrongly ordered. Reverting them." )
+            self.highlight ( "warn", "when changing SSMs, pids are wrongly ordered. Reverting them." )
             pids = ( pids[1], pids[0] )
 
         if not pids in self.M.ssmultipliers:
-            self.M.highlight ( "warn", "when changing SSMs, cannot find %s. not changing anything." % str(pids) )
+            self.highlight ( "warn", "when changing SSMs, cannot find %s. not changing anything." % str(pids) )
             return
         oldssm = self.M.ssmultipliers[pids]
         if newssm > 10000.:
             newssm = 10000.
         self.M.ssmultipliers[pids]=newssm
-        self.M.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
+        self.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
                                    ( str(pids), oldssm, newssm ) )
 
     def randomlyFreezeParticle ( self, sigma= 0.5, probMassive = 0.3):
@@ -658,7 +688,7 @@ class Manipulator:
         self.log ( "freeze random particle" )
         unfrozen = self.M.unFrozenParticles( withLSP = False )
         if len(unfrozen)<2:
-            self.M.log ( "only two particles are unfrozen, so dont freeze anything" )
+            self.log ( "only two particles are unfrozen, so dont freeze anything" )
             return 0 ## freeze only if at least 3 unfrozen particles exist
         pid = random.choice ( unfrozen )
 
@@ -1258,8 +1288,8 @@ class Manipulator:
         """ restore from the backup """
         if not hasattr ( self, "_backup" ):
             raise Exception ( "no backup available" )
-        for k,v in self._backup.items():
-            setattr ( self.M, k, v )
+        for k,v in self._backup.items(): ## do not!! shallow copy here
+            setattr ( self.M, k, copy.deepcopy(v) )
 
     def delBackup ( self ):
         """ delete protomodel backup dictionary"""
