@@ -107,13 +107,13 @@ class Predictor:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[predict:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+        print ( "[predict] %s" % ( " ".join(map(str,args))) )
         self.log ( *args )
 
     def log ( self, *args ):
         """ logging to file """
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
-            f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[predict:%s] %s\n" % ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def predict ( self, protomodel, sigmacut = 0.02*fb,
                   strategy = "aggressive"):
@@ -167,7 +167,7 @@ class Predictor:
 
         mingap=10*GeV
 
-        self.log ( "Now decomposing" )
+        # self.log ( "Now decomposing" )
         topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
         self.log ( "decomposed model into %d topologies." % len(topos) )
 
@@ -180,7 +180,7 @@ class Predictor:
 
 
         preds = []
-        self.log ( "start getting preds" )
+        # self.log ( "start getting preds" )
         from smodels.tools import runtime
         runtime._experimental = True
         for expRes in self.listOfExpRes:
@@ -200,8 +200,14 @@ class Predictor:
                 prediction.computeStatistics()
                 if (not llhdonly) or (prediction.likelihood != None):
                     preds.append ( prediction )
-        self.log ( "return %d predictions " % len(preds) )
-
+        sap = "best preds"
+        if allpreds:
+            sap = "all preds"
+        sllhd = ""
+        if llhdonly:
+            sllhd = ", llhds only"
+        self.log ( "returning %d predictions, %s%s" % \
+                   (len(preds),sap, sllhd ) )
         return preds
 
     def updateModelPredictions(self, protomodel, predictions):
@@ -223,7 +229,7 @@ class Predictor:
             rvalues.append(r)
         rvalues.sort(reverse = True )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
-        self.log ( "received r values %s" % srs )
+        self.log ( "top r values are: %s" % srs )
         protomodel.rvalues = rvalues[:-2] #Do not include initial zero values
         protomodel.rmax = rvalues[0]
         protomodel.r2 = rvalues[1]

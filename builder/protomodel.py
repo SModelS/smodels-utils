@@ -220,6 +220,7 @@ class ProtoModel:
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
+        module = "protomodel"
         col = colorama.Fore.GREEN
         if msgType.lower() in [ "error", "red" ]:
             col = colorama.Fore.RED
@@ -228,19 +229,22 @@ class ProtoModel:
         elif msgType.lower() in [ "green", "info" ]:
             col = colorama.Fore.GREEN
         else:
-            self.highlight ( "red", "i think we called highlight without msg type" )
-        print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
+            self.highlight ( "red", "I think we called highlight without msg type" )
+        print ( "%s[%s:%s] %s%s" % ( col, module,  
+            time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
         self.log ( *args )
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[model:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+        module = "protomodel"
+        print ( "[%s] %s" % (module, " ".join(map(str,args))) )
         self.log ( *args )
 
     def log ( self, *args ):
         """ logging to file """
+        module = "protomodel"
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
-            f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[%s:%s] %s\n" % ( module, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen, i.e.
@@ -358,7 +362,11 @@ class ProtoModel:
                     xsecs.append ( x )
 
             comment = "produced at step %d" % ( self.step )
-            self.log ( "done computing %d xsecs" % len(xsecs) )
+            pidsp = self.unFrozenParticles()
+            pidsp.sort()
+            prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
+            self.log ( "done computing %d xsecs for pids %s" % \
+                       ( len(xsecs), prtcles ) )
             self._stored_xsecs = ( xsecs, comment )
             self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
             self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])

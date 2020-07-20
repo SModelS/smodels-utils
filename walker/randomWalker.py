@@ -77,8 +77,10 @@ class RandomWalker:
             self.predictor.predict(self.protomodel)
             self.pprint ( "Cheat model gets Z=%.2f, K=%.2f" % \
                           ( self.manipulator.M.Z, self.manipulator.M.K ) )
+            # self.printStats ( substep=4 )
             self.manipulator.backupModel()
             self.hiscoreList.newResult ( self.manipulator.M )
+            self.printStats ( substep=5 )
             self.currentK = self.manipulator.M.K
             self.currentZ = self.manipulator.M.Z
         if dump_training:
@@ -128,13 +130,8 @@ class RandomWalker:
         ret.manipulator.initFromDict ( dictionary )
         ret.manipulator.setWalkerId ( walkerid )
         ret.manipulator.M.createNewSLHAFileName()
-        # ret.manipulator.M.initializeSSMs ( overwrite = False )
+        # ret.printStats ( substep=3 )
         ret.manipulator.backupModel()
-        if dump_training:
-            ## we use the accelerator only to dump the training data
-            from accelerator import Accelerator
-            ret.accelerator = Accelerator ( walkerid= walkerid, dump_training=True,
-                                        is_trained = False )
         return ret
 
     def pprint ( self, *args ):
@@ -152,11 +149,33 @@ class RandomWalker:
     def protomodel(self, protomodel):
         self.manipulator.M = protomodel
 
+    def printStats ( self, substep ):
+        """ print the stats, i.e. number of unfrozen particles.
+            for debugging. """
+        nUnfrozen = len( self.protomodel.unFrozenParticles() )
+        nTotal = len ( self.protomodel.particles )
+        pidsp = self.protomodel.unFrozenParticles()
+        pidsp.sort()
+
+        prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
+        pidsbc = list ( self.manipulator.getAllPidsOfBestCombo() )
+        pidsbc.sort()
+        prtclesbc = ", ".join ( map ( helpers.getParticleName, pidsbc ) )
+        self.pprint ( "Step %d/%d has %d/%d unfrozen particles: %s [%s]" % \
+              ( self.protomodel.step, substep, nUnfrozen, nTotal, \
+                prtcles, prtclesbc ) )
+        if len(pidsbc)>0 and not set(pidsbc).issubset ( set(pidsp) ):
+            self.pprint ( "  `-- error! best combo pids arent subset of masses pids!!!" )
+            self.manipulator.M.bestCombo = None
+
     def onestep ( self ):
-        #Remove data about best combo
-        self.protomodel.cleanBestCombo()
         #Add one step
         self.protomodel.step+=1
+        self.pprint ( "Step %d begins." % ( self.protomodel.step ) )
+        self.printStats( substep=10 )
+        #Remove data about best combo
+        self.protomodel.cleanBestCombo()
+        # self.printStats( substep=11 )
         printMemUsage = False
         if printMemUsage:
             self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d" %\
@@ -167,9 +186,11 @@ class RandomWalker:
         self.log ( "freeze pids that arent in best combo, we dont need them:" )
         nfrozen = self.manipulator.freezePidsNotInBestCombo()
         self.log ( " `- froze %d particles not in best combo" % nfrozen )
+        # self.printStats( substep=12 )
 
         #Take a step in the model space:
         self.manipulator.randomlyChangeModel()
+        # self.printStats( substep=13 )
 
         nUnfrozen = len( self.protomodel.unFrozenParticles() )
         nTotal = len ( self.protomodel.particles )
@@ -177,6 +198,8 @@ class RandomWalker:
         #Try to create a simpler model
         #(merge pre-defined particles of their mass difference is below dm)
         protomodelSimp = self.manipulator.simplifyModel(dm=200.0)
+
+        # self.printStats( substep=14 )
 
         if self.catch_exceptions:
             try:
@@ -192,23 +215,13 @@ class RandomWalker:
             if protomodelSimp:
                 self.predictor.predict(protomodelSimp)
 
-        pidsp = self.protomodel.unFrozenParticles()
-        pidsp.sort()
-
-        prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
-        pidsm = self.manipulator.M.unFrozenParticles()
-        pidsm.sort()
-        prtclesm = ", ".join ( map ( helpers.getParticleName, pidsm ) )
-        pidsbc = self.manipulator.getAllPidsOfBestCombo()
-        pidsbc.sort()
-        prtclesbc = ", ".join ( map ( helpers.getParticleName, pidsbc ) )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s [%s] {%s}" % ( self.protomodel.step, nUnfrozen, nTotal, prtcles, prtclesbc, prtclesm ) )
-
         #Now keep the model with highest score:
         if protomodelSimp:
             if self.manipulator.M.Z is None or (protomodelSimp.Z is not None
                         and (protomodelSimp.Z > self.manipulator.M.Z)):
                 self.manipulator.M = protomodelSimp
+
+        # self.printStats( substep=15 )
 
         #If no combination could be found, return
         if self.manipulator.M.Z is None:
@@ -217,16 +230,9 @@ class RandomWalker:
         #the muhat multiplier gets multiplied into the signal strengths
         self.manipulator.rescaleSignalBy(self.protomodel.muhat)
 
-        #Sanity check (the model should never be excluded after rescaling):
-        self.protomodel.excluded = self.protomodel.rmax > self.predictor.rthreshold
-        if self.protomodel.excluded:
-            self.highlight ( "info", "rmax=%.2f, excluded = %s (r2=%.2f): should never happen." % \
-                ( self.protomodel.rmax, self.protomodel.excluded, self.protomodel.r2 ) )
-            sys.exit(-2)
+        self.log ( "Step %d: found highest Z: %.2f" % \
+                   ( self.protomodel.step, self.protomodel.Z ) )
 
-        self.log ( "found highest Z: %.2f" % self.protomodel.Z )
-
-        # self.train ()
         nUnfrozen = len ( self.protomodel.unFrozenParticles() )
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [K=%.2f, Z=%.2f, %d unfrozen]" % \
             ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.K, self.protomodel.Z, nUnfrozen ) )
@@ -238,12 +244,14 @@ class RandomWalker:
         if self.checkIfToTeleport( pmax=0.5, norm = 10.0 ):
             # if we teleport the rest becomes irrelevant
             return
+        self.printStats( substep=19 )
 
-        self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
-
-        self.log ( "check if result goes into hiscore list" )
+        self.log ( "Step %d check if result goes into hiscore list" % \
+                   ( self.protomodel.step ) )
         self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
         self.log ( "done check for result to go into hiscore list" )
+        self.log ( "Step %d [%s] finished." % ( self.protomodel.step, smaxstp ) )
+
 
     def checkIfToTeleport ( self, pmax=0.1, norm = 10.0 ):
         """ check if we should teleport to a high score model. If we should then also
@@ -257,7 +265,7 @@ class RandomWalker:
         """
         bestK = self.hiscoreList.globalMaxK()
         if bestK < 1.:
-            self.log ( "K is smaller than one. no teleporting." )
+            self.log ( "bestK is smaller than one. no teleporting." )
         ourK = -2.
         if hasattr ( self.manipulator.M, "K" ) and self.manipulator.M.K > -2:
             ourK = self.manipulator.M.K
@@ -280,18 +288,11 @@ class RandomWalker:
 
     def takeStep ( self ):
         """ take the step, save it as last step """
-        if self.accelerator != None and hasattr ( self.accelerator, "grad" ):
-            self.oldgrad = self.accelerator.grad
         ## Backup model
         self.manipulator.backupModel()
         # Update current K and Z values
         self.currentK = self.protomodel.K
         self.currentZ = self.protomodel.Z
-
-    def saveState ( self ):
-        """ write out current state, for later retrieval """
-        with open("state.pcl","wb") as f:
-            pickle.dump ( self, f )
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
@@ -308,10 +309,10 @@ class RandomWalker:
             ratio = numpy.exp(.5*( newK - K))
 
         if ratio >= 1.:
-            self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % ( self.currentK,
-                        self.protomodel.K, ratio ) )
+            self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % \
+                             ( self.currentK, self.protomodel.K, ratio ) )
             if self.protomodel.K > 0. and self.protomodel.K < 0.7 * self.currentK:
-                self.pprint ( " `- weird, though, K decreases. Please check." )
+                self.pprint ( " `- weirdly, though, K decreases. Please check." )
                 sys.exit(-2)
             self.takeStep()
         else:
@@ -333,9 +334,13 @@ class RandomWalker:
 
     def walk ( self, catchem=False ):
         """ Now perform the random walk """
-
-        self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
+        # self.printStats ( substep = 2 )
         self.manipulator.backupModel()
+        if len ( self.manipulator.M.unFrozenParticles( withLSP=False ) ) < 1:
+            ## start with unfreezing a random particle 
+            self.manipulator.randomlyUnfreezeParticle(force = True)
+            self.manipulator.backupModel()
+
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
 
             if not catchem:
@@ -364,6 +369,4 @@ class RandomWalker:
 
             # obtain the ratio of posteriors
             self.decideOnTakingStep ()
-            # self.gradientAscent()
-        self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )

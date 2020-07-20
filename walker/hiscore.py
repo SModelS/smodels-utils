@@ -88,12 +88,14 @@ class Hiscore:
         return ret
 
     def addResult ( self, protomodel ):
-        """ add a result to the list """
+        """ add a result to the list 
+        :returns: true, if result was added
+        """
         m = Manipulator ( protomodel )
         if m.M.K <= self.currentMinK( zeroIsMin = True ):
-            return ## doesnt pass minimum requirement
+            return False ## doesnt pass minimum requirement
         if m.M.K == 0.:
-            return ## just to be sure, should be taken care of above, though
+            return False ## just to be sure, should be taken care of above, though
 
         Kold = self.globalMaxK()
         if m.M.K > Kold:
@@ -114,13 +116,14 @@ class Hiscore:
                 ### this m.M is essentially the m.M in hiscorelist.
                 ### Skip!
                 self.pprint ( "the protomodel seems to be already in highscore list. skip" )
-                return
+                return False
 
             if mi==None or m.M.K > mi.K: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
                 self.hiscores[i].cleanBestCombo( )
                 break
+        return True
 
     def computeParticleContributions ( self, manipulator ):
         """ this function sequentially removes all particles to compute
@@ -130,11 +133,10 @@ class Hiscore:
 
         #Make sure the model is backep up
         manipulator.backupModel()
-        protomodel = manipulator.M
 
-        unfrozen = protomodel.unFrozenParticles( withLSP=False )
-        oldZ = protomodel.Z
-        oldK = protomodel.K
+        unfrozen = manipulator.M.unFrozenParticles( withLSP=False )
+        oldZ = manipulator.M.Z
+        oldK = manipulator.M.K
         particleContributions = {} ## save the scores for the non-discarded particles.
         particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
 
@@ -143,39 +145,39 @@ class Hiscore:
             self.pprint( "asked to compute particle contributions to score, but predictor has not been set")
             return
 
-        pidsnmasses = [ (x,protomodel.masses[x]) for x in unfrozen ]
+        pidsnmasses = [ (x,manipulator.M.masses[x]) for x in unfrozen ]
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
         for cpid,(pid,mass) in enumerate(pidsnmasses):
-            protomodel.highlight ( "info", "computing contribution of %s (%.1f): [%d/%d]" % \
+            self.pprint ( "computing contribution of %s (%.1f): [%d/%d]" % \
                    ( helpers.getParticleName(pid,addSign=False),
-                     protomodel.masses[pid],(cpid+1),len(unfrozen) ) )
+                     manipulator.M.masses[pid],(cpid+1),len(unfrozen) ) )
 
             #Remove particle and recompute SLHA file:
             manipulator.freezeParticle(pid)
             #Recompute cross-secions:
-            protomodel.getXsecs()
-            self.predictor.predict( protomodel )
-            if protomodel.K is None:
+            manipulator.M.getXsecs()
+            self.predictor.predict( manipulator.M )
+            if manipulator.M.K is None:
                 self.pprint ( "when removing %s, K could not longer be computed. Setting to zero"% ( helpers.getParticleName(pid)))
-                protomodel.K = 0.0
-                protomodel.Z = 0.0
+                manipulator.M.K = 0.0
+                manipulator.M.Z = 0.0
             if oldK <= 0:
                 percK = 0.
             else:
-                percK = ( protomodel.K - oldK ) / oldK
+                percK = ( manipulator.M.K - oldK ) / oldK
                 self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
-                    ( helpers.getParticleName(pid), oldK, protomodel.K, 100.*percK, "%", oldZ,protomodel.Z, protomodel.nevents ) )
+                    ( helpers.getParticleName(pid), oldK, manipulator.M.K, 100.*percK, "%", oldZ,manipulator.M.Z, manipulator.M.nevents ) )
 
             #Store the new Z and K values in the original model:
-            particleContributions[pid]=protomodel.K
-            particleContributionsZ[pid]=protomodel.Z
+            particleContributions[pid]=manipulator.M.K
+            particleContributionsZ[pid]=manipulator.M.Z
             #Make sure to restore the model to its initial (full particle content) state
             manipulator.restoreModel()
             #Store contributions in the protomodel:
-            protomodel.particleContributions = particleContributions
-            protomodel.particleContributionsZ = particleContributionsZ
+            manipulator.M.particleContributions = particleContributions
+            manipulator.M.particleContributionsZ = particleContributionsZ
 
-        self.pprint ( "stored %d particl contributions" % len(protomodel.particleContributions) )
+        self.pprint ( "stored %d particle contributions" % len(manipulator.M.particleContributions) )
 
     def computeAnalysisContributions( self, manipulator ):
         """ compute the contributions to Z of the individual analyses
@@ -183,39 +185,38 @@ class Hiscore:
                   .analysisContributions
         """
 
-        protomodel = manipulator.M
         self.pprint ( "Now computing analysis contributions" )
         self.pprint ( "Recompute the score. Old one at K=%.2f, Z=%.2f" % \
-                      ( protomodel.K, protomodel.Z ) )
+                      ( manipulator.M.K, manipulator.M.Z ) )
         contributionsZ = {}
         contributionsK = {}
         combiner = Combiner()
         dZtot, dKtot = 0., 0.
-        bestCombo = copy.deepcopy ( protomodel.bestCombo )
-        prior = combiner.computePrior ( protomodel )
+        bestCombo = copy.deepcopy ( manipulator.M.bestCombo )
+        prior = combiner.computePrior ( manipulator.M )
         for ctr,pred in enumerate(bestCombo):
             combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
             Z, muhat_ = combiner.getSignificance ( combo )
             K = combiner.computeK ( Z, prior )
-            dZ = protomodel.Z - Z
-            dK = protomodel.K - K
+            dZ = manipulator.M.Z - Z
+            dK = manipulator.M.K - K
             dZtot += dZ
             dKtot += dK
             contributionsZ[ ctr ] = Z
             contributionsK [ ctr ] = K
         for k,v in contributionsZ.items():
-            percZ = (protomodel.Z-v) / dZtot
-            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( protomodel.bestCombo[k].analysisId(), protomodel.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
+            percZ = (manipulator.M.Z-v) / dZtot
+            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( manipulator.M.bestCombo[k].analysisId(), manipulator.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
             contributionsZ[ k ] = percZ
         for k,v in contributionsK.items():
-            percK = (protomodel.K-v) / dKtot
+            percK = (manipulator.M.K-v) / dKtot
             # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
             contributionsK[ k ] = percK
         contrsWithNames = {}
         for k,v in contributionsZ.items():
-            contrsWithNames [ protomodel.bestCombo[k].analysisId() ] = v
-        protomodel.analysisContributions = contrsWithNames
-        self.pprint ( "stored %d analyses contributions" % len(protomodel.analysisContributions) )
+            contrsWithNames [ manipulator.M.bestCombo[k].analysisId() ] = v
+        manipulator.M.analysisContributions = contrsWithNames
+        self.pprint ( "stored %d analyses contributions" % len(manipulator.M.analysisContributions) )
 
     def demote ( self, i ):
         """ demote everything from i+1 on,
@@ -286,6 +287,7 @@ class Hiscore:
     def save ( self ):
         """ later will do something smarter """
         self.writeListToPickle()
+        return True
 
     def writeListToDictFile ( self, dictFile=None ):
         """ write the models in append mode in a single dictFile.
@@ -355,46 +357,29 @@ class Hiscore:
 
     def newResult ( self, protomodel ):
         """ see if new result makes it into hiscore list. If yes, then add.
+        :returns: true, if it entered the hiscore list
         """
-        if protomodel.excluded: # we only take the ones that passed the critic
-            return
-        self.pprint ( "New result with K=%.2f, Z=%.2f, needs to pass K>%.2f, saving: %s" % ( protomodel.K, protomodel.Z, self.currentMinK(), "yes" if self.save_hiscores else "no" ) )
+        self.pprint ( "New result with K=%.2f, Z=%.2f, needs to pass K>%.2f, saving: %s" % \
+                ( protomodel.K, protomodel.Z, self.currentMinK(), 
+                  "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:
-            return
+            return False
         if protomodel.K <= self.currentMinK():
-            return ## clearly out
-        ret = False
-        ctr = 0
-        while not ret:
-            self.addResult ( protomodel )
-            # self.log ( "now save list" )
-            ret = self.save() ## and write it
-            ctr+=1
-            if ctr > 5:
-                break
-        self.log ( "done saving list" )
-
-    def newResultByZ ( self, protomodel ):
-        """ see if new result makes it into hiscore list. If yes, then add.
-            Old version, going by Z, not by K.
+            return False ## clearly out
+        self.addResult ( protomodel )
+        self.save() ## and write it
         """
-        if protomodel.excluded: # we only take the ones that passed the critic
-            return
-        self.pprint ( "New result with Z=%.2f, needs to pass %.2f, saving: %s" % (protomodel.Z, self.currentMinZ(), "yes" if self.save_hiscores else "no" ) )
-        if not self.save_hiscores:
-            return
-        if protomodel.Z <= self.currentMinZ():
-            return ## clearly out
         ret = False
         ctr = 0
         while not ret:
             self.addResult ( protomodel )
-            # self.log ( "now save list" )
             ret = self.save() ## and write it
             ctr+=1
             if ctr > 5:
                 break
-        self.log ( "done saving list" )
+        # self.log ( "done saving list" )
+        """
+        return True
 
     def pprint ( self, *args ):
         """ logging """
@@ -404,6 +389,6 @@ class Hiscore:
     def log ( self, *args ):
         """ logging to file """
         # logfile = "walker%d.log" % self.walkerid
-        logfile = "hiscore.log"
-        with open( logfile, "a" ) as f:
-            f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+        logfile = "walker%d.log" % self.walkerid
+        with open( logfile, "at" ) as f:
+            f.write ( "[hiscore:%s] %s\n" % ( time.asctime(), " ".join(map(str,args)) ) )
