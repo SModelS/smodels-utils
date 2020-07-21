@@ -219,7 +219,7 @@ class Predictor:
                   theory prediction info (sorted with highest r-value first)
         """
 
-        rvalues = [0.0,0.0] #If there are no predictions set rmax and r2 to 0
+        rvalues = [] #If there are no predictions set rmax and r2 to 0
         tpList = []
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
@@ -229,10 +229,12 @@ class Predictor:
             rexp = theorypred.getRValue(expected=True)
             tpList.append( (r, rexp, self.combiner.removeDataFromTheoryPred ( theorypred ) ) )
             rvalues.append(r)
+        while len(rvalues)<2:
+            rvalues.append(0.)
         rvalues.sort(reverse = True )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
         self.log ( "top r values before rescaling are: %s" % srs )
-        protomodel.rvalues = rvalues[:-2] #Do not include initial zero values
+        protomodel.rvalues = rvalues #Do not include initial zero values
         # protomodel.excluded = protomodel.rvalues[0] > self.rthreshold #The 0.99 deals with the case rmax = threshold
         protomodel.tpList = tpList[:]
 
