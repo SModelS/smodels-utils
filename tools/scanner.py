@@ -3,9 +3,11 @@
 """ draw Z as a function of a model parameter """
 
 import numpy, sys, os, copy, time, subprocess, glob
+sys.path.insert(0,"../")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from csetup import setup
-from protomodel.manipulator import Manipulator
-from helpers import rthresholds
+from builder.manipulator import Manipulator
+from tools.helpers import rthresholds
 from smodels.tools.runtime import nCPUs
 
 def getHiscore( force_copy = False, rundir = None ):
@@ -65,6 +67,7 @@ def predProcess ( args ):
                 ( i, ts, ctr, len(mrange), m, nevents ) )
         model.predict ( nevents = nevents, check_thresholds=False )
         ret[m]=(model.Z,model.rvalues[0],model.K)
+        model.delCurrentSLHA()
     return ret
 
 def printCombo ( combo, comment="" ):

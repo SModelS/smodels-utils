@@ -231,3 +231,4 @@ if __name__ == "__main__":
 
     import IPython
     IPython.embed( using=False )
+    ma.M.delCurrentSLHA()

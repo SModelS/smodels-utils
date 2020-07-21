@@ -376,4 +376,5 @@ class RandomWalker:
 
             # obtain the ratio of posteriors
             self.decideOnTakingStep ()
+        self.manipulator.M.delCurrentSLHA()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )

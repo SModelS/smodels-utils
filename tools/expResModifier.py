@@ -21,14 +21,14 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax ):
+    def __init__ ( self, dbpath, Zmax, rundir ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
         """
         self.dbpath = dbpath
         self.protomodel = None
-        self.rundir = setup()
+        self.rundir = setup( rundir )
         self.logfile = "modifier.log"
         if Zmax == None:
             Zmax = 100
@@ -100,6 +100,11 @@ class ExpResModifier:
         # logfile = "walker%d.log" % self.walkerid
         with open( self.logfile, "a" ) as f:
             f.write ( "[modifier] %s\n" % ( " ".join(map(str,args)) ) )
+
+    def finalize ( self ):
+        """ finalize, for the moment its just deleting slha files """
+        if hasattr ( self, "protomodel" ) and self.protomodel is not None:
+            self.protomodel.delCurrentSLHA()
 
     def produceProtoModel ( self, filename, dbversion ):
         """ try to produce a protomodel from pmodel
@@ -346,6 +351,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--suffix',
             help='suffix for database version ["fake1"]',
             type=str, default="fake1" )
+    argparser.add_argument ( '-R', '--rundir',
+            help='override rundir [None]',
+            type=str, default=None )
     argparser.add_argument ( '-M', '--max',
             help='upper limit on significance of individual excess [None]',
             type=float, default=None )
@@ -362,7 +370,7 @@ if __name__ == "__main__":
             help='upload to $RUNDIR', action='store_true' )
     args = argparser.parse_args()
     from smodels.experiment.databaseObj import Database
-    modifier = ExpResModifier( args.database, args.max )
+    modifier = ExpResModifier( args.database, args.max, args.rundir )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
@@ -370,8 +378,10 @@ if __name__ == "__main__":
     if args.check:
         check ( args.outfile )
 
-    if args.interact:
+    if args.interactive:
         modifier.interact ( er )
 
     if args.upload:
         modifier.upload()
+
+    modifier.finalize()
