@@ -149,7 +149,7 @@ class RandomWalker:
     def protomodel(self, protomodel):
         self.manipulator.M = protomodel
 
-    def printStats ( self, substep ):
+    def printStats ( self, substep=None ):
         """ print the stats, i.e. number of unfrozen particles.
             for debugging. """
         nUnfrozen = len( self.protomodel.unFrozenParticles() )
@@ -161,8 +161,8 @@ class RandomWalker:
         pidsbc = list ( self.manipulator.getAllPidsOfBestCombo() )
         pidsbc.sort()
         prtclesbc = ", ".join ( map ( helpers.getParticleName, pidsbc ) )
-        self.pprint ( "Step %d/%d has %d/%d unfrozen particles: %s [%s]" % \
-              ( self.protomodel.step, substep, nUnfrozen, nTotal, \
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s [%s]" % \
+              ( self.protomodel.step, nUnfrozen, nTotal, \
                 prtcles, prtclesbc ) )
         if len(pidsbc)>0 and not set(pidsbc).issubset ( set(pidsp) ):
             self.pprint ( "  `-- error! best combo pids arent subset of masses pids!!!" )
@@ -172,7 +172,7 @@ class RandomWalker:
         #Add one step
         self.protomodel.step+=1
         self.pprint ( "Step %d begins." % ( self.protomodel.step ) )
-        self.printStats( substep=10 )
+        self.printStats( )
         #Remove data about best combo
         self.protomodel.cleanBestCombo()
         # self.printStats( substep=11 )
@@ -247,7 +247,7 @@ class RandomWalker:
         if self.checkIfToTeleport( pmax=0.5, norm = 10.0 ):
             # if we teleport the rest becomes irrelevant
             return
-        self.printStats( substep=19 )
+        self.printStats( )
 
         self.log ( "Step %d check if result goes into hiscore list" % \
                    ( self.protomodel.step ) )
@@ -257,7 +257,7 @@ class RandomWalker:
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in self.protomodel.rvalues[:3] ] )
         self.log ( "r values after calling .newResult are at %s" % srs )
         self.log ( "done check for result to go into hiscore list" )
-        self.log ( "Step %d [%s] finished." % ( self.protomodel.step, smaxstp ) )
+        self.log ( "Step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
 
     def checkIfToTeleport ( self, pmax=0.1, norm = 10.0 ):
