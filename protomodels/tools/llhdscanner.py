@@ -4,12 +4,14 @@
 
 import os, sys, multiprocessing, time, numpy, subprocess, copy
 sys.path.insert(0,"./")
+sys.path.insert(0,"../")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from smodels.tools.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
 from csetup import setup
-from combiner import Combiner
+from tester.combiner import Combiner
 from tester.predictor import Predictor as P
-from plotHiscore import obtain
+from plotter.plotHiscore import obtain
 
 class LlhdThread:
     """ one thread of the sweep """
@@ -54,6 +56,7 @@ class LlhdThread:
                                      llhdonly=True, sigmacut=sigmacut )
         for mu in numpy.arange(.4,1.8,.05):
             llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )
+        self.M.delCurrentSLHA()
         return llhds,robs[:3]
 
     def getLikelihoods ( self, predictions, mu = 1. ):
@@ -259,6 +262,7 @@ class LlhdScanner:
         pickle.dump ( topo, f )
         pickle.dump ( time.asctime(), f )
         f.close()
+        self.M.delCurrentSLHA()
 
     def overrideWithDefaults ( self, args ):
         mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  300., \

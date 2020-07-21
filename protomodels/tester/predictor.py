@@ -143,6 +143,7 @@ class Predictor:
         self.computeSignificance( protomodel, predictions, strategy )
         if protomodel.Z is None:
             self.log ( "done with prediction. Could not find combinations (Z=%s)" % ( protomodel.Z) )
+            protomodel.delCurrentSLHA()
             return False
         else:
             self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( protomodel.Z, protomodel.muhat ) )
@@ -155,6 +156,7 @@ class Predictor:
             protomodel.computeXSecs()
             self.predict(protomodel,sigmacut=sigmacut, strategy= strategy)
 
+        protomodel.delCurrentSLHA()
         return True
 
     def runSModelS(self, inputFile, sigmacut, allpreds, llhdonly):
