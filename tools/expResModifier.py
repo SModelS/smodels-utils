@@ -7,7 +7,8 @@ expected from background, by sampling the background model. """
 # https://link.springer.com/content/pdf/10.1007/JHEP02(2015)004.pdf
 
 import copy, os, sys, time, subprocess, math
-sys.path.insert(0,"..")
+sys.path.insert( 0, "../" )
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from scipy import stats
 from builder.protomodel import ProtoModel
 from builder.manipulator import Manipulator
@@ -103,6 +104,7 @@ class ExpResModifier:
 
     def finalize ( self ):
         """ finalize, for the moment its just deleting slha files """
+        print ( "[expResModifier] finalize" )
         if hasattr ( self, "protomodel" ) and self.protomodel is not None:
             self.protomodel.delCurrentSLHA()
 
@@ -123,12 +125,14 @@ class ExpResModifier:
         keep_meta = True
         # M = ProtoModel ( walkerid, self.dbpath, expected, select, keep_meta )
         M = ProtoModel ( walkerid, keep_meta, dbversion = dbversion )
-        M.createNewSLHAFileName ( prefix="erm" )
+        M.createNewSLHAFileName ( prefix="erm", dir=self.rundir )
         ma = Manipulator ( M )
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
         ma.initFromDict ( m )
         ma.M.computeXSecs( )
+        print ( "xsecs produced", ma.M.currentSLHA )
+        print ( " `-", os.path.exists ( ma.M.currentSLHA ) )
         ma.printXSecs()
         self.protomodel = ma.M
         return self.protomodel
@@ -147,8 +151,10 @@ class ExpResModifier:
         # listOfExpRes = db.getExpResults( useSuperseded=True, useNonValidated=True )
         listOfExpRes = db.expResultList ## seems to be the safest bet?
         self.produceProtoModel ( pmodel, db.databaseVersion )
+        print ( "pm produced", os.path.exists ( self.protomodel.currentSLHA ) )
         self.log ( "%d results before faking bgs" % len(listOfExpRes) )
         updatedListOfExpRes = self.fakeBackgrounds ( listOfExpRes )
+        print ( "fb produced", os.path.exists ( self.protomodel.currentSLHA ) )
         self.log ( "%d results after faking bgs" % len(updatedListOfExpRes) )
         updatedListOfExpRes = self.addSignals ( updatedListOfExpRes )
         self.log ( "%d results after adding signals" % len(updatedListOfExpRes) )
@@ -270,6 +276,7 @@ class ExpResModifier:
 
     def addSignals ( self, listOfExpRes ):
         """ thats the method that adds a typical signal """
+        print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
         if self.protomodel == None:
             return listOfExpRes
         self.log ( "now adding the signals" )
