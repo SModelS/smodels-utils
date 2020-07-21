@@ -105,9 +105,9 @@ def writeRawNumbersHtml ( protomodel ):
     f=open("rawnumbers.html","wt")
     f.write("<table>\n" )
     f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>" )
-    didordidnot,hasssigs = hasSignals ( protomodel )
+    didordidnot,hassigs = hasSignals ( protomodel )
     print ( f"[plotHiscore] protomodel's database {didordidnot} have fake signals." )
-    if didordidnot:
+    if hassigs:
         f.write("<th>Signal</th>" )
     f.write("\n</tr>\n" )
     for tp in protomodel.bestCombo:

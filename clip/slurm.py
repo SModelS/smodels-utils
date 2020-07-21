@@ -22,7 +22,7 @@ def remove( fname, keep):
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
-                cheatcode, rundir ):
+                cheatcode, rundir, maxsteps ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -35,6 +35,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param time: time in hours
     :param cheatcode: in case we wish to start with a cheat model
     :param rundir: the run directory
+    :param maxsteps: max number of steps
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -50,8 +51,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s' )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     tf = "%s/RUN_%s.sh" % ( rundir, jmin )
@@ -423,6 +424,9 @@ def main():
     argparser.add_argument ( '-B', '--nbakes', nargs="?",
                     help='launch n identical jobs',
                     type=int, default=1 )
+    argparser.add_argument ( '-M', '--maxsteps', nargs="?",
+                    help='maximum number of steps',
+                    type=int, default=1000 )
     argparser.add_argument ( '-b', '--bake', nargs="?",
                     help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
                     type=str, default="" )
@@ -537,7 +541,7 @@ def main():
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                        args.keep, args.time, cheatcode, rundir )
+                        args.keep, args.time, cheatcode, rundir, args.maxsteps )
         else:
             import multiprocessing
             ## nwalkers is the number of jobs per process
@@ -553,7 +557,7 @@ def main():
                 #print ( "process", imin, imax )
                 p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                                 args.keep, args.time, cheatcode, rundir ) )
+                                 args.keep, args.time, cheatcode, rundir, args.maxsteps ) )
                 jobs.append ( p )
                 p.start()
 
