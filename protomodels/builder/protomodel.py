@@ -72,19 +72,8 @@ class ProtoModel:
         self.description = ""
         self.bestCombo = None
         self.computer = XSecComputer ( NLL, self.nevents, pythiaVersion=8 )
-        self.defineCodeVersion()
-
+        self.codeversion = "1.0"
         self.initializeModel()
-
-    def defineCodeVersion(self):
-        """ search for version file and set .codeVersion """
-        self.codeversion = "???"
-        if not os.path.exists ( "../version" ):
-            self.highlight ( "error", "cannot find version file. not setting .codeVersion" )
-            return
-        with open("../version","rt") as f:
-            ver = f.read()
-            self.codeversion = ver.strip()
 
     def initializeModel(self):
         """Use the template SLHA file to store possible decays and initialize the LSP"""
