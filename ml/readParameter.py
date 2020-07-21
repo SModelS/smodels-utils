@@ -37,6 +37,7 @@ def readParameterFile(logger, parameterFile):
 		databasePath = parser.get(sct, "databasePath")
 		sys.path.append(smodelsPath)
 		sys.path.append(databasePath)
+		import smodels
 		from smodels.experiment.databaseObj import Database
 		outputPath = parser.get(sct, "outputPath")
 		if outputPath == "": outputPath = None
@@ -58,6 +59,9 @@ def readParameterFile(logger, parameterFile):
 		txName = parser.get(sct, "txName").split(",")
 		dataselector = parser.get(sct, "dataselector").split(",")
 		signalRegion = parser.get(sct, "signalRegion").split(",")
+		for n, sr in enumerate(signalRegion):
+			if sr == "None": 
+				signalRegion[n] = None
 
 		paramDatabase = {"analysisID": analysisID, "txName": txName, "dataselector": dataselector, "signalRegion": signalRegion}
 

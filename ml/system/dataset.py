@@ -8,14 +8,16 @@ try:
 except:
 	from system.readOrigData import *
 from smodels.experiment.databaseObj import Database
+from smodels.tools import physicsUnits
 from smodels.tools.physicsUnits import GeV, fb
 from smodels.tools.stringTools import concatenateLines
-from smodels.theory.auxiliaryFunctions import rescaleWidth
+from smodels.theory.auxiliaryFunctions import rescaleWidth, unscaleWidth, removeUnits
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
 import numpy as np
 from random import shuffle
+from sklearn.cluster import MeanShift
 
 
 def MSErel(predicted, label, reduction = "mean"):
@@ -241,102 +243,99 @@ class DatasetBuilder():
 
 		samplesLeft = sampleSize
 
+
 		if netType == 'regression':
 
 			# Create dataset for our regression network
-			# Draw random number between convex hull minima and maxima for each axis
-			# If branches are symmetric, masses drawn for 1st branch are copied to 2nd
+			# Perform PCA and mean shift on original grid points
+			# Draw dataset points around each cluster
 			
-			### MANUALLY ADD ORIG GRID POINTS != 0 (USED FOR WIDTH MAPS)
+			tx = self.txNameData
 
+			#print("full dim: %s" % tx.full_dimensionality)
+			#print("dim: %s" % tx.dimensionality)
+			#print("widthpos:",tx.widthPosition)
+			#print("\n")
+
+			ogOrdered = []
+			if tx.widthPosition != []:
+				for og in self.origData:
+					temp, mw = [], []
+					for n, m in enumerate(og):
+						if n == tx.widthPosition[int(n/tx.dimensionality)][1] + 1 + int(n/tx.dimensionality) * tx.dimensionality:
+							mw.append(rescaleWidth(m))
+						else:
+							temp.append(m)
+					for w in mw: temp.append(w)
+					ogOrdered.append(tx.coordinatesToData(temp))
+			else: 
+				for og in self.origData:			
+					ogOrdered.append(tx.coordinatesToData(og))
+
+			og_PCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
+
+			clustering = MeanShift(bandwidth=8).fit(og_PCA)
+
+			m_c = [[] for _ in range(len(clustering.cluster_centers_))]
+			drawnPoints_PCA = []
+			drawnPoints = []
+			zeroes = 0
+
+			for n, label in enumerate(clustering.labels_):
+				m_c[label].append(og_PCA[n])
+
+			singleClusters = 0
+			for n, cluster in enumerate(m_c):
+				mean = np.mean(cluster, axis = 0)
+				std = np.std(cluster, axis = 0)
+
+				#if len(cluster) == 1: singleClusters += 1
 			
-			for n, e in enumerate(self.origData):
+				pointsToDraw = int(len(cluster)*sampleSize/len(self.origData)) + 1
 
-				m = [e[0]*GeV, (e[1]*GeV, e[2]*GeV)]
-				masses = [m, m]
+				while pointsToDraw > 0:
 
-				#print("input:")
-				#print(masses)
-				#print("data -> coordinates:")
-				#zguz = tx.txnameData.dataToCoordinates(masses)
-				#print(zguz)
-				#print("coordinates -> data:")
-				#zguz = tx.txnameData.coordinatesToData(zguz)
-				#print(zguz)		
+					rand = []
+					for i in range(tx.dimensionality):
+						rand.append(np.random.normal(mean[i], 180. + 2.*std[i]))
 
-				#val = self.txNameData.getValueFor(masses)
-				val = self.origValues[n]
-				if val > 0.:
-					new = [np.log(e[0]), rescaleWidth(e[1]), np.log(e[0]), rescaleWidth(e[1])]
-					#new = [np.log(e[0]), np.log(e[1]), rescaleWidth(e[2]), np.log(e[0]), np.log(e[1]), rescaleWidth(e[2])]
-					new.append(val+1e-5)
-					dataset.append(new)
-			
-			###############################################
-			
-			self.convexHullMax[1] = 1e-14
-			self.convexHullMax[3] = 1e-14
-			self.axesDependancies[0][1]["dependancy"] = None
-			self.axesDependancies[0][1]["constant"] = False
-			self.axesDependancies[0][1]["offset"] = 0
+					x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
+					val = tx.getValueFor(x)
+					val = removeUnits(val,physicsUnits.standardUnits)
 
-			while(samplesLeft>0):
+					if type(val) != type(None) and (val != 0. or random.random() < 0.1):
+						
+						pointsToDraw -= 1
 
-				print("sleft:", samplesLeft)
+						#if val == 0.:
+						#	zeroes += 1
 
-				if self.symmetric:
-					for n in range(self.inputDimensionHalf):
-						particles[n] = random.uniform(self.convexHullMin[n], self.convexHullMax[n])
-					for n in range(self.inputDimensionHalf):
-						particles[self.inputDimensionHalf+n] = particles[n]
-				else:
-					for n in range(self.inputDimension):
-						particles[n] = random.uniform(self.convexHullMin[n], self.convexHullMax[n])
+						val += 1e-5
+						
+						strippedUnits = tx.dataToCoordinates(x)
+						strippedUnits.append(val)
 
-				if self.symmetric:
-					for n in range(self.inputDimensionHalf):
+						#drawnPoints_PCA.append(rand)
+						drawnPoints.append(strippedUnits)
 
-						dep = self.axesDependancies[0][n]["dependancy"]
-						con = self.axesDependancies[0][n]["constant"]
-						off = self.axesDependancies[0][n]["offset"]
+			#drawnPoints_PCA = np.array(drawnPoints_PCA)
+			dataset = drawnPoints
 
-						if type(dep) == list:
-							particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
-						elif dep != None:
-							particles[n] = particles[dep] + off
-						elif con:
-							particles[n] = off
+			drawnPoints = np.array(drawnPoints)
 
-						#if n == 2:
-						#	particles[n] = 10**(random.uniform(-22,2))
-					
-				'''REMOVE'''
-				
-				#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]]
-				#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
-				mx = [(particles[0]*GeV, particles[1]*GeV)] 
-				#mx = [[p*GeV for p in particles[0:self.inputDimensionHalf]], [p*GeV for p in particles[self.inputDimensionHalf:self.inputDimension]]]
-				masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]		
+			for n in range(10):
+				print(dataset[n])
 
+			#print("%s%% are Zero." % round(100.*(zeroes/sampleSize), 3))
+			#print("min num of drawn points = %s" % int(10000/len(self.origData)))
+			#print("detected %s clusters in %s datapoints" % (len(m_c), len(self.origData)))
+			#print("%s of those are 1dim\n" % singleClusters)
 
-				val = self.txNameData.getValueFor(masses)
-
-				if type(val) != type(None) and val < 1e-6: val = 0
-				if type(val) != type(None) and ( val != 0 or random.random() < 0.05 ): #val != 0.0:
-			
-					if type(val) != float and type(val) != int: val = val.asNumber(fb) # IMPLEMENT FB AND PB
-
-					#new = [p for p in particles]
-					#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
-					new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
-
-					#new.append(0.1 + rescaleWidth(eff))
-					#new.append(( eff + 1e-5 ) * 1e3) #LLP OFFSET
-					new.append(val + 1e-5)
-
-					dataset.append(new)
-					samplesLeft -= 1
-					
+			#import matplotlib.pyplot as plt
+			#plt.figure(0)
+			#plt.scatter(drawnPoints[:,0], drawnPoints[:,1])
+			#plt.tight_layout()
+			#plt.show()
 						
 		else:
 
@@ -472,69 +471,63 @@ class DatasetBuilder():
 
 		
 
-		while(samplesLeft>0):
+			while(samplesLeft>0):
 
-			#print("sleft:", samplesLeft)
+				print("sleft:", samplesLeft)
 
-			if self.symmetric:
-				for n in range(self.inputDimensionHalf):
-					particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n]*2., 1)[0])
+				if self.symmetric:
+					for n in range(self.inputDimensionHalf):
+						particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n]*2., 1)[0])
 
 
-				for n in range(self.inputDimensionHalf):
+					for n in range(self.inputDimensionHalf):
 
-					dep = self.axesDependancies[0][n]["dependancy"]
-					con = self.axesDependancies[0][n]["constant"]
-					off = self.axesDependancies[0][n]["offset"]
+						dep = self.axesDependancies[0][n]["dependancy"]
+						con = self.axesDependancies[0][n]["constant"]
+						off = self.axesDependancies[0][n]["offset"]
 
-					if type(dep) == list:
-						particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
-					elif dep != None:
-						particles[n] = particles[dep] + off
-					elif con:
-						particles[n] = off
+						if type(dep) == list:
+							particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
+						elif dep != None:
+							particles[n] = particles[dep] + off
+						elif con:
+							particles[n] = off
 
-					particles[self.inputDimensionHalf+n] = particles[n]
+						particles[self.inputDimensionHalf+n] = particles[n]
 
-			else:
-				for n in range(self.inputDimension):
-					particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n], 1)[0])
+				else:
+					for n in range(self.inputDimension):
+						particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n], 1)[0])
+					
+
+				'''REMOVE'''
+				#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
+				#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]]
+
+				#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
+				mx = [(particles[0]*GeV, particles[1]*GeV)] 
+				masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]		
+
+				res = self.txNameData.getValueFor(masses)
+
+				'''REMOVE'''
+				# 2dim
+				#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
+				#new = [np.log(particles[0]), np.log(particles[1]), 0, np.log(particles[0]), np.log(particles[1]), 0]
+
+				# 1dim
+				#new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
+				new = [np.log(particles[0]), 0, np.log(particles[0]), 0]
+
+				#new = [np.log(p) if p != 0 else p for p in particles] 
+				if type(res) != type(None): new.append(1.)
+				else: new.append(0.)
 				
+				#if type(res) == type(None) or random.random() < 0.25:
+				dataset.append(new)
+				samplesLeft -= 1
+					#print(samplesLeft)
 
-			'''REMOVE'''
-			#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-			#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]]
-
-			#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
-			mx = [(particles[0]*GeV, particles[1]*GeV)] 
-			masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]		
-
-			res = self.txNameData.getValueFor(masses)
-
-			'''REMOVE'''
-			# 2dim
-			#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
-			#new = [np.log(particles[0]), np.log(particles[1]), 0, np.log(particles[0]), np.log(particles[1]), 0]
-
-			# 1dim
-			#new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
-			new = [np.log(particles[0]), 0, np.log(particles[0]), 0]
-
-			#new = [np.log(p) if p != 0 else p for p in particles] 
-			if type(res) != type(None): new.append(1.)
-			else: new.append(0.)
-			
-			#if type(res) == type(None) or random.random() < 0.25:
-			dataset.append(new)
-			samplesLeft -= 1
-				#print(samplesLeft)
-
-		#import matplotlib.pyplot as plt
-		#plt.figure(99)
-		#plt_dots = plt.scatter([m[0] for m in expresData],[m[1] for m in expresData], color = 'gray', alpha=0.5)
-		#plt_dots = plt.scatter([m[0] for m in massesHull[0]],[m[1] for m in massesHull[0]], color = 'green')
-		#plt_dots = plt.scatter([m[0] for m in massesHull[1]],[m[1] for m in massesHull[1]], color = 'blue')
-		#plt.show()
 
 		if shuffleData: shuffle(dataset)
 		dataSet = Data(dataset, self.inputDimension, self.device)

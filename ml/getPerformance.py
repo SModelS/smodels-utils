@@ -184,8 +184,11 @@ class Performance():
 		yaxis = 1 
 		'''REMOVE'''
 
-		X = [np.exp(inputs[0].item()) for inputs in self.validationSet.inputs]
-		Y = [np.exp(inputs[yaxis].item()) for inputs in self.validationSet.inputs]
+		#X = [np.exp(inputs[0].item()) for inputs in self.validationSet.inputs]
+		#Y = [np.exp(inputs[yaxis].item()) for inputs in self.validationSet.inputs]
+
+		X = [inputs[0].item() for inputs in self.validationSet.inputs]
+		Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
 
 		
 		E2 = []
@@ -194,11 +197,13 @@ class Performance():
 			p = predictions[n].item()
 			#l = unscaleWidth(l - 0.1).asNumber(GeV)
 			#p = unscaleWidth(p - 0.1).asNumber(GeV)
-			l -= 1e-5
-			p -= 1e-5
+
+			if l == 1e-5:
+				l -= 1e-5
+				p -= 1e-5
 			if l < 1e-4: l = 0
 			if p < 1e-4: p = 0
-			print(l, p)
+			#print(l, p)
 			#print("---")
 			if l > 0:
 				e = np.sqrt((( p - l ) / l)**2)
@@ -219,11 +224,11 @@ class Performance():
 		#plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, self.meanError*100.), fontsize=14)
 		plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, meanError2), fontsize=14)
 		plt.xlabel("mass mother [GeV]")
-		#plt.ylabel("mass daughter [GeV]")
-		plt.ylabel("relative error")
-		plt.scatter(X,E2)
-		#plt.scatter(X,Y, c=E2, cmap='rainbow', vmin=0, vmax=1)
-		#plt.colorbar()
+		plt.ylabel("mass daughter [GeV]")
+		#plt.ylabel("relative error")
+		#plt.scatter(X,E2)
+		plt.scatter(X,Y, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		plt.colorbar()
 		plt.tight_layout()
 
 		fileName = self.txName + "_regression_scatterPlot.eps"
