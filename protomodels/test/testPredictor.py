@@ -27,7 +27,10 @@ class PredictionsTest(unittest.TestCase):
         with open('randomModels_default.pcl','rb') as f:
             protomodel = pickle.load(f)[0]
 
+        protomodel.dbversion = None
+        protomodel.codeversion = None
         pNew = protomodel.copy()
+        pNew.templateSLHA = os.path.abspath('../builder/templates/template1g.slha')
         pNew.Z = None
         pNew.llhd = None
         pNew.bestCombo = None
@@ -36,8 +39,10 @@ class PredictionsTest(unittest.TestCase):
         pNew.tpList = []
 
 
+        #Test against old version:
         predictor =  Predictor( 0, dbpath='./database.pcl',
                               expected=False, select='all' )
+        predictor.rthreshold = 1.7
         predictor.predict(pNew)
         #OBS: Since the original protomodel already has all of its cross-sections rescaled, we do not
         #need to rescale pNew again (since muhat should be 1)
@@ -72,8 +77,6 @@ class PredictionsTest(unittest.TestCase):
             self.assertEqual(str(pred[2].expResult),str(pNew.tpList[i][2].expResult))
             self.assertAlmostEqual(pred[2].xsection.value.asNumber(),pNew.tpList[i][2].xsection.value.asNumber(),3)
 
-
-        self.assertEqual(protomodel.excluded,pNew.excluded)
 
         #Remove files generated during run
         for f in glob.glob('.cur*slha'):

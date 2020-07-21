@@ -20,25 +20,21 @@ class VerticalTest(unittest.TestCase):
 
     def testRun(self):
 
-        if os.path.isfile('H0.pcl'):
-            os.remove('H0.pcl')
+        if os.path.isfile('H0.hi'):
+            os.remove('H0.hi')
         helpers.seedRandomNumbers ( 1 )
         walker = RandomWalker ( nsteps=11, dbpath="./database.pcl", nevents = 10000 )
+        walker.predictor.rthreshold = 1.3 #Make sure to use the correct threshold
         walker.walk()
-        # for p in walker.hiscoreList.hiscores: print(p,'\n',p.step,p.K,p.Z)
 
-        self.assertAlmostEqual ( walker.protomodel.K, 2.047, 2 )
+        self.assertAlmostEqual ( walker.protomodel.K, 3.368, 2 )
         self.assertEqual ( len(walker.hiscoreList.hiscores), 1 )
-        self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].Z, 2.4388,2 )
-        self.assertEqual ( walker.hiscoreList.hiscores[0].step, 1 )
-        self.assertAlmostEqual ( walker.protomodel.masses[1000004], 420.069, 2 )
-        self.assertAlmostEqual ( walker.protomodel.masses[1000022], 240.309, 2 )
-        self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].masses[1000022], 240.309, 2 )
-        self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].masses[1000016], 1943.707, 2 )
-
-        #Remove files generated during run
-        for f in glob.glob('.cur*slha'):
-            os.remove(f)
+        self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].Z, 2.22952,2 )
+        self.assertEqual ( walker.hiscoreList.hiscores[0].step, 4 )
+        self.assertAlmostEqual ( walker.protomodel.masses[1000001], 791.1794, 2 )
+        self.assertAlmostEqual ( walker.protomodel.masses[1000022], 240.3092, 2 )
+        self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].masses[1000001], 791.1794, 2 )
+        self.assertAlmostEqual ( walker.hiscoreList.hiscores[0].masses[1000022], 240.3092, 2 )
 
 if __name__ == "__main__":
     unittest.main()
