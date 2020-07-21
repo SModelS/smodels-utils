@@ -19,7 +19,7 @@ class Predictor:
         self.modifier = None
         self.select = select
         self.expected = expected
-        self.rthreshold = 1.7 ## threshold for rmax
+        self.rthreshold = 1.3 ## threshold for rmax
         if expected:
             from expResModifier import ExpResModifier
             self.modifier = ExpResModifier()
