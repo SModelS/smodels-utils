@@ -8,7 +8,7 @@
 
 """
 
-import sys
+import sys,os
 sys.path.insert(0,"../")
 try:
     import smodels
@@ -28,6 +28,7 @@ class PredictionsTest(unittest.TestCase):
             pList= pickle.load(f) #List with original models and modified ones
 
         pNew = copy.deepcopy(pList[0]) #Obs: Can not use ProtoModel.copy(), since it calls random
+        pNew.templateSLHA = os.path.abspath('../builder/templates/template1g.slha')
         m = Manipulator(pNew)
         for p in pList:
             self.assertEqual(pNew.masses,p.masses)
