@@ -8,29 +8,13 @@
 
 """
 
-import logging,sys,os
-import numpy,argparse
-import torch,random,copy
-import matplotlib.pyplot as plt
-from system.dataset import *
-from system.initnet import *
-from getPerformance import *
-from system.getTimings import *
-from system.getInterpolationError import *
-from time import time
-from readParameter import readParameterFile
-from scipy.optimize import minimize
-from configparser import ConfigParser
-from smodels.theory.auxiliaryFunctions import unscaleWidth
-from torch.utils.data import DataLoader as DataLoader
-from datetime import datetime
+
 
 #import subprocess
 #plt.switch_backend('agg')
 #torch.multiprocessing.set_start_method("spawn")
 
-FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
-logger = logging.getLogger(__name__)
+
 
 
 def makeHeuristicPredictions(database):
@@ -71,8 +55,8 @@ class TrainerWrapper():
 
 		db = Database(self.paramPath["database"])
 		expres = db.getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
-
 		txList = expres.getDataset(self.paramDatabase["signalRegion"]).txnameList
+
 		for tx in txList:
 			if str(tx) == self.paramDatabase["txName"]:
 				txNameData = tx.txnameData
@@ -192,7 +176,7 @@ class TrainerWrapper():
 		self._loadDatasetBuilder()
 		self._makeHeuristicPredictions()
 
-		for netType in ["regression", "classification"]:
+		for netType in ["regression"]: #, "classification"]:
 
 			self._formatHyperParameter(netType)
 			logger.info("%s hyperparameter combination(s) loaded.." % len(self.hyperParameter[netType]))
@@ -212,7 +196,7 @@ class TrainerWrapper():
 			if self.paramAnalysis["lossPlot"]:
 				self.createLossPlot(netType)
 
-		self.combinedModel = NN_combined(self.modelTrainer["regression"].winner["model"], self.modelTrainer["classification"].winner["model"])
+		self.combinedModel = NN_combined(self.modelTrainer["regression"].winner["model"], None) #self.modelTrainer["classification"].winner["model"])
 
 		logger.info("All done! Final network generated after %ss." % round(time()-t0, 3))
 
@@ -339,7 +323,7 @@ class Trainer():
 		self.netType = netType
 
 		self.logData = []
-		self.winner = {"error": 1e5}
+		self.winner = {"error": 1e10}
 		
 
 	def findBestModel(self):
@@ -453,7 +437,7 @@ class Trainer():
 		return newDataset
 
 
-	def runCurrentConfiguration(self, secondRun = True):
+	def runCurrentConfiguration(self, secondRun = False):
 
 		"""
 		Parent method of actual training. Handles training differencies between
@@ -572,6 +556,17 @@ class Trainer():
 
 if __name__=='__main__':
 
+	import logging,sys,os
+	import numpy,argparse
+	import torch,random,copy
+	from readParameter import readParameterFile
+	from configparser import ConfigParser
+	from datetime import datetime
+	from time import time
+
+	FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+	logger = logging.getLogger(__name__)
+
 	ap = argparse.ArgumentParser(description="Trains and finds best performing neural networks for database analyses via hyperparameter search")
 	ap.add_argument('-p', '--parfile', 
 			help='parameter file', default='nn_parameters.ini')
@@ -589,6 +584,21 @@ if __name__=='__main__':
 		logger.info("Reading validation parameters from %s" %args.parfile)
 
 	fileParameters = readParameterFile(logger, args.parfile)
+
+	
+	#import matplotlib.pyplot as plt
+	from system.dataset import *
+	from system.initnet import *
+	from getPerformance import *
+	from system.getTimings import *
+	from system.getInterpolationError import *
+	
+	
+	from scipy.optimize import minimize
+	
+	from smodels.theory.auxiliaryFunctions import unscaleWidth
+	from torch.utils.data import DataLoader as DataLoader
+	
 
 	parameters = {}
 	parameters["database"] 		 = {}

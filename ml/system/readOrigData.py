@@ -4,6 +4,19 @@
 from smodels.tools.stringTools import concatenateLines
 from smodels.tools.physicsUnits import GeV, fb
 
+
+def formatOrigData(dataString):
+
+	#dataString.replace("[[[[", "[[[")
+	#dataString.replace("]]]]", "]]]")
+
+	print(dataString)
+	
+	origData = 0
+	
+	return origData
+
+
 def getContent(paramDatabase, whichTag):
 
 	expres = paramDatabase["expres"]

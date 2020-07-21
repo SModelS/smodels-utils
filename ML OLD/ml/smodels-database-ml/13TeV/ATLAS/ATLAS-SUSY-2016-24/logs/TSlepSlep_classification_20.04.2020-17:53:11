@@ -1,1 +1,0 @@
-loss: 0.022	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 80, 'activationFunction': 'rel', 'epochNum': 100, 'learnRate': 0.001, 'layer': 4, 'nodes': 80, 'shape': 'lin', 'rescaleMethod': None}
