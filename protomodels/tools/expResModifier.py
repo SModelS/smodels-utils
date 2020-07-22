@@ -151,10 +151,10 @@ class ExpResModifier:
         # listOfExpRes = db.getExpResults( useSuperseded=True, useNonValidated=True )
         listOfExpRes = db.expResultList ## seems to be the safest bet?
         self.produceProtoModel ( pmodel, db.databaseVersion )
-        print ( "pm produced", os.path.exists ( self.protomodel.currentSLHA ) )
+        # print ( "pm produced", os.path.exists ( self.protomodel.currentSLHA ) )
         self.log ( "%d results before faking bgs" % len(listOfExpRes) )
         updatedListOfExpRes = self.fakeBackgrounds ( listOfExpRes )
-        print ( "fb produced", os.path.exists ( self.protomodel.currentSLHA ) )
+        # print ( "fb produced", os.path.exists ( self.protomodel.currentSLHA ) )
         self.log ( "%d results after faking bgs" % len(updatedListOfExpRes) )
         updatedListOfExpRes = self.addSignals ( updatedListOfExpRes )
         self.log ( "%d results after adding signals" % len(updatedListOfExpRes) )
@@ -276,7 +276,7 @@ class ExpResModifier:
 
     def addSignals ( self, listOfExpRes ):
         """ thats the method that adds a typical signal """
-        print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
+        # print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
         if self.protomodel == None:
             return listOfExpRes
         self.log ( "now adding the signals" )
