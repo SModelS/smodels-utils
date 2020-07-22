@@ -2,9 +2,11 @@
 
 import sys
 import pyhf
-pyhf.set_backend(b"pytorch")
+# pyhf.set_backend(b"pytorch")
 import json
 import jsonpatch
+import time
+import importlib
 
 def simpleJson(bkg, obs):
     """
@@ -65,10 +67,14 @@ patch = [dict(
         ]
     )
 )]
+## Using the simple json
 llhdSpec = jsonpatch.apply_patch(bkg, patch)
-# Computing the cls outside of SModelS with POI = ul, should give 0.95
+## Using a complete json
+# with open("sbottom_900_550_60.json", 'r') as f:
+#     llhdSpec = json.load(f)
+## Computing the cls outside of SModelS with POI = ul, should give 0.95
 msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
 workspace = pyhf.Workspace(llhdSpec)
 model = workspace.model(modifier_settings=msettings)
-for _ in range(10000):
-    result = pyhf.infer.hypotest(1., workspace.data(model), model, qtilde=True, return_expected=False)
+for _ in range(1000):
+    result = pyhf.infer.hypotest(poi, workspace.data(model), model, qtilde=True, return_expected=False)
