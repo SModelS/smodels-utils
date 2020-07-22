@@ -353,7 +353,7 @@ if __name__ == "__main__":
             help='database to use [../../smodels-database]',
             type=str, default="../../smodels-database" )
     argparser.add_argument ( '-o', '--outfile',
-            help='file to write out database pickle [""]',
+            help='file to write out database pickle. If left empty, then outfile is <suffix>.pcl [""]',
             type=str, default="" )
     argparser.add_argument ( '-s', '--suffix',
             help='suffix for database version ["fake1"]',
@@ -376,6 +376,10 @@ if __name__ == "__main__":
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
     args = argparser.parse_args()
+    if type(args.rundir)==str and not "/" in args.rundir:
+        args.rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + args.rundir
+    if args.outfile == "":
+        args.outfile = args.suffix+".pcl"
     from smodels.experiment.databaseObj import Database
     modifier = ExpResModifier( args.database, args.max, args.rundir )
     if not args.outfile.endswith(".pcl"):
