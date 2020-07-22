@@ -21,8 +21,10 @@ def main():
                 break
     keys = list ( steps.keys() )
     keys.sort()
+    tots = 0
     for k in keys:
+        tots += steps[k]
         print ( k, steps[k] )
-    print ( f"we have {len(keys)} entries" )
+    print ( f"we have {len(keys)} entries, total of {tots} steps." )
 
 main()
