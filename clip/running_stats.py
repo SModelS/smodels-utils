@@ -42,6 +42,8 @@ def prettyPrint ( myset ):
         ret = ret[:-1]
     if len(ret)==0:
         ret="none"
+    if len(ret)>150:
+        ret=ret[:147]+"..."
     return ret
 
 def running_stats():
@@ -73,7 +75,8 @@ def running_stats():
             notaccounted.add ( i )
     print ( "    stuck (%d):" % len(pending), prettyPrint ( pending ) )
     print ( "  running (%d):" % len(running), prettyPrint ( running ) )
-    print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
+    if len(notaccounted)>0:
+        print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
 
     a = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" )
     print ( )
@@ -81,7 +84,7 @@ def running_stats():
     print ( "=====================" )
     print ( a )
 
-    a = subprocess.getoutput ( "slurm q | tail -n 3" )
+    a = subprocess.getoutput ( "slurm q | tail -n 2" )
     print ( )
     print ( "longest running jobs:" )
     print ( "=====================" )

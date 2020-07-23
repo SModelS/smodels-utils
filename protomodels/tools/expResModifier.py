@@ -22,7 +22,7 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax, rundir ):
+    def __init__ ( self, dbpath, Zmax, rundir, keep ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
@@ -30,6 +30,7 @@ class ExpResModifier:
         self.dbpath = dbpath
         self.protomodel = None
         self.rundir = setup( rundir )
+        self.keep = keep
         self.logfile = "modifier.log"
         if Zmax == None:
             Zmax = 100
@@ -105,6 +106,8 @@ class ExpResModifier:
     def finalize ( self ):
         """ finalize, for the moment its just deleting slha files """
         print ( "[expResModifier] finalize" )
+        if self.keep:
+            return
         if hasattr ( self, "protomodel" ) and self.protomodel is not None:
             self.protomodel.delCurrentSLHA()
 
@@ -125,14 +128,15 @@ class ExpResModifier:
         keep_meta = True
         # M = ProtoModel ( walkerid, self.dbpath, expected, select, keep_meta )
         M = ProtoModel ( walkerid, keep_meta, dbversion = dbversion )
-        M.createNewSLHAFileName ( prefix="erm", dir=self.rundir )
+        M.createNewSLHAFileName ( prefix="erm" )
         ma = Manipulator ( M )
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
         ma.initFromDict ( m )
-        ma.M.computeXSecs( )
-        print ( "xsecs produced", ma.M.currentSLHA )
-        print ( " `-", os.path.exists ( ma.M.currentSLHA ) )
+        ma.M.computeXSecs( keep_slha = True )
+        self.log ( f"xsecs produced {ma.M.currentSLHA}" )
+        self.log ( " `- does currentslha exist? %s" % \
+                   os.path.exists ( ma.M.currentSLHA ) )
         ma.printXSecs()
         self.protomodel = ma.M
         return self.protomodel
@@ -198,13 +202,20 @@ class ExpResModifier:
     def addSignalForEfficiencyMap ( self, dataset, tpred, lumi ):
         """ add a signal to this efficiency map. background sampling is
             already taken care of """
-        self.log ( " `- add EM matching tpred %s/%s: %s" % \
-                ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
+        self.log ( "add EM matching tpred %s/%s: %s" % \
+                ( tpred.analysisId(), tpred.dataId()[:8], tpred.xsection.value ) )
         orig = dataset.dataInfo.observedN
         sigLambda = float ( tpred.xsection.value * lumi )
         sigN = stats.poisson.rvs ( sigLambda )
         err = dataset.dataInfo.bgError
-        self.log ( "effmap adding sigN=%.2f to %.2f" % \
+        if orig > 0. or sigN == 0:
+            if sigN / orig < 1e-3: ## the signal is less than permille of bg?
+                self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
+                           ( sigN, orig ) )
+                dataset.dataInfo.origUpperLimit = dataset.dataInfo.upperLimit
+                dataset.dataInfo.origExpectedUpperLimit = dataset.dataInfo.expectedUpperLimit
+                return dataset
+        self.log ( " `- effmap adding sigN=%d to obsN=%d" % \
                    ( sigN, orig ) )
         dataset.dataInfo.trueBG = orig ## keep track of true bg
         dataset.dataInfo.observedN = orig + sigN
@@ -279,9 +290,11 @@ class ExpResModifier:
         # print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
         if self.protomodel == None:
             return listOfExpRes
-        self.log ( "now adding the signals" )
         ret = []
         self.produceTopoList()
+        self.log ( "now add the signals from %s, %d topos" % \
+                   ( self.protomodel, len(self.topos) ) )
+        addedUL, addedEM = 0, 0
         for l,expRes in enumerate(listOfExpRes):
             tpreds = theoryPredictionsFor ( expRes, self.topos, useBestDataset=False,
                                             combinedResults=False )
@@ -292,14 +305,22 @@ class ExpResModifier:
             #self.pprint ( "adding a signal for %s (lumi %s)" % \
             #              ( expRes.id(), lumi ) )
             for i,dataset in enumerate(expRes.datasets):
+                print ( ".", flush=True, end="" )
                 dt = dataset.dataInfo.dataType
                 dsname = dataset.dataInfo.dataId
                 if dt == "upperLimit":
                     for tpred in tpreds:
                         if tpred.dataId() == None:
                             # IPython.embed()
+                            addedUL += 1
                             listOfExpRes[l].datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
+                else:
+                    for tpred in tpreds:
+                        if tpred.dataId() != None:
+                            addedEM += 1
+                            listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
+        self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
         return listOfExpRes
 
     def fakeBackgrounds ( self, listOfExpRes ):
@@ -320,12 +341,18 @@ class ExpResModifier:
         return ret
 
     def upload( self ):
-        cmd = "cp %s ./modifier.log %s" % ( args.outfile, self.rundir )
-        a = subprocess.getoutput ( cmd )
-        print ( "[expResModifier]", cmd, a )
-        cmd = "rm %s/default.pcl" % self.rundir
-        a = subprocess.getoutput ( cmd )
-        print ( "[expResModifier]", cmd, a )
+        import filecmp
+        # cmd = "cp %s ./modifier.log %s" % ( args.outfile, self.rundir )
+        for f in [ args.outfile, self.logfile ]:
+            if not filecmp.cmp ( f, self.rundir+"/"+os.path.basename ( f ) ):
+                cmd = f"cp {f} {self.rundir}"
+                a = subprocess.getoutput ( cmd )
+                print ( "[expResModifier]", cmd, a )
+        fname = f"{self.rundir}/default.pcl"
+        if os.path.exists ( fname ):
+            cmd = f"rm {fname}"
+            a = subprocess.getoutput ( cmd )
+            print ( "[expResModifier]", cmd, a )
         cmd = "ln -s %s/%s %s/default.pcl" % ( self.rundir, args.outfile, self.rundir )
         a = subprocess.getoutput ( cmd )
         print ( "[expResModifier]", cmd, a )
@@ -348,7 +375,7 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
                         description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations. can insert signals, too.',
-                        epilog='./expResModifier.py -d $RUNDIR/original.pcl -o ./signal1.pcl -P pmodel9.py -s signal1' )
+                        epilog='./expResModifier.py -R $RUNDIR -d original.pcl -s signal1 -P pmodel9.py' )
     argparser.add_argument ( '-d', '--database',
             help='database to use [../../smodels-database]',
             type=str, default="../../smodels-database" )
@@ -375,13 +402,15 @@ if __name__ == "__main__":
             help='check the pickle file <outfile>', action='store_true' )
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
+    argparser.add_argument ( '-k', '--keep',
+            help='keep temporary files (for debugging)', action='store_true' )
     args = argparser.parse_args()
     if type(args.rundir)==str and not "/" in args.rundir:
         args.rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + args.rundir
     if args.outfile == "":
         args.outfile = args.suffix+".pcl"
     from smodels.experiment.databaseObj import Database
-    modifier = ExpResModifier( args.database, args.max, args.rundir )
+    modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
