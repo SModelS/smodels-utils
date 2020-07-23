@@ -318,7 +318,7 @@ class ExpResModifier:
         filename = "%s/database.dict" % self.rundir
         self.log ( f"saving stats to {filename}" )
         meta = { "dbpath": self.dbpath, "Zmax": self.Zmax,
-                 "database": self.dbversion, # "fudge": self.fudge,
+                 "database": self.dbversion, "fudge": 1., # self.fudge,
                  "protomodel": self.protomodel, "timestamp": time.asctime() }
         with open ( filename,"wt" ) as f:
             f.write ( str(meta)+"\n" )

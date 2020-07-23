@@ -70,7 +70,9 @@ class Plotter:
         if not "orig" in variable:
             title = "fake"
         title += f" observations, database v{dbname}"
-        fudge = self.meta["fudge"]
+        fudge = 1.
+        if "fudge" in self.meta:
+            fudge = self.meta["fudge"]
         if abs ( fudge - 1. ) > 1e-3:
             title += ", fudge=%.2f" % fudge
         plt.title ( title )
