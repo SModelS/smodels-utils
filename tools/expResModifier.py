@@ -37,6 +37,7 @@ class ExpResModifier:
             Zmax = 100
         self.Zmax = Zmax
         self.startLogger()
+        self.stats = {}
 
     def interact ( self, listOfExpRes ):
         import IPython
@@ -71,6 +72,8 @@ class ExpResModifier:
                 self.log ( "WARNING seems like I am having a hard time getting all "\
                         "values of %s positive." % globalInfo.id )
 
+        label = globalInfo.id + ":ul"
+        self.stats[label]=D
         self.log ( "fixing UL result %s: x=%.2f" % \
                    ( globalInfo.id, x ) )
         if x > 3.5:
@@ -198,6 +201,8 @@ class ExpResModifier:
             self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
         ## origN stores the n_observed of the original database
         dataset.dataInfo.origN = orig
+        label = dataset.globalInfo.id + ":" + dataset.dataInfo.dataId
+        self.stats[ label ] = D
         return dataset
 
     def addSignalForEfficiencyMap ( self, dataset, tpred, lumi ):
@@ -205,9 +210,14 @@ class ExpResModifier:
             already taken care of """
         self.log ( "add EM matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId()[:8], tpred.xsection.value ) )
+        label = dataset.globalInfo.id + ":" + dataset.dataInfo.id
+        if not label in self.stats:
+            self.stats[ label ]= {}
         orig = dataset.dataInfo.observedN
         sigLambda = float ( tpred.xsection.value * lumi )
+        self.stats[label]["sigLambda"]=sigLambda
         sigN = stats.poisson.rvs ( sigLambda )
+        self.stats[label]["sigN"]=sigN
         err = dataset.dataInfo.bgError
         if sigN == 0:
                 self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
@@ -283,6 +293,19 @@ class ExpResModifier:
             dataset.txnameList[i].txnameData = txnd
             dataset.txnameList[i].sigmaN = sigmaN
         return dataset
+
+    def saveStats ( self ):
+        """ write out the collected stats, so we can discuss experimentalists'
+            conservativeness """
+        filename = "%s/database.dict" % self.rundir
+        self.log ( f"saving stats to {filename}" )
+        meta = { "dbpath": self.dbpath, "Zmax": self.Zmax,
+                 "database": self.dbversion, "fudge": self.fudge,
+                 "protomodel": self.protomodel, "timestamp": time.asctime() }
+        with open ( filename,"wt" ) as f:
+            f.write ( str(meta)+"\n" )
+            f.write ( str(self.stats)+"\n" )
+            f.close()
 
     def produceTopoList ( self ):
         """ create smstopolist """
@@ -466,6 +489,8 @@ if __name__ == "__main__":
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode', action='store_true' )
+    argparser.add_argument ( '--stats',
+            help='create stats file', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
     argparser.add_argument ( '-u', '--upload',
@@ -483,6 +508,9 @@ if __name__ == "__main__":
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
+
+    if args.stats():
+        modifier.saveStats()
 
     if args.check:
         check ( args.outfile )
