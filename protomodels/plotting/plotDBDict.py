@@ -77,17 +77,27 @@ class Plotter:
             title += ", fudge=%.2f" % fudge
         plt.title ( title )
         plt.xlabel ( "reduced distances $( n_\mathrm{obs} - n_\mathrm{bg} ) / \sqrt{ \mathrm{stat}^2 + \mathrm{sys}^2 } $" )
-        plt.savefig ( f"{variable}{int(100*fudge)}.png" )
+        print ( f"[plotDBDict.py] plotting {variable}.png" )
+        plt.savefig ( f"{variable}.png" )
+        #plt.savefig ( f"{variable}{int(100*fudge)}.png" )
         plt.clf()
         plt.hist ( P, bins=10, label="%.2f $\pm$ %.2f" % ( np.mean(P), np.std(P) ) )
         plt.legend()
         plt.title  ( title )
         plt.xlabel ( "p values" )
-        plt.savefig ( f"H{variable}{int(100*fudge)}.png" )
+        print ( f"[plotDBDict.py] plotting H{variable}.png" )
+        plt.savefig ( f"H{variable}.png" )
+        # plt.savefig ( f"H{variable}{int(100*fudge)}.png" )
         plt.clf()
 
 def main():
-    plotter = Plotter ( "./database.dict" )
+    import argparse
+    argparser = argparse.ArgumentParser(description="meta statistics plotter, i.e. the thing that plots origS.png, HorigS.png, S.png, HS.png")
+    argparser.add_argument ( '-d', '--dictfile', nargs='?',
+            help='input dictionary file [./database.dict]', 
+            type=str, default='./database.dict' )
+    args=argparser.parse_args()
+    plotter = Plotter ( args.dictfile )
     plotter.plot( "origS" )
     plotter.plot( "S" )
 
