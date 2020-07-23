@@ -22,7 +22,7 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax, rundir, keep ):
+    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
@@ -31,6 +31,7 @@ class ExpResModifier:
         self.protomodel = None
         self.rundir = setup( rundir )
         self.keep = keep
+        self.nproc = nproc
         self.logfile = "modifier.log"
         if Zmax == None:
             Zmax = 100
@@ -208,8 +209,14 @@ class ExpResModifier:
         sigLambda = float ( tpred.xsection.value * lumi )
         sigN = stats.poisson.rvs ( sigLambda )
         err = dataset.dataInfo.bgError
-        if orig > 0. or sigN == 0:
-            if sigN / orig < 1e-3: ## the signal is less than permille of bg?
+        if sigN == 0:
+                self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
+                           ( sigN, orig ) )
+                dataset.dataInfo.origUpperLimit = dataset.dataInfo.upperLimit
+                dataset.dataInfo.origExpectedUpperLimit = dataset.dataInfo.expectedUpperLimit
+                return dataset
+        ## the signal is less than permille of bg?
+        if orig > 0. and sigN / orig < 1e-3:
                 self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
                            ( sigN, orig ) )
                 dataset.dataInfo.origUpperLimit = dataset.dataInfo.upperLimit
@@ -285,7 +292,7 @@ class ExpResModifier:
         sigmacut = 0.02*fb
         self.topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
 
-    def addSignals ( self, listOfExpRes ):
+    def addSignalsSingleProc ( self, listOfExpRes ):
         """ thats the method that adds a typical signal """
         # print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
         if self.protomodel == None:
@@ -295,7 +302,9 @@ class ExpResModifier:
         self.log ( "now add the signals from %s, %d topos" % \
                    ( self.protomodel, len(self.topos) ) )
         addedUL, addedEM = 0, 0
+        print ( f"{len(listOfExpRes)} results: ", end="" )
         for l,expRes in enumerate(listOfExpRes):
+            print ( ".", flush=True, end="" )
             tpreds = theoryPredictionsFor ( expRes, self.topos, useBestDataset=False,
                                             combinedResults=False )
             if tpreds == None:
@@ -305,7 +314,6 @@ class ExpResModifier:
             #self.pprint ( "adding a signal for %s (lumi %s)" % \
             #              ( expRes.id(), lumi ) )
             for i,dataset in enumerate(expRes.datasets):
-                print ( ".", flush=True, end="" )
                 dt = dataset.dataInfo.dataType
                 dsname = dataset.dataInfo.dataId
                 if dt == "upperLimit":
@@ -322,6 +330,63 @@ class ExpResModifier:
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
         self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
         return listOfExpRes
+
+    def signalAdder ( self, listOfExpRes ):
+        # print ( "[expResModifier] signalAdder", len(listOfExpRes), len(self.topos) )
+        addedUL, addedEM = 0, 0
+        for l,expRes in enumerate(listOfExpRes):
+            print ( ".", flush=True, end="" )
+            tpreds = theoryPredictionsFor ( expRes, self.topos, useBestDataset=False,
+                                            combinedResults=False )
+            if tpreds == None:
+                # ret.append ( expRes )
+                continue
+            lumi = expRes.globalInfo.lumi
+            #self.pprint ( "adding a signal for %s (lumi %s)" % \
+            #              ( expRes.id(), lumi ) )
+            for i,dataset in enumerate(expRes.datasets):
+                dt = dataset.dataInfo.dataType
+                dsname = dataset.dataInfo.dataId
+                if dt == "upperLimit":
+                    for tpred in tpreds:
+                        if tpred.dataId() == None:
+                            # IPython.embed()
+                            addedUL += 1
+                            listOfExpRes[l].datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
+                else:
+                    for tpred in tpreds:
+                        if tpred.dataId() != None:
+                            addedEM += 1
+                            listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
+                    ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
+        self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
+        return listOfExpRes
+
+    def addSignals ( self, listOfExpRes ):
+        """ thats the method that adds a typical signal, parallel version
+        :param nproc: number of processes
+        """
+        if self.protomodel == None:
+            return listOfExpRes
+        if self.nproc == 1:
+            return self.addSignalsSingleProc ( listOfExpRes )
+        # print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
+        ret = []
+        self.produceTopoList()
+        self.log ( "now add the signals from %s, %d topos, %d procs" % \
+                   ( self.protomodel, len(self.topos), self.nproc ) )
+        import multiprocessing
+        ## listOfExpRes=listOfExpRes[:10]
+        chunks = [ listOfExpRes[i::self.nproc] for i in range(self.nproc) ]
+        pool = multiprocessing.Pool ( processes = self.nproc )
+        tmp = pool.map ( self.signalAdder, chunks )
+        print ( "done! now collect." )
+        ret = []
+        for t in tmp:
+            for x in t:
+                ret.append ( x )
+        ## print ( "ret=", ret )
+        return ret
 
     def fakeBackgrounds ( self, listOfExpRes ):
         """ thats the method that samples the backgrounds """
@@ -391,6 +456,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-M', '--max',
             help='upper limit on significance of individual excess [None]',
             type=float, default=None )
+    argparser.add_argument ( '-N', '--nproc',
+            help='number of parallel processes, for signal adding [1]',
+            type=int, default=1 )
     argparser.add_argument ( '-P', '--pmodel',
             help='supply filename of a pmodel, in which case create a signal-infused database [""]',
             type=str, default="" )
@@ -410,7 +478,8 @@ if __name__ == "__main__":
     if args.outfile == "":
         args.outfile = args.suffix+".pcl"
     from smodels.experiment.databaseObj import Database
-    modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep )
+    modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep, \
+                               args.nproc )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
