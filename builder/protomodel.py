@@ -335,11 +335,12 @@ class ProtoModel:
             particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
-    def computeXSecs ( self, nevents = None ):
+    def computeXSecs ( self, nevents = None, keep_slha = False ):
         """ compute xsecs given the masses and signal strenght multipliers of the model.
          The results are stored in self._stored_xsecs and should be accessed through getXsecs.
         :param nevents: If defined, cross-sections will be computed with this number of MC events,
                         if None, the value used is self.nevents.
+        :param keep_slha: if true, then keep slha file at the end
 
         """
 
@@ -372,7 +373,11 @@ class ProtoModel:
             #Remove temp file
         except Exception as e:
             self.log("error computing cross-sections: %s" %e)
-        if os.path.exists ( tmpSLHA ): ## always remove
+        if keep_slha:
+            self.createSLHAFile( self.currentSLHA, addXsecs = True )
+            #if not self.currentSLHA == tmpSLHA:
+            #    os.rename ( tmpSLHA, self.currentSLHA )
+        if not keep_slha and os.path.exists ( tmpSLHA ): ## always remove
             os.remove( tmpSLHA )
 
     def rescaleXSecsBy(self, s):
