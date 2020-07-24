@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-import tempfile, argparse, stat, os, math, sys
+import tempfile, argparse, stat, os, math, sys, time
 try:
     import commands as subprocess
 except:
@@ -390,10 +390,17 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
 
-def queryStats ( ):
+def queryStats ( maxsteps ):
     import running_stats
     running_stats.count_jobs()
     running_stats.running_stats()
+    if maxsteps != None:
+        for i in range(maxsteps):
+            time.sleep(30.)
+            print()
+            running_stats.count_jobs()
+            running_stats.running_stats()
+            print()
 
 def logCall ():
     f=open("slurm.log","at")
@@ -410,7 +417,7 @@ def logCall ():
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
-    argparser.add_argument ( '-q','--query', help='query status, dont actually run',
+    argparser.add_argument ( '-q','--query', help='query status, dont actually run (use -M to query repeatedly)',
                              action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
@@ -425,8 +432,8 @@ def main():
                     help='launch n identical jobs',
                     type=int, default=1 )
     argparser.add_argument ( '-M', '--maxsteps', nargs="?",
-                    help='maximum number of steps',
-                    type=int, default=1000 )
+                    help='maximum number of steps [None=1000]',
+                    type=int, default=None )
     argparser.add_argument ( '-b', '--bake', nargs="?",
                     help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
                     type=str, default="" )
@@ -498,7 +505,7 @@ def main():
         subprocess.getoutput ( "./slurm.py -L 0" )
         return
     if args.query:
-        queryStats ( )
+        queryStats ( args.maxsteps )
         return
     if args.bake != "":
         if args.bake == "default":
@@ -538,6 +545,8 @@ def main():
         nprocesses = nworkers
 
     restartctr = 0
+    if args.maxsteps == None:
+        args.maxsteps = 1000
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
