@@ -144,8 +144,13 @@ class ProtoModel:
 
     def __repr__(self):
         """ shorted version of __str__"""
-
-        pStr = 'ProtoModel (%1.2f, %1.2f)' %(self.K,self.Z)
+        sK = str(self.K)
+        if type(self.K)==float:
+            sK="%1.2f" % self.K
+        sZ = str(self.Z)
+        if type(self.Z)==float:
+            sZ="%1.2f" % self.Z
+        pStr = 'ProtoModel (%s, %s)' % ( sK, sZ )
         return pStr
 
     def hasAntiParticle ( self, pid ):
