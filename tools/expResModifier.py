@@ -207,7 +207,7 @@ class ExpResModifier:
                 S = ( obs - exp ) / toterr
                 origS = ( orig - exp ) / toterr
             if S < self.Zmax:
-                self.log ( "effmap replacing nobs=%.2f (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
+                self.log ( "effmap replacing nobs=%d (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
                     ( orig, exp, lmbda, S, obs, dataset.globalInfo.id ) )
                 dataset.dataInfo.observedN = obs
         if S > 3.5:
@@ -285,8 +285,8 @@ class ExpResModifier:
     def addSignalForULMap ( self, dataset, tpred, lumi ):
         """ add a signal to this UL result. background sampling is
             already taken care of """
-        self.log ( " `- add UL matching tpred %s/%s: %s[%s]" % \
-                ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value, \
+        self.log ( " `- add UL matching tpred %s: %s[%s]" % \
+                ( tpred.analysisId(), tpred.xsection.value, \
                   tpred.PIDs ) )
         #print ( " `- add UL matching tpred %s/%s: %s[%s]" % \
         #        ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value, \
