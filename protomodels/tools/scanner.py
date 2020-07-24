@@ -7,14 +7,14 @@ sys.path.insert(0,"../")
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from csetup import setup
 from builder.manipulator import Manipulator
-from tools.helpers import rthresholds
 from smodels.tools.runtime import nCPUs
+from tester.predictor import Predictor
 
 def getHiscore( force_copy = False, rundir = None ):
     """ get the hiscore from the picklefile
     :param force_copy: if True, force a cp command on the pickle file
     """
-    import hiscore
+    from walker.hiscore import Hiscore
     # spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
     picklefile =rundir + "hiscore2.hi" # % spids
     backupfile = rundir+"hiscore.hi"
@@ -38,8 +38,7 @@ def getHiscore( force_copy = False, rundir = None ):
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[scanner] retrieving hiscore object %s on %s .... " % \
              ( picklefile, hostname ) )
-    hi = hiscore.Hiscore( walkerid=0, save_hiscores=False,
-                          picklefile = picklefile )
+    hi = Hiscore( walkerid=0, save_hiscores=False, picklefile = picklefile )
     Z=hi.hiscores[0].Z
     K=hi.hiscores[0].K
     print ( "[scanner] done retrieving hiscore object, highest at K=%.2f, Z=%.2f" % \
@@ -56,6 +55,7 @@ def predProcess ( args ):
     model = args["model"]
     model.walkerid = 100000+10000*i + model.walkerid
     pid = args["pid"]
+    predictor = args["predictor"]
     nevents = args["nevents"]
     mrange = args["mrange"]
     ret = {}
@@ -65,7 +65,8 @@ def predProcess ( args ):
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
                 ( i, ts, ctr, len(mrange), m, nevents ) )
-        model.predict ( nevents = nevents, check_thresholds=False )
+        #model.predict ( nevents = nevents, check_thresholds=False )
+        predictor.predict ( model ) # , nevents = nevents, check_thresholds=False )
         ret[m]=(model.Z,model.rvalues[0],model.K)
         model.delCurrentSLHA()
     return ret
@@ -107,6 +108,7 @@ def ssmProcess ( args ):
     print ( "[scanner:%d] starting thread" % ( i ) )
     model = args["model"]
     pids = args["pids"]
+    predictor = args["predictor"]
     nevents = args["nevents"]
     ssmrange = args["ssmrange"]
     ssm = args["ssm"]
@@ -118,7 +120,8 @@ def ssmProcess ( args ):
     ret = {}
     ts = time.strftime("%H:%M:%S" )
     model.delXSecs()
-    model.predict ( nevents = nevents, recycle_xsecs = True )
+    # model.predict ( nevents = nevents, recycle_xsecs = True )
+    predictor.predict ( model )
     print ( "[scanner:%d-%s] before we begin, Z is %.3f" % ( i, ts, model.Z ) )
 
     for ctr,ssm in enumerate(ssmrange):
@@ -137,13 +140,13 @@ def ssmProcess ( args ):
     return ret
 
 def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
-             nproc=5, fac = 1.008 ):
+             nproc=5, fac = 1.008, rundir = "" ):
     """ produce pickle files for pid, with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
     """
-    if type(pid) in [ list, tuple ]:
+    if type(pid) in [ list, tuple, set ]:
         for p in pid:
             produce ( hi, p, nevents, dryrun, nproc, fac )
         return
@@ -171,9 +174,14 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
     mranges = [ mrangetot[i::nproc] for i in range(nproc) ]
     print ( "[scanner] start scanning with m(%d)=%.1f with %d procs, %d mass points, %d events" % \
             ( pid, mass, nproc, len(mrangetot), nevents ) )
+    expected = False
+    select = "all"
+    dbpath = rundir + "/default.pcl"
+    predictor =  Predictor( 0, dbpath=dbpath,
+                            expected=expected, select=select )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(mranges) )
-    args = [ { "model": model, "pid": pid, "nevents": nevents,
+    args = [ { "model": model, "pid": pid, "nevents": nevents, "predictor": predictor,
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
@@ -190,7 +198,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         f.close()
 
 def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
-             nproc=5, fac = 1.008 ):
+             nproc=5, fac = 1.008, rundir= "" ):
     """ produce pickle files for ssm scan, for (pid1,pid2), with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
@@ -226,7 +234,13 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
             ( pid1, pid2, ssm, nproc, len(ssmrangetot), nevents ) )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(ssmranges) )
+    expected = False
+    select = "all"
+    dbpath = rundir + "/default.pcl"
+    predictor =  Predictor( 0, dbpath=dbpath,
+                            expected=expected, select=select )
     args = [ { "model": model, "pids": pids, "nevents": nevents, "ssm": ssm,
+               "predictor": predictor,
                "i": i, "ssmrange": x } for i,x in enumerate(ssmranges) ]
     Zs={}
     tmp = pool.map ( ssmProcess, args )
@@ -277,8 +291,9 @@ def findPids ( rundir ):
         ret.add ( int(s) )
     return ret
 
-def draw( pid= 1000022, interactive=False, pid2=0, copy=False, 
-          drawtimestamp = True, rundir = None, plotrmax=False ):
+def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
+          drawtimestamp = True, rundir = None, plotrmax=False,
+          rthreshold = 1.3 ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
     :param drawtimestamp: if True, put a timestamp on it
@@ -297,7 +312,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     def isSSMPlot():
         ## is this an ssm or a mass plot
         return pid2!=-1
-        
+
     import matplotlib
     matplotlib.use("Agg")
     from matplotlib import pyplot as plt
@@ -323,7 +338,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         y0=y_
         if type(y_)==tuple:
             y0 = y_[0]
-            if y_[1] > rthresholds[0]+.05 and plotrmax:
+            if y_[1] > rthreshold+.05 and plotrmax:
                 rsarea.append ( y_[1] )
                 y0 = -1.
             else:
@@ -467,15 +482,19 @@ if __name__ == "__main__":
     if args.produce:
         hi = getHiscore( args.force_copy, rundir )
         if args.pid2 > 0:
-            produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, nproc, args.factor )
+            produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir )
         else:
-            produce( hi, pids, args.nevents, args.dry_run, nproc, args.factor )
+            produce( hi, pids, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir )
+    pred = predictor.Predictor()
+    rthreshold = pred.rthreshold
     if args.draw:
         if args.pid != 0:
-            draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp, rundir )
+            draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp, rundir, \
+                  rthreshold )
         else:
             for pid in allpids:
                 try:
-                    draw( pid, args.interactive, args.pid2, args.copy, drawtimestamp )
+                    draw( pid, args.interactive, args.pid2, args.copy, drawtimestamp, 
+                          rundir, rthreshold )
                 except Exception as e:
                     print ( "[scanner] skipping %d: %s" % ( pid, e ) )
