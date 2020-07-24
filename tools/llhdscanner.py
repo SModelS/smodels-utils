@@ -10,13 +10,14 @@ from smodels.tools.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
 from csetup import setup
 from tester.combiner import Combiner
-from tester.predictor import Predictor as P
-from plotter.plotHiscore import obtain
+from tester.predictor import Predictor
+from plotting.plotHiscore import obtain
 
 class LlhdThread:
     """ one thread of the sweep """
     def __init__ ( self, threadnr: int, rundir: str,
-                   protomodel, pid1, pid2, mpid1, mpid2, nevents: int ):
+                   protomodel, pid1, pid2, mpid1, mpid2, nevents: int,
+                   predictor ):
         self.rundir = setup( rundir )
         self.threadnr = threadnr
         self.M = copy.deepcopy ( protomodel )
@@ -26,6 +27,7 @@ class LlhdThread:
         self.mpid1 = mpid1
         self.mpid2 = mpid2
         self.nevents = nevents
+        self.predictor = predictor
 
     def pprint ( self, *args ):
         """ pretty print """
@@ -46,18 +48,19 @@ class LlhdThread:
         if max(self.M.masses)>2000:
             sigmacut=.001*fb
         ## first get rmax
-        predsforexcl = P.predict ( self.M.currentSLHA, allpreds=False,
-                                      llhdonly=False )
-        robs = self.M.checkForExcluded ( predsforexcl )
+        worked = self.predictor.predict ( self.M ) #, allpreds=False,
+        #                              llhdonly=False )
+        #robs = self.M.checkForExcluded ( predsforexcl )
+        preds = [ x[2] for x in self.M.tpList ]
 
         ## now get the likelihoods
         llhds={}
-        predictions = P.predict ( self.M.currentSLHA, allpreds=True,
-                                     llhdonly=True, sigmacut=sigmacut )
+        #predictions = P.predict ( self.M.currentSLHA, allpreds=True,
+        #                             llhdonly=True, sigmacut=sigmacut )
         for mu in numpy.arange(.4,1.8,.05):
-            llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )
+            llhds[float(mu)] = self.getLikelihoods ( preds, mu=mu )
         self.M.delCurrentSLHA()
-        return llhds,robs[:3]
+        return llhds,self.M.rvalues[:3]
 
     def getLikelihoods ( self, predictions, mu = 1. ):
         """ return dictionary with the likelihoods per analysis """
@@ -132,9 +135,10 @@ class LlhdThread:
         return masspoints
 
 def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1,
-                mpid2, nevents: int, rpid1, rpid2, return_dict ):
+                mpid2, nevents: int, rpid1, rpid2, predictor, return_dict ):
     """ the method needed for parallelization to work """
-    thread = LlhdThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents )
+    thread = LlhdThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents, 
+                          predictor )
     newpoints = thread.run ( rpid1, rpid2 )
     if return_dict != None:
         return_dict[threadid]=newpoints
@@ -150,6 +154,10 @@ class LlhdScanner:
         self.pid1 = pid1
         self.pid2 = pid2
         self.nproc = nproc
+        expected = False
+        select = "all"
+        dbpath = rundir + "/default.pcl"
+        self.predictor = Predictor ( 0, dbpath=dbpath, expected=expected, select=select )
 
     def pprint ( self, *args ):
         """ pretty print """
@@ -178,7 +186,7 @@ class LlhdScanner:
         if self.nproc == 1:
             return runThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
                                self.mpid1, self.mpid2, self.nevents, rpid1, rpid2,
-                               None )
+                               predictor, None )
         chunkedRPid1 = [ list(rpid1[i::self.nproc]) for i in range(self.nproc) ]
         processes = []
         manager = multiprocessing.Manager()
@@ -186,7 +194,7 @@ class LlhdScanner:
         # print ( "chunked", chunkedRPid1 )
         for ctr,chunk in enumerate(chunkedRPid1):
             self.M.walkerid = ctr
-            p = multiprocessing.Process ( target = runThread, args = ( ctr, self.rundir, self.M, self.pid1, self.pid2, self.mpid1, self.mpid2, self.nevents, chunk, rpid2, return_dict ) )
+            p = multiprocessing.Process ( target = runThread, args = ( ctr, self.rundir, self.M, self.pid1, self.pid2, self.mpid1, self.mpid2, self.nevents, chunk, rpid2, self.predictor, return_dict ) )
             p.start()
             processes.append ( p )
 
@@ -229,12 +237,12 @@ class LlhdScanner:
         print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
         print ( "[llhdscanner] total %d points, %d events for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
         self.M.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
-        self.M.initializePredictor()
-        P[0].filterForTopos ( topo )
+        #self.M.initializePredictor()
+        self.predictor.filterForTopos ( topo )
         self.M.walkerid = 0
 
         thread0 = LlhdThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
-                               self.mpid1, self.mpid2, self.nevents )
+                               self.mpid1, self.mpid2, self.nevents, self.predictor )
         llhds,robs = thread0.getPredictions ( False )
         thread0.clean()
         self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
@@ -347,7 +355,7 @@ def main ():
             help='number of events [100000]',
             type=int, default=100000 )
     argparser.add_argument ( '-p', '--picklefile',
-            help='pickle file to draw from [<rundir>/hiscore.pcl]',
+            help='pickle file to draw from [<rundir>/hiscore.hi]',
             type=str, default="default" )
     argparser.add_argument ( '-D', '--draw',
             help='also perform the plotting, ie call plotLlhds',
@@ -364,7 +372,7 @@ def main ():
     if nproc < 1:
         nproc = nCPUs() + nproc
     if args.picklefile == "default":
-        args.picklefile = "%s/hiscore.pcl" % rundir
+        args.picklefile = "%s/hiscore.hi" % rundir
     protomodel = obtain ( args.number, args.picklefile )
     scanner = LlhdScanner( protomodel, args.pid1, args.pid2, nproc, args.rundir )
     args = scanner.overrideWithDefaults ( args )

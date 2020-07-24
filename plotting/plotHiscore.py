@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import pickle, os, sys, subprocess, time, glob, colorama, math
-from csetup import setup
 sys.path.insert(0,"../")
+from tools import hiscoreTools
 from builder.manipulator import Manipulator
+from builder import protomodel
+from csetup import setup
 from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
-sys.path.insert(0,"../" )
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
@@ -27,7 +28,6 @@ def obtain ( number, picklefile ):
         args.infile = picklefile
         args.fetch = False
         args.maxloss = 0.005
-        from tools import hiscoreTools
         hiscoreTools.main ( args )
 
     with open( picklefile,"rb" ) as f:
