@@ -293,7 +293,7 @@ class Manipulator:
 
         #Make sure there is at least one open channel:
         BRtot = sum(self.M.decays[pid].values())
-        if BRtot == 0.0:
+        if BRtot == 0.0 and len(openChannels)>0:
             chan = random.choice(list(openChannels))
             self.M.decays[pid][chan] = 1.0
             BRtot = 1.0
