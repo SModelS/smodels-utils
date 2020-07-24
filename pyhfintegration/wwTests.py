@@ -65,7 +65,7 @@ import inspect
 
 def retrieve_name(var):
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
-    return [var_name for var_name, var_val in callers_local_vars if var_val is var][0]
+    return [var_name for var_name, var_val in callers_local_vars if var_val is var]
 
 # ba=[5,7,9]
 # print ( "name", retrieve_name ( ba ) )
@@ -90,10 +90,10 @@ for _ in range(10):
     for l in lists:
         if len(l)>10000:
             print ( "list of size %d, name=``%s''" % ( len(l), retrieve_name(l) ) )
-            for i in range(len(l)):
-                print ( "  `- nr=", i )
-                print ( "  `- type=", type(l[i]) ) ## str(l).encode("utf-8")[:30] )
-                if type(l[i])==dict:
-                    continue
-                print ( "  `- content", l[i] )
-                print ( "  `-  size=", sizeof(l[i]) )
+            #for i in range(len(l)):
+            #    print ( "  `- nr=", i )
+            #    print ( "  `- type=", type(l[i]) ) ## str(l).encode("utf-8")[:30] )
+            #    if type(l[i])==dict:
+            #        continue
+            #    print ( "  `- content", l[i] )
+            #    print ( "  `-  size=", sizeof(l[i]) )
