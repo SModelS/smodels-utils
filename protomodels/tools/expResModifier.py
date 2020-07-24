@@ -228,7 +228,7 @@ class ExpResModifier:
             already taken care of """
         self.log ( "add EM matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId()[:8], tpred.xsection.value ) )
-        label = dataset.globalInfo.id + ":" + dataset.dataInfo.id
+        label = dataset.globalInfo.id + ":" + dataset.dataInfo.dataId
         if not label in self.stats:
             self.stats[ label ]= {}
         orig = dataset.dataInfo.observedN
@@ -365,7 +365,7 @@ class ExpResModifier:
                             listOfExpRes[l].datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
                 else:
                     for tpred in tpreds:
-                        if tpred.dataId() != None:
+                        if tpred.dataId() == dsname:
                             addedEM += 1
                             listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
@@ -396,6 +396,7 @@ class ExpResModifier:
                             listOfExpRes[l].datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
                 else:
                     for tpred in tpreds:
+                        print ( "dsname", dsname, "tpred", tpred.dataId() )
                         if tpred.dataId() != None:
                             addedEM += 1
                             listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
