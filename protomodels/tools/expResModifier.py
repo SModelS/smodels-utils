@@ -396,8 +396,7 @@ class ExpResModifier:
                             listOfExpRes[l].datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
                 else:
                     for tpred in tpreds:
-                        print ( "dsname", dsname, "tpred", tpred.dataId() )
-                        if tpred.dataId() != None:
+                        if tpred.dataId() == dsname:
                             addedEM += 1
                             listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
