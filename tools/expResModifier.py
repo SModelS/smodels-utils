@@ -22,7 +22,7 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc ):
+    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
@@ -32,6 +32,7 @@ class ExpResModifier:
         self.rundir = setup( rundir )
         self.keep = keep
         self.nproc = nproc
+        self.fudge = fudge
         self.logfile = "modifier.log"
         if Zmax == None:
             Zmax = 100
@@ -61,7 +62,7 @@ class ExpResModifier:
             x = float("inf")
             D = {}
             while x > self.Zmax:
-                x = stats.norm.rvs() # draw but once from standard-normal
+                x = stats.norm.rvs() * self.fudge # draw but once from standard-normal
                 D["x"] = x
             allpositive = True
             for i,y in enumerate( ret.y_values ):
@@ -83,6 +84,7 @@ class ExpResModifier:
                         "values of %s positive." % globalInfo.id )
 
         label = globalInfo.id + ":ul"
+        D["fduge"]=self.fudge
         self.stats[label]=D
         self.log ( "fixing UL result %s: x=%.2f" % \
                    ( globalInfo.id, x ) )
@@ -192,8 +194,8 @@ class ExpResModifier:
         sample from background and put the value as observed """
         orig = dataset.dataInfo.observedN
         exp = dataset.dataInfo.expectedBG
-        err = dataset.dataInfo.bgError
-        D = { "origN": orig, "expectedBG": exp, "bgError": err }
+        err = dataset.dataInfo.bgError * self.fudge
+        D = { "origN": orig, "expectedBG": exp, "bgError": err, "fudge": self.fudge }
         S, origS = float("inf"), float("nan")
         while S > self.Zmax:
             lmbda = stats.norm.rvs ( exp, err )
@@ -236,7 +238,7 @@ class ExpResModifier:
         self.stats[label]["sigLambda"]=sigLambda
         sigN = stats.poisson.rvs ( sigLambda )
         self.stats[label]["sigN"]=sigN
-        err = dataset.dataInfo.bgError
+        err = dataset.dataInfo.bgError * self.fudge
         if sigN == 0:
                 self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
                            ( sigN, orig ) )
@@ -318,7 +320,7 @@ class ExpResModifier:
         filename = "%s/database.dict" % self.rundir
         self.log ( f"saving stats to {filename}" )
         meta = { "dbpath": self.dbpath, "Zmax": self.Zmax,
-                 "database": self.dbversion, "fudge": 1., # self.fudge,
+                 "database": self.dbversion, "fudge": self.fudge,
                  "protomodel": self.protomodel, "timestamp": time.asctime() }
         with open ( filename,"wt" ) as f:
             f.write ( str(meta)+"\n" )
@@ -494,6 +496,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-R', '--rundir',
             help='override rundir [None]',
             type=str, default=None )
+    argparser.add_argument ( '-f', '--fudge',
+            help='fudge factor [1.0]',
+            type=float, default=1.0 )
     argparser.add_argument ( '-M', '--max',
             help='upper limit on significance of individual excess [None]',
             type=float, default=None )
@@ -522,7 +527,7 @@ if __name__ == "__main__":
         args.outfile = args.suffix+".pcl"
     from smodels.experiment.databaseObj import Database
     modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep, \
-                               args.nproc )
+                               args.nproc, args.fudge )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
