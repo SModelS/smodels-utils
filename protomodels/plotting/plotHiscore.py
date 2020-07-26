@@ -11,7 +11,7 @@ from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
-import helpers
+from tools import helpers
 
 runtime._experimental = True
 
