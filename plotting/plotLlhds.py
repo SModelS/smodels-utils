@@ -6,7 +6,8 @@ import pickle, sys, copy, subprocess, os, colorama, time, glob
 import IPython
 import numpy as np
 from csetup import setup as gsetup
-from helpers import getParticleName, toLatex
+gsetup()
+from tools.helpers import getParticleName, toLatex
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
@@ -317,6 +318,7 @@ class LlhdPlot:
             resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateSRs=False )
         stats = self.getAnaStats( integrateSRs=False )
         if stats == None:
+            self.pprint ( "found no ana stats?" )
             return
         anas = list(stats.keys())
         if pid1 in resultsForPIDs:
@@ -387,8 +389,10 @@ class LlhdPlot:
                 R[h]=rmax
             print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
             if cresults == 0:
-                print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
-                return
+                print ( "[plotLlhds] warning: found no results for %s. skip" % \
+                        str(masspoint) )
+                continue
+                # return
             x.add ( xmax*1.03 )
             x.add ( xmin*.93 )
             y.add ( ymax+50. )
@@ -400,14 +404,16 @@ class LlhdPlot:
             RMAX = float("nan")*X
             for irow,row in enumerate(Z):
                 for icol,col in enumerate(row):
-                    h = self.getHash(x[icol],y[irow])
+                    h = 0
+                    if len(x)>= icol and len(y) >= irow:
+                        h = self.getHash(list(x)[icol],list(y)[irow])
                     if h in L:
                         Z[irow,icol]=L[h]
                     if h in R:
                         RMAX[irow,icol]=R[h]
             if self.interactive:
                 self.RMAX = RMAX
-                self.ZCOMB = ZCOMB
+                # self.ZCOMB = ZCOMB
                 self.Z = Z
                 self.L = L
                 self.R = R
@@ -433,11 +439,14 @@ class LlhdPlot:
         ZCOMB = float("nan")*X
         for irow,row in enumerate(Z):
             for icol,col in enumerate(row):
-                h = self.getHash(x[icol],y[irow])
+                h = 0
+                if len(x)> icol and len(y) > irow:
+                    h = self.getHash(list(x)[icol],list(y)[irow])
                 if h in combL and not np.isnan(combL[h]):
                     ZCOMB[irow,icol]=combL[h]
                     if combL[h]==0.:
                         ZCOMB[irow,icol]=float("nan")
+        self.ZCOMB = ZCOMB
         contRMAX = plt.contour ( X, Y, RMAX, levels=[self.rthreshold], colors = [ "gray" ], zorder=10 )
         contRMAXf = plt.contourf ( X, Y, RMAX, levels=[self.rthreshold,float("inf")], colors = [ "gray" ], hatches = ['////'], alpha=getAlpha( "gray" ), zorder=10 )
         hldZcomb68 = computeHPD ( ZCOMB, RMAX, .68, False, rthreshold=self.rthreshold )
@@ -471,7 +480,7 @@ class LlhdPlot:
         circ1 = mpatches.Patch( facecolor="gray",alpha=getAlpha("gray"),hatch=r'////',label='excluded', edgecolor="black" )
         handles.append ( circ1 )
         plt.legend( handles=handles, loc="upper left" )
-        figname = "llhd%d.png" % ( pid1 )
+        figname = "%s/llhd%d.png" % ( self.rundir, pid1 )
         self.pprint ( "saving to %s" % figname )
         plt.savefig ( figname )
         if self.interactive:
