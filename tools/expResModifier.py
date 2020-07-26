@@ -84,7 +84,7 @@ class ExpResModifier:
                         "values of %s positive." % globalInfo.id )
 
         label = globalInfo.id + ":ul"
-        D["fduge"]=self.fudge
+        D["fudge"]=self.fudge
         self.stats[label]=D
         self.log ( "fixing UL result %s: x=%.2f" % \
                    ( globalInfo.id, x ) )

@@ -485,7 +485,7 @@ if __name__ == "__main__":
             produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir )
         else:
             produce( hi, pids, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir )
-    pred = predictor.Predictor()
+    pred = Predictor( 0 )
     rthreshold = pred.rthreshold
     if args.draw:
         if args.pid != 0:
