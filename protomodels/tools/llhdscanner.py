@@ -2,7 +2,7 @@
 
 """ script used to produce the likelihood scans """
 
-import os, sys, multiprocessing, time, numpy, subprocess, copy
+import os, sys, multiprocessing, time, numpy, subprocess, copy, glob
 sys.path.insert(0,"./")
 sys.path.insert(0,"../")
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
@@ -12,6 +12,22 @@ from csetup import setup
 from tester.combiner import Combiner
 from tester.predictor import Predictor
 from plotting.plotHiscore import obtain
+
+def findPids ( rundir ):
+    """ search for llhd*pcl files, report the corresponding pids.
+    :returns: set of pids
+    """
+    ret = set()
+    files = glob.glob("llhd*pcl")
+    files += glob.glob("%s/llhd*pcl" % rundir )
+    for f in files:
+        p = f.find("llhd")
+        s = f[p+4:]
+        s = s.replace(".pcl","")
+        s = s.replace("1000022","")
+        ret.add ( int(s) )
+    print ( "[llhdscanner] pids are %s" % ret )
+    return ret
 
 class LlhdThread:
     """ one thread of the sweep """
@@ -374,22 +390,27 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.hi" % rundir
     protomodel = obtain ( args.number, args.picklefile )
-    scanner = LlhdScanner( protomodel, args.pid1, args.pid2, nproc, args.rundir )
-    args = scanner.overrideWithDefaults ( args )
-    scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1,
-                                args.min2, args.max2, args.deltam2, \
-                                args.nevents, args.topo, args.output )
-    if args.draw:
-        import plotLlhds
-        verbose = args.verbosity
-        copy = True
-        max_anas = 5
-        interactive = False
-        drawtimestamp = True
-        compress = False
-        plot = plotLlhds.LlhdPlot ( args.pid1, args.pid2, verbose, copy, max_anas,
-                                   interactive, drawtimestamp, compress, rundir )
-        plot.plot()
+    pid1s = [ args.pid1 ]
+    if args.pid1 == 0:
+        pid1s = findPids( rundir )
+    for pid1 in pid1s:
+        scanner = LlhdScanner( protomodel, pid1, args.pid2, nproc, args.rundir )
+        args.pid1 = pid1
+        args = scanner.overrideWithDefaults ( args )
+        scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1,
+                                    args.min2, args.max2, args.deltam2, \
+                                    args.nevents, args.topo, args.output )
+        if args.draw:
+            import plotLlhds
+            verbose = args.verbosity
+            copy = True
+            max_anas = 5
+            interactive = False
+            drawtimestamp = True
+            compress = False
+            plot = plotLlhds.LlhdPlot ( pid1, args.pid2, verbose, copy, max_anas,
+                                       interactive, drawtimestamp, compress, rundir )
+            plot.plot()
 
 if __name__ == "__main__":
     main()
