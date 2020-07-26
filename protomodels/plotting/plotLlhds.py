@@ -494,7 +494,7 @@ class LlhdPlot:
     def copyFile ( self, filename ):
         """ copy filename to smodels.github.io/protomodels/latest/ """
         dest = os.path.expanduser ( "~/git/smodels.github.io" )
-        cmd = "cp %s/%s %s/protomodels/latest/" % ( self.rundir, filename, dest )
+        cmd = "cp %s %s/protomodels/latest/" % ( filename, dest )
         o = subprocess.getoutput ( cmd )
         self.pprint ( "%s: %s" % ( cmd, o ) )
 
