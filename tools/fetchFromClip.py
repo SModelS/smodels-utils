@@ -22,6 +22,7 @@ def main():
             description='file fetching utility, fetches from clip' )
     argparser.add_argument ( '-a', '--all', help='all files', action="store_true" )
     argparser.add_argument ( '--scan', help='files from scan', action="store_true" )
+    argparser.add_argument ( '--hiscore', help='the hiscore', action="store_true" )
     argparser.add_argument ( '--states', help='the states', action="store_true" )
     argparser.add_argument ( '--pmodels', help='the pmodels', action="store_true" )
     argparser.add_argument ( '--png', help='the png files', action="store_true" )
@@ -45,6 +46,7 @@ def main():
               "copy": [ "hiscoreCopy.hi" ],
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
+              "hiscore": [ "hiscore.hi" ],
               "ssms": [ "ssm*.pcl" ]
     }
     for k,v in args.__dict__.items():

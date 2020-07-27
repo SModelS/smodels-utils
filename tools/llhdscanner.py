@@ -64,17 +64,21 @@ class LlhdThread:
         if max(self.M.masses)>2000:
             sigmacut=.001*fb
         ## first get rmax
-        worked = self.predictor.predict ( self.M ) #, allpreds=False,
-        #                              llhdonly=False )
+        worked = self.predictor.predict ( self.M, keep_predictions = True )
+        #slhafile = self.M.createSLHAFile()
+        #predictions = self.predictor.runSModelS ( slhafile,
+        #        sigmacut = 0.02*fb, allpreds = True, llhdonly = True )
         #robs = self.M.checkForExcluded ( predsforexcl )
-        preds = [ x[2] for x in self.M.tpList ]
+        #preds = [ x[2] for x in self.M.tpList ]
+        # preds = [ x[2] for x in se ]
 
         ## now get the likelihoods
         llhds={}
         #predictions = P.predict ( self.M.currentSLHA, allpreds=True,
         #                             llhdonly=True, sigmacut=sigmacut )
         for mu in numpy.arange(.4,1.8,.05):
-            llhds[float(mu)] = self.getLikelihoods ( preds, mu=mu )
+            llhds[float(mu)] = self.getLikelihoods ( self.predictor.predictions, mu=mu )
+        del self.predictor.predictions
         self.M.delCurrentSLHA()
         return llhds,self.M.rvalues[:3]
 
