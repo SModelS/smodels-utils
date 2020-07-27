@@ -108,9 +108,10 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
             f.close()
         os.chmod ( fname, 0o775 )
 
-def fetchUnfrozenFromDict( rundir ):
+def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     """ fetch pids of unfrozenparticles from dictionary
         in <rundir>/pmodel.py, if exists.
+    :param includeLSP: if False, do not include the LSP in list
     :returns: list of pids, or None.
     """
     if not os.path.exists ( "%s/pmodel.py" % rundir ):
@@ -121,6 +122,8 @@ def fetchUnfrozenFromDict( rundir ):
         M = D["masses"]
         ret = []
         for k,v in M.items():
+            if not includeLSP and k == 1000022:
+                continue
             if v < 90000:
                 ret.append(k)
         return ret
@@ -131,6 +134,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
         in <rundir>/pmodel.py, if exists.
     :returns: list of pid pairs, or None.
     """
+    print ( "[slurm.py:fetchUnfrozenSSMsFromDict] FIXME can we find out which productions we can ignore?" )
     if not os.path.exists ( "%s/pmodel.py" % rundir ):
         print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen ssms" )
         return None
@@ -160,7 +164,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     :param rewrite: force rewrite of scan script
     """
     if pid == 0:
-        pids = fetchUnfrozenFromDict( rundir )
+        pids = fetchUnfrozenFromDict( rundir, includeLSP = False )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
