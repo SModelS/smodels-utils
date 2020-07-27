@@ -58,6 +58,7 @@ def predProcess ( args ):
     pid = args["pid"]
     predictor = args["predictor"]
     nevents = args["nevents"]
+    rundir = args["rundir"]
     mrange = args["mrange"]
     ret = {}
     for ctr,m in enumerate(mrange):
@@ -150,7 +151,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
     """
     if type(pid) in [ list, tuple, set ]:
         for p in pid:
-            produce ( hi, p, nevents, dryrun, nproc, fac )
+            produce ( hi, p, nevents, dryrun, nproc, fac, rundir = rundir )
         return
     model = hi.hiscores[0]
     if model == None:
@@ -183,7 +184,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
                             expected=expected, select=select )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(mranges) )
-    args = [ { "model": model, "pid": pid, "nevents": nevents, "predictor": predictor,
+    args = [ { "model": model, "rundir": rundir, "pid": pid, "nevents": nevents, "predictor": predictor,
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
@@ -206,6 +207,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
     """
+    print ( "produceSSMs", pid1, pid2 )
     model = hi.hiscores[0]
     pids = ( pid1, pid2 )
     if pid2 < pid1:
@@ -242,7 +244,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     predictor =  Predictor( 0, dbpath=dbpath,
                             expected=expected, select=select )
     args = [ { "model": model, "pids": pids, "nevents": nevents, "ssm": ssm,
-               "predictor": predictor,
+               "predictor": predictor, "rundir": rundir,
                "i": i, "ssmrange": x } for i,x in enumerate(ssmranges) ]
     Zs={}
     tmp = pool.map ( ssmProcess, args )
