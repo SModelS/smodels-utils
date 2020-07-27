@@ -44,10 +44,11 @@ class Drawer:
         self.ax.set_xlim( 0., self.mMax )
         self.ax.set_ylim( 0., self.mMax )
         self.ax.set_zlim( 0., self.mMax )
-        self.ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True,True) )
+        self.namer = SParticleNames ( susy= False )
+        self.ax.set_xlabel ( self.namer.texName(self.coordinates[0],True,True) )
         self.ax.grid(False)
-        self.ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True,True) )
-        self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
+        self.ax.set_ylabel ( self.namer.texName(self.coordinates[1],True,True) )
+        self.ax.set_zlabel ( self.namer.texName(self.coordinates[2],True,True) )
         self.ax.zaxis.set_visible(False)
 
         return self.fig
@@ -161,7 +162,7 @@ class Drawer:
             self.ax.yaxis.set_pane_color( panecol )
             self.ax.zaxis.set_pane_color( panecol )
             self.ax.set_zticks( np.arange ( 0., self.mMax+1, 500. ) )
-            self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
+            self.ax.set_zlabel ( self.namer.texName(self.coordinates[2],True,True) )
             self.ax.zaxis.set_major_formatter(FormatStrFormatter('%d'))
 
         self.lastartists = p
