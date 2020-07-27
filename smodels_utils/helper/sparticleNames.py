@@ -52,17 +52,38 @@ class SParticleNames:
         self.ids.update ( self.susyIDs )
 
     def rootColor( self, name ):
-        """ find the default colors for <name> """
+        """ find the default colors for <name>, ROOT version """
         from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
-        colors = { "Z": kGreen+3, "W": kGreen+3, "tau": kOrange+2, "mu": kOrange+2,
-                   "nu": kOrange+2, "g": kRed+2, "t": kBlue+3, "b": kBlue+3,
-                   "e": kOrange+2, "l": kOrange+2, "q": kBlue+3, "d": kBlue+3,
-                   "u": kBlue+3, "c": kBlue+3, "s": kBlue+3 }
-        for k,v in colors.items():
-            if k in name:
-                return v
-        return kBlack
+        colors = { "orange": kGreen+3, "blue": kBlue+3, "red": kRed+2,
+                   "black": kBlack }
+        c = self.texColor ( name )
+        return colors[c]
 
+    def texColor ( self, name ):
+        """ find the default colors for <name>, latex version 
+        name can be an integer/pid, or a string/name. In case of a string,
+        we will find the according pid.
+        """
+        pid = name
+        if type(name)==str:
+            if not name in self.names:
+                print ( "[sparticleNames.texColor] %s not in names" % name )
+                sys.exit(-1)
+            pid = self.names[name]
+        pid = abs(pid)
+        if pid in [ 1000001, 1000002, 1000003, 1000004, \
+                    2000001, 2000002, 2000003, 2000004 ]:
+            return "blue"
+        if pid in [ 1000005, 1000006, 2000005, 2000006 ]:
+            return "blue"
+        if pid in [ 1000022, 1000023, 1000025, 1000035, \
+                    1000024, 1000037 ]:
+            return "green"
+        if pid in [ 1000011, 1000012, 1000013, 1000014, \
+                    1000015, 1000016, 2000011, 2000012, \
+                    2000013, 2000014, 2000015, 2000016 ]:
+            return "orange"
+        return "black"
 
     def initXIDs ( self ):
         """ define the X notation """
@@ -122,7 +143,7 @@ class SParticleNames:
         ## make sure the inversions are defined as well
         self.names={}
         for (key,value) in self.ids.items():
-                self.names[value]=key
+            self.names[value]=key
 
     def isSM ( self, pid ):
         """ is pid a standard model pid? """
