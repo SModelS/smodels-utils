@@ -432,7 +432,7 @@ class LlhdPlot:
             cont50c = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ color ], zorder=10 )
             cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ), zorder=10 )
             plt.clabel ( cont50c, fmt="68%.0s" )
-            ax = cont50.ax
+            ax = cont50.axes
             while isCloseToExisting ( minXY, existingPoints ):
                 minXY = ( minXY[0]+8., minXY[1]+8., minXY[2] )
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black", zorder=20 )
@@ -466,7 +466,7 @@ class LlhdPlot:
         ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
         ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
         ### folien slide 317
-        ax = cont50.ax
+        ax = cont50.axes
         # Xs,Ys=X,Y
         Xs,Ys = filterSmaller ( X, Y )
         h = self.getHash()
@@ -488,7 +488,7 @@ class LlhdPlot:
         self.pprint ( "saving to %s" % figname )
         plt.savefig ( figname )
         if self.interactive:
-            self.ax = ax
+            self.axes = axes
             self.plt = plt
         plt.close()
         if self.copy:
