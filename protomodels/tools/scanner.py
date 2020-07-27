@@ -9,6 +9,7 @@ from csetup import setup
 from builder.manipulator import Manipulator
 from smodels.tools.runtime import nCPUs
 from tester.predictor import Predictor
+from smodels_utils.helper.sparticleNames import SParticleNames
 
 def getHiscore( force_copy = False, rundir = None ):
     """ get the hiscore from the picklefile
@@ -319,6 +320,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     from matplotlib import pyplot as plt
     import helpers
     import pickle
+    namer = SParticleNames ( susy = False )
     #if False:
     #    rundir = ""
     picklefile = "%sscanM%s.pcl" % (rundir, pid )
@@ -351,10 +353,10 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
             y2_ = float("nan")
         y.append ( y0 )
         yr.append ( y2_ )
-    pname = helpers.toLatex ( pid, addDollars=True )
+    pname = namer.texName ( pid, addDollars=True )
     if isSSMPlot():
-        pname = helpers.toLatex ( pid, addDollars=True, addSign=True )+","+\
-                helpers.toLatex ( pid2, addDollars=True, addSign=True )
+        pname = namer.texName ( pid, addDollars=True, addSign=True )+","+\
+                namer.texName ( pid2, addDollars=True, addSign=True )
     fig,ax1 = plt.subplots()
     plt.plot ( x, ydashed, linewidth=.3, c="tab:blue", zorder=0 )
     plt.plot ( x, yr, linewidth=2., label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )

@@ -1,4 +1,3 @@
-import pygraphviz, sys, math
 ##    # -*- coding: UTF-8 -*-
 
 """
@@ -9,11 +8,15 @@ import pygraphviz, sys, math
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
+
+import pygraphviz, sys, math
+import logging
+from smodels_utils.helper import sparticleNames
+
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
     """
     def __init__ ( self, options, ps, offset, extra={}, verbose="warn", html=False ):
-        import logging
         self.logger = logging.getLogger(__name__)
         verbosity = verbose.lower()
         levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
@@ -35,6 +38,7 @@ class DecayDrawer:
         self.G=pygraphviz.AGraph(directed=True)
         self.verbose=verbose
         self.html=html
+        self.namer = sparticleNames.SParticleNames ( susy = False )
 
     def draw ( self, out ):
         prog=sys.argv[0]
@@ -201,11 +205,18 @@ class DecayDrawer:
         # print name,"->",nname
         return nname
 
-    def texName ( self, name, color = False, dollars = True ):
-        """ map slha particle names to latex names
+    def texName ( self, pid, color = False, dollars = True ):
+        """ get tex name for pid 
         :param color: add color tag
         :param dollars: need dollars for math mode
         """
+
+        # print ( "[decayDrawer] find texName for", pid )
+        if type(pid)==int:
+            return self.namer.texColor(pid ) + self.namer.name ( pid )
+        return pid
+        """
+        name = pid
         if name.find(" ")>-1:
             names=name.split()
             texed=[]
@@ -281,10 +292,8 @@ class DecayDrawer:
         if name=="h2": return large ( "H" )
         if name=="a0": return large ( math("A") )
         if name=="a1": return large ( math("A^{1}") )
-        #if name=="nu nu": return large ( math ( "\\\\nu \\\\nu" ) )
-        #if name=="nu l": return large ( math ( "\\\\nu l" ) )
-        #if name=="l nu": return large ( math ( "l \\\\nu" ) )
         return large ( name )
+        """
 
     def htmlName ( self, name ):
         ### name=name.replace ( "+", "" )
@@ -347,7 +356,7 @@ class DecayDrawer:
             outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        self.logger.info (  "%s" % pdfcmd )
+        self.logger.error (  "%s" % pdfcmd )
         output=subprocess.getoutput(pdfcmd )
         self.logger.debug ( output )
 

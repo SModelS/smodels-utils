@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: sparticleNames
@@ -10,6 +10,7 @@
 """
 
 from __future__ import print_function
+import sys
 
 class SParticleNames:
     """ a class that assigns names to sparticles """
@@ -54,22 +55,36 @@ class SParticleNames:
     def rootColor( self, name ):
         """ find the default colors for <name>, ROOT version """
         from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
-        colors = { "orange": kGreen+3, "blue": kBlue+3, "red": kRed+2,
-                   "black": kBlack }
-        c = self.texColor ( name )
+        colors = { "orange": kOrange+3, "blue": kBlue+3, "red": kRed+2,
+                   "black": kBlack, "green": kGreen+3 }
+        c = self.namedColor ( name )
         return colors[c]
 
-    def texColor ( self, name ):
+    def rgbColor( self, name ):
+        """ find the default colors for <name>, rgb version """
+        colors = { "orange": "#d57f28", "blue": "#0000cc", "red": "#ff0000",
+                   "black": "#000000", "green": "#009900" }
+        c = self.namedColor ( name )
+        return colors[c]
+
+    def texColor( self, name ):
+        """ find the default colors for <name>, rgb version """
+        colors = { "orange": "{.4,.4,.1}", "blue": "{0,0,0.5}", "red": "{.5,0,0}",
+                   "black": "{0,0,0}", "green": "{0,.5,0}" }
+        c = self.namedColor ( name )
+        # \color[rgb]{0,0,.5}\
+        return f"\\color[rgb]{colors[c]}"
+
+    def namedColor ( self, pid ):
         """ find the default colors for <name>, latex version 
         name can be an integer/pid, or a string/name. In case of a string,
         we will find the according pid.
         """
-        pid = name
-        if type(name)==str:
-            if not name in self.names:
+        if type(pid)==str:
+            if not pid in self.names:
                 print ( "[sparticleNames.texColor] %s not in names" % name )
                 sys.exit(-1)
-            pid = self.names[name]
+            pid = self.names[pid]
         pid = abs(pid)
         if pid in [ 1000001, 1000002, 1000003, 1000004, \
                     2000001, 2000002, 2000003, 2000004 ]:
@@ -155,12 +170,59 @@ class SParticleNames:
         """ rootify <name>, currently not doing anything """
         return name
 
-    def rootName ( self, pid ):
-        """ format the name for ROOT """
-        return self.rootify ( self.name ( pid ) )
+    def htmlify ( self, name, addBrackets ):
+        """ htmlify <name> """
+        import re
+        m = re.search ( "_{[A-Za-z]*}", name)
+        html = name
+        if m != None:
+            repl = html[m.start()+2:m.end()-1]
+            html = html[:m.start()]+"<sub>"+repl+"</sub>"+html[m.end():]
 
-    def name ( self, pid ):
+        m = re.search ( "\^{[0-9\s]*}", html)
+        if m != None:
+            repl = html[m.start()+2:m.end()-1]
+            html = html[:m.start()]+"<sup>"+repl+"</sup>"+html[m.end():]
+
+        if addBrackets:
+            html = f"({html})"
+        html = html.replace("#bar{X}","x&#772;" )
+
+        return html
+
+    def rootName ( self, pid, addSign = False ):
+        """ format the name for ROOT """
+        return self.rootify ( self.name ( pid, addSign ) )
+
+    def htmlName ( self, pid, addSign=False, addBrackets = False ):
+        """ format the name for html """
+        return self.htmlify ( self.name ( pid, addSign ), addBrackets )
+
+    def texName ( self, pid, addSign=False, addDollars = False, addBrackets = False ):
+        """ format the name for tex """
+        n = self.name ( pid, addSign )
+        n = n.replace ( "#", "\\" )
+        if addSign:
+            if "+-" in n:
+                n = n.replace("+-","" )
+                n += "^{\\pm}"
+        if addDollars:
+            n = "$" + n + "$"
+        if addBrackets:
+            n = "(" + n + ")"
+        return n
+
+    def name ( self, pid, addSign=False ):
         """ get the name for a particle id """
+        if type(pid) in [ tuple, set, list ]:
+            ret=[]
+            for p in pid:
+                ret.append ( self.name ( p, addSign ) )
+            return ", ".join ( ret )
+
+        if type(pid) == str and pid.startswith("+-"):
+            n = self.name(int(pid[2:]))
+            return "+-"+n
         if not pid in self.ids and not abs(pid) in self.ids:
             return str(pid)
         if not pid in self.ids:
