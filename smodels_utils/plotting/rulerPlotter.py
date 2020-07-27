@@ -13,6 +13,8 @@ from __future__ import print_function
 
 import os, math, sys, tempfile
 import logging
+import pyslha
+from smodels_utils.helper.sparticleNames import SParticleNames
 
 def setLogLevel ( logger, verbose ):
     if "err" in verbose:
@@ -55,64 +57,6 @@ def _squarkname ( Type, postfix ):
         ret+="_{%s}" % postfix
     return ret
 
-def _color ( name ):
-    """ different colors for different particle types """
-    from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
-    Dict={ "~chi":kGreen+3,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
-        "~g":kRed+2,"~q":kBlue+3,"~u":kBlue+3,"~d":kBlue+3,"~c":kBlue+3,
-        "~s":kBlue+3,"~t":kBlue+2,"~b":kBlue+2,"~e":kOrange+2,"~l":kOrange+2 }
-    for (mname,color) in Dict.items():
-        if name.find(mname)==0: return color
-    return kBlack
-
-def _pprint ( name ):
-    """ find ROOT.TLatex names for various common names used in
-      the comments in slha files  """
-    Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{#pm}", "Hp":"H^{#pm}",
-        "H2":"H^{2}", "H":"H", "h":"h", "~e":"#tilde{e}",
-        "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
-        "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
-        "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
-        "~chi20":"#tilde{#chi}^{0}_{2}", "~chi30":"#tilde{#chi}^{0}_{3}",
-        "~chi40":"#tilde{#chi}^{0}_{4}", "~chi50":"#tilde{#chi}^{0}_{5}",
-        "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
-        "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
-        "~chi4+":"#tilde{#chi}^{+}_{4}"
-    }
-
-    if name in Dict.keys (): 
-        return Dict[name]
-    ## allow curly brackets in name
-    rawname=name.replace("{","").replace("}","")
-    if rawname in Dict.keys (): 
-        return Dict[rawname]
-
-    if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
-    if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
-    if name.find("~nu_tau")==0: return "#tilde{#nu}_{#tau}"
-    if name.find("~d")==0: return _squarkname("d",name[2:])
-    if name.find("~u")==0: return _squarkname("u",name[2:])
-    if name.find("~s")==0: return _squarkname("s",name[2:])
-    if name.find("~c")==0: return _squarkname("c",name[2:])
-    if name.find("~t")==0: return _squarkname("t",name[2:])
-    if name.find("~b")==0: return _squarkname("b",name[2:])
-
-    if name.find("~")>-1:
-        w=name.replace("~","#tilde{")
-        w=w.replace("chi40", "chi^{0}_{4}" )
-        w=w.replace("chi30", "chi^{0}_{3}" )
-        w=w.replace("chi20", "chi^{0}_{2}" )
-        w=w.replace("chi10", "chi^{0}_{1}" )
-        w=w.replace("chi1+", "chi^{+}_{1}" )
-        w=w.replace("chi2+", "chi^{+}_{2}" )
-        w=w.replace("L", "_{L}" )
-        w=w.replace("R", "_{R}" )
-        w=w.replace("1", "_{1}" )
-        w=w.replace("2", "_{2}" )
-        w=w.replace("chi", "#chi" )
-        name=w+"}"
-    return name
-
 def createDictionaryFromSLHA ( inputfile ):
     import pyslha
     print ( "creating dictionary" )
@@ -122,9 +66,11 @@ class RulerPlot:
     """ a class that encapsulates a horizontal ruler plot """
     def __init__ ( self, inputfile="masses.txt", outputfile="out", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True,
-           interactive = False, hasResultsFor = None, verbosity="info" ):
+           interactive = False, hasResultsFor = None, verbosity="info", 
+           susy=False ):
         """
         :param mergesquark: if True, merge squarks FIXME
+        :param susy: use SUSY particle names
         """
         self.inputfile = inputfile
         self.outputfile = outputfile
@@ -136,8 +82,20 @@ class RulerPlot:
         self.verbosity = verbosity
         self.logger=logging.getLogger("RulerPlot")
         self.interactive = interactive
+        self.susy = susy
 
     def squarkname ( self, Type, postfix, withDollars ):
+        """ latex squark name """
+        if self.susy:
+            return self.squarknameSUSY ( Type, postfix, withDollars )
+        ret="X_{%s}" % Type
+        if len(postfix)>0:
+            ret+="_{%s}" % postfix
+        if withDollars:
+            ret = "$" + ret + "$"
+        return ret
+
+    def squarknameSUSY ( self, Type, postfix, withDollars ):
         """ latex squark name """
         ret="\\tilde{%s}" % Type
         if len(postfix)>0:
@@ -146,7 +104,7 @@ class RulerPlot:
             ret = "$" + ret + "$"
         return ret
 
-    def pprint ( self, name, withDollars=True ):
+    def pprintSUSY ( self, name, withDollars=True ):
         """ latex names for various common names used in
           the comments in slha files  """
         Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{\\pm}", "Hp":"H^{\\pm}",
@@ -185,7 +143,68 @@ class RulerPlot:
         if name.find("~b")==0: return self.squarkname("b",name[2:],withDollars)
 
         if name.find("~")>-1:
+            # w=name.replace("~","X_{")
             w=name.replace("~","\\tilde{")
+            w=w.replace("chi40", "chi^{0}_{4}" )
+            w=w.replace("chi30", "chi^{0}_{3}" )
+            w=w.replace("chi20", "chi^{0}_{2}" )
+            w=w.replace("chi10", "chi^{0}_{1}" )
+            w=w.replace("chi1+", "chi^{+}_{1}" )
+            w=w.replace("chi2+", "chi^{+}_{2}" )
+            w=w.replace("L", "_{L}" )
+            w=w.replace("R", "_{R}" )
+            w=w.replace("1", "_{1}" )
+            w=w.replace("2", "_{2}" )
+            w=w.replace("chi", "\\chi" )
+            name=w+"}"
+        if withDollars:
+            name = "$" + name + "$"
+        return name
+
+    def pprint ( self, name, withDollars=True ):
+        """ latex names for various common names used in
+          the comments in slha files  """
+        if self.susy:
+            return self.pprintSUSY ( name, withDollars )
+
+        Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{\\pm}", "Hp":"H^{\\pm}",
+            "H2":"H^{2}", "H":"H", "h":"h", "~e":"\X{e}",
+            "~g":"\X{g}", "~mu":"\X{\\mu}", "~mu_L":"\X{\\mu}_{L}",
+            "~mu_R":"\X{\\mu}_{R}", "~e_L":"\X{e}_{L}","~e_R":"\X{e}_{R}",
+            "~tau_L":"\X{\\tau}_{L}","~tau_R":"\X{\\tau}_{R}",
+            "~chi20":"\X{\\chi}^{0}_{2}", "~chi30":"\X{\\chi}^{0}_{3}",
+            "~chi40":"\X{\\chi}^{0}_{4}", "~chi50":"\X{\\chi}^{0}_{5}",
+            "~chi10":"\X{\\chi}^{0}_{1}", "~chi1+":"\X{\\chi}^{+}_{1}",
+            "~chi2+":"\X{\\chi}^{+}_{2}", "~chi3+":"\X{\\chi}^{+}_{3}",
+            "~chi4+":"\X{\\chi}^{+}_{4}"
+        }
+
+        if name in Dict.keys (): 
+            ret = Dict[name]
+            if withDollars:
+                ret = "$" + ret + "$"
+            return ret
+        # allow curly brackets in name
+        rawname=name.replace("{","").replace("}","")
+        if rawname in Dict.keys (): 
+            ret = Dict[rawname]
+            if withDollars:
+                ret = "$" + ret + "$"
+            return ret
+
+        if name.find("~nu_e")==0: return "\X{\\nu}_{e}"
+        if name.find("~nu_mu")==0: return "\X{\\nu}_{\\mu}"
+        if name.find("~nu_tau")==0: return "\X{\\nu}_{\\tau}"
+        if name.find("~d")==0: return self.squarkname("d",name[2:],withDollars)
+        if name.find("~u")==0: return self.squarkname("u",name[2:],withDollars)
+        if name.find("~s")==0: return self.squarkname("s",name[2:],withDollars)
+        if name.find("~c")==0: return self.squarkname("c",name[2:],withDollars)
+        if name.find("~t")==0: return self.squarkname("t",name[2:],withDollars)
+        if name.find("~b")==0: return self.squarkname("b",name[2:],withDollars)
+
+        if name.find("~")>-1:
+            # w=name.replace("~","X_{")
+            w=name.replace("~","\X{")
             w=w.replace("chi40", "chi^{0}_{4}" )
             w=w.replace("chi30", "chi^{0}_{3}" )
             w=w.replace("chi20", "chi^{0}_{2}" )
@@ -387,7 +406,8 @@ def drawVertical ( inputfile="masses.txt", outputfile="out", Range=(None,None),
 
     tm = ROOT.TLatex()
     tm.SetNDC()
-    tm.DrawLatex(.0,.03,"#splitline{  m}{[GeV]}" )
+    tm.DrawLatex(.0,.005,"m [GeV]" )
+    # tm.DrawLatex(.0,.03,"#splitline{  m}{[GeV]}" )
 
     lines=[]
 
@@ -427,9 +447,10 @@ def drawVertical ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         sortedmasses.append((m,name))
     sortedmasses.sort()
 
+    namer = SParticleNames ( susy=False )
     for ctr,(m,name) in enumerate(sortedmasses):
         y=(abs(m)-minvalue)/(maxvalue-minvalue)
-        col=_color (name )
+        col= namer.rootColor (name )
         l=ROOT.TLine(xline0,y,xline1,y)
         l.SetLineWidth(3)
         l.SetLineColor(col)
@@ -461,7 +482,8 @@ def drawVertical ( inputfile="masses.txt", outputfile="out", Range=(None,None),
                 xm=coord[2]+2*offset
         """
         t.SetTextColor(col)
-        label = _pprint(name)
+        namer = SParticleNames( susy = False )
+        label = namer.rootify ( name )
         label = "#font[32]{%s}" % label
         t.DrawLatex(x+dx,y-.01,label )
         lctr=0
@@ -532,30 +554,23 @@ def convertSLHAFile ( inputfile, collapse_squarks ):
     outfile = "/tmp/masses.txt"
     logger=logging.getLogger(__name__)
     logger.info ( "now converting slha file %s to %s" % (inputfile, outfile) )
-    import pyslha
-    from smodels_utils.helper.sparticleNames import SParticleNames
-    namer = SParticleNames()
+    namer = SParticleNames( susy = False )
     f = pyslha.read ( inputfile )
     m = f.blocks["MASS"]
     keys = m.keys()
     D={}
     for key in keys:
         mass = m[key]
-        name = namer.name ( key )
-        n = name.replace( "_R", "_{R}" ).replace ( "_L", "_{L}" )
-        n = n.replace ( "_1", "_{1}" ).replace ( "_2", "_{2}" )
-        n = n.replace ( "h+", "H^{+}" )
-        n = n.replace ( "a0", "A^{0}" )
-        n = n.replace ( "h1", "H" )
-        n = n.replace ( "h2", "h" )
-        if n in [ "W", "b", "H", "Z" ]: ## skip SM particles
+        name = namer.rootName ( key )
+        if namer.isSM ( key ): ## skip SM particles
             continue
         if collapse_squarks: ## sum up all squarks
             if namer.particleType ( key ) == "q":
-                n="~q"
-        D[n]=mass
+                name=name.rootName ( 1000001 )
+        D[name]=mass
     g=open ( "/tmp/masses.txt", "w" )
     g.write ( str(D) )
+    g.write ( "\n" )
     g.close()
     return outfile
 

@@ -2,7 +2,7 @@
 
 """
 .. module:: sparticleNames
-        :synopsis: assign sparticle names to pids ( 1000021 <-> ~g, ... ),
+        :synopsis: assign sparticle names to pids ( 1000021 <-> ~g or Xg, ... ),
         pids to names, categorizes particles, etc.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -13,17 +13,10 @@ from __future__ import print_function
 
 class SParticleNames:
     """ a class that assigns names to sparticles """
-    def __init__ ( self ):
-        """ Defines the ids and the names """
-        self.ids={
-            1: "u", 2: "d", 3: "s", 4: "c", 5: "b", 6: "t", 11: "e-", 13: "mu-", 
-            15: "tau-", 12: "nu", 14: "nu", 16:"nu", 21: "g", 22: "gamma", 
-            24: "W", 23:"Z", 25:"h1", 35: "h2", 36: "a0", 37: "h+", 
-            -15: "tau+", -13: "mu+", -11: "e:", -37: "h-", -24: "W-",
-            -23: "Z", -25: "h1", -35: "h2", -36: "a0", -22: "gamma",
-            -21: "g", -16: "nu", -14: "nu", -12: "nu", -1: "u",
-            -2: "d", -3: "s", -4: "c", -5: "b", -6: "t",
-            1000001: "~d_L", 2000001: "~d_R",
+
+    def initSUSY ( self ):
+        """ define the SUSY notation """
+        self.susyIDs = { 1000001: "~d_L", 2000001: "~d_R",
             1000002: "~u_L", 2000002: "~u_R",
             1000003: "~s_L", 2000003: "~s_R",
             1000004: "~c_L", 2000004: "~c_R",
@@ -55,9 +48,95 @@ class SParticleNames:
             -1000024: "~chi1-", -1000023: "~chi20",
             -1000037: "~chi2-",- 1000025: "~chi30",
         }
+
+        self.ids.update ( self.susyIDs )
+
+    def rootColor( self, name ):
+        """ find the default colors for <name> """
+        from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
+        colors = { "Z": kGreen+3, "W": kGreen+3, "tau": kOrange+2, "mu": kOrange+2,
+                   "nu": kOrange+2, "g": kRed+2, "t": kBlue+3, "b": kBlue+3,
+                   "e": kOrange+2, "l": kOrange+2, "q": kBlue+3, "d": kBlue+3,
+                   "u": kBlue+3, "c": kBlue+3, "s": kBlue+3 }
+        for k,v in colors.items():
+            if k in name:
+                return v
+        return kBlack
+
+
+    def initXIDs ( self ):
+        """ define the X notation """
+        self.xIDs = { 1000001: "X_{d}", 2000001: "X_{d}^{2}",
+            1000002: "X_{u}", 2000002: "X_{u}^{2}",
+            1000003: "X_{s}", 2000003: "X_{s}^{2}",
+            1000004: "X_{c}", 2000004: "X_{c}^{2}",
+            1000005: "X_{b}", 2000005: "X_{b}^{2}",
+            1000006: "X_{t}", 2000006: "X_{t}^{2}",
+            1000011: "X_{e}", 1000012: "X_{nu}^{e}",
+            1000013: "X_{mu}", 1000014: "X_{nu}^{mu}",
+            1000015: "X_{tau}", 1000016: "X_{nu}^{tau}",
+            2000011: "X_{e}", 2000012: "X_{nu}^{e}",
+            2000013: "X_{mu}", 2000014: "X_{nu}^{mu}",
+            2000015: "X_{tau}", 2000016: "X_{nu}^{tau}",
+            1000021: "X_{g}", 1000022: "X_{Z}^{1}",
+            1000024: "X_{W}", 1000023: "X_{Z}^{2}",
+            1000037: "X_{W}^{2}", 1000025: "X_{Z}^{3}",
+            1000035: "X_{Z}^{3}",
+            -1000001: "#bar{X}_{d}", -2000001: "#bar{X}_{d}^{2}",
+            -1000002: "#bar{X}_{u}", -2000002: "#bar{X}_{u}^{2}",
+            -1000003: "#bar{X}_{s}", -2000003: "#bar{X}_{s}^{2}",
+            -1000004: "#bar{X}_{c}", -2000004: "#bar{X}_{c}^{2}",
+            -1000005: "#bar{X}_{b}", -2000005: "#bar{X}_{b}^{2}",
+            -1000006: "#bar{X}_{t}", -2000006: "#bar{X}_{t}^{2}",
+            -1000011: "#bar{X}_{e}", -1000012: "#bar{X}_{nu}^{e}",
+            -1000013: "#bar{X}_{mu}", -1000014: "#bar{X}_{nu^{mu}",
+            -1000015: "#bar{X}_{tau}", -1000016: "#bar{X}_{nu}^{tau}",
+            -2000011: "#bar{X}_{e}", -2000012: "#bar{X}_{nu}^{e}",
+            -2000013: "#bar{X}_{mu}", -2000014: "#bar{X}_{nu}^{mu}",
+            -2000015: "#bar{X}_{tau}", -2000016: "#bar{X}_{nu}^{tau}",
+            -1000021: "#bar{X}_{g}", -1000022: "#bar{X}_{Z}^{1}",
+            -1000024: "#bar{X}_{W}", -1000023: "#bar{X}_{Z}^{2}",
+            -1000037: "#bar{X}_{W}^{2}", -1000025: "~#bar{X}_{Z}^{3}",
+            -1000035: "#bar{X}_{Z}^{3}"
+        }
+        self.ids.update ( self.xIDs )
+
+    def __init__ ( self, susy=False ):
+        """ Defines the ids and the names
+        :param susy: use SUSY notation
+        """
+        self.susy = susy
+        self.ids={
+            1: "u", 2: "d", 3: "s", 4: "c", 5: "b", 6: "t", 11: "e-", 13: "mu-",
+            15: "tau-", 12: "nu", 14: "nu", 16:"nu", 21: "g", 22: "gamma",
+            24: "W", 23:"Z", 25:"h1", 35: "h2", 36: "a0", 37: "h+",
+            -15: "tau+", -13: "mu+", -11: "e:", -37: "h-", -24: "W-",
+            -23: "Z", -25: "h1", -35: "h2", -36: "a0", -22: "gamma",
+            -21: "g", -16: "nu", -14: "nu", -12: "nu", -1: "u",
+            -2: "d", -3: "s", -4: "c", -5: "b", -6: "t" }
+        if self.susy:
+            self.initSUSY()
+        else:
+            self.initXIDs()
+
+        ## make sure the inversions are defined as well
         self.names={}
         for (key,value) in self.ids.items():
                 self.names[value]=key
+
+    def isSM ( self, pid ):
+        """ is pid a standard model pid? """
+        if abs(pid)<100000:
+            return True
+        return False
+
+    def rootify ( self, name ):
+        """ rootify <name>, currently not doing anything """
+        return name
+
+    def rootName ( self, pid ):
+        """ format the name for ROOT """
+        return self.rootify ( self.name ( pid ) )
 
     def name ( self, pid ):
         """ get the name for a particle id """
@@ -130,7 +209,7 @@ class SParticleNames:
 
     def toHtml ( self, name ):
         """ translate particle names to html code """
-        #if name=="~chi2+": 
+        #if name=="~chi2+":
         #    name=self.tilde("&chi;")+"xxx" ## sup("+")+"2"#+sub("2")
         #if name=="~chi1+": return self.tilde("&chi;")+"1+" ## sup("+")+"2"#+sub("2")
         #if name=="~chi30": return self.tilde("&chi;")+sup("0")#+sub("2")
@@ -172,8 +251,8 @@ class SParticleNames:
         name=name.replace("t2","t<sub>2</sub>")
         name=name.replace("^*","<sup>*</sup>")
         #name=name.replace("+","<sup>+</sup>")
-        if name.find("~")==0: 
-            if name.find("<su")==-1: 
+        if name.find("~")==0:
+            if name.find("<su")==-1:
                 name=self.tilde(name[1:])
             else:
                 pos=name.find("<su")

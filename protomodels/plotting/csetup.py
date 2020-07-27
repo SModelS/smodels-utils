@@ -40,4 +40,4 @@ def setup( rundir = None, codedir = None ):
             rundir = rundir.replace ( "~", home )
             os.chdir ( rundir )
         return rundir
-    return ""
+    return "./"
