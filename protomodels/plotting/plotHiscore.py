@@ -312,8 +312,11 @@ def writeTex ( protomodel, keep_tex ):
 
     ssm = {}
     for v,pids in cpids.items():
-        pname = namer.texName ( pids, addSign = True )
-        ssm[v] = pname
+        sp = []
+        for pairs in pids:
+            pname = namer.texName ( pairs, addSign = True, addBrackets=True )
+            sp.append ( pname )
+        ssm[v] = ", ".join ( sp )
 
     particleContributionList = ""
     if hasattr ( protomodel, "particleContributions" ):

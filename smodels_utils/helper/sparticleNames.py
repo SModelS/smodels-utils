@@ -173,14 +173,18 @@ class SParticleNames:
     def htmlify ( self, name, addBrackets ):
         """ htmlify <name> """
         import re
-        m = re.search ( "_{[A-Za-z]*}", name)
         html = name
-        if m != None:
+        while True:
+            m = re.search ( "_{[A-Za-z]*}", html)
+            if m == None:
+                break
             repl = html[m.start()+2:m.end()-1]
             html = html[:m.start()]+"<sub>"+repl+"</sub>"+html[m.end():]
 
-        m = re.search ( "\^{[0-9\s]*}", html)
-        if m != None:
+        while True:
+            m = re.search ( "\^{[0-9\s]*}", html)
+            if m == None:
+                break
             repl = html[m.start()+2:m.end()-1]
             html = html[:m.start()]+"<sup>"+repl+"</sup>"+html[m.end():]
 
