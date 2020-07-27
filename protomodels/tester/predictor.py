@@ -116,11 +116,19 @@ class Predictor:
             f.write ( "[predictor-%s] %s\n" % ( time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def predict ( self, protomodel, sigmacut = 0.02*fb,
-                  strategy = "aggressive"):
-        """ Compute the predictions and statistical variables.
+                  strategy = "aggressive", keep_predictions = False ):
+        """ Compute the predictions and statistical variables, for a
+            protomodel.
 
-        :returns: True
+        :param sigmacut: weight cut on the predict xsecs for theoryPredictions
+        :param strategy: combination strategy, currently only aggressive is used
+        :param keep_predictions: if True, then keep all predictions (in self,
+               not in protomodel!!)
+        :returns: False, if no combinations could be found, else True
         """
+
+        if hasattr ( self, "predictions" ):
+            del self.predictions ## make sure we dont accidentally use old preds
 
         #Create SLHA file (for running SModelS)
         slhafile = protomodel.createSLHAFile()
@@ -138,6 +146,9 @@ class Predictor:
         # now use all prediction with likelihood values to compute the Z of the model
         predictions = self.runSModelS( slhafile, sigmacut, allpreds=True,
                                                llhdonly=True )
+
+        if keep_predictions:
+            self.predictions = predictions
 
         # Compute significance and store in the model:
         self.computeSignificance( protomodel, predictions, strategy )
