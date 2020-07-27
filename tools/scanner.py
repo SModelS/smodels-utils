@@ -135,7 +135,7 @@ def ssmProcess ( args ):
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, ssm=%.2f (%d events)" % \
                 ( i, ts, ctr, len(ssmrange), ssm, nevents ) )
-        model.predict ( nevents = nevents, recycle_xsecs = True )
+        # model.predict ( nevents = nevents, recycle_xsecs = True )
         predictor.predict ( model ) # #nevents = nevents, recycle_xsecs = True )
         print ( "[scanner:%d-%s]   `- Z=%.3f" % ( i, ts, model.Z ) )
         ret[ssm]=(model.Z,model.rvalues[0])

@@ -123,6 +123,9 @@ def getPidList( pid1, rundir ):
         t = t.replace("1000022","")
         pids.add ( int(t) )
     pids = list ( pids )
+    if len(pids)==0:
+        print ( "[plotLlhds] could not find any llhd*pcl files. Perhaps you wish to perform ../tools/fetchFromClip.py --llhds=" )
+        sys.exit()
     print ( "[plotLlhds] creating plots for pids: %s" % ", ".join ( map(str,pids) ) )
     return pids
 
@@ -475,9 +478,9 @@ class LlhdPlot:
         handles.append ( c )
         if sr == None:
             sr = "UL"
-        plt.title ( "HPD regions, %s [%s]" % ( namer.texName(pid1,True), self.topo ) )
-        plt.xlabel ( "m(%s) [GeV]" % namer.texName(pid1,True) )
-        plt.ylabel ( "m(%s) [GeV]" % namer.texName(self.pid2,True) )
+        plt.title ( "HPD regions, %s [%s]" % ( namer.texName(pid1, addSign=False, addDollars=True), self.topo ) )
+        plt.xlabel ( "m(%s) [GeV]" % namer.texName(pid1,addSign=False, addDollars=True) )
+        plt.ylabel ( "m(%s) [GeV]" % namer.texName(self.pid2, addSign=False, addDollars=True) )
         circ1 = mpatches.Patch( facecolor="gray",alpha=getAlpha("gray"),hatch=r'////',label='excluded', edgecolor="black" )
         handles.append ( circ1 )
         plt.legend( handles=handles, loc="upper left" )
