@@ -122,12 +122,12 @@ def simplifyList ( modes ):
     # print ( "reduced to", ret )
     return ret
 
+"""
 def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
-    """ get the HTML version of particle name
+    get the HTML version of particle name
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
     :param addBrackets: add brackets at beginning and end
-    """
     if type ( pid ) in [ list ]: ## several production modes are given in lists
         pid = simplifyList ( pid )
         ret = ""
@@ -159,12 +159,11 @@ def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
 
 def toLatex ( pid, addDollars=False, addM=False, addSign=False,
               addBrackets = True ):
-    """ get the latex version of particle name
+    get the latex version of particle name
     :param addDollars: add dollars before and after
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
     :param addBrackets: add brackets at beginning and end
-    """
 
     if type ( pid ) in [ list ]: ## several production modes are given in lists
         pid = simplifyList ( pid )
@@ -201,6 +200,7 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False,
     return pname
 
     return str(pid)
+"""
 
 def findLargestExcess ( db ):
     """ find the largest excess in any efficiency map type result

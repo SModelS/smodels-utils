@@ -7,11 +7,11 @@ import IPython
 import numpy as np
 from csetup import setup as gsetup
 gsetup()
-from tools.helpers import getParticleName, toLatex
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
+from smodels_utils.helper.sparticleNames import SParticleNames
 matplotlib.rcParams['hatch.linewidth'] = .5  # previous svg hatch linewidth
 
 def integrateLlhds ( Z, RMAX, rthreshold ):
@@ -343,6 +343,7 @@ class LlhdPlot:
         handles = []
         existingPoints = []
         combL = {}
+        namer = SParticleNames ( susy = False )
         for ctr,ana in enumerate ( anas ): ## loop over the analyses
             if ctr >= self.max_anas:
                 self.pprint ( "too many (%d > %d) analyses." % (len(anas),self.max_anas) )
@@ -474,9 +475,9 @@ class LlhdPlot:
         handles.append ( c )
         if sr == None:
             sr = "UL"
-        plt.title ( "HPD regions, %s [%s]" % ( toLatex(pid1,True), self.topo ) )
-        plt.xlabel ( "m(%s) [GeV]" % toLatex(pid1,True) )
-        plt.ylabel ( "m(%s) [GeV]" % toLatex(self.pid2,True) )
+        plt.title ( "HPD regions, %s [%s]" % ( namer.texName(pid1,True), self.topo ) )
+        plt.xlabel ( "m(%s) [GeV]" % namer.texName(pid1,True) )
+        plt.ylabel ( "m(%s) [GeV]" % namer.texName(self.pid2,True) )
         circ1 = mpatches.Patch( facecolor="gray",alpha=getAlpha("gray"),hatch=r'////',label='excluded', edgecolor="black" )
         handles.append ( circ1 )
         plt.legend( handles=handles, loc="upper left" )
