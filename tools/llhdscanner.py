@@ -335,8 +335,8 @@ def main ():
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-1', '--pid1',
-            help='pid1 [1000021]',
-            type=int, default=1000021 )
+            help='pid1 [1000006]',
+            type=int, default=1000006 )
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
@@ -394,7 +394,7 @@ def main ():
     if args.pid1 == 0:
         pid1s = findPids( rundir )
     for pid1 in pid1s:
-        scanner = LlhdScanner( protomodel, pid1, args.pid2, nproc, args.rundir )
+        scanner = LlhdScanner( protomodel, pid1, args.pid2, nproc, rundir )
         args.pid1 = pid1
         args = scanner.overrideWithDefaults ( args )
         scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1,
