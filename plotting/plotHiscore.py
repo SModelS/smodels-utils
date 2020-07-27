@@ -11,6 +11,7 @@ from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
+from smodels_utils.helper.sparticleNames import SParticleNames
 from tools import helpers
 
 runtime._experimental = True
@@ -111,6 +112,7 @@ def writeRawNumbersHtml ( protomodel ):
     if hassigs:
         f.write("<th>Signal</th>" )
     f.write("\n</tr>\n" )
+    namer = SParticleNames ( susy = False )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         idAndUrl = anaNameAndUrl ( tp )
@@ -146,7 +148,7 @@ def writeRawNumbersHtml ( protomodel ):
             obsN = dI.observedN
             if ( obsN - int(obsN) ) < 1e-6:
                 obsN=int(obsN)
-            particles = helpers.toHtml ( pids, addSign = False,
+            particles = namer.htmlName ( pids, addSign = False,
                                           addBrackets = False )
             f.write ( '<td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
                       ( did, obsN, eBG, bgErr, S, particles ) )
@@ -175,8 +177,9 @@ def writeRawNumbersHtml ( protomodel ):
                             pids.add ( abs(pid) )
                         if type(pid) in [ list, tuple ] and abs(pid[0])!=1000022:
                             pids.add ( abs(pid[0]) )
-            particles = helpers.toHtml ( pids, addSign = False,
-                                          addBrackets = False )
+            #particles = helpers.toHtml ( pids, addSign = False,
+            #                              addBrackets = False )
+            particle = namer.htmlName ( pids, addSign = False, addBrackets = False )
             f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
                     ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles ) )
             if hassigs:
@@ -197,6 +200,7 @@ def writeRawNumbersLatex ( protomodel ):
     f.write("\\begin{tabular}{l|c|r|r|c|r}\n" )
     f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Part}  \\\\\n" )
     f.write("\\hline\n" )
+    namer = SParticleNames ( susy = False )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         dtype = tp.dataType()
@@ -234,7 +238,7 @@ def writeRawNumbersLatex ( protomodel ):
                             p = abs(pid[0])
                             if p!=1000022:
                                 pids.add ( p )
-            particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
+            particles = namer.texName ( pids, addDollars=True, addSign = False, 
                                           addBrackets = False )
             obs = dI.observedN
             if obs == 0.:
@@ -263,8 +267,8 @@ def writeRawNumbersLatex ( protomodel ):
                             for p in pid:
                                 if type(p)==int and abs(p)!=1000022:
                                     pids.add ( abs(p) )
-            particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
-                                          addBrackets = False )
+            particles = namer.texName ( pids, addDollars=True, addSign = False,
+                                        addBrackets = False )
             print ( "  `- observed %s, expected %s" % ( tp.upperLimit, tp.expectedUL ) )
             f.write ( " & %.1f fb & %.1f fb & %s & %s \\\\ \n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles  ) )
     f.write("\end{tabular}\n" )
@@ -294,6 +298,7 @@ def writeTex ( protomodel, keep_tex ):
     frozen = protomodel.frozenParticles()
     xsecs = protomodel.getXsecs()[0]
     ssms = getUnfrozenSSMs ( protomodel, frozen, False )
+    namer = SParticleNames ( susy = False )
     for pids,v in ssms.items():
         xsec = findXSecOfPids ( xsecs, pids )
         if xsec < 0.001 * fb: ## only for xsecs we care about
@@ -307,7 +312,7 @@ def writeTex ( protomodel, keep_tex ):
 
     ssm = {}
     for v,pids in cpids.items():
-        pname = helpers.toLatex ( pids, addSign = True )
+        pname = namer.texName ( pids, addSign = True )
         ssm[v] = pname
 
     particleContributionList = ""
@@ -335,7 +340,7 @@ def writeTex ( protomodel, keep_tex ):
     else:
         print ( "[plotHiscore] protomodel has no ``particleContributions'' defined." )
 
-    import tex2png
+    from tools import tex2png
     src = getExtremeSSMs ( ssm, largest=True, nm = 7 )
     src += "\\\\"
     nsmallest = min( 7, len(ssm)-7 )
@@ -494,6 +499,7 @@ def writeIndexHtml ( protomodel ):
         https://smodels.github.io/protomodels/
     """
     ssm = []
+    namer = SParticleNames ( susy = False )
     frozen = protomodel.frozenParticles()
     ssms = getUnfrozenSSMs ( protomodel, frozen, False )
     for k,v in ssms.items():
@@ -515,16 +521,16 @@ def writeIndexHtml ( protomodel ):
             ( dotlessv, dbver, strategy, strategy, protomodel.walkerid, protomodel.step ) )
     if hasattr ( protomodel, "particleContributions" ):
         f.write ( "Z plots for: <a href=./M1000022.png?%d>%s</a>" % \
-                  ( dt, helpers.toHtml(1000022) ) )
+                  ( dt, namer.htmlName(1000022) ) )
         for k,v in protomodel.particleContributions.items():
             f.write ( ", " )
-            f.write ( "<a href=./M%d.png?%d>%s</a>" % ( k, dt, helpers.toHtml(k) ) )
+            f.write ( "<a href=./M%d.png?%d>%s</a>" % ( k, dt, namer.htmlName(k) ) )
         f.write ( ". HPD plots for: " )
         first = True
         for k,v in protomodel.particleContributions.items():
             if not first:
                 f.write ( ", " )
-            f.write ( "<a href=./llhd%d.png?%d>%s</a>" % ( k, dt, helpers.toHtml(k) ) )
+            f.write ( "<a href=./llhd%d.png?%d>%s</a>" % ( k, dt, namer.htmlName(k) ) )
             first = False
     # fixme replace with some autodetection mechanism
     ossms = { (-1000006,1000006), (1000021,1000021), (-2000006,2000006) }
@@ -551,8 +557,8 @@ def writeIndexHtml ( protomodel ):
         if not first:
             f.write ( ", " )
         f.write ( "<a href=./ssm_%d_%d.png?%d>(%s,%s)</a>" % \
-                  ( pids[0],pids[1], dt, helpers.toHtml(pids[0],addSign=True),
-                    helpers.toHtml(pids[1],addSign=True) ) )
+                  ( pids[0],pids[1], dt, namer.htmlName(pids[0],addSign=True),
+                    namer.htmlName(pids[1],addSign=True) ) )
         first = False
     f.write ( "<br>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )

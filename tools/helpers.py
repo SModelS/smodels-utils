@@ -20,153 +20,22 @@ def seedRandomNumbers ( seed ):
     print ( "[helpers] seeding the random number generators with %d. r=%.3f" % \
             ( seed, r ) )
 
-def getParticleName ( pid, addSign=False, addSMParticles=False, susy = False ):
+
+def getParticleName ( pid, addSign=False, addSMParticles=False, susy = False,
+                      html = True ):
+
     """ get the particle name of pid
     :param addSign: add sign info in name
-    :param addSMParticles: if True, then print also SM particle names
+    :param addSMParticles: if True, then return also SM particle names
     :param susy: use SUSY names
+    :param html: if True, get HTML version
     """
-    if susy:
-        return getParticleNameSUSY ( pid, addSign, addSMParticles )
-    if type ( pid ) in [ list, tuple ]:
-        # a list of pids? latexify them individually and concatenate
-        pids = []
-        for p in pid:
-            if not addSMParticles and type(p) not in [ list, tuple ] and abs(p)<1000000: # skip the SM particles
-                continue
-            pname = getParticleName ( p, addSign, addSMParticles )
-            pids.append ( pname )
-        return "(" + ",".join ( pids ) + ")"
-    names = { 1000001: "XdL", 2000001: "XdR", 1000002: "XuL",
-              2000002: "XuR", 1000003: "XsL", 2000003: "XsR",
-              1000004: "XcL", 2000004: "XcR", 1000005: "Xb1",
-              2000005: "Xb2", 1000006: "Xt1", 2000006: "Xt2",
-              1000011: "XeL", 2000011: "XeR", 1000012: "Xnue",
-              1000013: "XmuL", 2000013: "XmuR", 1000014: "Xnumu",
-              1000015: "XtauL", 2000015: "XtauR", 1000016: "Xnutau",
-              1000021: "Xg", 1000022: "Xchi10", 1000023: "Xchi20",
-              1000025: "Xchi30", 1000035: "Xchi40", 1000024: "Xchi1+",
-              1000037: "Xchi2+", 2000021: "Xg2", 3000006: "Xt3",
-              -1000001: "XdLbar", -2000001: "XdRbar", -1000002: "XuLbar",
-              -2000002: "XuRbar", -1000003: "XsLbar", -2000003: "XsRbar",
-              -1000004: "XcLbar", -2000004: "XcRbar", -1000005: "Xb1bar",
-              -2000005: "Xb2bar", -1000006: "Xt1bar", -2000006: "Xt2bar",
-              -1000011: "XeLbar", -2000011: "XeRbar", -1000012: "Xnuebar",
-              -1000013: "XmuLbar", -2000013: "XmuRbar", -1000014: "Xnumubar",
-              -1000015: "XtauLbar", -2000015: "XtauRbar", -1000016: "Xnutaubar",
-              -1000021: "Xg", -1000022: "Xchi10", -1000023: "Xchi20",
-              -2000021: "Xg", -3000006: "Xt3bar",
-              -1000025: "Xchi30", -1000035: "Xchi40", -1000024: "Xchi1-",
-              -1000037: "Xchi2-", "+-2000006": "Xt2^{(*)}",
-              "+-1000006": "Xt1^{(*)}", "+-?000006": "Xt_{i}^{(*)}",
-              "+-1000024": "Xchi1^{\pm}", "+-1000005": "Xb1^{(*)}",
-              "+-2000005": "Xb2^{(*)}", "+-?000005": "Xb_{i}^{(*)}",
-              "+-1000001": "XdL^{(*)}",
-              "+-2000001": "XdR^{(*)}", "+-?000001": "Xd_{i}^{(*)}",
-              "+-1000002": "XuL^{(*)}",
-              "+-2000002": "XuR^{(*)}", "+-?000002": "Xu_{i}^{(*)}",
-              "+-1000003": "XsL^{(*)}",
-              "+-2000003": "XsR^{(*)}", "+-?000003": "Xs_{i}^{(*)}",
-              "+-1000004": "XcL^{(*)}",
-              "+-2000004": "XcR^{(*)}", "+-?000004": "Xc_{i}^{(*)}",
-              "+-3000006": "Xt3^{(*)}", "+-1000015": "Xtau_{1}^{(*)}",
-              "+-1000011": "Xe_{1}^{(*)}", "+-1000013": "Xmu_{1}^{(*)}",
-              "+-1000037": "Xchi2^{\pm}"
-              }
-    if addSMParticles:
-        SMnames = { 1: "d", 2: "u", 3: "s", 4: "c", 5: "b", 6: "t",
-                    11: "e", 13: "mu", 15: "tau", 12: "nue", 14: "numu",
-                    16: "nutau", 21: "g", 22: "photon", 23: "Z", 25: "higgs",
-                    24: "W" }
-        import copy
-        cp = copy.deepcopy ( SMnames )
-        for k,v in cp.items():
-            SMnames[-k]=v+"-"
-            if k in [1,2,3,4,5,6,12,14,16]:
-                SMnames[-k]=v+"bar"
-
-    if not addSign:
-        pid = abs(pid)
-    if pid in names:
-        ret = names[pid]
-        return ret
-    if True:
-        print ( "[helpers] could not find pid %s" % pid )
-        # sys.exit()
-    return str(pid)
-
-
-def getParticleNameSUSY ( pid, addSign=False, addSMParticles=False ):
-    """ get the particle name of pid
-    :param addSign: add sign info in name
-    :param addSMParticles: if True, then print also SM particle names
-    """
-    if type ( pid ) in [ list, tuple ]:
-        # a list of pids? latexify them individually and concatenate
-        pids = []
-        for p in pid:
-            if not addSMParticles and type(p) not in [ list, tuple ] and abs(p)<1000000: # skip the SM particles
-                continue
-            pname = getParticleName ( p, addSign, addSMParticles )
-            pids.append ( pname )
-        return "(" + ",".join ( pids ) + ")"
-    names = { 1000001: "~dL", 2000001: "~dR", 1000002: "~uL",
-              2000002: "~uR", 1000003: "~sL", 2000003: "~sR",
-              1000004: "~cL", 2000004: "~cR", 1000005: "~b1",
-              2000005: "~b2", 1000006: "~t1", 2000006: "~t2",
-              1000011: "~eL", 2000011: "~eR", 1000012: "~nue",
-              1000013: "~muL", 2000013: "~muR", 1000014: "~numu",
-              1000015: "~tauL", 2000015: "~tauR", 1000016: "~nutau",
-              1000021: "~g", 1000022: "~chi10", 1000023: "~chi20",
-              1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
-              1000037: "~chi2+", 2000021: "~g2", 3000006: "~t3",
-              -1000001: "~dLbar", -2000001: "~dRbar", -1000002: "~uLbar",
-              -2000002: "~uRbar", -1000003: "~sLbar", -2000003: "~sRbar",
-              -1000004: "~cLbar", -2000004: "~cRbar", -1000005: "~b1bar",
-              -2000005: "~b2bar", -1000006: "~t1bar", -2000006: "~t2bar",
-              -1000011: "~eLbar", -2000011: "~eRbar", -1000012: "~nuebar",
-              -1000013: "~muLbar", -2000013: "~muRbar", -1000014: "~numubar",
-              -1000015: "~tauLbar", -2000015: "~tauRbar", -1000016: "~nutaubar",
-              -1000021: "~g", -1000022: "~chi10", -1000023: "~chi20",
-              -2000021: "~g", -3000006: "~t3bar",
-              -1000025: "~chi30", -1000035: "~chi40", -1000024: "~chi1-",
-              -1000037: "~chi2-", "+-2000006": "~t2^{(*)}",
-              "+-1000006": "~t1^{(*)}", "+-?000006": "~t_{i}^{(*)}",
-              "+-1000024": "~chi1^{\pm}", "+-1000005": "~b1^{(*)}",
-              "+-2000005": "~b2^{(*)}", "+-?000005": "~b_{i}^{(*)}",
-              "+-1000001": "~dL^{(*)}",
-              "+-2000001": "~dR^{(*)}", "+-?000001": "~d_{i}^{(*)}",
-              "+-1000002": "~uL^{(*)}",
-              "+-2000002": "~uR^{(*)}", "+-?000002": "~u_{i}^{(*)}",
-              "+-1000003": "~sL^{(*)}",
-              "+-2000003": "~sR^{(*)}", "+-?000003": "~s_{i}^{(*)}",
-              "+-1000004": "~cL^{(*)}",
-              "+-2000004": "~cR^{(*)}", "+-?000004": "~c_{i}^{(*)}",
-              "+-3000006": "~t3^{(*)}", "+-1000015": "~tau_{1}^{(*)}",
-              "+-1000011": "~e_{1}^{(*)}", "+-1000013": "~mu_{1}^{(*)}",
-              "+-1000037": "~chi2^{\pm}"
-              }
-    if addSMParticles:
-        SMnames = { 1: "d", 2: "u", 3: "s", 4: "c", 5: "b", 6: "t",
-                    11: "e", 13: "mu", 15: "tau", 12: "nue", 14: "numu",
-                    16: "nutau", 21: "g", 22: "photon", 23: "Z", 25: "higgs",
-                    24: "W" }
-        import copy
-        cp = copy.deepcopy ( SMnames )
-        for k,v in cp.items():
-            SMnames[-k]=v+"-"
-            if k in [1,2,3,4,5,6,12,14,16]:
-                SMnames[-k]=v+"bar"
-
-    if not addSign:
-        pid = abs(pid)
-    if pid in names:
-        ret = names[pid]
-        return ret
-    if True:
-        print ( "[helpers] could not find pid %s" % pid )
-        # sys.exit()
-    return str(pid)
+    # print ( "[helpers] we are asking for name of" ,pid, "addSign", addSign )
+    from smodels_utils.helper import sparticleNames
+    namer = sparticleNames.SParticleNames ( susy = susy )
+    if html:
+        return namer.htmlName ( pid, addSign=addSign )
+    return namer.texName ( pid, addSign = addSign )
 
 def lrEquiv ( l, r ):
     """ check if the two strings are equivalent up to L vs R """
@@ -279,22 +148,13 @@ def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
             pass
         for p in lpid:
             pids.append ( toHtml ( p, addM, addSign ) )
-        ret = ",".join ( pids )
+        ret = ", ".join ( pids )
         if addBrackets:
             ret = "(" + ret + ")"
         return ret
     pname = pid
     if type(pid) in [ int, str ]:
-        pname = getParticleName(pid,addSign)
-    pname = pname.replace("1","<sub>1</sub>" )
-    pname = pname.replace("2","<sub>2</sub>" )
-    pname = pname.replace("L","<sub>L</sub>" )
-    pname = pname.replace("R","<sub>R</sub>" )
-    pname = pname.replace("chi","&chi;" )
-    pname = pname.replace("mu","&mu;" )
-    pname = pname.replace("tau","&tau;" )
-    pname = pname.replace("0","<sup>0</sup>" )
-    pname = pname.replace("bar","<sup>*</sup>" )
+        pname = getParticleName(pid,addSign, html = True )
     return pname
 
 def toLatex ( pid, addDollars=False, addM=False, addSign=False,
@@ -332,27 +192,7 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False,
         return ret
     pname = pid
     if type(pid) in [ int, str ]:
-        pname = getParticleName(pid,addSign)
-    # oldp = pname
-    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}",
-             "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
-             "~nue": "\\tilde{\\nu}_{e}", "~tauL": "\\tilde{\\tau}L",
-             "~numu": "\\tilde{\\nu}_{\\mu}", "~tau1": "\\tilde{\\tau}1",
-             "bar": "^{*}", "~tau2": "\\tilde{\\tau}2",
-             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}",
-             "3": "_{3}", "0": "^{0}", "-": "^{-}" }
-    keys = list ( rpls.keys() )
-    keys.sort(key=len,reverse=True)
-    for kr in keys:
-        vr=rpls[kr]
-        pname = pname.replace(kr,vr)
-    if False and pname.find("~")==0 and pname.find("bar")>0:
-        p1,p2=1,2
-        pname = pname.replace("bar","")
-        pname="\\tilde{"+pname[p1:p2]+"}^{*}"+pname[p2:]
-    if pname.find("~")==0:
-        p1,p2=1,2
-        pname="\\tilde{"+pname[p1:p2]+"}"+pname[p2:]
+        pname = getParticleName(pid, addSign, html = False )
     if addM:
         pname = "m(" + pname + ")"
     if addDollars:
