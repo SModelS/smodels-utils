@@ -23,9 +23,11 @@ def setup( rundir = None, codedir = None ):
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/protomodels/" % codedir )
     if rundir != None:
-        os.chdir ( rundir )
+        if not "/" in rundir[:-1]:
+            rundir = f"/scratch-cbe/users/wolfgan.waltenberger/{rundir}"
         if not rundir.endswith("/"):
             rundir += "/"
+        os.chdir ( rundir )
         return rundir
     home = os.environ["HOME"]
     if os.path.exists ( "./rundir.conf" ):
