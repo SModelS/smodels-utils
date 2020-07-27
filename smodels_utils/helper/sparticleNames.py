@@ -60,11 +60,15 @@ class SParticleNames:
         c = self.namedColor ( name )
         return colors[c]
 
-    def rgbColor( self, name ):
+    def rgbColor( self, name, bold=False ):
         """ find the default colors for <name>, rgb version """
-        colors = { "orange": "#d57f28", "blue": "#0000cc", "red": "#ff0000",
+        boldcolors = { "orange": "#c56f18", "blue": "#000099", "red": "#990000",
+                   "black": "#000000", "green": "#005500" }
+        colors = { "orange": "#e58f38", "blue": "#0000ff", "red": "#ff0000",
                    "black": "#000000", "green": "#009900" }
         c = self.namedColor ( name )
+        if bold:
+            return boldcolors[c]
         return colors[c]
 
     def texColor( self, name ):
