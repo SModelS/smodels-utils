@@ -62,14 +62,23 @@ ul = 3.*fb
 import pyhfInterface
 from pympler import muppy, summary
 import inspect
+import gc
+import importlib
 
-def retrieve_name(var):
+def retrieve_name(var, skip_names=[]):
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
-    return [var_name for var_name, var_val in callers_local_vars if var_val is var]
+    return [var_name for var_name, var_val in callers_local_vars if var_val is var if var_name not in skip_names ]
+
+def objects_by_id(id_):
+    for obj in gc.get_objects():
+        if id(obj) == id_:
+            return obj
+    return None
 
 # ba=[5,7,9]
 # print ( "name", retrieve_name ( ba ) )
 # sys.exit()
+    
 
 for _ in range(10):
     data = pyhfInterface.PyhfData(cbSig, cbJson)
@@ -77,19 +86,25 @@ for _ in range(10):
     print ( _ ) # , gc.get_count() )
     result = ulcomputer.ulSigma()*pb
     lh = ulcomputer.likelihood()
-    # del pyhfInterface
-    # gc.collect()
-    # reload ( pyhfInterface )
 
-    all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    summary.print_(sum1)
+    #all_objects = muppy.get_objects()
+    #sum1 = summary.summarize(all_objects)
+    #summary.print_(sum1)
 
+    #del all_objects, sum1
+
+    #print ( "whats not in gc?" )
     # Get references to certain types of objects such as dataframe
-    lists = [ao for ao in all_objects if isinstance(ao, list)]
-    for l in lists:
-        if len(l)>10000:
-            print ( "list of size %d, name=``%s''" % ( len(l), retrieve_name(l) ) )
+    #lists = [ao for ao in all_objects if isinstance(ao, list)]
+    #for i,address in enumerate(muppy.filter(all_objects, Type=list)):
+    #      in_gc = objects_by_id(address)
+    #      names = retrieve_name(address, skip_names = [ "address" ] )
+    #      if in_gc: continue
+    #      print("not in gc",i, names)
+    #for l in lists:
+    #    if len(l)>100000:
+    #        print ( "list of size %d, name=``%s''" % ( len(l), retrieve_name(l) ) )
+    #        print ( " `- ", l )
             #for i in range(len(l)):
             #    print ( "  `- nr=", i )
             #    print ( "  `- type=", type(l[i]) ) ## str(l).encode("utf-8")[:30] )

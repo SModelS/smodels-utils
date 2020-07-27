@@ -77,4 +77,4 @@ msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'cod
 workspace = pyhf.Workspace(llhdSpec)
 model = workspace.model(modifier_settings=msettings)
 for _ in range(1000):
-    result = pyhf.infer.hypotest(poi, workspace.data(model), model, qtilde=True, return_expected=False)
+    result = pyhf.infer.hypotest( 1., workspace.data(model), model, qtilde=True, return_expected=False)
