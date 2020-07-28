@@ -41,7 +41,7 @@ def obtain ( number, picklefile ):
                 ( number, len(hiscores) ) )
     Z = hiscores[number].Z
     K = hiscores[number].K
-    print ( "[plotHiscore] obtaining #%d: K=%.3f, Z=%.2f" % (number, K, Z ) )
+    print ( "[plotHiscore] obtaining #%d: K=%.3f" % (number, K ) )
     return hiscores[ number ]
 
 def gitCommit ( dest, wanted ):
@@ -57,7 +57,7 @@ def gitCommit ( dest, wanted ):
     return True
 
 def discussPredictions ( protomodel ):
-    print ( "How the Z comes about. Best combo:" )
+    print ( "How the K comes about. Best combo:" )
     combo = protomodel.bestCombo
     for pred in combo:
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
@@ -398,8 +398,8 @@ def writeIndexTex ( protomodel, texdoc ):
             continue
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.tex","w")
-    f.write ( "Our current winner has a score of K=%.2f, Z=%.2f, " % \
-              ( protomodel.K, protomodel.Z ) )
+    f.write ( "Our current winner has a score of K=%.2f, " % \
+              ( protomodel.K ) )
     dbver = "???"
     dotlessv = "???"
     strategy = "aggressive"
@@ -433,27 +433,27 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "\\begin{table}\n" )
         f.write ( "\\begin{center}\n" )
         f.write ( "\\begin{tabular}{l|c|c}\n" )
-        f.write ( "\\bf{Analysis Name} & \\bf{Z(without)} & \\bf{Contribution} \\\\\n" )
+        f.write ( "\\bf{Analysis Name} & \\bf{K(without)} & \\bf{Contribution} \\\\\n" )
         f.write ( "\\hline\n" )
         conts = []
-        dZtot = 0.
+        dKtot = 0.
         contributions = protomodel.analysisContributions.items()
         for k,v in contributions:
             conts.append ( ( v, k ) )
-            dZtot += v
-        dZtot = dZtot * protomodel.Z
-        Zs = {}
+            dKtot += v
+        dKtot = dKtot * protomodel.K
+        Ks = {}
         for k,v in contributions:
-            Zs[k] = ( protomodel.Z - dZtot * v)
+            Ks[k] = ( protomodel.K - dKtot * v)
         conts.sort( reverse=True )
         for v,k in conts:
-            Zwithout= Zs[k]
-            f.write ( "%s & %.2f & %s%s \\\\ \n" % ( k, Zwithout, int(round(100.*v)), "\\%" ) )
+            Kwithout= Ks[k]
+            f.write ( "%s & %.2f & %s%s \\\\ \n" % ( k, Kwithout, int(round(100.*v)), "\\%" ) )
             # f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "\\%" ) )
         # f.write ( "\end{itemize}\n" )
         f.write ( "\\end{tabular}\n" )
         f.write ( "\\end{center}\n" )
-        f.write ( "\\caption{Contributions to the significance Z. Z(without) denotes the Z value obtained in absence of the particular analysis.}\n" )
+        f.write ( "\\caption{Contributions to the test statistic K. K(without) denotes the Z value obtained in absence of the particular analysis.}\n" )
         f.write ( "\\label{tab:analysiscontributions}\n" )
         f.write ( "\\end{table}\n" )
     else:
@@ -511,7 +511,7 @@ def writeIndexHtml ( protomodel ):
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
-    f.write ( "<table><td><h1>Current best protomodel: K=%.2f, Z=%.2f</h1><td><img height=60px src=https://smodels.github.io/pics/banner.png></table>\n" % ( protomodel.K, protomodel.Z ) )
+    f.write ( "<table><td><h1>Current best protomodel: K=%.2f</h1><td><img height=60px src=https://smodels.github.io/pics/banner.png></table>\n" % ( protomodel.K ) )
     f.write ( "</center>\n" )
     dbver = "???"
     dotlessv = "???"
@@ -523,7 +523,7 @@ def writeIndexHtml ( protomodel ):
     f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in walker %d step %d.</b> " % \
             ( dotlessv, dbver, strategy, strategy, protomodel.walkerid, protomodel.step ) )
     if hasattr ( protomodel, "particleContributions" ):
-        f.write ( "Z plots for: <a href=./M1000022.png?%d>%s</a>" % \
+        f.write ( "K plots for: <a href=./M1000022.png?%d>%s</a>" % \
                   ( dt, namer.htmlName(1000022) ) )
         for k,v in protomodel.particleContributions.items():
             f.write ( ", " )
