@@ -12,6 +12,7 @@ from csetup import setup
 from tester.combiner import Combiner
 from tester.predictor import Predictor
 from plotting.plotHiscore import obtain
+from plotting import plotLlhds
 
 def findPids ( rundir ):
     """ search for llhd*pcl files, report the corresponding pids.
@@ -48,7 +49,7 @@ class LlhdThread:
     def pprint ( self, *args ):
         """ pretty print """
         t = time.strftime("%H:%M:%S")
-        line = "[llhdthread%d:%s] %s" % ( self.threadnr, t, " ".join(map(str,args)))
+        line = "[llhdthread%d-%s] %s" % ( self.threadnr, t, " ".join(map(str,args)))
         print ( line )
         with open ( "llhdscan%d.log" % self.pid1, "at" ) as f:
             f.write ( line+"\n" )
@@ -127,7 +128,7 @@ class LlhdThread:
                               ( i1, npid1s, m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )
 
-        for m1 in rpid1:
+        for i1,m1 in enumerate(rpid1):
             self.M.masses[self.pid1]=m1
             self.M.masses[self.pid2]=self.mpid2 ## reset LSP mass
             for k,v in oldmasses.items():
@@ -149,8 +150,8 @@ class LlhdThread:
                 for mu,llhd in llhds.items():
                     nllhds+=len(llhd)
 
-                self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
-                              ( m1, m2, len(llhds), nllhds ) )
+                self.pprint ( "%d/%d rpids: m1 %d, m2 %d, %d mu's, %d llhds." % \
+                              ( i1, len(rpid1), m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )
         return masspoints
 
@@ -405,7 +406,6 @@ def main ():
                                     args.min2, args.max2, args.deltam2, \
                                     args.nevents, args.topo, args.output )
         if args.draw:
-            import plotLlhds
             verbose = args.verbosity
             copy = True
             max_anas = 5
