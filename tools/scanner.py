@@ -345,17 +345,17 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         y_ = Zs[i]
         y0=y_
         if type(y_)==tuple:
+            idx = 2
             if len(y_)==2:
-                print ( "[scanner] rerun ssm scanning" )
-                sys.exit()
-            y0 = y_[2]
+                idx = 0
+            y0 = y_[idx]
             if y_[1] > rthreshold+.05 and plotrmax:
                 rsarea.append ( y_[1] )
                 y0 = -1.
             else:
                 rsarea.append ( 0. )
             rs.append ( y_[1] )
-            ydashed.append ( Zs[i][2] )
+            ydashed.append ( Zs[i][idx] )
         y2_ = y0
         if y2_ < 0.:
             y2_ = float("nan")
@@ -400,7 +400,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         param="%.3f" % cmass
     Zmax = Zs[cmass]
     if type(Zmax)==tuple:
-        Zmax=Zmax[2]
+        Zmax=Zmax[idx]
     ax1.scatter ( [ cmass ], [ Zmax ], label="proto-model, K(%s)=%.2f" % (param, Zmax ), marker="*", s=130, c="g", zorder=10 )
     plt.title ( "Test statistic K=K(%s)" % pname )
     # plt.text ( .8 * max(x),-.21, timestamp )
