@@ -232,7 +232,7 @@ class PyhfUpperLimitComputer:
         Inspired by the `pyhf.infer.mle` module but for non-log likelihood
         """
         logger.debug("Calling likelihood")
-        self.__init__(self.data)
+        self.scale = 1.
         if self.nWS == 1:
             workspace = self.workspaces[0]
         elif workspace_index != None:
@@ -241,56 +241,35 @@ class PyhfUpperLimitComputer:
                 return None
             else:
                 workspace = self.workspaces[workspace_index]
-        # Same modifiers_settings as those used when running the 'pyhf cls' command line
+        else:
+            workspace = self.cbWorkspace()
+        # Same modifiers_settings as those use when running the 'pyhf cls' command line
         msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
         model = workspace.model(modifier_settings=msettings)
         test_poi = 1.
         _, nllh = pyhf.infer.mle.fixed_poi_fit(test_poi, workspace.data(model), model, return_fitted_val=True)
-        return np.exp(-nllh.tolist()[0]/2)
+        nl =  self.tofloat ( nllh ) ## convert to float
+        return np.exp(-nl/2)
+
+    def tofloat ( self, tensor ):
+        """ retrieve a float out of a tensor with a single entry.
+            make sure it works with all backends and versions """
+        try:
+            nl = float(nl)
+            return nl
+        except:
+            pass
+        nl = nl[0]
+        return nl
+
 
     def chi2(self, workspace_index=None):
         """
         Returns the chi square
         """
-        self.__init__(self.data)
+        self.scale = 1.
         logger.debug("Calling chi2")
-        if self.nWS == 1:
-            workspace = self.workspaces[0]
-        elif workspace_index != None:
-            if self.zeroSignalsFlag[workspace_index] == True:
-                logger.warning("Workspace number %d has zero signals" % workspace_index)
-                return None
-            else:
-                workspace = self.workspaces[workspace_index]
-        # Same modifiers_settings as those used when running the 'pyhf cls' command line
-        msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
-        model = workspace.model(modifier_settings=msettings)
-        _, nllh = pyhf.infer.mle.fit(workspace.data(model), model, return_fitted_val=True)
-        logger.debug(workspace['channels'][0]['samples'][0])
-        logger.debug('nllh : {}'.format(nllh))
-        # Computing the background numbers and fetching the observations
-        for ch in workspace['channels']:
-            chName = ch['name']
-            # Backgrounds
-            for sp in ch['samples']:
-                if sp['name'] != 'bsm':
-                    try:
-                        bkg = [b + d for b, d in zip(bkg, sp['data'])]
-                    except NameError: # If bkg doesn't exit, intialize it
-                        bkg = sp['data']
-            # Observations
-            for observation in workspace['observations']:
-                if observation['name'] == chName:
-                    obs = observation['data']
-            dn = [ob - bk for ob, bk in zip(obs, bkg)]
-            # Feeding dn as signal input
-            for sp in ch['samples']:
-                if sp['name'] == 'bsm':
-                    sp['data'] = dn
-        logger.debug(workspace['channels'][0]['samples'][0])
-        _, maxNllh = pyhf.infer.mle.fixed_poi_fit(1., workspace.data(model), model, return_fitted_val=True)
-        logger.debug('maxNllh : {}'.format(maxNllh))
-        return (maxNllh - nllh).tolist()[0]
+        return None
 
     # Trying a new method for upper limit computation :
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
