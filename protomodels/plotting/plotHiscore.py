@@ -453,7 +453,7 @@ def writeIndexTex ( protomodel, texdoc ):
         # f.write ( "\end{itemize}\n" )
         f.write ( "\\end{tabular}\n" )
         f.write ( "\\end{center}\n" )
-        f.write ( "\\caption{Contributions to the test statistic K. K(without) denotes the Z value obtained in absence of the particular analysis.}\n" )
+        f.write ( "\\caption{Contributions to the test statistic K. K(without) denotes the K value obtained in absence of the particular analysis.}\n" )
         f.write ( "\\label{tab:analysiscontributions}\n" )
         f.write ( "\\end{table}\n" )
     else:
