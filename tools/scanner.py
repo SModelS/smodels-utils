@@ -345,6 +345,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         y_ = Zs[i]
         y0=y_
         if type(y_)==tuple:
+            if len(y_)==2:
+                print ( "[scanner] rerun ssm scanning" )
+                sys.exit()
             y0 = y_[2]
             if y_[1] > rthreshold+.05 and plotrmax:
                 rsarea.append ( y_[1] )
