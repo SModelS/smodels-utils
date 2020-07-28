@@ -139,7 +139,7 @@ def ssmProcess ( args ):
         # model.predict ( nevents = nevents, recycle_xsecs = True )
         predictor.predict ( model ) # #nevents = nevents, recycle_xsecs = True )
         print ( "[scanner:%d-%s]   `- Z=%.3f" % ( i, ts, model.Z ) )
-        ret[ssm]=(model.Z,model.rvalues[0])
+        ret[ssm]=(model.Z,model.rvalues[0],model.K)
     return ret
 
 def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
@@ -305,6 +305,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     """
     if pid2 == 0: ## means all
         pidpairs = findPidPairs( rundir )
+        if len(pidpairs) == 0:
+            print ( "[scanner] could not find ssm*pcl files. Maybe run ./fetchFromClip.py --ssms" )
+            return
         for pids in pidpairs:
             try:
                 draw ( pids[0], interactive, pids[1], copy, drawtimestamp, \
