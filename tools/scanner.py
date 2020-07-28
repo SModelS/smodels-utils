@@ -342,14 +342,14 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         y_ = Zs[i]
         y0=y_
         if type(y_)==tuple:
-            y0 = y_[0]
+            y0 = y_[2]
             if y_[1] > rthreshold+.05 and plotrmax:
                 rsarea.append ( y_[1] )
                 y0 = -1.
             else:
                 rsarea.append ( 0. )
             rs.append ( y_[1] )
-            ydashed.append ( Zs[i][0] )
+            ydashed.append ( Zs[i][2] )
         y2_ = y0
         if y2_ < 0.:
             y2_ = float("nan")
@@ -361,9 +361,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
                 namer.texName ( pid2, addDollars=True, addSign=True )
     fig,ax1 = plt.subplots()
     plt.plot ( x, ydashed, linewidth=.3, c="tab:blue", zorder=0 )
-    plt.plot ( x, yr, linewidth=2., label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )
+    plt.plot ( x, yr, linewidth=2., label="K(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
-    ax1.set_ylabel ( "Z", c="tab:blue" )
+    ax1.set_ylabel ( "K", c="tab:blue" )
     ax1.set_xlabel ( "m [GeV]" )
     maxyr = numpy.nanmax(ydashed)
     # print ( "ydashed", ydashed )
@@ -386,7 +386,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     param="%d GeV" % xmax
     if isSSMPlot():
         param="%.3f" % xmax
-    ax1.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%s)=%.2f" % (param, ymax ), s=130, c="k", marker="*", zorder=5 )
+    ax1.scatter ( [ xmax ], [ ymax ], label="maximum K, K(%s)=%.2f" % (param, ymax ), s=130, c="k", marker="*", zorder=5 )
     if type(cmass)==tuple:
         cmass = x[int(len(x)/2)]
     param = "%d GeV" % cmass
@@ -394,9 +394,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         param="%.3f" % cmass
     Zmax = Zs[cmass]
     if type(Zmax)==tuple:
-        Zmax=Zmax[0]
-    ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, Z(%s)=%.2f" % (param, Zmax ), marker="*", s=130, c="g", zorder=10 )
-    plt.title ( "Significance Z=Z(%s)" % pname )
+        Zmax=Zmax[2]
+    ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, K(%s)=%.2f" % (param, Zmax ), marker="*", s=130, c="g", zorder=10 )
+    plt.title ( "Test statistic K=K(%s)" % pname )
     # plt.text ( .8 * max(x),-.21, timestamp )
     # plt.text ( .8 * max(x),.55*min(rs), timestamp, facecolor="gray", transform = ax1.transAxes )
     if drawtimestamp:
