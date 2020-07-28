@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-import sys, os, time
+import sys, os, time, math
 sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.colors import colors
 from smodels_utils.helper.various import hasLLHD
-import analysisCombiner
+from tester import analysisCombiner
 import ROOT
 import IPython
 import ctypes
@@ -28,8 +28,12 @@ def sortOutDupes ( results ):
     ids_withoutLLHD = set()
     ret_withoutLLHD = {}
     for res in results:
+        force_override = False
         ID = res.globalInfo.id
-        if ID in ids: ## already in
+        if "-agg" in ID:
+            ID = ID.replace("-agg","")
+            force_override = True
+        if ID in ids and not force_override: ## already in
             continue
         hasllhd = hasLLHD ( res )
         if hasllhd and not ID in ids:
@@ -53,7 +57,7 @@ def sortOutDupes ( results ):
     return ret
 
 def draw( strategy, databasepath, trianglePlot, miscol,
-          diagcol, experiment, S, drawtimestamp ):
+          diagcol, experiment, S, drawtimestamp, outputfile ):
     """
     :param trianglePlot: if True, then only plot the upper triangle of this
                          symmetrical matrix
@@ -62,6 +66,7 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     :param experiment: draw only for specific experiment ("CMS", "ATLAS", "all" )
     :param S: draw only for specific sqrts ( "8", "13", "all" )
     :param drawtimestamp: if true, put a timestamp on plot
+    :param outputfile: file name of output file (matrix.png)
     """
     ROOT.gStyle.SetOptStat(0000)
 
@@ -96,20 +101,25 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     #results.sort()
     nres = len ( results )
 
-    ROOT.c1=ROOT.TCanvas("c1","c1",1600,1500)
-    #ROOT.c1.SetLeftMargin(0.17)
-    #ROOT.c1.SetBottomMargin(0.17)
-    ROOT.c1.SetLeftMargin(0.12)
-    ROOT.c1.SetBottomMargin(0.15)
-    ROOT.c1.SetTopMargin(0.09)
-    ROOT.c1.SetRightMargin(0.015)
+    ROOT.c1=ROOT.TCanvas("c1","c1",1820,1540)
+    ROOT.c1.SetLeftMargin(0.22)
+    ROOT.c1.SetBottomMargin(0.21)
+    ROOT.c1.SetTopMargin(0.06)
+    ROOT.c1.SetRightMargin(0.10)
+    if nres > 60:
+        ROOT.c1.SetLeftMargin(0.12) ## seemed to work for 96 results
+        ROOT.c1.SetBottomMargin(0.15)
+        ROOT.c1.SetTopMargin(0.09)
+        ROOT.c1.SetRightMargin(0.015)
 
     h=ROOT.TH2F ( "Correlations", "",
                   nres, 0., nres, nres, 0., nres )
     xaxis = h.GetXaxis()
     yaxis = h.GetYaxis()
-    xaxis.SetLabelSize(.014)
-    yaxis.SetLabelSize(.014)
+
+    sze = 0.13 / math.sqrt ( nres )
+    xaxis.SetLabelSize( 1.3*sze )
+    yaxis.SetLabelSize( 1.3*sze )
 
     bins= { "CMS": { 8: [999,0], 13:[999,0] },
             "ATLAS": { 8: [999,0], 13: [999,0] } }
@@ -134,6 +144,8 @@ def draw( strategy, databasepath, trianglePlot, miscol,
             bins[ana][sqrts][1]=x
             ymax=x
         color = ROOT.kGray+2
+        if len(exps)==1 and len(sqrtses)==1:
+            label = label.replace("CMS-","").replace("ATLAS-","").replace("-agg","")
         label = "#color[%d]{%s}" % (color, label )
         xaxis.SetBinLabel(n-x, label )
         yaxis.SetBinLabel(x+1, label )
@@ -153,6 +165,11 @@ def draw( strategy, databasepath, trianglePlot, miscol,
 
     h.Draw("col")
     ROOT.bins, ROOT.xbins, ROOT.lines = {}, {}, []
+    if len(exps)==1 and len(sqrtses)==1:
+        ROOT.t1 = ROOT.TLatex()
+        ROOT.t1.SetNDC()
+        ROOT.t1.DrawLatex ( .45, .95, "%s, %d TeV" % ( exps[0], sqrtses[0] ) )
+        
     for ana in exps:
         for sqrts in sqrtses:
             name= "%s%d" % ( ana, sqrts )
@@ -165,8 +182,9 @@ def draw( strategy, databasepath, trianglePlot, miscol,
             ROOT.xbins[name].SetTextSize(.025)
             xcoord = .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] )
             ycoord = n- .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] ) -3
-            ROOT.bins[name].DrawLatex(-4,xcoord-3,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
-            ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
+            if len(sqrtses)>1 or len(exps)>1:
+                ROOT.bins[name].DrawLatex(-4,xcoord-3,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
+                ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             yt = bins[ana][sqrts][1] +1
             extrudes = 3 # how far does the line extrude into tick labels?
             xmax = n
@@ -191,6 +209,7 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     xline.Draw()
     ROOT.lines.append ( line )
     ROOT.lines.append ( xline )
+    h.LabelsOption("v","X")
     if trianglePlot:
         for i in range(n+1):
             wline = ROOT.TLine ( n, i, n-i, i )
@@ -233,9 +252,16 @@ def draw( strategy, databasepath, trianglePlot, miscol,
         l.DrawLatex ( .01, .01, "plot produced %s from database v%s" % \
                       ( time.strftime("%h %d %Y" ), d.databaseVersion ) )
     ROOT.gPad.SetGrid()
-    print ( "Plotting to matrix_%s.png" % strategy )
-    ROOT.c1.Print("matrix_%s.png" % strategy )
-    ROOT.c1.Print("matrix_%s.pdf" % strategy )
+    if "%M" in outputfile:
+        modifiers = ""
+        if len(exps)==1:
+            modifiers += exps[0]
+        if len(sqrtses)==1:
+            modifiers += str(sqrtses[0])
+        outputfile = outputfile.replace("%M",modifiers)
+    print ( "Plotting to %s" % outputfile )
+    ROOT.c1.Print( outputfile )
+    # ROOT.c1.Print("matrix_%s.pdf" % strategy )
 
 if __name__ == "__main__":
     import argparse
@@ -251,6 +277,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--sqrts', nargs='?',
             help='plot only specific sqrts 8,13,all [all]',
             type=str, default='all' )
+    argparser.add_argument ( '-o', '--outputfile', nargs='?',
+            help='outputfile [matrix%M.png]',
+            type=str, default='matrix%M.png' )
     argparser.add_argument ( '-t', '--triangular',
             help='plot as lower triangle matrix?',
             action="store_true" )
@@ -264,4 +293,4 @@ if __name__ == "__main__":
     diagcol = ROOT.kBlack
     diagcol = ROOT.kGray
     draw( args.strategy, args.database, args.triangular, miscol, diagcol,
-          args.experiment, args.sqrts, drawtimestamp )
+          args.experiment, args.sqrts, drawtimestamp, args.outputfile )
