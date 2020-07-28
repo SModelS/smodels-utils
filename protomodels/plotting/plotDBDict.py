@@ -60,10 +60,12 @@ class Plotter:
         mean,std = np.mean ( S), np.std ( S )
         minX, maxX = min(S), max(S)
         x = np.linspace( minX, maxX,100 )
-        result = plt.hist( S, bins=30, label=f"{len(S)} SRs" )
+        result = plt.hist( S, bins=30, label=f"{len(S)} signal regions" )
         dx = result[1][1] - result[1][0]
         scale = len(S)*dx
-        plt.plot(x,scipy.stats.norm.pdf(x,mean,std)*scale, label="%.2f $\pm$ %.2f" % ( mean, std ))
+        plt.plot(x,scipy.stats.norm.pdf(x,mean,std)*scale, linewidth=2,
+                 label="N$\\left(%.2f,%.2f^2\\right)$" % ( mean, std ))
+#                 label="$\bar{p} = %.2f \pm %.2f$" % ( mean, std ))
         plt.legend()
         dbname = os.path.basename ( self.meta["database"] )
         title = "real"
@@ -81,7 +83,7 @@ class Plotter:
         plt.savefig ( f"{variable}.png" )
         #plt.savefig ( f"{variable}{int(100*fudge)}.png" )
         plt.clf()
-        plt.hist ( P, bins=10, label="%.2f $\pm$ %.2f" % ( np.mean(P), np.std(P) ) )
+        plt.hist ( P, bins=10, label="$\\bar{p} = %.2f \pm %.2f$" % ( np.mean(P), np.std(P) ) )
         plt.legend()
         plt.title  ( title )
         plt.xlabel ( "p values" )
