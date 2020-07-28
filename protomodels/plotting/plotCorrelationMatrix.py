@@ -101,11 +101,11 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     #results.sort()
     nres = len ( results )
 
-    ROOT.c1=ROOT.TCanvas("c1","c1",1820,1540)
-    ROOT.c1.SetLeftMargin(0.22)
-    ROOT.c1.SetBottomMargin(0.21)
+    ROOT.c1=ROOT.TCanvas("c1","c1",1770,1540)
+    ROOT.c1.SetLeftMargin(0.15)
+    ROOT.c1.SetBottomMargin(0.19)
     ROOT.c1.SetTopMargin(0.06)
-    ROOT.c1.SetRightMargin(0.10)
+    ROOT.c1.SetRightMargin(0.01)
     if nres > 60:
         ROOT.c1.SetLeftMargin(0.12) ## seemed to work for 96 results
         ROOT.c1.SetBottomMargin(0.15)
