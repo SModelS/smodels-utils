@@ -255,12 +255,12 @@ class PyhfUpperLimitComputer:
         """ retrieve a float out of a tensor with a single entry.
             make sure it works with all backends and versions """
         try:
-            nl = float(nl)
-            return nl
+            number = float(tensor)
+            return number
         except:
             pass
-        nl = nl[0]
-        return nl
+        number = tensor[0]
+        return number
 
 
     def chi2(self, workspace_index=None):
