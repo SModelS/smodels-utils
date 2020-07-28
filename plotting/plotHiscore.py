@@ -406,8 +406,8 @@ def writeIndexTex ( protomodel, texdoc ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( " it was produced with database {\\tt v%s}, combination strategy {\\tt %s} in step %d." % \
-            ( dotlessv, strategy, protomodel.step ) )
+    f.write ( " it was produced with database {\\tt v%s}, combination strategy {\\tt %s} walker %d in step %d." % \
+            ( dotlessv, strategy, protomodel.walkerid, protomodel.step ) )
     f.write ( "\n" )
     if hasattr ( protomodel, "tpList" ):
         rvalues=protomodel.tpList
