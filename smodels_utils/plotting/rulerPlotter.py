@@ -40,8 +40,14 @@ class RulerPlot:
         """
         self.inputfile = inputfile
         self.slhafile = inputfile
+        for e in [ "png", "pdf", "eps" ]:
+            if outputfile.endswith(f".{e}"):
+                formats[e]=True
+                outputfile = outputfile.replace(f".{e}","")
         self.outputfile = outputfile
         self.range = Range
+        if sum ( formats.values() ) == 0:
+            formats["png"]=True ## if nothing, then pngs
         self.formats = formats
         self.printmass = printmass
         self.mergesquark = mergesquark
@@ -297,7 +303,7 @@ class RulerPlot:
                     if br < 0.95:
                         label += ": %s" % br
                     plt.text ( xavg + .05, mlow + 30., label, color="grey" )
-        for frmat,runthis in formats.items():
+        for frmat,runthis in self.formats.items():
             if not runthis:
                 continue
             of = self.outputfile + "." + frmat
@@ -355,12 +361,6 @@ if __name__ == "__main__":
     argparser.add_argument ( '-squark', '--squark',
                              help='represent all squarks as ~q', action='store_true' )
     args=argparser.parse_args()
-    if not args.pdf and not args.eps:
-        args.png = True ## if nothing, then pngs
-    for e in [ "png", "pdf", "eps" ]:
-        if args.output.endswith(f".{e}"):
-            setattr ( args, e, True )
-            args.output = args.output.replace(f".{e}","")
     Range=[args.min,args.max]
     formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
 
