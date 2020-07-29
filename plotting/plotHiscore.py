@@ -687,7 +687,6 @@ def plotRuler( protomodel, verbosity, horizontal ):
 
     plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname,
                                        Range=(None, None), mergesquark = False,
-                                       interactive = False,
                                        drawdecays = False,
                                        hasResultsFor = resultsFor )
     if horizontal:
