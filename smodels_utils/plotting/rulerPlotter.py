@@ -32,7 +32,7 @@ class RulerPlot:
     """ a class that encapsulates a horizontal ruler plot """
     def __init__ ( self, inputfile="masses.txt", outputfile="out", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True,
-           interactive = False, drawdecays=True, hasResultsFor = None, 
+           drawdecays=True, hasResultsFor = None, 
            verbosity="info", susy=False ):
         """
         :param mergesquark: if True, merge squarks FIXME
@@ -54,10 +54,11 @@ class RulerPlot:
         self.hasResultsFor = hasResultsFor 
         self.verbosity = verbosity
         self.logger=logging.getLogger("RulerPlot")
-        self.interactive = interactive
         self.susy = susy
         self.namer = SParticleNames ( susy = susy )
         self.decays = {}
+        self.getMasses()
+        self.getRange()
         if drawdecays:
             self.getDecays()
 
@@ -65,8 +66,6 @@ class RulerPlot:
         """ obtain the masses from input file, remove > 3000 GeV """
         if self.inputfile.endswith ( ".slha" ):
             pmasses = self.retrieveMasses ()
-
-        print ( "pmasses", pmasses )
         masses={}
         # masses=pmasses
         for (pid,D) in pmasses.items():
@@ -148,7 +147,7 @@ class RulerPlot:
         pids = [ x[1] for x in sortedpids ]
         return pids
 
-    def plotHorizontal ( self ):
+    def drawHorizontal ( self ):
         # https://pythonprogramming.net/spines-hline-matplotlib-tutorial/
         """ the matplotlib plotting function """
         from matplotlib import pyplot as plt
@@ -203,10 +202,9 @@ class RulerPlot:
         self.ax1 = ax1
         self.plt = plt
 
-    def plotVertical ( self ):
+    def drawVertical ( self ):
         # https://pythonprogramming.net/spines-hline-matplotlib-tutorial/
         """ the matplotlib plotting function """
-        print ( "[rulerPlotter] vertical plot!" )
         from matplotlib import pyplot as plt
         plt.rc("text",usetex=True)
         import numpy
@@ -307,28 +305,14 @@ class RulerPlot:
             if not runthis:
                 continue
             of = self.outputfile + "." + frmat
-            print ( "[rulerPlotter] saving to %s" % of )
+            self.logger.info ( "saving to %s" % of )
             plt.savefig ( of )
         self.ax1 = ax1
         self.plt = plt
 
     def interactiveShell( self ):
-        if self.interactive == False:
-            return
         import IPython
         IPython.embed()
-
-    def drawVertical ( self ):
-        self.getMasses()
-        self.getRange()
-        self.plotVertical()
-        self.interactiveShell()
-
-    def drawHorizontal ( self ):
-        self.getMasses()
-        self.getRange()
-        self.plotHorizontal()
-        self.interactiveShell()
 
 if __name__ == "__main__":
     import argparse, types
@@ -375,8 +359,11 @@ if __name__ == "__main__":
     if args.hasResultsFor != "":
         hasResultsFor = eval ( args.hasResultsFor )
     plotter = RulerPlot ( inputfile, args.output, Range, formats, args.masses, \
-                          args.squark, args.interactive, args.decays, hasResultsFor )
+                          args.squark, args.decays, hasResultsFor )
     if args.horizontal:
         plotter.drawHorizontal()
     else:
         plotter.drawVertical()
+
+    if args.interactive:
+        plotter.interactiveShell()
