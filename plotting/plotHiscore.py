@@ -685,15 +685,16 @@ def plotRuler( protomodel, verbosity, horizontal ):
         print ( '[plotHiscore] ../smodels_utils/plotting/rulerPlotter.py -o ruler.png --hasResultsFor "%s" %s' % \
                 ( str(resultsFor), protomodel.currentSLHA ) )
 
+    plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname,
+                                       Range=(None, None), mergesquark = False,
+                                       interactive = False,
+                                       drawdecays = False,
+                                       hasResultsFor = resultsFor )
     if horizontal:
-        plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname,
-                                           Range=(None, None), mergesquark = False,
-                                           interactive = False,
-                                           hasResultsFor = resultsFor )
-        plotter.draw()
+
+        plotter.drawHorizontal()
     else:
-        rulerPlotter.drawVertical ( protomodel.currentSLHA, fname,
-                Range=(None,None), mergesquark = False, hasResultsFor = resultsFor )
+        plotter.drawVertical()
 
 def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
     print ( "[plotHiscore] now draw %s" % outfile )
