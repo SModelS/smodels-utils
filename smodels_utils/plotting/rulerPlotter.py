@@ -11,10 +11,13 @@
 
 from __future__ import print_function
 
-import os, math, sys, tempfile, numpy
+import os, math, sys, tempfile, numpy, subprocess
 import logging
 import pyslha
 from smodels_utils.helper.sparticleNames import SParticleNames
+from matplotlib import pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 300
 
 def setLogLevel ( logger, verbose ):
     if "err" in verbose:
@@ -33,7 +36,7 @@ class RulerPlot:
     def __init__ ( self, inputfile="masses.txt", outputfile="out", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True,
            drawdecays=True, hasResultsFor = None, 
-           verbosity="info", susy=False ):
+           verbosity="info", susy=False, trim= True ):
         """
         :param mergesquark: if True, merge squarks FIXME
         :param susy: use SUSY particle names
@@ -59,6 +62,8 @@ class RulerPlot:
         self.decays = {}
         self.getMasses()
         self.getRange()
+        self.drawdecays = drawdecays
+        self.trim = trim
         if drawdecays:
             self.getDecays()
 
@@ -150,9 +155,7 @@ class RulerPlot:
     def drawHorizontal ( self ):
         # https://pythonprogramming.net/spines-hline-matplotlib-tutorial/
         """ the matplotlib plotting function """
-        from matplotlib import pyplot as plt
         plt.rc("text",usetex=True)
-        import numpy
         dm = self.maxmass - self.minmass
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         y = [ 0. ] * len(ticks)
@@ -212,7 +215,10 @@ class RulerPlot:
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         x = [ 0. ] * len(ticks)
         x[0]=1.
-        fig = plt.figure(figsize=(4,10))
+        figratio = ( 3, 10 )
+        if self.drawdecays:
+            figratio = ( 5, 6 )
+        fig = plt.figure(figsize=figratio )
         ax1 = plt.subplot()
         labels = []
         for i,label in enumerate(ax1.yaxis.get_ticklabels()):
@@ -260,6 +266,8 @@ class RulerPlot:
             xavg = .5*x1 + .5*x2
             lctr=0
             dm = 20.
+            if self.drawdecays:
+                dm = 35.
             keys = []
 
             if self.hasResultsFor != None:
@@ -269,8 +277,11 @@ class RulerPlot:
                         if abs(m-mana)>1e-2:
                             print ( "WARNING: clustering particle masses %.2f and %.2f. hope its ok. check it." % ( m, mana )  )
                         keys.append ( mana )
+                        dm1 = 30. ## gap to first ana id
+                        if self.drawdecays:
+                            dm1 = 50.
                         for cana,ana in enumerate(analyses):
-                            plt.text ( xavg, m-30.-dm*cana, ana.replace("201","1" ),
+                            plt.text ( xavg, m-dm1-dm*cana, ana.replace("201","1" ),
                                        c=col, ha="center" )
                             lctr+=1
 
@@ -296,7 +307,7 @@ class RulerPlot:
                     dm = mlow - m + 20. + dmResults
                     plt.arrow ( xavg, mtop, 0., dm , color="grey",
                                linestyle="dashed", linewidth=.5, 
-                               head_length=10, head_width=.08 )
+                               head_length=15, head_width=.05 )
                     label = self.namer.texName(idNotBSM,addDollars=True) 
                     if br < 0.95:
                         label += ": %s" % br
@@ -307,6 +318,10 @@ class RulerPlot:
             of = self.outputfile + "." + frmat
             self.logger.info ( "saving to %s" % of )
             plt.savefig ( of )
+            if frmat == "png" and self.trim:
+                cmd = "convert %s -trim %s" % ( of, of )
+                subprocess.getoutput ( cmd )
+
         self.ax1 = ax1
         self.plt = plt
 
@@ -332,6 +347,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
           help='verbosity -- debug, info, warning, error [info]', type=str, default='info' )
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
+    argparser.add_argument ( '-t', '--trim', help='trim png', action='store_true' )
     argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps',
                              action='store_true' )
     argparser.add_argument ( '-H', '--horizontal', help='horizontal plot, not vertical',
@@ -359,7 +375,8 @@ if __name__ == "__main__":
     if args.hasResultsFor != "":
         hasResultsFor = eval ( args.hasResultsFor )
     plotter = RulerPlot ( inputfile, args.output, Range, formats, args.masses, \
-                          args.squark, args.decays, hasResultsFor )
+                          args.squark, args.decays, hasResultsFor,
+                          trim = args.trim )
     if args.horizontal:
         plotter.drawHorizontal()
     else:
