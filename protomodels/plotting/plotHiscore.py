@@ -198,7 +198,7 @@ def writeRawNumbersLatex ( protomodel ):
     print ( "=====================" )
     f=open("rawnumbers.tex","wt")
     f.write("\\begin{tabular}{l|c|r|r|c|r}\n" )
-    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Part}  \\\\\n" )
+    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Particle}  \\\\\n" )
     f.write("\\hline\n" )
     namer = SParticleNames ( susy = False )
     for tp in protomodel.bestCombo:
