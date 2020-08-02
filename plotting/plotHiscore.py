@@ -398,7 +398,7 @@ def writeIndexTex ( protomodel, texdoc ):
             continue
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.tex","w")
-    f.write ( "Our current winner has a score of K=%.2f, " % \
+    f.write ( "Our current winner has a score of \\K=%.2f, " % \
               ( protomodel.K ) )
     dbver = "???"
     dotlessv = "???"
@@ -433,7 +433,7 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "\\begin{table}\n" )
         f.write ( "\\begin{center}\n" )
         f.write ( "\\begin{tabular}{l|c|c}\n" )
-        f.write ( "\\bf{Analysis Name} & \\bf{K(without)} & \\bf{Contribution} \\\\\n" )
+        f.write ( "\\bf{Analysis Name} & \\bf{\\K(without)} & \\bf{Contribution} \\\\\n" )
         f.write ( "\\hline\n" )
         conts = []
         dKtot = 0.
@@ -453,7 +453,7 @@ def writeIndexTex ( protomodel, texdoc ):
         # f.write ( "\end{itemize}\n" )
         f.write ( "\\end{tabular}\n" )
         f.write ( "\\end{center}\n" )
-        f.write ( "\\caption{Contributions to the test statistic K. K(without) denotes the K value obtained in absence of the particular analysis.}\n" )
+        f.write ( "\\caption{Contributions to the test statistic \\K. \\K(without) denotes the \\K value obtained in absence of the particular analysis.}\n" )
         f.write ( "\\label{tab:analysiscontributions}\n" )
         f.write ( "\\end{table}\n" )
     else:
