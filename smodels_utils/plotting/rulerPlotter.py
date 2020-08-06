@@ -17,6 +17,8 @@ import pyslha
 from smodels_utils.helper.sparticleNames import SParticleNames
 from matplotlib import pyplot as plt
 import matplotlib as mpl
+mpl.use('Agg')
+
 mpl.rcParams['figure.dpi'] = 300
 
 def setLogLevel ( logger, verbose ):
