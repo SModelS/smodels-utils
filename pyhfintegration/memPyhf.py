@@ -2,7 +2,7 @@
 
 import sys
 import pyhf
-# pyhf.set_backend(b"pytorch")
+pyhf.set_backend(b"pytorch")
 import json
 import jsonpatch
 import time
@@ -76,5 +76,5 @@ llhdSpec = jsonpatch.apply_patch(bkg, patch)
 msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
 workspace = pyhf.Workspace(llhdSpec)
 model = workspace.model(modifier_settings=msettings)
-for _ in range(1000):
+for _ in range(10000):
     result = pyhf.infer.hypotest( 1., workspace.data(model), model, qtilde=True, return_expected=False)
