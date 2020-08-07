@@ -4,26 +4,31 @@
 
 from matplotlib import pyplot as plt
 import numpy as np
-import os
-import pickle
+import os, glob, pickle
 import scipy.stats
 import matplotlib.mlab as mlab
 
 class Plotter:
-    def __init__ ( self, filename ):
+    def __init__ ( self, pathname ):
         """
         :param filename: filename of dictionary
         """
-        self.filename = filename
+        self.filenames = []
+        for pname in pathname:
+            self.filenames += glob.glob ( pname )
+        self.meta = {}
+        self.data = {}
         self.read()
 
     def read ( self ):
         """ read in content of filename """
-        with open( self.filename,"rt") as f:
-            lines=f.readlines()
-        self.meta=eval(lines[0])
-        nan=float("nan")
-        self.data=eval(lines[1])
+        for fname in self.filenames:
+            with open( fname,"rt") as f:
+                lines=f.readlines()
+            basename = os.path.basename ( fname ).replace(".dict","")
+            self.meta.update (  eval(lines[0]) )
+            nan=float("nan")
+            self.data[basename] = eval(lines[1])
 
     def computeP ( self, obs, bg, bgerr ):
         """ compute p value, for now we assume Gaussanity """
@@ -49,51 +54,64 @@ class Plotter:
     def compute ( self, variable, fakeVariable, store ):
         """ compute the p values """
         S,Sfake,P,Pfake=[],[],[],[]
-        fname = "pDatabase.pcl"
-        if os.path.exists ( fname ):
-            print ( f"[plotDBDict] found {fname}. Using data therein." )
-            with open ( fname, "rb" ) as f:
-                fname = os.path.basename ( pickle.load ( f ) )
-                selfbase = os.path.basename ( self.filename )
-                if selfbase != fname:
-                    print ( f"[plotDBDict] we want {selfbase} pickle has {fname}. Wont use." )
-                else:
-                    S = pickle.load ( f )
-                    Sfake = pickle.load ( f )
-                    P = pickle.load ( f )
-                    Pfake = pickle.load ( f )
-                    f.close()
-                    return S,Sfake,P,Pfake
-        for k,v in self.data.items():
-            if not ":ul" in k:
-                s = v[variable]
-                sfake = v[fakeVariable]
-                S.append( s )
-                Sfake.append( sfake )
-                obs = v["origN"]
-                if not "orig" in variable:
-                    obs = v["newObs"]
-                fakeobs = v["newObs"]
-                P.append( self.computeP ( obs, v["expectedBG"], v["bgError"] ) )
-                Pfake.append( self.computeP ( fakeobs, v["expectedBG"], v["bgError"] ) )
-                P.append( scipy.stats.norm.cdf ( s ) )
-                Pfake.append( scipy.stats.norm.cdf ( sfake ) )
-        if store:
-            with open ( fname, "wb" ) as f:
-                pickle.dump ( os.path.basename ( self.filename ), f )
-                pickle.dump ( S, f )
-                pickle.dump ( Sfake, f)
-                pickle.dump ( P, f )
-                pickle.dump ( Pfake, f )
-                f.close()
+        for filename in self.filenames:
+            selfbase = os.path.basename ( filename )
+            fname = selfbase.replace(".dict",".pcl")
+            print ( f"[plotDBDict] looking for {fname}" )
+            if os.path.exists ( fname ):
+                print ( f"[plotDBDict] found {fname}. Using data therein." )
+                with open ( fname, "rb" ) as f:
+                    pname = os.path.basename ( pickle.load ( f ) )
+                    if fname != pname:
+                        print ( f"[plotDBDict] we want {fname} pickle has {pname}. Wont use." )
+                    else:
+                        S += pickle.load ( f )
+                        Sfake += pickle.load ( f )
+                        P += pickle.load ( f )
+                        Pfake += pickle.load ( f )
+                        f.close()
+            else:
+                print ( f"[plotDBDict] not found {fname}. Creating." )
+                S_,Sfake_,P_,Pfake_=[],[],[],[]
+                data = self.data [ fname.replace(".pcl","") ]
+                for k,v in data.items():
+                    if not ":ul" in k:
+                        s = v[variable]
+                        sfake = v[fakeVariable]
+                        S.append( s )
+                        S_.append ( s )
+                        Sfake.append( sfake )
+                        Sfake_.append ( sfake )
+                        obs = v["origN"]
+                        if not "orig" in variable:
+                            obs = v["newObs"]
+                        fakeobs = v["newObs"]
+                        p = self.computeP ( obs, v["expectedBG"], v["bgError"] )
+                        P.append( p )
+                        P_.append ( p )
+                        pfake = self.computeP ( fakeobs, v["expectedBG"], v["bgError"] )
+                        Pfake.append( pfake )
+                        Pfake_.append ( pfake )
+                        P.append( scipy.stats.norm.cdf ( s ) )
+                        cfake = scipy.stats.norm.cdf ( sfake )
+                        Pfake.append( cfake )
+                if store:
+                    print ( f"[plotDBDict] dumping to {fname}" )
+                    with open ( fname, "wb" ) as f:
+                        pickle.dump ( os.path.basename ( fname ), f )
+                        pickle.dump ( S_, f )
+                        pickle.dump ( Sfake_, f)
+                        pickle.dump ( P_, f )
+                        pickle.dump ( Pfake_, f )
+                        f.close()
         return S,Sfake,P,Pfake
 
     def plot( self, variable, fakeVariable, outfile ):
         """ plot the p values """
         S,Sfake,P,Pfake=self.compute ( variable, fakeVariable, True )
         mean,std = np.mean ( S), np.std ( S )
-        minX, maxX = min(S), max(S)
-        x = np.linspace( minX, maxX,100 )
+        #minX, maxX = min(S), max(S)
+        #x = np.linspace( minX, maxX,100 )
         # plt.legend()
         dbname = os.path.basename ( self.meta["database"] )
         title = f"$p$ values, database v{dbname}"
@@ -102,10 +120,10 @@ class Plotter:
             fudge = self.meta["fudge"]
         if abs ( fudge - 1. ) > 1e-3:
             title += ", fudge=%.2f" % fudge
-        plt.hist ( P, bins=10, label="real", facecolor="tab:blue" )
-        plt.hist ( Pfake, bins=10, label="fake", edgecolor="red", linewidth=3, histtype="step" )
-        print ( "real Ps at %.3f +/- %.2f" % ( np.mean(P), np.std(P) ) )
-        print ( "fake Ps at %.3f +/- %.2f" % ( np.mean(Pfake), np.std(Pfake) ) )
+        plt.hist ( P, weights = [ 1. / len(self.filenames) ]*len(P), bins=10, label="real", facecolor="tab:blue" )
+        plt.hist ( Pfake, weights = [ 1. / len(self.filenames) ]*len(P), bins=10, label="fake", edgecolor="red", linewidth=3, histtype="step" )
+        print ( "real Ps %d entries at %.3f +/- %.2f" % ( len(P), np.mean(P), np.std(P)  ) )
+        print ( "fake Ps %d entries at %.3f +/- %.2f" % ( len(Pfake), np.mean(Pfake), np.std(Pfake) ) )
         # plt.hist ( P, bins=10, label="$\\bar{p} = %.2f \pm %.2f$" % ( np.mean(P), np.std(P) ) )
         plt.legend()
         plt.title  ( title )
@@ -116,8 +134,8 @@ class Plotter:
 
 def main():
     import argparse
-    argparser = argparse.ArgumentParser(description="meta statistics plotter, i.e. the thing that plots origS.png, HorigS.png, S.png, HS.png")
-    argparser.add_argument ( '-d', '--dictfile', nargs='?',
+    argparser = argparse.ArgumentParser(description="meta statistics plotter, i.e. the thing that plots pDatabase.png")
+    argparser.add_argument ( '-d', '--dictfile', nargs='*',
             help='input dictionary file [./database.dict]', 
             type=str, default='./database.dict' )
     argparser.add_argument ( '-o', '--outfile', nargs='?',
