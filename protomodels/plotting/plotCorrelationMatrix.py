@@ -102,8 +102,8 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     nres = len ( results )
 
     ROOT.c1=ROOT.TCanvas("c1","c1",1770,1540)
-    ROOT.c1.SetLeftMargin(0.15)
-    ROOT.c1.SetBottomMargin(0.19)
+    ROOT.c1.SetLeftMargin(0.18)
+    ROOT.c1.SetBottomMargin(0.21)
     ROOT.c1.SetTopMargin(0.06)
     ROOT.c1.SetRightMargin(0.01)
     if nres > 60:
@@ -252,13 +252,13 @@ def draw( strategy, databasepath, trianglePlot, miscol,
         l.DrawLatex ( .01, .01, "plot produced %s from database v%s" % \
                       ( time.strftime("%h %d %Y" ), d.databaseVersion ) )
     ROOT.gPad.SetGrid()
-    if "%M" in outputfile:
+    if "@M" in outputfile:
         modifiers = ""
         if len(exps)==1:
             modifiers += exps[0]
         if len(sqrtses)==1:
             modifiers += str(sqrtses[0])
-        outputfile = outputfile.replace("%M",modifiers)
+        outputfile = outputfile.replace("@M",modifiers)
     print ( "Plotting to %s" % outputfile )
     ROOT.c1.Print( outputfile )
     # ROOT.c1.Print("matrix_%s.pdf" % strategy )
@@ -269,8 +269,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-S', '--strategy', nargs='?',
             help='combination strategy [aggressive]', type=str, default='aggressive' )
     argparser.add_argument ( '-d', '--database', nargs='?',
-            help='path to database [../../smodels-database]',
-            type=str, default='../../smodels-database' )
+            help='path to database [../../../smodels-database]',
+            type=str, default='../../../smodels-database' )
     argparser.add_argument ( '-e', '--experiment', nargs='?',
             help='plot only specific experiment CMS,ATLAS,all [all]',
             type=str, default='all' )
@@ -278,8 +278,8 @@ if __name__ == "__main__":
             help='plot only specific sqrts 8,13,all [all]',
             type=str, default='all' )
     argparser.add_argument ( '-o', '--outputfile', nargs='?',
-            help='outputfile [matrix%M.png]',
-            type=str, default='matrix%M.png' )
+            help='outputfile [matrix@M.png]',
+            type=str, default='matrix@M.png' )
     argparser.add_argument ( '-t', '--triangular',
             help='plot as lower triangle matrix?',
             action="store_true" )
