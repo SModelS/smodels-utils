@@ -58,17 +58,30 @@ def predProcess ( args ):
     pid = args["pid"]
     predictor = args["predictor"]
     nevents = args["nevents"]
+    dry_run = args["dry_run"]
     rundir = args["rundir"]
     mrange = args["mrange"]
+    preserve_xsecs = args["preserve_xsecs"]
     ret = {}
+    right_xsecs = copy.deepcopy ( model._stored_xsecs )
     for ctr,m in enumerate(mrange):
         model.createNewSLHAFileName ( prefix = "s%dp%d%.2f" % ( i, pid, m ) )
         model.masses[pid]=m
+        if preserve_xsecs:
+            ## fake a computation of xsecs, update the masses check
+            model._stored_xsecs = copy.deepcopy ( right_xsecs )
+            model._xsecMasses = dict([[pid,m] for pid,m in model.masses.items()])
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
                 ( i, ts, ctr, len(mrange), m, nevents ) )
         #model.predict ( nevents = nevents, check_thresholds=False )
-        predictor.predict ( model ) # , nevents = nevents, check_thresholds=False )
+        if dry_run:
+            print ( "[scanner:%d-%s] dry-run, not doing anything" % ( i, ts ) )
+            model.K = 0.
+            model.Z = 0.
+            model.rvalues = [ 0, 0, 0 ]
+        else:
+            predictor.predict ( model ) # , nevents = nevents, check_thresholds=False )
         ret[m]=(model.Z,model.rvalues[0],model.K)
         model.delCurrentSLHA()
     return ret
@@ -142,18 +155,23 @@ def ssmProcess ( args ):
         ret[ssm]=(model.Z,model.rvalues[0],model.K)
     return ret
 
-def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
-             nproc=5, fac = 1.008, rundir = "" ):
+def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
+             nproc=5, fac = 1.008, rundir = "", preserve_xsecs = False ):
     """ produce pickle files for pid, with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
+    :param preserve_xsecs: adjust the SSMs to that xsecs are preserved
     """
     if type(pid) in [ list, tuple, set ]:
         for p in pid:
-            produce ( hi, p, nevents, dryrun, nproc, fac, rundir = rundir )
+            produce ( hi, p, nevents, dry_run, nproc, fac, rundir = rundir,
+                      preserve_xsecs = preserve_xsecs )
         return
     model = hi.hiscores[0]
+    if preserve_xsecs and not hasattr ( model, "stored_xsecs" ):
+        print ( "[scanner] preserve_xsec mode, so computing the xsecs now" )
+        model.computeXSecs()
     if model == None:
         print ( "[scanner] cannot find a model in %s" % hi.pickleFile )
     mass = model.masses[pid]
@@ -184,13 +202,13 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
                             expected=expected, select=select )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(mranges) )
-    args = [ { "model": model, "rundir": rundir, "pid": pid, "nevents": nevents, "predictor": predictor,
+    args = [ { "model": model, "rundir": rundir, "pid": pid, "nevents": nevents, "predictor": predictor, "preserve_xsecs": preserve_xsecs, "dry_run": dry_run,
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
     for r in tmp:
         Zs.update(r)
-    if dryrun:
+    if dry_run:
         return
     import pickle
     with open ( "scanM%s.pcl" % pid, "wb" ) as f:
@@ -198,9 +216,10 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         pickle.dump ( mass, f )
         pickle.dump ( nevents, f )
         pickle.dump ( time.asctime(), f )
+        pickle.dump ( preserve_xsecs, f )
         f.close()
 
-def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
+def produceSSMs( hi, pid1, pid2, nevents = 100000, dry_run=False,
              nproc=5, fac = 1.008, rundir= "" ):
     """ produce pickle files for ssm scan, for (pid1,pid2), with nevents
     :param hi: hiscore list object
@@ -244,13 +263,13 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     predictor =  Predictor( 0, dbpath=dbpath,
                             expected=expected, select=select )
     args = [ { "model": model, "pids": pids, "nevents": nevents, "ssm": ssm,
-               "predictor": predictor, "rundir": rundir,
+               "predictor": predictor, "rundir": rundir, "dry_run": dry_run,
                "i": i, "ssmrange": x } for i,x in enumerate(ssmranges) ]
     Zs={}
     tmp = pool.map ( ssmProcess, args )
     for r in tmp:
         Zs.update(r)
-    if dryrun:
+    if dry_run:
         return
     import pickle
     filename = "ssm%d%d.pcl" % (pids[0],pids[1])
@@ -471,6 +490,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode, starts ipython (only works with -d, and not in bulk mode)',
             action="store_true" )
+    argparser.add_argument ( '--preserve_xsecs',
+            help='when scanning masses, adjust the SSMs so that the xsecs are constant',
+            action="store_true" )
     argparser.add_argument ( '-F', '--force_copy',
             help='force copying the hiscore.hi file',
             action="store_true" )
@@ -495,7 +517,7 @@ if __name__ == "__main__":
         if args.pid2 > 0:
             produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir )
         else:
-            produce( hi, pids, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir )
+            produce( hi, pids, args.nevents, args.dry_run, nproc, args.factor, rundir = rundir, preserve_xsecs = args.preserve_xsecs )
     pred = Predictor( 0 )
     rthreshold = pred.rthreshold
     if args.draw:
@@ -505,7 +527,7 @@ if __name__ == "__main__":
         else:
             for pid in allpids:
                 try:
-                    draw( pid, args.interactive, args.pid2, args.copy, drawtimestamp, 
+                    draw( pid, args.interactive, args.pid2, args.copy, drawtimestamp,
                           rundir, rthreshold )
                 except Exception as e:
                     print ( "[scanner] skipping %d: %s" % ( pid, e ) )
