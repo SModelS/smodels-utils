@@ -5,6 +5,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import os
+import pickle
 import scipy.stats
 import matplotlib.mlab as mlab
 
@@ -45,51 +46,64 @@ class Plotter:
         fakeobs = scipy.stats.poisson.rvs ( lmbda )
         return sum(fakeobs>obs) / len(fakeobs)
 
-    def plot( self, variable ):
-        """ plot the significances """
-        S,P=[],[]
+    def compute ( self, variable, fakeVariable, store ):
+        """ compute the p values """
+        S,Sfake,P,Pfake=[],[],[],[]
+        fname = "pDatabase.pcl"
+        if os.path.exists ( fname ):
+            print ( f"[plotDBDict] found {fname}. Using data therein." )
+            with open ( fname, "rb" ) as f:
+                S = pickle.load ( f )
+                Sfake = pickle.load ( f )
+                P = pickle.load ( f )
+                Pfake = pickle.load ( f )
+                f.close()
+            return S,Sfake,P,Pfake
         for k,v in self.data.items():
             if not ":ul" in k:
                 s = v[variable]
+                sfake = v[fakeVariable]
                 S.append( s )
+                Sfake.append( sfake )
                 obs = v["origN"]
                 if not "orig" in variable:
                     obs = v["newObs"]
+                fakeobs = v["newObs"]
                 P.append( self.computeP ( obs, v["expectedBG"], v["bgError"] ) )
+                Pfake.append( self.computeP ( fakeobs, v["expectedBG"], v["bgError"] ) )
                 P.append( scipy.stats.norm.cdf ( s ) )
+                Pfake.append( scipy.stats.norm.cdf ( sfake ) )
+        if store:
+            with open ( fname, "wb" ) as f:
+                pickle.dump ( S, f )
+                pickle.dump ( Sfake, f)
+                pickle.dump ( P, f )
+                pickle.dump ( Pfake, f )
+                f.close()
+        return S,Sfake,P,Pfake
+
+    def plot( self, variable, fakeVariable ):
+        """ plot the p values """
+        S,Sfake,P,Pfake=self.compute ( variable, fakeVariable, True )
         mean,std = np.mean ( S), np.std ( S )
         minX, maxX = min(S), max(S)
         x = np.linspace( minX, maxX,100 )
-        result = plt.hist( S, bins=30, label=f"{len(S)} signal regions" )
-        dx = result[1][1] - result[1][0]
-        scale = len(S)*dx
-        plt.plot(x,scipy.stats.norm.pdf(x,mean,std)*scale, linewidth=2,
-                 label="N$\\left(%.2f,%.2f^2\\right)$" % ( mean, std ))
-#                 label="$\bar{p} = %.2f \pm %.2f$" % ( mean, std ))
-        plt.legend()
+        # plt.legend()
         dbname = os.path.basename ( self.meta["database"] )
-        title = "real"
-        if not "orig" in variable:
-            title = "fake"
-        title += f" observations, database v{dbname}"
+        title = f"$p$ values, database v{dbname}"
         fudge = 1.
         if "fudge" in self.meta:
             fudge = self.meta["fudge"]
         if abs ( fudge - 1. ) > 1e-3:
             title += ", fudge=%.2f" % fudge
-        plt.title ( title )
-        plt.xlabel ( "reduced distances $( n_\mathrm{obs} - n_\mathrm{bg} ) / \sqrt{ \mathrm{stat}^2 + \mathrm{sys}^2 } $" )
-        print ( f"[plotDBDict.py] plotting {variable}.png" )
-        plt.savefig ( f"{variable}.png" )
-        #plt.savefig ( f"{variable}{int(100*fudge)}.png" )
-        plt.clf()
-        plt.hist ( P, bins=10, label="$\\bar{p} = %.2f \pm %.2f$" % ( np.mean(P), np.std(P) ) )
+        plt.hist ( P, bins=10, label="real", facecolor="tab:blue" )
+        plt.hist ( Pfake, bins=10, label="fake", edgecolor="red", linewidth=3, histtype="step" )
+        # plt.hist ( P, bins=10, label="$\\bar{p} = %.2f \pm %.2f$" % ( np.mean(P), np.std(P) ) )
         plt.legend()
         plt.title  ( title )
-        plt.xlabel ( "p values" )
-        print ( f"[plotDBDict.py] plotting H{variable}.png" )
-        plt.savefig ( f"H{variable}.png" )
-        # plt.savefig ( f"H{variable}{int(100*fudge)}.png" )
+        plt.xlabel ( "$p$ values" )
+        print ( "[plotDBDict.py] plotting pDatabase.png" )
+        plt.savefig ( "pDatabase.png" )
         plt.clf()
 
 def main():
@@ -100,8 +114,7 @@ def main():
             type=str, default='./database.dict' )
     args=argparser.parse_args()
     plotter = Plotter ( args.dictfile )
-    plotter.plot( "origS" )
-    plotter.plot( "S" )
+    plotter.plot( "origS", "S" )
 
 if __name__ == "__main__":
     main()
