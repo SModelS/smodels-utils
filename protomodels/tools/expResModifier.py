@@ -165,6 +165,7 @@ class ExpResModifier:
                        model. in this case fake a signal
         :returns: the database
         """
+        self.suffix = suffix
         self.log ( "starting to create %s. suffix is %s protomodel is %s." % \
                    ( outfile, suffix, pmodel ) )
         db = Database ( self.dbpath )
@@ -317,7 +318,7 @@ class ExpResModifier:
     def saveStats ( self ):
         """ write out the collected stats, so we can discuss experimentalists'
             conservativeness """
-        filename = "%s/database.dict" % self.rundir
+        filename = "%s/db%s.dict" % ( self.rundir, self.suffix )
         self.log ( f"saving stats to {filename}" )
         meta = { "dbpath": self.dbpath, "Zmax": self.Zmax,
                  "database": self.dbversion, "fudge": self.fudge,
@@ -512,8 +513,6 @@ if __name__ == "__main__":
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode', action='store_true' )
-    argparser.add_argument ( '--stats',
-            help='create stats file', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
     argparser.add_argument ( '-u', '--upload',
@@ -532,8 +531,7 @@ if __name__ == "__main__":
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
 
-    if args.stats:
-        modifier.saveStats()
+    modifier.saveStats()
 
     if args.check:
         check ( args.outfile )
