@@ -31,12 +31,13 @@ class Plotter:
             self.meta.update (  eval(lines[0]) )
             nan=float("nan")
             data = eval(lines[1])
-            newdata = []
+            newdata = {}
             for i,v in data.items():
-                if "expectedBG" in v and v["expectedBG"]<self.filter:
-                    print ( f"[plotDBDict] removing {basename}:{i}" )
+                if "expectedBG" in v and v["expectedBG"]>=self.filter:
+                    newdata[i]=v
                 else:
-                    newdata.append ( i )
+                    print ( f"[plotDBDict] removing {basename}:{i}" )
+            print ( f"[plotDBDict] keeping {len(newdata)}/{len(data)} for {basename}" )
             self.data[basename] = newdata
 
     def computeP ( self, obs, bg, bgerr ):
@@ -71,7 +72,8 @@ class Plotter:
                 print ( f"[plotDBDict] found {fname}. Using data therein." )
                 with open ( fname, "rb" ) as f:
                     pname = os.path.basename ( pickle.load ( f ) )
-                    if fname != pname:
+                    filtervalue = pickle.load ( f )
+                    if fname != pname or abs (self.filter - filtervalue ) > 1e-6:
                         print ( f"[plotDBDict] we want {fname} pickle has {pname}. Wont use." )
                     else:
                         S += pickle.load ( f )
@@ -95,10 +97,13 @@ class Plotter:
                         if not "orig" in variable:
                             obs = v["newObs"]
                         fakeobs = v["newObs"]
-                        p = self.computeP ( obs, v["expectedBG"], v["bgError"] )
+                        vexp = v["expectedBG"]
+                        if vexp < self.filter:
+                            continue
+                        p = self.computeP ( obs, vexp, v["bgError"] )
                         P.append( p )
                         P_.append ( p )
-                        pfake = self.computeP ( fakeobs, v["expectedBG"], v["bgError"] )
+                        pfake = self.computeP ( fakeobs, vexp, v["bgError"] )
                         Pfake.append( pfake )
                         Pfake_.append ( pfake )
                         P.append( scipy.stats.norm.cdf ( s ) )
@@ -108,6 +113,7 @@ class Plotter:
                     print ( f"[plotDBDict] dumping to {fname}" )
                     with open ( fname, "wb" ) as f:
                         pickle.dump ( os.path.basename ( fname ), f )
+                        pickle.dump ( self.filter, f )
                         pickle.dump ( S_, f )
                         pickle.dump ( Sfake_, f)
                         pickle.dump ( P_, f )
