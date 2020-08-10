@@ -69,12 +69,8 @@ patch = [dict(
 )]
 ## Using the simple json
 llhdSpec = jsonpatch.apply_patch(bkg, patch)
-## Using a complete json
-# with open("sbottom_900_550_60.json", 'r') as f:
-#     llhdSpec = json.load(f)
-## Computing the cls outside of SModelS with POI = ul, should give 0.95
 msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
 workspace = pyhf.Workspace(llhdSpec)
-model = workspace.model(modifier_settings=msettings)
 for _ in range(10000):
+    model = workspace.model(modifier_settings=msettings)
     result = pyhf.infer.hypotest( 1., workspace.data(model), model, qtilde=True, return_expected=False)
