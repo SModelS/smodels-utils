@@ -143,6 +143,7 @@ For ATLAS-SUSY-2018-31, there are two cases :
   - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination? -> for now, added a `best combination` key in the python output
 - [x] add the `best combination` to the `validationData` output
 - [x] validation doesn't really work for ATLAS-SUSY-2018-06 efficiency map; solved with k-factor = 1
+- [ ] try `del model` at each loop
 - [ ] try rescaling signals without re-instantiating the `model` variable at every loop
-- [ ] validate ATLAS-SUSY-2018-06 and 2019-08 with `pyhf` : problem with multiple POIs
+- [ ] validate ATLAS-SUSY-2018-06 and 2019-08 with `pyhf` : problem with multiple POIs -> ask pyhf people
 - [ ] why ATLAS-SUSY-2018-06 gives same exp and obs UL with pyhf -> two POIs ?
