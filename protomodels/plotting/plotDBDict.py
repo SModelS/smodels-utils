@@ -9,13 +9,15 @@ import scipy.stats
 import matplotlib.mlab as mlab
 
 class Plotter:
-    def __init__ ( self, pathname ):
+    def __init__ ( self, pathname, filtervalue: float ):
         """
         :param filename: filename of dictionary
+        :param filtervalue: filter out signal regions with expectedBG < filtervalue
         """
         self.filenames = []
         for pname in pathname:
             self.filenames += glob.glob ( pname )
+        self.filter = filtervalue
         self.meta = {}
         self.data = {}
         self.read()
@@ -28,7 +30,14 @@ class Plotter:
             basename = os.path.basename ( fname ).replace(".dict","")
             self.meta.update (  eval(lines[0]) )
             nan=float("nan")
-            self.data[basename] = eval(lines[1])
+            data = eval(lines[1])
+            newdata = []
+            for i,v in data.items():
+                if "expectedBG" in v and v["expectedBG"]<self.filter:
+                    print ( f"[plotDBDict] removing {basename}:{i}" )
+                else:
+                    newdata.append ( i )
+            self.data[basename] = newdata
 
     def computeP ( self, obs, bg, bgerr ):
         """ compute p value, for now we assume Gaussanity """
@@ -141,8 +150,11 @@ def main():
     argparser.add_argument ( '-o', '--outfile', nargs='?',
             help='output file [./pDatabase.png]', 
             type=str, default='./pDatabase.png' )
+    argparser.add_argument ( '-f', '--filter', nargs='?',
+            help='filter out signal regions with expectedBG<x [x=0.]', 
+            type=float, default=0. )
     args=argparser.parse_args()
-    plotter = Plotter ( args.dictfile )
+    plotter = Plotter ( args.dictfile, args.filter )
     plotter.plot( "origS", "S", args.outfile )
 
 if __name__ == "__main__":
