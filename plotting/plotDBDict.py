@@ -62,7 +62,7 @@ class Plotter:
         return sum(fakeobs>obs) / len(fakeobs)
 
     def compute ( self, variable, fakeVariable, store ):
-        """ compute the p values """
+        """ compute the p-values """
         S,Sfake,P,Pfake=[],[],[],[]
         for filename in self.filenames:
             selfbase = os.path.basename ( filename )
@@ -122,14 +122,14 @@ class Plotter:
         return S,Sfake,P,Pfake
 
     def plot( self, variable, fakeVariable, outfile ):
-        """ plot the p values """
+        """ plot the p-values """
         S,Sfake,P,Pfake=self.compute ( variable, fakeVariable, True )
         mean,std = np.mean ( S), np.std ( S )
         #minX, maxX = min(S), max(S)
         #x = np.linspace( minX, maxX,100 )
         # plt.legend()
         dbname = os.path.basename ( self.meta["database"] )
-        title = f"$p$ values, database v{dbname}"
+        title = f"$p$-values, database v{dbname}"
         fudge = 1.
         if "fudge" in self.meta:
             fudge = self.meta["fudge"]
@@ -142,7 +142,8 @@ class Plotter:
         # plt.hist ( P, bins=10, label="$\\bar{p} = %.2f \pm %.2f$" % ( np.mean(P), np.std(P) ) )
         plt.legend()
         plt.title  ( title )
-        plt.xlabel ( "$p$ values" )
+        plt.xlabel ( "$p$-values" )
+        plt.ylabel ( "# Signal Regions" )
         print ( f"[plotDBDict.py] plotting {outfile}"  )
         plt.savefig ( outfile )
         plt.clf()
@@ -157,8 +158,8 @@ def main():
             help='output file [./pDatabase.png]', 
             type=str, default='./pDatabase.png' )
     argparser.add_argument ( '-f', '--filter', nargs='?',
-            help='filter out signal regions with expectedBG<x [x=0.]', 
-            type=float, default=0. )
+            help='filter out signal regions with expectedBG<x [x=-1.]', 
+            type=float, default=-1. )
     args=argparser.parse_args()
     plotter = Plotter ( args.dictfile, args.filter )
     plotter.plot( "origS", "S", args.outfile )
