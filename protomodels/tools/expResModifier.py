@@ -291,9 +291,9 @@ class ExpResModifier:
         self.log ( " `- add UL matching tpred %s: %s[%s]" % \
                 ( tpred.analysisId(), tpred.xsection.value, \
                   tpred.PIDs ) )
-        #print ( " `- add UL matching tpred %s/%s: %s[%s]" % \
-        #        ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value, \
-        #          tpred.PIDs ) )
+        #print ( " `- add UL matching tpred %s: %s[%s] ds:%s" % \
+        #        ( tpred.analysisId(), tpred.xsection.value, \
+        #          tpred.PIDs, dataset ) )
         ## so we simply add the theory predicted cross section to the limit
         sigmaN = tpred.xsection.value.asNumber(fb)
         ## sigmaN is the predicted production cross section of the signal,
@@ -301,15 +301,17 @@ class ExpResModifier:
         for i,txname in enumerate(dataset.txnameList):
             if not self.txNameIsIn ( txname, tpred ):
                 continue
-            # print ( "  `-- adding %s to %s" % ( sigmaN, txname ) )
+            #print ( "  `-- adding %s to %s" % ( sigmaN, txname ) )
             txnd = txname.txnameData
             etxnd = txname.txnameDataExp
+            #print ( "len", len(txnd.y_values), len(txnd.origdata) )
             for yi,y in enumerate(txnd.y_values):
                 oldv = txnd.y_values[yi]
                 if etxnd != None and len(txnd.y_values) == len(etxnd.y_values):
                     dt = ( ( txnd.delta_x - etxnd.delta_x )**2 ).sum()
                     if dt < 1e-2:
                         oldv = etxnd.y_values[yi] ## FIXME more checks pls
+                # print ( "    `--- adding %s %s" % ( oldv, sigmaN ) )
                 txnd.y_values[yi]=oldv + sigmaN
             dataset.txnameList[i].txnameData = txnd
             dataset.txnameList[i].sigmaN = sigmaN
@@ -513,6 +515,8 @@ if __name__ == "__main__":
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode', action='store_true' )
+    argparser.add_argument ( '-B', '--build',
+            help='build the original pickle file with all relevant info, then exit (use --database to specify path)', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
     argparser.add_argument ( '-u', '--upload',
@@ -520,6 +524,14 @@ if __name__ == "__main__":
     argparser.add_argument ( '-k', '--keep',
             help='keep temporary files (for debugging)', action='store_true' )
     args = argparser.parse_args()
+    if args.build:
+        from smodels.experiment.txnameObj import TxNameData
+        TxNameData._keep_values = True
+        from smodels.experiment.databaseObj import Database
+        print ( f"[expResModifier] starting to build database at {args.database}." )
+        db = Database ( args.database )
+        print ( f"[expResModifier] built database at {args.database}. Exiting." )
+        sys.exit()
     if type(args.rundir)==str and not "/" in args.rundir:
         args.rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + args.rundir
     if args.outfile == "":
