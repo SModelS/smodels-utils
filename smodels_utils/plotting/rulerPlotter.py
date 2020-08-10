@@ -35,7 +35,7 @@ def setLogLevel ( logger, verbose ):
 
 class RulerPlot:
     """ a class that encapsulates a horizontal ruler plot """
-    def __init__ ( self, inputfile="masses.txt", outputfile="out", Range=(None,None),
+    def __init__ ( self, inputfile="masses.txt", outputfile="ruler", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True,
            drawdecays=True, hasResultsFor = None, 
            verbosity="info", susy=False, trim= True ):
@@ -219,7 +219,7 @@ class RulerPlot:
         x[0]=1.
         figratio = ( 3, 10 )
         if self.drawdecays:
-            figratio = ( 5, 6 )
+            figratio = ( 7, 4 )
         fig = plt.figure(figsize=figratio )
         ax1 = plt.subplot()
         labels = []
@@ -249,8 +249,13 @@ class RulerPlot:
             side = -1 ## -1 is left 1 is right
             if ctr % 2 == 0:
                 side = 4.
+            dtext=0.
+            if ctr == 0:
+                dtext =.05
+            if ctr == 2:
+                xoff += .03
             # print  ( "mass", label, m, xoff )
-            plt.text ( xoff, m, label, c = coldark, size=15, fontweight="bold", ha="left" )
+            plt.text ( xoff + dtext, m, label, c = coldark, size=15, fontweight="bold", ha="left" )
             x1 = xoff + side * .05
             x2 = x1 + numpy.sign(side)*.1
             if ctr == 0:
@@ -261,7 +266,7 @@ class RulerPlot:
             ## the LBP gets horizontal lines in both directions 
             if ctr == 0:
                 x1 = xoff - .05
-                x2 = .1
+                x2 = .03
                 plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
             ## 
             ## at the center of the decay line
@@ -269,7 +274,7 @@ class RulerPlot:
             lctr=0
             dm = 20.
             if self.drawdecays:
-                dm = 35.
+                dm = 45.
             keys = []
 
             if self.hasResultsFor != None:
@@ -281,7 +286,7 @@ class RulerPlot:
                         keys.append ( mana )
                         dm1 = 30. ## gap to first ana id
                         if self.drawdecays:
-                            dm1 = 50.
+                            dm1 = 55.
                         for cana,ana in enumerate(analyses):
                             plt.text ( xavg, m-dm1-dm*cana, ana.replace("201","1" ),
                                        c=col, ha="center" )
@@ -308,12 +313,12 @@ class RulerPlot:
                     mtop = m - dmResults - 10.
                     dm = mlow - m + 20. + dmResults
                     plt.arrow ( xavg, mtop, 0., dm , color="grey",
-                               linestyle="dashed", linewidth=.5, 
-                               head_length=15, head_width=.05 )
+                               linewidth=2, 
+                               head_length=15, head_width=.03 )
                     label = self.namer.texName(idNotBSM,addDollars=True) 
                     if br < 0.95:
                         label += ": %s" % br
-                    plt.text ( xavg + .05, mlow + 30., label, color="grey" )
+                    plt.text ( xavg + .05, mlow + 30., label, color="grey", size=14 )
         for frmat,runthis in self.formats.items():
             if not runthis:
                 continue
