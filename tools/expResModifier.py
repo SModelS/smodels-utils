@@ -298,14 +298,29 @@ class ExpResModifier:
         sigmaN = tpred.xsection.value.asNumber(fb)
         ## sigmaN is the predicted production cross section of the signal,
         ## in fb
+        def distance ( v1, v2 ):
+            """ compute distance between v1 and v2 """
+            ret = 0.
+            v1,v2 = list(v1),list(v2)
+            if len(v1)*2 == len(v2):
+                v1 = v1*2
+            for _1,_2 in zip ( v1, v2 ):
+                ret+= ( _1 - _2 )**2
+            ret = math.sqrt (ret )
+            return ret
+
         for i,txname in enumerate(dataset.txnameList):
             if not self.txNameIsIn ( txname, tpred ):
                 continue
             #print ( "  `-- adding %s to %s" % ( sigmaN, txname ) )
             txnd = txname.txnameData
             etxnd = txname.txnameDataExp
-            #print ( "len", len(txnd.y_values), len(txnd.origdata) )
+            coordsTpred = txnd.dataToCoordinates ( tpred.mass ) ## coordinates of tpred
             for yi,y in enumerate(txnd.y_values):
+                pt = txnd.tri.points[yi] ## the point in the rotated coords
+                dist = distance ( pt, coordsTpred )
+                if dist > 400.: ## change y_values only in vicinity of protomodel
+                    continue
                 oldv = txnd.y_values[yi]
                 if etxnd != None and len(txnd.y_values) == len(etxnd.y_values):
                     dt = ( ( txnd.delta_x - etxnd.delta_x )**2 ).sum()
@@ -346,7 +361,7 @@ class ExpResModifier:
         ret = []
         self.produceTopoList()
         self.log ( "now add the signals from %s, %d topos" % \
-                   ( self.protomodel, len(self.topos) ) )
+                   ( self.getPModelName(), len(self.topos) ) )
         addedUL, addedEM = 0, 0
         print ( f"{len(listOfExpRes)} results: ", end="" )
         for l,expRes in enumerate(listOfExpRes):
@@ -374,6 +389,7 @@ class ExpResModifier:
                             addedEM += 1
                             listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
+        print ( )
         self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
         return listOfExpRes
 
@@ -408,6 +424,13 @@ class ExpResModifier:
         self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
         return listOfExpRes
 
+    def getPModelName ( self ):
+        """ name of protomodel """
+        pmodelname = str(self.protomodel)
+        for i in [ "<sub>", "<sup>", "</sub>", "</sup>" ]:
+            pmodelname = pmodelname.replace( i, "" )
+        return pmodelname
+
     def addSignals ( self, listOfExpRes ):
         """ thats the method that adds a typical signal, parallel version
         :param nproc: number of processes
@@ -419,8 +442,8 @@ class ExpResModifier:
         # print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
         ret = []
         self.produceTopoList()
-        self.log ( "now add the signals from %s, %d topos, %d procs" % \
-                   ( self.protomodel, len(self.topos), self.nproc ) )
+        self.log ( "now add the signals from %s, K=%s, %d topos, %d procs" % \
+                   ( self.getPModelName(), len(self.topos), self.nproc ) )
         import multiprocessing
         ## listOfExpRes=listOfExpRes[:10]
         chunks = [ listOfExpRes[i::self.nproc] for i in range(self.nproc) ]
