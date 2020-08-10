@@ -101,6 +101,8 @@ class DecayDrawer:
     def addNode ( self, mass, name, include_masses=False,
             color='#FFFFFF', isFermionic=True ):
         """ add a node """
+        if type(name) == int:
+            name = self.texName ( name, dollars=True )
         llabel=self.prettyName ( name )
         if include_masses:
             try:
@@ -114,8 +116,10 @@ class DecayDrawer:
             self.minmass=mass
         if mass > self.maxmass:
             self.maxmass=mass
-        self.G.add_node ( name )
-        node=self.G.get_node ( name )
+        tname = self.texName ( name, dollars=True )
+        # print ( "Here1, adding", tname )
+        self.G.add_node ( tname )
+        node=self.G.get_node ( tname )
         node.attr['color']=color
         self.massctr+=1
         fmass=0.
@@ -166,9 +170,11 @@ class DecayDrawer:
                 l+=",\\,\\\\\\\\"
         if matrixMode: ## make a matrix
             l+="\\\\end{matrix}$"
+        tn = self.texName ( name, dollars=True )
         d = self.texName ( daughter, dollars=True )
-        t = self.G.add_edge ( name, d )
-        edge=self.G.get_edge ( name, d )
+        self.addNode ( 0., d )
+        t = self.G.add_edge ( tn, d )
+        edge=self.G.get_edge ( tn, d )
         edge.attr['label']=l
 
     def addEdges ( self, name, decs, rmin = 0.0 ):
@@ -189,6 +195,7 @@ class DecayDrawer:
         """ add a ruler that lists the masses """
         for m in range ( int( math.ceil ( minmass/100.)) *100, \
                 int(math.floor ( maxmass/100.))*100+1,100):
+            #print ( "Here2, adding", m )
             self.G.add_node ( str(m) )
             node=self.G.get_node( str(m) )
             node.attr['pos']="%f,%f" % ( 0, m )
