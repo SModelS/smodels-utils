@@ -166,8 +166,9 @@ class DecayDrawer:
                 l+=",\\,\\\\\\\\"
         if matrixMode: ## make a matrix
             l+="\\\\end{matrix}$"
-        t = self.G.add_edge ( name, daughter )
-        edge=self.G.get_edge ( name, daughter )
+        d = self.texName ( daughter, dollars=True )
+        t = self.G.add_edge ( name, d )
+        edge=self.G.get_edge ( name, d )
         edge.attr['label']=l
 
     def addEdges ( self, name, decs, rmin = 0.0 ):
@@ -194,108 +195,23 @@ class DecayDrawer:
             node.attr['color']='#FFFFFF'
             node.attr['label']=str(m)+' GeV'
 
-    def simpleName ( self, name ):
-        """ simple names for slha names """
-        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T",
-                 "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU",
-                 "~d_R":"DR", "~s_R": "SR", "~chi2+":"C2", "~chi40":"C4",
-                 "~chi2+":"C2", "~chi10":"C1", "~chi30":"C3" }
-        nname=name
-        for (From,To) in reps.items(): nname=nname.replace(From,To)
-        # print name,"->",nname
-        return nname
-
     def texName ( self, pid, color = False, dollars = True ):
         """ get tex name for pid 
         :param color: add color tag
         :param dollars: need dollars for math mode
         """
 
-        # print ( "[decayDrawer] find texName for", pid )
+        # print ( "[decayDrawer] find texName for", pid, type(pid) )
         if type(pid)==int:
-            return self.namer.texColor(pid ) + self.namer.name ( pid )
-        return pid
-        """
-        name = pid
-        if name.find(" ")>-1:
-            names=name.split()
-            texed=[]
-            for n in names:
-                texed.append ( self.texName ( n, color ) )
-            return " ".join ( texed )
-        def huge(x):
-            return x
-            #return "\\\\Huge{\\\\textbf{%s}}" % x
-        def large(x):
-            return x
-            #return "\\\\large{%s}" % x
-        def math(x): 
+            ret = self.namer.texColor(pid ) + self.namer.name ( pid )
             if dollars:
-                return "$%s$" % x
-            return x
-        def green(x,usecol):
-            if not usecol:
-                return x
-            return "\\color[rgb]{0,.5,0}%s" % x
-        def blue(x,usecol):
-            if not usecol:
-                return x
-            return "\\color[rgb]{0,0,.5}%s" % x
-        def brown(x,usecol):
-            if not usecol:
-                return x
-            return "\\color{brown}%s" % x
-        def red(x,usecol):
-            if not usecol:
-                return x
-            return "\\color[rgb]{.5,0,0}%s" % x
-        def tilde(x): ## x is in tilde
-            return "\\\\tilde{%s}" % (x)
-            # return "\\\\tilde{\\\\mathrm{%s}}" % (x)
-        name=name.replace("_","")
-        tsup=name[-1:]
-        tsub=name[-2:-1]
-        second=name[1:2]
-        first=name[:1]
-        if first=="~" and name.find("chi")>-1: # weakinos
-            sup,sub="",""
-            if tsup in [ "+", "-", "0" ]: sup="^{%s}" % tsup
-            if tsub in [ "1", "2", "3", "4", "5" ]: sub="_{%s}" % tsub
-            return huge ( green ( math ( tilde ( "\\\\chi" ) + sup + sub ), color ) )
-
-        if name[:4]=="~tau": # stau
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
-        squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
-        if first=="~" and second in squarks: # squarks and selectron
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            return huge ( blue ( math ( tilde ( second ) + sub ), color ) )
-        if name[:3]=="~mu": # smuon
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            return huge ( brown ( math ( tilde ( "\\\\mu" ) + sub ), color ) )
-        if name=="~g": return huge ( red ( math ( tilde ( "g" ) ), color ) )
-        if name[:3]=="~nu": # sneutrinos:
-            flavor=name[3:-1]
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            if flavor in [ "mu", "tau" ]: sub="_{\\\\%s%s}" % (flavor,sub)
-            if flavor in [ "e" ]: sub="_{%s%s}" % (flavor,sub)
-            return huge ( brown ( math ( tilde ( "\\\\nu" ) + sub ), color ) )
-        if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
-        if name=="gamma": return large ( math ( "\gamma" ) )
-        if name=="nu": return large ( math ( "\\\\nu" ) )
-        if name=="mu": return large ( math ( "\\\\mu" ) )
-        if name=="tau": return large ( math ( "\\\\tau" ) )
-        if name=="h1": return large ( "h" )
-        if name=="h2": return large ( "H" )
-        if name=="a0": return large ( math("A") )
-        if name=="a1": return large ( math("A^{1}") )
-        return large ( name )
-        """
+                ret = f"${ret}$"
+            # print ( "ret=", ret )
+            return ret
+        return pid
 
     def htmlName ( self, name ):
+        print (  "find htmlName for", name )
         ### name=name.replace ( "+", "" )
         reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+",
            "chi2+":"chi&#8322;+", "chi3+":"chi&#8323;+", "chi20":"chi&#8322;&#8304;",
@@ -317,7 +233,7 @@ class DecayDrawer:
             return self.simpleName ( name )
         if self.tex:
             # return self.simpleName ( name )
-            ret = "$" + self.texName ( name, self.options["color"], dollars=False ) + "$"
+            ret = self.texName ( name, self.options["color"], dollars=True ) 
             # print ( "ret", name, ret )
             return ret
         return self.htmlName ( name )
