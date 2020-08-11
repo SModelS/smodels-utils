@@ -211,7 +211,7 @@ class ExpResModifier:
                 origS = ( orig - exp ) / toterr
             if S < self.Zmax:
                 self.log ( "effmap replacing old nobs=%d (bg=%.2f+/-%.2f, lmbda=%.2f, S=%.2f) with nobs=%d for %s" % \
-                    ( orig, err, exp, lmbda, S, obs, dataset.globalInfo.id ) )
+                    ( orig, exp, err, lmbda, S, obs, dataset.globalInfo.id ) )
                 dataset.dataInfo.observedN = obs
         if S > 3.5:
             self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
