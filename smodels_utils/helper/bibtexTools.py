@@ -19,6 +19,7 @@ def getBibtexName ( anaid ):
               "ATLAS-CONF-2013-047": "ATLAS-CONF-2013-047",
               "CMS-SUS-13-012": "Chatrchyan:2014lfa",
               "ATLAS-SUSY-2013-02": "Aad:2014wea",
+              "CMS-SUS-19-006": "Sirunyan:2686457",
     }
     if anaid in names:
         return names[anaid]
