@@ -6,10 +6,9 @@ from datetime import datetime, timedelta
 def extractTime ( timestring ):
     """ extract the time from line, 
         e.g. [protomodel-18:00:00] .... """
-    line = timestring.replace( "[protomodel-", "" )
-    line = line.replace( "[manipulator-", "" )
-    line = line.replace( "[predictor-", "" )
-    line = line.replace( "[hiscore-", "" )
+    line = timestring
+    for i in [ "protomodel", "manipulator", "randomWalker", "predictor", "hiscore" ]:
+        line = line.replace( f"[{i}-", "" )
     p = line.find("]")
     line = line[:p]
     ps = line.rfind(" ")
@@ -19,9 +18,12 @@ def extractTime ( timestring ):
 
 def timeMe():
     base = "/scratch-cbe/users/wolfgan.waltenberger/"
-    files = glob.glob ( f"{base}/rundir.real*/walker?.log" )
-    files += glob.glob ( f"{base}/rundir.real*/walker??.log" )
-    files += glob.glob ( f"{base}/rundir.real*/walker???.log" )
+    # rundirs = f"{base}/rundir.real*"
+    rundirs = f"{base}/rundir.signal*"
+    rundirs = f"{base}/rundir.fake*"
+    files = glob.glob ( f"{rundirs}/walker?.log" )
+    files += glob.glob ( f"{rundirs}/walker??.log" )
+    files += glob.glob ( f"{rundirs}/walker???.log" )
     deltas = []
     for f in files:
         h = open ( f, "rt" )
@@ -37,7 +39,8 @@ def timeMe():
         tdelta = t2 - t1
         deltas.append ( tdelta )
     import numpy
-    print ( numpy.mean ( deltas ), numpy.min ( deltas ), numpy.max ( deltas) )
+    print ( "avg:", numpy.mean ( deltas ), "min:", numpy.min ( deltas ), \
+            "max:", numpy.max ( deltas) )
 
 
 timeMe()
