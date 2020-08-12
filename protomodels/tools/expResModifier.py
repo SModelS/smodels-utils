@@ -22,10 +22,12 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge ):
+    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge, 
+                   suffix: str ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
+        :param suffix: suffix to use, e.g. fake, signal, etc
         """
         self.dbpath = dbpath
         self.protomodel = None
@@ -34,6 +36,7 @@ class ExpResModifier:
         self.nproc = nproc
         self.fudge = fudge
         self.logfile = "modifier.log"
+        self.suffix = suffix
         if Zmax == None:
             Zmax = 100
         self.Zmax = Zmax
@@ -43,6 +46,37 @@ class ExpResModifier:
     def interact ( self, listOfExpRes ):
         import IPython
         IPython.embed( using=False )
+
+    def extractStats ( self ):
+        """ dont produce a new fake database, extract a stats dict
+            from an existing database. """
+        picklefile = self.rundir + "/" + self.dbpath
+        if self.rundir in self.dbpath:
+            picklefile = self.dbpath
+        self.pprint ( f"Extracting stats from {picklefile}" )
+        db = Database ( picklefile )
+        self.dbversion = db.databaseVersion
+        listOfExpRes = db.expResultList
+        self.stats = {}
+        for expRes in listOfExpRes:
+            for i,dataset in enumerate(expRes.datasets):
+                dId = dataset.dataInfo.dataId
+                if dId == None:
+                    dId = "ul"
+                label = dataset.globalInfo.id + ":" + dId
+                D={}
+                info = dataset.dataInfo
+                dt = info.dataType
+                if dt == "upperLimit":
+                    for txname in dataset.txnameList:
+                        D[txname]=txname.txnameData.y_values
+                        
+                for i in [ "observedN", "origN", "expectedBG", "lmbda", "bgError",
+                           "origUpperLimit", "origExpectedUpperLimit", "upperLimit",
+                           "expectedUpperLimit" ]:
+                    if hasattr ( info, i ):
+                        D[i] = getattr ( info, i )
+                self.stats[ label ] = D
 
     def computeNewObserved ( self, txname, globalInfo ):
         """ given expected upper limit, compute a fake observed limit
@@ -157,7 +191,7 @@ class ExpResModifier:
         self.protomodel = ma.M
         return self.protomodel
 
-    def modifyDatabase ( self, outfile="", suffix="fake1", pmodel="" ):
+    def modifyDatabase ( self, outfile="", pmodel="" ):
         """ modify the database, possibly write out to a pickle file
         :param outfile: if not empty, write the database into file
         :param suffix: suffix to append to database version
@@ -165,7 +199,6 @@ class ExpResModifier:
                        model. in this case fake a signal
         :returns: the database
         """
-        self.suffix = suffix
         self.log ( "starting to create %s. suffix is %s protomodel is %s." % \
                    ( outfile, suffix, pmodel ) )
         db = Database ( self.dbpath )
@@ -491,18 +524,18 @@ class ExpResModifier:
         a = subprocess.getoutput ( cmd )
         print ( "[expResModifier]", cmd, a )
 
-def check ( picklefile ):
-    """ check the picklefile """
-    print ( "now checking the modified database" )
-    db = Database ( picklefile )
-    listOfExpRes = db.getExpResults()
-    for er in listOfExpRes:
-        datasets = er.datasets
-        for ds in datasets:
-            txnl = ds.txnameList
-            for txn in txnl:
-                x = txn.txnameData.dataType
-    print ( "were good", db.databaseVersion )
+    def check ( self, picklefile ):
+        """ check the picklefile """
+        print ( "now checking the modified database" )
+        db = Database ( picklefile )
+        listOfExpRes = db.getExpResults()
+        for er in listOfExpRes:
+            datasets = er.datasets
+            for ds in datasets:
+                txnl = ds.txnameList
+                for txn in txnl:
+                    x = txn.txnameData.dataType
+        print ( "were good", db.databaseVersion )
 
 
 if __name__ == "__main__":
@@ -542,6 +575,9 @@ if __name__ == "__main__":
             help='build the original pickle file with all relevant info, then exit (use --database to specify path)', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
+    argparser.add_argument ( '-x', '--extract_stats',
+            help='dont create new database, extract stats from existing database', 
+            action='store_true' )
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
     argparser.add_argument ( '-k', '--keep',
@@ -561,15 +597,18 @@ if __name__ == "__main__":
         args.outfile = args.suffix+".pcl"
     from smodels.experiment.databaseObj import Database
     modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep, \
-                               args.nproc, args.fudge )
+                               args.nproc, args.fudge, args.suffix )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
-    er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
+    if args.extract_stats:
+        er = modifier.extractStats()
+    else:
+        er = modifier.modifyDatabase ( args.outfile, args.pmodel )
 
     modifier.saveStats()
 
     if args.check:
-        check ( args.outfile )
+        modifier.check ( args.outfile )
 
     if args.interactive:
         modifier.interact ( er )
