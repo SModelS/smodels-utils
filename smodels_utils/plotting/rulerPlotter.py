@@ -35,14 +35,16 @@ def setLogLevel ( logger, verbose ):
 
 class RulerPlot:
     """ a class that encapsulates a horizontal ruler plot """
-    def __init__ ( self, inputfile="masses.txt", outputfile="ruler", Range=(None,None),
-           formats={ "png": True }, printmass=False, mergesquark=True,
-           drawdecays=True, hasResultsFor = None, 
-           verbosity="info", susy=False, trim= True ):
+    def __init__ ( self, inputfile="masses.txt", outputfile="ruler", 
+           Range=(None,None), formats={ "png": True }, printmass=False, 
+           mergesquark=True, drawdecays=True, hasResultsFor = None, 
+           verbosity="info", susy=False, trim= True, style="" ):
         """
         :param mergesquark: if True, merge squarks FIXME
         :param susy: use SUSY particle names
+        :param style: emulate various styles, currently only "andre" is known
         """
+        self.style = style
         self.inputfile = inputfile
         self.slhafile = inputfile
         for e in [ "png", "pdf", "eps" ]:
@@ -162,7 +164,7 @@ class RulerPlot:
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         y = [ 0. ] * len(ticks)
         y[0]=1.
-        fig = plt.figure(figsize=(10,3))
+        fig = plt.figure(figsize=(10,4))
         ax1 = plt.subplot()
         # ax1 = plt.subplot2grid((1,1), (0,0))
         labels = []
@@ -173,9 +175,10 @@ class RulerPlot:
         ax1.spines['left'].set_color('none')
         ax1.spines['top'].set_color('none')
         ax1.plot ( ticks, y, c="w" )
+        ax1.tick_params(axis='x', labelsize= 20, pad = 0 )
         ax1.set_yticks([])
         # plt.xlabel ( "m [GeV]" )
-        plt.text(self.maxmass+30.,-.12,"m [GeV]" )
+        plt.text(self.maxmass-10.,-.17,"m [GeV]", fontsize=25 )
 
         sortedpids = self.getSortedPids()
 
@@ -189,7 +192,7 @@ class RulerPlot:
             yoff = 0. ## yoffset, put every second one halfway down
             if ctr % 2 == 1:
                 yoff=.5
-            plt.text ( m, 1.-yoff, label, c = coldark, size=15, fontweight="bold" )
+            plt.text ( m, .8-yoff, label, c = coldark, size=30, fontweight="bold" )
             lctr=0
             keys = []
 
@@ -203,7 +206,15 @@ class RulerPlot:
                         for cana,ana in enumerate(analyses):
                             plt.text ( m-50., .91-yoff-.07*cana, ana.replace("201","1" ), c=col )
                             lctr+=1
-        plt.savefig ( "horizontal.png" )
+        for frmat,runthis in self.formats.items():
+            if not runthis:
+                continue
+            of = self.outputfile + "." + frmat
+            self.logger.info ( "saving to %s" % of )
+            plt.savefig ( of )
+            if frmat == "png" and self.trim:
+                cmd = "convert %s -trim %s" % ( of, of )
+                subprocess.getoutput ( cmd )
         self.ax1 = ax1
         self.plt = plt
 
@@ -214,6 +225,9 @@ class RulerPlot:
         plt.rc("text",usetex=True)
         import numpy
         dm = self.maxmass - self.minmass
+        fontsize = 15
+        if style == "andre":
+            fontsize = 20
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         x = [ 0. ] * len(ticks)
         x[0]=1.
@@ -232,7 +246,11 @@ class RulerPlot:
         ax1.spines['bottom'].set_color('none')
         ax1.plot ( x, ticks, c="w" )
         ax1.set_xticks([])
-        plt.text(-.22, self.minmass-30., "m [GeV]" )
+        ax1.tick_params(axis='y', labelsize= fontsize-2, pad = 0 )
+        if style == "andre":
+            plt.text(-.22, self.maxmass+20., "m [GeV]", fontsize=fontsize )
+        else:
+            plt.text(-.22, self.minmass-30., "m [GeV]", fontsize=fontsize )
 
         sortedpids = self.getSortedPids()
 
@@ -254,19 +272,23 @@ class RulerPlot:
                 dtext =.05
             if ctr == 2:
                 xoff += .03
-            # print  ( "mass", label, m, xoff )
-            plt.text ( xoff + dtext, m, label, c = coldark, size=15, fontweight="bold", ha="left" )
+            print  ( "mass", label, m, xoff )
+            plt.text ( xoff + dtext, m, label, c = coldark, size=fontsize, 
+                       fontweight="bold", ha="left" )
             x1 = xoff + side * .05
             x2 = x1 + numpy.sign(side)*.1
             if ctr == 0:
                 x2 = 1.
             ## small horizontal lines next to the particle names
-            plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
+            if style != "andre":
+                ## thats the line to the right
+                plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
 
             ## the LBP gets horizontal lines in both directions 
             if ctr == 0:
                 x1 = xoff - .05
                 x2 = .03
+                ## thats the line to the left
                 plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
             ## 
             ## at the center of the decay line
@@ -289,7 +311,7 @@ class RulerPlot:
                             dm1 = 55.
                         for cana,ana in enumerate(analyses):
                             plt.text ( xavg, m-dm1-dm*cana, ana.replace("201","1" ),
-                                       c=col, ha="center" )
+                                       fontsize=fontsize, c=col, ha="center" )
                             lctr+=1
 
             if pid in self.decays:
@@ -318,7 +340,8 @@ class RulerPlot:
                     label = self.namer.texName(idNotBSM,addDollars=True) 
                     if br < 0.95:
                         label += ": %s" % br
-                    plt.text ( xavg + .05, mlow + 30., label, color="grey", size=14 )
+                    plt.text ( xavg + .05, mlow + 30., label, color="grey", 
+                               size=fontsize-1 )
         for frmat,runthis in self.formats.items():
             if not runthis:
                 continue
@@ -348,21 +371,25 @@ if __name__ == "__main__":
     argparser.add_argument ( '-M', '--max',
           help='maximum mass, -1 for automatic mode', type=int, default=-1 )
     argparser.add_argument ( '-o', '--output',
-          help='output file name [ruler.png]', type=str, default='ruler.png' )
+          help='output file name [@@input@@.png]', type=str, default='@@input@@.png' )
     argparser.add_argument ( '-R', '--hasResultsFor',
           help='hasResultsFor dictionary, given as string [""]', type=str, default='' )
     argparser.add_argument ( '-v', '--verbosity',
-          help='verbosity -- debug, info, warning, error [info]', type=str, default='info' )
+          help='verbosity -- debug, info, warning, error [info]', 
+          type=str, default='info' )
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
     argparser.add_argument ( '-t', '--trim', help='trim png', action='store_true' )
     argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps',
                              action='store_true' )
-    argparser.add_argument ( '-H', '--horizontal', help='horizontal plot, not vertical',
-                             action='store_true' )
-    argparser.add_argument ( '-I', '--interactive', help='start interactive shell after plotting',
-                             action='store_true' )
+    argparser.add_argument ( '-H', '--horizontal', 
+            help='horizontal plot, not vertical', action='store_true' )
+    argparser.add_argument ( '-I', '--interactive', 
+            help='start interactive shell after plotting', action='store_true' )
     argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
-    argparser.add_argument ( '-D', '--decays', help='draw decays', action='store_true' )
+    argparser.add_argument ( '-a', '--andre', 
+                             help='Andre style', action='store_true' )
+    argparser.add_argument ( '-D', '--decays', 
+                             help='draw decays', action='store_true' )
     argparser.add_argument ( '-mass', '--masses', help='write masses',
                              action='store_true' )
     argparser.add_argument ( '-squark', '--squark',
@@ -370,6 +397,9 @@ if __name__ == "__main__":
     args=argparser.parse_args()
     Range=[args.min,args.max]
     formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
+
+    repl = os.path.basename ( args.inputfile[0]).replace(".slha","")
+    args.output = args.output.replace("@@input@@",repl)
 
     inputfile=args.inputfile[0].replace("@@installdir@@",
                                         SModelSUtils.installDirectory() )
@@ -381,9 +411,12 @@ if __name__ == "__main__":
     hasResultsFor = None
     if args.hasResultsFor != "":
         hasResultsFor = eval ( args.hasResultsFor )
+    style = ""
+    if args.andre:
+        style = "andre"
     plotter = RulerPlot ( inputfile, args.output, Range, formats, args.masses, \
                           args.squark, args.decays, hasResultsFor,
-                          trim = args.trim )
+                          trim = args.trim, style=style )
     if args.horizontal:
         plotter.drawHorizontal()
     else:
