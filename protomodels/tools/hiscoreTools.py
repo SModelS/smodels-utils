@@ -217,7 +217,14 @@ if __name__ == "__main__":
     import pickle
     f = open ( args.infile, "rb" )
     protomodels = pickle.load(f)
-    ma = Manipulator ( protomodels[0] )
+    import builder
+    protomodel = protomodels
+    # so we can also use Andre's pcl files
+    if type(protomodels)==builder.protomodel.ProtoModel:
+        protomodel = protomodels
+    else:
+        protomodel = protomodels[0]
+    ma = Manipulator ( protomodel )
     ma.M.createNewSLHAFileName()
     print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
