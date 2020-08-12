@@ -272,7 +272,15 @@ class RulerPlot:
                 dtext =.05
             if ctr == 2:
                 xoff += .03
-            print  ( "mass", label, m, xoff )
+            if style == "andre":
+                xoff = 0.35 + (-1)**(ctr) * .05 * math.ceil(ctr/2)
+                if ctr>0 and ctr%2 == 1:
+                    dtext = -.17
+                if ctr>0 and ctr%2 == 0:
+                    dtext = .2
+                if ctr == 0:
+                    dtext = -.01
+            print  ( "ctr", ctr, "mass", label, m, "xoff", xoff, "dtext", dtext )
             plt.text ( xoff + dtext, m, label, c = coldark, size=fontsize, 
                        fontweight="bold", ha="left" )
             x1 = xoff + side * .05
@@ -281,7 +289,7 @@ class RulerPlot:
                 x2 = 1.
             ## small horizontal lines next to the particle names
             if style != "andre":
-                ## thats the line to the right
+            ## thats the line to the right
                 plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
 
             ## the LBP gets horizontal lines in both directions 
@@ -289,7 +297,11 @@ class RulerPlot:
                 x1 = xoff - .05
                 x2 = .03
                 ## thats the line to the left
+                print ( "line m=", m, "x=", x1, x2 )
                 plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
+                if len(sortedpids)>2:
+                    plt.plot ( [ xoff + dtext+.1, .7 ], [m+10. , m+10. ], c= coldark )
+
             ## 
             ## at the center of the decay line
             xavg = .5*x1 + .5*x2
