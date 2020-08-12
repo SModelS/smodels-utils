@@ -280,7 +280,7 @@ class RulerPlot:
                     dtext = .2
                 if ctr == 0:
                     dtext = -.01
-            print  ( "ctr", ctr, "mass", label, m, "xoff", xoff, "dtext", dtext )
+            #print  ( "ctr", ctr, "mass", label, m, "xoff", xoff, "dtext", dtext )
             plt.text ( xoff + dtext, m, label, c = coldark, size=fontsize, 
                        fontweight="bold", ha="left" )
             x1 = xoff + side * .05
@@ -297,7 +297,7 @@ class RulerPlot:
                 x1 = xoff - .05
                 x2 = .03
                 ## thats the line to the left
-                print ( "line m=", m, "x=", x1, x2 )
+                # print ( "line m=", m, "x=", x1, x2 )
                 plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
                 if len(sortedpids)>2:
                     plt.plot ( [ xoff + dtext+.1, .7 ], [m+10. , m+10. ], c= coldark )
