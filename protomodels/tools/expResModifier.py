@@ -200,7 +200,7 @@ class ExpResModifier:
         :returns: the database
         """
         self.log ( "starting to create %s. suffix is %s protomodel is %s." % \
-                   ( outfile, suffix, pmodel ) )
+                   ( outfile, self.suffix, pmodel ) )
         db = Database ( self.dbpath )
         self.dbversion = db.databaseVersion
         # listOfExpRes = db.getExpResults( useSuperseded=True, useNonValidated=True )
@@ -214,7 +214,7 @@ class ExpResModifier:
         updatedListOfExpRes = self.addSignals ( updatedListOfExpRes )
         self.log ( "%d results after adding signals" % len(updatedListOfExpRes) )
         db.expResultList = updatedListOfExpRes
-        newver = db.databaseVersion + suffix
+        newver = db.databaseVersion + self.suffix
         db.txt_meta.databaseVersion = newver
         db.pcl_meta.databaseVersion = newver
         self.pprint ( "Constructed fake database with %d (of %d) results" % \
