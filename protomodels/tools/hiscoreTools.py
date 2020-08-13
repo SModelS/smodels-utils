@@ -3,7 +3,7 @@
 """ A class that centralizes access to the hiscore list over multiple threads.
 """
 
-import pickle, subprocess, colorama, sys
+import pickle, subprocess, colorama, sys, os
 from scipy import stats
 sys.path.insert(0,"../")
 from builder.manipulator import Manipulator
@@ -178,14 +178,28 @@ def main ( args ):
     if type(args.outfile)==str and (".pcl" in args.outfile or ".hi" in args.outfile ):
         if not hasattr ( protomodels[0], "analysisContributions" ):
             print ( "[hiscore] why does the winner not have analysis contributions?" )
-            # ma = Manipulator ( protomodels[0] )
-            # self.computeAnalysisContributions(ma)
-            # protomodels[0]=ma.M
+            ma = Manipulator ( protomodels[0] )
+            from walker.hiscore import Hiscore
+            hi = Hiscore( 0, True, f"{rundir}/hiscore.hi" )
+            hi.computeAnalysisContributions(ma)
+            protomodels[0]=ma.M
+            hi.save()
         if not hasattr ( protomodels[0], "particleContributions" ):
             print ( "[hiscore] why does the winner not have particle contributions?" )
-            # ma = Manipulator ( protomodels[0] )
-            # self.computeParticleContributions(ma)
-            # protomodels[0]=ma.M
+            ma = Manipulator ( protomodels[0] )
+            from walker.hiscore import Hiscore
+            from tester.predictor import Predictor
+            predictor = None
+            dbpath = f"{rundir}/default.pcl"
+            if hasattr ( args, "dbpath" ):
+                dbpath = args.dbpath
+            if os.path.exists ( dbpath ):
+                predictor = Predictor ( 0, dbpath = dbpath, 
+                                        expected = False, select= "all" )
+            hi = Hiscore( 0, True, f"{rundir}/hiscore.hi", predictor = predictor )
+            hi.computeParticleContributions(ma)
+            protomodels[0]=ma.M
+            hi.save()
 
     if args.outfile is not None:
         storeList ( protomodels, args.outfile )
@@ -217,15 +231,24 @@ if __name__ == "__main__":
     import pickle
     f = open ( args.infile, "rb" )
     protomodels = pickle.load(f)
-    ma = Manipulator ( protomodels[0] )
+    import builder
+    protomodel = protomodels
+    # so we can also use Andre's pcl files
+    if type(protomodels)==builder.protomodel.ProtoModel:
+        protomodel = protomodels
+    else:
+        protomodel = protomodels[0]
+    ma = Manipulator ( protomodel )
     ma.M.createNewSLHAFileName()
     print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, trimmer%s" % \
+    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     from tester import combiner
+    from walker import hiscore
+    from tester import predictor
     co = combiner.Combiner() #Keep it for convenience
     # import hiscore #Keep it for convenience
 

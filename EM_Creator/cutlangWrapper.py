@@ -416,6 +416,43 @@ class CutLangWrapper:
                         f.write(g.read() + ",\n")
             f.write("}")
 
+    @staticmethod
+    def get_common_substring(str_list):
+        """gets the largest common substring present in all strings in str_list
+           returns a tuple consisting of tuples of position of the substring in the first string
+           and its length e.g. ((0,3) (4,3)) for str_list = ("aaabccc", "cccbaaa")
+           WARNING: this method is expensive and should not be used for potentialy large lists
+        """
+        positions = []
+        lengths = []
+        for i in range(len(str_list[0])):
+            print(f"i : {i}.")
+            j =0
+            is_substr = True
+            while i + j < len(str_list[0]) and is_substr == True:
+                is_substr = CutLangWrapper.is_substring_in_list(str_list[0][i:i + j + 1], str_list[1:])
+                if is_substr:
+                    j += 1
+                print(f"i: {i}, j : {j}")
+            if j > 0:
+                positions.append(i)
+                lengths.append(j)
+        if len(lengths) == 0:
+            return ((0,0))
+        else:
+            temp = max(lengths)
+            result = list( (positions[k], temp)  for k,l in enumerate(lengths) if l == temp)
+            return result
+
+    @staticmethod
+    def is_substring_in_list(string, str_list):
+        print("The substring: "+string+" the strings: " + str(str_list))
+        result = True
+        for i in range(len(str_list)):
+            if not string in str_list[i]:
+                result = False
+                break
+        return result
 
     def exe(self, cmd, logfile = None, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell

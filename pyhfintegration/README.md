@@ -131,13 +131,8 @@ For ATLAS-SUSY-2018-31, there are two cases :
 
 # To do list
 
-- [x] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison
-- [x] create a SModelS "pyhf" branch off the "develop" branch
-- [x] add pyhf into smodels/share/requirements.txt
-- [x] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key (and `datasetOrder`?)
-- [x] put the code into smodels/tools.
-- [x] change datasetObj.py:getCombinedUpperLimitFor
 - [x] add best expected combination in datasetObj.py:getCombinedUpperLimitFor
+- [x] added `jsonFiles` attribute into `smodels-utils/smodels_utils/dataPreparation/inputObjects.py`
 - [x] implement the likelihood method and interface it to SModelS
 - [x] implement the chi2 method and interface it to SModelS
 - [x] add a unit test
@@ -147,3 +142,8 @@ For ATLAS-SUSY-2018-31, there are two cases :
 - [x] "forked" covariances/drawBestSRs.py to drawBestCB.py that now takes `combination` instead of `dataset`
   - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination? -> for now, added a `best combination` key in the python output
 - [x] add the `best combination` to the `validationData` output
+- [x] validation doesn't really work for ATLAS-SUSY-2018-06 efficiency map; solved with k-factor = 1
+- [ ] try `del model` at each loop
+- [ ] try rescaling signals without re-instantiating the `model` variable at every loop
+- [ ] validate ATLAS-SUSY-2018-06 and 2019-08 with `pyhf` : problem with multiple POIs -> ask pyhf people
+- [ ] why ATLAS-SUSY-2018-06 gives same exp and obs UL with pyhf -> two POIs ?
