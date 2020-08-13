@@ -3,12 +3,21 @@
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV
 import socket
+import atexit
+
+servers = []
+
+def shutdown ():
+    print ( "[databaseServer] shutting down servers" )
+    for i in servers:
+        i.finish()
 
 class DatabaseServer:
     def __init__ ( self, dbpath, port ):
         self.dbpath = dbpath
         self.port = port
         self.packetlength = 256
+        servers.append ( self )
 
     def run ( self ):
         self.initialize()
@@ -23,6 +32,7 @@ class DatabaseServer:
         data=data[6:] ## remove the query statement
         ret = self.lookUpResult ( data )
         self.pprint ( 'sending result of "%s" back to the client' % ret )
+        ret = (str(ret)+" "*32)[:32]
         self.connection.sendall ( bytes(ret,"utf-8") )
 
     def lookUpResult ( self, data ):
@@ -35,12 +45,16 @@ class DatabaseServer:
         expected = False 
         if tokens[0] == "exp":
             expected = True
-        self.pprint ( 'looking up result for %s:%s:%s %s' % ( anaId, txname, dType, massv ) )
+        self.pprint ( 'looking up result for %s %s %s %s' % ( anaId, txname, dType, massv ) )
         for exp in self.expResults:
             if not exp.globalInfo.id == anaId:
                 continue
             for ds in exp.datasets:
                 if dType == "ul" and ds.getType() != "upperLimit":
+                    continue
+                if dType != "ul" and dType != ds.getID():
+                    continue
+                if dType != "ul" and ds.getType() != "efficiencyMap":
                     continue
                 for txn in ds.txnameList:
                     if txn.txName != txname:
@@ -49,12 +63,17 @@ class DatabaseServer:
                              txn.txnameData.delta_x ) 
                     res = None
                     if expected:
-                        res = txn.txnameDataExp.getValueForPoint ( coords )
+                        if txn.txnameDataExp != None:
+                            res = txn.txnameDataExp.getValueForPoint ( coords )
                     else:
                         res = txn.txnameData.getValueForPoint ( coords )
                     print ( "now query", massv, anaId, ds.getType(), txname, ":", res )
                     return str(res)
         return "None"
+
+    def finish ( self ):
+        if hasattr ( self, "connection" ):
+            self.connection.close()
 
     def listen ( self ):
         try:
@@ -66,11 +85,12 @@ class DatabaseServer:
                 if data:
                     self.parseData ( str(data) )
                 else:
-                    self.pprint ( 'no more data from', self.client_address )
+                    self.pprint ( 'no more data from %s:%s' % \
+                                  ( self.client_address[0], self.client_address[1] ) )
                     break
         finally:
             # Clean up the connection
-            self.connection.close()
+            self.finish()
 
     def pprint ( self, *args ):
         print ( "[databaseServer]", " ".join(map(str,args)) )
@@ -81,10 +101,14 @@ class DatabaseServer:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address = ('localhost', self.port )
         self.pprint ( 'starting up on %s port %s' % self.server_address )
+        self.pprint ( 'I will be serving database %s at %s' % \
+                      (self.db.databaseVersion, self.dbpath ) )
         self.sock.bind( self.server_address )
 
         # Listen for incoming connections
         self.sock.listen(1)
+
+        atexit.register ( shutdown )
 
         while True:
             # Wait for a connection
