@@ -161,7 +161,7 @@ class RandomWalker:
         pidsbc = list ( self.manipulator.getAllPidsOfBestCombo() )
         pidsbc.sort()
         prtclesbc = ", ".join ( map ( helpers.getParticleName, pidsbc ) )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s [%s]" % \
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s [in best combo: %s]" % \
               ( self.protomodel.step, nUnfrozen, nTotal, \
                 prtcles, prtclesbc ) )
         if len(pidsbc)>0 and not set(pidsbc).issubset ( set(pidsp) ):
