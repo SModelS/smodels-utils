@@ -466,10 +466,10 @@ class Combiner:
         if name == "flat":
             prior = 1.
         if name == "expo1":
-            a,b,c = 3, 3.68*3, 5.7*3
+            a,b,c = 2, 4, 8
             prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) )
         if name == "expo2":
-            a,b,c = 4, 16, 32
+            a,b,c = 3, 3.68*3, 5.7*3
             prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) )
         if name == "gauss1":
             a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
