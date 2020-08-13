@@ -26,6 +26,7 @@ def main():
     argparser.add_argument ( '--states', help='the states', action="store_true" )
     argparser.add_argument ( '--pmodels', help='the pmodels', action="store_true" )
     argparser.add_argument ( '--png', help='the png files', action="store_true" )
+    argparser.add_argument ( '--database', help='the database default.pcl file', action="store_true" )
     argparser.add_argument ( '--dbdict', help='the database.dict file', action="store_true" )
     argparser.add_argument ( '--ssms', help='the ssm files', action="store_true" )
     argparser.add_argument ( '--llhds', help='the llhd files', action="store_true" )
@@ -46,6 +47,7 @@ def main():
               "fake": [ "fake*.pcl", "signal*.pcl" ],
               "copy": [ "hiscoreCopy.hi" ],
               "dbdict": [ "database.dict" ],
+              "database": [ "default.pcl" ],
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
               "hiscore": [ "hiscore.hi" ],
