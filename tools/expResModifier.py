@@ -22,10 +22,12 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge ):
+    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge, 
+                   suffix: str ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
+        :param suffix: suffix to use, e.g. fake, signal, etc
         """
         self.dbpath = dbpath
         self.protomodel = None
@@ -34,6 +36,7 @@ class ExpResModifier:
         self.nproc = nproc
         self.fudge = fudge
         self.logfile = "modifier.log"
+        self.suffix = suffix
         if Zmax == None:
             Zmax = 100
         self.Zmax = Zmax
@@ -43,6 +46,37 @@ class ExpResModifier:
     def interact ( self, listOfExpRes ):
         import IPython
         IPython.embed( using=False )
+
+    def extractStats ( self ):
+        """ dont produce a new fake database, extract a stats dict
+            from an existing database. """
+        picklefile = self.rundir + "/" + self.dbpath
+        if self.rundir in self.dbpath:
+            picklefile = self.dbpath
+        self.pprint ( f"Extracting stats from {picklefile}" )
+        db = Database ( picklefile )
+        self.dbversion = db.databaseVersion
+        listOfExpRes = db.expResultList
+        self.stats = {}
+        for expRes in listOfExpRes:
+            for i,dataset in enumerate(expRes.datasets):
+                dId = dataset.dataInfo.dataId
+                if dId == None:
+                    dId = "ul"
+                label = dataset.globalInfo.id + ":" + dId
+                D={}
+                info = dataset.dataInfo
+                dt = info.dataType
+                if dt == "upperLimit":
+                    for txname in dataset.txnameList:
+                        D[txname]=txname.txnameData.y_values
+                        
+                for i in [ "observedN", "origN", "expectedBG", "lmbda", "bgError",
+                           "origUpperLimit", "origExpectedUpperLimit", "upperLimit",
+                           "expectedUpperLimit" ]:
+                    if hasattr ( info, i ):
+                        D[i] = getattr ( info, i )
+                self.stats[ label ] = D
 
     def computeNewObserved ( self, txname, globalInfo ):
         """ given expected upper limit, compute a fake observed limit
@@ -157,7 +191,7 @@ class ExpResModifier:
         self.protomodel = ma.M
         return self.protomodel
 
-    def modifyDatabase ( self, outfile="", suffix="fake1", pmodel="" ):
+    def modifyDatabase ( self, outfile="", pmodel="" ):
         """ modify the database, possibly write out to a pickle file
         :param outfile: if not empty, write the database into file
         :param suffix: suffix to append to database version
@@ -209,8 +243,8 @@ class ExpResModifier:
                 S = ( obs - exp ) / toterr
                 origS = ( orig - exp ) / toterr
             if S < self.Zmax:
-                self.log ( "effmap replacing nobs=%d (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
-                    ( orig, exp, lmbda, S, obs, dataset.globalInfo.id ) )
+                self.log ( "effmap replacing old nobs=%d (bg=%.2f+/-%.2f, lmbda=%.2f, S=%.2f) with nobs=%d for %s" % \
+                    ( orig, exp, err, lmbda, S, obs, dataset.globalInfo.id ) )
                 dataset.dataInfo.observedN = obs
         if S > 3.5:
             self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
@@ -290,25 +324,42 @@ class ExpResModifier:
         self.log ( " `- add UL matching tpred %s: %s[%s]" % \
                 ( tpred.analysisId(), tpred.xsection.value, \
                   tpred.PIDs ) )
-        #print ( " `- add UL matching tpred %s/%s: %s[%s]" % \
-        #        ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value, \
-        #          tpred.PIDs ) )
+        #print ( " `- add UL matching tpred %s: %s[%s] ds:%s" % \
+        #        ( tpred.analysisId(), tpred.xsection.value, \
+        #          tpred.PIDs, dataset ) )
         ## so we simply add the theory predicted cross section to the limit
         sigmaN = tpred.xsection.value.asNumber(fb)
         ## sigmaN is the predicted production cross section of the signal,
         ## in fb
+        def distance ( v1, v2 ):
+            """ compute distance between v1 and v2 """
+            ret = 0.
+            v1,v2 = list(v1),list(v2)
+            if len(v1)*2 == len(v2):
+                v1 = v1*2
+            for _1,_2 in zip ( v1, v2 ):
+                ret+= ( _1 - _2 )**2
+            ret = math.sqrt (ret )
+            return ret
+
         for i,txname in enumerate(dataset.txnameList):
             if not self.txNameIsIn ( txname, tpred ):
                 continue
-            # print ( "  `-- adding %s to %s" % ( sigmaN, txname ) )
+            #print ( "  `-- adding %s to %s" % ( sigmaN, txname ) )
             txnd = txname.txnameData
             etxnd = txname.txnameDataExp
+            coordsTpred = txnd.dataToCoordinates ( tpred.mass ) ## coordinates of tpred
             for yi,y in enumerate(txnd.y_values):
+                pt = txnd.tri.points[yi] ## the point in the rotated coords
+                dist = distance ( pt, coordsTpred )
+                if dist > 400.: ## change y_values only in vicinity of protomodel
+                    continue
                 oldv = txnd.y_values[yi]
                 if etxnd != None and len(txnd.y_values) == len(etxnd.y_values):
                     dt = ( ( txnd.delta_x - etxnd.delta_x )**2 ).sum()
                     if dt < 1e-2:
                         oldv = etxnd.y_values[yi] ## FIXME more checks pls
+                # print ( "    `--- adding %s %s" % ( oldv, sigmaN ) )
                 txnd.y_values[yi]=oldv + sigmaN
             dataset.txnameList[i].txnameData = txnd
             dataset.txnameList[i].sigmaN = sigmaN
@@ -317,7 +368,7 @@ class ExpResModifier:
     def saveStats ( self ):
         """ write out the collected stats, so we can discuss experimentalists'
             conservativeness """
-        filename = "%s/database.dict" % self.rundir
+        filename = "%s/db%s.dict" % ( self.rundir, self.suffix )
         self.log ( f"saving stats to {filename}" )
         meta = { "dbpath": self.dbpath, "Zmax": self.Zmax,
                  "database": self.dbversion, "fudge": self.fudge,
@@ -343,7 +394,7 @@ class ExpResModifier:
         ret = []
         self.produceTopoList()
         self.log ( "now add the signals from %s, %d topos" % \
-                   ( self.protomodel, len(self.topos) ) )
+                   ( self.getPModelName(), len(self.topos) ) )
         addedUL, addedEM = 0, 0
         print ( f"{len(listOfExpRes)} results: ", end="" )
         for l,expRes in enumerate(listOfExpRes):
@@ -371,6 +422,7 @@ class ExpResModifier:
                             addedEM += 1
                             listOfExpRes[l].datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
+        print ( )
         self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
         return listOfExpRes
 
@@ -405,6 +457,13 @@ class ExpResModifier:
         self.log ( f"added {addedUL} UL signals and {addedEM} EM signals" )
         return listOfExpRes
 
+    def getPModelName ( self ):
+        """ name of protomodel """
+        pmodelname = str(self.protomodel)
+        for i in [ "<sub>", "<sup>", "</sub>", "</sup>" ]:
+            pmodelname = pmodelname.replace( i, "" )
+        return pmodelname
+
     def addSignals ( self, listOfExpRes ):
         """ thats the method that adds a typical signal, parallel version
         :param nproc: number of processes
@@ -416,8 +475,8 @@ class ExpResModifier:
         # print ( "adding signals", os.path.exists ( self.protomodel.currentSLHA ) )
         ret = []
         self.produceTopoList()
-        self.log ( "now add the signals from %s, %d topos, %d procs" % \
-                   ( self.protomodel, len(self.topos), self.nproc ) )
+        self.log ( "now add the signals from %s, K=%s, %d topos, %d procs" % \
+                   ( self.getPModelName(), len(self.topos), self.nproc ) )
         import multiprocessing
         ## listOfExpRes=listOfExpRes[:10]
         chunks = [ listOfExpRes[i::self.nproc] for i in range(self.nproc) ]
@@ -465,18 +524,18 @@ class ExpResModifier:
         a = subprocess.getoutput ( cmd )
         print ( "[expResModifier]", cmd, a )
 
-def check ( picklefile ):
-    """ check the picklefile """
-    print ( "now checking the modified database" )
-    db = Database ( picklefile )
-    listOfExpRes = db.getExpResults()
-    for er in listOfExpRes:
-        datasets = er.datasets
-        for ds in datasets:
-            txnl = ds.txnameList
-            for txn in txnl:
-                x = txn.txnameData.dataType
-    print ( "were good", db.databaseVersion )
+    def check ( self, picklefile ):
+        """ check the picklefile """
+        print ( "now checking the modified database" )
+        db = Database ( picklefile )
+        listOfExpRes = db.getExpResults()
+        for er in listOfExpRes:
+            datasets = er.datasets
+            for ds in datasets:
+                txnl = ds.txnameList
+                for txn in txnl:
+                    x = txn.txnameData.dataType
+        print ( "were good", db.databaseVersion )
 
 
 if __name__ == "__main__":
@@ -512,31 +571,44 @@ if __name__ == "__main__":
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode', action='store_true' )
-    argparser.add_argument ( '--stats',
-            help='create stats file', action='store_true' )
+    argparser.add_argument ( '-B', '--build',
+            help='build the original pickle file with all relevant info, then exit (use --database to specify path)', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
+    argparser.add_argument ( '-x', '--extract_stats',
+            help='dont create new database, extract stats from existing database', 
+            action='store_true' )
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
     argparser.add_argument ( '-k', '--keep',
             help='keep temporary files (for debugging)', action='store_true' )
     args = argparser.parse_args()
+    if args.build:
+        from smodels.experiment.txnameObj import TxNameData
+        TxNameData._keep_values = True
+        from smodels.experiment.databaseObj import Database
+        print ( f"[expResModifier] starting to build database at {args.database}." )
+        db = Database ( args.database )
+        print ( f"[expResModifier] built database at {args.database}. Exiting." )
+        sys.exit()
     if type(args.rundir)==str and not "/" in args.rundir:
         args.rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + args.rundir
     if args.outfile == "":
         args.outfile = args.suffix+".pcl"
     from smodels.experiment.databaseObj import Database
     modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep, \
-                               args.nproc, args.fudge )
+                               args.nproc, args.fudge, args.suffix )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
-    er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
+    if args.extract_stats:
+        er = modifier.extractStats()
+    else:
+        er = modifier.modifyDatabase ( args.outfile, args.pmodel )
 
-    if args.stats:
-        modifier.saveStats()
+    modifier.saveStats()
 
     if args.check:
-        check ( args.outfile )
+        modifier.check ( args.outfile )
 
     if args.interactive:
         modifier.interact ( er )
