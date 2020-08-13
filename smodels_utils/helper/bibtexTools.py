@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
-# vim: set encoding=utf-8
+
+"""
+.. module:: bibtexTools
+        :synopsis: Collection of methods for bibtex.
+                   Currently contains only a dictionary for getting the
+                   bibtex names of analyses
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
+"""
 
 from __future__ import print_function
-from smodels.experiment.databaseObj import Database
+
 from smodels.tools.smodelsLogging import setLogLevel
+import bibtexparser
 import urllib, colorama
 import os, sys
-import bibtexparser
+from smodels.experiment.databaseObj import Database
 
 if sys.version[0]=="2":
     reload(sys)
@@ -22,10 +31,8 @@ try:
 except ImportError:
     from urllib.request import urlopen
 
-""" write bibtex file of analysis references from the database itself """
-
 class BibtexWriter:
-    def __init__ ( self, databasepath, verbose ):
+    def __init__ ( self, databasepath="./", verbose="info" ):
         self.verbose = verbose.lower()
         setLogLevel ( self.verbose )
         self.databasepath = databasepath
@@ -69,7 +76,10 @@ class BibtexWriter:
             else:
                 self.log ( "Success!" )
         else:
-            self.log ( "Did not copy ./database.bib and ./refs.bib. Something seems wrong. Maybe you did not generate them?" )
+            if not os.path.isdir ( self.databasepath ):
+                print ( "Databasepath %s is not a directory. Wont copy." % self.databasepath )
+            else:
+                self.log ( "Did not copy ./database.bib and ./refs.bib. Something seems wrong. Maybe you did not generate them?" )
 
 
     def close ( self ):
@@ -277,6 +287,15 @@ class BibtexWriter:
         cachef.write ( "\n" )
         cachef.close()
 
+    def writeBibEntry ( self, bib, Id ):
+        self.success += 1
+        self.log ( "Success!" )
+        self.f.write ( bib )
+        self.f.write ( "\n" )
+        if self.write_cache:
+            self.writeCache ( Id, bib )
+        return
+
     def processExpRes ( self, expRes, write_cache ):
         self.npublications += 1
         Id = expRes.globalInfo.id
@@ -295,12 +314,7 @@ class BibtexWriter:
             self.log ( "Marked as special case!" )
             bib = self.bibtexFromCDS ( self.specialcases[Id] )
             if bib:
-                self.success += 1
-                self.log ( "Success!" )
-                self.f.write ( bib )
-                self.f.write ( "\n" )
-                if write_cache:
-                    self.writeCache ( Id, bib )
+                self.writeBibEntry ( bib, Id )
                 return
             else:
                 self.log ( "Special treatment failed." )
@@ -323,12 +337,7 @@ class BibtexWriter:
         self.log ( " * Id, url: %s, %s" % ( Id, url ) )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
-            self.success += 1
-            self.log ( "Success!" )
-            self.f.write ( str(bib) )
-            self.f.write ( "\n" )
-            if write_cache:
-                self.writeCache ( Id, bib )
+            self.writeBibEntry ( bib, Id )
             return
         if "bin/view/CMSPublic" in url:
             oldurl = url
@@ -337,11 +346,7 @@ class BibtexWriter:
             # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
             bib = self.bibtexFromWikiUrl ( url, Id )
             if bib:
-                self.success += 1
-                self.log ( "Success! (with url rewrite)" )
-                # self.log ( "Bib: %s" % bib[-100:] )
-                self.f.write ( str(bib) )
-                self.f.write ( "\n" )
+                self.writeBibEntry ( bib, Id )
                 return
         self.nfailed += 1
         self.nomatch += 1
@@ -350,6 +355,7 @@ class BibtexWriter:
         self.h.write ( "    `---- %s\n" % url )
 
     def run( self, write_cache ):
+        self.write_cache = write_cache
         self.openHandles()
         home = os.environ["HOME"]
         # self.db = Database ( "%s/git/smodels-database" % home )
@@ -399,6 +405,47 @@ class BibtexWriter:
         ret = str(ret[:-2]+"}")
         return ret
 
+    def query ( self, anaid: str ):
+        """ get the bibtex name of anaid
+        :param anaid: eg CMS-SUS-16-050
+        :returns: bibtex label, eg Aaboud:2017vwy
+        """
+        path = os.path.dirname ( __file__ )
+        refsfile = f"{path}/refs.bib"
+        if os.path.exists ( refsfile ):
+            f=open( refsfile )
+            bibtex=bibtexparser.load ( f )
+            f.close()
+            biblabels = bibtex.entries_dict.keys()
+            labels = {}
+            for label,entry in bibtex.entries_dict.items():
+                for i in [ "label", "number", "reportnumber" ]:
+                    if i in entry:
+                        name = entry[i].split(",")[0]
+                        name = name.split(".")[0]
+                        if not label in labels:
+                            labels[label]=name
+                        if not name in labels:
+                            labels[ name ] = label
+            if anaid in labels:
+                return labels[anaid]
+        names = { "ATLAS-SUSY-2016-07": "Aaboud:2017vwy",
+                  "ATLAS-SUSY-2016-16": "Aaboud:2017aeu",
+                  "CMS-SUS-16-050": "Sirunyan:2291344",
+                  "ATLAS-CONF-2013-047": "ATLAS-CONF-2013-047",
+                  "CMS-SUS-13-012": "Chatrchyan:2014lfa",
+                  "ATLAS-SUSY-2013-02": "Aad:2014wea",
+                  "CMS-SUS-19-006": "Sirunyan:2686457",
+        }
+        if anaid in names:
+            return names[anaid]
+        return "FIXME"
+
+    def interactive ( self ):
+        """ start an interactive session """
+        import IPython
+        IPython.embed( using = False )
+
     def addSummaries ( self ):
         f=open("refs.bib")
         self.log ( "adding summaries to database.bib." )
@@ -413,16 +460,18 @@ class BibtexWriter:
         self.i.close()
         commands.getoutput ( "cat refs.bib >> database.bib" )
 
-
 if __name__ == "__main__":
     import argparse
-    argparser = argparse.ArgumentParser(description='write bibtex files for database' )
+    argparser = argparse.ArgumentParser(description='write bibtex files for database, and other bibtex related tools' )
     argparser.add_argument ( '-d', '--database',
             help='path to database [../../smodels-database]',
             type=str, default='../../smodels-database' )
     argparser.add_argument ( '-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str )
+    argparser.add_argument ( "-q", "--query",
+            help="query the database for bibtex label of <anaId>",
+            default = None, type = str )
     argparser.add_argument ( "-c", "--copy",
             help="copy bibtex files to database folder (does not generate the files, however)",
             action="store_true" )
@@ -431,6 +480,10 @@ if __name__ == "__main__":
             action="store_true" )
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
+    if args.query != None:
+        ret = writer.query( args.query )
+        print ( "query for %s resulted in %s" % ( args.query, ret ) )
+        sys.exit()
     if args.copy:
         writer.copy()
     else:
