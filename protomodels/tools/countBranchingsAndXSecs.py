@@ -47,6 +47,10 @@ def countPerFile ( f ):
 
 def count( path ):
     files = glob.glob("%s/*.slha" % path )
+    print ( "[countBranchingsAndXSecs] counting all %d files in %s" % ( len(files), path ) )
+    if len(files)==0:
+        print ( "[countBranchingsAndXSecs] error: no files found" )
+        return
     brstats,xsecstats = [], []
     for f in files:
         nbranchings, nxsecs = countPerFile( f )
@@ -62,7 +66,15 @@ def count( path ):
             ( numpy.mean ( xsecstats ), numpy.std ( xsecstats ) ) )
 
 if __name__ == "__main__":
-    count( "pmssm/" )
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='count the numbers of branchings and xsecs in a directory of slha files' )
+    argparser.add_argument ( '-d', '--directory',
+            help='directory [slha/]',
+            type=str, default="slha/" )
+    args = argparser.parse_args()
+    
+    count( args.directory )
     """
     # Average number of branchings 3.68
     # Average number of xsecs 5.7
