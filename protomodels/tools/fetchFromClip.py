@@ -31,6 +31,7 @@ def main():
     argparser.add_argument ( '--ssms', help='the ssm files', action="store_true" )
     argparser.add_argument ( '--llhds', help='the llhd files', action="store_true" )
     argparser.add_argument ( '--fake', help='the fake* databases', action="store_true" )
+    argparser.add_argument ( '--slha', help='the hiscore.slha file', action="store_true" )
     argparser.add_argument ( '--copy', help='the copy of the hiscore file', 
                              action="store_true" )
     argparser.add_argument ( '-2', '--two', help='the second hiscore file', 
@@ -47,6 +48,7 @@ def main():
               "two": [ "hiscore2.hi" ],
               "fake": [ "fake*.pcl", "signal*.pcl" ],
               "copy": [ "hiscoreCopy.hi" ],
+              "slha": [ "hiscore.slha" ],
               "dbdict": [ "database.dict" ],
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
