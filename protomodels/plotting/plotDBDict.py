@@ -129,7 +129,7 @@ class Plotter:
         #x = np.linspace( minX, maxX,100 )
         # plt.legend()
         dbname = os.path.basename ( self.meta["database"] )
-        title = f"$p$-values, database v{dbname}"
+        title = f"$p$-values, SModelS database v{dbname}"
         fudge = 1.
         if "fudge" in self.meta:
             fudge = self.meta["fudge"]
