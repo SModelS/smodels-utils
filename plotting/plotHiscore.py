@@ -12,6 +12,7 @@ from smodels.theory.theoryPrediction import TheoryPrediction
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 from smodels_utils.helper.sparticleNames import SParticleNames
+from smodels_utils.helper.bibtexTools import BibtexWriter
 from tools import helpers
 
 runtime._experimental = True
@@ -201,13 +202,15 @@ def writeRawNumbersLatex ( protomodel ):
     f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Particle}  \\\\\n" )
     f.write("\\hline\n" )
     namer = SParticleNames ( susy = False )
+    bibtex = BibtexWriter()
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         dtype = tp.dataType()
         print ( "item %s (%s)" % ( anaId, dtype ) )
         dt = { "upperLimit": "ul", "efficiencyMap": "em" }
         # f.write ( "%s & %s & " % ( anaId, dt[dtype] ) )
-        f.write ( "%s & " % ( anaId ) )
+        ref = bibtex.query ( anaId )
+        f.write ( "%s~\\cite{%s} & " % ( anaId, ref ) )
         if dtype == "efficiencyMap":
             dI = tp.dataset.dataInfo
             obsN = dI.observedN
