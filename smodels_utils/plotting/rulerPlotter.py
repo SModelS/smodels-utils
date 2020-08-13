@@ -226,7 +226,7 @@ class RulerPlot:
         import numpy
         dm = self.maxmass - self.minmass
         fontsize = 15
-        if style == "andre":
+        if self.style == "andre":
             fontsize = 20
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         x = [ 0. ] * len(ticks)
@@ -247,7 +247,7 @@ class RulerPlot:
         ax1.plot ( x, ticks, c="w" )
         ax1.set_xticks([])
         ax1.tick_params(axis='y', labelsize= fontsize-2, pad = 0 )
-        if style == "andre":
+        if self.style == "andre":
             plt.text(-.22, self.maxmass+20., "m [GeV]", fontsize=fontsize )
         else:
             plt.text(-.22, self.minmass-30., "m [GeV]", fontsize=fontsize )
@@ -272,7 +272,7 @@ class RulerPlot:
                 dtext =.05
             if ctr == 2:
                 xoff += .03
-            if style == "andre":
+            if self.style == "andre":
                 xoff = 0.35 + (-1)**(ctr) * .05 * math.ceil(ctr/2)
                 if ctr>0 and ctr%2 == 1:
                     dtext = -.17
@@ -288,7 +288,7 @@ class RulerPlot:
             if ctr == 0:
                 x2 = 1.
             ## small horizontal lines next to the particle names
-            if style != "andre":
+            if self.style != "andre":
             ## thats the line to the right
                 plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
 
