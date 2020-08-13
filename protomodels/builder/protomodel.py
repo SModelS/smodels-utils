@@ -205,7 +205,7 @@ class ProtoModel:
         for dpid in self.possibledecays[pid]:
             #Get the list of BSM particles in the decay:
             if isinstance(dpid,(list,tuple)):
-                pidList = [abs(p) for p in dpid if p in self.masses]
+                pidList = [abs(p) for p in dpid if abs(p) in self.particles]
             else:
                 pidList = [abs(dpid)]
             #Skip decays to unfrozen particles
@@ -234,7 +234,7 @@ class ProtoModel:
             col = colorama.Fore.GREEN
         else:
             self.highlight ( "red", "I think we called highlight without msg type" )
-        print ( "%s[%s:%s] %s%s" % ( col, module,  
+        print ( "%s[%s:%s] %s%s" % ( col, module,
             time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
         self.log ( *args )
 
