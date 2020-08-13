@@ -221,11 +221,13 @@ if __name__ == "__main__":
     ma.M.createNewSLHAFileName()
     print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, trimmer%s" % \
+    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     from tester import combiner
+    from walker import hiscore
+    from tester import predictor
     co = combiner.Combiner() #Keep it for convenience
     # import hiscore #Keep it for convenience
 
