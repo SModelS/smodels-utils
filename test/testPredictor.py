@@ -47,8 +47,11 @@ class PredictionsTest(unittest.TestCase):
         #OBS: Since the original protomodel already has all of its cross-sections rescaled, we do not
         #need to rescale pNew again (since muhat should be 1)
 
-        #Hard coded combarison against (old) version (minor xsec differences):
-        self.assertTrue(abs(3.9-pNew.K)/3.9 < 0.1)
+        #Hard coded combarison against (old) version (minor xsec differences and the change in prior):
+        oldPrior = predictor.combiner.computePrior(pNew,name="expo2",nll=True)
+        newPrior = predictor.combiner.computePrior(pNew,name="expo1",nll=True)
+        newK = pNew.K - 2*oldPrior + 2*newPrior
+        self.assertTrue(abs(3.9-newK)/3.9 < 0.1)
         self.assertTrue(abs(2.3-pNew.Z)/2.3 < 0.1)
         self.assertEqual(15,len(pNew.rvalues))
         self.assertEqual('BDGK',pNew.letters)
@@ -57,7 +60,10 @@ class PredictionsTest(unittest.TestCase):
         for i,r in enumerate(rvalues):
             self.assertTrue(abs(pNew.rvalues[i]-r)/r < 0.05) #Allow no more than 5% differences (due to xsec)
 
+
         #Compare against new default:
+        predictor.rthreshold = 1.3
+        predictor.predict(pNew)
         self.assertAlmostEqual(protomodel.Z,pNew.Z,3)
         self.assertAlmostEqual(protomodel.K,pNew.K,3)
         self.assertAlmostEqual(protomodel.muhat,pNew.muhat,3)
@@ -65,7 +71,7 @@ class PredictionsTest(unittest.TestCase):
         self.assertAlmostEqual(protomodel.llhd,pNew.llhd,3)
 
 
-        np.testing.assert_almost_equal(protomodel.rvalues[:-2],pNew.rvalues,3)
+        np.testing.assert_almost_equal(protomodel.rvalues,pNew.rvalues,3)
         self.assertEqual(len(protomodel.bestCombo),len(pNew.bestCombo))
         for i,pred in enumerate(protomodel.bestCombo):
             self.assertEqual(str(pred.expResult),str(pNew.bestCombo[i].expResult))
