@@ -21,6 +21,41 @@ def remove( fname, keep):
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
 
+def startServer ( rundir, dry_run, time ):
+    """ start the database server in <rundir> """
+    with open ( "%sclip/server_template.sh" % codedir, "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    """
+    nr = rundir
+    if nr.endswith("/"):
+        nr = nr[:-1]
+    p = nr.rfind("/")
+    if p > 0:
+        nr = nr[p+1:]
+    """
+    print ( f"[slurm.py] start database server in {rundir}" )
+    tf = "%s/SERVER.sh" % ( rundir )
+    with open(tf,"wt") as f:
+        for line in lines:
+            f.write ( line.replace("@@RUNDIR@@",rundir) )
+    os.chmod( tf, 0o755 )
+    ram = 3 # max ( 2, 0.5 * ( jmax - jmin ) )
+    cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+    if 8 < time <= 48:
+        qos = "c_medium"
+    cmd += [ "--qos", qos ]
+    cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    print ( " ".join ( cmd ) )
+    if not dry_run:
+        a=subprocess.run ( cmd )
+        print ( "returned: %s" % a )
+
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                 cheatcode, rundir, maxsteps ):
     """ prepare everything for a single job
@@ -55,31 +90,6 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                   ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    tf = "%s/RUN_%s.sh" % ( rundir, jmin )
-    with open(tf,"wt") as f:
-        for line in lines:
-            f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
-    os.chmod( tf, 0o755 )
-    ram = max ( 25, 2.0 * ( jmax - jmin ) )
-    # cmd = [ "srun" ]
-    cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
-    qos = "c_short"
-    if time > 48:
-        qos = "c_long"
-    if 8 < time <= 48:
-        qos = "c_medium"
-    cmd += [ "--qos", qos ]
-    # cmd += [ "-n", str(jmax - jmin) ]
-    # cmd += [ "--threads-per-core", str(jmax - jmin) ]
-    # cmd += [ "-N", str(jmax - jmin) ]
-    # cmd += [ "-k" ]
-    cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
-    print ( " ".join ( cmd ) )
-    if not dry_run:
-        a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
     #remove ( tf, keep )
     #remove ( runner, keep )
 
@@ -429,6 +439,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
+    argparser.add_argument ( '-s','--server', help='start the database server for rundir',
+                             action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
                     help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
                     type=int, default=-1 )
@@ -454,12 +466,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
                              action="store_true" )
-    #argparser.add_argument ( '-R','--regressor', help='run the regressor',
-    #                         action="store_true" )
     argparser.add_argument ( '--allscans', help='run all the scans: masses, llhds, and ssmses',
                              action="store_true" )
-    #argparser.add_argument ( '-r','--restart', help='restart worker jobs n times [0]',
-    #                         type=int, default=0 )
     argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
                              action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
@@ -502,6 +510,8 @@ def main():
         args.dbpath = args.dbpath + ".pcl"
     if not args.query:
         logCall ()
+    if args.server:
+        startServer ( rundir, args.dry_run, args.time )
 
     if args.allscans:
         subprocess.getoutput ( "./slurm.py -S 0" )
