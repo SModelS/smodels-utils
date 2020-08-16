@@ -90,8 +90,34 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                   ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
+    tf = "%s/RUN_%s.sh" % ( rundir, jmin )
+    with open(tf,"wt") as f:
+        for line in lines:
+                    f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
+    os.chmod( tf, 0o755 )
+    # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     #remove ( tf, keep )
     #remove ( runner, keep )
+    ram = 2.5 # max ( 2.5, 2.0 * ( jmax - jmin ) )
+    # cmd = [ "srun" ]
+    cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+    if 8 < time <= 48:
+        qos = "c_medium"
+    cmd += [ "--qos", qos ]
+    # cmd += [ "-n", str(jmax - jmin) ]
+    # cmd += [ "--threads-per-core", str(jmax - jmin) ]
+    # cmd += [ "-N", str(jmax - jmin) ]
+    # cmd += [ "-k" ]
+    cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    print ( " ".join ( cmd ) )
+    if not dry_run:
+        a=subprocess.run ( cmd )
+        print ( "returned: %s" % a )
 
 def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
