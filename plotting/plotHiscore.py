@@ -180,7 +180,7 @@ def writeRawNumbersHtml ( protomodel ):
                             pids.add ( abs(pid[0]) )
             #particles = helpers.toHtml ( pids, addSign = False,
             #                              addBrackets = False )
-            particle = namer.htmlName ( pids, addSign = False, addBrackets = False )
+            particles = namer.htmlName ( pids, addSign = False, addBrackets = False )
             f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
                     ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles ) )
             if hassigs:
