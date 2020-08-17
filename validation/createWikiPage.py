@@ -137,6 +137,10 @@ a list of [all SMS topologies](SmsDictionary%s).
 
 The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. If a covariance matrix has been published, we present the combined limit of all signal regions. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
+Note that the SModelS validation plots show on- and off-shell regions
+separately (e.g., T2tt and T2ttoff) while the exclusion lines given by ATLAS or
+CMS are for on- and off-shell at once.
+
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
         self.dotlessv, self.dotlessv ) )
         if self.ugly:
