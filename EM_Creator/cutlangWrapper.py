@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# coding: utf-8
 
 """
 .. module:: CutLangWrapper
@@ -33,6 +34,9 @@
 # FIXME: Instead of exiting, raise exceptions?
 # FIXME: Adapt the getmasses scheme to CLA wrapper
 # FIXME: Delphes & Cutlang return codes.
+# FIXME: Output partial efficiencies into .part.embaked files
+# FIXME: analyses or analysis in __main__ and in run and __init__?
+# TODO: Add a filter complement function
 
 
 
@@ -58,7 +62,7 @@ class CutLangWrapper:
 
     GZIP_BLOCK = 1 << 24 # Block to decompress gzipped file, ~ 16 MB
 
-    def __init__ ( self, topo, njets, rerun, analyses, auto_confirm = True):
+    def __init__ ( self, topo, njets, rerun, analyses, auto_confirm = True, filterString = ""):
         """
         If not already present, clones and builds Delphes, CutLang and ADLLHC Analyses.
         Prepares output directories.
@@ -76,7 +80,10 @@ class CutLangWrapper:
         self.analyses = self.__standardise_analysis(analyses)
         self.rerun = rerun
         self.auto_confirm = auto_confirm
-
+        if len(filterString) > 0:
+            self.filterRegions, self.filterBins = CutLangWrapper.process_filter_string(filterString)
+        else:
+            self.filterRegions, self.filterBins = set(),{}
 
         # make auxiliary directories
         self.base_dir = Directory(f"cutlang_results/{self.analyses}", make = True)
@@ -205,6 +212,7 @@ class CutLangWrapper:
         nevents = [] # list of starting numbers of events
         entries = "" # efficiency entries for output
         contains_eff = False # Whether this root file yielded an efficiencies
+        ignorelist = {'baseline', 'presel'} & self.filterRegions
 
         self.__debug("Objects found in CutLang results:")
         self.__debug(str([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]))
@@ -215,8 +223,8 @@ class CutLangWrapper:
             x = x.ReadObj()
             if isinstance(x, ROOT.TDirectoryFile):
                 # if the region is in ignorelist, move onto another one
-                reg_name = x.GetName()
-                if reg_name in {'baseline', 'presel'}:
+                regionName = x.GetName()
+                if regionName in ignorelist:
                     continue
 
                 # if there is no cutflow defined in region, move onto another one
@@ -227,7 +235,7 @@ class CutLangWrapper:
                     continue
 
                 x.GetObject("cutflow", rootTmp)
-                entry = "".join(["'", reg_name, "': "])
+                entry = "".join(["'", regionName, "': "])
                 s = rootTmp.GetNbinsX()
                 if rootTmp[2] == 0:
                     entries += "NaN"
@@ -239,14 +247,36 @@ class CutLangWrapper:
                 nevents.append(rootTmp[2])
                 entries += entry
                 contains_eff = True
+                # if the region contains bins, process them
                 if "bincounts" in keys:
-                    self.__info(f"Found bins in {reg_name} section.")
+                    self.__info(f"Found bins in {regionName} section.")
                     x.GetObject("bincounts", rootTmp)
+                    # set the bins to be excluded from printout
+                    if regionName in self.filterBins:
+                        filterBinNums = self.filterBins[regionName]
+                    else:
+                        filterBinNums = []
+
                     nbins = rootTmp.GetNbinsX()
+                    binlabels = [rootTmp.GetXaxis().GetBinLabel(i) for i in range(nbins)]
+                    # shorten the bin label strings by removing common
+                    # substrings
+                    # while True:
+                    #     str_tuple = self.get_common_substring(binlabels)
+                    #     print(str_tuple)
+                    #     if str_tuple[0][1] >= 5:
+                    #         first_string = binlabels[0]
+                    #         binlabels = [s.replace(str_tuple[0][0], "") for s in binlabels]
+                    #     else:
+                    #         break
+
                     for i in range(nbins):
+                        # if bin number i is filtered out, skip it
+                        if i in filterBinNums:
+                            continue
                         bin_name = rootTmp.GetXaxis().GetBinLabel(i)
                         # bin_name = bin_name.replace("[","").replace("]","")
-                        bin_name = "_".join([reg_name, bin_name.replace(" ", "_")])
+                        bin_name = "_".join([regionName, bin_name.replace(" ", "_")])
                         entry = "".join(["'", bin_name, "': "])
                         self.__debug(f"bin no {rootTmp[i]} nevents: {nevents[-1]}.")
                         entry += str(rootTmp[i]/nevents[-1]) + ', '
@@ -425,6 +455,7 @@ class CutLangWrapper:
         """
         positions = []
         lengths = []
+        print(str_list)
         for i in range(len(str_list[0])):
             print(f"i : {i}.")
             j =0
@@ -438,14 +469,15 @@ class CutLangWrapper:
                 positions.append(i)
                 lengths.append(j)
         if len(lengths) == 0:
-            return ((0,0))
+            return (("",0),)
         else:
-            temp = max(lengths)
-            result = list( (positions[k], temp)  for k,l in enumerate(lengths) if l == temp)
+            maxLength = max(lengths)
+            result = list( (str_list[0][positions[k]: positions[k] + temp], maxLength)  for k,l in enumerate(lengths) if l == maxLength)
             return result
 
     @staticmethod
     def is_substring_in_list(string, str_list):
+        """ Checks if the string is a substring of all the strings in str_list"""
         print("The substring: "+string+" the strings: " + str(str_list))
         result = True
         for i in range(len(str_list)):
@@ -453,6 +485,7 @@ class CutLangWrapper:
                 result = False
                 break
         return result
+
 
     def exe(self, cmd, logfile = None, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell
@@ -591,26 +624,55 @@ class CutLangWrapper:
         analysis = analysis.replace("SUSY", "SUS")
         return analysis
 
-    def __info ( self, *msg ):
+
+    @staticmethod
+    def __info (*msg):
         """Print yellow info message"""
         print ( "%s[CutLangWrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
 
-    def __debug( self, *msg ):
+    @staticmethod
+    def __debug(*msg):
         """Print green debug message."""
         print ( "%s[CutLangWrapper] %s%s" % ( colorama.Fore.GREEN, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
 
-    def __msg ( self, *msg):
+    @staticmethod
+    def __msg(*msg):
         """Print normal message"""
         print ( "[CutLangWrapper] %s" % " ".join ( msg ) )
 
-    def __error ( self, *msg ):
+    @staticmethod
+    def __error(*msg):
         """Print red error message"""
-        print ( "%s[CutLangWrapper] Error: %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
-                   colorama.Fore.RESET ) )
+        string = ' '.join(msg)
+        print ( f"{colorama.Fore.RED}[CutLangWrapper] Error:  {string} {colorama.Fore.RESET}")
 
 
+    @staticmethod
+    def process_filter_string(string):
+        """ Takes comma separated string of regions and returns a tuple
+            of set and dictionary (regionList, binList).
+        """
+
+        string = string.replace(" ","")
+        filterList = string.split(",")
+
+        binList = {}
+        print(str(filterList))
+        removedElements = set()
+        for x in filterList:
+            searchObj = re.search("bin(\d+)", x)
+            if searchObj:
+                removedElements.add(x)
+                regionName = x[:searchObj.start()]
+                if regionName in binList:
+                    binList[regionName].append(int(searchObj.group(1)))
+                else:
+                    binList[regionName] = [int(searchObj.group(1))]
+
+        regionList = set(filterList) - set(removedElements)
+        return regionList, binList
 
 
 class Directory:
@@ -650,6 +712,8 @@ if __name__ == "__main__":
                            type=int, default=1)
     argparser.add_argument('-r', '--rerun', help='force rerun, even if there is a summary file already',
                            action="store_true")
+    argparser.add_argument('-f', '--filter', help='Regions and bins to be filtered out, comma separated list. E.g. "SR7, SR5, SR4bin2, SR4bin3"',
+                           type=str, default="")
     args = argparser.parse_args()
     if args.clean:
         cutlang = CutLangWrapper(args.topo, args.njets, args.rerun, args.analyses)
