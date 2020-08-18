@@ -40,7 +40,7 @@ def startServer ( rundir, dry_run, time ):
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@",rundir) )
     os.chmod( tf, 0o755 )
-    ram = 4 # max ( 2, 0.5 * ( jmax - jmin ) )
+    ram = 3 # max ( 2, 0.5 * ( jmax - jmin ) )
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
@@ -102,7 +102,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     ram = max ( 35, 2.0 * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
-        ram = 2.5
+        ram = 1
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
@@ -117,6 +117,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
+    # cmd += [ "--mem", "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
@@ -516,7 +517,7 @@ def main():
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking ["cms_sus_16_033,atlas_susy_2016_07"]',
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
     argparser.add_argument ( '-R', '--rundir', 
-                        help='override the default rundir [None]',
+                        help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
                         type=str, default="T3GQ" )
@@ -532,95 +533,97 @@ def main():
         rundir = args.rundir
         if not "/" in rundir:
             rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + rundir + "/"
-    if args.dbpath == "real":
-        args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
-    if args.dbpath == "default":
-        args.dbpath = rundir + "/default.pcl"
-    if "fake" in args.dbpath and not args.dbpath.endswith(".pcl"):
-        args.dbpath = args.dbpath + ".pcl"
+
+    rundirs = glob.glob ( rundir )
+    rundirs.sort()
+    if len(rundirs)>1:
+        print ( "[slurm.py] rundirs ", ", ".join ( rundirs ) )
+
     if not args.query:
         logCall ()
-    if args.server:
-        startServer ( rundir, args.dry_run, args.time )
 
-    if args.allscans:
-        subprocess.getoutput ( "./slurm.py -S 0" )
-        subprocess.getoutput ( "./slurm.py -S 0 --pid2 0" )
-        subprocess.getoutput ( "./slurm.py -L 0" )
-        return
-    if args.query:
-        queryStats ( args.maxsteps )
-        return
-    if args.bake != "":
-        if args.bake == "default":
-            args.bake = '@n 10000 @a'
-        if args.mass == "default":
-            # args.mass = "[(300,1099,25),'half',(200,999,25)]"
-            args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
-        for i in range(args.nbakes):
-            bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-                   args.nprocesses, rundir )
-    if args.clean:
-        clean_dirs( rundir, clean_all = False )
-        return
-    if args.clean_all:
-        clean_dirs( rundir, clean_all = True )
-        return
-    if args.updater:
-        runUpdater( args.dry_run, args.time, rundir )
-        return
-    if args.scan != -1:
-        rewrite = True # args.rewrite
-        runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir )
-        return
-    if args.llhdscan != -1:
-        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
-        return
+    for rundir in rundirs:
+        if args.dbpath == "real":
+            args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
+        if args.dbpath == "default":
+            args.dbpath = rundir + "/default.pcl"
+        if "fake" in args.dbpath and not args.dbpath.endswith(".pcl"):
+            args.dbpath = args.dbpath + ".pcl"
 
-    with open("run_walker.sh","rt") as f:
-        lines=f.readlines()
-    nmin, nmax, cont = args.nmin, args.nmax, args.cont
-    cheatcode = args.cheatcode
-    if nmax == 0:
-        nmax = nmin + 1
-    nworkers = args.nmax - args.nmin # + 1
-    nprocesses = min ( args.nprocesses, nworkers )
-    if nprocesses == 0:
-        nprocesses = nworkers
+        if args.server:
+            startServer ( rundir, args.dry_run, args.time )
 
-    restartctr = 0
-    if args.maxsteps == None:
-        args.maxsteps = 1000
-    while True:
-        if nprocesses == 1:
-            runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                        args.keep, args.time, cheatcode, rundir, args.maxsteps )
-        else:
-            import multiprocessing
-            ## nwalkers is the number of jobs per process
-            nwalkers = 0
-            if nprocesses > 0:
-                nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
-            jobs = []
-            #print ( "nworkers", nworkers )
-            #print ( "nproceses", nprocesses )
-            for i in range(nprocesses):
-                imin = nmin + i*nwalkers
-                imax = imin + nwalkers
-                #print ( "process", imin, imax )
-                p = multiprocessing.Process ( target = runOneJob,
-                        args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                                 args.keep, args.time, cheatcode, rundir, args.maxsteps ) )
-                jobs.append ( p )
-                p.start()
+        if args.allscans:
+            subprocess.getoutput ( "./slurm.py -R %s -S 0" % rundir )
+            subprocess.getoutput ( "./slurm.py -R %s -S 0 --pid2 0" % rundir )
+            subprocess.getoutput ( "./slurm.py -R %s -L 0" % rundir )
+            continue
 
-            for j in jobs:
-                j.join()
-        break
-        #if args.restart < 1:
-        #    break
-        #restartctr+=1
-        #if restartctr>args.restart:
-        #    break
+        if args.query:
+            queryStats ( args.maxsteps )
+            continue
+        if args.bake != "":
+            if args.bake == "default":
+                args.bake = '@n 10000 @a'
+            if args.mass == "default":
+                # args.mass = "[(300,1099,25),'half',(200,999,25)]"
+                args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
+            for i in range(args.nbakes):
+                bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
+                       args.nprocesses, rundir )
+        if args.clean:
+            clean_dirs( rundir, clean_all = False )
+            continue
+        if args.clean_all:
+            clean_dirs( rundir, clean_all = True )
+            continue
+        if args.updater:
+            runUpdater( args.dry_run, args.time, rundir )
+            continue
+        if args.scan != -1:
+            rewrite = True # args.rewrite
+            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir )
+            continue
+        if args.llhdscan != -1:
+            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
+            continue
+
+        with open("run_walker.sh","rt") as f:
+            lines=f.readlines()
+        nmin, nmax, cont = args.nmin, args.nmax, args.cont
+        cheatcode = args.cheatcode
+        if nmax == 0:
+            nmax = nmin + 1
+        nworkers = args.nmax - args.nmin # + 1
+        nprocesses = min ( args.nprocesses, nworkers )
+        if nprocesses == 0:
+            nprocesses = nworkers
+
+        restartctr = 0
+        if args.maxsteps == None:
+            args.maxsteps = 1000
+        while True:
+            if nprocesses == 1:
+                runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
+                            args.keep, args.time, cheatcode, rundir, args.maxsteps )
+            else:
+                import multiprocessing
+                ## nwalkers is the number of jobs per process
+                nwalkers = 0
+                if nprocesses > 0:
+                    nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
+                jobs = []
+                for i in range(nprocesses):
+                    imin = nmin + i*nwalkers
+                    imax = imin + nwalkers
+                    p = multiprocessing.Process ( target = runOneJob,
+                            args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
+                                     args.keep, args.time, cheatcode, rundir, args.maxsteps ) )
+                    jobs.append ( p )
+                    p.start()
+
+                for j in jobs:
+                    j.join()
+            break
 
 main()
