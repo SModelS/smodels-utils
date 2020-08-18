@@ -40,7 +40,7 @@ def startServer ( rundir, dry_run, time ):
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@",rundir) )
     os.chmod( tf, 0o755 )
-    ram = 3 # max ( 2, 0.5 * ( jmax - jmin ) )
+    ram = 4 # max ( 2, 0.5 * ( jmax - jmin ) )
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
@@ -102,7 +102,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     ram = max ( 35, 2.0 * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
-        ram = 1
+        ram = 2
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
