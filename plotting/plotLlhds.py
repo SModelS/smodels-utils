@@ -132,7 +132,8 @@ def getPidList( pid1, rundir ):
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
     def __init__ ( self, pid1, pid2, verbose, copy, max_anas, 
-                   interactive, drawtimestamp, compress, rundir ):
+                   interactive, drawtimestamp, compress, rundir,
+                   upload ):
         """
         :param pid1: pid for x axis, possibly a range of pids
         :param pid2: pid for y axis
@@ -142,8 +143,10 @@ class LlhdPlot:
         :param interactive: prepare for an interactive session?
         :param drawtimestamp: if true, put a timestamp on plot
         :param compress: prepare for compression
+        :param upload: upload directory, default is "latest"
         """
         self.rundir = rundir
+        self.upload = upload
         self.setup( pid1, pid2 )
         self.DEBUG, self.INFO = 40, 30
         self.drawtimestamp = drawtimestamp
@@ -502,9 +505,9 @@ class LlhdPlot:
         return
 
     def copyFile ( self, filename ):
-        """ copy filename to smodels.github.io/protomodels/latest/ """
+        """ copy filename to smodels.github.io/protomodels/<upload>/ """
         dest = os.path.expanduser ( "~/git/smodels.github.io" )
-        cmd = "cp %s %s/protomodels/latest/" % ( filename, dest )
+        cmd = "cp %s %s/protomodels/%s/" % ( filename, dest, self.upload )
         o = subprocess.getoutput ( cmd )
         self.pprint ( "%s: %s" % ( cmd, o ) )
 
@@ -640,8 +643,11 @@ if __name__ == "__main__":
             help='compress the pickle file so that things work on a laptop',
             action="store_true" )
     argparser.add_argument ( '-c', '--copy',
-            help='copy plots to ~/git/smodels.github.io/protomodels/latest',
+            help='copy plots to ~/git/smodels.github.io/protomodels/<upload>',
             action="store_true" )
+    argparser.add_argument ( '-u', '--upload',
+            help='choose upload directory [latest]',
+            type=str, default="latest" )
     argparser.add_argument ( '-R', '--rundir',
             help='override the default rundir [None]',
             type=str, default=None )
@@ -660,7 +666,8 @@ if __name__ == "__main__":
 
     for pid1 in pids:
         plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas,
-                          args.interactive, drawtimestamp, args.compress, rundir )
+                          args.interactive, drawtimestamp, args.compress, rundir,
+                          args.upload )
 
         if args.list_analyses:
             plot.listAnalyses()
