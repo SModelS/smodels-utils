@@ -22,20 +22,27 @@ def seedRandomNumbers ( seed ):
 
 
 def getParticleName ( pid, addSign=False, addSMParticles=False, susy = False,
-                      html = True ):
+                      html = True, Ascii = False ):
 
     """ get the particle name of pid
     :param addSign: add sign info in name
     :param addSMParticles: if True, then return also SM particle names
     :param susy: use SUSY names
     :param html: if True, get HTML version
+    :param Ascii: if True, get ascii version, overrides html
     """
-    # print ( "[helpers] we are asking for name of" ,pid, "addSign", addSign )
+    if Ascii:
+        return getAsciiName ( pid, susy )
     from smodels_utils.helper import sparticleNames
     namer = sparticleNames.SParticleNames ( susy = susy )
     if html:
         return namer.htmlName ( pid, addSign=addSign )
     return namer.texName ( pid, addSign = addSign )
+
+def getAsciiName ( pid, susy = False ):
+    from smodels_utils.helper import sparticleNames
+    namer = sparticleNames.SParticleNames ( susy = susy )
+    return namer.asciiName ( pid )
 
 def lrEquiv ( l, r ):
     """ check if the two strings are equivalent up to L vs R """

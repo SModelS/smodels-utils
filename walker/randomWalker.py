@@ -157,10 +157,10 @@ class RandomWalker:
         pidsp = self.protomodel.unFrozenParticles()
         pidsp.sort()
 
-        prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
+        prtcles = ", ".join ( map ( helpers.getAsciiName, pidsp ) )
         pidsbc = list ( self.manipulator.getAllPidsOfBestCombo() )
         pidsbc.sort()
-        prtclesbc = ", ".join ( map ( helpers.getParticleName, pidsbc ) )
+        prtclesbc = ", ".join ( map ( helpers.getAsciiName, pidsbc ) )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s [in best combo: %s]" % \
               ( self.protomodel.step, nUnfrozen, nTotal, \
                 prtcles, prtclesbc ) )

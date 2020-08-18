@@ -128,7 +128,7 @@ class ProtoModel:
         """ return basic information on model
         """
 
-        pNames = [helpers.getParticleName ( pid ) for pid in self.unFrozenParticles()]
+        pNames = [helpers.getParticleName ( pid, Ascii=True ) for pid in self.unFrozenParticles()]
         pNames = ','.join(pNames)
         pStr = 'ProtoModel (%s):' %(pNames)
         if self.K:
@@ -337,7 +337,7 @@ class ProtoModel:
         for pid,m in self.masses.items():
             if m > 99000:
                 continue
-            particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
+            particles.append ( "%s: %d" % (  helpers.getAsciiName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
     def computeXSecs ( self, nevents = None, keep_slha = False ):
@@ -369,7 +369,7 @@ class ProtoModel:
             comment = "produced at step %d" % ( self.step )
             pidsp = self.unFrozenParticles()
             pidsp.sort()
-            prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
+            prtcles = ", ".join ( map ( helpers.getAsciiName, pidsp ) )
             self.log ( "done computing %d xsecs for pids %s" % \
                        ( len(xsecs), prtcles ) )
             self._stored_xsecs = ( xsecs, comment )

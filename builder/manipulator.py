@@ -467,7 +467,7 @@ class Manipulator:
                 pid = pids[0] #Unfreeze the lighter state
                 break
 
-        self.log ( "Unfreezing %s:" % ( helpers.getParticleName(pid) ) )
+        self.log ( "Unfreezing %s:" % ( helpers.getAsciiName(pid) ) )
         return self.unFreezeParticle(pid)
 
     def randomlyChangeBranchings ( self, prob=0.2, zeroBRprob = 0.05, singleBRprob = 0.05 ):
@@ -543,7 +543,7 @@ class Manipulator:
         #Make sure BRs add up to 1:
         self.normalizeBranchings(pid)
 
-        self.log ( "changed branchings of %s" % (helpers.getParticleName(pid) ) )
+        self.log ( "changed branchings of %s" % (helpers.getAsciiName(pid) ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self, prob=0.25, probSingle=0.8, ssmSigma=0.1):
@@ -580,8 +580,8 @@ class Manipulator:
         if newSSM < 0.:
             newSSM = 0.
         self.changeSSM(pair,newSSM)
-        self.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]),
-                        helpers.getParticleName(pair[1]), newSSM ) )
+        self.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getAsciiName(pair[0]),
+                        helpers.getAsciiName(pair[1]), newSSM ) )
         return 1
 
     def randomlyChangeSSOfOneParticle ( self, pid = None ):
@@ -612,7 +612,7 @@ class Manipulator:
             return 1
         f = random.uniform ( .8, 1.2 )
         self.log ( "randomly changing ssms of %s by a factor of %.2f" % \
-                     ( helpers.getParticleName ( p ), f ) )
+                     ( helpers.getAsciiName ( p ), f ) )
         ssms = []
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
@@ -622,7 +622,7 @@ class Manipulator:
                 # self.M.ssmultipliers[dpd]= newssm
                 self.changeSSM ( dpd, newssm )
                 ssms.append ( newssm )
-        self.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
+        self.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getAsciiName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
 
     def changeSSM ( self, pids, newssm ):
@@ -699,7 +699,7 @@ class Manipulator:
                 minmass = protomodel.masses[i]
                 pid = i
         # p = random.choice ( unfrozen )
-        protomodel.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        protomodel.log ( "Freezing most massive %s (%.1f)" % ( helpers.getAsciiName(pid), minmass ) )
         self.freezeParticle ( pid, protomodel = protomodel )
         return 1
 
@@ -727,7 +727,7 @@ class Manipulator:
             for pids in self.canonicalOrder:
                 if pid == pids[0] and pids[1] in unfrozen:
                     return 0
-        protomodel.log ( "Freezing %s." % ( helpers.getParticleName(pid) ) )
+        protomodel.log ( "Freezing %s." % ( helpers.getAsciiName(pid) ) )
         #Remove pid from masses, decays and signal multipliers:
         if  pid in protomodel.masses:
             protomodel.masses.pop(pid)

@@ -85,7 +85,7 @@ def main( nmin, nmax, cont,
     walkers = []
     for i in range(nmin,nmax):
         if pfile is None:
-            print ( "[walkingWorker] starting %d with cheatcode %d" % ( i, cheatcode ) )
+            print ( "[walkingWorker] starting %d @ %s with cheatcode %d" % ( i, rundir, cheatcode ) )
             w = RandomWalker( walkerid=i, nsteps = maxsteps, dump_training = dump_training,
                                      dbpath = dbpath, cheatcode = cheatcode, rundir = rundir,
                                      nevents = nevents )
