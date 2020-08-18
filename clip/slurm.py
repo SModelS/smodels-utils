@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-import tempfile, argparse, stat, os, math, sys, time
+import tempfile, argparse, stat, os, math, sys, time, glob
 try:
     import commands as subprocess
 except:
@@ -98,7 +98,11 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     #remove ( tf, keep )
     #remove ( runner, keep )
-    ram = 2.5 # max ( 2.5, 2.0 * ( jmax - jmin ) )
+    
+    ram = max ( 35, 2.0 * ( jmax - jmin ) )
+    proxies = glob.glob ( f"{rundir}/proxy*pcl" )
+    if len(proxies)>0:
+        ram = 2.5
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
@@ -449,7 +453,7 @@ def logCall ():
         if " " in i or "," in i:
             i = '"%s"' % i
         args += i + " "
-    f.write ("[slurm.py] %s\n" % args.strip() )
+    f.write ("[slurm.py-%s] %s\n" % ( time.strftime("%H:%M:%S"), args.strip() ) )
     # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
 

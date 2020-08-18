@@ -334,7 +334,10 @@ def writeTex ( protomodel, keep_tex ):
         for k,v in protomodel.particleContributions.items():
             if v in tok.keys():
                 v+=1e-6
-            tok[v] = "%s = %d%s" % ( namer.texName(k), round(100.*(protomodel.K - v)/totalcont ), "\%" )
+            perc = 100.
+            if totalcont != 0.:
+                perc = round(100.*(protomodel.K - v)/totalcont )
+            tok[v] = "%s = %d%s" % ( namer.texName(k), perc, "\%" )
         keys = list ( tok.keys() )
         keys.sort()
         for v in keys:
