@@ -117,8 +117,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
-    # cmd += [ "--mem", "--time", "%s" % ( time*60-1 ), "%s" % tf ]
-    cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    if ram == 1:
+        cmd += [ "--mem", "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    else:
+        cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
@@ -274,7 +276,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "40G" ]
+    cmd += [ "--mem", "30G" ]
     cmd += [ "-c", "30" ]
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
@@ -495,6 +497,8 @@ def main():
                     type=int, default=-1 )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
+    argparser.add_argument ( '--pythia8', help='check pythia8 install',
+                             action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
                              action="store_true" )
     argparser.add_argument ( '--allscans', help='run all the scans: masses, llhds, and ssmses',
@@ -524,6 +528,10 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    if args.pythia8:
+        a = subprocess.getoutput ( "ls /users/wolfgan.waltenberger/git/smodels/smodels/lib/pythia8/pythia8226/share/Pythia8/xmldoc" )
+        print ( a )
+        return
     args.rewrite = True
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
