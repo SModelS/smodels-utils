@@ -40,7 +40,7 @@ def startServer ( rundir, dry_run, time ):
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@",rundir) )
     os.chmod( tf, 0o755 )
-    ram = 4 # max ( 2, 0.5 * ( jmax - jmin ) )
+    ram = 3500 # max ( 2, 0.5 * ( jmax - jmin ) )
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
@@ -50,7 +50,7 @@ def startServer ( rundir, dry_run, time ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
@@ -99,10 +99,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
     
-    ram = max ( 35, 2.0 * ( jmax - jmin ) )
+    ram = max ( 3500, 2000. * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
-        ram = 2
+        ram = 1500
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
@@ -117,10 +117,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
-    if ram == 1:
-        cmd += [ "--mem", "--time", "%s" % ( time*60-1 ), "%s" % tf ]
-    else:
-        cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
