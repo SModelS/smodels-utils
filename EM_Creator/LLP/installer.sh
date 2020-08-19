@@ -38,11 +38,4 @@ if echo "$answer" | grep -iq "^y" ;then
 fi
 
 
-echo -n "Install ufo2slha (y/n)? "
-read answer
-if echo "$answer" | grep -iq "^y" ;then
-	git clone git@github.com:andlessa/ufo2slha.git
-
-fi
-
 

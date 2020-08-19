@@ -15,8 +15,9 @@ import logging,shutil
 import subprocess
 import time,datetime,tempfile
 import multiprocessing
+import numpy as np
 
-FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s at %(asctime)s'
+FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT,datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
 
@@ -287,7 +288,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser( description=
             "Run MadGraph and Pythia in order to compute efficiencies for a given model." )
     ap.add_argument('-p', '--parfile', default='eff_parameters_default.ini',
-            help='path to the parameters file. Parameters not defined in the parfile will be read from eff_parameters_default.ini')
+            help='path to the parameters file.')
     ap.add_argument('-v', '--verbose', default='error',
             help='verbose level (debug, info, warning or error). Default is error')
 
@@ -311,13 +312,36 @@ if __name__ == "__main__":
         logger.error( "No such file or directory: '%s'" % args.parfile)
         sys.exit()
 
-    #Get a list of parsers (in case loops have been defined)
-    parserList = parser.expandLoops()
+    #Check if a parameter file has been defined:
+    parserList = []
+    if parser.has_option('MadGraphSet','parametersFile') and parser.get('MadGraphSet','parametersFile'):
+        pFile = parser.get('MadGraphSet','parametersFile')
+        parser.remove_option('MadGraphSet','parametersFile')
+        if not os.path.isfile(pFile):
+            logger.error('Parameters file %s not found' %pFile)
+            sys.exit()
+
+        values = np.genfromtxt(pFile,names=True)
+        xlabels = values.dtype.names
+        logger.info('Using values for the parameters: %s from file %s' %(xlabels,pFile))
+        for name in xlabels:
+            parser.remove_option('MadGraphSet',name)
+        for pt in values:
+            newParser = ConfigParserExt()
+            newParser.read_dict(parser.toDict(raw=True))
+            for name in xlabels:
+                newParser.set('MadGraphSet',name,str(pt[name]))
+            parserList += newParser.expandLoops()
+    else:
+        #Get a list of parsers (in case loops have been defined)
+        parserList = parser.expandLoops()
+
 
     ncpus = parser.getint("options","ncpu")
     if ncpus  < 0:
         ncpus =  multiprocessing.cpu_count()
 
+    logger.info("Running %i jobs in %i cpus" %(len(parserList),ncpus))
     pool = multiprocessing.Pool(processes=ncpus)
     children = []
     #Loop over model parameters and submit jobs
