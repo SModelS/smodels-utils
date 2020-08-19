@@ -817,7 +817,7 @@ class ValidationPlot():
 
         return True
 
-    def getDataFile(self,validationDir,fformat='.pdf'):
+    def getDataFile(self,validationDir,fformat='pdf'):
         """
         Defines the name of the .py file and returns it
 
@@ -825,12 +825,15 @@ class ValidationPlot():
 
         :return: name of the .py file
         """
-
+        if fformat.startswith("."):
+            fformat = fformat[1:]
         datafile = self.getPlotFile(validationDir,fformat)
         datafile = datafile.rstrip(fformat)
-        return datafile+'.py'
+        if not datafile.endswith ( "." ):
+            datafile += "."
+        return datafile+'py'
 
-    def getPlotFile(self,validationDir,fformat='.pdf'):
+    def getPlotFile(self,validationDir,fformat='pdf'):
         """
         Defines the name of the plot file and returns it
 
@@ -839,8 +842,13 @@ class ValidationPlot():
         :return: name of the plot file
         """
 
+        if fformat.startswith("."):
+            fformat = fformat[1:]
+
         filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
+        if self.combine:
+            filename += '_combined'
         filename += '.'+fformat
 
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
