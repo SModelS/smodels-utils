@@ -3,7 +3,7 @@
 """ various helper functions that do not fit in any of the more
     specific modules """
 
-import copy, math
+import copy, math, time, random, subprocess
 from smodels.experiment.datasetObj import DataSet
 from smodels.experiment.expResultObj import ExpResult
 from smodels.experiment.infoObj import Info
@@ -20,6 +20,27 @@ def seedRandomNumbers ( seed ):
     print ( "[helpers] seeding the random number generators with %d. r=%.3f" % \
             ( seed, r ) )
 
+def cpPythia8 ( self ):
+    """ as a very ugly workaround for now, if something goes wrong with 
+        cross sections, cp the pythia8 install. """
+    libdir = "/users/wolfgan.waltenberger/git/smodels/smodels/lib"
+    lockfile = libdir+"/lock"
+    ctr = 0
+    while os.path.exists ( lockfile ):
+        time.sleep ( random.uniform ( 1, 3 ) )
+        ctr += 1
+        if ctr > 5:
+            break
+    cmd = "touch %s" % lockfile
+    subprocess.getoutput ( cmd )
+    cmd = "rm -rf %s/pythia8old" % libdir
+    subprocess.getoutput ( cmd )
+    cmd = "mv %s/pythia8 %s/pythia8old" % ( libdir, libdir )
+    subprocess.getoutput ( cmd )
+    cmd = "cp -r %s/pythia8backup %s/pythia8" % ( libdir, libdir )
+    subprocess.getoutput ( cmd )
+    cmd = "rm -f %s" % lockfile
+    subprocess.getoutput ( cmd )
 
 def getParticleName ( pid, addSign=False, addSMParticles=False, susy = False,
                       html = True, Ascii = False ):
