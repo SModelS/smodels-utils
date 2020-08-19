@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, time, colorama, copy, sys, pickle
+import random, tempfile, os, time, colorama, copy, sys, pickle, random
 from tester.combiner import Combiner
 sys.path.insert(0,"../")
 from tools import helpers
@@ -379,12 +379,14 @@ class ProtoModel:
                 self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
                 self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
                 hasComputed = True
+                break
                 #Remove temp file
             except Exception as e:
                 countAttempts += 1
                 self.log( "error computing cross-sections: %s, attempt # %d" % \
                           (e, countAttempts ) )
                 helpers.cpPythia8()
+                time.sleep ( random.uniform ( 5, 10 ) )
                 if countAttempts > 5:
                     break
 

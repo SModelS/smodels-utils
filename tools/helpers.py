@@ -3,7 +3,7 @@
 """ various helper functions that do not fit in any of the more
     specific modules """
 
-import copy, math, time, random, subprocess
+import copy, math, time, random, subprocess, os
 from smodels.experiment.datasetObj import DataSet
 from smodels.experiment.expResultObj import ExpResult
 from smodels.experiment.infoObj import Info
@@ -20,10 +20,13 @@ def seedRandomNumbers ( seed ):
     print ( "[helpers] seeding the random number generators with %d. r=%.3f" % \
             ( seed, r ) )
 
-def cpPythia8 ( self ):
+def cpPythia8 ( ):
     """ as a very ugly workaround for now, if something goes wrong with 
         cross sections, cp the pythia8 install. """
     libdir = "/users/wolfgan.waltenberger/git/smodels/smodels/lib"
+    # ~/git/smodels/smodels/lib/pythia8/pythia8226/share/Pythia8/xmldoc/Welcome.xml
+    if os.path.exists ( libdir + "/pythia8/pythia8226/share/Pythia8/xmldoc/Welcome.xml" ):
+        return
     lockfile = libdir+"/lock"
     ctr = 0
     while os.path.exists ( lockfile ):
