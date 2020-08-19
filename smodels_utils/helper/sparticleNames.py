@@ -242,7 +242,7 @@ class SParticleNames:
     def asciiName ( self, pid ):
         """ get the ascii version of the name """
         ret = self.name ( pid )
-        ret = ret.replace("_","").replace("{","").replace("}","")
+        ret = ret.replace("_","").replace("{","").replace("}","").replace("^","")
         return ret
 
     def pid ( self, name ):
