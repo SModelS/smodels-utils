@@ -30,11 +30,6 @@ def getHiscore( force_copy = False, rundir = None ):
         import subprocess
         o = subprocess.getoutput ( cmd )
         print ( "[scanner] %s: %s" % ( cmd, o ) )
-    elif os.stat ( picklefile ).st_size + 1025 < os.stat ( backupfile ).st_size:
-        cmd = "cp %s %s" % ( backupfile, picklefile )
-        import subprocess
-        o = subprocess.getoutput ( cmd )
-        print ( "[scanner] %s: %s" % ( cmd, o ) )
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[scanner] retrieving hiscore object %s on %s .... " % \
@@ -316,11 +311,12 @@ def findPids ( rundir ):
 
 def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
           drawtimestamp = True, rundir = None, plotrmax=False,
-          rthreshold = 1.3 ):
+          rthreshold = 1.3, upload = "latest" ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
     :param drawtimestamp: if True, put a timestamp on it
     :param plotrmax: if True, plot also rmax curve
+    :param upload: upload directory, default is "latest"
     """
     if pid2 == 0: ## means all
         pidpairs = findPidPairs( rundir )
@@ -330,7 +326,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         for pids in pidpairs:
             try:
                 draw ( pids[0], interactive, pids[1], copy, drawtimestamp, \
-                       rundir, plotrmax )
+                       rundir, plotrmax, upload = upload )
             except Exception as e:
                 print ( "[scanner] %s" % e )
         return
@@ -452,7 +448,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     plt.close()
     if copy:
         dest = os.path.expanduser ( "~/git/smodels.github.io" )
-        cmd = "cp %s/%s %s/protomodels/latest/" % ( rundir,figname, dest )
+        cmd = "cp %s/%s %s/protomodels/%s/" % ( rundir,figname, dest, upload )
         o = subprocess.getoutput ( cmd )
         print ( "[scanner] %s: %s" % ( cmd, o ) )
 
@@ -496,8 +492,11 @@ if __name__ == "__main__":
     argparser.add_argument ( '-F', '--force_copy',
             help='force copying the hiscore.hi file',
             action="store_true" )
+    argparser.add_argument ( '-u', '--upload',
+            help='choose upload directory [latest]',
+            type=str, default="latest" )
     argparser.add_argument ( '-c', '--copy',
-            help='copy plots to ~/git/smodels.github.io/protomodels/latest/',
+            help='copy plots to ~/git/smodels.github.io/protomodels/<upload>/',
             action="store_true" )
     argparser.add_argument ( '-N', '--notimestamp',
             help='dont put a timestamp on it',
@@ -523,11 +522,11 @@ if __name__ == "__main__":
     if args.draw:
         if args.pid != 0:
             draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp, rundir, \
-                  rthreshold )
+                  rthreshold, upload = args.upload )
         else:
             for pid in allpids:
                 try:
                     draw( pid, args.interactive, args.pid2, args.copy, drawtimestamp,
-                          rundir, rthreshold )
+                          rundir, rthreshold, upload = args.upload )
                 except Exception as e:
                     print ( "[scanner] skipping %d: %s" % ( pid, e ) )

@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, time, colorama, copy, sys, pickle
+import random, tempfile, os, time, colorama, copy, sys, pickle, random
 from tester.combiner import Combiner
 sys.path.insert(0,"../")
 from tools import helpers
@@ -71,7 +71,7 @@ class ProtoModel:
         self.letters = ""
         self.description = ""
         self.bestCombo = None
-        self.computer = XSecComputer ( NLL, self.nevents, pythiaVersion=8 )
+        self.computer = XSecComputer ( NLL, self.nevents, pythiaVersion=8, maycompile=False )
         self.codeversion = "1.0"
         self.initializeModel()
 
@@ -128,7 +128,7 @@ class ProtoModel:
         """ return basic information on model
         """
 
-        pNames = [helpers.getParticleName ( pid ) for pid in self.unFrozenParticles()]
+        pNames = [helpers.getParticleName ( pid, Ascii=True ) for pid in self.unFrozenParticles()]
         pNames = ','.join(pNames)
         pStr = 'ProtoModel (%s):' %(pNames)
         if self.K:
@@ -337,7 +337,7 @@ class ProtoModel:
         for pid,m in self.masses.items():
             if m > 99000:
                 continue
-            particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
+            particles.append ( "%s: %d" % (  helpers.getAsciiName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
     def computeXSecs ( self, nevents = None, keep_slha = False ):
@@ -353,31 +353,44 @@ class ProtoModel:
             nevents = self.nevents
 
         xsecs = []
-        try:
-            #Create temporary file with the current model (without cross-sections)
-            tmpSLHA = tempfile.mktemp( prefix=".%s_xsecfile" % ( self.walkerid ),
-                                                suffix=".slha",dir="./")
-            tmpSLHA = self.createSLHAFile(tmpSLHA, addXsecs = False)
-            for sqrts in [8, 13]:
-                self.computer.compute( sqrts*TeV, tmpSLHA, unlink=True,
-                                loFromSlha=False, ssmultipliers = self.ssmultipliers )
-                for x in self.computer.loXsecs:
-                    xsecs.append ( x )
-                for x in self.computer.xsecs:
-                    xsecs.append ( x )
+        hasComputed = False
+        countAttempts = 0
+        while not hasComputed:
+            try:
+                #Create temporary file with the current model (without cross-sections)
+                tmpSLHA = tempfile.mktemp( prefix=".%s_xsecfile" % ( self.walkerid ),
+                                                    suffix=".slha",dir="./")
+                tmpSLHA = self.createSLHAFile(tmpSLHA, addXsecs = False)
+                for sqrts in [8, 13]:
+                    self.computer.compute( sqrts*TeV, tmpSLHA, unlink=True,
+                                    loFromSlha=False, ssmultipliers = self.ssmultipliers )
+                    for x in self.computer.loXsecs:
+                        xsecs.append ( x )
+                    for x in self.computer.xsecs:
+                        xsecs.append ( x )
 
-            comment = "produced at step %d" % ( self.step )
-            pidsp = self.unFrozenParticles()
-            pidsp.sort()
-            prtcles = ", ".join ( map ( helpers.getParticleName, pidsp ) )
-            self.log ( "done computing %d xsecs for pids %s" % \
-                       ( len(xsecs), prtcles ) )
-            self._stored_xsecs = ( xsecs, comment )
-            self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
-            self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
-            #Remove temp file
-        except Exception as e:
-            self.log("error computing cross-sections: %s" %e)
+                comment = "produced at step %d" % ( self.step )
+                pidsp = self.unFrozenParticles()
+                pidsp.sort()
+                prtcles = ", ".join ( map ( helpers.getAsciiName, pidsp ) )
+                self.log ( "done computing %d xsecs for pids %s" % \
+                           ( len(xsecs), prtcles ) )
+                self._stored_xsecs = ( xsecs, comment )
+                self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
+                self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
+                hasComputed = True
+                break
+                #Remove temp file
+            except Exception as e:
+                countAttempts += 1
+                if countAttempts > 1:
+                    self.log( "error computing cross-sections: %s, attempt # %d" % \
+                              (e, countAttempts ) )
+                helpers.cpPythia8()
+                time.sleep ( random.uniform ( 5, 10 ) )
+                if countAttempts > 5:
+                    break
+
         if keep_slha:
             self.createSLHAFile( self.currentSLHA, addXsecs = True )
             #if not self.currentSLHA == tmpSLHA:

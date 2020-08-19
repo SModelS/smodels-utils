@@ -9,6 +9,7 @@ from builder.manipulator import Manipulator
 from tester.combiner import  Combiner
 from tools import helpers
 from tools.csetup import setup
+from smodels_utils.helper import sparticleNames
 
 class Hiscore:
     """ encapsulates the hiscore list. """
@@ -30,6 +31,7 @@ class Hiscore:
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
         self.mtime = 0 ## last modification time of current list
+        self.namer = sparticleNames.SParticleNames ( susy = False )
         if hiscores == None:
             self.updateListFromPickle ( )
         else:
@@ -149,7 +151,7 @@ class Hiscore:
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
         for cpid,(pid,mass) in enumerate(pidsnmasses):
             self.pprint ( "computing contribution of %s (%.1f): [%d/%d]" % \
-                   ( helpers.getParticleName(pid,addSign=False),
+                   ( self.namer.asciiName(pid),
                      manipulator.M.masses[pid],(cpid+1),len(unfrozen) ) )
 
             #Remove particle and recompute SLHA file:
@@ -158,7 +160,7 @@ class Hiscore:
             manipulator.M.getXsecs()
             self.predictor.predict( manipulator.M )
             if manipulator.M.K is None:
-                self.pprint ( "when removing %s, K could not longer be computed. Setting to zero"% ( helpers.getParticleName(pid)))
+                self.pprint ( "when removing %s, K could not longer be computed. Setting to zero"% ( self.namer.asciiName(pid)))
                 manipulator.M.K = 0.0
                 manipulator.M.Z = 0.0
             if oldK <= 0:
@@ -166,7 +168,7 @@ class Hiscore:
             else:
                 percK = ( manipulator.M.K - oldK ) / oldK
                 self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
-                    ( helpers.getParticleName(pid), oldK, manipulator.M.K, 100.*percK, "%", oldZ,manipulator.M.Z, manipulator.M.nevents ) )
+                    ( self.namer.asciiName(pid), oldK, manipulator.M.K, 100.*percK, "%", oldZ,manipulator.M.Z, manipulator.M.nevents ) )
 
             #Store the new Z and K values in the original model:
             particleContributions[pid]=manipulator.M.K

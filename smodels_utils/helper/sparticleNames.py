@@ -239,6 +239,12 @@ class SParticleNames:
             return self.ids[abs(pid)]
         return self.ids[pid]
 
+    def asciiName ( self, pid ):
+        """ get the ascii version of the name """
+        ret = self.name ( pid )
+        ret = ret.replace("_","").replace("{","").replace("}","").replace("^","").replace("\\","")
+        return ret
+
     def pid ( self, name ):
         """ get the pid for a particle name """
         if not name in self.names:

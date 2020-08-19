@@ -3,7 +3,7 @@
 """ various helper functions that do not fit in any of the more
     specific modules """
 
-import copy, math
+import copy, math, time, random, subprocess, os
 from smodels.experiment.datasetObj import DataSet
 from smodels.experiment.expResultObj import ExpResult
 from smodels.experiment.infoObj import Info
@@ -20,22 +20,53 @@ def seedRandomNumbers ( seed ):
     print ( "[helpers] seeding the random number generators with %d. r=%.3f" % \
             ( seed, r ) )
 
+def cpPythia8 ( ):
+    """ as a very ugly workaround for now, if something goes wrong with 
+        cross sections, cp the pythia8 install. """
+    libdir = "/users/wolfgan.waltenberger/git/smodels/smodels/lib"
+    # ~/git/smodels/smodels/lib/pythia8/pythia8226/share/Pythia8/xmldoc/Welcome.xml
+    if os.path.exists ( libdir + "/pythia8/pythia8226/share/Pythia8/xmldoc/Welcome.xml" ):
+        return
+    lockfile = libdir+"/lock"
+    ctr = 0
+    while os.path.exists ( lockfile ):
+        time.sleep ( random.uniform ( 1, 3 ) )
+        ctr += 1
+        if ctr > 5:
+            break
+    cmd = "touch %s" % lockfile
+    subprocess.getoutput ( cmd )
+    cmd = "rm -rf %s/pythia8old" % libdir
+    subprocess.getoutput ( cmd )
+    cmd = "mv %s/pythia8 %s/pythia8old" % ( libdir, libdir )
+    subprocess.getoutput ( cmd )
+    cmd = "cp -r %s/pythia8backup %s/pythia8" % ( libdir, libdir )
+    subprocess.getoutput ( cmd )
+    cmd = "rm -f %s" % lockfile
+    subprocess.getoutput ( cmd )
 
 def getParticleName ( pid, addSign=False, addSMParticles=False, susy = False,
-                      html = True ):
+                      html = True, Ascii = False ):
 
     """ get the particle name of pid
     :param addSign: add sign info in name
     :param addSMParticles: if True, then return also SM particle names
     :param susy: use SUSY names
     :param html: if True, get HTML version
+    :param Ascii: if True, get ascii version, overrides html
     """
-    # print ( "[helpers] we are asking for name of" ,pid, "addSign", addSign )
+    if Ascii:
+        return getAsciiName ( pid, susy )
     from smodels_utils.helper import sparticleNames
     namer = sparticleNames.SParticleNames ( susy = susy )
     if html:
         return namer.htmlName ( pid, addSign=addSign )
     return namer.texName ( pid, addSign = addSign )
+
+def getAsciiName ( pid, susy = False ):
+    from smodels_utils.helper import sparticleNames
+    namer = sparticleNames.SParticleNames ( susy = susy )
+    return namer.asciiName ( pid )
 
 def lrEquiv ( l, r ):
     """ check if the two strings are equivalent up to L vs R """
