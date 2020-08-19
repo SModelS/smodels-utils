@@ -749,7 +749,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     return plane,base
 
 def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
-                      looseness = 1.2 ):
+                      looseness = 1.2, style = "" ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
@@ -758,6 +758,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     :param silentMode: If True the plot will not be shown on the screen
     :param preliminary: if true, write "preliminary" over the plot
     :param looseness: ?
+    :param style: allow for styles, currently "", and "sabine"
     :return: TCanvas object containing the plot
     """
 
@@ -1019,9 +1020,13 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
-    lsub.SetTextAlign(31)
-    lsub.SetTextSize(.025)
-    lsub.DrawLatex(.98,.086,subtitle)
+    if style == "sabine":
+        lsub.SetTextSize(.037)
+        lsub.DrawLatex(.15,.79,subtitle)
+    else:
+        lsub.SetTextAlign(31)
+        lsub.SetTextSize(.025)
+        lsub.DrawLatex(.98,.086,subtitle)
     tgr.lsub=lsub
 
     nleg = 1

@@ -51,7 +51,8 @@ class ValidationPlot():
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
-                 combine=False, weightedAgreementFactor=True, model="default" ):
+                 combine=False, weightedAgreementFactor=True, model="default",
+                 style = "" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
@@ -61,6 +62,7 @@ class ValidationPlot():
         self.model = model
         self.txName = TxNameStr
         self.axes = Axes.strip()
+        self.style = style
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
@@ -546,7 +548,7 @@ class ValidationPlot():
         t0=time.time()
         """ Test all input points """
         modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
-                 listOfExpRes, 1000, False, parameterFile)
+                 listOfExpRes, 5000, False, parameterFile)
         dt=(time.time()-t0) / len(fileList) ## for now we just write out avg time
 
         #Define original plot
@@ -723,7 +725,8 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
-                               preliminary=self.preliminary )
+                               preliminary=self.preliminary,
+                               style = self.style )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
