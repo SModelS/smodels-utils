@@ -383,8 +383,9 @@ class ProtoModel:
                 #Remove temp file
             except Exception as e:
                 countAttempts += 1
-                self.log( "error computing cross-sections: %s, attempt # %d" % \
-                          (e, countAttempts ) )
+                if countAttempts > 1:
+                    self.log( "error computing cross-sections: %s, attempt # %d" % \
+                              (e, countAttempts ) )
                 helpers.cpPythia8()
                 time.sleep ( random.uniform ( 5, 10 ) )
                 if countAttempts > 5:
