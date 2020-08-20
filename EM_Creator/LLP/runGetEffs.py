@@ -348,7 +348,7 @@ if __name__ == "__main__":
     ncpus = parser.getint("options","ncpu")
     if ncpus  < 0:
         ncpus =  multiprocessing.cpu_count()
-
+    ncpus = min(ncpus,len(parserList))
     logger.info("Running %i jobs in %i cpus" %(len(parserList),ncpus))
     pool = multiprocessing.Pool(processes=ncpus)
     children = []
