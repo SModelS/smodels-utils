@@ -78,7 +78,6 @@ int run(const string & infile, int nevents, const string & cfgfile, const string
 
     //Get isolated HSCPs
     std::vector<Particle*> IsoHSCPs = getIsolatedHSCPs(pythia.event);
-    cout << "number of HSCPs found = " << IsoHSCPs.size() << endl;
 	fprintf(OutputFile,"<event>\niev: %d\nnHSCPs: %lu\n",iEvent,IsoHSCPs.size());
     std::vector< std::vector< std::pair<double,double> > > allEffs;
     std::vector<double> Flong(IsoHSCPs.size(),0.);

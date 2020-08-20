@@ -9,7 +9,7 @@
 # containing only the HSCPs
 
 #First tell the system where to find the modules:
-import sys,os
+import sys,os,glob
 from configParserWrapper import ConfigParserExt
 import logging,shutil
 import subprocess
@@ -190,7 +190,7 @@ def Run_MG5(parser):
 
     #Save param_card file
     if parser.has_option("MadGraphPars",'slhaout'):
-        slhaOut = parser.get("MadGraphPars",'slhaout'))
+        slhaOut = parser.get("MadGraphPars",'slhaout')
         if slhaOut:
             slhaOut = os.path.abspath(slhaOut)
             if not os.path.isdir(os.path.dirname(slhaOut)):
@@ -381,11 +381,17 @@ if __name__ == "__main__":
     #Loop over model parameters and submit jobs
     firstRun = True
     for newParser in parserList:
+        if newParser.get("options","runMG"):
+            #Run process generation (if required)
+            if not os.path.isdir(newParser.get('MadGraphPars','processFolder')):
+                generateProcesses(newParser)
+
         if firstRun:
             if parser.get("PythiaOptions",'execfile') != 'None':
                 os.system("make %s" %parser.get("PythiaOptions",'execfile'))
                 time.sleep(5)  #Let first job run for 5s in case it needs to create shared folders
             firstRun = False
+
         parserDict = newParser.toDict(raw=False) #Must convert to dictionary for pickling
         p = pool.apply_async(runAll, args=(parserDict,))
         children.append(p)
