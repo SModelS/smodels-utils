@@ -13,7 +13,7 @@ import sys,os
 from configParserWrapper import ConfigParserExt
 import logging,shutil
 import subprocess
-import time,datetime,tempfile
+import time,datetime,tempfile,tarfile
 import multiprocessing
 import numpy as np
 
@@ -137,7 +137,6 @@ def generateEvents(parser):
     commandsFile = commandsFile[1]
 
     logger.info("Generating MG5 events with command file %s" %commandsFile)
-    logger.info("Generating MG5 events")
     run = subprocess.Popen('./bin/generate_events --multicore --nb_core=%s < %s' %(ncpu,commandsFile),
                            shell=True,stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,cwd=outputFolder)
@@ -229,6 +228,10 @@ def Run_pythia(parser,inputFile):
     pythiacfg = os.path.abspath(pars['pythiacfg'])
     inputFile = os.path.abspath(inputFile)
     outFile = os.path.abspath(pars['pythiaout'])
+    if os.path.splitext(outFile)[1] == '.gz':
+        outFile = os.path.splitext(outFile)[0]
+    if os.path.splitext(outFile)[1] == '.tar':
+        outFile = os.path.splitext(outFile)[0]
     logger.debug('Excuting: \n./%s -f %s -c %s -o %s -n -1' %(execFile,
                                                           inputFile,pythiacfg,outFile))
     run = subprocess.Popen('./%s -f %s -c %s -o %s -n -1' %(execFile,
@@ -240,6 +243,11 @@ def Run_pythia(parser,inputFile):
     logger.debug('Pythia output:\n %s \n' %output)
 
     logger.info("Finished pythia event generation")
+
+    if os.path.isfile(outFile) and ('.gz' in pars['pythiaout']):
+        with tarfile.open(outFile+'.tar.gz', "w:gz") as tar:
+            tar.add(outFile, arcname=os.path.basename(outFile))
+        os.remove(outFile)
 
     return True
 
