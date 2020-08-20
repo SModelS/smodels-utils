@@ -1000,7 +1000,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
     if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
         ## pyhf combination
-        subtitle = "pyhf combining %d datasets" % len(validationPlot.expRes.datasets)
+        subtitle = "pyhf combining %d SRs" % len(validationPlot.expRes.datasets)
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
         subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
