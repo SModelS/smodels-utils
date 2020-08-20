@@ -186,9 +186,35 @@ def Run_MG5(parser):
 
     #Finally generate events and compute widths:
     generateEvents(parser)
+    mg5out = parser.get("MadGraphPars",'mg5out')
+
+    #Save param_card file
+    if parser.has_option("MadGraphPars",'slhaout'):
+        slhaOut = parser.get("MadGraphPars",'slhaout'))
+        if slhaOut:
+            slhaOut = os.path.abspath(slhaOut)
+            if not os.path.isdir(os.path.dirname(slhaOut)):
+                os.makedirs(os.path.dirname(slhaOut))
+            paramFile = os.path.join(mg5out,'Cards/param_card.dat')
+            paramFile = os.path.abspath(paramFile)
+            if not os.path.isfile(paramFile):
+                logger.warning("Could not find param card %s" %paramFile)
+            else:
+                shutil.copyfile(paramFile,os.path.abspath(slhaOut))
+
+    #Save banner file
+    if parser.has_option("MadGraphPars",'bannerout'):
+        bannerOut = parser.get("MadGraphPars",'bannerout')
+        if bannerOut:
+            bannerOut = os.path.abspath(bannerOut)
+            if not os.path.isdir(os.path.dirname(bannerOut)):
+                os.makedirs(os.path.dirname(bannerOut))
+            bannerDir = os.path.join(mg5out,'Events/run_01/*.txt')
+            for f in glob.glob(bannerDir):
+                bannerFile = os.path.abspath(f)
+                shutil.copyfile(bannerFile,os.path.abspath(bannerOut))
 
     #Get output file:
-    mg5out = parser.get("MadGraphPars",'mg5out')
     eventFile  = os.path.join(mg5out,'Events/run_01/unweighted_events.lhe.gz')
     eventFile = os.path.abspath(eventFile)
     if not os.path.isfile(eventFile):
@@ -278,7 +304,7 @@ def runAll(parserDict):
 
     #Clean output:
     if parser.get("options","cleanOutFolders"):
-        if parser.get("options","runMG") or parser.get("options","runSlhaCreator"):
+        if parser.get("options","runMG"):
             logger.info("Cleaning output")
             if os.path.isdir(parser.getstr("MadGraphPars","mg5out")):
                 shutil.rmtree(parser.getstr("MadGraphPars","mg5out"))
