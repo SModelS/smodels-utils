@@ -190,7 +190,7 @@ def Run_MG5(parser):
 
     #Save param_card file
     if parser.has_option("MadGraphPars",'slhaout'):
-        slhaOut = parser.get("MadGraphPars",'slhaout'))
+        slhaOut = parser.get("MadGraphPars",'slhaout')
         if slhaOut:
             slhaOut = os.path.abspath(slhaOut)
             if not os.path.isdir(os.path.dirname(slhaOut)):
