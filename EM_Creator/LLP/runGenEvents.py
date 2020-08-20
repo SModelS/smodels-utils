@@ -321,9 +321,9 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description=
             "Run MadGraph and Pythia in order to compute efficiencies for a given model." )
-    ap.add_argument('-p', '--parfile', default='eff_parameters_default.ini',
+    ap.add_argument('-p', '--parfile', default='parameters_THSCPM1b.ini',
             help='path to the parameters file.')
-    ap.add_argument('-v', '--verbose', default='error',
+    ap.add_argument('-v', '--verbose', default='warning',
             help='verbose level (debug, info, warning or error). Default is error')
 
 
