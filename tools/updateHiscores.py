@@ -96,7 +96,7 @@ def plot( Z, K, rundir ):
         args.commit = True
     plotHiscore.runPlotting ( args )
 
-def main( rundir = None ):
+def main( rundir = None, maxruns=3 ):
     """ eternal loop that updates hiscore.hi and states.dict """
     rundir = setup( rundir )
     i = 0
@@ -111,6 +111,8 @@ def main( rundir = None ):
             Kold = float ( f.read().strip() )
     while True:
         i+=1
+        if maxruns != None and i > maxruns:
+            break
         D = updateHiscores( rundir )
         Z,step,model,K = D["Z"],D["step"],D["model"],D["K"]
         if K > Kold + .001:
