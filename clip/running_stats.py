@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob, stat, os, time, subprocess
+import glob, stat, os, time, subprocess, colorama
 
 def getRundir():
     # ret="/scratch-cbe/users/wolfgan.waltenbergerrundir/"
@@ -103,7 +103,10 @@ def count_jobs():
         running= int ( running )
     except:
         pass
-    print ( "pending", pend, "running", running, "total", pend+running )
+    lpend = "pending %s%s%s" % ( colorama.Fore.YELLOW, pend, colorama.Fore.RESET )
+    lrun = "running %s%s%s" % ( colorama.Fore.GREEN, running, colorama.Fore.RESET )
+    ltot = "total %s%s%s" % ( colorama.Fore.RED, pend+running, colorama.Fore.RESET )
+    print ( "pending", lpend, "running", lrun, "total", ltot )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
         print ( "remaining", remaining )

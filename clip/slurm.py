@@ -299,31 +299,10 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     a = subprocess.run ( cmd )
     print ( "[runScanner] >>", a )
 
-def runUpdaterOld( dry_run, time, rundir ):
+def runUpdater( dry_run, time, rundir, maxiterations ):
     """ thats the hiscore updater
     :param time: time, given in minutes(?)
-    """
-    # cmd = [ "srun", "--qos", qos, "--mem", "100G", "./run_hiscore_updater.sh" ]
-    cmd = [ "srun", "--mem", "40G" ]
-    cmd += [ "--reservation", "interactive" ]
-    # cmd = [ "srun", "--mem", "50G" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    qos = "c_short"
-    if time > 48:
-        qos = "c_long"
-        cmd += [ "--qos", qos ]
-    if 8 < time <= 48:
-        qos = "c_medium"
-        cmd += [ "--qos", qos ]
-    cmd += [ "--pty", "bash", "./run_hiscore_updater.sh" ]
-    print ( "updater: " + " ".join ( cmd ) )
-    if dry_run:
-        return
-    subprocess.run ( cmd )
-
-def runUpdater( dry_run, time, rundir ):
-    """ thats the hiscore updater
-    :param time: time, given in minutes(?)
+    :param maxiterations: maximum number of iterations to run the updater
     """
     with open ( "%sclip/hiscore_update_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
@@ -334,6 +313,8 @@ def runUpdater( dry_run, time, rundir ):
             f.write ( line.replace("@@RUNDIR@@", rundir ) )
     os.chmod( tf, 0o755 )
     runner = "%s/upHi.py" % ( rundir )
+    if maxiterations == None:
+        maxiterations = 1000
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -342,8 +323,8 @@ def runUpdater( dry_run, time, rundir ):
         f.write ( "sys.path.insert(0,'%s/protomodels/tools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
-        f.write ( "updateHiscores.main ( rundir='%s' )\n" % \
-                  ( rundir ) )
+        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d )\n" % \
+                  ( rundir, maxiterations ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "srun", "--mem", "40G" ]
     cmd += [ "--reservation", "interactive" ]
@@ -478,7 +459,7 @@ def main():
                     help='launch n identical jobs',
                     type=int, default=1 )
     argparser.add_argument ( '-M', '--maxsteps', nargs="?",
-                    help='maximum number of steps [None=1000]',
+                    help='maximum number of steps in a walker, max number of iterations in the updater [None=1000]',
                     type=int, default=None )
     argparser.add_argument ( '-b', '--bake', nargs="?",
                     help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
@@ -583,7 +564,7 @@ def main():
             clean_dirs( rundir, clean_all = True )
             continue
         if args.updater:
-            runUpdater( args.dry_run, args.time, rundir )
+            runUpdater( args.dry_run, args.time, rundir, args.maxsteps )
             continue
         if args.scan != -1:
             rewrite = True # args.rewrite
