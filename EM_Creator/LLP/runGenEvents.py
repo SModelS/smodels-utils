@@ -9,7 +9,7 @@
 # containing only the HSCPs
 
 #First tell the system where to find the modules:
-import sys,os
+import sys,os,glob
 from configParserWrapper import ConfigParserExt
 import logging,shutil
 import subprocess
@@ -186,9 +186,35 @@ def Run_MG5(parser):
 
     #Finally generate events and compute widths:
     generateEvents(parser)
+    mg5out = parser.get("MadGraphPars",'mg5out')
+
+    #Save param_card file
+    if parser.has_option("MadGraphPars",'slhaout'):
+        slhaOut = parser.get("MadGraphPars",'slhaout')
+        if slhaOut:
+            slhaOut = os.path.abspath(slhaOut)
+            if not os.path.isdir(os.path.dirname(slhaOut)):
+                os.makedirs(os.path.dirname(slhaOut))
+            paramFile = os.path.join(mg5out,'Cards/param_card.dat')
+            paramFile = os.path.abspath(paramFile)
+            if not os.path.isfile(paramFile):
+                logger.warning("Could not find param card %s" %paramFile)
+            else:
+                shutil.copyfile(paramFile,os.path.abspath(slhaOut))
+
+    #Save banner file
+    if parser.has_option("MadGraphPars",'bannerout'):
+        bannerOut = parser.get("MadGraphPars",'bannerout')
+        if bannerOut:
+            bannerOut = os.path.abspath(bannerOut)
+            if not os.path.isdir(os.path.dirname(bannerOut)):
+                os.makedirs(os.path.dirname(bannerOut))
+            bannerDir = os.path.join(mg5out,'Events/run_01/*.txt')
+            for f in glob.glob(bannerDir):
+                bannerFile = os.path.abspath(f)
+                shutil.copyfile(bannerFile,os.path.abspath(bannerOut))
 
     #Get output file:
-    mg5out = parser.get("MadGraphPars",'mg5out')
     eventFile  = os.path.join(mg5out,'Events/run_01/unweighted_events.lhe.gz')
     eventFile = os.path.abspath(eventFile)
     if not os.path.isfile(eventFile):
@@ -278,7 +304,7 @@ def runAll(parserDict):
 
     #Clean output:
     if parser.get("options","cleanOutFolders"):
-        if parser.get("options","runMG") or parser.get("options","runSlhaCreator"):
+        if parser.get("options","runMG"):
             logger.info("Cleaning output")
             if os.path.isdir(parser.getstr("MadGraphPars","mg5out")):
                 shutil.rmtree(parser.getstr("MadGraphPars","mg5out"))
@@ -295,9 +321,9 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description=
             "Run MadGraph and Pythia in order to compute efficiencies for a given model." )
-    ap.add_argument('-p', '--parfile', default='eff_parameters_default.ini',
+    ap.add_argument('-p', '--parfile', default='parameters_THSCPM1b.ini',
             help='path to the parameters file.')
-    ap.add_argument('-v', '--verbose', default='error',
+    ap.add_argument('-v', '--verbose', default='warning',
             help='verbose level (debug, info, warning or error). Default is error')
 
 
@@ -348,18 +374,24 @@ if __name__ == "__main__":
     ncpus = parser.getint("options","ncpu")
     if ncpus  < 0:
         ncpus =  multiprocessing.cpu_count()
-
+    ncpus = min(ncpus,len(parserList))
     logger.info("Running %i jobs in %i cpus" %(len(parserList),ncpus))
     pool = multiprocessing.Pool(processes=ncpus)
     children = []
     #Loop over model parameters and submit jobs
     firstRun = True
     for newParser in parserList:
+        if newParser.get("options","runMG"):
+            #Run process generation (if required)
+            if not os.path.isdir(newParser.get('MadGraphPars','processFolder')):
+                generateProcesses(newParser)
+
         if firstRun:
             if parser.get("PythiaOptions",'execfile') != 'None':
                 os.system("make %s" %parser.get("PythiaOptions",'execfile'))
                 time.sleep(5)  #Let first job run for 5s in case it needs to create shared folders
             firstRun = False
+
         parserDict = newParser.toDict(raw=False) #Must convert to dictionary for pickling
         p = pool.apply_async(runAll, args=(parserDict,))
         children.append(p)
