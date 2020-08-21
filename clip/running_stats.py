@@ -94,9 +94,16 @@ def count_jobs():
     print ( "slurm q says:" )
     print ( "=============" )
     pend = subprocess.getoutput ( "slurm q | grep PEND | wc -l" )
-    print ( "pending", pend )
+    try:
+        pend = int (pend )
+    except:
+        pass
     running = subprocess.getoutput ( "slurm q | grep RUNNING | wc -l" )
-    print ( "running", running )
+    try:
+        running= int ( running )
+    except:
+        pass
+    print ( "pending", pend, "running", running, "total", pend+running )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
         print ( "remaining", remaining )
