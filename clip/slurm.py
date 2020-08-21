@@ -99,10 +99,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
     
-    ram = max ( 3500, 2000. * ( jmax - jmin ) )
+    ram = max ( 3500, 3000. * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
-        ram = 2500
+        ram = max ( 2800, 2400. * ( jmax - jmin ) )
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
