@@ -25,7 +25,7 @@ def setup( rundir = None ):
     os.chdir ( rundir )
     return rundir
 
-def countSteps():
+def countSteps( printout = True ):
     """ count the number of steps taken accoring to walker logs """
     import glob
     files = glob.glob("walker*log")
@@ -50,9 +50,11 @@ def countSteps():
     tots = 0
     for k in keys:
         tots += steps[k]
-        print ( k, steps[k] )
-    print ( f"we have {len(keys)} entries, total of {tots} steps." )
-    return tots
+        if printout:
+            print ( k, steps[k] )
+    if printout:
+        print ( f"we have {len(keys)} entries, total of {tots} steps." )
+    return tots,steps
 
 def updateHiscores( rundir=None ):
     args = types.SimpleNamespace()
