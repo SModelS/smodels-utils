@@ -26,16 +26,9 @@ def startServer ( rundir, dry_run, time ):
     with open ( "%sclip/server_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
-    """
-    nr = rundir
-    if nr.endswith("/"):
-        nr = nr[:-1]
-    p = nr.rfind("/")
-    if p > 0:
-        nr = nr[p+1:]
-    """
+    Dir = getDirname ( rundir )
     print ( f"[slurm.py] start database server in {rundir}" )
-    tf = "%s/SERVER.sh" % ( rundir )
+    tf = "%s/SRV%s.sh" % ( rundir, Dir )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@",rundir) )
@@ -89,8 +82,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d )\n" % \
                   ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
+    Dir = getDirname ( rundir )
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    tf = "%s/RUN_%s.sh" % ( rundir, jmin )
+    tf = "%s/RUN%s_%s.sh" % ( rundir, Dir, jmin )
     with open(tf,"wt") as f:
         for line in lines:
                     f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
@@ -299,6 +293,19 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     a = subprocess.run ( cmd )
     print ( "[runScanner] >>", a )
 
+def getDirname ( rundir ):
+    """ get the directory name of rundir, e.g.:
+        /scratch-cbe/users/wolfgan.waltenberger/rundir.fake1 -> fake1
+    """
+    ret = rundir
+    if ret.endswith("/"):
+         ret = ret[:-1]
+    p = ret.rfind("/")
+    if p>-1:
+         ret = ret[p+1:]
+    ret = ret.replace("rundir.","")
+    return ret
+
 def runUpdater( dry_run, time, rundir, maxiterations ):
     """ thats the hiscore updater
     :param time: time, given in minutes(?)
@@ -307,7 +314,8 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
     with open ( "%sclip/hiscore_update_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
-    tf = "%s/HISCORE_UPDATER.sh" % ( rundir )
+    Dir = getDirname ( rundir )
+    tf = "%s/HI%s.sh" % ( rundir, Dir )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@", rundir ) )

@@ -15,6 +15,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-r','--run', help='cancel all RUN jobs (ie the walkers only)',
                              action="store_true" )
+    argparser.add_argument ( '-H','--hiscore', help='cancel all hiscore jobs',
+                             action="store_true" )
     args=argparser.parse_args()
     grp = "| grep QOSMax"
     if args.all:
@@ -23,6 +25,8 @@ def main():
         grp = "| grep ' B'"
     if args.pending:
         grp = "| grep PENDING"
+    if args.hiscore:
+        grp = "| grep HI"
     if args.server:
         grp = "| grep SERVER"
     if args.run:
