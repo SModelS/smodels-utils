@@ -326,8 +326,10 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d )\n" % \
                   ( rundir, maxiterations ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
-    cmd = [ "srun", "--mem", "40G" ]
-    cmd += [ "--reservation", "interactive" ]
+    cmd = [ "sbatch", "--mem", "30G" ]
+    if maxiterations > 5:
+        cmd = [ "srun", "--mem", "40G" ]
+        cmd += [ "--reservation", "interactive" ]
     # cmd = [ "srun", "--mem", "50G" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     qos = "c_short"
@@ -337,7 +339,9 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
     if 8 < time <= 48:
         qos = "c_medium"
         cmd += [ "--qos", qos ]
-    cmd += [ "--pty", "bash", tf ]
+    if maxiterations > 5:
+        cmd += [ "--pty", "bash" ]
+    cmd += [ tf ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
         return

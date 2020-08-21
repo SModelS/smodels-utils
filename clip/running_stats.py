@@ -91,8 +91,8 @@ def running_stats():
     print ( a )
 
 def count_jobs():
-    print ( "slurm q says:" )
-    print ( "=============" )
+    #print ( "slurm q says:" )
+    #print ( "=============" )
     pend = subprocess.getoutput ( "slurm q | grep PEND | wc -l" )
     try:
         pend = int (pend )
@@ -103,9 +103,9 @@ def count_jobs():
         running= int ( running )
     except:
         pass
-    lpend = "pending %s%s%s" % ( colorama.Fore.YELLOW, pend, colorama.Fore.RESET )
-    lrun = "running %s%s%s" % ( colorama.Fore.GREEN, running, colorama.Fore.RESET )
-    ltot = "total %s%s%s" % ( colorama.Fore.RED, pend+running, colorama.Fore.RESET )
+    lpend = "%s%s%s" % ( colorama.Fore.YELLOW, pend, colorama.Fore.RESET )
+    lrun = "%s%s%s" % ( colorama.Fore.GREEN, running, colorama.Fore.RESET )
+    ltot = "%s%s%s" % ( colorama.Fore.RED, pend+running, colorama.Fore.RESET )
     print ( "pending", lpend, "running", lrun, "total", ltot )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
