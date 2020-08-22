@@ -26,6 +26,13 @@ class Predictor:
         force_load = None
         if dbpath.endswith ( ".pcl" ):
             force_load = "pcl"
+        ntries = 0
+        while not os.path.exists ( dbpath ):
+            ## give it a few tries
+            ntries += 1
+            time.sleep ( ntries * 5 )
+            if ntries > 5
+                break
         self.database=Database( dbpath, force_load = force_load )
         self.fetchResults()
         self.combiner = Combiner(self.walkerid)
