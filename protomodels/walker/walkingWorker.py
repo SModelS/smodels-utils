@@ -90,11 +90,11 @@ def main( nmin, nmax, cont,
                                      dbpath = dbpath, cheatcode = cheatcode, rundir = rundir,
                                      nevents = nevents )
             walkers.append ( w )
-        elif pfile.endswith(".pcl"):
+        elif pfile.endswith(".hi") or pfdile.endswith(".pcl"):
             nstates = len(states )
             ctr = i % nstates
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
-            w = RandomWalker.fromProtoModel ( states[ctr], "aggressive",
+            w = RandomWalker.fromProtoModel ( states[ctr], strategy = "aggressive",
                     walkerid = i, nsteps = maxsteps, dump_training=dump_training, expected = False,
                     dbpath = dbpath, rundir = rundir )
             walkers.append ( w )
