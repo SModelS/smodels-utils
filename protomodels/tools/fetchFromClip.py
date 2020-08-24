@@ -49,7 +49,7 @@ def main():
               "fake": [ "fake*.pcl", "signal*.pcl" ],
               "copy": [ "hiscoreCopy.hi" ],
               "slha": [ "hiscore.slha" ],
-              "dbdict": [ "database.dict" ],
+              "dbdict": [ "d*.dict" ],
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
               "hiscore": [ "hiscore.hi" ],
