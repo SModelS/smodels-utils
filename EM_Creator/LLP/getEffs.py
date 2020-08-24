@@ -118,7 +118,7 @@ def getEffForEvent(event,widths=[0.0],detectorLength=1.0):
 
     return effs
 
-def getEventsFrom(infile, effLabels = None):
+def getEventsFrom(lheFile, effLabels = None):
     """
     Reads a simplified LHE file and returns a list of events.
     Each event is simply a list of TParticle objects.
@@ -128,15 +128,24 @@ def getEventsFrom(infile, effLabels = None):
     :return: list of events (e.g. [ [ TParticle1, TParticle2,..], [ TParticle1,...]  ])
     """
 
-    if not os.path.isfile(infile):
-        logger.error("File %s not found" %infile)
+    if not os.path.isfile(lheFile):
+        logger.error("File %s not found" %lheFile)
         return []
+
+
+    inputFile = lheFile
+    if lheFile.endswith(".tar.gz"):
+        with tarfile.open(lheFile, "r:gz") as tar:
+            inputFile = lheFile.replace('.tar.gz','')
+            tar.extract(os.path.basename(inputFile),
+                            path=os.path.dirname(lheFile))
 
     #Define labels for efficiencies is the order appearing in the event file:
     if effLabels is None:
-        effLabels = ['trigger','c000','c000_err','c100','c100_err','c200','c200_err','c300','c300_err']
+        effLabels = ['trigger','trigger_err','c000','c000_err','c100','c100_err',
+                     'c200','c200_err','c300','c300_err']
 
-    f = open(infile,'r')
+    f = open(inputFile,'r')
     events = f.read()
     events = events[events.find('<event>'):events.rfind('<\event>')]
     events = events.split('<event>')[1:]
@@ -161,11 +170,16 @@ def getEventsFrom(infile, effLabels = None):
                 name = "~hscp"
                 charge = -1.
             particle = Particle(pdg=pdg,triMomentum=triMomentum,energy=energy,mass=mass,name=name,charge=charge)
-            particle.effs = dict([[label,l[i]] for i,label in enumerate(effLabels)])
+            particle.effs = dict([[label,l[6+i]] for i,label in enumerate(effLabels)])
 
             particles.append(particle)
 
         eventList.append(particles)
+
+
+    if inputFile != lheFile and os.path.isfile(inputFile):
+        os.remove(inputFile)
+
 
     return eventList
 
@@ -182,21 +196,11 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
     :return: True/False
     """
 
-    if not os.path.isfile(lheFile):
-        logger.error('File %s not found' %lheFile)
-        return False
-
-    inputFile = lheFile
-    if lheFile.endswith(".tar.gz"):
-        with tarfile.open(lheFile, "r:gz") as tar:
-            inputFile = lheFile.replace('.tar.gz','')
-            tar.extract(os.path.basename(inputFile),
-                            path=os.path.dirname(lheFile))
-
-    events = getEventsFrom(inputFile)
+    events = getEventsFrom(lheFile)
 
     columns = ['width','c000','c100','c200','c300','c000_err','c100_err','c200_err','c300_err']
     effs = np.zeros(len(widths),dtype=[(c,float) for c in columns])
+    effs['width'] = widths
     for event in events:
         if not event:
             continue  #Skip events without HSCPs
@@ -218,9 +222,14 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
         if '_err' in label:
             effs[label] = np.sqrt(effs[label])/len(events)
         else:
-            effs[sr] = effs[sr]/len(events)
+            effs[label] = effs[label]/len(events)
 
     res = np.sort(effs,order='width')
+
+
+    inputFile = lheFile
+    if lheFile.endswith(".tar.gz"):
+        inputFile = lheFile.replace('.tar.gz','')
 
     outFile = os.path.join(outFolder,os.path.basename(inputFile).replace('.lhe','')+'.eff')
     #Save results to file:
@@ -228,10 +237,8 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
     header = header[3:]
     np.savetxt(outFile,res,header=header,fmt = ['     %1.7e']*len(res.dtype.names))
 
-    if inputFile != lheFile and os.path.isfile(inputFile):
-        os.remove(inputFile)
-
     return True
+
 
 
 if __name__ == "__main__":
@@ -239,7 +246,7 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description=
             "Compute effective fraction of long-lived particles" )
-    ap.add_argument('-p', '--parfile', default='map_parameters.ini',
+    ap.add_argument('-p', '--parfile', default='eff_parameters.ini',
             help='path to the parameters file.')
     ap.add_argument('-v', '--verbose', default='error',
             help='verbose level (debug, info, warning or error). Default is error')
