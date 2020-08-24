@@ -3,7 +3,7 @@
 """ simple script that perpetually updates hiscore list
     from H<n>.pcl """
 
-import time, types, sys, os
+import time, types, sys, os, subprocess
 
 def setup( rundir = None ):
     # codedir = "/mnt/hephy/pheno/ww/git/"
@@ -25,11 +25,19 @@ def setup( rundir = None ):
     os.chdir ( rundir )
     return rundir
 
-def countSteps( printout = True ):
-    """ count the number of steps taken accoring to walker logs """
+def countSteps( printout = True, writeSubmitFile = False ):
+    """ count the number of steps taken accoring to walker logs 
+    :param printout: print out statistics
+    :param writeSubmitFile: write a submit file for the non-finished jobs
+    """
     import glob
     files = glob.glob("walker*log")
     steps = {}
+    g = None
+    if writeSubmitFile:
+        g = open ( "submit.sh", "wt" )
+        g.write ( "#!/bin/sh\n\n" )
+    files.sort()
     for f in files:
         nr = int ( f.replace("walker","").replace(".log","") )
         h = open ( f, "rt" )
@@ -44,6 +52,14 @@ def countSteps( printout = True ):
                 laststep = int ( laststep.strip() )
                 #print ( nr, laststep )
                 steps[nr]=laststep
+                if writeSubmitFile and laststep < 1000:
+                    rundir = os.getcwd()
+                    if rundir.endswith("/"):
+                        rundir=rundir[:-1]
+                    p = rundir.rfind("/")
+                    rundir = rundir[p+1:]
+                    g.write ( "./slurm.py -R %s -n %d -N %d -M 1000\n" % \
+                              ( rundir, nr, nr+1 ) )
                 break
     keys = list ( steps.keys() )
     keys.sort()
@@ -54,6 +70,11 @@ def countSteps( printout = True ):
             print ( k, steps[k] )
     if printout:
         print ( f"we have {len(keys)} entries, total of {tots} steps." )
+    if writeSubmitFile:
+        g.close()
+        os.chmod ( "submit.sh", 0o755 )
+        cmd = "cp submit.sh %s" % os.environ["HOME"]
+        subprocess.getoutput ( cmd )
     return tots,steps
 
 def updateHiscores( rundir=None ):
