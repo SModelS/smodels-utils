@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #Reads a series of data files  with the (isolated) HSCP momentum information for each event (in the stable limit)
-#and extract an efficiency map for all the points, including the effect of finite width.
+#and extract the efficiencies as a function of the widths.
 
 import sys
 from configParserWrapper import ConfigParserExt
@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     import argparse
     ap = argparse.ArgumentParser( description=
-            "Compute effective fraction of long-lived particles" )
+            "Compute efficencies for multiple widths" )
     ap.add_argument('-p', '--parfile', default='eff_parameters.ini',
             help='path to the parameters file.')
     ap.add_argument('-v', '--verbose', default='error',
@@ -281,6 +281,7 @@ if __name__ == "__main__":
         ncpus =  multiprocessing.cpu_count()
 
     ncpus = min(ncpus,len(lheFiles))
+    logger.info("Running over %i files with %i cpus" %(len(lheFiles),ncpus))
     pool = multiprocessing.Pool(processes=ncpus)
     children = []
     #Loop over model parameters and submit jobs
@@ -288,7 +289,7 @@ if __name__ == "__main__":
         p = pool.apply_async(getEffsFor, args=(lheFile,nHSCP,widths,detectorLength,effFolder,))
         children.append(p)
 
-    #Wait for jobs to finish:
+
     output = [p.get() for p in children]
 
     print("\n\nDone in %3.2f min" %((time.time()-t0)/60.))
