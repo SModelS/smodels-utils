@@ -36,7 +36,13 @@ class Plotter:
                 if "expectedBG" in v and v["expectedBG"]>=self.filter:
                     newdata[i]=v
                 else:
-                    print ( f"[plotDBDict] removing {basename}:{i}" )
+                    if i.endswith ( ":ul" ):
+                        print ( f"[plotDBDict] removing {basename}:{i} (is an UL)" )
+                    else:
+                        eBG=None
+                        if "expectedBG" in v:
+                            eBG = v["expectedBG"]
+                        print ( f"[plotDBDict] removing {basename}:{i} (eBG is {eBG})" )
             print ( f"[plotDBDict] keeping {len(newdata)}/{len(data)} for {basename}" )
             self.data[basename] = newdata
 
@@ -68,6 +74,7 @@ class Plotter:
             selfbase = os.path.basename ( filename )
             fname = selfbase.replace(".dict",".pcl")
             print ( f"[plotDBDict] looking for {fname}" )
+            hasPickle = False
             if os.path.exists ( fname ):
                 print ( f"[plotDBDict] found {fname}. Using data therein." )
                 with open ( fname, "rb" ) as f:
@@ -81,7 +88,8 @@ class Plotter:
                         P += pickle.load ( f )
                         Pfake += pickle.load ( f )
                         f.close()
-            else:
+                        hasPickle = True
+            if not hasPickle:
                 print ( f"[plotDBDict] not found {fname}. Creating." )
                 S_,Sfake_,P_,Pfake_=[],[],[],[]
                 data = self.data [ fname.replace(".pcl","") ]
