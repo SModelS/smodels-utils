@@ -258,6 +258,9 @@ def Run_pythia(parser,inputFile):
         outFile = os.path.splitext(outFile)[0]
     if os.path.splitext(outFile)[1] == '.tar':
         outFile = os.path.splitext(outFile)[0]
+    if not os.path.isdir(os.path.dirname(outFile)):
+        os.makedirs(os.path.dirname(outFile))
+
     logger.debug('Excuting: \n./%s -f %s -c %s -o %s -n -1' %(execFile,
                                                           inputFile,pythiacfg,outFile))
     run = subprocess.Popen('./%s -f %s -c %s -o %s -n -1' %(execFile,
