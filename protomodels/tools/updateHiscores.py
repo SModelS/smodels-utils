@@ -71,6 +71,17 @@ def countSteps( printout = True, writeSubmitFile = False ):
     if printout:
         print ( f"we have {len(keys)} entries, total of {tots} steps." )
     if writeSubmitFile:
+        keys = list ( steps.keys() )
+        keys.sort()
+        for k in range(0,50):
+            if not k in keys:
+                rundir = os.getcwd()
+                if rundir.endswith("/"):
+                    rundir=rundir[:-1]
+                p = rundir.rfind("/")
+                rundir = rundir[p+1:]
+                g.write ( "./slurm.py -R %s -n %d -N %d -M 1000\n" % \
+                          ( rundir, k, k+1 ) )
         g.close()
         os.chmod ( "submit.sh", 0o755 )
         cmd = "cp submit.sh %s" % os.environ["HOME"]
