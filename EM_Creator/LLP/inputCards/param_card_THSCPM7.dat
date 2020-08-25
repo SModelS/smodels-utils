@@ -311,8 +311,8 @@ DECAY 1000024 1.000000e+00 # Wch1
 DECAY 1000025 1.915985e+00 # Wneu3 
 DECAY 1000035 2.585851e+00 # Wneu4 
 DECAY 1000037 1.000000e+00 # Wch2 
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    3     1000024    12  -12   # BR(~chi_2+ -> ~chi_1+  nu nu)
+#          BR         NDA      ID1      ID2
+     1.00000000E+00    2     1000024     22  # BR(~chi_2+ -> ~chi_1+  gamma)
 
 DECAY 2000001 2.858123e-01 # Wsd4 
 DECAY 2000002 1.152973e+00 # Wsu4 
