@@ -309,8 +309,10 @@ def runAll(parserDict):
     if parser.get("options","cleanOutFolders"):
         if parser.get("options","runMG"):
             logger.info("Cleaning output")
-            if os.path.isdir(parser.getstr("MadGraphPars","mg5out")):
+            try:
                 shutil.rmtree(parser.getstr("MadGraphPars","mg5out"))
+            except:
+                pass
 
     logger.info("Done in %3.2f min" %((time.time()-t0)/60.))
     now = datetime.datetime.now()
