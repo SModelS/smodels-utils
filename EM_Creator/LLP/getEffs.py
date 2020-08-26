@@ -32,7 +32,7 @@ class Particle(object):
 
     def fourMom(self):
 
-        return [self.energy] + self.triMommentum
+        return [self.energy] + self.triMomentum
 
     def triMom(self):
 
@@ -62,7 +62,26 @@ class Particle(object):
             mass = np.sqrt(np.inner(self.fourMom(),self.fourMom()))
             return mass
 
-def getEffForEvent(event,widths=[0.0],detectorLength=1.0):
+def decayProbabilityFor(particle,width,detectorLength=None):
+
+    if detectorLength is None:
+        #Compute using full detector geometry
+        b_detector = 10.8
+        h_detector = 7.4
+        theta_max_len = math.atan(h_detector/b_detector)
+        theta = 2.0*math.atan(math.exp(-abs(particle.Eta())))
+        if theta < theta_max_len:
+           detectorLength = b_detector/math.cos(theta)
+        else:
+           detectorLength = h_detector/math.sin(theta)
+
+    gammabeta = particle.P()/particle.mass
+    x = detectorLength*width/1.975e-16 #Effective length
+    probDecay = math.exp(-x/gammabeta)
+
+    return probDecay
+
+def getEffForEvent(event,widths=[0.0],detectorLength=None):
     """
     Compute the efficiency for the event for a given
     list of x-values (xEffs), where x = L/ctau.
@@ -105,9 +124,7 @@ def getEffForEvent(event,widths=[0.0],detectorLength=1.0):
     #Loop over x values and compute the probability of reconstructing at least one HSCP:
     for i,w in enumerate(widths):
         effs['width'][i] = w
-        x = detectorLength*w/1.975e-16 #Effective length
-        #Compute fraction of HSCPs which decay outside the detector:
-        probDecay = np.array([math.exp(-hscp.mass*x/hscp.P()) for hscp in event])
+        probDecay = np.array([decayProbabilityFor(hscp,w,detectorLength) for hscp in event])
         for sr in SRs:
             #Compute probability for reconstructing each HSCP:
             probTag = probDecay*ProbTrigger*ProbOnline[sr]
@@ -231,7 +248,10 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
     if lheFile.endswith(".tar.gz"):
         inputFile = lheFile.replace('.tar.gz','')
 
+
     outFile = os.path.join(outFolder,os.path.basename(inputFile).replace('.lhe','')+'.eff')
+    if not os.path.isdir(os.path.dirname(outFile)):
+        os.makedirs(os.path.dirname(outFile))
     #Save results to file:
     header = '%19s'*len(res.dtype.names) %res.dtype.names
     header = header[3:]

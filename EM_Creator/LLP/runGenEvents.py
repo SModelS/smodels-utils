@@ -291,6 +291,19 @@ def runAll(parserDict):
     parser = ConfigParserExt()
     parser.read_dict(parserDict)
 
+    #Check if run should be skipped
+    skip = False
+    if parser.has_option("options","skipDone"):
+        skip = parser.get("options","skipDone")
+    if skip:
+        if parser.get("options","runPythia"):
+            pythiaOut = parser.get("PythiaOptions","pythiaout")
+            if os.path.isfile(pythiaOut):
+                logger.info("File %s found. Skipping run." %pythiaOut)
+                now = datetime.datetime.now()
+                return "Run skipped at %s" %(now.strftime("%Y-%m-%d %H:%M"))
+
+
     #Run MadGraph and create SLHA file (keep MG5 events):
     parserDict["options"]["cleanOutFolders"] = False
     if parser.get("options","runMG"):
