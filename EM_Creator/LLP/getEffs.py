@@ -126,10 +126,12 @@ def getEffForEvent(event,widths=[0.0],detectorLength=None):
         effs['width'][i] = w
         probDecay = np.array([decayProbabilityFor(hscp,w,detectorLength) for hscp in event])
         for sr in SRs:
-            #Compute probability for reconstructing each HSCP:
-            probTag = probDecay*ProbTrigger*ProbOnline[sr]
-            #Probability for reconstructing at least one HSCP (1 - probability for missing all):
-            probFinal = 1.0 - np.prod(1.0-probTag)
+            #Compute probability for triggering at least one HSCP  (1 - probability for missing all):
+            probTriggerTotal = 1.0 - np.prod(1.0-ProbTrigger*probDecay)
+            #Compute probabitlity for reconstructing at least one HSCP  (1 - probability for missing all):
+            probTagTotal = 1.0 - np.prod(1.0-ProbOnline[sr])
+            #Total probability for triggering and reconstructing at least one HSCP:
+            probFinal = probTriggerTotal*probTagTotal
             #Store result:
             effs[sr][i] = probFinal
 
