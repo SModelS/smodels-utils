@@ -258,6 +258,9 @@ def Run_pythia(parser,inputFile):
         outFile = os.path.splitext(outFile)[0]
     if os.path.splitext(outFile)[1] == '.tar':
         outFile = os.path.splitext(outFile)[0]
+    if not os.path.isdir(os.path.dirname(outFile)):
+        os.makedirs(os.path.dirname(outFile))
+
     logger.debug('Excuting: \n./%s -f %s -c %s -o %s -n -1' %(execFile,
                                                           inputFile,pythiacfg,outFile))
     run = subprocess.Popen('./%s -f %s -c %s -o %s -n -1' %(execFile,
@@ -288,6 +291,19 @@ def runAll(parserDict):
     parser = ConfigParserExt()
     parser.read_dict(parserDict)
 
+    #Check if run should be skipped
+    skip = False
+    if parser.has_option("options","skipDone"):
+        skip = parser.get("options","skipDone")
+    if skip:
+        if parser.get("options","runPythia"):
+            pythiaOut = parser.get("PythiaOptions","pythiaout")
+            if os.path.isfile(pythiaOut):
+                logger.info("File %s found. Skipping run." %pythiaOut)
+                now = datetime.datetime.now()
+                return "Run skipped at %s" %(now.strftime("%Y-%m-%d %H:%M"))
+
+
     #Run MadGraph and create SLHA file (keep MG5 events):
     parserDict["options"]["cleanOutFolders"] = False
     if parser.get("options","runMG"):
@@ -306,8 +322,10 @@ def runAll(parserDict):
     if parser.get("options","cleanOutFolders"):
         if parser.get("options","runMG"):
             logger.info("Cleaning output")
-            if os.path.isdir(parser.getstr("MadGraphPars","mg5out")):
+            try:
                 shutil.rmtree(parser.getstr("MadGraphPars","mg5out"))
+            except:
+                pass
 
     logger.info("Done in %3.2f min" %((time.time()-t0)/60.))
     now = datetime.datetime.now()
