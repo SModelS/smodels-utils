@@ -76,7 +76,7 @@ class Hiscore:
 
     def globalMaxK ( self ):
         """ globally (across all walkers), the highest K """
-        ret = 0.
+        ret = -3. ## set to negative if no hiscore exists
         if self.hiscores[0] != None:
             if self.hiscores[0].K > ret:
                 ret = self.hiscores[0].K

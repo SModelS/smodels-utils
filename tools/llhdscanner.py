@@ -412,8 +412,9 @@ def main ():
             interactive = False
             drawtimestamp = True
             compress = False
+            upload = "latest"
             plot = plotLlhds.LlhdPlot ( pid1, args.pid2, verbose, copy, max_anas,
-                                       interactive, drawtimestamp, compress, rundir )
+                                       interactive, drawtimestamp, compress, rundir, upload )
             plot.plot()
 
 if __name__ == "__main__":
