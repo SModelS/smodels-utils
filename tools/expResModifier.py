@@ -22,7 +22,7 @@ from smodels.theory import decomposer
 from tools.csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge, 
+    def __init__ ( self, dbpath, Zmax, rundir, keep, nproc, fudge,
                    suffix: str ):
         """
         :param dbpath: path to database
@@ -70,7 +70,7 @@ class ExpResModifier:
                 if dt == "upperLimit":
                     for txname in dataset.txnameList:
                         D[txname]=txname.txnameData.y_values
-                        
+
                 for i in [ "observedN", "origN", "expectedBG", "lmbda", "bgError",
                            "origUpperLimit", "origExpectedUpperLimit", "upperLimit",
                            "expectedUpperLimit" ]:
@@ -102,7 +102,7 @@ class ExpResModifier:
             for i,y in enumerate( ret.y_values ):
                 sigma_exp = y / 1.96 ## the sigma of the Gaussian
                 D["yexp"]= y
-                D["yobs"]= float("nan") 
+                D["yobs"]= float("nan")
                 if len(ret.y_values) == len(observed.y_values):
                     D["yobs"]=observed.y_values[i]
                 D["sigma_exp"]= sigma_exp
@@ -507,6 +507,56 @@ class ExpResModifier:
         self.log ( "done faking the backgrounds" )
         return ret
 
+    def filter ( self, outfile, nofastlim, onlyvalidated, nosuperseded ):
+        """ filter the list fo experimental results.
+        :param outfile: store result in outfile (a pickle file)
+        :param nofastlim: remove fastlim results
+        :param onlyvalidated: remove non-validated results
+        :param nosuperseded: remove superseded results
+        """
+        self.log ( "starting to filter %s. suffix is %s." % \
+                   ( outfile, self.suffix ) )
+        db = Database ( self.dbpath )
+        listOfExpRes = db.expResultList ## seems to be the safest bet?
+        newList = []
+        for er in listOfExpRes:
+            addThisOne = True
+            if nofastlim:
+                if hasattr ( er.globalInfo, "contact" ) and "fastlim" in er.globalInfo.contact:
+                    print ( " `- skipping fastlim %s" % er.globalInfo.id )
+                    addThisOne = False
+            if nosuperseded:
+                if hasattr ( er.globalInfo, "supersededBy" ):
+                    print ( " `- skipping superseded %s" % er.globalInfo.id )
+                    addThisOne = False
+            if hasattr ( er.globalInfo, "private" ) and er.globalInfo.private in [ "True", True ]:
+                    print ( " `- skipping private %s" % er.globalInfo.id )
+                    addThisOne = False
+            if not addThisOne:
+                continue
+            if onlyvalidated:
+                newDs = []
+                for ds in er.datasets:
+                    txnew = []
+                    for txn in ds.txnameList:
+                        if txn.validated == False:
+                            print ( " `- skipping non-validated %s/%s/%s" % \
+                                    ( txn.txName, ds.dataInfo.dataId, er.globalInfo.id ) )
+                        else:
+                            txnew.append ( txn )
+                    ds.txnameList = txnew
+                    if len(txnew)>0:
+                        newDs.append ( ds )
+                er.datasets = newDs
+                if len(newDs) == 0:
+                    addThisOne = False
+            if not addThisOne:
+                continue
+            newList.append ( er )
+        db.expResultList = newList
+        if outfile != "":
+            db.createBinaryFile( outfile )
+
     def upload( self ):
         import filecmp
         # cmd = "cp %s ./modifier.log %s" % ( args.outfile, self.rundir )
@@ -538,11 +588,30 @@ class ExpResModifier:
         print ( "were good", db.databaseVersion )
 
 
+epilog="""
+Examples:
+=========
+
+Fake SM-only database:
+----------------------
+./expResModifier.py -R $RUNDIR -d original.pcl -s fake1
+
+Database with a fake signal:
+----------------------------
+./expResModifier.py -R $RUNDIR -d original.pcl -s signal1 -P pmodel9.py
+
+Just filter the database:
+-------------------------
+./expResModifier.py -d ./original.pcl --nofastlim --onlyvalidated --nosuperseded --dontsample -o test.pcl
+
+"""
+
 if __name__ == "__main__":
     import argparse
+    from argparse import RawTextHelpFormatter
     argparser = argparse.ArgumentParser(
-                        description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations. can insert signals, too.',
-                        epilog='./expResModifier.py -R $RUNDIR -d original.pcl -s signal1 -P pmodel9.py' )
+                        description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations. can insert signals, too.', formatter_class = RawTextHelpFormatter,
+                        epilog=epilog )
     argparser.add_argument ( '-d', '--database',
             help='database to use [../../smodels-database]',
             type=str, default="../../smodels-database" )
@@ -558,6 +627,18 @@ if __name__ == "__main__":
     argparser.add_argument ( '-f', '--fudge',
             help='fudge factor [1.0]',
             type=float, default=1.0 )
+    argparser.add_argument ( '--nofastlim',
+            help='remove fastlim results',
+            action='store_true' )
+    argparser.add_argument ( '--onlyvalidated',
+            help='remove non-validated results',
+            action='store_true' )
+    argparser.add_argument ( '--nosuperseded',
+            help='remove superseded results',
+            action='store_true' )
+    argparser.add_argument ( '--dontsample',
+            help='do not sample at all, only filter',
+            action='store_true' )
     argparser.add_argument ( '-M', '--max',
             help='upper limit on significance of individual excess [None]',
             type=float, default=None )
@@ -576,7 +657,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
     argparser.add_argument ( '-x', '--extract_stats',
-            help='dont create new database, extract stats from existing database', 
+            help='dont create new database, extract stats from existing database',
             action='store_true' )
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
@@ -600,6 +681,13 @@ if __name__ == "__main__":
                                args.nproc, args.fudge, args.suffix )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
+    if args.nofastlim or args.onlyvalidated or args.nosuperseded:
+        modifier.filter ( args.outfile, args.nofastlim, args.onlyvalidated,
+                          args.nosuperseded )
+    if args.dontsample:
+        print ( "[expResModifier] was asked to not sample, so we exit now." )
+        sys.exit()
+
     if args.extract_stats:
         er = modifier.extractStats()
     else:
