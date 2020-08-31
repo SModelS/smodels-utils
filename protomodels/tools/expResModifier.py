@@ -600,6 +600,10 @@ Database with a fake signal:
 ----------------------------
 ./expResModifier.py -R $RUNDIR -d original.pcl -s signal1 -P pmodel9.py
 
+Build a database:
+-----------------
+./expResModifier.py -B -d ../../../smodels-database
+
 Just filter the database:
 -------------------------
 ./expResModifier.py -d ./original.pcl --nofastlim --onlyvalidated --nosuperseded --dontsample -o test.pcl
