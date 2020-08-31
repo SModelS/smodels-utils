@@ -35,10 +35,10 @@ bin/OldListOfAnalysesWithSuperseded
 slha/ls
 validation/Validation*
 */.http*
-scripts/database.bib
-scripts/failed.txt
-scripts/log.txt
-scripts/refs.bib
+smodels_utils/helper/database.bib
+smodels_utils/helper/failed.txt
+smodels_utils/helper/log.txt
+smodels_utils/helper/refs.bib
 singularity/smodels.simg
 bin/downloads.csv
 *.exe
