@@ -434,6 +434,33 @@ CMS are for on- and off-shell at once.
                     return "eUL"
         return False
 
+    def compileOldAnaIds ( self ):
+        """ compile the list of analysis ids in the comparison database,
+        i.e. create self.OldAnaIds, and self.topos
+        """
+        expRs = self.comparison_db.getExpResults( useSuperseded = True, 
+                      useNonValidated = self.ignore_validated )
+        anaIds = [ x.globalInfo.id for x in expRs ]
+        self.OldAnaIds = set ( anaIds )
+        self.topos = {}
+        for r in expRs:
+            anaId = r.globalInfo.id
+            if not anaId in self.topos.keys():
+                self.topos[anaId]=[]
+            topos = r.getTxNames()
+            topos.sort()
+            Type = "-ul"
+            if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
+                Type = "-eff"
+            for t in topos:
+                name = t.txName+Type 
+                self.topos[anaId].append ( name )
+        # print ( "the old analysis ids are", self.OldAnaIds )
+        if self.comparison_db.databaseVersion == "1.2.3":
+            print ( "[createWikiPage] adding ATLAS-SUSY-2016-24:TSlepSlep-eff" )
+            self.topos["ATLAS-SUSY-2016-24"].append ( 'TSlepSlep-eff' )
+
+
     def isNewAnaID ( self, id, txname, tpe ):
         """ is analysis id <id> new?
         :param id: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
@@ -444,24 +471,7 @@ CMS are for on- and off-shell at once.
             # no comparison database given. So nothing is new.
             return False
         if not hasattr ( self, "OldAnaIds" ):
-            expRs = self.comparison_db.getExpResults( useSuperseded = True, 
-                          useNonValidated = self.ignore_validated )
-            anaIds = [ x.globalInfo.id for x in expRs ]
-            self.OldAnaIds = set ( anaIds )
-            self.topos = {}
-            for r in expRs:
-                anaId = r.globalInfo.id
-                if not anaId in self.topos.keys():
-                    self.topos[anaId]=[]
-                topos = r.getTxNames()
-                topos.sort()
-                Type = "-ul"
-                if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
-                    Type = "-eff"
-                for t in topos:
-                    name = t.txName+Type 
-                    self.topos[anaId].append ( name )
-            ## print ( "the old analysis ids are", self.OldAnaIds )
+            self.compileOldAnaIds()
         if not id in self.OldAnaIds: ## whole ana is new?
             return True
         myType = "-ul"
