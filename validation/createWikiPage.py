@@ -318,6 +318,8 @@ CMS are for on- and off-shell at once.
             vDir = valDir.replace ( self.databasePath,"")
             altpath = self.databasePath.replace ( "/home", "/nfsdata" )
             vDir = vDir.replace ( altpath, "" )
+            #vDir = vDir.replace("/media/linux/walten/git/smodels-database","/validation/%s" % self.dotlessv )
+            vDir = vDir.replace("/media/linux/walten/git/smodels-database","" )
             if vDir[0]=="/":
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
@@ -330,6 +332,7 @@ CMS are for on- and off-shell at once.
                         files.append ( i )
             files.sort()
             t0=time.time()-159000000
+            valDir = valDir.replace("/media/linux/walten/git/smodels-database","" )
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
                 figName = pngname.replace(valDir+"/","").replace ( \

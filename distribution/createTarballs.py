@@ -416,7 +416,7 @@ def main():
                     default="database" )
     ap.add_argument('-c', '--clear', help='remove output from previous run', 
                     action="store_true" )
-    ap.add_argument('-t', '--tag', help='database version [1.2.3]', default='1.2.3')
+    ap.add_argument('-t', '--tag', help='database version [1.2.4]', default='1.2.4')
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', 
                     default='../../smodels')
 

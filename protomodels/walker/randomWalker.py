@@ -262,11 +262,12 @@ class RandomWalker:
 
 
     def checkIfToTeleport ( self, pmax=0.1, norm = 10.0 ):
-        """ check if we should teleport to a high score model. If we should then also
-            perform the teleportation. The teleportation is done only if the model
-            has a score smaller then the best score in hiscoreList.
-            The teleportation probability is given by pmax*(1-exp^(K-bestK)/norm),
-            so pmax is the maximum probability (when K -> -infinity).
+        """ check if we should teleport to a high score model. If yes, then we
+            should then also perform the teleportation. The teleportation is
+            done only if the model has a score smaller then the best score in
+            hiscoreList.  The teleportation probability is given by
+            pmax*(1-exp^(K-bestK)/norm), so pmax is the maximum probability
+            (when K -> -infinity).
 
         :param pmax: Maximum probability for teleportation.
         :param norm: Normalization for K distance.

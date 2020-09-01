@@ -159,16 +159,19 @@ def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
     :param preserve_xsecs: adjust the SSMs to that xsecs are preserved
     """
     if type(pid) in [ list, tuple, set ]:
+        pid = set(map(abs,pid))
         for p in pid:
             produce ( hi, p, nevents, dry_run, nproc, fac, rundir = rundir,
                       preserve_xsecs = preserve_xsecs )
         return
+    pid = abs(pid)
     model = hi.hiscores[0]
     if preserve_xsecs and not hasattr ( model, "stored_xsecs" ):
         print ( "[scanner] preserve_xsec mode, so computing the xsecs now" )
         model.computeXSecs()
     if model == None:
         print ( "[scanner] cannot find a model in %s" % hi.pickleFile )
+    apid = abs(pid)
     mass = model.masses[pid]
     if mass > 9e5:
         print ( "mass %d too high. Wont produce." % mass )

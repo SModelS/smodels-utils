@@ -32,6 +32,9 @@ except ImportError:
     from urllib.request import urlopen
 
 class BibtexWriter:
+    cachedir = "../bibtexs/"
+    unuseddir = f"{cachedir}unused/"
+
     def __init__ ( self, databasepath="./", verbose="info" ):
         self.verbose = verbose.lower()
         setLogLevel ( self.verbose )
@@ -52,6 +55,14 @@ class BibtexWriter:
             "ATLAS-CONF-2013-089": "http://cds.cern.ch/record/1595272",
         }
         self.g=open ( "log.txt", "w" )
+        self.mkdirs()
+
+    def mkdirs ( self ):
+        """ make the directories """
+        if not os.path.exists ( self.cachedir ):
+            os.mkdir( self.cachedir  )
+        if not os.path.exists ( self.unuseddir ):
+            os.mkdir( self.unuseddir )
 
     def openHandles ( self ):
         """ open all file handles. """ 
@@ -267,7 +278,7 @@ class BibtexWriter:
     def tryFetchFromBackup ( self, Id ):
         """ there is a local file with the entry?
         convenient! we use it! """
-        fname = "../bibtexs/%s.tex" % Id
+        fname = "%s/%s.tex" % ( self.cachedir, Id )
         if not os.path.exists ( fname ):
             return False
         self.log ( "A backup file exists. We use it." )
@@ -277,12 +288,8 @@ class BibtexWriter:
         return txt
 
     def writeCache ( self, Id, bib ):
-        self.log ( "Now write cache file ../bibtexs/%s.tex" % Id )
-        if not os.path.exists ( "../bibtexs/" ):
-            os.mkdir("../bibtexs/" )
-        if not os.path.exists ( "../bibtexs/unused/" ):
-            os.mkdir("../bibtexs/unused/" )
-        cachef = open ( "../bibtexs/unused/%s.tex" % Id, "w" )
+        self.log ( "Now write cache file %s/%s.tex" % ( self.cachedir, Id ) )
+        cachef = open ( "%s/%s.tex" % ( self.cachedir, Id ) , "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
         cachef.close()
@@ -301,6 +308,7 @@ class BibtexWriter:
         Id = expRes.globalInfo.id
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
+            
         backup = self.tryFetchFromBackup( Id )
         if backup != False:
             self.success += 1
@@ -464,8 +472,8 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description='write bibtex files for database, and other bibtex related tools' )
     argparser.add_argument ( '-d', '--database',
-            help='path to database [../../smodels-database]',
-            type=str, default='../../smodels-database' )
+            help='path to database [../../../smodels-database]',
+            type=str, default='../../../smodels-database' )
     argparser.add_argument ( '-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str )
@@ -476,7 +484,7 @@ if __name__ == "__main__":
             help="copy bibtex files to database folder (does not generate the files, however)",
             action="store_true" )
     argparser.add_argument ( "-w", "--write_cache",
-            help="cache the retrieved results in ../bibtexs/",
+            help=f"cache the retrieved results in {BibtexWriter.cachedir}",
             action="store_true" )
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )

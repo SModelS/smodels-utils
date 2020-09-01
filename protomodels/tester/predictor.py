@@ -2,6 +2,7 @@
 
 """ store the theory predictions in pickle """
 
+import pickle, time, os, sys
 from smodels.theory import decomposer
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.share.models.SMparticles import SMList
@@ -9,8 +10,10 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
-from tester.combiner import Combiner
-import pickle, time, os
+try:
+    from tester.combiner import Combiner
+except:
+    from combiner import Combiner
 
 class Predictor:
     def __init__ ( self, walkerid, dbpath = "./default.pcl",
@@ -294,9 +297,43 @@ class Predictor:
         protomodel.description = combiner.getComboDescription(protomodel.bestCombo)
 
 if __name__ == "__main__":
-    inputFile="gluino_squarks.slha"
-    p = Predictor ( 0 )
-    predictions = p.predict ( inputFile )
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='calling the predictor from the command line' )
+    argparser.add_argument ( '-d', '--database',
+            help='Path to database pickle file [./default.pcl]',
+            type=str, default="./default.pcl" )
+    argparser.add_argument ( '-f', '--hiscore',
+            help='input model, to be taken from hiscore file [./hiscore.hi]',
+            type=str, default="./model.slha" )
+    argparser.add_argument ( '-o', '--output',
+            help='output pickle file [./predictions.pcl]',
+            type=str, default="./predictions.pcl" )
+    argparser.add_argument ( '-i', '--interactive',
+            help='interactive shell',
+            action="store_true" )
+    args = argparser.parse_args()
+    
+    p = Predictor ( 0, args.database ) 
 
-    with open("predictions.pcl", "wb" ) as f:
-        pickle.dump ( predictions, f )
+    sys.path.insert(0,"../")
+    from walker.hiscore import Hiscore
+    hiscore = Hiscore ( 0, False, args.hiscore )
+    hi = hiscore.hiscores[0]
+    print ( "Will scrutinize hiscore obtained with database %s K=%.3f" % \
+            ( hi.dbversion, hi.K ) )
+    oldK = hi.K
+
+    hi.K=-3 # make sure it gets recomputed
+    print ( "to be sure i reset K to %.2f" % hi.K )
+
+    predictions = p.predict ( hi )
+
+    if args.output not in [ "", "none", "None" ]:
+        with open( args.output, "wb" ) as f:
+            pickle.dump ( predictions, f )
+
+    if args.interactive:
+        import IPython
+        IPython.embed ( using = False )
+

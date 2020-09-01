@@ -28,6 +28,7 @@ def checkNonValidated( database ):
     has_nonValidated = False
     expResults = database.getExpResults( useNonValidated=True )
     has_nonValidated = False
+    nonValidateds = set()
     for e in expResults:
         for ds in e.datasets:
             for tx in ds.txnameList:
@@ -36,7 +37,8 @@ def checkNonValidated( database ):
                 print ( "Non-validated result: %s,%s, %s: %s " % \
                         ( e.globalInfo.id, ds, tx, tx.validated) )
                 has_nonValidated = True
-    return has_nonValidated
+                nonValidateds.add ( e.globalInfo.id )
+    return has_nonValidated, nonValidateds
 
 def removeFastLim ( db ):
     """ remove fastlim results """
@@ -75,6 +77,7 @@ def main():
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
     has_nonValidated = False
+    nonValidated = []
     discard_zeroes=True
     if "test" in dbname:
         discard_zeroes = False
@@ -93,7 +96,8 @@ def main():
             d.txt_meta.hasFastLim = False
         dbname = d.pcl_meta.pathname
         if not args.skipValidation:
-            has_nonValidated = checkNonValidated(d)
+            validated, which = checkNonValidated(d)
+            has_nonValidated = validated
         else:
             has_nonValidated = False
         fastlim = d.pcl_meta.hasFastLim
@@ -127,7 +131,8 @@ def main():
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
     if has_nonValidated:
-        print ( "has non-validated results. Stopping the procedure." )
+        nvlist = ",".join(which)
+        print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
         sys.exit()
     cmd = "mv %s ./%s" % ( dbname, pclfilename )
     ssh = True
@@ -150,6 +155,10 @@ def main():
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     print("\n\t -----> The json file has to be updated in the smodels.github.io:master/database repository.\n")
     print("\n\t -----> The .pcl file can be uploaded through https://cernbox.cern.ch/index.php/s/jt7xJCepuXTRWPL\n\n")
+    if not args.dry_run:
+        a=CMD.getoutput ( cmd )
+        print ( a )
+    cmd = "cd ../../smodels.github.io/; git pull; git add database/%s; git commit -m 'auto-commited by publishDatabasePickle.py'; git push" % infofile
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
