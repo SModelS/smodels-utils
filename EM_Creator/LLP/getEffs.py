@@ -202,7 +202,7 @@ def getEventsFrom(lheFile, effLabels = None):
 
     return eventList
 
-def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
+def getEffsFor(lheFile,selectHSCPs,widths,detectorLength,outFolder):
     """
     Compute the efficiencies for a list of widths
     using the events and efficiencies stored in the lheFile (for zero width).
@@ -211,9 +211,13 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
     :param widths: list of widths (in GeV) to compute the efficiency for
     :param detectorLength: fixed detector length size (in meters)
     :param outFolder: output folder
+    :param selectHSCPs: If None will use all HSCPs in the event, otherwise should contain a list with the PDG codes of the HSCPs to be considered.
 
     :return: True/False
     """
+
+    if isinstance(selectHSCPs,(int,float)):
+        selectHSCPs = [int(selectHSCPs)]
 
     events = getEventsFrom(lheFile)
 
@@ -221,19 +225,19 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
     effs = np.zeros(len(widths),dtype=[(c,float) for c in columns])
     effs['width'] = widths
     for event in events:
-        if not event:
-            continue  #Skip events without HSCPs
+        #Filter HSCPs in each event (if required):
+        if selectHSCPs is not None:
+            event = [hscp for hscp in event if hscp.pdg in selectHSCPs]
 
-        #Limit the maximum number of HSCPs per event:
-        event = event[:nHSCP]
+        if not event:
+            continue  #Skip events without (selected) HSCPs
+
         #Get rescaled efficiency
         evEffs = getEffForEvent(event,widths,detectorLength)
         for sr in evEffs.dtype.names:
             if sr == 'width': continue
             effs[sr] += evEffs[sr] #Add up efficiencies
             effs[sr+'_err'] += evEffs[sr]**2 #Add up error squared
-
-
 
     #Compute average efficiency and error
     for label in effs.dtype.names:
@@ -244,7 +248,6 @@ def getEffsFor(lheFile,nHSCP,widths,detectorLength,outFolder):
             effs[label] = effs[label]/len(events)
 
     res = np.sort(effs,order='width')
-
 
     inputFile = lheFile
     if lheFile.endswith(".tar.gz"):
@@ -298,7 +301,10 @@ if __name__ == "__main__":
     widths = np.array(parser.get("options","widths"))
     detectorLength = parser.get("options","detectorLength")
     ncpus = parser.getint("options","ncpu")
-    nHSCP = parser.getint("options","nHSCP")
+    if parser.has_option("options","selectHSCPs"):
+        selectHSCPs = parser.get("options","selectHSCPs")
+    else:
+        selectHSCPs = None
     if ncpus  < 0:
         ncpus =  multiprocessing.cpu_count()
 
@@ -308,7 +314,7 @@ if __name__ == "__main__":
     children = []
     #Loop over model parameters and submit jobs
     for lheFile in lheFiles:
-        p = pool.apply_async(getEffsFor, args=(lheFile,nHSCP,widths,detectorLength,effFolder,))
+        p = pool.apply_async(getEffsFor, args=(lheFile,selectHSCPs,widths,detectorLength,effFolder,))
         children.append(p)
 
 
