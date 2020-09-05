@@ -158,7 +158,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         if self.superSeded:
             ret.append ( "superseded by" )
         if self.likelihoods:
-            ret.append ( "llhds" )
+            ret.append ( "likeli- hoods" )
         return ret
 
     def moveToGithub( self ):
