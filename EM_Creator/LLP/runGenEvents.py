@@ -341,7 +341,7 @@ if __name__ == "__main__":
             "Run MadGraph and Pythia in order to compute efficiencies for a given model." )
     ap.add_argument('-p', '--parfile', default='parameters_THSCPM1b.ini',
             help='path to the parameters file.')
-    ap.add_argument('-v', '--verbose', default='warning',
+    ap.add_argument('-v', '--verbose', default='info',
             help='verbose level (debug, info, warning or error). Default is error')
 
 

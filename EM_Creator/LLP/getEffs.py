@@ -216,28 +216,38 @@ def getEffsFor(lheFile,selectHSCPs,widths,detectorLength,outFolder):
     :return: True/False
     """
 
+    logger.info("Computing efficiencies for %s" %lheFile)
+
     if isinstance(selectHSCPs,(int,float)):
         selectHSCPs = [int(selectHSCPs)]
 
-    events = getEventsFrom(lheFile)
+    try:
+        events = getEventsFrom(lheFile)
+    except:
+        logger.error("Error reading events from %s" %lheFile)
+        return False
 
     columns = ['width','c000','c100','c200','c300','c000_err','c100_err','c200_err','c300_err']
     effs = np.zeros(len(widths),dtype=[(c,float) for c in columns])
     effs['width'] = widths
-    for event in events:
-        #Filter HSCPs in each event (if required):
-        if selectHSCPs is not None:
-            event = [hscp for hscp in event if hscp.pdg in selectHSCPs]
+    try:
+        for event in events:
+            #Filter HSCPs in each event (if required):
+            if selectHSCPs is not None:
+                event = [hscp for hscp in event if hscp.pdg in selectHSCPs]
 
-        if not event:
-            continue  #Skip events without (selected) HSCPs
+            if not event:
+                continue  #Skip events without (selected) HSCPs
 
-        #Get rescaled efficiency
-        evEffs = getEffForEvent(event,widths,detectorLength)
-        for sr in evEffs.dtype.names:
-            if sr == 'width': continue
-            effs[sr] += evEffs[sr] #Add up efficiencies
-            effs[sr+'_err'] += evEffs[sr]**2 #Add up error squared
+            #Get rescaled efficiency
+            evEffs = getEffForEvent(event,widths,detectorLength)
+            for sr in evEffs.dtype.names:
+                if sr == 'width': continue
+                effs[sr] += evEffs[sr] #Add up efficiencies
+                effs[sr+'_err'] += evEffs[sr]**2 #Add up error squared
+    except:
+        logger.error("Error computing efficiencies for %s" %lheFile)
+        return False
 
     #Compute average efficiency and error
     for label in effs.dtype.names:
@@ -273,7 +283,7 @@ if __name__ == "__main__":
             "Compute efficencies for multiple widths" )
     ap.add_argument('-p', '--parfile', default='eff_parameters.ini',
             help='path to the parameters file.')
-    ap.add_argument('-v', '--verbose', default='error',
+    ap.add_argument('-v', '--verbose', default='info',
             help='verbose level (debug, info, warning or error). Default is error')
 
 
