@@ -249,7 +249,9 @@ if __name__ == "__main__":
     from tester import combiner
     from walker import hiscore
     from tester import predictor
-    co = combiner.Combiner() #Keep it for convenience
+    from tester.combiner import Combiner
+    from tester.predictor import Predictor
+    co = Combiner() #Keep it for convenience
     # import hiscore #Keep it for convenience
 
     import IPython
