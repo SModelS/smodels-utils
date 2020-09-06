@@ -367,6 +367,33 @@ class Manipulator:
                 if not ppair in self.M.ssmultipliers:
                     self.M.ssmultipliers[ppair] = 1.0
 
+    def describe ( self ):
+        """ lengthy description of protomodel """
+        print( '\nK = %1.2f, Z = %1.2f, muhat = %1.2f, mumax = %s' % \
+               (self.M.K,self.M.Z,self.M.muhat,self.M.mumax) )
+        print('\t Best Combo:')
+        for tp in sorted(self.M.bestCombo, key = lambda tp: tp.expResult.globalInfo.id):
+            if tp.dataset.dataInfo.dataType == 'efficiencyMap':
+                print('\t\t',tp.expResult.globalInfo.id,tp.txnames,
+                             tp.dataset.dataInfo.dataId,
+                      'obsN=%d' % tp.dataset.dataInfo.observedN,
+                      'expBG=%.2f+/-%.2f' % ( tp.dataset.dataInfo.expectedBG,
+                                              tp.dataset.dataInfo.bgError ),
+                      'pred=',tp.xsection.value,'UL =',tp.getUpperLimit())
+            else:
+                print('\t\t',tp.expResult.globalInfo.id,tp.txnames,
+                             tp.dataset.dataInfo.dataId,
+                      'pred=%s, UL=%s' % ( tp.xsection.value, tp.getUpperLimit()) )
+
+        print('\t Constraints:')
+        for tp in sorted( self.M.tpList, key = lambda x: x[0], reverse=True ):
+            if tp[0] < 1.0: continue
+            print('\t\t r = %1.2f' % tp[0],tp[2].expResult.globalInfo.id,
+                                     tp[2].dataset.dataInfo.dataType,tp[2].txnames,
+                  'theory xsec =  %1.2f, UL = %1.2f, UL_exp = %1.2f' 
+                  %(tp[2].xsection.value.asNumber(fb),tp[2].upperLimit.asNumber(fb),
+                    tp[2].expectedUL.asNumber(fb)))
+
     def rescaleSignalBy ( self, s ):
         """ multiply the signal strength multipliers with muhat"""
 
