@@ -13,8 +13,8 @@ from smodels_utils.helper import sparticleNames
 
 class Hiscore:
     """ encapsulates the hiscore list. """
-    def __init__ ( self, walkerid : int, save_hiscores : bool,
-                   picklefile="hiscore.hi" : str, backup=True, hiscores=None,
+    def __init__ ( self, walkerid: int, save_hiscores: bool,
+                   picklefile: str="hiscore.hi", backup=True, hiscores=None,
                    predictor = None ):
         """ the constructor
         :param save_hiscores: if true, then assume you want to save, not just read.
