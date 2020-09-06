@@ -227,6 +227,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-f', '--infile',
             help='Hiscore file. [hiscore.hi]',
             type=str, default="hiscore.hi" )
+    argparser.add_argument ( '-x', '--execute',
+            help='execute python script EXECUTE before going interactive [None]',
+            type=str, default=None )
     args = argparser.parse_args()
     import pickle
     f = open ( args.infile, "rb" )
@@ -242,7 +245,7 @@ if __name__ == "__main__":
     ma.M.createNewSLHAFileName()
     print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor%s" % \
+    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -251,8 +254,14 @@ if __name__ == "__main__":
     from tester import predictor
     from tester.combiner import Combiner
     from tester.predictor import Predictor
+    import copy
     co = Combiner() #Keep it for convenience
     # import hiscore #Keep it for convenience
+
+    if args.execute not in [ "", None ]:
+        if os.path.exists ( args.execute ):
+            with open ( args.execute, "rt" ) as f:
+                exec ( f.read() )
 
     import IPython
     IPython.embed( using=False )

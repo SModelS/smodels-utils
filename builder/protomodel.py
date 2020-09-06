@@ -61,16 +61,6 @@ class ProtoModel:
                 self.templateSLHA = "templates/template2g.slha"
             # self.templateSLHA = "templates/template_many.slha"
         self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
-        self.rvalues = [] ## store the r values of the exclusion attempt
-        self.tpList = [] ## store information about the theory predictions
-        self.llhd=0.
-        self.muhat = 1.
-        self.mumax = None
-        self.Z = 0.0
-        self.K = None
-        self.letters = ""
-        self.description = ""
-        self.bestCombo = None
         self.computer = XSecComputer ( NLL, self.nevents, pythiaVersion=8, maycompile=False )
         self.codeversion = "1.0"
         self.initializeModel()
@@ -79,6 +69,16 @@ class ProtoModel:
         """Use the template SLHA file to store possible decays and initialize the LSP"""
 
         #Make sure the masses, decays and multipliers are empty
+        self.tpList = [] ## store information about the theory predictions
+        self.rvalues = [] ## store the r values of the exclusion attempt
+        self.llhd=0.
+        self.muhat = 1.
+        self.mumax = None
+        self.Z = 0.0
+        self.K = None
+        self.letters = ""
+        self.description = ""
+        self.bestCombo = None
         self.decays = {} ## the actual branchings
         self.masses = {}
         self.possibledecays = {} ## list all possible decay channels
