@@ -13,8 +13,9 @@ from smodels_utils.helper import sparticleNames
 
 class Hiscore:
     """ encapsulates the hiscore list. """
-    def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.hi",
-                   backup=True, hiscores=None, predictor = None ):
+    def __init__ ( self, walkerid : int, save_hiscores : bool,
+                   picklefile="hiscore.hi" : str, backup=True, hiscores=None,
+                   predictor = None ):
         """ the constructor
         :param save_hiscores: if true, then assume you want to save, not just read.
         :param picklefile: path of pickle file name to connect hiscore list with
@@ -90,7 +91,7 @@ class Hiscore:
         return ret
 
     def addResult ( self, protomodel ):
-        """ add a result to the list 
+        """ add a result to the list
         :returns: true, if result was added
         """
         m = Manipulator ( protomodel )
@@ -362,7 +363,7 @@ class Hiscore:
         :returns: true, if it entered the hiscore list
         """
         self.pprint ( "New result with K=%.2f, Z=%.2f, needs to pass K>%.2f, saving: %s" % \
-                ( protomodel.K, protomodel.Z, self.currentMinK(), 
+                ( protomodel.K, protomodel.Z, self.currentMinK(),
                   "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:
             return False
