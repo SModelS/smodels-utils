@@ -199,6 +199,44 @@ class Manipulator:
             return
         self.pprint ( f"dont understand content of file {filename}" )
 
+    def diff ( self, other ):
+        """ diff between our protomodel and <other> protomodel 
+        :returns: dictionary of differences
+        """
+        ret = {}
+        keys = set ( self.M.__dict__.keys() )
+        keys = keys.union ( set ( other.__dict__.keys() ) )
+        for key in keys:
+            if not key in self.M.__dict__:
+                ret[key]="missing in self"
+                continue
+            if not key in other.__dict__:
+                ret[key]="missing in other"
+                continue
+            selfV, otherV = getattr ( self.M, key ), getattr ( other, key )
+            if type(selfV) != type(otherV):
+                ret[key]=f"different types {type(selfV)} != {type(otherV)}"
+                continue
+            if type(selfV) in [ int, str ]:
+                if selfV != otherV:
+                    ret[key]=f"self is {selfV} other is {otherV}"
+                continue
+            if type(selfV) in [ float ]:
+                if selfV != otherV:
+                    ret[key]=f"self is {selfV} other is {otherV}"
+                continue
+            if type(selfV) in [ dict ]:
+                if selfV != otherV:
+                    ret[key]=f"dictionaries differ"
+                continue
+            if type(selfV) in [ list, set ]:
+                if selfV != otherV:
+                    ret[key]=f"containers differ"
+                continue
+
+        return ret
+
+
     def initFromDict ( self, D, filename="" ):
         """ setup the protomodel from dictionary D.
         :param D: dictionary, as defined in pmodel*.py files.
