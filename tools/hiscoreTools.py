@@ -251,7 +251,7 @@ if __name__ == "__main__":
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]        Classes: %sCombiner, Predictor, Hiscore%s" % \
+    print ( "[hiscoreTools]        Classes: %sProtoModel, Combiner, Predictor, Hiscore%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools] Instantiations: %sma, co, hi%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -260,6 +260,7 @@ if __name__ == "__main__":
     from tester import predictor
     from tester.combiner import Combiner
     from tester.predictor import Predictor
+    from builder.protomodel import ProtoModel
     from smodels.tools.physicsUnits import pb, fb
     import copy
     co = Combiner() #Keep it for convenience
