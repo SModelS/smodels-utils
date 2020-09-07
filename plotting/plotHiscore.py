@@ -337,7 +337,8 @@ def writeTex ( protomodel, keep_tex ):
             perc = 100.
             if totalcont != 0.:
                 perc = round(100.*(protomodel.K - v)/totalcont )
-            tok[v] = "%s = (%.2f) %d%s" % ( namer.texName(k), v, perc, "\%" )
+            tok[v] = "%s: K_\mathrm{without}=%.2f (%d%s)" % ( namer.texName(k), v, perc, "\%" )
+            # tok[v] = "%s = (%.2f) %d%s" % ( namer.texName(k), v, perc, "\%" )
         keys = list ( tok.keys() )
         keys.sort()
         for v in keys:
