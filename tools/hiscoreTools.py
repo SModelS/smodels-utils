@@ -243,9 +243,11 @@ if __name__ == "__main__":
         protomodel = protomodels[0]
     ma = Manipulator ( protomodel )
     ma.M.createNewSLHAFileName()
-    print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
+    print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels, pb, fb%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor, copy, fb, pb%s" % \
+    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
+            ( colorama.Fore.RED, colorama.Fore.RESET ) )
+    print ( "[hiscoreTools]                                 Classes: %sCombiner, Predictor%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
