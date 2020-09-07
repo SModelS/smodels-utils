@@ -199,7 +199,7 @@ class Predictor:
             combinedRes=False
         else:
             bestDataSet=True
-            combinedRes=True
+            combinedRes=False
 
 
         preds = []
@@ -215,7 +215,7 @@ class Predictor:
             if allpreds:
                 combpreds = theoryPredictionsFor ( expRes, topos,
                                                    useBestDataset=False,
-                                                   combinedResults=True )
+                                                   combinedResults=False )
                 if combpreds != None:
                     for c in combpreds:
                         predictions.append ( c )
