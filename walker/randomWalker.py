@@ -193,7 +193,6 @@ class RandomWalker:
         # self.printStats( substep=13 )
 
         nUnfrozen = len( self.protomodel.unFrozenParticles() )
-        nTotal = len ( self.protomodel.particles )
         ## number of pids in best combo, as a check
         #Try to create a simpler model
         #(merge pre-defined particles of their mass difference is below dm)
@@ -218,11 +217,10 @@ class RandomWalker:
 
         #Now keep the model with highest score:
         if protomodelSimp:
-            if self.manipulator.M.Z is None or (protomodelSimp.Z is not None
-                        and (protomodelSimp.Z > self.manipulator.M.Z)):
+            if self.manipulator.M.K is None or (protomodelSimp.K is not None
+                        and (protomodelSimp.K > self.manipulator.M.K)):
                 self.manipulator.M = protomodelSimp
 
-        # self.printStats( substep=15 )
 
         #If no combination could be found, return
         if self.manipulator.M.Z is None:
