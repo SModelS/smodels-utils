@@ -234,9 +234,9 @@ if __name__ == "__main__":
             help='execute python script EXECUTE before going interactive [None]',
             type=str, default=None )
     args = argparser.parse_args()
-    import pickle
-    f = open ( args.infile, "rb" )
-    protomodels = pickle.load(f)
+    from walker.hiscore import Hiscore
+    hi = Hiscore ( 0, False, args.infile )
+    protomodels = hi.hiscores
     import builder
     protomodel = protomodels
     # so we can also use Andre's pcl files
@@ -251,9 +251,9 @@ if __name__ == "__main__":
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]        Classes: %sCombiner, Predictor%s" % \
+    print ( "[hiscoreTools]        Classes: %sCombiner, Predictor, Hiscore%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools] Instantiations: %sma, co%s" % \
+    print ( "[hiscoreTools] Instantiations: %sma, co, hi%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     from tester import combiner
     from walker import hiscore
