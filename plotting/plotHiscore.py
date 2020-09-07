@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys, subprocess, time, glob, colorama, math
+import pickle, os, sys, subprocess, time, glob, colorama, math, numpy
 sys.path.insert(0,"../")
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from tools import hiscoreTools
@@ -337,7 +337,7 @@ def writeTex ( protomodel, keep_tex ):
             perc = 100.
             if totalcont != 0.:
                 perc = round(100.*(protomodel.K - v)/totalcont )
-            tok[v] = "%s = %d%s" % ( namer.texName(k), perc, "\%" )
+            tok[v] = "%s = (%.2f) %d%s" % ( namer.texName(k), v, perc, "\%" )
         keys = list ( tok.keys() )
         keys.sort()
         for v in keys:
@@ -443,18 +443,23 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "\\hline\n" )
         conts = []
         dKtot = 0.
-        contributions = protomodel.analysisContributions.items()
-        for k,v in contributions:
+        Ktot = protomodel.K
+        contributions = protomodel.analysisContributions
+        for k,v in contributions.items():
             conts.append ( ( v, k ) )
-            dKtot += v
-        dKtot = dKtot * protomodel.K
-        Ks = {}
+            dKtot += Ktot - v
+        # dKtot = dKtot # * protomodel.K
+        Ks, Kwo = {}, {}
+        """
         for k,v in contributions:
             Ks[k] = ( protomodel.K - dKtot * v)
+            Kwo[k] = protomodel.K
+        """
         conts.sort( reverse=True )
         for v,k in conts:
-            Kwithout= Ks[k]
-            f.write ( "%s & %.2f & %s%s \\\\ \n" % ( k, Kwithout, int(round(100.*v)), "\\%" ) )
+            Kwithout= contributions[k]
+            cont = ( Ktot - Kwithout ) / dKtot
+            f.write ( "%s & %.2f & %s%s \\\\ \n" % ( k, Kwithout, int(round(100.*cont)), "\\%" ) )
             # f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "\\%" ) )
         # f.write ( "\end{itemize}\n" )
         f.write ( "\\end{tabular}\n" )
@@ -586,14 +591,23 @@ def writeIndexHtml ( protomodel ):
 
     if hasattr ( protomodel, "analysisContributions" ):
         print ( "[plotHiscore] contributions-per-analysis are defined" )
-        f.write ( "<td><br><b>Contributions per analysis:</b><br>\n<ul>\n" )
+        f.write ( "<td><br><b>K values without analyses: (contribution)</b><br>\n<ul>\n" )
         conts = []
-        for k,v in protomodel.analysisContributions.items():
+        Ktot = protomodel.K
+        dKtot = 0.
+        contributions = protomodel.analysisContributions
+        for k,v in contributions.items():
             conts.append ( ( v, k ) )
+            dKtot += Ktot - v
         conts.sort( reverse=True )
         for v,k in conts:
+            Kwithout= contributions[k]
+            cont = ( Ktot - Kwithout ) / dKtot
             nameAndUrl = anaNameAndUrl ( k, protomodel=protomodel )
-            f.write ( "<li> %s: %s%s\n" % ( nameAndUrl, int(round(100.*v)), "%" ) )
+            kv = str(v)
+            if type(v) in [ float, numpy.float64 ]:
+                kv = "%.2f (%d%s)" % ( v,int(round(100.*cont)), "%" )
+            f.write ( "<li> %s: %s\n" % ( nameAndUrl, kv ) )
         # f.write ( "</table>\n" )
     else:
         print ( "[plotHiscore] analysis-contributions are not defined" )

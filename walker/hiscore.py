@@ -141,7 +141,7 @@ class Hiscore:
         oldZ = manipulator.M.Z
         oldK = manipulator.M.K
         particleContributions = {} ## save the scores for the non-discarded particles.
-        particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
+        #particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
 
         #Make sure predictor is accesible
         if not self.predictor:
@@ -173,12 +173,12 @@ class Hiscore:
 
             #Store the new Z and K values in the original model:
             particleContributions[pid]=manipulator.M.K
-            particleContributionsZ[pid]=manipulator.M.Z
+            #particleContributionsZ[pid]=manipulator.M.Z
             #Make sure to restore the model to its initial (full particle content) state
             manipulator.restoreModel()
             #Store contributions in the protomodel:
             manipulator.M.particleContributions = particleContributions
-            manipulator.M.particleContributionsZ = particleContributionsZ
+            #manipulator.M.particleContributionsZ = particleContributionsZ
 
         self.pprint ( "stored %d particle contributions" % len(manipulator.M.particleContributions) )
 
@@ -201,22 +201,26 @@ class Hiscore:
             combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
             Z, muhat_ = combiner.getSignificance ( combo )
             K = combiner.computeK ( Z, prior )
-            dZ = manipulator.M.Z - Z
-            dK = manipulator.M.K - K
-            dZtot += dZ
-            dKtot += dK
-            contributionsZ[ ctr ] = Z
+            #dZ = manipulator.M.Z - Z
+            #dK = manipulator.M.K - K
+            #dZtot += dZ
+            #dKtot += dK
+            # contributionsZ[ ctr ] = Z
             contributionsK [ ctr ] = K
+        """
         for k,v in contributionsZ.items():
             percZ = (manipulator.M.Z-v) / dZtot
             self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( manipulator.M.bestCombo[k].analysisId(), manipulator.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
             contributionsZ[ k ] = percZ
         for k,v in contributionsK.items():
-            percK = (manipulator.M.K-v) / dKtot
+            mK = manipulator.M.K
+            # percK = (manipulator.M.K-v) / dKtot
             # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributionsK[ k ] = percK
+            contributionsK[ k ] = mK
+            # contributionsK[ k ] = percK
+        """
         contrsWithNames = {}
-        for k,v in contributionsZ.items():
+        for k,v in contributionsK.items():
             contrsWithNames [ manipulator.M.bestCombo[k].analysisId() ] = v
         manipulator.M.analysisContributions = contrsWithNames
         self.pprint ( "stored %d analyses contributions" % len(manipulator.M.analysisContributions) )
