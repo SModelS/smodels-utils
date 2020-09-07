@@ -16,7 +16,7 @@ class ProtoModel:
     """
     LSP = 1000022 ## the LSP is hard coded
 
-    def __init__ ( self, walkerid = None, keep_meta = True, nevents = 10000,
+    def __init__ ( self, walkerid = 0, keep_meta = True, nevents = 10000,
                    dbversion = "????" ):
         """
         :param keep_meta: If True, keep also all the data in best combo (makes
@@ -183,6 +183,7 @@ class ProtoModel:
             if self._stored_xsecs:
                 return self._stored_xsecs
 
+        self.delXSecs()
         #If something has changed, re-compute the cross-sections.
         #Xsecs are computed, self._xsecMasses and self._xsecSSM are updated.
         #The results are sored in the SLHA and self._stored_xsec.
@@ -352,11 +353,11 @@ class ProtoModel:
         if not nevents:
             nevents = self.nevents
 
-        xsecs = []
         hasComputed = False
         countAttempts = 0
         while not hasComputed:
             try:
+                xsecs = []
                 #Create temporary file with the current model (without cross-sections)
                 tmpSLHA = tempfile.mktemp( prefix=".%s_xsecfile" % ( self.walkerid ),
                                                     suffix=".slha",dir="./")
@@ -368,6 +369,11 @@ class ProtoModel:
                         xsecs.append ( x )
                     for x in self.computer.xsecs:
                         xsecs.append ( x )
+                    self.computer.loXsecs = []
+                    self.computer.xsecs = []
+
+                #for xsec in xsecs:
+                #    print ( "[protomodel] I will save %s" % xsec )
 
                 comment = "produced at step %d" % ( self.step )
                 pidsp = self.unFrozenParticles()
@@ -393,8 +399,6 @@ class ProtoModel:
 
         if keep_slha:
             self.createSLHAFile( self.currentSLHA, addXsecs = True )
-            #if not self.currentSLHA == tmpSLHA:
-            #    os.rename ( tmpSLHA, self.currentSLHA )
         if not keep_slha and os.path.exists ( tmpSLHA ): ## always remove
             os.remove( tmpSLHA )
 
@@ -496,6 +500,9 @@ class ProtoModel:
         #Add cross-sections:
         if addXsecs:
             xsecs = self.getXsecs() #Cross-sections will be computed if something has changed
+            #print ( "[protomodels] adding xsecs to", outputSLHA )
+            #for xsec in xsecs[0]:
+            #    print ( "[protomodel] adding xsec", str(xsec) )
             self.computer.addXSecToFile( xsecs[0], outputSLHA )
             self.computer.addMultipliersToFile ( self.ssmultipliers, outputSLHA )
             self.computer.addCommentToFile ( xsecs[1], outputSLHA )
