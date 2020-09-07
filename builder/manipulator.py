@@ -425,17 +425,20 @@ class Manipulator:
 
     def describe ( self ):
         """ lengthy description of protomodel """
-        print( '\nK = %1.2f, Z = %1.2f, muhat = %1.2f, mumax = %s' % \
-               (self.M.K,self.M.Z,self.M.muhat,self.M.mumax) )
+        sK = str(self.M.K)
+        if type(sK)==float:
+            sK="%1.2f" % self.M.K
+        print( '\nK = %s, Z = %1.2f, muhat = %1.2f, mumax = %s' % \
+               ( sK,self.M.Z,self.M.muhat,self.M.mumax) )
         print('\t Best Combo:')
-        for tp in sorted(self.M.bestCombo, key = lambda tp: tp.expResult.globalInfo.id):
+        for tp in self.M.bestCombo:
             if tp.dataset.dataInfo.dataType == 'efficiencyMap':
                 print('\t\t',tp.expResult.globalInfo.id,tp.txnames,
                              tp.dataset.dataInfo.dataId,
                       'obsN=%d' % tp.dataset.dataInfo.observedN,
                       'expBG=%.2f+/-%.2f' % ( tp.dataset.dataInfo.expectedBG,
                                               tp.dataset.dataInfo.bgError ),
-                      'pred=',tp.xsection.value,'UL =',tp.getUpperLimit())
+                      'pred=',tp.xsection.value, 'UL =',tp.getUpperLimit() )
             else:
                 print('\t\t',tp.expResult.globalInfo.id,tp.txnames,
                              tp.dataset.dataInfo.dataId,
