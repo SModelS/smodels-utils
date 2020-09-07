@@ -616,6 +616,7 @@ class Combiner:
         self.discussCombinations ( combinables )
         bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected,
                                                  mumax = mumax )
+        bestCombo = sorted( bestCombo, key = lambda tp: tp.expResult.globalInfo.id )
         ## compute a likelihood equivalent for Z
         if Z is not None:
             llhd = stats.norm.pdf(Z)

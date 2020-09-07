@@ -245,7 +245,7 @@ if __name__ == "__main__":
     ma.M.createNewSLHAFileName()
     print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
+    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor, copy, fb, pb%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -254,6 +254,7 @@ if __name__ == "__main__":
     from tester import predictor
     from tester.combiner import Combiner
     from tester.predictor import Predictor
+    from smodels.tools.physicsUnits import pb, fb
     import copy
     co = Combiner() #Keep it for convenience
     # import hiscore #Keep it for convenience
