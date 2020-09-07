@@ -227,6 +227,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-f', '--infile',
             help='Hiscore file. [hiscore.hi]',
             type=str, default="hiscore.hi" )
+    argparser.add_argument ( '-n', '--nointeractive',
+            help='Dont start interactive shell',
+            action = "store_true" )
     argparser.add_argument ( '-x', '--execute',
             help='execute python script EXECUTE before going interactive [None]',
             type=str, default=None )
@@ -243,13 +246,14 @@ if __name__ == "__main__":
         protomodel = protomodels[0]
     ma = Manipulator ( protomodel )
     ma.M.createNewSLHAFileName()
-    print ( "[hiscoreTools] starting interactive session. Variables: %sprotomodels, pb, fb%s" % \
+    print ( "[hiscoreTools] starting interactive session." )
+    print ( "[hiscoreTools]      Variables: %sprotomodels, pb, fb%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
+    print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                                 Classes: %sCombiner, Predictor%s" % \
+    print ( "[hiscoreTools]        Classes: %sCombiner, Predictor%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]                          Instantiations: %sma, co, tr%s" % \
+    print ( "[hiscoreTools] Instantiations: %sma, co%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     from tester import combiner
     from walker import hiscore
@@ -266,6 +270,7 @@ if __name__ == "__main__":
             with open ( args.execute, "rt" ) as f:
                 exec ( f.read() )
 
-    import IPython
-    IPython.embed( using=False )
+    if not args.nointeractive:
+        import IPython
+        IPython.embed( using=False )
     ma.M.delCurrentSLHA()
