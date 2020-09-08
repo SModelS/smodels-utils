@@ -249,7 +249,9 @@ if __name__ == "__main__":
     print ( "[hiscoreTools] starting interactive session." )
     print ( "[hiscoreTools]      Variables: %sprotomodels, pb, fb%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor, copy%s" % \
+    print ( "[hiscoreTools]         python: %scopy, numpy, scipy, scipy.stats, math%s" % \
+            ( colorama.Fore.RED, colorama.Fore.RESET ) )
+    print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]        Classes: %sProtoModel, Combiner, Predictor, Hiscore%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -262,7 +264,7 @@ if __name__ == "__main__":
     from tester.predictor import Predictor
     from builder.protomodel import ProtoModel
     from smodels.tools.physicsUnits import pb, fb
-    import copy
+    import copy, numpy, scipy, scipy.stats, math
     co = Combiner() #Keep it for convenience
     # import hiscore #Keep it for convenience
 
