@@ -127,6 +127,7 @@ class Plotter:
                         pickle.dump ( P_, f )
                         pickle.dump ( Pfake_, f )
                         f.close()
+        # print ( "P", P )
         return S,Sfake,P,Pfake
 
     def plot( self, variable, fakeVariable, outfile ):
@@ -143,11 +144,15 @@ class Plotter:
             fudge = self.meta["fudge"]
         if abs ( fudge - 1. ) > 1e-3:
             title += ", fudge=%.2f" % fudge
-        plt.hist ( P, weights = [ 1. / len(self.filenames) ]*len(P), bins=10, label="real", facecolor="tab:blue" )
-        plt.hist ( Pfake, weights = [ 1. / len(self.filenames) ]*len(P), bins=10, label="fake", edgecolor="red", linewidth=3, histtype="step" )
-        print ( "real Ps %d entries at %.3f +/- %.2f" % ( len(P), np.mean(P), np.std(P)  ) )
-        print ( "fake Ps %d entries at %.3f +/- %.2f" % ( len(Pfake), np.mean(Pfake), np.std(Pfake) ) )
-        # plt.hist ( P, bins=10, label="$\\bar{p} = %.2f \pm %.2f$" % ( np.mean(P), np.std(P) ) )
+        nbins = 11 ## change the number of bins
+        plt.hist ( P, weights = [ 1. / len(self.filenames) ]*len(P), bins=nbins,
+                   label="real", facecolor="tab:blue" )
+        plt.hist ( Pfake, weights = [ 1. / len(self.filenames) ]*len(P), bins=nbins,
+                   label="fake", edgecolor="red", linewidth=3, histtype="step" )
+        print ( "real Ps %d entries at %.3f +/- %.2f" % 
+                ( len(P), np.mean(P), np.std(P)  ) )
+        print ( "fake Ps %d entries at %.3f +/- %.2f" % 
+                ( len(Pfake), np.mean(Pfake), np.std(Pfake) ) )
         plt.legend()
         plt.title  ( title )
         plt.xlabel ( "$p$-values" )
@@ -160,13 +165,13 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser(description="meta statistics plotter, i.e. the thing that plots pDatabase.png")
     argparser.add_argument ( '-d', '--dictfile', nargs='*',
-            help='input dictionary file [./database.dict]', 
+            help='input dictionary file [./database.dict]',
             type=str, default='./database.dict' )
     argparser.add_argument ( '-o', '--outfile', nargs='?',
-            help='output file [./pDatabase.png]', 
+            help='output file [./pDatabase.png]',
             type=str, default='./pDatabase.png' )
     argparser.add_argument ( '-f', '--filter', nargs='?',
-            help='filter out signal regions with expectedBG<x [x=-1.]', 
+            help='filter out signal regions with expectedBG<x [x=-1.]',
             type=float, default=-1. )
     args=argparser.parse_args()
     plotter = Plotter ( args.dictfile, args.filter )
