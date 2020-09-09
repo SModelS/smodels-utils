@@ -9,6 +9,58 @@ from smodels.experiment.expResultObj import ExpResult
 from smodels.experiment.infoObj import Info
 import unum,numpy
 
+def countSSMultipliers ():
+    """ count the total number of ssmultipliers of a protomodel """
+    from builder.protomodel import ProtoModel
+    model = ProtoModel()
+    modes = set()
+    def sortMe ( p, q ):
+        if p < q:
+            return (p,q)
+        return ( q,p )
+    for p in model.particles:
+        for q in model.particles:
+            modes.add ( (p,q) )
+            if model.hasAntiParticle(p):
+                modes.add ( sortMe(-p,q ) )
+            if model.hasAntiParticle(q):
+                modes.add( sortMe(p,-q) )
+            if model.hasAntiParticle(p) and model.hasAntiParticle(q):
+                modes.add ( sortMe(-p,-q) )
+    print ( "We have %d production modes" % len(modes) )
+    return modes
+
+def countDecays( templatefile = "../builder/templates/template1g.slha" ):
+    """ count the number of decays in a template file """
+    if not os.path.exists ( templatefile ):
+        templatefile = templatefile.replace("../","./" )
+        if not os.path.exists ( templatefile ):
+            print ( "Could not find template file %s" % templatefile )
+            return 0
+    with open( templatefile ) as f:
+       lines=f.readlines()
+    count = []
+    for line in lines:
+        if "#" in line:
+            p = line.find("#")
+            line = line[:p]
+        line = line.strip()
+        if not "D" in line:
+            continue
+        if "DECAY" in line:
+            continue
+        if "BLOCK" in line:
+            continue
+        if line == "":
+            continue
+        line = line.replace("D","")
+        tokens = line.split(" ")
+        ids = tokens[0].split("_")
+        ids = tuple ( map ( int , ids ) )
+        count.append ( ids )
+    print ("I count %d decay channels" % len(count) )
+    return count
+
 def seedRandomNumbers ( seed ):
     """ seed all random number generation """
     import random, numpy
@@ -152,86 +204,6 @@ def simplifyList ( modes ):
                     pass
     # print ( "reduced to", ret )
     return ret
-
-"""
-def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
-    get the HTML version of particle name
-    :param addM: make it m(particle)
-    :param addSign: add a "-" sign for negative pids
-    :param addBrackets: add brackets at beginning and end
-    if type ( pid ) in [ list ]: ## several production modes are given in lists
-        pid = simplifyList ( pid )
-        ret = ""
-        for pids in pid:
-            ret += toHtml ( pids, addM, addSign )
-            ret += "="
-        if len(ret)>1:
-            ret = ret[:-1]
-        return ret
-
-    if type ( pid ) in [ set, tuple ]: ## production mothers are given as tuples
-        # a list of pids? latexify them individually and concatenate
-        pids = []
-        lpid = list ( pid )
-        try:
-            lpid.sort()
-        except:
-            pass
-        for p in lpid:
-            pids.append ( toHtml ( p, addM, addSign ) )
-        ret = ", ".join ( pids )
-        if addBrackets:
-            ret = "(" + ret + ")"
-        return ret
-    pname = pid
-    if type(pid) in [ int, str ]:
-        pname = getParticleName(pid,addSign, html = True )
-    return pname
-
-def toLatex ( pid, addDollars=False, addM=False, addSign=False,
-              addBrackets = True ):
-    get the latex version of particle name
-    :param addDollars: add dollars before and after
-    :param addM: make it m(particle)
-    :param addSign: add a "-" sign for negative pids
-    :param addBrackets: add brackets at beginning and end
-
-    if type ( pid ) in [ list ]: ## several production modes are given in lists
-        pid = simplifyList ( pid )
-        ret = ""
-        for pids in pid:
-            ret += toLatex  ( pids, addDollars, addM, addSign )
-            ret += "="
-        if len(ret)>1:
-            ret = ret[:-1]
-        return ret
-
-    if type ( pid ) in [ set, tuple ]: ## production mothers are given as tuples
-        # a list of pids? latexify them individually and concatenate
-        pids = []
-        lpid = list ( pid )
-        try:
-            lpid.sort()
-        except:
-            pass
-        for p in lpid:
-            pids.append ( toLatex ( p, addDollars, addM, addSign ) )
-        ret = ",".join ( pids )
-        if addBrackets:
-            ret = "(" + ret + ")"
-        return ret
-    pname = pid
-    if type(pid) in [ int, str ]:
-        pname = getParticleName(pid, addSign, html = False )
-    if addM:
-        pname = "m(" + pname + ")"
-    if addDollars:
-        pname = "$" + pname + "$"
-    # print ( "tolatex", pid, pname, oldp )
-    return pname
-
-    return str(pid)
-"""
 
 def findLargestExcess ( db ):
     """ find the largest excess in any efficiency map type result

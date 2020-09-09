@@ -239,8 +239,9 @@ if __name__ == "__main__":
     protomodels = hi.hiscores
     import builder
     protomodel = protomodels
+    from builder.protomodel import ProtoModel
     # so we can also use Andre's pcl files
-    if type(protomodels)==builder.protomodel.ProtoModel:
+    if type(protomodels)==ProtoModel:
         protomodel = protomodels
     else:
         protomodel = protomodels[0]
@@ -251,7 +252,7 @@ if __name__ == "__main__":
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]         python: %scopy, numpy, scipy, scipy.stats, math%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
-    print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor%s" % \
+    print ( "[hiscoreTools]        Modules: %smanipulator, hiscore, combiner, predictor, helpers%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
     print ( "[hiscoreTools]        Classes: %sProtoModel, Combiner, Predictor, Hiscore%s" % \
             ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -266,6 +267,7 @@ if __name__ == "__main__":
     from smodels.tools.physicsUnits import pb, fb
     import copy, numpy, scipy, scipy.stats, math
     co = Combiner() #Keep it for convenience
+    from tools import helpers
     # import hiscore #Keep it for convenience
 
     if args.execute not in [ "", None ]:
