@@ -102,8 +102,14 @@ class Predictor:
             dataTypes = [ "efficiencyMap" ]
         if self.select == "ul":
             dataTypes = [ "upperLimit" ]
+        txnames = [ "all" ]
+        if self.select.startswith("txnames:"):
+            s = self.select.replace("txnames:","")
+            txnames = s.split(",")
+            self.pprint ( "I have been asked to select txnames for %s" % s )
 
         listOfExpRes = self.database.getExpResults( dataTypes = dataTypes,
+                                                    txnames = txnames,
                                                     useNonValidated=True )
         if self.modifier:
             listOfExpRes = self.modifier.modify ( listOfExpRes )

@@ -37,7 +37,7 @@ class RandomWalker:
         :param cheatcode: cheat mode. 0 is no cheating, 1 is with ranges, 2
                       is the Z323 model.
         :param expected: remove possible signals from database
-        :param select: select only subset of results
+        :param select: select only subset of results (all for all, em for efficiency maps only, ul for upper limits only, alternatively select for txnames via e.g. "txnames:T1,T2"
         :param catch_exceptions: should we catch exceptions
         :param nevents: number of MC events when computing cross-sections
         """
