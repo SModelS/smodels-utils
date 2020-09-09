@@ -318,7 +318,7 @@ class LlhdPlot:
             pid1 = self.pid1
         self.pprint ( "plotting summary for %s, %s" % ( pid1, self.topo ) )
         resultsForPIDs = {}
-        from plotHiscore import getPIDsOfTPred, obtain
+        from plotting.plotHiscore import getPIDsOfTPred, obtain
         protomodel = obtain ( 0, self.hiscorefile )
         for tpred in protomodel.bestCombo:
             resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateSRs=False )
