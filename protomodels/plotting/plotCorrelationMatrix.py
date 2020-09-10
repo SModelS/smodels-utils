@@ -278,7 +278,7 @@ if __name__ == "__main__":
             help='plot only specific sqrts 8,13,all [all]',
             type=str, default='all' )
     argparser.add_argument ( '-o', '--outputfile', nargs='?',
-            help='outputfile [matrix@M.png]',
+            help='outputfile (@M gets replaced by [experiment][sqrts]) [matrix@M.png]',
             type=str, default='matrix@M.png' )
     argparser.add_argument ( '-t', '--triangular',
             help='plot as lower triangle matrix?',
