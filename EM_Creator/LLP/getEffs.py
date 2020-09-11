@@ -62,7 +62,7 @@ class Particle(object):
             mass = np.sqrt(np.inner(self.fourMom(),self.fourMom()))
             return mass
 
-def decayProbabilityFor(particle,width,detectorLength=None):
+def longLivedProbabilityFor(particle,width,detectorLength=None):
 
     if detectorLength is None:
         #Compute using full detector geometry
@@ -77,9 +77,9 @@ def decayProbabilityFor(particle,width,detectorLength=None):
 
     gammabeta = particle.P()/particle.mass
     x = detectorLength*width/1.975e-16 #Effective length
-    probDecay = math.exp(-x/gammabeta)
+    probLongLived = math.exp(-x/gammabeta)
 
-    return probDecay
+    return probLongLived
 
 def getEffForEvent(event,widths=[0.0],detectorLength=None):
     """
@@ -124,10 +124,10 @@ def getEffForEvent(event,widths=[0.0],detectorLength=None):
     #Loop over x values and compute the probability of reconstructing at least one HSCP:
     for i,w in enumerate(widths):
         effs['width'][i] = w
-        probDecay = np.array([decayProbabilityFor(hscp,w,detectorLength) for hscp in event])
+        probLLP = np.array([longLivedProbabilityFor(hscp,w,detectorLength) for hscp in event])
         for sr in SRs:
             #Compute probability for triggering at least one HSCP  (1 - probability for missing all):
-            probTriggerTotal = 1.0 - np.prod(1.0-ProbTrigger*probDecay)
+            probTriggerTotal = 1.0 - np.prod(1.0-ProbTrigger*probLLP)
             #Compute probabitlity for reconstructing at least one HSCP  (1 - probability for missing all):
             probTagTotal = 1.0 - np.prod(1.0-ProbOnline[sr])
             #Total probability for triggering and reconstructing at least one HSCP:
