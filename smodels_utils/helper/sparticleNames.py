@@ -178,15 +178,21 @@ class SParticleNames:
         """ htmlify <name> """
         import re
         html = name
+
+        replacements = { "\\mu": "&mu;", "\\nu": "&nu;", "\\tau": "&tau;", 
+                         "\\gamma": "&gamma;" }
+        for k,v in replacements.items():
+            html = html.replace(k,v)
+
         while True:
-            m = re.search ( "_{[A-Za-z]*}", html)
+            m = re.search ( "_{[A-Za-z&;]*}", html)
             if m == None:
                 break
             repl = html[m.start()+2:m.end()-1]
             html = html[:m.start()]+"<sub>"+repl+"</sub>"+html[m.end():]
 
         while True:
-            m = re.search ( "\^{[0-9\s]*}", html)
+            m = re.search ( "\^{[0-9&;A-Za-z-+]*}", html)
             if m == None:
                 break
             repl = html[m.start()+2:m.end()-1]
@@ -195,6 +201,11 @@ class SParticleNames:
         if addBrackets:
             html = f"({html})"
         html = html.replace("#bar{X}","x&#772;" )
+        html = html.replace("~","")
+        html = html.replace("_{&nu;","<sub>&nu;</sub>")
+        if html == "nu":
+            html="&nu;"
+        print ( "htmlify", name, "->", html )
 
         return html
 
@@ -306,8 +317,9 @@ class SParticleNames:
     def sup ( self, text ):
         return "<sup>"+text+"</sup>"
 
+    """
     def toHtml ( self, name ):
-        """ translate particle names to html code """
+        # translate particle names to html code
         #if name=="~chi2+":
         #    name=self.tilde("&chi;")+"xxx" ## sup("+")+"2"#+sub("2")
         #if name=="~chi1+": return self.tilde("&chi;")+"1+" ## sup("+")+"2"#+sub("2")
@@ -358,6 +370,7 @@ class SParticleNames:
                 name=self.tilde(name[1:pos])+name[pos:]
         # print name,"<br>"
         return "<nobr>"+name+"</nobr>"
+    """
 
 
 if __name__ == "__main__":
@@ -365,9 +378,17 @@ if __name__ == "__main__":
     print ( "sparticle names" )
     namer = SParticleNames()
     ctr=0
+    f=open("index.html","wt" )
+    f.write ( "<html><body>\n" )
     for (key,value) in namer.ids.items():
        ctr+=1
-       print ( "%8d %8s   |" % (key,value), end="" )
-       if ctr==3:
-         print
-         ctr=0
+       print ()
+       line = "pid %d: %s" % ( key, namer.htmlName ( key ) )
+       print ( line )
+       print ()
+       f.write ( line + "<br>\n" )
+    f.close()
+       # print ( "%8d %8s   |" % (key,value), end="" )
+       #if ctr==3:
+       #  print ()
+       #  ctr=0
