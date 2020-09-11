@@ -95,7 +95,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
     
-    ram = max ( 6500, 4500. * ( jmax - jmin ) )
+    ram = max ( 7000, 4500. * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
         ram = max ( 4500, 3000. * ( jmax - jmin ) )
@@ -422,9 +422,11 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
 def clean_dirs( rundir, clean_all = False, verbose=True ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
-    cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
+    # cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
+    cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* *log" % rundir
     if clean_all:
-        cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
+        # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
+        cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf" % rundir
     if verbose:
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
@@ -546,12 +548,13 @@ def main():
         logCall ()
 
     for rundir in rundirs:
-        if args.dbpath == "real":
-            args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
-        if args.dbpath == "default":
-            args.dbpath = rundir + "/default.pcl"
-        if "fake" in args.dbpath and not args.dbpath.endswith(".pcl"):
-            args.dbpath = args.dbpath + ".pcl"
+        dbpath = args.dbpath
+        if dbpath == "real":
+            dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
+        if args.dbpath == "default": ## make sure we always set from scratch
+            dbpath = rundir + "/default.pcl"
+        if "fake" in dbpath and not dbpath.endswith(".pcl"):
+            dbpath = dbpath + ".pcl"
 
         if args.server:
             startServer ( rundir, args.dry_run, args.time )
@@ -607,7 +610,7 @@ def main():
             args.maxsteps = 1000
         while True:
             if nprocesses == 1:
-                runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
+                runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
                             args.select )
             else:
@@ -621,7 +624,7 @@ def main():
                     imin = nmin + i*nwalkers
                     imax = imin + nwalkers
                     p = multiprocessing.Process ( target = runOneJob,
-                            args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
+                            args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select ) )
                     jobs.append ( p )
                     p.start()
