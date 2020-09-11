@@ -205,7 +205,7 @@ class SParticleNames:
         html = html.replace("_{&nu;","<sub>&nu;</sub>")
         if html == "nu":
             html="&nu;"
-        print ( "htmlify", name, "->", html )
+        # print ( "htmlify", name, "->", html )
 
         return html
 
