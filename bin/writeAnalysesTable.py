@@ -19,6 +19,7 @@ try:
 except:
     import commands as C ## python2
 from smodels.tools.physicsUnits import fb, TeV
+from smodels_utils.helper.various import hasLLHD
 import IPython
 
 try:
@@ -42,7 +43,7 @@ def isIn ( i, txnames ):
 
 class Writer:
     def __init__ ( self, db, experiment, sqrts, keep, caption, numbers, prettyNames,
-                         superseded, topos, showsqrts, longtable = False ):
+                   superseded, topos, showsqrts, longtable = False, likelihoods = False ):
         """ writer class
         :param experiment: select on experiment, e.g. CMS, ATLAS, or both
         :param sqrts: select on sqrts (str)
@@ -53,12 +54,14 @@ class Writer:
         :param topos: add column for list of topologies (bool)
         :param showsqrts: show sqrts column (bool)
         :param longtable: longtable or tabular latex environment
+        :param likelihoods: add likelihood information
         """
         from smodels.experiment.databaseObj import Database
         database = Database ( args.database )
         #Creat analyses list:
         self.listOfAnalyses = database.getExpResults( useSuperseded=superseded )
         self.experiment = experiment 
+        self.likelihoods = likelihoods
         self.sqrts = sqrts.lower()
         self.sqrts = self.sqrts.replace("*","").replace("tev","").replace("both","all").replace("none","all")
         if self.sqrts == "":
@@ -127,7 +130,11 @@ class Writer:
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
+        llhds = "no"
+        if hasLLHD ( ana ):
+            llhds = "yes"
         if nextIsSame:
+            llhds = "yes"
             dt = "ul, eff"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
         gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
@@ -176,6 +183,8 @@ class Writer:
         lines[0] += "%s & %s " % ( dt, ana.globalInfo.lumi.asNumber(1/fb) )
         if self.showsqrts:
             lines[0] += "& %s " % ( sqrts )
+        if self.likelihoods:
+            lines[0] += f"& {llhds}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
@@ -207,6 +216,8 @@ class Writer:
             frmt = "|l|l|l|c|c|c|"
         if self.numbers:
             frmt = "|r" + frmt
+        if self.likelihoods:
+            frmt = frmt + "r|"
         toprint = "\\begin{%s}{%s}\n\hline\n" % ( self.table, frmt )
         if self.numbers:
             toprint +="{\\bf \#} &"
@@ -219,6 +230,8 @@ class Writer:
         toprint += "{\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } "
         if self.showsqrts:
             toprint += "& {\\bf $\\sqrt s$ } "
+        if self.likelihoods:
+            toprint += "& {\\bf likelihoods}"
         toprint += "\\\\\n\hline\n"
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
         for ctr,ana in enumerate(self.listOfAnalyses):
@@ -320,6 +333,8 @@ if __name__ == "__main__":
                             action='store_true' )
         argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
                             action='store_true' )
+        argparser.add_argument('-L', '--likelihoods', help='add likelihood info', 
+                            action='store_true' )
         argparser.add_argument('-t', '--topologies', help='add topologies', 
                             action='store_true' )
         argparser.add_argument('-l', '--longtable', help='use longtable not tabular', 
@@ -335,7 +350,8 @@ if __name__ == "__main__":
                          keep = args.keep, caption = args.caption,
                          numbers = args.enumerate, prettyNames=args.prettyNames,
                          superseded = args.superseded, topos = args.topologies,
-                         showsqrts=args.show_sqrts, longtable = args.longtable )
+                         showsqrts=args.show_sqrts, longtable = args.longtable,
+                         likelihoods = args.likelihoods )
         #Generate table:
         writer.generateAnalysisTable( args.output )
         # create pdf
