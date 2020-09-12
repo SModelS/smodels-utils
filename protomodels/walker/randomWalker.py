@@ -209,6 +209,8 @@ class RandomWalker:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert and not count it as a step." % (str(e),type(e) ) )
                 self.manipulator.restoreModel()
                 self.manipulator.M.step -= 1 # we dont count that step.
+                import traceback
+                traceback.print_exc()
                 return
         else:
             self.predictor.predict(self.manipulator.M)
