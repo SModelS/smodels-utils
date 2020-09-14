@@ -100,16 +100,16 @@ class ExpResModifier:
                 x = stats.norm.rvs() * self.fudge # draw but once from standard-normal
                 D["x"] = x
             allpositive = True
-            for i,y in enumerate( ret.y_values ):
+            for i,y in enumerate( expected.y_values ):
                 sigma_exp = y / 1.96 ## the sigma of the Gaussian
-                D["yexp"]= y
-                D["yobs"]= float("nan")
-                if len(ret.y_values) == len(observed.y_values):
-                    D["yobs"]=observed.y_values[i]
-                D["sigma_exp"]= sigma_exp
+                #D["yexp"]= y
+                #D["yobs"]= float("nan")
+                #if len(expected.y_values) == len(observed.y_values):
+                #    D["yobs"]=observed.y_values[i]
+                #D["sigma_exp"]= sigma_exp
                 ## now lets shift, observed limit = expected limit + dx
                 obs = y + sigma_exp * x ## shift the expected by the random fake signal
-                D["y"]= obs ## we keep only last entry, but thats ok
+                #D["y"]= obs ## we keep only last entry, but thats ok
                 if obs <= 0.:
                     ## try again
                     allpositive = False
@@ -118,11 +118,11 @@ class ExpResModifier:
                 self.log ( "WARNING seems like I am having a hard time getting all "\
                         "values of %s positive." % globalInfo.id )
 
-        label = globalInfo.id + ":ul"
+        label = globalInfo.id + ":ul:" + txname.txName
         D["fudge"]=self.fudge
         self.stats[label]=D
-        self.log ( "computed new UL result %s, x=%.2f" % \
-                   ( globalInfo.id, x ) )
+        self.log ( "computed new UL result %s:%s, x=%.2f" % \
+                   ( globalInfo.id, txname.txName, x ) )
         if x > 3.5:
             self.log ( "WARNING high UL x=%.2f!!!" % x )
         return ret
@@ -286,6 +286,7 @@ class ExpResModifier:
         self.stats[label]["sigLambda"]=sigLambda
         sigN = stats.poisson.rvs ( sigLambda )
         self.stats[label]["sigN"]=sigN
+        self.stats[label]["obsBg"]=self.stats[label]["newObs"]
         err = dataset.dataInfo.bgError * self.fudge
         if sigN == 0:
                 self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
@@ -304,6 +305,7 @@ class ExpResModifier:
                    ( sigN, orig ) )
         dataset.dataInfo.trueBG = orig ## keep track of true bg
         dataset.dataInfo.observedN = orig + sigN
+        self.stats[label]["newObs"]=dataset.dataInfo.observedN
         dataset.dataInfo.sigN = sigN ## keep track of signal
 
         ## now recompute the limits!!
