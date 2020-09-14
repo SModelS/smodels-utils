@@ -189,7 +189,8 @@ def writeRawNumbersHtml ( protomodel ):
                       S, particles ) )
             if hassigs:
                 sig = "-"
-                for txn in tp.dataset.txnameList:
+                for txn in tp.txnames:
+                # for txn in tp.dataset.txnameList:
                     if hasattr ( txn, "sigmaN" ):
                         sig = "%.2f fb" % txn.sigmaN
                 f.write ( '<td style="text-align:right">%s</td>' % sig )
