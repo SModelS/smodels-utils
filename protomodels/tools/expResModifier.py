@@ -42,6 +42,7 @@ class ExpResModifier:
         self.Zmax = Zmax
         self.startLogger()
         self.stats = {}
+        self.logCall()
 
     def interact ( self, listOfExpRes ):
         import IPython
@@ -120,7 +121,7 @@ class ExpResModifier:
         label = globalInfo.id + ":ul"
         D["fudge"]=self.fudge
         self.stats[label]=D
-        self.log ( "fixing UL result %s: x=%.2f" % \
+        self.log ( "computed new UL result %s, x=%.2f" % \
                    ( globalInfo.id, x ) )
         if x > 3.5:
             self.log ( "WARNING high UL x=%.2f!!!" % x )
@@ -134,6 +135,19 @@ class ExpResModifier:
                 txnd = self.computeNewObserved ( txname, dataset.globalInfo )
                 dataset.txnameList[i].txnameData = txnd
         return dataset
+
+    def logCall ( self ):
+        """ log how expResModifier got called """
+        f=open("expResModifier.log","at")
+        args = ""
+        for i in sys.argv:
+            if " " in i or "," in i:
+                i = '"%s"' % i
+            args += i + " "
+        f.write ( "[expResModifier.py-%s] %s\n" % \
+                  ( time.strftime("%H:%M:%S"), args.strip() ) )
+        # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
+        f.close()
 
     def pprint ( self, *args ):
         """ logging """
@@ -321,9 +335,10 @@ class ExpResModifier:
     def addSignalForULMap ( self, dataset, tpred, lumi ):
         """ add a signal to this UL result. background sampling is
             already taken care of """
-        self.log ( " `- add UL matching tpred %s: %s[%s]" % \
+        txns = list ( map ( str, tpred.txnames ) )
+        self.log ( "add UL matching tpred %s: %s[%s] -- %s" % \
                 ( tpred.analysisId(), tpred.xsection.value, \
-                  tpred.PIDs ) )
+                  tpred.PIDs, ",".join(txns) ) )
         #print ( " `- add UL matching tpred %s: %s[%s] ds:%s" % \
         #        ( tpred.analysisId(), tpred.xsection.value, \
         #          tpred.PIDs, dataset ) )
@@ -507,7 +522,7 @@ class ExpResModifier:
         self.log ( "done faking the backgrounds" )
         return ret
 
-    def filter ( self, outfile, nofastlim, onlyvalidated, nosuperseded, 
+    def filter ( self, outfile, nofastlim, onlyvalidated, nosuperseded,
                        remove_orig ):
         """ filter the list fo experimental results.
         :param outfile: store result in outfile (a pickle file)
@@ -708,6 +723,7 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
     modifier = ExpResModifier( args.database, args.max, args.rundir, args.keep, \
                                args.nproc, args.fudge, args.suffix )
+
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     if args.nofastlim or args.onlyvalidated or args.nosuperseded or args.remove_orig:
