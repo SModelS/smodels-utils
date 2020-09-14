@@ -107,7 +107,7 @@ def writeRawNumbersHtml ( protomodel ):
     """ write out the raw numbers of the excess, as html """
     f=open("rawnumbers.html","wt")
     f.write("<table>\n" )
-    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>" )
+    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Topos</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>" )
     didordidnot,hassigs = hasSignals ( protomodel )
     print ( f"[plotHiscore] protomodel's database {didordidnot} have fake signals." )
     if hassigs:
@@ -118,6 +118,9 @@ def writeRawNumbersHtml ( protomodel ):
         anaId = tp.analysisId()
         idAndUrl = anaNameAndUrl ( tp )
         dtype = tp.dataType()
+        ltopos = list(map(str,tp.txnames ) )
+        ltopos.sort()
+        topos = ", ".join ( ltopos )
         S = "?"
         dt = { "upperLimit": "ul", "efficiencyMap": "em" }
         f.write ( "<tr><td>%s</td><td>%s</td> " % ( idAndUrl, dt[dtype] ) )
@@ -151,8 +154,8 @@ def writeRawNumbersHtml ( protomodel ):
                 obsN=int(obsN)
             particles = namer.htmlName ( pids, addSign = False,
                                           addBrackets = False )
-            f.write ( '<td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
-                      ( did, obsN, eBG, bgErr, S, particles ) )
+            f.write ( '<td>%s</td><td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
+                      ( did, topos, obsN, eBG, bgErr, S, particles ) )
             if hassigs:
                 sig = "-"
                 if hasattr ( dI, "sigN" ):
@@ -181,8 +184,9 @@ def writeRawNumbersHtml ( protomodel ):
             #particles = helpers.toHtml ( pids, addSign = False,
             #                              addBrackets = False )
             particles = namer.htmlName ( pids, addSign = False, addBrackets = False )
-            f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
-                    ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles ) )
+            f.write ( '<td>-</td><td>%s</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
+                    ( topos, tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), 
+                      S, particles ) )
             if hassigs:
                 sig = "-"
                 for txn in tp.dataset.txnameList:
