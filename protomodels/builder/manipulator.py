@@ -1019,7 +1019,10 @@ class Manipulator:
         for mpid,decays in protomodel.decays.items():
             olddecays[mpid] = dict([[dpids,br] for dpids,br in decays.items()])
         ## Store orignal xsecs (needed for rescaling the SSMs)
-        oldxsecs = protomodel.getXsecs()[0]
+        oldxsecs = None
+        tmpx = protomodel.getXsecs()
+        if len(tmpx)>0:
+            oldxsecs = tmpx[0]
 
         pair = list(pair)
         pair.sort()
@@ -1030,7 +1033,6 @@ class Manipulator:
         avgM = self.computeAvgMass ( pair )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         protomodel.masses[ p1 ] = avgM ## set this one to the avg mass
-
 
         #Get p2 decays:
         p2decays = protomodel.decays[p2]
@@ -1082,8 +1084,9 @@ class Manipulator:
                 #Add new channel:
                 protomodel.decays[mpid][newpids]=br
 
-        ## merge the signal strength multipliers:
-        self.mergeSSMs( pair, oldXsecs = oldxsecs, protomodel=protomodel )
+        if oldxsecs != None:
+            ## merge the signal strength multipliers:
+            self.mergeSSMs( pair, oldXsecs = oldxsecs, protomodel=protomodel )
 
         ## finally freeze p2:
         self.freezeParticle(p2,protomodel=protomodel)

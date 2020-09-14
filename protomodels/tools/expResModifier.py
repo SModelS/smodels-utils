@@ -507,12 +507,14 @@ class ExpResModifier:
         self.log ( "done faking the backgrounds" )
         return ret
 
-    def filter ( self, outfile, nofastlim, onlyvalidated, nosuperseded ):
+    def filter ( self, outfile, nofastlim, onlyvalidated, nosuperseded, 
+                       remove_orig ):
         """ filter the list fo experimental results.
         :param outfile: store result in outfile (a pickle file)
         :param nofastlim: remove fastlim results
         :param onlyvalidated: remove non-validated results
         :param nosuperseded: remove superseded results
+        :param remove_orig: remove original values
         """
         self.log ( "starting to filter %s. suffix is %s." % \
                    ( outfile, self.suffix ) )
@@ -550,6 +552,15 @@ class ExpResModifier:
                 er.datasets = newDs
                 if len(newDs) == 0:
                     addThisOne = False
+            if remove_orig:
+                from smodels.experiment.txnameObj import TxNameData
+                TxNameData._keep_values = False
+                for iD,ds in enumerate(er.datasets):
+                    for it,txn in enumerate(ds.txnameList):
+                        if hasattr ( txn.txnameData, "origdata" ):
+                            del er.datasets[iD].txnameList[it].txnameData.origdata
+                        if txn.txnameDataExp != None and hasattr ( txn.txnameDataExp, "origdata" ):
+                            del er.datasets[iD].txnameList[it].txnameDataExp.origdata
             if not addThisOne:
                 continue
             newList.append ( er )
@@ -573,6 +584,15 @@ class ExpResModifier:
         cmd = "ln -s %s/%s %s/default.pcl" % ( self.rundir, args.outfile, self.rundir )
         a = subprocess.getoutput ( cmd )
         print ( "[expResModifier]", cmd, a )
+
+    def symlink ( self, outfile ):
+        """ create a symlink to rundir/default.pcl """
+        dest = f"{self.rundir}/default.pcl"
+        if os.path.exists ( dest ):
+            cmd = f"rm {dest}"
+            subprocess.getoutput ( cmd )
+        cmd = f"ln -s {outfile} {dest}"
+        subprocess.getoutput ( cmd )
 
     def check ( self, picklefile ):
         """ check the picklefile """
@@ -606,7 +626,7 @@ Build a database:
 
 Just filter the database:
 -------------------------
-./expResModifier.py -d ./original.pcl --nofastlim --onlyvalidated --nosuperseded --dontsample -o test.pcl
+./expResModifier.py -d ./original.pcl --remove_orig --nofastlim --onlyvalidated --nosuperseded --dontsample -o test.pcl
 
 """
 
@@ -640,6 +660,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '--nosuperseded',
             help='remove superseded results',
             action='store_true' )
+    argparser.add_argument ( '--remove_orig',
+            help='remove original values',
+            action='store_true' )
     argparser.add_argument ( '--dontsample',
             help='do not sample at all, only filter',
             action='store_true' )
@@ -665,6 +688,8 @@ if __name__ == "__main__":
             action='store_true' )
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
+    argparser.add_argument ( '-S', '--symlink',
+            help='symlink default.pcl to <outfile> (in rundir)', action='store_true' )
     argparser.add_argument ( '-k', '--keep',
             help='keep temporary files (for debugging)', action='store_true' )
     args = argparser.parse_args()
@@ -685,9 +710,11 @@ if __name__ == "__main__":
                                args.nproc, args.fudge, args.suffix )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
-    if args.nofastlim or args.onlyvalidated or args.nosuperseded:
+    if args.nofastlim or args.onlyvalidated or args.nosuperseded or args.remove_orig:
         modifier.filter ( args.outfile, args.nofastlim, args.onlyvalidated,
-                          args.nosuperseded )
+                          args.nosuperseded, args.remove_orig )
+        modifier.symlink ( args.outfile )
+        sys.exit()
     if args.dontsample:
         print ( "[expResModifier] was asked to not sample, so we exit now." )
         sys.exit()
@@ -708,4 +735,5 @@ if __name__ == "__main__":
     if args.upload:
         modifier.upload()
 
+    modifier.symlink ( args.outfile )
     modifier.finalize()
