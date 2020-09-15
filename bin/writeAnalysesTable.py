@@ -60,11 +60,11 @@ class Writer:
         :param extended_likelihoods: add extended likelihood information
         """
         from smodels.experiment.databaseObj import Database
-        database = Database ( args.database )
+        self.database = Database ( args.database )
         #Creat analyses list:
         self.bibtex = None
         self.bibtex = BibtexWriter ( args.database )
-        self.listOfAnalyses = database.getExpResults( useSuperseded=superseded )
+        self.getExpResults ( superseded = superseded )
         self.experiment = experiment 
         self.likelihoods = likelihoods
         self.extended_likelihoods = extended_llhds
@@ -89,6 +89,17 @@ class Writer:
         self.table = "tabular"
         if longtable:
             self.table = "longtable"
+
+    def getExpResults ( self, superseded ):
+        """ get the experimental results, and filter 
+        :param superseded: allow superseded results
+        """
+        self.listOfAnalyses = []
+        ers = self.database.getExpResults( useSuperseded=superseded )
+        for er in ers:
+            if hasattr ( er.globalInfo, "contact" ) and "fastlim" in er.globalInfo.contact:
+                continue
+            self.listOfAnalyses.append ( er )
 
     def sameAnaIds ( self, ana1, ana2 ):
         ana1n = ana1.globalInfo.id
