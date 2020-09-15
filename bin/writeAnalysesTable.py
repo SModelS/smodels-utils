@@ -68,10 +68,14 @@ class Writer:
         self.experiment = experiment 
         self.likelihoods = likelihoods
         self.extended_likelihoods = extended_llhds
+        self.addcombos = extended_llhds
         self.sqrts = sqrts.lower()
         self.sqrts = self.sqrts.replace("*","").replace("tev","").replace("both","all").replace("none","all")
         if self.sqrts == "":
             self.sqrts = "all"
+        if self.sqrts == "8":
+            print ( "[writeAnalysesTable] sqrts is 8, so no column for combos" )
+            self.addcombos = False
         self.keep = keep
         self.topos = topos
         self.caption = caption
@@ -201,7 +205,7 @@ class Writer:
         if self.likelihoods:
             lines[0] += f"& {llhds}"
         if self.extended_likelihoods:
-            ulobs, ulexp, em, comb = " ", " ", " ", " "
+            ulobs, ulexp, em = " ", " ", " "
             check = "\\checkmark" ## check="x"
             if "ul" in dt:
                 ulobs = check
@@ -209,12 +213,19 @@ class Writer:
                     ulexp = check
             if "eff" in dt:
                 em = check
+            #ulobs, ulexp, em, comb = "x", "x", "x", "JSON"
+            lines[0] += f"& {ulobs} & {ulexp} & {em}"
+        if self.addcombos:
+            comb = " "
             if hasattr ( ana.globalInfo, "jsonFiles" ):
                 comb = "JSON"
             if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
                 comb = "JSON"
-            #ulobs, ulexp, em, comb = "x", "x", "x", "JSON"
-            lines[0] += f"& {ulobs} & {ulexp} & {em} & {comb}"
+            if hasattr ( ana.globalInfo, "covariance" ):
+                comb = "Cov."
+            if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
+                comb = "Cov."
+            lines[0] += f"& {comb}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
@@ -258,7 +269,8 @@ class Writer:
             toprint +="{\\bf \#} &"
         toprint += "{\\bf ID} & "
         if self.prettyNames:
-            toprint += "{\\bf Pretty Name} & "
+            # toprint += "{\\bf Pretty Name} & "
+            toprint += "{\\bf Short Description} & "
             
         if self.topos:
             toprint += "{\\bf Topologies} &"
@@ -270,7 +282,9 @@ class Writer:
         if self.likelihoods:
             toprint += "& {\\bf likelihoods}"
         if self.extended_likelihoods:
-            toprint += "& {\\bf UL$_\mathrm{obs}$} & {\\bf UL$_\mathrm{exp}$} & {\\bf EM} & {\\bf comb.}"
+            toprint += "& {\\bf UL$_\mathrm{obs}$} & {\\bf UL$_\mathrm{exp}$} & {\\bf EM}"
+        if self.addcombos:
+            toprint += "& {\\bf comb.}"
         toprint += "\\\\\n\hline\n"
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
         for ctr,ana in enumerate(self.listOfAnalyses):
@@ -284,7 +298,10 @@ class Writer:
                     nextIsSame = True
             if self.experimentIsMet ( ana.globalInfo.id ):
                 if self.sqrtsIsMet ( ana.globalInfo.sqrts ):
-                    tp, n_topos = self.writeSingleAna ( ana, nextIsSame, self.listOfAnalyses[ctr+1] )
+                    nextAna = None
+                    if nextIsSame:
+                        nextAna = self.listOfAnalyses[ctr+1]
+                    tp, n_topos = self.writeSingleAna ( ana, nextIsSame, nextAna )
                     toprint += tp
         toprint += "\\hline\n"
         if self.caption:
