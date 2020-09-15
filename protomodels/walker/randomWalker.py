@@ -2,7 +2,7 @@
 
 """ a first start at the random walk idea """
 
-import random, pickle, sys, time, math, socket
+import random, pickle, sys, time, math, socket, os
 if sys.version_info[0]==2:
     import commands as subprocess # python2.7
 else:
@@ -66,6 +66,10 @@ class RandomWalker:
         self.catch_exceptions = catch_exceptions
         self.maxsteps = nsteps
         self.accelerator = None
+        jobid = "unknown"
+        if "SLURM_JOBID" in os.environ:
+            jobid = os.environ["SLURM_JOBID"]
+        self.pprint ( "Ramping up with slurm jobid %s" % jobid )
 
         if cheatcode <= 0:
             self.takeStep() # the first step should be considered as "taken"
