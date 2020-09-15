@@ -144,7 +144,7 @@ class Plotter:
             fudge = self.meta["fudge"]
         if abs ( fudge - 1. ) > 1e-3:
             title += ", fudge=%.2f" % fudge
-        nbins = 11 ## change the number of bins
+        nbins = 10 ## change the number of bins
         plt.hist ( P, weights = [ 1. / len(self.filenames) ]*len(P), bins=nbins,
                    label="real", facecolor="tab:blue" )
         plt.hist ( Pfake, weights = [ 1. / len(self.filenames) ]*len(P), bins=nbins,

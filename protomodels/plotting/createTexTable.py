@@ -36,6 +36,14 @@ class Table:
             K = txt[0]["K"]
             pids = list ( txt[0]["masses"].keys() )
             pids.remove ( 1000022 )
+            def sorter ( x ):  ## we sort such that stop is first and the lbp is last
+                ## which is not the real order but a close bet
+                if x == 1000006:
+                    x-=100000
+                if x == 1000022:
+                    x+= 1000000
+                return x
+            pids.sort( key= sorter )
             if True:
                 label = label.replace("signal", "fake" )
             prtcles = self.namer.texName ( pids, addDollars=True )
