@@ -211,7 +211,7 @@ def writeRawNumbersLatex ( protomodel ):
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         dtype = tp.dataType()
-        print ( "item %s (%s)" % ( anaId, dtype ) )
+        print ( "[plotHiscore] item %s (%s)" % ( anaId, dtype ) )
         dt = { "upperLimit": "ul", "efficiencyMap": "em" }
         # f.write ( "%s & %s & " % ( anaId, dt[dtype] ) )
         ref = bibtex.query ( anaId )
