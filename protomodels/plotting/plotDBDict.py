@@ -26,11 +26,16 @@ class Plotter:
         """ read in content of filename """
         for fname in self.filenames:
             with open( fname,"rt") as f:
-                lines=f.readlines()
+                tmp=f.readlines()
+            lines = []
+            for line in tmp:
+                if line.startswith("#"):
+                    continue
+                lines.append ( line )
             basename = os.path.basename ( fname ).replace(".dict","")
             self.meta.update (  eval(lines[0]) )
             nan=float("nan")
-            data = eval(lines[1])
+            data = eval("\n".join(lines[1:]))
             newdata = {}
             for i,v in data.items():
                 if "expectedBG" in v and v["expectedBG"]>=self.filter:

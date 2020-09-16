@@ -29,6 +29,7 @@ class ExpResModifier:
         :param Zmax: upper limit on an individual excess
         :param suffix: suffix to use, e.g. fake, signal, etc
         """
+        self.comments = {} ## comments on entries in dict
         self.dbpath = dbpath
         self.protomodel = None
         self.rundir = setup( rundir )
@@ -263,9 +264,15 @@ class ExpResModifier:
         if S > 3.5:
             self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
         D["S"]=S
+        self.comments["S"]="the significance of the observation"
         D["origS"]=origS
+        self.comments["origS"]="the significance of the original observation"
+        self.comments["lmbda"]="lambda of the fake background"
         D["lmbda"]=lmbda
         D["newObs"]=obs
+        self.comments["newObs"]="the new fake observation"
+        D["obsBg"]=obs
+        self.comments["obsBg"]="the new fake observation, background component"
         D["toterr"]=toterr
         ## origN stores the n_observed of the original database
         dataset.dataInfo.origN = orig
@@ -276,8 +283,10 @@ class ExpResModifier:
     def addSignalForEfficiencyMap ( self, dataset, tpred, lumi ):
         """ add a signal to this efficiency map. background sampling is
             already taken care of """
-        self.log ( "add EM matching tpred %s/%s: %s" % \
-                ( tpred.analysisId(), tpred.dataId()[:8], tpred.xsection.value ) )
+        txns = list ( map ( str, tpred.txnames ) )
+        self.log ( "add EM matching tpred %s/%s %s: %s" % \
+                ( tpred.analysisId(), tpred.dataId(), ",".join(txns), \
+                  tpred.xsection.value ) )
         label = dataset.globalInfo.id + ":" + dataset.dataInfo.dataId
         if not label in self.stats:
             self.stats[ label ]= {}
@@ -285,9 +294,17 @@ class ExpResModifier:
         sigLambda = float ( tpred.xsection.value * lumi )
         self.stats[label]["sigLambda"]=sigLambda
         sigN = stats.poisson.rvs ( sigLambda )
-        self.stats[label]["sigN"]=sigN
+        if not "sigN" in self.stats[label]:
+            ## sigN is the total number of added signals
+            ## they may be from multiple topologies
+            self.stats[label]["sigN"]=0
+        self.stats[label]["sigN"]=self.stats[label]["sigN"]+sigN
+        txnsc = "_".join( txns )
+        ## sigNT<x> denotes the contributions from the individual theory preds
+        self.stats[label]["sigN%s" % txnsc ] = sigN
         self.stats[label]["obsBg"]=self.stats[label]["newObs"]
         err = dataset.dataInfo.bgError * self.fudge
+        dataset.dataInfo.sigN = sigN ## keep track of signal
         if sigN == 0:
                 self.log ( " `- signal sigN=%d re obsN=%d too small. skip." % \
                            ( sigN, orig ) )
@@ -306,7 +323,6 @@ class ExpResModifier:
         dataset.dataInfo.trueBG = orig ## keep track of true bg
         dataset.dataInfo.observedN = orig + sigN
         self.stats[label]["newObs"]=dataset.dataInfo.observedN
-        dataset.dataInfo.sigN = sigN ## keep track of signal
 
         ## now recompute the limits!!
         alpha = .05
@@ -389,10 +405,17 @@ class ExpResModifier:
         self.log ( f"saving stats to {filename}" )
         meta = { "dbpath": self.dbpath, "Zmax": self.Zmax,
                  "database": self.dbversion, "fudge": self.fudge,
-                 "protomodel": self.protomodel, "timestamp": time.asctime() }
+                 "protomodel": '"%s"' % self.protomodel, "timestamp": time.asctime() }
         with open ( filename,"wt" ) as f:
             f.write ( str(meta)+"\n" )
-            f.write ( str(self.stats)+"\n" )
+            for k,v in self.comments.items():
+                f.write ( f"# {k}: {v}\n" )
+            f.write ( '{' )
+            for ctr,(k,v) in enumerate(self.stats.items()):
+                f.write ( f"'{k}': {v}" )
+                if ctr != len(self.stats)-1:
+                    f.write ( ",\n" )
+            f.write ( '}\n' )
             f.close()
 
     def produceTopoList ( self ):
