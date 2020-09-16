@@ -112,8 +112,12 @@ class RulerPlot:
         """ given self.masses, compute the range that we wish to plot. """
         maxvalue=max (self.masses)
         minvalue=min(self.masses)
-        maxvalue = min ( [ maxvalue, 3100. ] )
-        minvalue = max ( [ 0, minvalue ] )
+        maxvalue = min ( [ 1.05*maxvalue, 3100. ] )
+        minvalue = max ( [ 0, .95*minvalue ] )
+        if minvalue > 480:
+            minvalue = 480
+        if maxvalue < 1010:
+            maxvalue = 1010
         dm = maxvalue - minvalue
         if self.range[0] != None and self.range[0] >=0.:
             minvalue=self.range[0]
@@ -231,7 +235,7 @@ class RulerPlot:
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         x = [ 0. ] * len(ticks)
         x[0]=1.
-        figratio = ( 3, 10 )
+        figratio = ( 4, 10 )
         if self.drawdecays:
             figratio = ( 7, 4 )
         fig = plt.figure(figsize=figratio )
@@ -322,6 +326,9 @@ class RulerPlot:
                         if self.drawdecays:
                             dm1 = 55.
                         for cana,ana in enumerate(analyses):
+                            print ( "[rulerPlotter] write", ana, xavg )
+                            if xavg > .9:
+                                xavg = .73
                             plt.text ( xavg, m-dm1-dm*cana, ana.replace("201","1" ),
                                        fontsize=fontsize, c=col, ha="center" )
                             lctr+=1
