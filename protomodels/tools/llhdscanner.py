@@ -207,7 +207,7 @@ class LlhdScanner:
         if self.nproc == 1:
             return runThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
                                self.mpid1, self.mpid2, self.nevents, rpid1, rpid2,
-                               predictor, None )
+                               self.predictor, None )
         chunkedRPid1 = [ list(rpid1[i::self.nproc]) for i in range(self.nproc) ]
         processes = []
         manager = multiprocessing.Manager()

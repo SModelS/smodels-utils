@@ -2,7 +2,7 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys, copy, subprocess, os, colorama, time, glob
+import pickle, sys, copy, subprocess, os, colorama, time, glob, math
 import IPython
 import numpy as np
 from csetup import setup as gsetup
@@ -302,6 +302,27 @@ class LlhdPlot:
         print ( "              plot.pid1, plot.pid2, plot.topo" )
         print ( "Function members: plot.findClosestPoint()" )
 
+
+    def getLClosestTo ( self, L, mx=None, my=None ):
+        """ get the L closest to your point """
+        if mx == None:
+            mx=self.mx
+        if my == None:
+            my=self.my
+        def distance_ ( k, mx, my ):
+            _x = int(math.floor(k/1000.))
+            _y = int(math.floor(k % 1000 ) )
+            ret= (mx - _x)**2 + (my - _y)**2
+            return ret
+
+        dmmin, vmin = float("inf"), 23.
+        for k,v in L.items():
+            dm = distance_ ( k, mx, my )
+            if dm < dmmin and not np.isnan(v):
+                dmmin = dmmin
+                vmin = v
+        return vmin
+
     def plot ( self, ulSeparately=True, pid1=None ):
         """ a summary plot, overlaying all contributing analyses 
         :param ulSeparately: if true, then plot UL results on their own
@@ -364,6 +385,7 @@ class LlhdPlot:
             r,sr = self.getResultFor ( ana, self.masspoints[0][2] )
             if r:
                 s="(%.2f)" % (-np.log(r))
+            print ( "[plotLlhds] result for", ana,"is", s )
             cresults = 0
             for cm,masspoint in enumerate(self.masspoints[1:]):
                 #if cm % 10 != 0:
@@ -394,7 +416,8 @@ class LlhdPlot:
                 else:
                     combL[h] = combL[h] + zt
                 R[h]=rmax
-            print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
+            print ()
+            # print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
             if cresults == 0:
                 print ( "[plotLlhds] warning: found no results for %s. skip" % \
                         str(masspoint) )
@@ -442,7 +465,7 @@ class LlhdPlot:
             while isCloseToExisting ( minXY, existingPoints ):
                 minXY = ( minXY[0]+8., minXY[1]+8., minXY[2] )
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black", zorder=20 )
-            anan = ana.replace(":None",":UL") + " (%.2f)" % (minXY[2])
+            anan = ana.replace(":None",":UL") # + " (%.2f)" % (minXY[2])
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=anan, alpha=1., zorder=20 )
             existingPoints.append ( minXY )
             handles.append ( a )
@@ -479,8 +502,12 @@ class LlhdPlot:
         # Xs,Ys=X,Y
         Xs,Ys = filterSmaller ( X, Y )
         h = self.getHash()
-        if h in L:
-            s=" (%.2f)" % L[h]
+        # print ( "hash is", h )
+        #s=" (??)"
+        #if h in L:
+        #    s=" (%.2f)" % L[h]
+        #s=" (%.2f)" % self.getLClosestTo ( L )
+        s=""
         ax.scatter( [ self.mx ], [ self.my ], marker="*", s=200, color="white", zorder=20 )
         c = ax.scatter( [ self.mx ], [ self.my ], marker="*", s=160, color="black", 
                       label="proto-model%s" % s, zorder=20 )
@@ -497,7 +524,7 @@ class LlhdPlot:
         self.pprint ( "saving to %s" % figname )
         plt.savefig ( figname )
         if self.interactive:
-            self.axes = axes
+            self.axes = ax
             self.plt = plt
         plt.close()
         if self.copy:
