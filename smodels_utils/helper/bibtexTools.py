@@ -231,8 +231,18 @@ class BibtexWriter:
         f=urlopen ( url )
         lines = f.readlines()
         f.close()
+        lines = list ( map ( str, lines ) )
+
+        ## first pass, aim for inspire
         for l in lines:
-            l=str(l)
+            if "nspire" in l:
+                inspire = self.fetchInspireUrl ( l, label )
+                # self.log ( "   `- fetching from inspire: %s" % inspire )
+                if not "failed" in inspire:
+                    return self.bibtexFromInspire ( inspire, label )
+
+        ## second pass, try CDS and everything else
+        for l in lines:
             if "preliminary results are superseded by the following paper" in l:
                 self.log ( "    %s: superseded !!!!! " % label )
                 self.h.write ( "%s is superseded." % label )
@@ -243,20 +253,20 @@ class BibtexWriter:
                 #self.h.write ( "%s is not found!" % label )
                 #self.not_found += 1
                 return None
-            if "nspire" in l:
-                inspire = self.fetchInspireUrl ( l, label )
-                # self.log ( "   `- fetching from inspire: %s" % inspire )
-                if not "failed" in inspire:
-                    return self.bibtexFromInspire ( inspire, label )
             if 'CDS record' in l:
                 cds = self.fetchCDSUrl ( l, label )
                 if not "failed" in cds:
-                    return self.bibtexFromCDS ( cds, label )
+                    try:
+                        return self.bibtexFromCDS ( cds, label )
+                    except Exception as e:
+                        print ( "HTTPEerror when fetching %s/%s from CDS: %s" % \
+                                ( cds, label, e ) )
             if 'target="_blank">' in l:
             # if 'target="_blank">Link to ' in l:
                 pas = self.fetchPasUrl ( l )
                 if not "failed" in pas:
                     return self.bibtexFromCDS ( pas, label )
+            return None
 
     def log ( self, line ):
         if self.verbose in [ "debug", "info" ]:
