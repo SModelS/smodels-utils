@@ -9,12 +9,16 @@ import scipy.stats
 import matplotlib.mlab as mlab
 
 class Plotter:
-    def __init__ ( self, pathname, filtervalue: float ):
+    def __init__ ( self, pathname, filtervalue: float, comment ):
         """
         :param filename: filename of dictionary
         :param filtervalue: filter out signal regions with expectedBG < filtervalue
+        :param comment: an optional comment, to write in the plot
         """
         self.filenames = []
+        if comment in [ "None", "", "none" ]:
+            comment = None
+        self.comment = comment
         for pname in pathname:
             self.filenames += glob.glob ( pname )
         self.filter = filtervalue
@@ -150,6 +154,7 @@ class Plotter:
         if abs ( fudge - 1. ) > 1e-3:
             title += ", fudge=%.2f" % fudge
         nbins = 10 ## change the number of bins
+        fig, ax = plt.subplots()
         plt.hist ( P, weights = [ 1. / len(self.filenames) ]*len(P), bins=nbins,
                    label="real", facecolor="tab:blue" )
         plt.hist ( Pfake, weights = [ 1. / len(self.filenames) ]*len(P), bins=nbins,
@@ -163,6 +168,9 @@ class Plotter:
         plt.xlabel ( "$p$-values" )
         plt.ylabel ( "# Signal Regions" )
         print ( f"[plotDBDict.py] plotting {outfile}"  )
+        if self.comment != None:
+            plt.text ( .65, -.11, self.comment, transform=ax.transAxes, 
+                       style="italic" )
         plt.savefig ( outfile )
         plt.clf()
 
@@ -175,11 +183,14 @@ def main():
     argparser.add_argument ( '-o', '--outfile', nargs='?',
             help='output file [./pDatabase.png]',
             type=str, default='./pDatabase.png' )
+    argparser.add_argument ( '-c', '--comment', nargs='?',
+            help='an optional comment, to put in the plot [None]',
+            type=str, default=None )
     argparser.add_argument ( '-f', '--filter', nargs='?',
             help='filter out signal regions with expectedBG<x [x=-1.]',
             type=float, default=-1. )
     args=argparser.parse_args()
-    plotter = Plotter ( args.dictfile, args.filter )
+    plotter = Plotter ( args.dictfile, args.filter, args.comment )
     plotter.plot( "origS", "S", args.outfile )
 
 if __name__ == "__main__":
