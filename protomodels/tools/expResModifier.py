@@ -755,9 +755,9 @@ if __name__ == "__main__":
         modifier.filter ( args.outfile, args.nofastlim, args.onlyvalidated,
                           args.nosuperseded, args.remove_orig )
         modifier.symlink ( args.outfile )
-        sys.exit()
+
     if args.dontsample:
-        print ( "[expResModifier] was asked to not sample, so we exit now." )
+        print ( "[expResModifier] we were asked to not sample, so we exit now." )
         sys.exit()
 
     if args.extract_stats:
