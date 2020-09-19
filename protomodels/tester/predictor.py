@@ -17,8 +17,14 @@ except:
 
 class Predictor:
     def __init__ ( self, walkerid, dbpath = "./default.pcl",
-                   expected = False, select = "all" ):
+                   expected = False, select = "all",
+                   do_combine = False ):
+        """
+        :param do_combine: if True, then also use combined results,
+                           both via simplified likelihoods and pyhf.
+        """
         self.walkerid = walkerid
+        self.do_combine = do_combine
         self.modifier = None
         self.select = select
         self.expected = expected
@@ -205,7 +211,7 @@ class Predictor:
             combinedRes=False
         else:
             bestDataSet=True
-            combinedRes=False
+            combinedRes=self.do_combine
 
 
         preds = []

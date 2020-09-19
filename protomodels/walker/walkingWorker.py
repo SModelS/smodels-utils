@@ -40,7 +40,8 @@ def startWalkers ( walkers, seed=None,  catchem=False):
 def main( nmin, nmax, cont,
           dbpath = "<rundir>/database.pcl",
           cheatcode = 0, dump_training = False, rundir=None, maxsteps = 10000,
-          nevents = 100000, seed = None,  catchem=True, select="all" ):
+          nevents = 100000, seed = None,  catchem=True, select="all",
+          do_combine = False ):
     """ a worker node to set up to run walkers
     :param nmin: the walker id of the first walker
     :param nmax: the walker id + 1 of the last walker
@@ -53,6 +54,8 @@ def main( nmin, nmax, cont,
     :param seed: random seed number (optional)
     :param catchem: If True will catch the exceptions and exit.
     :param select: select only subset of results (all for all, em for efficiency maps only, ul for upper limits only, alternatively select for txnames via e.g. "txnames:T1,T2"
+    :param do_combine: if true, then also perform combinations, either via
+                       simplified likelihoods or via pyhf
     """
 
     if rundir != None and "<rundir>" in dbpath:
@@ -89,7 +92,7 @@ def main( nmin, nmax, cont,
             w = RandomWalker( walkerid=i, nsteps = maxsteps, 
                               dump_training = dump_training,
                               dbpath=dbpath, cheatcode=cheatcode, select=select, 
-                              rundir=rundir, nevents=nevents )
+                              rundir=rundir, nevents=nevents, do_combine = do_combine )
             walkers.append ( w )
         elif pfile.endswith(".hi") or pfdile.endswith(".pcl"):
             nstates = len(states )
@@ -98,7 +101,7 @@ def main( nmin, nmax, cont,
             w = RandomWalker.fromProtoModel ( states[ctr], strategy = "aggressive",
                     walkerid = i, nsteps = maxsteps, dump_training=dump_training, 
                     expected = False, select = select, dbpath = dbpath, 
-                    rundir = rundir )
+                    rundir = rundir, do_combine = do_combine )
             walkers.append ( w )
         else:
             nstates = len(states )
@@ -107,7 +110,8 @@ def main( nmin, nmax, cont,
             w = RandomWalker.fromDictionary ( states[ctr], nsteps = maxsteps, 
                     strategy = "aggressive", walkerid = i, 
                     dump_training=dump_training, dbpath = dbpath, expected = False, 
-                    select = select, rundir = rundir, nevents = nevents )
+                    select = select, rundir = rundir, nevents = nevents,
+                    do_combine = do_combine )
             walkers.append ( w )
     startWalkers ( walkers, seed=seed, catchem=catchem )
 

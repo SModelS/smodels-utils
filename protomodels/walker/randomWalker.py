@@ -31,7 +31,8 @@ class RandomWalker:
                    dump_training = False, cheatcode = 0,
                    dbpath = "./database.pcl", expected = False,
                    select = "all", catch_exceptions = True,
-                   rundir = None, nevents = 100000 ):
+                   rundir = None, nevents = 100000,
+                   do_combine = False ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform, negative is infinity
         :param cheatcode: cheat mode. 0 is no cheating, 1 is with ranges, 2
@@ -40,6 +41,8 @@ class RandomWalker:
         :param select: select only subset of results (all for all, em for efficiency maps only, ul for upper limits only, alternatively select for txnames via e.g. "txnames:T1,T2"
         :param catch_exceptions: should we catch exceptions
         :param nevents: number of MC events when computing cross-sections
+        :param do_combine: if true, then also perform combinations, either via
+                           simplified likelihoods or via pyhf
         """
         if type(walkerid) != int or type(nsteps) != int or type(strategy)!= str:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
@@ -51,7 +54,7 @@ class RandomWalker:
 
         #Initialize Predictor
         self.predictor =  Predictor( self.walkerid, dbpath=dbpath,
-                              expected=expected, select=select )
+                              expected=expected, select=select, do_combine=do_combine )
 
         #Initialize Hiscore (with access to the predictor)
         self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.hi" % ( self.rundir, walkerid ),
@@ -108,9 +111,10 @@ class RandomWalker:
                    walkerid=0, dump_training = False,
                    dbpath="<rundir>/database.pcl", expected = False,
                    select = "all", catch_exceptions = True, keep_meta = True,
-                   rundir = None):
-        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected, select=select,
-                   catch_exceptions = catch_exceptions, rundir = rundir )
+                   rundir = None, do_combine = False ):
+        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected,
+                   select=select, catch_exceptions = catch_exceptions, rundir = rundir,
+                   do_combine = do_combine )
         ret.manipulator.M = protomodel
         ret.manipulator.setWalkerId ( walkerid )
         ret.manipulator.backupModel()
@@ -126,9 +130,10 @@ class RandomWalker:
                    walkerid=0, dump_training = False,
                    dbpath="<rundir>/database.pcl", expected = False,
                    select = "all", catch_exceptions = True, keep_meta = True,
-                   rundir = None, nevents = 100000):
-        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected, select=select,
-                   catch_exceptions = catch_exceptions, rundir = rundir, nevents = nevents )
+                   rundir = None, nevents = 100000, do_combine = False ):
+        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected,
+                   select=select, catch_exceptions = catch_exceptions, rundir = rundir,
+                   nevents = nevents, do_combine = do_combine )
         ret.manipulator.M = ProtoModel( walkerid, keep_meta, \
                 dbversion = ret.predictor.database.databaseVersion )
         ret.manipulator.initFromDict ( dictionary )

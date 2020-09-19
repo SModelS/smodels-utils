@@ -50,7 +50,7 @@ def startServer ( rundir, dry_run, time ):
         print ( "returned: %s" % a )
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
-                cheatcode, rundir, maxsteps, select ):
+                cheatcode, rundir, maxsteps, select, do_combine ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -64,8 +64,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param cheatcode: in case we wish to start with a cheat model
     :param rundir: the run directory
     :param maxsteps: max number of steps
-    :param select: select for certain results, e.g. "all", "ul", "em", 
+    :param select: select for certain results, e.g. "all", "ul", "em",
                    "txnames:T1,T2"
+    :param do_combine: if true, then also perform combinations, either via
+                        simplified likelihoods or via pyhf
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -81,8 +83,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, select='%s' )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps, select ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, select='%s', do_combine=%s )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps, select, do_combine ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     Dir = getDirname ( rundir )
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
@@ -94,7 +96,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     #remove ( tf, keep )
     #remove ( runner, keep )
-    
+
     ram = max ( 7000, 4500. * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
@@ -458,12 +460,16 @@ def logCall ():
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
-    argparser.add_argument ( '-q','--query', help='query status, dont actually run (use -M to query repeatedly)',
-                             action="store_true" )
+    argparser.add_argument ( '-q','--query', 
+            help='query status, dont actually run (use -M to query repeatedly)',
+            action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
-    argparser.add_argument ( '-k','--keep', help='keep the shell scripts that are being run, do not remove them afters',
-                             action="store_true" )
+    argparser.add_argument ( '-k','--keep', 
+            help='keep the shell scripts that are being run, do not remove them afters',
+            action="store_true" )
+    argparser.add_argument ( '--do_combine', 
+            help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
     argparser.add_argument ( '-s','--server', help='start the database server for rundir',
@@ -506,7 +512,8 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
                         type=int, default=0 )
-    argparser.add_argument ( '-N', '--nmax', nargs='?', help='maximum worker id. Zero means nmin + 1. [0]',
+    argparser.add_argument ( '-N', '--nmax', nargs='?', 
+                        help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
@@ -517,7 +524,7 @@ def main():
                         type=str, default="" )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking ["cms_sus_16_033,atlas_susy_2016_07"]',
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
-    argparser.add_argument ( '-R', '--rundir', 
+    argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
@@ -612,7 +619,7 @@ def main():
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select )
+                            args.select, args.do_combine )
             else:
                 import multiprocessing
                 ## nwalkers is the number of jobs per process
