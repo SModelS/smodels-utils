@@ -227,7 +227,7 @@ class Predictor:
             if allpreds:
                 combpreds = theoryPredictionsFor ( expRes, topos,
                                                    useBestDataset=False,
-                                                   combinedResults=False )
+                                                   combinedResults=self.do_combine )
                 if combpreds != None:
                     for c in combpreds:
                         predictions.append ( c )
