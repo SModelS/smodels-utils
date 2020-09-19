@@ -632,7 +632,7 @@ def main():
                     imax = imin + nwalkers
                     p = multiprocessing.Process ( target = runOneJob,
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
-                                     args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select ) )
+                                     args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select, args.do_combine ) )
                     jobs.append ( p )
                     p.start()
 
