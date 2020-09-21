@@ -259,13 +259,13 @@ class Predictor:
 
     def printPredictions ( self ):
         """ if self.predictions exists, pretty print them """
-        print ( "[predictor] predictions:" )
         if hasattr ( self, "predictions" ):
+            print ( "[predictor] all predictions (for combiner):" )
             for p in self.predictions:
                 print ( " - %s %s, %s %s" % \
                         ( p.analysisId(), p.dataType(), p.dataset.dataInfo.dataId, p.txnames ) )
         if hasattr ( self, "bestpreds" ):
-            print ( "[predictor] best preds:" )
+            print ( "[predictor] best SR predictions (for critic):" )
             for p in self.bestpreds:
                 print ( " - %s %s, %s %s" % \
                         ( p.analysisId(), p.dataType(), p.dataset.dataInfo.dataId, p.txnames ) )
