@@ -165,7 +165,7 @@ class Manipulator:
             col = colorama.Fore.GREEN
         else:
             self.highlight ( "red", "I think we called highlight without msg type" )
-        print ( "%s[%s-%s] %s%s" % ( col, module, 
+        print ( "%s[%s-%s] %s%s" % ( col, module,
             time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
         self.log ( *args )
 
@@ -200,7 +200,7 @@ class Manipulator:
         self.pprint ( f"dont understand content of file {filename}" )
 
     def diff ( self, other ):
-        """ diff between our protomodel and <other> protomodel 
+        """ diff between our protomodel and <other> protomodel
         :returns: dictionary of differences
         """
         ret = {}
@@ -423,35 +423,42 @@ class Manipulator:
                 if not ppair in self.M.ssmultipliers:
                     self.M.ssmultipliers[ppair] = 1.0
 
-    def describe ( self ):
-        """ lengthy description of protomodel """
+    def describe ( self, all=False ):
+        """ lengthy description of protomodel
+        :param all: if true, list all theory preds
+        """
         sK = str(self.M.K)
-        if type(sK)==float:
+        try:
             sK="%1.2f" % self.M.K
+        except:
+            pass
         print( '\nK = %s, Z = %1.2f, muhat = %1.2f, mumax = %s' % \
                ( sK,self.M.Z,self.M.muhat,self.M.mumax) )
-        print('\t Best Combo:')
+        print('  * Best Combo:')
         for tp in self.M.bestCombo:
             if tp.dataset.dataInfo.dataType == 'efficiencyMap':
-                print('\t\t',tp.expResult.globalInfo.id,tp.txnames,
+                print('      - ',tp.expResult.globalInfo.id,tp.txnames,
                              tp.dataset.dataInfo.dataId,
                       'obsN=%d' % tp.dataset.dataInfo.observedN,
                       'expBG=%.2f+/-%.2f' % ( tp.dataset.dataInfo.expectedBG,
                                               tp.dataset.dataInfo.bgError ),
                       'pred=',tp.xsection.value, 'UL =',tp.getUpperLimit() )
             else:
-                print('\t\t',tp.expResult.globalInfo.id,tp.txnames,
+                print('        ',tp.expResult.globalInfo.id,tp.txnames,
                              tp.dataset.dataInfo.dataId,
                       'pred=%s, UL=%s' % ( tp.xsection.value, tp.getUpperLimit()) )
 
-        print('\t Constraints:')
+        print('  * Constraints:')
         for tp in sorted( self.M.tpList, key = lambda x: x[0], reverse=True ):
-            if tp[0] < 1.0: continue
-            print('\t\t r = %1.2f' % tp[0],tp[2].expResult.globalInfo.id,
+            if not all and tp[0] < 1.0: continue
+            eUL = "no ULexp"
+            if type(tp[2].expectedUL) != type(None):
+                eUL = "UL_exp=%1.2f" % tp[2].expectedUL.asNumber(fb)
+            print('     - r=%1.2f' % tp[0],tp[2].expResult.globalInfo.id,
                                      tp[2].dataset.dataInfo.dataType,tp[2].txnames,
-                  'theory xsec =  %1.2f, UL = %1.2f, UL_exp = %1.2f' 
+                  'theory xsec=%1.2f, UL=%1.2f, %s'
                   %(tp[2].xsection.value.asNumber(fb),tp[2].upperLimit.asNumber(fb),
-                    tp[2].expectedUL.asNumber(fb)))
+                    eUL))
 
     def rescaleSignalBy ( self, s ):
         """ multiply the signal strength multipliers with muhat"""
