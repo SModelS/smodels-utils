@@ -427,13 +427,17 @@ class Manipulator:
         """ lengthy description of protomodel
         :param all: if true, list all theory preds
         """
-        sK = str(self.M.K)
+        sK, sZ = str(self.M.K), str(self.M.Z)
         try:
             sK="%1.2f" % self.M.K
         except:
             pass
-        print( '\nK = %s, Z = %1.2f, muhat = %1.2f, mumax = %s' % \
-               ( sK,self.M.Z,self.M.muhat,self.M.mumax) )
+        try:
+            sZ="%1.2f" % self.M.Z
+        except:
+            pass
+        print( '\nK = %s, Z = %s, muhat = %1.2f, mumax = %s' % \
+               ( sK, sZ, self.M.muhat, self.M.mumax ) )
         print('  * Best Combo:')
         for tp in self.M.bestCombo:
             if tp.dataset.dataInfo.dataType == 'efficiencyMap':
