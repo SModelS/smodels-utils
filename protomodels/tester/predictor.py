@@ -152,17 +152,22 @@ class Predictor:
         if hasattr ( self, "predictions" ):
             del self.predictions ## make sure we dont accidentally use old preds
 
-        #Create SLHA file (for running SModelS)
+        # Create SLHA file (for running SModelS)
         slhafile = protomodel.createSLHAFile()
 
-        #First run SModelS using all results and considering only the best signal region.
+        # First run SModelS using all results and considering only the best signal region.
+        # thats the run for the critic
         bestpreds = self.runSModelS( slhafile, sigmacut,  allpreds=False,
                                            llhdonly=False )
-        #Extract  the relevant prediction information and store in the protomodel:
+
+        if keep_predictions:
+            self.bestpreds = bestpreds
+        # Extract the relevant prediction information and store in the protomodel:
         self.updateModelPredictions(protomodel,bestpreds)
         # self.log ( "model is excluded? %s" % str(protomodel.excluded) )
 
-        #Compute the maximum allowed (global) mu value given the r-values stored in protomodel
+        # Compute the maximum allowed (global) mu value given the r-values 
+        # stored in protomodel
         protomodel.mumax = self.getMaxAllowedMu(protomodel)
 
         # now use all prediction with likelihood values to compute the Z of the model
@@ -193,6 +198,13 @@ class Predictor:
         return True
 
     def runSModelS(self, inputFile, sigmacut, allpreds, llhdonly):
+        """ run smodels proper.
+        :param inputFile: the input slha file
+        :param sigmacut: the cut on the topology weights, typically 0.02*fb
+        :param allpreds: if true, return all predictions of analyses, else
+                         only best signal region
+        :param llhdonly: if true, return only results with likelihoods
+        """
 
         if not os.path.exists ( inputFile ):
             self.pprint ( "error, cannot find inputFile %s" % inputFile )
@@ -205,6 +217,7 @@ class Predictor:
         # self.log ( "Now decomposing" )
         topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
         self.log ( "decomposed model into %d topologies." % len(topos) )
+            
 
         if allpreds:
             bestDataSet=False
@@ -212,7 +225,6 @@ class Predictor:
         else:
             bestDataSet=True
             combinedRes=self.do_combine
-
 
         preds = []
         # self.log ( "start getting preds" )
@@ -244,6 +256,14 @@ class Predictor:
         self.log ( "returning %d predictions, %s%s" % \
                    (len(preds),sap, sllhd ) )
         return preds
+
+    def printPredictions ( self ):
+        """ if self.predictions exists, pretty print them """
+        if not hasattr ( self, "predictions" ):
+            return
+        print ( "[predictor] predictions:" )
+        for p in self.predictions:
+            print ( " - %s %s, %s" % ( p.analysisId(), p.dataType(), p.txnames ) )
 
     def updateModelPredictions(self, protomodel, predictions):
         """ Extract information from list of theory predictions and store in the protomodel.
