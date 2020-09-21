@@ -259,11 +259,16 @@ class Predictor:
 
     def printPredictions ( self ):
         """ if self.predictions exists, pretty print them """
-        if not hasattr ( self, "predictions" ):
-            return
         print ( "[predictor] predictions:" )
-        for p in self.predictions:
-            print ( " - %s %s, %s" % ( p.analysisId(), p.dataType(), p.txnames ) )
+        if hasattr ( self, "predictions" ):
+            for p in self.predictions:
+                print ( " - %s %s, %s %s" % \
+                        ( p.analysisId(), p.dataType(), p.dataset.dataInfo.dataId, p.txnames ) )
+        if hasattr ( self, "bestpreds" ):
+            print ( "[predictor] best preds:" )
+            for p in self.bestpreds:
+                print ( " - %s %s, %s %s" % \
+                        ( p.analysisId(), p.dataType(), p.dataset.dataInfo.dataId, p.txnames ) )
 
     def updateModelPredictions(self, protomodel, predictions):
         """ Extract information from list of theory predictions and store in the protomodel.
