@@ -6,7 +6,8 @@ expected from background, by sampling the background model. """
 
 # https://link.springer.com/content/pdf/10.1007/JHEP02(2015)004.pdf
 
-import copy, os, sys, time, subprocess, math
+import copy, os, sys, time, subprocess, math, numpy
+import scipy.spatial
 sys.path.insert( 0, "../" )
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
 from scipy import stats
@@ -547,6 +548,14 @@ class ExpResModifier:
         self.log ( "done faking the backgrounds" )
         return ret
 
+    def cleanTxNameData ( self, txnd ):
+        txnd.y_values=numpy.array ( txnd.y_values, dtype=numpy.float32 )
+            
+        if txnd.dimensionality == 1:
+            return txnd
+        txnd.tri._points = numpy.array ( txnd.tri._points, dtype=numpy.float32 )
+        return txnd
+
     def filter ( self, outfile, nofastlim, onlyvalidated, nosuperseded,
                        remove_orig ):
         """ filter the list fo experimental results.
@@ -601,13 +610,16 @@ class ExpResModifier:
                         delattr ( er.globalInfo, label )
                 for iD,ds in enumerate(er.datasets):
                     for it,txn in enumerate(ds.txnameList):
+                        txn.txnameData = self.cleanTxNameData ( txn.txnameData )
                         for label in [ "figureUrl", "dataUrl" ]:
                             if hasattr ( txn, label ):
                                 delattr ( txn, label )
                         if hasattr ( txn.txnameData, "origdata" ):
                             del er.datasets[iD].txnameList[it].txnameData.origdata
-                        if txn.txnameDataExp != None and hasattr ( txn.txnameDataExp, "origdata" ):
-                            del er.datasets[iD].txnameList[it].txnameDataExp.origdata
+                        if txn.txnameDataExp != None:
+                            txn.txnameDataExp = self.cleanTxNameData ( txn.txnameDataExp )
+                            if hasattr ( txn.txnameDataExp, "origdata" ):
+                                del er.datasets[iD].txnameList[it].txnameDataExp.origdata
             if not addThisOne:
                 continue
             newList.append ( er )
