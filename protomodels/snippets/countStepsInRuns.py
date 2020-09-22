@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
 from protomodels.tools.updateHiscores import countSteps
-import glob, os, colorama, time
+import glob, os, colorama, time, argparse
 
 def main():
-    Dirs = glob.glob ( "rundir.*/" )
+    argparser = argparse.ArgumentParser(
+        description='count the number of finished jobs in protomodels production' )
+    argparser.add_argument ( '-p', '--pattern', type=str, default="", 
+        help="show only the ones that contain <pattern>" )
+    args = argparser.parse_args()
+    Dirs = glob.glob ( f"rundir.{args.pattern}*/" )
     oldDict = {}
     t0 = time.time()
     oldt = t0
