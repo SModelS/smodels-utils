@@ -909,9 +909,12 @@ class Manipulator:
             elif pid == pids[1] and pids[0] in unfrozen:
                 minMass = self.M.masses[pids[0]] #Do not allow for masses below the ligher state
 
-        #If the particle is the LSP, make sure its mass remains the lightest:
-        if pid == self.M.LSP and len(unfrozen) > 1:
-            maxMass = min([self.M.masses[p] for p in unfrozen if p != self.M.LSP])
+        #If the particle is the LSP, make sure its mass remains the lightest, but relax the lower limit
+        if pid == self.M.LSP:
+            minMass = 10.0
+            if len(unfrozen) > 1:
+                maxMass = min([self.M.masses[p] for p in unfrozen if p != self.M.LSP])
+
 
         ret = self.randomlyChangeMassOf ( pid, dx=dx, minMass=minMass, maxMass=maxMass )
 
