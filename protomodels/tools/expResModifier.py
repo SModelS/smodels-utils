@@ -595,8 +595,15 @@ class ExpResModifier:
             if remove_orig:
                 from smodels.experiment.txnameObj import TxNameData
                 TxNameData._keep_values = False
+                for label in [ "prettyName", "url", "arxiv", "publication", "implementedBy",\
+                               "lastUpdate", "contact" ]:
+                    if hasattr ( er.globalInfo, label ):
+                        delattr ( er.globalInfo, label )
                 for iD,ds in enumerate(er.datasets):
                     for it,txn in enumerate(ds.txnameList):
+                        for label in [ "figureUrl", "dataUrl" ]:
+                            if hasattr ( txn, label ):
+                                delattr ( txn, label )
                         if hasattr ( txn.txnameData, "origdata" ):
                             del er.datasets[iD].txnameList[it].txnameData.origdata
                         if txn.txnameDataExp != None and hasattr ( txn.txnameDataExp, "origdata" ):
