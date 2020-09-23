@@ -191,13 +191,6 @@ class ProtoModel:
 
         return self._stored_xsecs
 
-    def needsMassGap ( self, mother, daughter ):
-        """ a small fix for now, we check if the mass gaps are fulfilled. """
-        mother, daughter = abs(mother), abs(daughter)
-        mstop = 172.
-        if mother == 1000006 and daughter in [ 1000022, 1000023, 1000021 ]:
-            return mstop 
-
     def getOpenChannels(self,pid):
         """get the list of open decay channels for particle pid. Open channels are
         the decays to unfrozen particles and to lighter particles.
