@@ -64,10 +64,15 @@ def countSteps( printout = True, writeSubmitFile = False ):
     keys = list ( steps.keys() )
     keys.sort()
     tots = 0
+    finished = []
     for k in keys:
         tots += steps[k]
-        if printout:
-            print ( k, steps[k] )
+        if printout and steps[k] < 1000:
+            print ( "walker %d: %d" % ( k, steps[k] ) )
+        if steps[k] == 1000:
+            finished.append ( k )
+    if printout and len(finished)>0:
+        print ( "Finished: %s" % ",".join( list(map(str,finished ) ) ) )
     if printout:
         print ( f"we have {len(keys)} entries, total of {tots} steps." )
     if writeSubmitFile:

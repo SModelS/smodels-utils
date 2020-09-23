@@ -188,42 +188,49 @@ class Hiscore:
                   .analysisContributions
         """
 
-        self.pprint ( "Now computing analysis contributions" )
-        self.pprint ( "Recompute the score. Old one at K=%.2f, Z=%.2f" % \
-                      ( manipulator.M.K, manipulator.M.Z ) )
-        contributionsZ = {}
-        contributionsK = {}
-        combiner = Combiner()
-        dZtot, dKtot = 0., 0.
-        bestCombo = copy.deepcopy ( manipulator.M.bestCombo )
-        prior = combiner.computePrior ( manipulator.M )
-        for ctr,pred in enumerate(bestCombo):
-            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
-            Z, muhat_ = combiner.getSignificance ( combo )
-            K = combiner.computeK ( Z, prior )
-            #dZ = manipulator.M.Z - Z
-            #dK = manipulator.M.K - K
-            #dZtot += dZ
-            #dKtot += dK
-            # contributionsZ[ ctr ] = Z
-            contributionsK [ ctr ] = K
-        """
-        for k,v in contributionsZ.items():
-            percZ = (manipulator.M.Z-v) / dZtot
-            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( manipulator.M.bestCombo[k].analysisId(), manipulator.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
-            contributionsZ[ k ] = percZ
-        for k,v in contributionsK.items():
-            mK = manipulator.M.K
-            # percK = (manipulator.M.K-v) / dKtot
-            # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributionsK[ k ] = mK
-            # contributionsK[ k ] = percK
-        """
-        contrsWithNames = {}
-        for k,v in contributionsK.items():
-            contrsWithNames [ manipulator.M.bestCombo[k].analysisId() ] = v
-        manipulator.M.analysisContributions = contrsWithNames
-        self.pprint ( "stored %d analyses contributions" % len(manipulator.M.analysisContributions) )
+        try:
+            self.pprint ( "Now computing analysis contributions" )
+            self.pprint ( "Recompute the score. Old one at K=%.2f, Z=%.2f" % \
+                          ( manipulator.M.K, manipulator.M.Z ) )
+            contributionsZ = {}
+            contributionsK = {}
+            combiner = Combiner()
+            dZtot, dKtot = 0., 0.
+            bestCombo = copy.deepcopy ( manipulator.M.bestCombo )
+            self.pprint ( "we have %d entries in best combo" % len(bestCombo) )
+            prior = combiner.computePrior ( manipulator.M )
+            self.pprint ( "the prior is %s" % prior )
+            for ctr,pred in enumerate(bestCombo):
+                combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
+                Z, muhat_ = combiner.getSignificance ( combo )
+                K = combiner.computeK ( Z, prior )
+                self.pprint ( "K for %d is %s" % ( ctr, K ) )
+                #dZ = manipulator.M.Z - Z
+                #dK = manipulator.M.K - K
+                #dZtot += dZ
+                #dKtot += dK
+                # contributionsZ[ ctr ] = Z
+                contributionsK [ ctr ] = K
+            """
+            for k,v in contributionsZ.items():
+                percZ = (manipulator.M.Z-v) / dZtot
+                self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( manipulator.M.bestCombo[k].analysisId(), manipulator.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
+                contributionsZ[ k ] = percZ
+            for k,v in contributionsK.items():
+                mK = manipulator.M.K
+                # percK = (manipulator.M.K-v) / dKtot
+                # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+                contributionsK[ k ] = mK
+                # contributionsK[ k ] = percK
+            """
+            contrsWithNames = {}
+            for k,v in contributionsK.items():
+                self.pprint ( "contributionsK of %s reads %s" % ( k, v ) )
+                contrsWithNames [ manipulator.M.bestCombo[k].analysisId() ] = v
+            manipulator.M.analysisContributions = contrsWithNames
+            self.pprint ( "stored %d analyses contributions" % len(manipulator.M.analysisContributions) )
+        except Exception as e:
+            self.pprint ( "in computeAnalysisContributions caught %s" % str(e) )
 
     def demote ( self, i ):
         """ demote everything from i+1 on,

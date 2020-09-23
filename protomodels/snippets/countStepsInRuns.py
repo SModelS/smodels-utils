@@ -49,7 +49,7 @@ def main():
             line = "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET )
         if n < 50000 and nold == n and dt > 1200:
             line = "%s%s%s" % ( colorama.Fore.RED, line, colorama.Fore.RESET )
-        if n < 50000 and nold == n:
+        if n < 50000 and nold == n and dt <= 1200:
             line = "%s%s%s" % ( colorama.Fore.YELLOW, line, colorama.Fore.RESET )
         if nold != None:
             line += " (was %5d)" % nold

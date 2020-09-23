@@ -97,7 +97,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
 
-    ram = max ( 7000, 4500. * ( jmax - jmin ) )
+    ram = max ( 7500, 4500. * ( jmax - jmin ) )
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
         ram = max ( 4500, 3000. * ( jmax - jmin ) )
