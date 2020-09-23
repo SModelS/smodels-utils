@@ -223,7 +223,7 @@ class ProtoModel:
             ## skip if mass gap is not met
             meetsMassgaps=True
             for mgpid,mg in massgaps.items():
-                if mgpid in pidList and (mdaughter+mg) >= self.masses[pid]:
+                if mgpid in dpid and (mdaughter+mg) >= self.masses[pid]:
                     meetsMassgaps=False
                     break
             if not meetsMassgaps:
