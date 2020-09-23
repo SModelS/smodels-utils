@@ -208,7 +208,7 @@ class ProtoModel:
             if isinstance(dpid,(list,tuple)):
                 pidList = [abs(p) for p in dpid if abs(p) in self.particles]
             else:
-                self.highlight ( "warn", "a decay channel without the SM particle is specified: %s" % str(dpid) )
+                self.highlight ( "warn", "a decay channel without the SM particle is specified in %s:%s" % (pid,str(dpid) ) )
                 pidList = [abs(dpid)]
             #Skip decays to unfrozen particles
             if not all([dp in unfrozen for dp in pidList]):
@@ -223,9 +223,11 @@ class ProtoModel:
             ## skip if mass gap is not met
             meetsMassgaps=True
             for mgpid,mg in massgaps.items():
-                if mgpid in dpid and (mdaughter+mg) >= self.masses[pid]:
+                if type(dpid) in [ tuple, list] and mgpid in dpid and \
+                         (mdaughter+mg) >= self.masses[pid]:
                     meetsMassgaps=False
                     break
+            # print ( "pid", pid, "dpid", dpid, "dm", self.masses[pid]-mdaughter, "meets", meetsMassgaps )
             if not meetsMassgaps:
                 continue
 
