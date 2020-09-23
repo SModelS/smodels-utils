@@ -191,6 +191,13 @@ class ProtoModel:
 
         return self._stored_xsecs
 
+    def needsMassGap ( self, mother, daughter ):
+        """ a small fix for now, we check if the mass gaps are fulfilled. """
+        mother, daughter = abs(mother), abs(daughter)
+        mstop = 172.
+        if mother == 1000006 and daughter in [ 1000022, 1000023, 1000021 ]:
+            return mstop 
+
     def getOpenChannels(self,pid):
         """get the list of open decay channels for particle pid. Open channels are
         the decays to unfrozen particles and to lighter particles.
@@ -208,6 +215,7 @@ class ProtoModel:
             if isinstance(dpid,(list,tuple)):
                 pidList = [abs(p) for p in dpid if abs(p) in self.particles]
             else:
+                self.highlight ( "warn", "a decay channel without the SM particle is specified: %s" % str(dpid) )
                 pidList = [abs(dpid)]
             #Skip decays to unfrozen particles
             if not all([dp in unfrozen for dp in pidList]):
@@ -217,6 +225,17 @@ class ProtoModel:
             #Skip decays to heavier particles
             if mdaughter >= self.masses[pid]:
                 continue
+            massgaps = {  6: 169., 24: 76., 23: 86., 25: 118.,
+                         15: 1.7, 4: 1.0, 5: 4.0 } 
+            ## skip if mass gap is not met
+            meetsMassgaps=True
+            for mgpid,mg in massgaps.items():
+                if mgpid in pidList and (mdaughter+mg) >= self.masses[pid]:
+                    meetsMassgaps=False
+                    break
+            if not meetsMassgaps:
+                continue
+
             openChannels.add ( dpid )
 
         openChannels = list(openChannels)
