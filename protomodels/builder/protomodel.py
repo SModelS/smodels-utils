@@ -203,6 +203,12 @@ class ProtoModel:
         #Get list of possible decay channels:
         openChannels = set()
         unfrozen = self.unFrozenParticles()
+        smMasses = {  6: 173., 24: 81., 23: 92., 25: 125.,
+                         15: 1.77, 4: 1.2, 5: 5.0 }
+        #Get all relevant masses
+        allMasses = dict([[pid,mass] for pid,mass in self.masses.items()])
+        allMasses.update(smMasses)
+
         for dpid in self.possibledecays[pid]:
             #Get the list of BSM particles in the decay:
             if isinstance(dpid,(list,tuple)):
@@ -214,21 +220,10 @@ class ProtoModel:
             if not all([dp in unfrozen for dp in pidList]):
                 continue
             #Get total daughter mass (it should only be a single mass)
-            mdaughter = sum([self.masses[p] for p in pidList])
+            mdaughter = sum([allMasses[abs(p)] for p in dpid if abs(p) in allMasses])
+
             #Skip decays to heavier particles
             if mdaughter >= self.masses[pid]:
-                continue
-            massgaps = {  6: 169., 24: 76., 23: 86., 25: 118.,
-                         15: 1.7, 4: 1.0, 5: 4.0 } 
-            ## skip if mass gap is not met
-            meetsMassgaps=True
-            for mgpid,mg in massgaps.items():
-                if type(dpid) in [ tuple, list] and mgpid in dpid and \
-                         (mdaughter+mg) >= self.masses[pid]:
-                    meetsMassgaps=False
-                    break
-            # print ( "pid", pid, "dpid", dpid, "dm", self.masses[pid]-mdaughter, "meets", meetsMassgaps )
-            if not meetsMassgaps:
                 continue
 
             openChannels.add ( dpid )
