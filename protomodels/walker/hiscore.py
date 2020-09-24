@@ -104,13 +104,13 @@ class Hiscore:
         if m.M.K > Kold:
             ## we have a new hiscore?
             ## compute the particle contributions
-            if not hasattr ( m.M, "particleContributions" ):
-                self.pprint ( "particleContributions missing, compute them!" )
-                self.computeParticleContributions(m)
+            #if not hasattr ( m.M, "particleContributions" ):
+            #    self.pprint ( "particleContributions missing, compute them!" )
+            #    self.computeParticleContributions(m)
             ## compute the analysis contributions
-            if not hasattr ( m.M, "analysisContributions" ):
-                self.pprint ( "analysisContributions missing, compute them!" )
-                self.computeAnalysisContributions(m)
+            #if not hasattr ( m.M, "analysisContributions" ):
+            #    self.pprint ( "analysisContributions missing, compute them!" )
+            #    self.computeAnalysisContributions(m)
             protomodel = m.M
             protomodel.getXsecs() #Make sure cross-sections have been computed
 
