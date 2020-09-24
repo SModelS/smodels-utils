@@ -203,6 +203,7 @@ class Hiscore:
             for ctr,pred in enumerate(bestCombo):
                 self.pprint ( "Now starting to compute for %d" % ctr )
                 combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
+                self.pprint ( "deep copy still worked: %d" % (len(combo)) )
                 Z, muhat_ = combiner.getSignificance ( combo )
                 self.pprint ( "Z for %d is %s" % ( ctr, Z ) )
                 K = combiner.computeK ( Z, prior )
