@@ -201,28 +201,15 @@ class Hiscore:
             prior = combiner.computePrior ( manipulator.M )
             self.pprint ( "the prior is %s" % prior )
             for ctr,pred in enumerate(bestCombo):
+                self.pprint ( "Now starting to compute for %d" % ctr )
                 combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
                 Z, muhat_ = combiner.getSignificance ( combo )
+                self.pprint ( "Z for %d is %s" % ( ctr, Z ) )
                 K = combiner.computeK ( Z, prior )
                 self.pprint ( "K for %d is %s" % ( ctr, K ) )
-                #dZ = manipulator.M.Z - Z
-                #dK = manipulator.M.K - K
-                #dZtot += dZ
-                #dKtot += dK
-                # contributionsZ[ ctr ] = Z
                 contributionsK [ ctr ] = K
-            """
-            for k,v in contributionsZ.items():
-                percZ = (manipulator.M.Z-v) / dZtot
-                self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( manipulator.M.bestCombo[k].analysisId(), manipulator.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
-                contributionsZ[ k ] = percZ
-            for k,v in contributionsK.items():
-                mK = manipulator.M.K
-                # percK = (manipulator.M.K-v) / dKtot
-                # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-                contributionsK[ k ] = mK
-                # contributionsK[ k ] = percK
-            """
+            self.pprint ( "finished computing contributions" )
+
             contrsWithNames = {}
             for k,v in contributionsK.items():
                 self.pprint ( "contributionsK of %s reads %s" % ( k, v ) )
