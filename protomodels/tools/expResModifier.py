@@ -610,14 +610,14 @@ class ExpResModifier:
                         delattr ( er.globalInfo, label )
                 for iD,ds in enumerate(er.datasets):
                     for it,txn in enumerate(ds.txnameList):
-                        txn.txnameData = self.cleanTxNameData ( txn.txnameData )
+                        #txn.txnameData = self.cleanTxNameData ( txn.txnameData )
                         for label in [ "figureUrl", "dataUrl" ]:
                             if hasattr ( txn, label ):
                                 delattr ( txn, label )
                         if hasattr ( txn.txnameData, "origdata" ):
                             del er.datasets[iD].txnameList[it].txnameData.origdata
                         if txn.txnameDataExp != None:
-                            txn.txnameDataExp = self.cleanTxNameData ( txn.txnameDataExp )
+                            #txn.txnameDataExp = self.cleanTxNameData ( txn.txnameDataExp )
                             if hasattr ( txn.txnameDataExp, "origdata" ):
                                 del er.datasets[iD].txnameList[it].txnameDataExp.origdata
             if not addThisOne:
