@@ -604,7 +604,7 @@ class ExpResModifier:
             if remove_orig:
                 from smodels.experiment.txnameObj import TxNameData
                 TxNameData._keep_values = False
-                for label in [ "prettyName", "url", "arxiv", "publication", "implementedBy",\
+                for label in [ "prettyName", "arxiv", "publication", "implementedBy",\
                                "lastUpdate", "contact" ]:
                     if hasattr ( er.globalInfo, label ):
                         delattr ( er.globalInfo, label )

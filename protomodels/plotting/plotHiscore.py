@@ -389,16 +389,16 @@ def anaNameAndUrl ( ana, forPdf=False, protomodel=None ):
     if type(ana)==str:
         for i in protomodel.bestCombo:
             url = ""
-            if i.analysisId() == ana:
+            if i.analysisId() == ana and hasattr ( i.dataset.globalInfo, "url" ):
                 url = i.dataset.globalInfo.url
                 break
         return "<a href=%s>%s</a>" % \
                ( url, ana )
     if type(ana)==TheoryPrediction:
+        if not hasattr ( ana.dataset.globalInfo, "url" ):
+            return ( ana.analysisId() )
         return "<a href=%s>%s</a>" % \
                ( ana.dataset.globalInfo.url, ana.analysisId() )
-    return "<a href=%s>%s</a>" % \
-           ( ana.globalInfo.url, ana.analysisId() )
 
 def writeIndexTex ( protomodel, texdoc ):
     """ write the index.tex file

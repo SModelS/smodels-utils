@@ -197,18 +197,18 @@ class Hiscore:
             combiner = Combiner()
             dZtot, dKtot = 0., 0.
             bestCombo = copy.deepcopy ( manipulator.M.bestCombo )
-            self.pprint ( "we have %d entries in best combo" % len(bestCombo) )
+            #self.pprint ( "we have %d entries in best combo" % len(bestCombo) )
             prior = combiner.computePrior ( manipulator.M )
-            self.pprint ( "the prior is %s" % prior )
+            #self.pprint ( "the prior is %s" % prior )
             for ctr,pred in enumerate(bestCombo):
-                self.pprint ( "Now starting to compute for %d" % ctr )
+                #self.pprint ( "Now starting to compute for %d" % ctr )
                 combo = bestCombo[:ctr]+bestCombo[ctr+1:]
                 # combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
-                self.pprint ( "deep copy still worked: %d" % (len(combo)) )
+                #self.pprint ( "deep copy still worked: %d" % (len(combo)) )
                 Z, muhat_ = combiner.getSignificance ( combo )
-                self.pprint ( "Z for %d is %s" % ( ctr, Z ) )
+                #self.pprint ( "Z for %d is %s" % ( ctr, Z ) )
                 K = combiner.computeK ( Z, prior )
-                self.pprint ( "K for %d is %s" % ( ctr, K ) )
+                #self.pprint ( "K for %d is %s" % ( ctr, K ) )
                 contributionsK [ ctr ] = K
             self.pprint ( "finished computing contributions" )
 
