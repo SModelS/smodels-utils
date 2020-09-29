@@ -5,6 +5,7 @@ from system.dataset import *
 from system.initnet import *
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb
+from readParameter import readParameterFile
 import os, sys, torch
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,8 +52,9 @@ def getInterpolTimeOnly(expres, topo):
 	T = []
 	for i in range(5):
 
-		sampleSize = 200
-		dataset = generateDataset(expres, topo, None, 0., 200, "regression", "cpu")
+		sampleSize = 2000
+		dataset = generateDataset(expres, topo, None, 0., sampleSize, "regression", "cpu")
+		sampleSize = len(dataset)
 
 		inputs = dataset.inputs.numpy()
 		dim = int(0.5*dataset.inputDimension)
@@ -103,24 +105,19 @@ def getSpeed(model, expres, topo, dataset):
 	
 
 
-def getTimings(expres, topo):
+def getTimings(model, txNameData, data):
 
-	fp = os.getcwd() + "/model.pth"
-
-	model = CumulativeModel(model_reg, model_cla)
-	torch.save(model, fp)
-
-	data = generateDataset(expres, topo, None, [0.,0.], 1000., "regression", "cpu")
-
-	model = torch.load(fp)
-	model.eval()
+	
 
 	data_i = []
 	data_p = []
 	for d in data:
 
-		m = [[d[0][0].item()*GeV, d[0][1].item()*GeV, d[0][2].item()*GeV], [d[0][3].item()*GeV, d[0][4].item()*GeV, d[0][5].item()*GeV]]
+		print(d)
+
+		#m = [[d[0][0].item()*GeV, d[0][1].item()*GeV, d[0][2].item()*GeV], [d[0][3].item()*GeV, d[0][4].item()*GeV, d[0][5].item()*GeV]]
 		#m= [[d[0][0].item()*GeV, d[0][1].item()*GeV], [d[0][2].item()*GeV, d[0][3].item()*GeV]]
+		m = [[d[0], (d[1], d[2])], [d[3], (d[4], d[5])]]
 
 		n = d[0]
 		data_i.append(m)
@@ -134,8 +131,8 @@ def getTimings(expres, topo):
 	for n in range(5):
 		t0 = time()
 		for m in data_i:
-			interpolate_GETTIMINGS(m, topo, expres)
-			#expres.getUpperLimitFor(txname=topo, mass=m)
+			#interpolate_GETTIMINGS(m, topo, expres)
+			txNameData.getValueFor(m)
 		T.append(time()-t0)
 	print("interpolation: %s +/- %sms" % (round(1000*np.mean(T)/len(data), 5), round(1000*np.std(T)/len(data), 5)))
 	
@@ -144,7 +141,7 @@ def getTimings(expres, topo):
 		t0 = time()
 		for m in data_p:
 			predict_GETTIMINGS(m, model)
-			#model_reg(m)
+			model(m)
 		T.append(time()-t0)
 	print("prediction: %s +/- %sms" % (round(1000*np.mean(T)/len(data), 5), round(1000*np.std(T)/len(data), 5)))
 	
@@ -225,6 +222,8 @@ if __name__=='__main__':
 			default = 'info', type = str)
            
 	args = ap.parse_args()
+	numeric_level = getattr(logging,args.log.upper(), None)
+	logger.setLevel(level=numeric_level)
     
 	if not os.path.isfile(args.parfile):
 		logger.error("Parameters file %s not found" %args.parfile)
@@ -232,32 +231,45 @@ if __name__=='__main__':
 		logger.info("Reading validation parameters from %s" %args.parfile)
 
 
-	parser = ConfigParser( inline_comment_prefixes=( ';', ) )
-	parser.read(args.parfile)
+	fileParameters = readParameterFile(logger, args.parfile)
 
-	#Control output level:
-	numeric_level = getattr(logging,args.log.upper(), None)
-	logger.setLevel(level=numeric_level)
-    
-	#Add smodels and smodels-database to path
-	smodelsPath = parser.get("path", "smodelsPath")
-	databasePath = parser.get("path", "databasePath")
-	sys.path.append(smodelsPath)
-	sys.path.append(databasePath)
-	from smodels.experiment.databaseObj import Database
+	netType = "regression"
 
-	#Select analysis and topologies for training
-	analysisID = parser.get("database", "analysis")
-	txName = parser.get("database", "txNames").split(",")[0]
+	parameters = {}
+	parameters["database"] 		 = {}
+	parameters["path"] 			 = fileParameters["path"]
+	parameters["dataset"] 		 = fileParameters["dataset"]
+	parameters["device"] 		 = fileParameters["device"]
+	parameters["analysis"] 		 = fileParameters["analysis"]
+	parameters["hyperParameter"] = fileParameters["hyperParameter"]
 
-	#Configure dataset generated for training
-	sampleSize = float(parser.get("dataset", "sampleSize"))
-	massRange = parser.get("dataset", "massRange").split(",")
-	massRange = [float(mR) for mR in massRange]
+	for analysisID in fileParameters["database"]["analysisID"]:
+		for txName in fileParameters["database"]["txName"]:
+			for daSel in fileParameters["database"]["dataselector"]:
+				for signalRegion in fileParameters["database"]["signalRegion"]:
 
+					parameters["database"]["analysisID"]   = analysisID
+					parameters["database"]["txName"]	   = txName
+					parameters["database"]["dataSelector"] = daSel
+					parameters["database"]["signalRegion"] = signalRegion
 
-	expres = Database(databasePath, progressbar = True)
-	expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
+					db = Database(parameters["path"]["database"])
+					expres = db.getExpResults(analysisIDs = analysisID, txnames = txName, dataTypes = daSel, useSuperseded = True, useNonValidated = True)[0]
 
-	getTimings(expres, txName)
+					txList = expres.getDataset(signalRegion).txnameList
+					for tx in txList:
+						if str(tx) == txName:
+							txNameData = tx.txnameData
+							break
+
+					parameters["database"]["expres"] = expres
+					parameters["database"]["txNameData"] = txNameData
+
+					datasetbuilder = DatasetBuilder(logger, parameters["database"], parameters["dataset"], parameters["device"])
+					validationSet = datasetbuilder.generateNewSet(netType, sampleSize = 10000)
+
+					model = loadModel(expres, txName)[netType]
+					model.eval()
+
+					getTimings(model, txNameData, validationSet)
 	#getPlot()

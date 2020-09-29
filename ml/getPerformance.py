@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class Performance():
 
-	def __init__(self, parameters, netType, showPlots = True, savePlots = True):
+	def __init__(self, parameters, netType, validationSet = None, showPlots = True, savePlots = True):
 
 		"""
 
@@ -54,7 +54,7 @@ class Performance():
 		self.showPlots = True
 		self.savePlots = True
 		self.netType = netType
-		self.model = loadModel(expres, txName)[netType]
+		self.model = loadModel(expres, txName)[netType].double()
 
 		# TEMPORARY replace databasePath
 		dbPath = expres.path
@@ -66,8 +66,10 @@ class Performance():
 		if not os.path.exists(self.savePath): os.makedirs(self.savePath)
 		# ---
 
-		datasetbuilder = DatasetBuilder(logger, self.paramDatabase, self.paramDataset, self.paramDevice["device"])
-		self.validationSet = datasetbuilder.generateNewSet(netType, sampleSize = 2000)
+		if validationSet == None:
+			datasetbuilder = DatasetBuilder(logger, self.paramDatabase, self.paramDataset, self.paramDevice["device"])
+			self.validationSet = datasetbuilder.generateNewSet(netType, sampleSize = 10000)
+		else: self.validationSet = validationSet
 
 
 	def evaluate(self):
@@ -81,7 +83,8 @@ class Performance():
 
 			self.error = torch.sqrt(MSErel(self.model(self.validationSet.inputs), self.validationSet.labels, reduction = None))
 			self.meanError = torch.mean(self.error).item()
-			self.getBins()
+			#self.getBins()
+			self.getEffBins()
 			self.validateRegression()
 
 		else:
@@ -164,6 +167,69 @@ class Performance():
 
 		fig.tight_layout()
 		if self.showPlots: plt.show()
+
+
+	def getEffBins(self, binNum = 15):
+
+		#binRange = max(self.validationSet.labels).item() / binNum  #250.
+		binRange = [10**(n-10) for n in range(binNum)]
+
+		errorBin = [[] for i in range(binNum)]
+		errorBinNum = [0 for i in range(binNum)]
+
+		for i in range(len(self.error)):
+
+			for n in range(binNum):
+				if self.validationSet.labels[i] < binRange[n] or n == binNum - 1:
+					errorBin[n].append(self.error[i].item())
+					break
+
+		mean, std = [], []
+		for i in range(binNum):
+			if len(errorBin[i]) != 0:
+				mean.append(np.mean(errorBin[i]))
+				std.append(np.std(errorBin[i]))
+			else:
+				mean.append(0)
+				std.append(0)
+
+		#for i, m in enumerate(mean):
+		#	if m < 1:
+		#		print(i,"\n---")
+		#		for e in errorBin[i]: print(e)
+
+
+		labels = []
+		for n in range(binNum):
+			if n == binNum - 1: r = ">" + str(binRange[n]) + " fb"
+			elif n == 0: r = "0 - " + str(binRange[n]) + " fb"
+			else: r = str(binRange[n-1]) + "-" + str(binRange[n]) + " fb"
+			labels.append("(" + r + ")" + " n=" + str(len(errorBin[n])))
+
+
+		#labels = ["n=" + str(round(s, 3)) for s in sumBin]
+		x = np.arange(len(errorBin))  # the label locations
+		width = 0.5
+
+		fig, ax = plt.subplots()
+		rects = ax.bar(x, mean, width, yerr=std)
+
+		ax.set_ylabel('mean error')
+		ax.set_title('mean error sorted by xsecs (n = %s)' % len(self.validationSet))
+		ax.set_xticks(x)
+		ax.set_xticklabels(labels, rotation=45, rotation_mode="anchor", ha="right")
+		#ax.legend()
+
+		for rect in rects:
+			height = round(rect.get_height(), 3)
+			ax.annotate('{}'.format(height),
+				xy=(rect.get_x() + rect.get_width() / 2, height), 
+				xytext=(0, 3),  # 3 points vertical offset
+				textcoords="offset points",
+				ha='center', va='bottom')
+
+		fig.tight_layout()
+		if self.showPlots: plt.show()
 		
 
 
@@ -177,20 +243,25 @@ class Performance():
 		predictions = self.model(self.validationSet.inputs)#.detach().tolist()
 		labels = self.validationSet.labels#.detach().tolist()
 
+
+		for inputs in self.validationSet.inputs[0:20]:
+			print(inputs)
+
 		yaxis = 1
 		if self.validationSet.inputDimension > 4:
 			if max(self.validationSet.inputs[2]) - min(self.validationSet.inputs[2]) > 20:
 				yaxis = 2
-		yaxis = 1 
-		'''REMOVE'''
 
-		#X = [np.exp(inputs[0].item()) for inputs in self.validationSet.inputs]
-		#Y = [np.exp(inputs[yaxis].item()) for inputs in self.validationSet.inputs]
+		#yaxis = 4 #1
+		#'''REMOVE'''
 
 		X = [inputs[0].item() for inputs in self.validationSet.inputs]
-		Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
+		Y = [inputs[4].item() for inputs in self.validationSet.inputs] #yaxis
 
-		
+		#Y = [l.item() for l in self.validationSet.labels]
+
+		zeroError = 0
+		bigErr = 0
 		E2 = []
 		for n in range(len(labels)):
 			l = labels[n].item()
@@ -198,27 +269,48 @@ class Performance():
 			#l = unscaleWidth(l - 0.1).asNumber(GeV)
 			#p = unscaleWidth(p - 0.1).asNumber(GeV)
 
-			if l == 1e-5:
-				l -= 1e-5
-				p -= 1e-5
-			if l < 1e-4: l = 0
-			if p < 1e-4: p = 0
-			#print(l, p)
-			#print("---")
+			#if l == 1e-5:
+			#	l -= 1e-5
+			#	p -= 1e-5
+			if l < 1e-6: l = 0
+			if p < 1e-6: p = 0
+
 			if l > 0:
 				e = np.sqrt((( p - l ) / l)**2)
-			else: e = p
-			#e = np.sqrt((l - p)**2)
-			if e > 1.: print(l,p)
-			E2.append(e)
+				#else: e = p	\t
+				#e = np.sqrt((l - p)**2) \t
 
-		meanError2 = np.mean(E2)* 100.
+				if e < 0.05: 
+					print(l,p)
+					bigErr += 1
+				E2.append(e) # \t
+			else:
+				if p != 0: zeroError += 1
+				E2.append(p)
+
+		meanError2 = np.mean(E2) * 100.
 		
 		#X = [inputs[0].item() for inputs in self.validationSet.inputs]
 		#Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
 		E = [e.item() for e in self.error]
 
 		
+		#Xd,Yd,Ed = [],[],[]
+		#for n, width in enumerate(Y):
+		#	if width < 1e-6:
+		#for n, err in enumerate(E2):
+		#	if err > 0.1:
+
+		#for n, label in enumerate(self.validationSet.labels):
+		#	if label < 1e-4:
+		#		Xd.append(X[n])
+		#		Yd.append(Y[n])
+		#		Ed.append(E2[n])
+
+		#meanEd = np.mean(Ed) * 100.
+		
+		print("SMOL ERROR: %s" %bigErr)
+		print("ZERO ERROR: %s" %zeroError)
 
 		plt.figure(2)
 		#plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, self.meanError*100.), fontsize=14)
@@ -228,6 +320,7 @@ class Performance():
 		#plt.ylabel("relative error")
 		#plt.scatter(X,E2)
 		plt.scatter(X,Y, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		#plt.scatter(Xd,Yd, c=Ed, cmap='rainbow', vmin=0, vmax=1)
 		plt.colorbar()
 		plt.tight_layout()
 

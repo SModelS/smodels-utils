@@ -8,7 +8,13 @@
 
 """
 
+import logging,sys,os
+import numpy,argparse
+import torch,random,copy
 
+FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+#logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
 
 #import subprocess
 #plt.switch_backend('agg')
@@ -17,9 +23,46 @@
 
 
 
-def makeHeuristicPredictions(database):
-	print("PLACEHOLDER")
-	return None
+def makeHeuristicPredictions(hyperParameter, netType):
+
+	hyperParamPredicted = copy.deepcopy(hyperParameter)
+
+	for key, value in hyperParameter.items():
+		if value == None or value == [None]:
+
+			if key == "optimizer":
+				newValue = "Adam"
+
+			if key == "batchSize":
+				newValue = 16
+			
+			elif key == "lossFunction":
+
+				if netType == "regression":
+					newValue = "MSErel"
+				else:
+					newValue = "BCE"
+
+			elif key == "rescaleMethod":
+				if netType == "regression":
+					newValue = "standardScore"
+				else: newValue = None
+
+			elif key == "learnRate":
+				newValue = 1e-3
+
+			elif key == "epochNum":
+
+				lr = hyperParameter["learnRate"]
+				if lr == None:
+					lr = 1e-3
+					hyperParamPredicted["learnRate"] = [lr]
+
+				newValue = 20 - int(20 * np.log10(lr))
+
+			hyperParamPredicted[key] = [newValue]
+
+	return hyperParamPredicted
 
 
 class TrainerWrapper():
@@ -42,6 +85,7 @@ class TrainerWrapper():
 
 		"""
 
+		self.parameters = parameters
 		self.paramPath = parameters["path"]
 		self.paramDatabase = parameters["database"]
 		self.paramDataset = parameters["dataset"]
@@ -78,6 +122,7 @@ class TrainerWrapper():
 		Set directories for any training outputs including the final model.
 		If 'outputPath' in parameter file was left blank, default expres database location
 		will be used as root folder.
+
 		"""
 
 		###################################################
@@ -122,19 +167,19 @@ class TrainerWrapper():
 
 		for netType in ["regression", "classification"]:
 			for key, value in self.hyperParameterRaw[netType].items():
-				if value == None:
+				if value == None or value == [None]:
 					missingParameters = True
 					break
 
-		if missingParameters:
-			timestamp = time()
-			logger.info("Missing hyperparameters found. Predicting optimal model architectures..")
-			heuristicParameters = makeHeuristicPredictions(self.database)
-			logger.info("Done. (%ss)" % (round(time() - timestamp, 3)))
+			if missingParameters:
+				timestamp = time()
+				logger.info("Missing hyperparameters found. Predicting optimal model architectures..")
+				heuristicParameters = makeHeuristicPredictions(self.hyperParameterRaw[netType], netType)
+				logger.info("Done. (%ss)" % (round(time() - timestamp, 3)))
 
-		for netType in ["regression", "classification"]:
 			for key, value in heuristicParameters.items():
-				if self.hyperParameterRaw[netType][key] == None:
+				missingValue = self.hyperParameterRaw[netType][key]
+				if missingValue == None or missingValue == [None]:
 					self.hyperParameterRaw[netType][key] = value
 
 
@@ -150,12 +195,10 @@ class TrainerWrapper():
 
 		self.dataset = {}
 
-		# TEMPORARY BAND-AID TO ONLY FOCUS ON ONE MODEL
 		if netType == "classification":
 			datasetFull = self.datasetBuilder.generateNewSet(netType, sampleSize = 100)
 		else:
 			datasetFull = self.datasetBuilder.generateNewSet(netType)
-
 		splitSet = datasetFull.split(self.paramDataset["sampleSplit"])
 		
 		self.dataset["full"] 		= datasetFull
@@ -176,7 +219,8 @@ class TrainerWrapper():
 		self._loadDatasetBuilder()
 		self._makeHeuristicPredictions()
 
-		for netType in ["regression"]: #, "classification"]:
+		### QUICK FIX TO FOCUS ON ONE MODEL ONLY ###
+		for netType in ["regression", "classification"]:
 
 			self._formatHyperParameter(netType)
 			logger.info("%s hyperparameter combination(s) loaded.." % len(self.hyperParameter[netType]))
@@ -196,18 +240,24 @@ class TrainerWrapper():
 			if self.paramAnalysis["lossPlot"]:
 				self.createLossPlot(netType)
 
+
+
 		self.combinedModel = NN_combined(self.modelTrainer["regression"].winner["model"], None) #self.modelTrainer["classification"].winner["model"])
 
 		logger.info("All done! Final network generated after %ss." % round(time()-t0, 3))
 
 		self.saveModel()
 
+		if True: #runPerformance:
+			validater = Performance(self.parameters, "regression", validationSet = self.dataset["validation"])
+			validater.evaluate()
+
 		existingModel = None # LoadModel(...)
 
 		#speedFactor = getSpeed(bestModel, expres, txName, trainerRegression.fullDataset)
 		#bestModel.setSpeedFactor(speedFactor)
 
-		#if runPerformance:
+		
 			#validateModel(model, expres, txName, massRange, sampleSize, netType, validationSet)
 
 
@@ -219,6 +269,7 @@ class TrainerWrapper():
 
 
 		"""
+		print("LOSSPLOT")
 
 		fullPath = self.outputDir["loss"] + self.paramDatabase["txName"] + "_" + netType + "_lossPlot.png" #.eps
 
@@ -421,7 +472,7 @@ class Trainer():
 
 		newDataset = Data(subset, self.inputDimension, self.device)
 		return newDataset
-
+	
 		###
 
 		relError = MSErel(self.model(self.fullDataset.inputs), self.fullDataset.labels, reduction = None)
@@ -437,7 +488,7 @@ class Trainer():
 		return newDataset
 
 
-	def runCurrentConfiguration(self, secondRun = False):
+	def runCurrentConfiguration(self, secondRun = True):
 
 		"""
 		Parent method of actual training. Handles training differencies between
@@ -450,24 +501,22 @@ class Trainer():
 			logger.error("No hyperparameter configuration specified for training.")
 			return
 
-		self.model = createNet(self.currentHyperParamConfig, self.datasetFull, self.netType).to(self.device)
+		self.model = createNet(self.currentHyperParamConfig, self.datasetFull, self.netType).double().to(self.device)
 		self.trainModel()
 
-		if secondRun:
+		if self.netType == "regression" and secondRun:
 			subset = self._getWrongPredictionsSubset()
 			logger.info("Rerunning training with new dataset: %s points" %len(subset))
 			self._rerunWithWrongPredictionSubset(subset)
 
-
-		if self.netType == "regression":
-			self.meanError = MSErel(self.model(self.validationSet.inputs), self.validationSet.labels)
-
-		else:
+		if self.netType == "classification":
 
 			predictions, labels = self.model(self.validationSet.inputs).detach().numpy(), self.validationSet.labels.detach().numpy()
 			self.model._delimiter = minimize(self._findDelimiter, 0.5, args=(predictions, labels), method="Powell").x.tolist()
-			lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
-			self.meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
+			#lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
+			#self.meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
+
+		self.meanError = getModelError(self.model, self.validationSet, self.netType)[0]
 		
 		logger.info("Done! Mean error on validation set: %s" %round(self.meanError.item(), 3))
 		self.logData.append([round(self.meanError.item(), 3), self.currentHyperParamConfig])
@@ -556,16 +605,10 @@ class Trainer():
 
 if __name__=='__main__':
 
-	import logging,sys,os
-	import numpy,argparse
-	import torch,random,copy
 	from readParameter import readParameterFile
 	from configparser import ConfigParser
 	from datetime import datetime
 	from time import time
-
-	FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
-	logger = logging.getLogger(__name__)
 
 	ap = argparse.ArgumentParser(description="Trains and finds best performing neural networks for database analyses via hyperparameter search")
 	ap.add_argument('-p', '--parfile', 
@@ -575,8 +618,11 @@ if __name__=='__main__':
 			default = 'info', type = str)
            
 	args = ap.parse_args()
+
+
 	numeric_level = getattr(logging,args.log.upper(), None)
 	logger.setLevel(level=numeric_level)
+	
     
 	if not os.path.isfile(args.parfile):
 		logger.error("Parameters file %s not found" %args.parfile)
@@ -585,20 +631,16 @@ if __name__=='__main__':
 
 	fileParameters = readParameterFile(logger, args.parfile)
 
-	
 	#import matplotlib.pyplot as plt
 	from system.dataset import *
 	from system.initnet import *
+	from system.auxiliaryFunctions import *
 	from getPerformance import *
 	from system.getTimings import *
 	from system.getInterpolationError import *
-	
-	
 	from scipy.optimize import minimize
-	
 	from smodels.theory.auxiliaryFunctions import unscaleWidth
 	from torch.utils.data import DataLoader as DataLoader
-	
 
 	parameters = {}
 	parameters["database"] 		 = {}

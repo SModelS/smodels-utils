@@ -3,59 +3,7 @@ import torch.nn as nn
 import numpy as np
 import os
 
-"""
 
-def loadModelX(expres, txName, netType):
-
-	#savePath = expres.path + "/models/"
-	
-	# TEMPORARY replace databasePath
-	dbPath = expres.path
-	for i in range(len(dbPath)):
-		if dbPath[i:i+8] == 'database':
-			dbPath = dbPath[i:]
-			break
-	savePath = os.getcwd() + "/" + dbPath + "/models/"
-	# ---
-
-	fileName = txName + '_' + netType + '.pth'
-
-	try: 
-		#model = Net_reg()
-		#model.load_state_dict(torch.load(savePath + fileName))
-
-		model = torch.load(savePath + fileName)
-		model.eval()
-	except:
-		model = None
-
-	return model
-
-"""
-
-def loadModel(expres, txName):
-	
-	# TEMPORARY replace databasePath
-	dbPath = expres.path
-	for i in range(len(dbPath)):
-		if dbPath[i:i+8] == 'database':
-			dbPath = dbPath[i:]
-			break
-	savePath = os.getcwd() + "/" + dbPath + "/models/"
-	# ---
-
-	fileName = txName + '.pth'
-
-	try: 
-		#model = Net_reg()
-		#model.load_state_dict(torch.load(savePath + fileName))
-
-		model = torch.load(savePath + fileName)
-		model.eval()
-	except:
-		model = None
-
-	return model
 
 
 
@@ -331,7 +279,6 @@ class Net_reg(nn.Module):
 		#	std = self.rescaleParameter["parameter"]["std"]
 		#	x = ( x - mean ) / std
 
-		#x = np.log(x)
 		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
 		#x = torch.abs(x)

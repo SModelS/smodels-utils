@@ -24,8 +24,6 @@ def readParameterFile(logger, parameterFile):
 	parser.allow_no_value = True
 	parser.read(parameterFile)
 
-
-
 	############################################
 	# Add smodels and smodels-database to path #
 	############################################
@@ -39,6 +37,7 @@ def readParameterFile(logger, parameterFile):
 		sys.path.append(databasePath)
 		import smodels
 		from smodels.experiment.databaseObj import Database
+
 		outputPath = parser.get(sct, "outputPath")
 		if outputPath == "": outputPath = None
 
@@ -47,6 +46,7 @@ def readParameterFile(logger, parameterFile):
 	else:
 		logger.info("No '{}' section found. Skipping Database import.".format(sct))
 		paramPath = None
+
 
 	###############################################
 	# Select analysis and topologies for training #
@@ -158,39 +158,32 @@ def readParameterFile(logger, parameterFile):
 
 	hyperParameter = {}
 
+	params = [("optimizer", str), ("lossFunction", str), ("batchSize", int),
+			("activationFunction", str), ("epochNum", int), ("learnRate", float),
+			("layer", int), ("nodes", int), ("shape", str), ("rescaleMethod", str)]
+
 	for netType in ["regression", "classification"]:
+
 		if parser.has_section(netType):
 
-			optimizers = parser.get(netType, "optimizer").split(",")
-			lossFunctions = parser.get(netType, "lossFunc").split(",")
-			batchSizes = parser.get(netType, "batchSize").split(",")
-			batchSizes = [int(bS) for bS in batchSizes]
-			activationFunctions = parser.get(netType, "activFunc").split(",")
-			epochNums = parser.get(netType, "epochs").split(",")
-			epochNums = [int(eN) for eN in epochNums]
-			learnRates = parser.get(netType, "learnRate").split(",")
-			learnRates = [float(lN) for lN in learnRates]
-			layers = parser.get(netType, "layer").split(",")
-			layers = [int(l) for l in layers]
-			nodes = parser.get(netType, "nodes").split(",")
-			nodes = [int(n) for n in nodes]
-			shapes = parser.get(netType, "shape").split(",")
-			try: rescaleMethods = parser.get(netType, "rescaleData").split(",")
-			except: rescaleMethods = [None]
-
 			hP = {}
-			hP["optimizer"] = optimizers
-			hP["lossFunction"] = lossFunctions
-			hP["batchSize"] = batchSizes
-			hP["activationFunction"] = activationFunctions
-			hP["epochNum"] = epochNums
-			hP["learnRate"] = learnRates
-			hP["layer"] = layers
-			hP["nodes"] = nodes
-			hP["shape"] = shapes
-			hP["rescaleMethod"] = rescaleMethods
-			#hP = HyperParameter(hP)
-		
+
+			for param in params:
+
+				key = param[0]
+				form = param[1]
+
+				try:
+					p = parser.get(netType, key).split(",")
+
+					if form != str:
+						p = [form(x) for x in p]
+				except: p = [None]
+
+				hP[key] = p
+			
+			#hP = HyperParameter(hp)
+
 		else:
 			logger.info("No '{}' section found. No hyperparameters loaded".format(netType))
 			hP = None
@@ -211,7 +204,7 @@ def readParameterFile(logger, parameterFile):
 
 if __name__=='__main__':
 
-	ap = argparse.ArgumentParser(description="Trains and finds best performing neural networks for database analyses via hyperparameter search")
+	ap = argparse.ArgumentParser(description = "Reads parameter file for neural network training")
 	ap.add_argument('-p', '--parfile', 
 			help='parameter file specifying the plots to be checked', default = 'nn_parameters.ini')
 	ap.add_argument('-l', '--log', 

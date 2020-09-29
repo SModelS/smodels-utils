@@ -55,7 +55,8 @@ def listInterpolTimes(db, analyses, txNames, dataselector, superseded = True, no
 			for txname in txnames:
 
 				mean, std = getInterpolTimeOnly(e, txname)
-				print("  " + txname.ljust(colLen) + str(round(mean, 3)) + " +- " + str(round(std, 3)) + "ms")
+				print("  %s%s +- %sms" % (txname.ljust(colLen), str(round(mean, 3)), str(round(std, 3))))
+				#print("  " + txname.ljust(colLen) + str(round(mean, 3)) + " +- " + str(round(std, 3)) + "ms")
 
 				"""
 				model = loadModel(e, txname)
@@ -75,41 +76,60 @@ def listInterpolTimes(db, analyses, txNames, dataselector, superseded = True, no
 
 def listModels(db, analyses, txNames, dataselector, superseded = True, nonValidated = True):
 
-	print("\n  ---\n  NEURAL NETWORKS AVAILABLE:\n  ---")
-
 	dataselector = "upperLimit"
 	expres = db.getExpResults(analysisIDs = analyses, txnames = txNames, dataTypes = dataselector, useSuperseded = superseded, useNonValidated = nonValidated)
 	colLen = getOutputColumnWidth(expres)
 
+	targetDim = 3
+
+	print("\n  SCANNING DATABASE:")
+	print("  _________________________\n")
+	print("  filtering for:")
+	print("  type: %s, dim = %s" % (dataselector, targetDim))
+	print("  _________________________\n")
+
+	
 	for e in expres:
 
-		print("\n  " + e.id() + ":")
-
-		txnames = []
+		txnames, txs = [], []
 		for dataset in e.datasets:
-			for txname in dataset.txnameList:
-				tx = txname.txName
-				if not tx in txnames:
-					txnames.append(tx)
+			for tx in dataset.txnameList:
+				#tx = txname #.txName
+				if not tx.txName in txnames:
+					txnames.append(tx.txName)
+					txs.append(tx)
 
 		
 
 
-		if isinstance(txnames, list):
+		if isinstance(txs, list):
 
-			for txname in txnames:
+			for tx in txs:
 
-				model = loadModel(e, txname)
+				idPosted = False
+
+				fullDim = tx.txnameData.full_dimensionality
+				dim = tx.txnameData.dimensionality
+				width = tx.txnameData.widthPosition
+
+				if dim != targetDim: continue
+
+				if not idPosted: 
+					idPosted = True
+					print("\n  " + e.id() + ":")
+
+				model = loadModel(e, tx.txName)
 				if model != None:
 					lossReg = model.getValidationLoss("regression").item()
 					lossCla = model.getValidationLoss("classification").item()
 					speedFactor = 1. / model.getSpeedFactor()
 
-					performance = str(round(lossReg, 3)) + " / " + str(round(lossCla, 3)) + " / " + str(round(speedFactor, 3))
+					performance = "%s / %s / %s" % (str(round(lossReg, 3)), str(round(lossCla, 3)), str(round(speedFactor, 3)))
+					#performance = str(round(lossReg, 3)) + " / " + str(round(lossCla, 3)) + " / " + str(round(speedFactor, 3))
 				else: 
 					performance = "N/A"
 
-				print("  " + txname.ljust(colLen) + performance)
+				print("  " + tx.txName.ljust(colLen) + performance)
 
 
 	print("\n  ---\n")

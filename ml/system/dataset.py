@@ -3,10 +3,9 @@
 #sys.path.append('../../../smodels-utils/')
 
 import os, torch, unum, random, copy
-try:
-	from system.readOrigData import *
-except:
-	from system.readOrigData import *
+from time import time
+from system.readOrigData import *
+from system.auxiliaryFunctions import *
 from smodels.experiment.databaseObj import Database
 from smodels.tools import physicsUnits
 from smodels.tools.physicsUnits import GeV, fb
@@ -20,51 +19,7 @@ from random import shuffle
 from sklearn.cluster import MeanShift
 
 
-def MSErel(predicted, label, reduction = "mean"):
-	#loss = torch.abs((input-label)/label)
-	#if reduction == "mean": loss = torch.mean(loss)
-	#if label != 0.:
-	#	loss = ((input-label)/label)**2
-	#else: loss = input**2
-	#print(predicted)
-	#print(label)
-	#print("---")
-	loss = ((predicted-label)/label)**2
-	if reduction == "mean": loss = torch.sqrt(torch.mean(loss))
-	return loss
-"""
 
-def MSErel(predicted, label, reduction = "mean"):
-	loss = torch.abs(torch.log(predicted/label))
-	#print(predicted)
-	#print(label)
-	#print("---")
-	if reduction == "mean": loss = torch.mean(loss)
-	return loss
-
-
-def MSErel(predicted, label, reduction = "mean"):
-
-	loss = ( (predicted-label)/(predicted+label) )**2
-	if reduction == "mean": loss = torch.sqrt(torch.mean(loss))
-	return loss
-"""
-
-def loadOptimizer(optimizerName, model, learnRate):
-	if optimizerName == "Adam":
-		optimizer = torch.optim.Adam(model.parameters(), lr=learnRate)
-	else:
-		optimizer = torch.optim.Adam(model.parameters(), lr=learnRate)
-		logger.warning("Invalid optimizer selected. Only Adam is supported currently. Continuing on Adam" %args.parfile)
-
-	return optimizer
-
-def loadLossFunction(lossFunctionName, device):
-	if lossFunctionName == "MSE": lossFunction = nn.MSELoss(reduction = 'mean').to(device)
-	elif lossFunctionName == "MSErel": lossFunction = MSErel
-	elif lossFunctionName == "BCE": lossFunction = nn.BCELoss(reduction = 'mean').to(device)
-
-	return lossFunction
 
 
 
@@ -123,34 +78,21 @@ class HyperParameter():
 
 
 
-def GetModel(expres, topo, netType):
 
-	savedir = expres.path + '/data/'
-		
-	#temporary relocation
-	for i in range(len(savedir)):
-		if savedir[i:i+8] == 'database':
-			savedir = savedir[:i] + 'utils/ml/storage' + savedir[i+8:]
-
-	pth = savedir + str(topo) + '_' + netType + '.pth'
-
-	if os.path.exists(pth):
-
-		model = torch.load(pth)
-		model.eval()
-
-	else: model = None
-
-	return model
 
 
 
 class Data(Dataset):
 
+	"""
+	Holds the actual datasets in torch.tensor format for training and evaluation
+
+	"""
+
 	def __init__(self, dataset, inputDimension, device, rescaleInputs = False, rescaleLabels = False):
 
-		self.inputs = torch.tensor(dataset, dtype=torch.float32).narrow(1, 0, inputDimension).to(device)
-		self.labels = torch.tensor(dataset, dtype=torch.float32).narrow(1, inputDimension, 1).to(device)
+		self.inputs = torch.tensor(dataset, dtype=torch.float32).narrow(1, 0, inputDimension).double().to(device)
+		self.labels = torch.tensor(dataset, dtype=torch.float32).narrow(1, inputDimension, 1).double().to(device)
 
 		mean = torch.mean(self.inputs)	#[torch.mean(self.inputs), torch.mean(self.labels)]
 		std = torch.std(self.inputs)	#[torch.std(self.inputs), torch.std(self.labels)]
@@ -195,7 +137,9 @@ class Data(Dataset):
 class DatasetBuilder():
 
 	"""
-
+	Outputs a Dataset class that is used for training and evaluation of neural networks
+	Needs metainfo of analysis and training parameters (usually loaded from nn_parameters.info file) as well as a device to send Dataset class to
+	(cpu or specific gpu)
 
 
 	"""
@@ -209,327 +153,352 @@ class DatasetBuilder():
 
 		self.txNameData = self.paramDatabase["txNameData"]
 
-		self.axesDependancies	= self._getAxes()
 		self.origData, self.origValues, self.units	= self._getOrigData()
 		self.origDataMean		= np.mean(self.origData, axis = 0)
 		self.origDataStd		= np.std(self.origData, axis = 0)
 		self.inputDimension 	= self.txNameData.full_dimensionality
-		self.inputDimensionHalf = int(0.5*self.inputDimension)
-		self.convexHullMin 		= np.min(self.origData, axis=0)
-		self.convexHullMax 		= np.max(self.origData, axis=0)
 
-		isSymmetric = True
-		for line in self.origData:
-			if not line[0:self.inputDimensionHalf] == line[self.inputDimensionHalf:self.inputDimension]:
-				isSymmetric = False
-				break
-		self.symmetric = isSymmetric
+		### TEMPORARY to remove 1e6 widths ###
+		self._removeBigWidths()
+
+		self.og_PCA = None
+		self.m_c = None
+
+
+	def _removeBigWidths(self):
+
+		widthPos = self.txNameData.widthPosition[0][1] + 1
+		n = 0
+		while n < len(self.origData):
+
+			width = self.origData[n][widthPos]
+			if width > 1e4:
+				self.origData.pop(n)
+			else:
+				n += 1
+
+		
 
 
 	def _getOrigData(self):
-		return getOrigExpresData(self.paramDatabase, stripUnits = True)
+		return  getOrigExpresData(self.paramDatabase, stripUnits = True)
 
 
-	def _getAxes(self):
-		return getAxesData(self.logger, self.paramDatabase)
+	def _PCA(self, data = None):
+
+		"""
+		Perform PCA on any given masspoints (default = original grid points)
+
+		"""
+
+		if data == None: data = self.origData
+
+		tx = self.txNameData
+		ogOrdered = []
+
+		if tx.widthPosition != []:
+			for og in data:
+				temp, mw = [], []
+				for n, m in enumerate(og):
+					if n == tx.widthPosition[int(n/tx.dimensionality)][1] + 1 + int(n/tx.dimensionality) * tx.dimensionality:
+						mw.append(rescaleWidth(m))
+					else:
+						temp.append(m)
+				for w in mw: temp.append(w)
+				ogOrdered.append(tx.coordinatesToData(temp))
+		else: 
+			for og in data:			
+				ogOrdered.append(tx.coordinatesToData(og))
+
+		#self.og_PCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
+		data_PCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
+
+		return data_PCA
+
+
+	def _clusterData(self, bw = 8):
+
+		"""
+		Perform meanshift analysis on PCA grid points
+
+		"""
+
+		clustering = MeanShift(bandwidth = bw).fit(self.og_PCA)
+			
+		m_c = [[] for _ in range(len(clustering.cluster_centers_))]
+		#drawnPoints_PCA = []
+		
+		for n, label in enumerate(clustering.labels_):
+			m_c[label].append(self.og_PCA[n])
+
+		self.m_c = m_c
+
+
+	def _addClusterBias(self, sampleSize):
+	
+		"""
+		Adding a bias to draw more points from clusters with non-zero values
+
+		"""
+
+		tx = self.txNameData
+		clusterMeanVals = []
+		zeroClusters, nonZeroClusters = 0, 0
+		for n, cluster in enumerate(self.m_c):
+
+				mean = np.mean(cluster, axis = 0)
+
+				x = tx.coordinatesToData(mean, rotMatrix = tx._V, transVector = tx.delta_x)
+				val = tx.getValueFor(x)
+				val = removeUnits(val,physicsUnits.standardUnits)
+
+				clusterMeanVals.append(val)
+
+				if val == 0: zeroClusters += len(cluster)
+				else: nonZeroClusters += len(cluster)
+						
+
+		# If number of gridpoints is greater than sampleSize 'factor' could be a negative value
+		factor = max((sampleSize - zeroClusters) / nonZeroClusters, 1)
+
+		pointsToDraw = []
+		for n, cluster in enumerate(self.m_c):
+
+			if clusterMeanVals[n] > 0:
+				pointsToDraw.append(int(factor*len(cluster))+1)
+			else:
+				pointsToDraw.append(len(cluster))
+
+		return clusterMeanVals, pointsToDraw
+
+
+
+	def _getHullPoints(self):
+
+		"""
+		Algorithm that finds hull edges from original datapoints
+
+		"""
+
+		massesSorted = [sorted(self.origData,key=lambda l:l[n]) for n in range(len(self.origData[0]))]
+		massesHull = []
+
+		for k in range(len(massesSorted)):
+
+			#if k == widthPos:
+			#	continue
+
+			massesSortedReduced = []
+			lastMass = 0.
+			totalMasses = len(massesSorted[k])
+
+			for n in range(totalMasses):
+				subset = []
+				currentMass = massesSorted[k][n][k]
+				if lastMass == currentMass:
+					continue
+				lastMass = currentMass
+				for i in range(n, totalMasses):
+					if massesSorted[k][i][k] == currentMass:
+						subset.append(massesSorted[k][i])
+					else: break
+
+				massesSortedReduced.append(np.max(subset, axis=0))
+				#massesSortedReduced.append(max(subset, key=lambda x:x[k])) this should work but doesnt for some reason?
+
+			massesHull.append(massesSortedReduced)
+
+		return massesHull
 
 
 	def generateNewSet(self, netType, sampleSize = None, shuffleData = True):
 
+		"""
+		Generates datasets for training and evaluation and returns them as custom 'Data' class
+		1. reads original grid points and PCA's them to reduce dimensionality
+		2. mean-shift clusters PCA data to get points of high information density
+		if classification:
+			3. finds edges of original grid points
+			4. draw points around edges
+		5. draws points for each m-s cluster
+
+		"""
+
 		if sampleSize == None: sampleSize = self.paramDataset["sampleSize"]
+		samplesLeft = sampleSize
 
 		dataset = []
 		particles = [0 for _ in range(self.inputDimension)]
+		tx = self.txNameData
 
-		samplesLeft = sampleSize
+		width = tx.widthPosition
+		rescaleInputs = width != []
 
+		#print(width)
+
+		if type(self.og_PCA) == type(None):
+			t0 = time()
+			self.logger.info("PCA on orig data..")
+			self.og_PCA = self._PCA()
+			self.logger.info("done. %ss" % round(time()-t0, 3))
+
+		if type(self.m_c) == type(None):
+			t0 = time()
+			self.logger.info("clustering..")
+			self._clusterData()
+			self.logger.info("done. %ss" % round(time()-t0, 3))
+
+		t0 = time()
+		self.logger.info("drawing points..")
 
 		if netType == 'regression':
+		
 
-			# Create dataset for our regression network
-			# Perform PCA and mean shift on original grid points
-			# Draw dataset points around each cluster
+			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(sampleSize)
 			
-			tx = self.txNameData
-
-			#print("full dim: %s" % tx.full_dimensionality)
-			#print("dim: %s" % tx.dimensionality)
-			#print("widthpos:",tx.widthPosition)
-			#print("\n")
-
-			ogOrdered = []
-			if tx.widthPosition != []:
-				for og in self.origData:
-					temp, mw = [], []
-					for n, m in enumerate(og):
-						if n == tx.widthPosition[int(n/tx.dimensionality)][1] + 1 + int(n/tx.dimensionality) * tx.dimensionality:
-							mw.append(rescaleWidth(m))
-						else:
-							temp.append(m)
-					for w in mw: temp.append(w)
-					ogOrdered.append(tx.coordinatesToData(temp))
-			else: 
-				for og in self.origData:			
-					ogOrdered.append(tx.coordinatesToData(og))
-
-			og_PCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
-
-			clustering = MeanShift(bandwidth=8).fit(og_PCA)
-
-			m_c = [[] for _ in range(len(clustering.cluster_centers_))]
-			drawnPoints_PCA = []
-			drawnPoints = []
 			zeroes = 0
+			drawnPoints = []
+			for n, cluster in enumerate(self.m_c):
 
-			for n, label in enumerate(clustering.labels_):
-				m_c[label].append(og_PCA[n])
-
-			singleClusters = 0
-			for n, cluster in enumerate(m_c):
 				mean = np.mean(cluster, axis = 0)
 				std = np.std(cluster, axis = 0)
+				print("cluster %s/%s" % (n+1, len(self.m_c))) #self.logger.debug
+				pointsLeft = pointsToDrawPerCluster[n]
 
-				#if len(cluster) == 1: singleClusters += 1
-			
-				pointsToDraw = int(len(cluster)*sampleSize/len(self.origData)) + 1
-
-				while pointsToDraw > 0:
+				while pointsLeft > 0:
 
 					rand = []
 					for i in range(tx.dimensionality):
-						rand.append(np.random.normal(mean[i], 180. + 2.*std[i]))
+						rand.append(np.random.normal(mean[i], 250. + 4.*std[i]))
 
 					x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
 					val = tx.getValueFor(x)
 					val = removeUnits(val,physicsUnits.standardUnits)
 
-					if type(val) != type(None) and (val != 0. or random.random() < 0.1):
+					# temporary test
+					if val != None:
+						if val < 1e-6: val = 0.
+
+					if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random.random() < 0.1) ):
 						
-						pointsToDraw -= 1
+						pointsLeft -= 1
+						
+						if val == 0.:
+							zeroes += 1
 
-						#if val == 0.:
-						#	zeroes += 1
-
-						val += 1e-5
+						#val += 1e-5
 						
 						strippedUnits = tx.dataToCoordinates(x)
 						strippedUnits.append(val)
 
-						#drawnPoints_PCA.append(rand)
 						drawnPoints.append(strippedUnits)
 
-			#drawnPoints_PCA = np.array(drawnPoints_PCA)
-			dataset = drawnPoints
-
-			drawnPoints = np.array(drawnPoints)
-
-			for n in range(10):
-				print(dataset[n])
-
-			#print("%s%% are Zero." % round(100.*(zeroes/sampleSize), 3))
-			#print("min num of drawn points = %s" % int(10000/len(self.origData)))
-			#print("detected %s clusters in %s datapoints" % (len(m_c), len(self.origData)))
-			#print("%s of those are 1dim\n" % singleClusters)
-
-			#import matplotlib.pyplot as plt
-			#plt.figure(0)
-			#plt.scatter(drawnPoints[:,0], drawnPoints[:,1])
-			#plt.tight_layout()
-			#plt.show()
+			print("%s%% are Zero." % round(100.*(zeroes/len(drawnPoints)), 3)) #self.logger.debug
 						
 		else:
 
-			
-			# Particle widths (at least for 2016-32-eff) range from 1e-22 - 1e+6 and thus will always be on shell
-			#widthPos = 2
-			#self.axesDependancies[0][widthPos]["dependancy"] = None
-			#self.axesDependancies[0][widthPos]["constant"] = True
-			#self.axesDependancies[0][widthPos]["offset"] = 0
+			hullPoints = self._getHullPoints()
 
-			# Create dataset for our classification network
-			# First we generate a rough estimate of our convex hull with "massesHull"
-			# Then we draw points around the hull and finish populating our dataset with
-			# random points drawn around the center of our hull
-			
-			massesSorted = [sorted(self.origData,key=lambda l:l[n]) for n in range(len(self.origData[0]))]
-			massesHull = []
-
-			for k in range(len(massesSorted)):
-
-				#if k == widthPos:
-				#	continue
-
-				massesSortedReduced = []
-				lastMass = 0.
-				totalMasses = len(massesSorted[k])
-
-				for n in range(totalMasses):
-					subset = []
-					currentMass = massesSorted[k][n][k]
-					if lastMass == currentMass:
-						continue
-					lastMass = currentMass
-					for i in range(n, totalMasses):
-						if massesSorted[k][i][k] == currentMass:
-							subset.append(massesSorted[k][i])
-						else: break
-
-					massesSortedReduced.append(np.max(subset, axis=0))
-					#massesSortedReduced.append(max(subset, key=lambda x:x[k])) this should work but doesnt for some reason?
-
-				massesHull.append(massesSortedReduced)
-
-
+			hP_PCA = []
 			numOfHullPoints = 0
-			for axisPoints in massesHull:
+			for axisPoints in hullPoints:
 				numOfHullPoints += len(axisPoints)
-			samplesPerHullPoint = int(( sampleSize / numOfHullPoints ) * 0.15) #0.75)
-				
-			for currentMassHull in massesHull:
+
+				temp = self._PCA(axisPoints)
+				hP_PCA.append(temp)
+
+			samplesPerHullPoint = int(( sampleSize / numOfHullPoints ) * 0.75) #0.15)
+
+			drawnPoints = []
+
+			for currentMassHull in hP_PCA:
+
+				#mean = np.mean(currentMassHull, axis = 0)
+				std = np.std(currentMassHull, axis = 0)
 
 				for point in currentMassHull:
 
 					samplesPerHullPointLeft = samplesPerHullPoint
 
-					#isMin = point[0] == self.convexHullMin[0] or point[1] == self.convexHullMin[1]
-					#isMax = point[0] == self.convexHullMax[0] or point[1] == self.convexHullMax[1]
-
-					#if isMin or isMax:
-					#	samplesPerHullPointLeft *= 5
-
 					while(samplesPerHullPointLeft > 0):
 
-						for n in range(self.inputDimension):
+						rand = []
+						for i in range(tx.dimensionality):
+							rand.append(np.random.normal(point[i], 1.25*std[i]))
 
-							if ( self.symmetric and n == self.inputDimensionHalf - 1 ) or ( not self.symmetric and n == self.inputDimension - 1 ):
-								std = 25. #45.
-							else:
-								std = 25. #abs(point[n] - point[n+1]) * 0.15 #0.25
-							mean = point[n]
+						x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
+						val = tx.getValueFor(x)
+						val = removeUnits(val,physicsUnits.standardUnits)
 
-							particles[n] = abs(np.random.normal(mean, std, 1)[0])
+						if type(val) != type(None): val = 0.
+						else: val = 1.
 
-						if self.symmetric:
-							for n in range(self.inputDimensionHalf):
+						strippedUnits = tx.dataToCoordinates(x)
+						strippedUnits.append(val)
+						drawnPoints.append(strippedUnits)
 
-								dep = self.axesDependancies[0][n]["dependancy"]
-								con = self.axesDependancies[0][n]["constant"]
-								off = self.axesDependancies[0][n]["offset"]
-
-								if type(dep) == list:
-									particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
-								elif dep != None:
-									particles[n] = particles[dep] + off
-								elif con:
-									particles[n] = off
-
-								particles[self.inputDimensionHalf+n] = particles[n]
-
-
-						'''REMOVE'''
-						#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-						#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]] # [[(x,w)], [(x,w)]]
-						mx = [(particles[0]*GeV, particles[1]*GeV)] 
-						#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
-						masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]
-
-						res = self.txNameData.getValueFor(masses)
-
-						#if SR == None:
-						#	res = expres.getUpperLimitFor(txname=topo, mass=masses)
-						#else:
-						#	res = expres.getEfficiencyFor(txname=topo, mass=masses, dataset=SR)
-
-						'''REMOVE'''
-						# 2dim
-						#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
-						new = [np.log(particles[0]), np.log(particles[1]), 0, np.log(particles[0]), np.log(particles[1]), 0]
-
-						# 1dim
-						#new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
-						#new = [np.log(particles[0]), 0, np.log(particles[0]), 0]
-
-						#new = [np.log(p) if p != 0 else p for p in particles] 
-						if type(res) != type(None): new.append(1.)
-						else: new.append(0.)
-					
-						dataset.append(new)
 						samplesLeft -= 1
 						samplesPerHullPointLeft -= 1
 
+	
+			samplesLeft = 0
+			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(samplesLeft)
 
-						#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-						#ul	   = expres.getUpperLimitFor(txname=topo, mass=masses)
+			for n, cluster in enumerate(self.m_c):
 
-						#new = [p for p in particles]
-						#if type(ul) != type(None): new.append(1.)
-						#else: new.append(0.)
-					
-						#dataset.append(new)
-						#samplesLeft -= 1
-						#samplesPerHullPointLeft -= 1
+				mean = np.mean(cluster, axis = 0)
+				std = np.std(cluster, axis = 0)
 
-		
+				self.logger.debug("cluster %s/%s" % (n+1, len(self.m_c)))
+				pointsLeft = pointsToDrawPerCluster[n]
 
-			while(samplesLeft>0):
+				while pointsLeft > 0:
 
-				print("sleft:", samplesLeft)
+					rand = []
+					for i in range(tx.dimensionality):
+						rand.append(np.random.normal(mean[i], 2.*std[i]))
 
-				if self.symmetric:
-					for n in range(self.inputDimensionHalf):
-						particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n]*2., 1)[0])
+					x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
+					val = tx.getValueFor(x)
+					val = removeUnits(val,physicsUnits.standardUnits)
 
+					if type(val) != type(None): val = 0.
+					else: val = 1.
+						
+					pointsLeft -= 1
+	
+					strippedUnits = tx.dataToCoordinates(x)
+					strippedUnits.append(val)
 
-					for n in range(self.inputDimensionHalf):
+					drawnPoints.append(strippedUnits)
 
-						dep = self.axesDependancies[0][n]["dependancy"]
-						con = self.axesDependancies[0][n]["constant"]
-						off = self.axesDependancies[0][n]["offset"]
+		self.logger.info("done. %ss" % round(time()-t0, 3))
 
-						if type(dep) == list:
-							particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
-						elif dep != None:
-							particles[n] = particles[dep] + off
-						elif con:
-							particles[n] = off
+		"""
+		from sklearn.preprocessing import MinMaxScaler
+		scaler = MinMaxScaler(feature_range=(1, 40))
 
-						particles[self.inputDimensionHalf+n] = particles[n]
+		### transform everything except values ###
+		splitA, splitB = [], []
+		for dP in drawnPoints:
+			splitA.append(dP[0:-1])
+			splitB.append(dP[-1])
 
-				else:
-					for n in range(self.inputDimension):
-						particles[n] = abs(np.random.normal(self.origDataMean[n], self.origDataStd[n], 1)[0])
-					
+		scaler = scaler.fit(splitA)
+		splitA = scaler.transform(splitA)
+		splitA = np.array(splitA)
+		splitB = np.array(splitB)
+		splitB = splitB[np.newaxis, :].T
+		drawnPoints = np.concatenate((splitA, splitB), axis=1)
+		### --- ###
 
-				'''REMOVE'''
-				#masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-				#masses = [[(particles[0]*GeV, particles[1]*GeV)], [(particles[0]*GeV, particles[1]*GeV)]]
+		#scaler = scaler.fit(drawnPoints)
+		#drawnPoints = scaler.transform(drawnPoints)
+		"""
 
-				#mx = [particles[0]*GeV, (particles[1]*GeV, particles[2]*GeV)] 
-				mx = [(particles[0]*GeV, particles[1]*GeV)] 
-				masses = [mx, mx] # [[x,(y,w)], [x,(y,w)]]		
-
-				res = self.txNameData.getValueFor(masses)
-
-				'''REMOVE'''
-				# 2dim
-				#new = [np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2]), np.log(particles[0]), np.log(particles[1]), rescaleWidth(particles[2])]
-				#new = [np.log(particles[0]), np.log(particles[1]), 0, np.log(particles[0]), np.log(particles[1]), 0]
-
-				# 1dim
-				#new = [np.log(particles[0]), rescaleWidth(particles[1]), np.log(particles[0]), rescaleWidth(particles[1])]
-				new = [np.log(particles[0]), 0, np.log(particles[0]), 0]
-
-				#new = [np.log(p) if p != 0 else p for p in particles] 
-				if type(res) != type(None): new.append(1.)
-				else: new.append(0.)
-				
-				#if type(res) == type(None) or random.random() < 0.25:
-				dataset.append(new)
-				samplesLeft -= 1
-					#print(samplesLeft)
-
-
-		if shuffleData: shuffle(dataset)
-		dataSet = Data(dataset, self.inputDimension, self.device)
-		return dataSet
+		#for dp in drawnPoints[0:20]:
+		#	print(dp)
+		if shuffleData: shuffle(drawnPoints)
+		dataset = Data(drawnPoints, self.inputDimension, self.device)
+		return dataset
 

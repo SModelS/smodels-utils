@@ -4,7 +4,7 @@
 from smodels.tools.stringTools import concatenateLines
 from smodels.tools.physicsUnits import GeV, fb
 
-
+"""
 def formatOrigData(dataString):
 
 	#dataString.replace("[[[[", "[[[")
@@ -45,16 +45,45 @@ def getContent(paramDatabase, whichTag):
 			break
 
 	return data
-
+"""
 
 def getOrigExpresData(paramDatabase, singleLines = True, stripUnits = True):
 
 	if paramDatabase["dataSelector"] == "upperLimit":
-		tag = "upperLimits"
+		whichTag = "upperLimits"
 	else:
-		tag = "efficiencyMap"
+		whichTag = "efficiencyMap"
 
-	data = getContent(paramDatabase, tag)
+	#data = getContent(paramDatabase, whichTag)
+
+	# copied from above # 
+
+	expres = paramDatabase["expres"]
+	txName = paramDatabase["txName"]
+	dataSelector = paramDatabase["dataSelector"]
+	signalRegion = paramDatabase["signalRegion"]
+
+	if dataSelector == "upperLimit":
+		filePath = expres.path + '/data/' + txName + '.txt'
+	else:
+		filePath = expres.path + '/' + signalRegion + '/' + txName + '.txt'
+
+	with open(filePath) as txtFile:
+		txdata = txtFile.read()
+	content = concatenateLines(txdata.split("\n"))
+	tags = [line.split(":", 1)[0].strip() for line in content]
+
+	for i,tag in enumerate(tags):
+		if not tag: continue
+		line = content[i]
+		value = line.split(':',1)[1].strip()
+		if ";" in value: value = value.split(";")
+
+		if tag == whichTag:
+			data = value
+			break
+
+	# endcopy #
 
 	origData, values = [], []
 
@@ -96,7 +125,7 @@ def getOrigExpresData(paramDatabase, singleLines = True, stripUnits = True):
 
 	return origData, values, units
 
-
+"""
 def getAxesData(logger, paramDatabase):
 
 
@@ -194,6 +223,6 @@ if __name__== '__main__':
 	ax5 = "[[(x, y), 100.0], [(x, y), 100.0]]"
 
 	mod = getAxesData(ax5)
-
 	print(mod)
 
+"""
