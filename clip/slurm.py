@@ -97,10 +97,12 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
 
-    ram = max ( 5500, 3500. * ( jmax - jmin ) )
+    ram = max ( 6000, 3500. * ( jmax - jmin ) )
+    if "comb" in rundir:
+        ram = ram * 1.1
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
-        ram = max ( 4500, 3000. * ( jmax - jmin ) )
+        ram = ram *.8
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
@@ -218,7 +220,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "40G" ]
+    cmd += [ "--mem", "30G" ]
     cmd += [ "-c", "30" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]

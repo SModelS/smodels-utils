@@ -111,6 +111,23 @@ def count_jobs():
     if int(remaining)>0:
         print ( "remaining", remaining )
 
+def count_dupes():
+    A = subprocess.getoutput ( "slurm q" )
+    jobs = []
+    for a in A.split("\n"):
+        tokens = a.split(" ")
+        T = ""
+        for t in tokens:
+            if "RUN" in t and "_" in t:
+                T = t
+        if "." in T:
+            T=T[:T.find(".")]
+        jobs.append ( T )
+    for j in set(jobs):
+        if jobs.count(j)>1:
+            print ( "job",j,"#",jobs.count(j) )
+
 if __name__ == "__main__":
+    #count_dupes()
     count_jobs()
     running_stats()
