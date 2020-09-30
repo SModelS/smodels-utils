@@ -914,9 +914,12 @@ class Manipulator:
             minMass = 10.0
             if len(unfrozen) > 1:
                 maxMass = min([self.M.masses[p] for p in unfrozen if p != self.M.LSP])
-        if abs(pid) in [ 1000001, 1000002, 1000003, 1000004, 1000021 ]:
-            if minMass < 310.: ## an artificial wall because the maps are bounded
-                minMass = 310. ## from below
+        # an artificial wall because the maps are bounded from below
+        walledpids = [ 1000001, 1000002, 1000003, 1000004, 1000021 ]
+        walledpids += [ 1000005, 1000006, 2000005, 2000006 ]
+        wallmass = 310.
+        if abs(pid) in walledpids:
+            minMass = max ( wallmass, minMass )
 
         ret = self.randomlyChangeMassOf ( pid, dx=dx, minMass=minMass, maxMass=maxMass )
 

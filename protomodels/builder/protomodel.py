@@ -365,6 +365,7 @@ class ProtoModel:
         hasComputed = False
         countAttempts = 0
         while not hasComputed:
+            tmpSLHA = ""
             try:
                 xsecs = []
                 #Create temporary file with the current model (without cross-sections)
@@ -394,9 +395,13 @@ class ProtoModel:
                 self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
                 self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
                 hasComputed = True
+                if not keep_slha and os.path.exists ( tmpSLHA ): ## remove
+                    os.remove( tmpSLHA )
                 break
                 #Remove temp file
             except Exception as e:
+                if not keep_slha and os.path.exists ( tmpSLHA ): ## remove
+                    os.remove( tmpSLHA )
                 countAttempts += 1
                 if countAttempts > 1:
                     self.log( "error computing cross-sections: %s, attempt # %d" % \
@@ -408,8 +413,6 @@ class ProtoModel:
 
         if keep_slha:
             self.createSLHAFile( self.currentSLHA, addXsecs = True )
-        if not keep_slha and os.path.exists ( tmpSLHA ): ## always remove
-            os.remove( tmpSLHA )
 
     def rescaleXSecsBy(self, s):
         """rescale the stored cross-sections by a factor s"""
@@ -456,6 +459,7 @@ class ProtoModel:
 
         :return: Name of the SLHA file created
         """
+        self.delCurrentSLHA()
 
         #If output is not defined, create file and store in self.currentSLHA
         if outputSLHA is None:

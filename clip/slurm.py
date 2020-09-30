@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-import tempfile, argparse, stat, os, math, sys, time, glob
+import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
 try:
     import commands as subprocess
 except:
@@ -121,7 +121,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
+        if not "returncode=0" in str(a):
+            a = "%s%s%s" % ( colorama.Fore.RED, a, colorama.Fore.RESET )
         print ( "returned: %s" % a )
+        # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
@@ -637,6 +640,7 @@ def main():
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select, args.do_combine ) )
                     jobs.append ( p )
                     p.start()
+                    time.sleep ( random.uniform ( 0.001, .01 ) )
 
                 for j in jobs:
                     j.join()
