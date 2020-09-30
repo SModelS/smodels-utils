@@ -290,9 +290,11 @@ class LlhdPlot:
             pid1 = self.pid1[0]
         self.picklefile = "%s/llhd%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
+            llhdp = self.picklefile
             self.picklefile = "%s/mp%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
-            self.pprint ( "could not find pickle file %s" % self.picklefile )
+            self.pprint ( "could not find pickle files %s and %s" % \
+                          ( llhdp, self.picklefile ) )
 
     def describe ( self ):
         """ describe the situation """

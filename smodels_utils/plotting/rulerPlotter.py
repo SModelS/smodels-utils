@@ -228,11 +228,11 @@ class RulerPlot:
         from matplotlib import pyplot as plt
         plt.rc("text",usetex=True)
         import numpy
-        dm = self.maxmass - self.minmass
+        deltam = self.maxmass - self.minmass
         fontsize = 15
         if self.style == "andre":
             fontsize = 20
-        ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
+        ticks = numpy.arange ( self.minmass, self.maxmass, .05*deltam )
         x = [ 0. ] * len(ticks)
         x[0]=1.
         figratio = ( 4, 10 )
@@ -310,9 +310,9 @@ class RulerPlot:
             ## at the center of the decay line
             xavg = .5*x1 + .5*x2
             lctr=0
-            dm = 20.
+            dm = deltam / 40.
             if self.drawdecays:
-                dm = 45.
+                dm = dm * 2.25 ## why though?
             keys = []
 
             if self.hasResultsFor != None:
@@ -322,11 +322,11 @@ class RulerPlot:
                         if abs(m-mana)>1e-2:
                             print ( "WARNING: clustering particle masses %.2f and %.2f. hope its ok. check it." % ( m, mana )  )
                         keys.append ( mana )
-                        dm1 = 30. ## gap to first ana id
+                        dm1 = deltam / 30. ## gap to first ana id
                         if self.drawdecays:
-                            dm1 = 55.
+                            dm1 = dm1 * 1.83 ## why though?
                         for cana,ana in enumerate(analyses):
-                            print ( "[rulerPlotter] write", ana, xavg )
+                            print ( "[rulerPlotter] write %s at x=%.1f" % ( ana, xavg ) )
                             if xavg > .9:
                                 xavg = .73
                             plt.text ( xavg, m-dm1-dm*cana, ana.replace("201","1" ),
