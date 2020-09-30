@@ -9,7 +9,7 @@
 
 """
 
-import pygraphviz, sys, math
+import pygraphviz, sys, math, os
 import logging
 from smodels_utils.helper import sparticleNames
 
@@ -247,8 +247,11 @@ class DecayDrawer:
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
+        fname = "%s.tex"%out 
+        if not os.path.exists ( fname ):
+            return
         self.logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
-        f=open("%s.tex"%out)
+        f=open( fname )
         lines=f.readlines()
         f.close()
         f=open("%s.tex"%out,"w")
