@@ -6,9 +6,9 @@
 import pickle, subprocess, colorama, sys, os
 from scipy import stats
 sys.path.insert(0,"../")
-from builder.manipulator import Manipulator
 from tools.csetup import setup
-
+setup()
+from builder.manipulator import Manipulator
 
 def count ( protomodels ):
     return len(protomodels)-protomodels.count(None)

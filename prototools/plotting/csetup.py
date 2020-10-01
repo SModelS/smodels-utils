@@ -20,8 +20,9 @@ def setup( rundir = None, codedir = None ):
     if codedir == None:
         codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
+    sys.path.insert(0,"%sprotomodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/protomodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/prototools/" % codedir )
     if rundir != None:
         if not "/" in rundir[:-1]:
             rundir = f"/scratch-cbe/users/wolfgan.waltenberger/{rundir}"

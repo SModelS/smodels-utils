@@ -1,5 +1,7 @@
 This folder is all about combining different analyses, and finding the best
 combination. Including the artificial model builder.
+But: it all has moved. Most of the code went to SModelS:protomodels, the remainder
+is now in prototools.
 
 Random walker
 ^^^^^^^^^^^^^
