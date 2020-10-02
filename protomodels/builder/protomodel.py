@@ -510,15 +510,28 @@ class ProtoModel:
                 outF.write(l)
         outF.close()
 
+        ctAttempts = 0
+        hasXSecs = False
         #Add cross-sections:
         if addXsecs:
-            xsecs = self.getXsecs() #Cross-sections will be computed if something has changed
-            #print ( "[protomodels] adding xsecs to", outputSLHA )
-            #for xsec in xsecs[0]:
-            #    print ( "[protomodel] adding xsec", str(xsec) )
-            self.computer.addXSecToFile( xsecs[0], outputSLHA )
-            self.computer.addMultipliersToFile ( self.ssmultipliers, outputSLHA )
-            self.computer.addCommentToFile ( xsecs[1], outputSLHA )
+            while not hasXSecs:
+                # Cross-sections will be computed if something has changed
+                xsecs = self.getXsecs()
+                #print ( "[protomodels] adding xsecs to", outputSLHA )
+                #for xsec in xsecs[0]:
+                #    print ( "[protomodel] adding xsec", str(xsec) )
+                if len(xsecs)>0:
+                    self.computer.addXSecToFile( xsecs[0], outputSLHA )
+                    self.computer.addMultipliersToFile ( self.ssmultipliers, outputSLHA )
+                    self.computer.addCommentToFile ( xsecs[1], outputSLHA )
+                    hasXSecs = True
+                else:
+                    ctAttempts += 1
+                    self.pprint ( "empty cross section container at attempt %d? whats going on?" % ctAttempts )
+                    self.delXSecs()
+                    if ctAttempts > 5:
+                        break
+                    time.sleep ( random.uniform ( 0.5, 2.*ctAttempts ) )
 
         return outputSLHA
 

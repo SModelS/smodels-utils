@@ -12,6 +12,7 @@
 from __future__ import print_function
 import sys, os
 sys.path.insert(0,"../../../" )
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/" )
 
 from protomodels.walker.sparticleNames import SParticleNames
 
