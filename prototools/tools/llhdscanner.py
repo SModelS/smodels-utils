@@ -5,7 +5,8 @@
 import os, sys, multiprocessing, time, numpy, subprocess, copy, glob
 sys.path.insert(0,"./")
 sys.path.insert(0,"../")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
 from smodels.tools.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
 from csetup import setup

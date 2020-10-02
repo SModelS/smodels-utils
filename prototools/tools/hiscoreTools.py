@@ -136,7 +136,7 @@ def main ( args ):
 
     if args.fetch:
         import subprocess
-        cmd = "scp gpu:/local/wwaltenberger/git/smodels-utils/protomodels/H*.hi ."
+        cmd = "scp gpu:/local/wwaltenberger/git/smodels-utils/prototools/H*.hi ."
         print ( "[hiscore] %s" % cmd )
         out = subprocess.getoutput ( cmd )
         print ( out )

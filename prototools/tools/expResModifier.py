@@ -9,7 +9,8 @@ expected from background, by sampling the background model. """
 import copy, os, sys, time, subprocess, math, numpy
 import scipy.spatial
 sys.path.insert( 0, "../" )
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
 from scipy import stats
 from builder.protomodel import ProtoModel
 from builder.manipulator import Manipulator

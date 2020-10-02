@@ -10,7 +10,8 @@ def setup( rundir = None ):
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/protomodels/" % codedir )
+    sys.path.insert(0,"%s/protomodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/prototools/" % codedir )
     if rundir != None:
         rundir = rundir.replace ( "~", os.environ["HOME"] )
         os.chdir ( rundir )

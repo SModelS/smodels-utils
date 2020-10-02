@@ -4,7 +4,8 @@
 
 import numpy, sys, os, copy, time, subprocess, glob
 sys.path.insert(0,"../")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
 from csetup import setup
 from builder.manipulator import Manipulator
 from smodels.tools.runtime import nCPUs

@@ -2,7 +2,8 @@
 
 import pickle, os, sys, subprocess, time, glob, colorama, math, numpy
 sys.path.insert(0,"../")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
 from tools import hiscoreTools
 from builder.manipulator import Manipulator
 from builder import protomodel
