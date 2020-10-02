@@ -72,7 +72,8 @@ def countSteps( printout = True, writeSubmitFile = False ):
         if steps[k] == 1000:
             finished.append ( k )
     if printout and len(finished)>0:
-        print ( "Finished: %s" % ",".join( list(map(str,finished ) ) ) )
+        print ( "%d walkers finished: %s" % \
+                (len(finished), ",".join( list(map(str,finished ) ) ) ) )
     if printout:
         print ( f"we have {len(keys)} entries, total of {tots} steps." )
     if writeSubmitFile:
