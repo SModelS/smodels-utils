@@ -26,10 +26,11 @@ def setup( rundir = None ):
     os.chdir ( rundir )
     return rundir
 
-def countSteps( printout = True, writeSubmitFile = False ):
+def countSteps( printout = True, writeSubmitFile = False, doSubmit = False ):
     """ count the number of steps taken accoring to walker logs 
     :param printout: print out statistics
     :param writeSubmitFile: write a submit file for the non-finished jobs
+    :param doSubmit: if True, then do submit jobs without further asking
     """
     import glob
     files = glob.glob("walker*log")
@@ -93,6 +94,10 @@ def countSteps( printout = True, writeSubmitFile = False ):
         os.chmod ( "submit.sh", 0o755 )
         cmd = "cp submit.sh %s" % os.environ["HOME"]
         subprocess.getoutput ( cmd )
+        if doSubmit:
+            cmd = "cd %s; ./submit.sh; cd -" % os.environ["HOME"]
+            a = subprocess.getoutput ( cmd )
+            print ( a )
     return tots,steps
 
 def updateHiscores( rundir=None ):

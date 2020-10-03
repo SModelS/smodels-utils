@@ -641,7 +641,7 @@ def main():
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select, args.do_combine ) )
                     jobs.append ( p )
                     p.start()
-                    time.sleep ( random.uniform ( 0.001, .01 ) )
+                    time.sleep ( random.uniform ( 0.005, .01 ) )
 
                 for j in jobs:
                     j.join()
