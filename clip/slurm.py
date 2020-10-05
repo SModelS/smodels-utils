@@ -648,6 +648,7 @@ def main():
 
                 for j in jobs:
                     j.join()
+                print ( f"[slurm.py] joined {len(jobs)} jobs." )
             break
 
 main()
