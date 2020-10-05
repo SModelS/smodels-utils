@@ -224,7 +224,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "30G" ]
+    cmd += [ "--mem", "20G" ]
     cmd += [ "-c", "30" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
