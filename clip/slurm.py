@@ -100,7 +100,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
 
     ram = max ( 6000, 3500. * ( jmax - jmin ) )
     if "comb" in rundir:
-        ram = ram * 1.1
+        ram = ram * 1.2
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
         ram = ram *.8
@@ -237,7 +237,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid)).replace("@@RUNDIR@@",rundir ) )
         f.close()
-    nprcs = 15
+    # nprcs = 15
+    nprcs = 10
     produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )

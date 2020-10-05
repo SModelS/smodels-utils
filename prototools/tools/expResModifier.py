@@ -6,7 +6,7 @@ expected from background, by sampling the background model. """
 
 # https://link.springer.com/content/pdf/10.1007/JHEP02(2015)004.pdf
 
-import copy, os, sys, time, subprocess, math, numpy
+import copy, os, sys, time, subprocess, math, numpy, shutil
 import scipy.spatial
 sys.path.insert( 0, "../" )
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
@@ -189,6 +189,7 @@ class ExpResModifier:
         if not os.path.exists ( filename ):
             self.pprint ( "When trying to construct protomodel, %s does not exist" % filename )
             return None
+        shutil.copyfile ( filename, self.rundir+"/signal.py" )
         walkerid = 0
         expected = False
         select = "all"
