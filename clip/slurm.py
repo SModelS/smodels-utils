@@ -342,7 +342,7 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools/tools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
-        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlot=False )\n" % \
+        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=False )\n" % \
                   ( rundir, maxiterations ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
@@ -600,6 +600,8 @@ def main():
             clean_dirs( rundir, clean_all = True )
             continue
         if args.updater:
+            if args.maxsteps == None:
+                args.maxsteps = 1
             runUpdater( args.dry_run, args.time, rundir, args.maxsteps )
             continue
         if args.scan != -1:
@@ -648,7 +650,11 @@ def main():
 
                 for j in jobs:
                     j.join()
-                print ( f"[slurm.py] joined {len(jobs)} jobs." )
+                res = colorama.Fore.RESET
+                col = colorama.Fore.GREEN
+                if len(jobs) in [ 48, 49, 51 ]:
+                    colo = colorama.Fore.RED
+                print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
             break
 
 main()

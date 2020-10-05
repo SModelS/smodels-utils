@@ -137,6 +137,7 @@ def updateStates( rundir=None):
     args.outfile = "states.dict"
     if rundir != None:
         args.outfile = "%s/states.dict" % rundir
+        args.rundir = rundir
     args.infile = None
     # args.maxloss = .003
     # args.nevents = 50000
@@ -157,6 +158,7 @@ def plot( Z, K, rundir ):
     args.destinations = False
     args.picklefile = "%s/hiscore.hi" % rundir 
     args.dbpath = "%s/default.pcl" % rundir
+    args.rundir = rundir
     args.verbosity = "info"
     args.horizontal = False
     args.html = True
@@ -170,7 +172,7 @@ def plot( Z, K, rundir ):
         args.commit = True
     plotHiscore.runPlotting ( args )
 
-def main( rundir = None, maxruns=3, doPlot=True ):
+def main( rundir = None, maxruns=3, doPlots=True ):
     """ eternal loop that updates hiscore.hi and states.dict 
     :param maxruns: maximally iterate that many times
     :param doPlots: if False, suppress plotting
