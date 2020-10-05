@@ -4,7 +4,7 @@ import pickle, os, sys, subprocess, time, glob, colorama, math, numpy
 sys.path.insert(0,"../")
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
-from tools import hiscoreTools
+from moretools import hiscoreTools
 from builder.manipulator import Manipulator
 from builder import protomodel
 from csetup import setup
@@ -356,7 +356,7 @@ def writeTex ( protomodel, keep_tex ):
     else:
         print ( "[plotHiscore] protomodel has no ``particleContributions'' defined." )
 
-    from tools import tex2png
+    from moretools import tex2png
     src = getExtremeSSMs ( ssm, largest=True, nm = 7 )
     src += "\\\\"
     nsmallest = min( 7, len(ssm)-7 )
