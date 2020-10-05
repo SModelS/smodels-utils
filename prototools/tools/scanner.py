@@ -79,7 +79,7 @@ def predProcess ( args ):
         else:
             predictor.predict ( model ) # , nevents = nevents, check_thresholds=False )
         ret[m]=(model.Z,model.rvalues[0],model.K)
-        model.delCurrentSLHA()
+        # model.delCurrentSLHA()
     return ret
 
 def printCombo ( combo, comment="" ):
@@ -169,7 +169,7 @@ def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
     model = hi.hiscores[0]
     if preserve_xsecs and not hasattr ( model, "stored_xsecs" ):
         print ( "[scanner] preserve_xsec mode, so computing the xsecs now" )
-        model.computeXSecs()
+        model.computeXSecs( keep_slha = True )
     if model == None:
         print ( "[scanner] cannot find a model in %s" % hi.pickleFile )
     apid = abs(pid)
@@ -177,7 +177,7 @@ def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
     if mass > 9e5:
         print ( "mass %d too high. Wont produce." % mass )
         return
-    #model.createNewSLHAFileName ( prefix = "scan%s" % pid )
+    # model.createNewSLHAFileName ( prefix = "scan%s" % pid )
     Zs = {}
     fm = .6 ## lower bound (relative) on mass
     # mrange = numpy.arange ( mass * fm, mass / fm, .008*mass )
@@ -205,6 +205,7 @@ def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
+    # model.delCurrentSLHA()
     for r in tmp:
         Zs.update(r)
     if dry_run:

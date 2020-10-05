@@ -111,6 +111,7 @@ class LlhdThread:
                 self.M.masses[k]=v
             oldmasses={}
             self.M.delXSecs() ## make sure we compute
+            self.M.getXsecs()
             for i2,m2 in enumerate(rpid2):
                 if m2 > m1: ## we assume pid2 to be the daughter
                     continue
