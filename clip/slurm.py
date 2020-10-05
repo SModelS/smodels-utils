@@ -342,14 +342,16 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools/tools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
-        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d )\n" % \
+        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlot=False )\n" % \
                   ( rundir, maxiterations ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
-    cmd = [ "sbatch", "--mem", "30G" ]
+    cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
-        cmd = [ "srun", "--mem", "40G" ]
+        cmd = [ "srun", "--mem", "25G" ]
         cmd += [ "--reservation", "interactive" ]
     # cmd = [ "srun", "--mem", "50G" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/hi-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/hi-%j.out" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     qos = "c_short"
     if time > 48:

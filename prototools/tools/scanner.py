@@ -153,7 +153,7 @@ def ssmProcess ( args ):
 
 def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
              nproc=5, fac = 1.008, rundir = "", preserve_xsecs = False ):
-    """ produce pickle files for pid, with nevents
+    """ produce pickle files of mass scans for pid, with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
@@ -167,6 +167,12 @@ def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
         return
     pid = abs(pid)
     model = hi.hiscores[0]
+    if fac == None:
+        fac = 1.008
+        if model.masses[pid]<150.:
+            fac = 1.007
+        if model.masses[pid]<80.:
+            fac = 1.006
     if preserve_xsecs and not hasattr ( model, "stored_xsecs" ):
         print ( "[scanner] preserve_xsec mode, so computing the xsecs now" )
         model.computeXSecs( keep_slha = True )
@@ -187,9 +193,11 @@ def produce( hi, pid=1000022, nevents = 100000, dry_run=False,
     while m1 > fm * mass:
         m1 = mass/dm
         m2 = mass*dm
-        mrangetot.append( m1 )
-        mrangetot.append( m2 )
         dm = dm * fac
+        mrangetot.append( m1 )
+        if pid in [ 1000006, 2000006 ] and m2 > 1550.:
+            continue ## there is nothing to see beyond
+        mrangetot.append( m2 )
     mrangetot.sort()
     mranges = [ mrangetot[i::nproc] for i in range(nproc) ]
     print ( "[scanner] start scanning with m(%d)=%.1f with %d procs, %d mass points, %d events" % \
@@ -226,6 +234,8 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dry_run=False,
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
     """
+    if fac == None:
+        fac = 1.008
     print ( "produceSSMs", pid1, pid2 )
     model = hi.hiscores[0]
     pids = ( pid1, pid2 )
@@ -471,8 +481,8 @@ if __name__ == "__main__":
             help='number of processes, if zero then determine automatically [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--factor',
-            help='multiplication factor [1.008]',
-            type=float, default=1.008 )
+            help='multiplication factor [None=1.008]',
+            type=float, default=None )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [100000]',
             type=int, default=100000 )

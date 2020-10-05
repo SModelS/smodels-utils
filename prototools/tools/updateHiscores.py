@@ -170,8 +170,11 @@ def plot( Z, K, rundir ):
         args.commit = True
     plotHiscore.runPlotting ( args )
 
-def main( rundir = None, maxruns=3 ):
-    """ eternal loop that updates hiscore.hi and states.dict """
+def main( rundir = None, maxruns=3, doPlot=True ):
+    """ eternal loop that updates hiscore.hi and states.dict 
+    :param maxruns: maximally iterate that many times
+    :param doPlots: if False, suppress plotting
+    """
     rundir = setup( rundir )
     i = 0
     Z, Zold, step, K, Kold = 0., 0., 0, -90., -90.
@@ -197,7 +200,8 @@ def main( rundir = None, maxruns=3 ):
             with open ( "%shistory.txt" % rundir, "at" ) as f:
                 f.write ( "%s, step=%d, Z=%.4f, K=%.4f, t=%s\n" % ( time.asctime(),step,Z,K,T) )
                 f.close()
-            plot ( Z, K, rundir )
+            if doPlots:
+                plot ( Z, K, rundir )
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s\n" % str(Z) )
                 f.close()
