@@ -12,9 +12,8 @@ from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
-from smodels_utils.helper.sparticleNames import SParticleNames
 from smodels_utils.helper.bibtexTools import BibtexWriter
-from tools import helpers
+from tools.sparticleNames import SParticleNames
 
 runtime._experimental = True
 
@@ -406,10 +405,11 @@ def writeIndexTex ( protomodel, texdoc ):
     :param texdoc: the source that goes into texdoc.png
     """
     ssm = []
+    namer = SParticleNames ( False )
     for k,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
+        ssm.append ( "%s: %.2f" % ( namer.texName(k,addSign=True),v) )
     f=open("index.tex","w")
     f.write ( "Our current winner has a score of \\K=%.2f, " % \
               ( protomodel.K ) )
@@ -524,7 +524,7 @@ def writeIndexHtml ( protomodel ):
     frozen = protomodel.frozenParticles()
     ssms = getUnfrozenSSMs ( protomodel, frozen, False )
     for k,v in ssms.items():
-        ssm.append ( "%s: %.2g" % (helpers.getParticleName(k,addSign=True),v) )
+        ssm.append ( "%s: %.2g" % ( namer.htmlName(k,addSign=True),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )

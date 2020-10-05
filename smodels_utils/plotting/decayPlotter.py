@@ -20,7 +20,7 @@ from smodels_utils import SModelSUtils
 from . import setPath
 from smodels_utils.plotting import decayPlots
 import os
-from smodels_utils.helper import sparticleNames
+from tools import sparticleNames
 
 def draw( slhafile, outfile, options, offset=0.,
           verbosity="info", ssmultipliers = None ):

@@ -14,7 +14,7 @@ from __future__ import print_function
 import os, math, sys, tempfile, numpy, subprocess
 import logging
 import pyslha
-from smodels_utils.helper.sparticleNames import SParticleNames
+from tools.sparticleNames import SParticleNames
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 mpl.use('Agg')
