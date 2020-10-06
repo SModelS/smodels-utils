@@ -129,32 +129,6 @@ class LlhdThread:
                 self.pprint ( "%d/%d: m1 %d, m2 %d, %d mu's, %d llhds." % \
                               ( i1, npid1s, m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )
-
-        for i1,m1 in enumerate(rpid1):
-            self.M.masses[self.pid1]=m1
-            self.M.masses[self.pid2]=self.mpid2 ## reset LSP mass
-            for k,v in oldmasses.items():
-                self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
-                self.M.masses[k]=v
-            oldmasses={}
-            self.M.delXSecs() ## make sure we compute
-            for i2,m2 in enumerate(rpid2):
-                if m2 > m1: ## we assume pid2 to be the daughter
-                    continue
-                self.M.masses[self.pid2]=m2
-                for pid_,m_ in self.M.masses.items():
-                    if pid_ != self.pid2 and m_ < m2: ## make sure LSP remains the LSP
-                        self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
-                        oldmasses[pid_]=m_
-                        self.M.masses[pid_]=m2 + 1.
-                llhds,robs = self.getPredictions ( True )
-                nllhds = 0
-                for mu,llhd in llhds.items():
-                    nllhds+=len(llhd)
-
-                self.pprint ( "%d/%d rpids: m1 %d, m2 %d, %d mu's, %d llhds." % \
-                              ( i1, len(rpid1), m1, m2, len(llhds), nllhds ) )
-                masspoints.append ( (m1,m2,llhds,robs) )
         return masspoints
 
 def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1,
