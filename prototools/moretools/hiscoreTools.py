@@ -6,7 +6,7 @@
 import pickle, subprocess, colorama, sys, os
 from scipy import stats
 sys.path.insert(0,"../")
-from tools.csetup import setup
+from moretools.csetup import setup
 setup()
 from builder.manipulator import Manipulator
 
