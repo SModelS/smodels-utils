@@ -177,31 +177,48 @@ def fetchUnfrozenFromDict( rundir, includeLSP = True ):
 
 def fetchUnfrozenSSMsFromDict( rundir ):
     """ fetch pid pairs of ssmultipliers from dictionary
-        in <rundir>/pmodel.py, if exists.
+        in <rundir>/states.dict, if exists.
     :returns: list of pid pairs, or None.
     """
+    ## FIXME the pid pairs should be taken from hiscore file, so we have xsecs to look at!
     print ( "[slurm.py:fetchUnfrozenSSMsFromDict] FIXME can we find out which productions we can ignore?" )
-    if not os.path.exists ( "%s/pmodel.py" % rundir ):
-        print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen ssms" )
+    # fname = f"{rundir}/pmodel.py"
+    fname = f"{rundir}/states.dict"
+    if not os.path.exists ( fname ):
+        print ( f"[slurm.py] could not find {fname} file when trying to fetch unfrozen ssms" )
         return None
-    with open ( "%s/pmodel.py" % rundir, "rt" ) as f:
-        D = eval( f.read() )
-        M = D["masses"]
-        ssms = D["ssmultipliers"]
-        pids = []
-        for k,v in M.items():
-            if v < 90000:
-                pids.append(k)
-        ret = []
-        for ssmpids,ssm in ssms.items():
-            for ssmpid in ssmpids:
-                #if abs(ssmpid) == 1000022:
-                #    continue
-                if abs(ssmpid) not in pids:
-                    continue
+    with open ( fname, "rt" ) as f:
+        lines = f.read()
+    lines = lines.replace("nan","'nan'" )
+    D = eval( lines )
+    M = D[0]["masses"]
+    ssms = D[0]["ssmultipliers"]
+    pids = []
+    for k,v in M.items():
+        if v < 90000:
+            pids.append(k)
+    ret = []
+    for ssmpids,ssm in ssms.items():
+        takeIt = True
+        hasStop = False
+        hasSquark = False
+        for ssmpid in ssmpids:
+            #if abs(ssmpid) == 1000022:
+            #    continue
+            if abs(ssmpid) in [ 1000006, 2000006 ]:
+                hasStop = True
+            if abs(ssmpid) in [ 1000001, 1000002, 1000003, 1000004 ]:
+                hasSquark = True
+            if abs(ssmpid) not in pids:
+                takeIt = False
+        if hasStop and hasSquark:
+            takeIt = False
+        if 1000022 in ssmpids or -1000022 in ssmpids:
+            print ( "[slurm.py] in this iteration we ignore LSP production modes!" )
+            takeIt = False
+        if takeIt:
             ret.append ( ssmpids )
-        return ret
-    return None
+    return ret
 
 def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     """ run the llhd scanner for pid, on the current hiscore
@@ -471,15 +488,15 @@ def logCall ():
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
-    argparser.add_argument ( '-q','--query', 
+    argparser.add_argument ( '-q','--query',
             help='query status, dont actually run (use -M to query repeatedly)',
             action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
-    argparser.add_argument ( '-k','--keep', 
+    argparser.add_argument ( '-k','--keep',
             help='keep the shell scripts that are being run, do not remove them afters',
             action="store_true" )
-    argparser.add_argument ( '--do_combine', 
+    argparser.add_argument ( '--do_combine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
@@ -523,7 +540,7 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
                         type=int, default=0 )
-    argparser.add_argument ( '-N', '--nmax', nargs='?', 
+    argparser.add_argument ( '-N', '--nmax', nargs='?',
                         help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
