@@ -35,8 +35,8 @@ def startServer ( rundir, dry_run, time ):
     os.chmod( tf, 0o755 )
     ram = 3500 # max ( 2, 0.5 * ( jmax - jmin ) )
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/srv-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/srv-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -106,8 +106,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         ram = ram *.8
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -158,20 +158,22 @@ def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     :param includeLSP: if False, do not include the LSP in list
     :returns: list of pids, or None.
     """
-    if not os.path.exists ( "%s/pmodel.py" % rundir ):
-        print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen pids" )
+    fname = f"{rundir}/states.dict"
+    if not os.path.exists ( fname ):
+        print ( f"[slurm.py] could not find {fname} file when trying to fetch unfrozen pids" )
         return None
-    with open ( "%s/pmodel.py" % rundir, "rt" ) as f:
-        D = eval( f.read() )
-        M = D["masses"]
-        ret = []
-        for k,v in M.items():
-            if not includeLSP and k == 1000022:
-                continue
-            if v < 90000:
-                ret.append(k)
-        return ret
-    return None
+    with open ( fname, "rt" ) as f:
+        lines = f.read()
+    lines = lines.replace("nan","'nan'" )
+    D = eval( lines )
+    M = D[0]["masses"]
+    ret = []
+    for k,v in M.items():
+        if not includeLSP and k == 1000022:
+            continue
+        if v < 90000:
+            ret.append(k)
+    return ret
 
 def fetchUnfrozenSSMsFromDict( rundir ):
     """ fetch pid pairs of ssmultipliers from dictionary
@@ -220,8 +222,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/llhd-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/llhd-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "20G" ]
@@ -264,7 +266,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
             return
         pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
-            pids = [ 1000001, 1000003, 1000006, 10000022 ]
+            pids = [ 1000001, 1000003, 1000006, 1000022 ]
         for i in pids:
             runScanner ( i, dry_run, time, rewrite, pid2, rundir )
         return
@@ -274,8 +276,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/scan-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/scan-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "30G" ]
@@ -406,8 +408,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
     if True:

@@ -353,7 +353,6 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     import matplotlib
     matplotlib.use("Agg")
     from matplotlib import pyplot as plt
-    import helpers
     import pickle
     namer = SParticleNames ( susy = False )
     #if False:
