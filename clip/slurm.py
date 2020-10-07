@@ -35,8 +35,8 @@ def startServer ( rundir, dry_run, time ):
     os.chmod( tf, 0o755 )
     ram = 3500 # max ( 2, 0.5 * ( jmax - jmin ) )
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/srv-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/srv-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -106,8 +106,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         ram = ram *.8
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -132,7 +132,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/smodels-utils/prototools/tools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
+            f.write ("%s/smodels-utils/prototools/moretools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -147,7 +147,7 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/smodels-utils/prototools/tools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
+            f.write ("%s/smodels-utils/prototools/moretools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
                      ( codedir, nprocs, rundir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
@@ -158,48 +158,67 @@ def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     :param includeLSP: if False, do not include the LSP in list
     :returns: list of pids, or None.
     """
-    if not os.path.exists ( "%s/pmodel.py" % rundir ):
-        print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen pids" )
+    fname = f"{rundir}/states.dict"
+    if not os.path.exists ( fname ):
+        print ( f"[slurm.py] could not find {fname} file when trying to fetch unfrozen pids" )
         return None
-    with open ( "%s/pmodel.py" % rundir, "rt" ) as f:
-        D = eval( f.read() )
-        M = D["masses"]
-        ret = []
-        for k,v in M.items():
-            if not includeLSP and k == 1000022:
-                continue
-            if v < 90000:
-                ret.append(k)
-        return ret
-    return None
+    with open ( fname, "rt" ) as f:
+        lines = f.read()
+    lines = lines.replace("nan","'nan'" )
+    D = eval( lines )
+    M = D[0]["masses"]
+    ret = []
+    for k,v in M.items():
+        if not includeLSP and k == 1000022:
+            continue
+        if v < 90000:
+            ret.append(k)
+    return ret
 
 def fetchUnfrozenSSMsFromDict( rundir ):
     """ fetch pid pairs of ssmultipliers from dictionary
-        in <rundir>/pmodel.py, if exists.
+        in <rundir>/states.dict, if exists.
     :returns: list of pid pairs, or None.
     """
+    ## FIXME the pid pairs should be taken from hiscore file, so we have xsecs to look at!
     print ( "[slurm.py:fetchUnfrozenSSMsFromDict] FIXME can we find out which productions we can ignore?" )
-    if not os.path.exists ( "%s/pmodel.py" % rundir ):
-        print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen ssms" )
+    # fname = f"{rundir}/pmodel.py"
+    fname = f"{rundir}/states.dict"
+    if not os.path.exists ( fname ):
+        print ( f"[slurm.py] could not find {fname} file when trying to fetch unfrozen ssms" )
         return None
-    with open ( "%s/pmodel.py" % rundir, "rt" ) as f:
-        D = eval( f.read() )
-        M = D["masses"]
-        ssms = D["ssmultipliers"]
-        pids = []
-        for k,v in M.items():
-            if v < 90000:
-                pids.append(k)
-        ret = []
-        for ssmpids,ssm in ssms.items():
-            for ssmpid in ssmpids:
-                #if abs(ssmpid) == 1000022:
-                #    continue
-                if abs(ssmpid) not in pids:
-                    continue
+    with open ( fname, "rt" ) as f:
+        lines = f.read()
+    lines = lines.replace("nan","'nan'" )
+    D = eval( lines )
+    M = D[0]["masses"]
+    ssms = D[0]["ssmultipliers"]
+    pids = []
+    for k,v in M.items():
+        if v < 90000:
+            pids.append(k)
+    ret = []
+    for ssmpids,ssm in ssms.items():
+        takeIt = True
+        hasStop = False
+        hasSquark = False
+        for ssmpid in ssmpids:
+            #if abs(ssmpid) == 1000022:
+            #    continue
+            if abs(ssmpid) in [ 1000006, 2000006 ]:
+                hasStop = True
+            if abs(ssmpid) in [ 1000001, 1000002, 1000003, 1000004 ]:
+                hasSquark = True
+            if abs(ssmpid) not in pids:
+                takeIt = False
+        if hasStop and hasSquark:
+            takeIt = False
+        if 1000022 in ssmpids or -1000022 in ssmpids:
+            print ( "[slurm.py] in this iteration we ignore LSP production modes!" )
+            takeIt = False
+        if takeIt:
             ret.append ( ssmpids )
-        return ret
-    return None
+    return ret
 
 def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     """ run the llhd scanner for pid, on the current hiscore
@@ -220,11 +239,11 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/llhd-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/llhd-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "20G" ]
+    cmd += [ "--mem", "15G" ]
     cmd += [ "-c", "30" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
@@ -264,7 +283,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
             return
         pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
-            pids = [ 1000001, 1000003, 1000006, 10000022 ]
+            pids = [ 1000001, 1000003, 1000006, 1000022 ]
         for i in pids:
             runScanner ( i, dry_run, time, rewrite, pid2, rundir )
         return
@@ -274,8 +293,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/scan-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/scan-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "30G" ]
@@ -339,7 +358,7 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools/tools')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools/moretools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
         f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=False )\n" % \
@@ -406,8 +425,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
     if True:
@@ -469,15 +488,15 @@ def logCall ():
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
-    argparser.add_argument ( '-q','--query', 
+    argparser.add_argument ( '-q','--query',
             help='query status, dont actually run (use -M to query repeatedly)',
             action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
-    argparser.add_argument ( '-k','--keep', 
+    argparser.add_argument ( '-k','--keep',
             help='keep the shell scripts that are being run, do not remove them afters',
             action="store_true" )
-    argparser.add_argument ( '--do_combine', 
+    argparser.add_argument ( '--do_combine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
@@ -521,7 +540,7 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
                         type=int, default=0 )
-    argparser.add_argument ( '-N', '--nmax', nargs='?', 
+    argparser.add_argument ( '-N', '--nmax', nargs='?',
                         help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',

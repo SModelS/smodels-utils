@@ -11,7 +11,7 @@ import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
-from smodels_utils.helper.sparticleNames import SParticleNames
+from tools.sparticleNames import SParticleNames
 matplotlib.rcParams['hatch.linewidth'] = .5  # previous svg hatch linewidth
 
 def integrateLlhds ( Z, RMAX, rthreshold ):
@@ -124,7 +124,7 @@ def getPidList( pid1, rundir ):
         pids.add ( int(t) )
     pids = list ( pids )
     if len(pids)==0:
-        print ( "[plotLlhds] could not find any llhd*pcl files. Perhaps you wish to perform ../tools/fetchFromClip.py --llhds=" )
+        print ( "[plotLlhds] could not find any llhd*pcl files. Perhaps you wish to perform ../moretools/fetchFromClip.py --llhds=" )
         sys.exit()
     print ( "[plotLlhds] creating plots for pids: %s" % ", ".join ( map(str,pids) ) )
     return pids

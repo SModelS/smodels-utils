@@ -11,7 +11,7 @@
 
 import pygraphviz, sys, math, os
 import logging
-from smodels_utils.helper import sparticleNames
+from tools import sparticleNames
 
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
