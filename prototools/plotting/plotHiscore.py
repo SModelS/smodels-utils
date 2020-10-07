@@ -13,7 +13,7 @@ from smodels.theory.theoryPrediction import TheoryPrediction
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 from smodels_utils.helper.bibtexTools import BibtexWriter
-from tools.sparticleNames import SParticleNames
+from ptools.sparticleNames import SParticleNames
 
 runtime._experimental = True
 

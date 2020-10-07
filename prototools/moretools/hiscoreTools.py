@@ -268,7 +268,7 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
     import copy, numpy, scipy, scipy.stats, math
     co = Combiner() #Keep it for convenience
-    from tools import helpers
+    from ptools import helpers
     # import hiscore #Keep it for convenience
 
     if args.execute not in [ "", None ]:

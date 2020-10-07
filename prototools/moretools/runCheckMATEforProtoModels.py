@@ -15,7 +15,7 @@ import multiprocessing
 import tempfile
 from MG5converter import convert_to_mg5card
 sys.path.append('../')
-from tools import sparticleNames
+from ptools import sparticleNames
 try:
     from ConfigParser import SafeConfigParser as ConfigParser
 except ImportError as e:

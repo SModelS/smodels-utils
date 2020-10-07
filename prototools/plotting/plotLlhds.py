@@ -11,7 +11,7 @@ import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
-from tools.sparticleNames import SParticleNames
+from ptools.sparticleNames import SParticleNames
 matplotlib.rcParams['hatch.linewidth'] = .5  # previous svg hatch linewidth
 
 def integrateLlhds ( Z, RMAX, rthreshold ):

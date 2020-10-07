@@ -10,7 +10,7 @@ WrapperBase.defaulttempdir="./" ## keep the temps in our folder
 from builder.manipulator import Manipulator
 from smodels.tools.runtime import nCPUs
 from tester.predictor import Predictor
-from tools.sparticleNames import SParticleNames
+from ptools.sparticleNames import SParticleNames
 
 def getHiscore( force_copy = False, rundir = None ):
     """ get the hiscore from the picklefile
