@@ -71,7 +71,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
-    print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
+    line = "run walkers %d - %d" % ( jmin, jmax-1 )
+    if jmax == jmin + 1:
+        line = "run walker %d" % jmin
+    print ( "[runOneJob:%d] %s" % ( pid, line ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
     dump_trainingdata = False
@@ -119,8 +122,12 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
     cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
-    print ( " ".join ( cmd ) )
-    if not dry_run:
+    scmd =  " ".join ( cmd )
+    scmd = scmd.replace ( "/scratch-cbe/users/wolfgan.waltenberger", "$BASE" )
+    if dry_run:
+        print ( "[slurm.py] dry_running:", scmd )
+    else:
+        print ( "[slurm.py] running", scmd )
         a=subprocess.run ( cmd )
         if not "returncode=0" in str(a):
             a = "%s%s%s" % ( colorama.Fore.RED, a, colorama.Fore.RESET )
@@ -582,7 +589,10 @@ def main():
     if not args.query:
         logCall ()
 
+    totjobs = 0
+
     for rundir in rundirs:
+        time.sleep ( random.uniform ( .002, .005 ) )
         dbpath = args.dbpath
         if dbpath == "real":
             dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
@@ -665,15 +675,21 @@ def main():
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select, args.do_combine ) )
                     jobs.append ( p )
                     p.start()
-                    time.sleep ( random.uniform ( 0.005, .01 ) )
+                    time.sleep ( random.uniform ( 0.006, .01 ) )
 
                 for j in jobs:
                     j.join()
                 res = colorama.Fore.RESET
                 col = colorama.Fore.GREEN
+                totjobs+=len(jobs)
                 if len(jobs) in [ 48, 49, 51 ]:
                     colo = colorama.Fore.RED
                 print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
             break
+        res = colorama.Fore.RESET
+        col = colorama.Fore.GREEN
+        if totjobs % 10 != 0:
+            col = colorama.Fore.RED
+        print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
 
 main()

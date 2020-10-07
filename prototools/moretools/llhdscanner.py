@@ -3,13 +3,12 @@
 """ script used to produce the likelihood scans """
 
 import os, sys, multiprocessing, time, numpy, subprocess, copy, glob
-sys.path.insert(0,"./")
-sys.path.insert(0,"../")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
+from csetup import setup
+setup()
+from smodels.tools.wrapperBase import WrapperBase
+WrapperBase.defaulttempdir="./" ## keep the temps in our folder
 from smodels.tools.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
-from csetup import setup
 from tester.combiner import Combiner
 from tester.predictor import Predictor
 from plotting.plotHiscore import obtain
@@ -134,7 +133,7 @@ class LlhdThread:
 def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1,
                 mpid2, nevents: int, rpid1, rpid2, predictor, return_dict ):
     """ the method needed for parallelization to work """
-    thread = LlhdThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents, 
+    thread = LlhdThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents,
                           predictor )
     newpoints = thread.run ( rpid1, rpid2 )
     if return_dict != None:
