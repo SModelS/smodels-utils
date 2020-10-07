@@ -3,10 +3,10 @@
 """ draw Z as a function of a model parameter """
 
 import numpy, sys, os, copy, time, subprocess, glob
-sys.path.insert(0,"../")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/protomodels/")
-sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/prototools/")
 from csetup import setup
+setup()
+from smodels.tools.wrapperBase import WrapperBase
+WrapperBase.defaulttempdir="./" ## keep the temps in our folder
 from builder.manipulator import Manipulator
 from smodels.tools.runtime import nCPUs
 from tester.predictor import Predictor
