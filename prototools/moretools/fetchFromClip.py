@@ -47,7 +47,7 @@ def main():
     store = { "scan": [ "scanM*.pcl", "ssm*.pcl" ], 
               "states": [ "states.dict" ],
               "database": [ "default.pcl" ],
-              "llhds": [ "llhd*pcl", "mp*pcl" ],
+              "llhds": [ "llhd*pcl" ],
               "two": [ "hiscore2.hi" ],
               "fake": [ "fake*.pcl", "signal*.pcl" ],
               "copy": [ "hiscoreCopy.hi" ],
