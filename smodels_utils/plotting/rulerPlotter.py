@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 import logging
 import pyslha
 sys.path.insert(0,"../../../protomodels/" )
-from tools.sparticleNames import SParticleNames
+from ptools.sparticleNames import SParticleNames
 
 mpl.rcParams['figure.dpi'] = 300
 
