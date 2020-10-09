@@ -368,7 +368,8 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools/moretools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
-        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=False )\n" % \
+        f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
+        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=not batchjob )\n" % \
                   ( rundir, maxiterations ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
