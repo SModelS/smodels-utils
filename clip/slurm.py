@@ -661,6 +661,7 @@ def main():
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
                             args.select, args.do_combine )
+                totjobs+=1
             else:
                 import multiprocessing
                 ## nwalkers is the number of jobs per process
