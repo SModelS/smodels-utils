@@ -103,7 +103,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( runner, keep )
 
     ram = max ( 6000, 3500. * ( jmax - jmin ) )
-    if "comb" in rundir:
+    if "comb" in rundir: ## combinations need more RAM
+        ram = ram * 1.2
+    if "history" in rundir: ## history runs need more RAM
         ram = ram * 1.2
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
