@@ -693,7 +693,9 @@ def main():
             break
         res = colorama.Fore.RESET
         col = colorama.Fore.GREEN
-        if totjobs % 10 != 0:
+        if totjobs % 10 != 0 and (totjobs)>1:
+            col = colorama.Fore.RED
+        if totjobs == 0:
             col = colorama.Fore.RED
         print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
 
