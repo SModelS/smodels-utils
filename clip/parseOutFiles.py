@@ -5,7 +5,7 @@
 import glob, subprocess, os, shutil
 
 def main():
-    files = glob.glob("walk-10107*out")
+    files = glob.glob("walk-*out")
     ooms, oofs = [], []
     for f in files:
         h = open ( f, "rt" )
