@@ -16,6 +16,9 @@ def main():
             if "oom" in line:
                 ooms.append ( lines[0] )
                 oofs.append ( f )
+                print ( lines[0] )
+                print ( line )
+                print ( )
                 break
     submitsh = "submit.sh"
     g=open( submitsh,"wt")
