@@ -13,7 +13,7 @@ def main():
         # [walkingWorker] starting 45 @ /scratch-cbe/users/wolfgan.waltenberger/rundir.lfake4/ with cheatcode 0
         h.close()
         for line in lines:
-            if "oom" in line:
+            if "oom" in line or "rror" in line:
                 ooms.append ( lines[0] )
                 oofs.append ( f )
                 print ( lines[0] )
