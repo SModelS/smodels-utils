@@ -26,6 +26,7 @@ def main():
     argparser.add_argument ( '--states', help='the states', action="store_true" )
     argparser.add_argument ( '--pmodels', help='the pmodels', action="store_true" )
     argparser.add_argument ( '--png', help='the png files', action="store_true" )
+    argparser.add_argument ( '--history', help='the history files', action="store_true" )
     argparser.add_argument ( '--database', help='the default.pcl database file', action="store_true" )
     argparser.add_argument ( '--file', help='the file <file>', type=str, default=None )
     argparser.add_argument ( '--dbdict', help='the database.dict file', action="store_true" )
@@ -38,8 +39,13 @@ def main():
     argparser.add_argument ( '-2', '--two', help='the second hiscore file', 
                              action="store_true" )
     argparser.add_argument ( '-R', '--rundir', help='name of remote rundir folder [rundir]', 
-                             type=str, default="rundir" )
+                             type=str, default=None )
     args = argparser.parse_args()
+    if args.rundir == None:
+        args.rundir = "rundir"
+        if args.history:
+            print ( "[fetchFromClip] did not supply a rundir but fetching history files, so choosing rundir.history" )
+            args.rundir = "rundir.history"
     # files= [ "hiscore.hi" ]
     files = set()
     if args.file not in [ None, "", "None", "none" ]:
@@ -54,6 +60,7 @@ def main():
               "slha": [ "hiscore.slha" ],
               "dbdict": [ "d*.dict" ],
               "pmodels": [ "pmodel?.py" ],
+              "history": [ "history*.list" ],
               "png": [ "*.png" ],
               "hiscore": [ "hiscore.hi" ],
               "ssms": [ "ssm*.pcl" ]
