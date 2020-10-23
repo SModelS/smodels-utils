@@ -1030,7 +1030,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             lsub.DrawLatex(.15,.79,subtitle)
     else:
         lsub.SetTextAlign(31)
-        lsub.SetTextSize(.025)
+        # lsub.SetTextSize(.025)
+        lsub.SetTextSize(.035)
         lsub.DrawLatex(.98,.086,subtitle)
     tgr.lsub=lsub
 
