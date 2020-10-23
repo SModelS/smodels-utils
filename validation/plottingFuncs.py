@@ -749,7 +749,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     return plane,base
 
 def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
-                      looseness = 1.2, style = "" ):
+                      looseness = 1.2, style = "", legendplacement = "top right" ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
@@ -759,6 +759,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     :param preliminary: if true, write "preliminary" over the plot
     :param looseness: ?
     :param style: allow for styles, currently "", and "sabine"
+    :param legendplacement: placement of legend. One of:
+                      "automatic", "top right", "top left"
     :return: TCanvas object containing the plot
     """
 
@@ -1037,16 +1039,20 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     dx = 0. ## top, left
     dx = .33 ## top, right
     hasExclLines = False
-    placement = "top left" ## "automatic", "top right", "top left"
+    # placement = "top left" ## "automatic", "top right", "top left"
     possibleplacements = [ "automatic", "auto", "top left", "top right" ]
-    if placement not in possibleplacements:
+    legendplacement = legendplacement.replace("'","")
+    legendplacement = legendplacement.replace('"',"")
+    legendplacement = legendplacement.lower()
+    legendplacement = legendplacement.strip()
+    if legendplacement not in possibleplacements:
         print ( "[plottingFuncs] ERROR placement %s not in %s" % \
-                ( placement, ",".join( possibleplacements ) ) )
+                ( legendplacement, ", ".join( possibleplacements ) ) )
         sys.exit(-1)
     leg = TLegend() ## automatic placement
-    if placement == "top right":
+    if legendplacement == "top right":
         leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
-    if placement == "top left":
+    if legendplacement == "top left":
         leg = TLegend(0.15,0.75-0.040*nleg,0.495,0.83)
     setOptions(leg)
     # leg.SetFillStyle(0)

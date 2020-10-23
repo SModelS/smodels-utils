@@ -52,7 +52,7 @@ class ValidationPlot():
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default",
-                 style = "" ):
+                 style = "", legendplacement = "top right" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
@@ -73,6 +73,7 @@ class ValidationPlot():
         self.preliminary = preliminary
         self.weightedAF = weightedAgreementFactor
         self.combine = combine
+        self.legendplacement = legendplacement
 
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
@@ -726,7 +727,7 @@ class ValidationPlot():
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
                                preliminary=self.preliminary,
-                               style = self.style )
+                               style = self.style, legendplacement = self.legendplacement )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """

@@ -22,7 +22,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
                   preliminary=False, combine=False,pngAlso = False,
                   weightedAgreementFactor = True, model = "default",
-                  style = "" ):
+                  style = "", legendplacement = "top right" ):
     """
     Creates a validation plot and saves its output.
 
@@ -54,6 +54,10 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param weightedAgreementFactor: when computing the agreement factor,
                                     weight points by the area of their Voronoi cell
     :param model: the model to use (e.g. mssm, nmssm, idm)
+    :param style: currently only "" and "sabine" are known
+                  style "sabine": SR label "pyhf combining 2 SRs" gets moved to
+                  top left corner of temperature p lot in pretty print
+    :param legendplacement: placement of legend. One of: top right, top left, auto
     :return: True on success
     """
 
@@ -62,7 +66,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
                     limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
                     combine=combine, weightedAgreementFactor = weightedAgreementFactor,
-                    model = model, style= style )
+                    model = model, style= style, legendplacement = legendplacement )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -166,7 +170,7 @@ def run ( expResList, axis, pretty, generateData ):
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
                                      doGenerate,limitPoints,extraInfo,preliminary,
                                      combine,pngAlso, weightedAgreementFactor, model,
-                                     style = style )
+                                     style = style, legendplacement = legendplacement )
                         doGenerate = False
             else:
                 from sympy import var
@@ -176,7 +180,7 @@ def run ( expResList, axis, pretty, generateData ):
                     validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
                                  generateData,limitPoints,extraInfo, preliminary,
                                  combine,pngAlso, weightedAgreementFactor, model,
-                                 style = style )
+                                 style = style, legendplacement = legendplacement )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -186,7 +190,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
         limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
         weightedAgreementFactor=True, model = "default", axis=None,
-        force_load = None, style = "" ):
+        force_load = None, style = "", legendplacement = "top right" ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -220,6 +224,10 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param force_load: force loading the text database ("txt"), or the
            binary database ("pcl"), dont force anything if None
     :param style: currently only "" and "sabine" are known
+                  style "sabine": SR label "pyhf combining 2 SRs" gets moved to
+                  top left corner of temperature p lot in pretty print
+    :param legendplacement: placement of legend: one of:
+                            top left, top right, auto [top right]
     """
 
     if not os.path.isdir(databasePath):
@@ -391,15 +399,18 @@ if __name__ == "__main__":
             if pretty == False and spretty not in [ "false", "0", "no" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
-        style = ""
         if parser.has_option("options","limitPoints"):
             limitPoints = parser.getint("options","limitPoints")
         if parser.has_option("options","extraInfo"):
             extraInfo = parser.getboolean("options", "extraInfo")
         if parser.has_option("options","preliminary"):
             preliminary = parser.getboolean("options", "preliminary")
+        style = ""
         if parser.has_option("options","style"):
             style = parser.get("options", "style")
+        legendplacement = "top right"
+        if parser.has_option("options","legendplacement"):
+            legendplacement = parser.get("options", "legendplacement")
         if parser.has_option("options","weightedAgreementFactor"):
             weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
@@ -421,4 +432,4 @@ if __name__ == "__main__":
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
          extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
-         force_load, style )
+         force_load, style, legendplacement )
