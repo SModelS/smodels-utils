@@ -1037,7 +1037,17 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     dx = 0. ## top, left
     dx = .33 ## top, right
     hasExclLines = False
-    leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    placement = "top left" ## "automatic", "top right", "top left"
+    possibleplacements = [ "automatic", "auto", "top left", "top right" ]
+    if placement not in possibleplacements:
+        print ( "[plottingFuncs] ERROR placement %s not in %s" % \
+                ( placement, ",".join( possibleplacements ) ) )
+        sys.exit(-1)
+    leg = TLegend() ## automatic placement
+    if placement == "top right":
+        leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    if placement == "top left":
+        leg = TLegend(0.15,0.75-0.040*nleg,0.495,0.83)
     setOptions(leg)
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
