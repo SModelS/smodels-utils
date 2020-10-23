@@ -1024,7 +1024,10 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     lsub.SetNDC()
     if style == "sabine":
         lsub.SetTextSize(.037)
-        lsub.DrawLatex(.15,.79,subtitle)
+        if legendplacement == "top left": # then we move to top right with this
+            lsub.DrawLatex(.57,.79,subtitle)
+        else:
+            lsub.DrawLatex(.15,.79,subtitle)
     else:
         lsub.SetTextAlign(31)
         lsub.SetTextSize(.025)
