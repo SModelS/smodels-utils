@@ -1,4 +1,0 @@
-loss: 8.658	{'index': 2, 'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 5, 'learnRate': 0.001, 'layer': 4, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
-loss: 9.026	{'index': 1, 'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 5, 'learnRate': 0.001, 'layer': 6, 'nodes': 16, 'shape': 'lin', 'rescaleMethod': None}
-loss: 9.947	{'index': 0, 'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 5, 'learnRate': 0.001, 'layer': 4, 'nodes': 16, 'shape': 'lin', 'rescaleMethod': None}
-loss: 9.947	{'index': 3, 'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 5, 'learnRate': 0.001, 'layer': 6, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}

@@ -1,1 +1,0 @@
-loss: 0.316	{'index': 0, 'optimizer': 'Adam', 'lossFunction': 'MSErel', 'batchSize': 32, 'activationFunction': 'lrel', 'epochNum': 80, 'learnRate': 0.0001, 'layer': 12, 'nodes': 128, 'shape': 'trap', 'rescaleMethod': 'standardScore'}

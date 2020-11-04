@@ -1,75 +1,80 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from system.dataset import *
-from system.initnet import *
-import os, sys, torch
-import matplotlib.pyplot as plt
+import argparse, os, sys, torch
 import numpy as np
-import argparse, logging
-from configparser import ConfigParser
-from readParameter import readParameterFile
+import matplotlib.pyplot as plt
+from parameter import Parameter
+from sklearn.preprocessing import MinMaxScaler
+from system.initnet import DatabaseNetwork
+from system.dataset import DatasetBuilder
+from smodels.tools.smodelsLogging import logger
+
+#from system.dataset import *
+
+#from system.auxiliaryFunctions import *
+#from configparser import ConfigParser
+
 from smodels.tools.physicsUnits import GeV, fb
 from smodels.theory.auxiliaryFunctions import unscaleWidth
+#from smodels.experiment.databaseObj import Database
 
-FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
-logger = logging.getLogger(__name__)
+#FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+#logger = logging.getLogger(__name__)
 
 
-class Performance():
+class NetworkEvaluater():
 
-	def __init__(self, parameters, netType, validationSet = None, showPlots = True, savePlots = True):
-
-		"""
-
+	def __init__(self, parameter, model = None, dataset = None):
 
 		"""
 
-		self.paramPath = parameters["path"]
-		self.paramDatabase = parameters["database"]
-		self.paramDataset = parameters["dataset"]
-		self.paramDevice = parameters["device"]
-		self.paramAnalysis = parameters["analysis"]
 
-		analysis 		= self.paramDatabase["analysisID"]
-		txName 			= self.paramDatabase["txName"]
-		dataSelector 	= self.paramDatabase["dataSelector"]
+		"""
 
-		db = Database(self.paramPath["database"])
-		expres = db.getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
+		#self.paramPath = parameters["path"]
+		#self.paramDatabase = parameters["database"]
+		#self.paramDataset = parameters["dataset"]
+		#self.paramDevice = parameters["device"]
+		#self.paramAnalysis = parameters["analysis"]
 
-		txList = expres.getDataset(self.paramDatabase["signalRegion"]).txnameList
-		for tx in txList:
-			if str(tx) == self.paramDatabase["txName"]:
-				txNameData = tx.txnameData
-				break
+		#analysis 		= self.paramDatabase["analysisID"]
+		#txName 			= self.paramDatabase["txName"]
+		#dataSelector 	= self.paramDatabase["dataSelector"]
 
-		self.paramDatabase["expres"] = expres
-		self.paramDatabase["txNameData"] = txNameData
+		self.expres = parameter["expres"]
+		self.txNameData = parameter["txNameData"]
+		self.nettype = parameter["nettype"]
 
-		self.expres = expres
-		self.txName = txName
+		#self.expres = expres
+		#self.txName = txName
+		
 		#self.dataselector = dataselector
-		self.SR = parameters["database"]["signalRegion"]
-		self.showPlots = True
-		self.savePlots = True
-		self.netType = netType
-		self.model = loadModel(expres, txName)[netType].double()
+		#self.SR = parameter["database"]["signalRegion"]
+		#self.showPlots = True
+		#self.savePlots = True
 
-		# TEMPORARY replace databasePath
-		dbPath = expres.path
+		if model != None:
+			self.model = model
+		else:
+			self.model = DatabaseNetwork.load(self.expres, self.txNameData) #loadModel(expres, txName)[netType]#.double()
+
+		#self.scaler = self.model.getScaler()
+
+		dbPath = self.expres.path
 		for i in range(len(dbPath)):
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
 		self.savePath = os.getcwd() + "/" + dbPath + "/performance/"
 		if not os.path.exists(self.savePath): os.makedirs(self.savePath)
-		# ---
 
-		if validationSet == None:
-			datasetbuilder = DatasetBuilder(logger, self.paramDatabase, self.paramDataset, self.paramDevice["device"])
-			self.validationSet = datasetbuilder.generateNewSet(netType, sampleSize = 10000)
-		else: self.validationSet = validationSet
+		if dataset == None:
+			builder = DatasetBuilder(parameter)
+			dataset = builder.run(self.nettype, sampleSize = 10000, splitData = False)
+			self.dataset = dataset["full"]
+		else: 
+			self.dataset = dataset
 
 
 	def evaluate(self):
@@ -93,7 +98,7 @@ class Performance():
 			self.meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
 			self.validateClassification()
 
-		if self.showPlots: plt.show()
+		#if self.showPlots: plt.show()
 		
 
 	def getBins(self, binNum = 15):
@@ -169,7 +174,7 @@ class Performance():
 		if self.showPlots: plt.show()
 
 
-	def getEffBins(self, binNum = 15):
+	def binData(self, binNum = 15):
 
 		#binRange = max(self.validationSet.labels).item() / binNum  #250.
 		binRange = [10**(n-10) for n in range(binNum)]
@@ -233,55 +238,76 @@ class Performance():
 		
 
 
-	def validateRegression(self):
+	def regression(self):
 
 		"""
 
 
 		"""
 
-		predictions = self.model(self.validationSet.inputs)#.detach().tolist()
-		labels = self.validationSet.labels#.detach().tolist()
+		model = self.model["regression"]
 
+		predictions = model(self.dataset.inputs)
+		labels = self.dataset.labels
+		scaler = model.scaler
 
-		for inputs in self.validationSet.inputs[0:20]:
-			print(inputs)
+		s1, s2 = [], []
 
-		yaxis = 1
-		if self.validationSet.inputDimension > 4:
-			if max(self.validationSet.inputs[2]) - min(self.validationSet.inputs[2]) > 20:
-				yaxis = 2
+		for n in range(len(self.dataset)):
+			i = self.dataset.inputs[n].detach().numpy()
+			l = self.dataset.labels[n].detach().numpy()
+			p = predictions[n].detach().numpy()
 
-		#yaxis = 4 #1
-		#'''REMOVE'''
+			L = np.concatenate((i,l))
+			P = np.concatenate((i,p))
 
-		X = [inputs[0].item() for inputs in self.validationSet.inputs]
-		Y = [inputs[4].item() for inputs in self.validationSet.inputs] #yaxis
+			s1.append(L)
+			s2.append(P)
 
-		#Y = [l.item() for l in self.validationSet.labels]
+		inputsNew = scaler.inverse_transform(s1)
+
+		labels1 = scaler.inverse_transform(s1)[:, [-1]]
+		predic1 = scaler.inverse_transform(s2)[:, [-1]]
+
+		# clear up as much memory as we possibly can
+		#del(s1)
+		#del(s2)
+
+		#yaxis = 1
+		#if self.validationSet.inputDimension > 4:
+		#	if max(self.validationSet.inputs[2]) - min(self.validationSet.inputs[2]) > 20:
+		#		yaxis = 2
+
 
 		zeroError = 0
 		bigErr = 0
 		E2 = []
+		LL = 0
+		PP = 0
+
 		for n in range(len(labels)):
-			l = labels[n].item()
-			p = predictions[n].item()
-			#l = unscaleWidth(l - 0.1).asNumber(GeV)
-			#p = unscaleWidth(p - 0.1).asNumber(GeV)
 
-			#if l == 1e-5:
-			#	l -= 1e-5
-			#	p -= 1e-5
-			if l < 1e-6: l = 0
-			if p < 1e-6: p = 0
+			#l = labels[n].item()
+			#p = predictions[n].item()
 
-			if l > 0:
+			l = labels1[n][0]
+			p = predic1[n][0]
+
+			if l < 1e-7:
+				l = 0
+				LL +=1
+				if p < 1e-7: 
+					p = 0
+					PP += 1
+
+			if l != 0:
 				e = np.sqrt((( p - l ) / l)**2)
 				#else: e = p	\t
 				#e = np.sqrt((l - p)**2) \t
 
-				if e < 0.05: 
-					print(l,p)
+				if e > 0.25: 
+					print("[%s,\t%s]\tI: %s\tP: %s" %(int(inputsNew[n][0]),unscaleWidth(inputsNew[n][2]).asNumber(GeV), round(l,10), round(p,10) ))
+					#print("[%s,\t%s]\tI: %s\tP: %s" %(round(inputsNew[n][0],5),round(inputsNew[n][2],5),round(l,5),round(p,5)))
 					bigErr += 1
 				E2.append(e) # \t
 			else:
@@ -289,51 +315,85 @@ class Performance():
 				E2.append(p)
 
 		meanError2 = np.mean(E2) * 100.
-		
-		#X = [inputs[0].item() for inputs in self.validationSet.inputs]
-		#Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
-		E = [e.item() for e in self.error]
 
-		
-		#Xd,Yd,Ed = [],[],[]
-		#for n, width in enumerate(Y):
-		#	if width < 1e-6:
-		#for n, err in enumerate(E2):
-		#	if err > 0.1:
+		print("total: %s" %len(labels))
+		print("big: %s" %bigErr)
+		print("zero: %s" %zeroError)
+		print("error: %s%%" %round(meanError2, 2))
+		#print("squished L's: %s\tP's: %s" %(LL,PP))
 
-		#for n, label in enumerate(self.validationSet.labels):
-		#	if label < 1e-4:
-		#		Xd.append(X[n])
-		#		Yd.append(Y[n])
-		#		Ed.append(E2[n])
-
-		#meanEd = np.mean(Ed) * 100.
+		print(self.dataset.inputs[0])
 		
-		print("SMOL ERROR: %s" %bigErr)
-		print("ZERO ERROR: %s" %zeroError)
+		yaxis, waxis = 1, 2 # M1b
+		#yaxis, waxis = 2, 6	# M5
+		#yaxis, waxis = 1, 4 # M8
+
+		#E = [e.item() for e in self.error]
+
+		"""
+		#M0_scaled = [inputs[0].item() for inputs in self.validationSet.inputs]
+		#M1_scaled = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
 
 		plt.figure(2)
-		#plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, self.meanError*100.), fontsize=14)
 		plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, meanError2), fontsize=14)
-		plt.xlabel("mass mother [GeV]")
-		plt.ylabel("mass daughter [GeV]")
+		plt.xlabel("squark mass [scaled]")
+		plt.ylabel("stau [scaled]")
 		#plt.ylabel("relative error")
-		#plt.scatter(X,E2)
-		plt.scatter(X,Y, c=E2, cmap='rainbow', vmin=0, vmax=1)
-		#plt.scatter(Xd,Yd, c=Ed, cmap='rainbow', vmin=0, vmax=1)
-		plt.colorbar()
+		plt.scatter(M0_scaled,M1_scaled, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		cbar = plt.colorbar()
+		cbar.set_label('relative error', rotation=90)
 		plt.tight_layout()
+		"""
 
-		fileName = self.txName + "_regression_scatterPlot.eps"
-		if self.savePlots:plt.savefig(self.savePath + fileName)
-	
-		#origPoints = getExpresData(self.expres, self.txName, self.SR)
-		#origPoints = getOrigExpresData(self.paramDatabase, stripUnits = True)
+		M0_GeV = [inputs[0] for inputs in inputsNew]
+		M1_GeV = [inputs[yaxis] for inputs in inputsNew]
+		EFF = [labels for labels in labels1]
+		W_Log = [inputs[waxis].item() for inputs in inputsNew]
+
+		plt.figure(3)
+		#plt.title('id: {}, tx: {}, sr: {}, relError: {:4.2f}% (regression)'.format(self.expres.globalInfo.getInfo('id'), self.txName, self.SR, meanError2), fontsize=14)
+		plt.title('{} relError: {:4.2f}% (regression)'.format(str(self.txNameData), meanError2), fontsize=14)
+		plt.xlabel(r"$m_{squark}$ (GeV)")
+		plt.ylabel(r"$m_{stau}$ (GeV)")
+		#plt.ylabel("relative error")
+		plt.scatter(M0_GeV, M1_GeV, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		cbar = plt.colorbar()
+		cbar.set_label('relative error', rotation=90)
+		plt.tight_layout()
+		fileName = str(self.txNameData) + "_regression_scatterPlot_stau.png" #eps
+		plt.savefig(self.savePath + fileName)
+
+		#W_Log = [np.log10(unscaleWidth(inputs[waxis].item()).asNumber(GeV)) for inputs in self.validationSet.inputs]
+		#W_Log = [inputs[waxis].item() for inputs in self.validationSet.inputs]
 		
-		#X0 = [oP[0] for oP in origPoints]
-		#Y0 = [oP[1] for oP in origPoints]
-		#plt.scatter(X0,Y0, marker="x", c="black", s=32)
+		
+		plt.figure(4)
+		plt.title('{} relError: {:4.2f}% (regression)'.format(str(self.txNameData), meanError2), fontsize=14)
+		plt.xlabel(r"$m_{squark}$ (GeV)")
+		plt.ylabel("width log + 1 scale")
+		plt.scatter(M0_GeV, W_Log, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		cbar = plt.colorbar()
+		cbar.set_label('relative error', rotation=90)
+		plt.tight_layout()
+		fileName = str(self.txNameData) + "_regression_scatterPlot_width.png" #eps
+		plt.savefig(self.savePath + fileName)
 
+		#EFF = [labels.item() for labels in self.validationSet.labels]
+		
+
+		plt.figure(5)
+		plt.title('{} relError: {:4.2f}% (regression)'.format(str(self.txNameData), meanError2), fontsize=14)
+		plt.xlabel(r"$m_{squark}$ (GeV)")
+		plt.ylabel("efficiencies")
+		plt.scatter(M0_GeV, EFF, c=E2, cmap='rainbow', vmin=0, vmax=1)
+		cbar = plt.colorbar()
+		cbar.set_label('relative error', rotation=90)
+		plt.tight_layout()
+		fileName = str(self.txNameData) + "_regression_scatterPlot_eff.png" #eps
+		plt.savefig(self.savePath + fileName)
+
+		#if self.savePlots:plt.savefig(self.savePath + fileName)
+		# ^^^^^^^^^^^^
 
 	def validateClassification(self):
 
@@ -419,9 +479,35 @@ class Performance():
 		#plt.scatter(X0,Y0, marker="x", c="black", s=32)
 
 		fileName = self.txName + "_classification_scatterPlot.eps"
-		if self.savePlots:plt.savefig(self.savePath + fileName)
+		#if self.savePlots:plt.savefig(self.savePath + fileName)
+		# ^^^^^^^^^^^^
 		plt.show()
 
+
+def main(parameter):
+
+	# ----------------------------------------------------------------------------------- #
+	# custom dictionary class that automatically permutates all possible map combinations #
+	# ----------------------------------------------------------------------------------- #
+
+	thingsToEvaluate = parameter["database"]
+
+	# -------------------------------------------------------------------------------- #
+	# loop over all analysis map combinations of the parameter file [database] section #
+	# -------------------------------------------------------------------------------- #
+
+	while(thingsToEvaluate.incrIndex):
+
+		parameter.loadExpres
+
+		for nettype in ["regression","classification"]:
+			parameter.set("nettype", nettype)
+
+			validater = NetworkEvaluater(parameter)
+			#validater.evaluate()
+
+			validater.regression()
+			exit()
 
 
 if __name__=='__main__':
@@ -434,38 +520,10 @@ if __name__=='__main__':
 			default = 'info', type = str)
 	ap.add_argument('-n', '--netType', 
 			help='which neural network to test (regression or classification)',
-			default = 'regression', type = str)
-           
+			default = 'regression', type = str)     
 	args = ap.parse_args()
-	numeric_level = getattr(logging,args.log.upper(), None)
-	logger.setLevel(level=numeric_level)
-    
-	if not os.path.isfile(args.parfile):
-		logger.error("Parameters file %s not found" %args.parfile)
-	else:
-		logger.info("Reading validation parameters from %s" %args.parfile)
 
-	fileParameters = readParameterFile(logger, args.parfile)
+	parameter = Parameter(args.parfile, args.log)
 
-	parameters = {}
-	parameters["database"] 		 = {}
-	parameters["path"] 			 = fileParameters["path"]
-	parameters["dataset"] 		 = fileParameters["dataset"]
-	parameters["device"] 		 = fileParameters["device"]
-	parameters["analysis"] 		 = fileParameters["analysis"]
-	parameters["hyperParameter"] = fileParameters["hyperParameter"]
-
-	for analysisID in fileParameters["database"]["analysisID"]:
-		for txName in fileParameters["database"]["txName"]:
-			for daSel in fileParameters["database"]["dataselector"]:
-				for signalRegion in fileParameters["database"]["signalRegion"]:
-
-					parameters["database"]["analysisID"]   = analysisID
-					parameters["database"]["txName"]	   = txName
-					parameters["database"]["dataSelector"] = daSel
-					parameters["database"]["signalRegion"] = signalRegion
-
-					validater = Performance(parameters, args.netType)
-					validater.evaluate()
-
+	main(parameter)
 
