@@ -1,86 +1,12 @@
-#import sys
-#sys.path.append('../../../smodels/')
-#sys.path.append('../../../smodels-utils/')
 
-import os, torch, unum, random, copy
-from time import time
-from system.readOrigData import *
-from system.auxiliaryFunctions import *
-from smodels.experiment.databaseObj import Database
-from smodels.tools import physicsUnits
-from smodels.tools.physicsUnits import GeV, fb
-from smodels.tools.stringTools import concatenateLines
-from smodels.theory.auxiliaryFunctions import rescaleWidth, unscaleWidth, removeUnits
-from torch.autograd import Variable
-from torch.utils.data import Dataset, DataLoader
-from torch import nn
+import os, sys, torch
 import numpy as np
+from copy import deepcopy
 from random import shuffle
-from sklearn.cluster import MeanShift
-
-
-
-
-
-
-class HyperParameter():
-
-	def __init__(self, parameterDict):
-
-		self.parameter = parameterDict
-		self.combinations = {}
-		self.numOfCombinations = 0
-
-		paramIndex = {}
-		done = False
-		firstKey = list(self.parameter.keys())[0]
-		lastKey = list(self.parameter.keys())[-1]
-
-		while not done:
-
-			endOfDict = True
-			for key in parameterDict:
-				currentParamLen = len(self.parameter[key])
-
-				if not key in self.combinations:
-					self.combinations[key] = []
-
-					if key != firstKey: paramIndex[key] = 0
-					else: paramIndex[key] = -1
-
-				if endOfDict:
-					if paramIndex[key] + 1 < currentParamLen:
-						paramIndex[key] += 1
-						endOfDict = False
-					else:
-						paramIndex[key] = 0
-						endOfDict = True
-						if key == lastKey: done = True
-
-			if not done:
-				self.numOfCombinations += 1
-				for key in self.combinations:
-					self.combinations[key].append(paramIndex[key])
-
-	def __len__(self):
-		return self.numOfCombinations
-
-	def __getitem__(self, index):
-		configuration = {"index": index}
-		for key in self.parameter:
-			configuration[key] = self.parameter[key][self.combinations[key][index]]
-		return configuration
-
-	def __str__(self):
-		return str(self.parameter)
-
-
-
-
-
-
-
-
+from torch.utils.data import Dataset # better import?
+from sklearn.preprocessing import MinMaxScaler	
+from smodels.theory.auxiliaryFunctions import rescaleWidth #, unscaleWidth, removeUnits
+from smodels.tools.smodelsLogging import logger
 
 class Data(Dataset):
 
@@ -91,8 +17,8 @@ class Data(Dataset):
 
 	def __init__(self, dataset, inputDimension, device, rescaleInputs = False, rescaleLabels = False):
 
-		self.inputs = torch.tensor(dataset, dtype=torch.float32).narrow(1, 0, inputDimension).double().to(device)
-		self.labels = torch.tensor(dataset, dtype=torch.float32).narrow(1, inputDimension, 1).double().to(device)
+		self.inputs = torch.tensor(dataset, dtype=torch.float64).narrow(1, 0, inputDimension).to(device) #.double().to(device)
+		self.labels = torch.tensor(dataset, dtype=torch.float64).narrow(1, inputDimension, 1).to(device) #.double().to(device)
 
 		mean = torch.mean(self.inputs)	#[torch.mean(self.inputs), torch.mean(self.labels)]
 		std = torch.std(self.inputs)	#[torch.std(self.inputs), torch.std(self.labels)]
@@ -120,7 +46,7 @@ class Data(Dataset):
 			if i > 0: start += int(length * sampleSplit[i-1])
 			end = int(length * sampleSplit[i])
 
-			splitData[i] = copy.deepcopy(self)
+			splitData[i] = deepcopy(self)
 			splitData[i].inputs = self.inputs.narrow(0, start, end)
 			splitData[i].labels = self.labels.narrow(0, start, end)
 
@@ -131,9 +57,6 @@ class Data(Dataset):
 
 
 
-
-
-
 class DatasetBuilder():
 
 	"""
@@ -141,33 +64,61 @@ class DatasetBuilder():
 	Needs metainfo of analysis and training parameters (usually loaded from nn_parameters.info file) as well as a device to send Dataset class to
 	(cpu or specific gpu)
 
-
 	"""
 
-	def __init__(self, logger, paramDatabase, paramDataset, device):
+	def __init__(self, parameter):
 
-		self.paramDatabase = paramDatabase
-		self.paramDataset = paramDataset
-		self.device = device
-		self.logger = logger
+		"""
+		Sets up the dataset generation for a specific map
+		var:parameter can be a simple dict, or the custom class introduced in 'readParameter.py'
 
-		self.txNameData = self.paramDatabase["txNameData"]
+		""" 
 
-		self.origData, self.origValues, self.units	= self._getOrigData()
-		self.origDataMean		= np.mean(self.origData, axis = 0)
-		self.origDataStd		= np.std(self.origData, axis = 0)
-		self.inputDimension 	= self.txNameData.full_dimensionality
+		self.smodelsPath = parameter["smodelsPath"]
+		self.utilsPath = parameter["utilsPath"]
 
-		### TEMPORARY to remove 1e6 widths ###
-		self._removeBigWidths()
+		self.expres = parameter["expres"]
+		self.txNameData = parameter["txNameData"]
+		self.full_dim = self.txNameData.full_dimensionality
 
-		self.og_PCA = None
-		self.m_c = None
+		self.sampleSize 	= parameter["sampleSize"]
+		self.sampleSplit 	= parameter["sampleSplit"]
+		self.device 		= parameter["device"]
+
+		self.refXsecFile = parameter["refXsecFile"]
+		if self.refXsecFile != None:
+			self.refXsecColumns = parameter["refXsecColumns"]
+			self._readRefXsecs()
+		else: self.refXsecs = None
+
+		self.loadFile = parameter["loadFile"]
+		if self.loadFile != None:
+			self.massColumns = parameter["massColumns"]
+
+		logger.info("builder completed for %s" % parameter["txNameData"])
+		
+		#self._loadOrigData()
+
+		#self._origData		= None
+		#self._origData_Info	= None
+		#self._origData_PCA	= None
+		#self._origData_MC	= None
+
 
 
 	def _removeBigWidths(self):
 
-		widthPos = self.txNameData.widthPosition[0][1] + 1
+		"""
+		Some analyses had big widths in the range 1e6 in the original grid, which dampened final performance significantly.
+		Use with caution, more of a troubleshooting method.
+
+		"""
+
+		width = self.txNameData.widthPosition
+		if width == []:
+			return
+
+		widthPos = width[0][1] + 1
 		n = 0
 		while n < len(self.origData):
 
@@ -177,11 +128,20 @@ class DatasetBuilder():
 			else:
 				n += 1
 
-		
 
+	def _loadOrigData(self): #, removeBigWidths = False
 
-	def _getOrigData(self):
-		return  getOrigExpresData(self.paramDatabase, stripUnits = True)
+		"""
+		Load grid points from databse/../analysis/sr/Tx.txt
+
+		"""
+
+		self.origData = getOrigExpresData(self.paramDatabase, stripUnits = True)
+		#if removeBigWidths: self._removeBigWidths()
+
+		#self.origData, self.origValues, self.units	= self._getOrigData()
+		#self.origDataMean		= np.mean(self.origData, axis = 0)
+		#self.origDataStd		= np.std(self.origData, axis = 0)
 
 
 	def _PCA(self, data = None):
@@ -191,7 +151,7 @@ class DatasetBuilder():
 
 		"""
 
-		if data == None: data = self.origData
+		if data == None: data = self._origData
 
 		tx = self.txNameData
 		ogOrdered = []
@@ -258,7 +218,7 @@ class DatasetBuilder():
 				else: nonZeroClusters += len(cluster)
 						
 
-		# If number of gridpoints is greater than sampleSize 'factor' could be a negative value
+		# If number of gridpoints is greater than sampleSize, 'factor' could be a negative value
 		factor = max((sampleSize - zeroClusters) / nonZeroClusters, 1)
 
 		pointsToDraw = []
@@ -277,6 +237,7 @@ class DatasetBuilder():
 
 		"""
 		Algorithm that finds hull edges from original datapoints
+		Used to generate convex hull dataset for classifaction network
 
 		"""
 
@@ -310,8 +271,101 @@ class DatasetBuilder():
 
 		return massesHull
 
+	
+	def _readRefXsecs(self):
 
-	def generateNewSet(self, netType, sampleSize = None, shuffleData = True):
+		"""
+		Load reference cross sections for an eff cutoff given by
+		luminosity * eff * refXsec[m0] > 1e-2 to ignore irrelevent effs and improve model performance
+
+		"""
+
+		from slha.addRefXSecs import getXSecsFrom
+
+		fiLe = self.refXsecFile
+		col  = self.refXsecColumns
+
+		if col != None:
+			xsecs = getXSecsFrom(fiLe, columns={"mass":col[0],"xsec":col[1]})
+		else:
+			xsecs = getXSecsFrom(fiLe)
+			
+		dic = {"masses":[],"xsecs":[]}
+
+		for key,value in xsecs.items():
+			dic["masses"].append(key)
+			dic["xsecs"].append(value*1e3) # pb -> fb
+
+		self.refXsecs = dic
+	
+
+	def _getRefXsec(self, mother):
+
+		for n, mass in enumerate(self.refXsecs["masses"]):
+			if mass > mother:
+				return self.refXsecs["xsecs"][n]
+
+		return self.refXsecs["xsecs"][-1]
+
+
+
+	def _loadDataset(self):
+
+		lumi = 31.6
+		logger.info("loading dataset (%s)" % self.nettype)
+		
+		with open(self.loadFile) as txtFile:
+			raw = txtFile.read()
+
+		lines = raw.split("\n")[1:]
+
+		dataset = []
+		count = [0 for n in range(20)]
+		squished = 0
+		totalLen = len(lines) - 1
+		
+		for line in lines[:-1]:
+			values = line.split()
+			datapoint = []
+			for x in self.massColumns:
+				if x < 0:
+					x = -x
+					datapoint.append(rescaleWidth(float(values[x])))
+				else:
+					datapoint.append(float(values[x]))
+
+
+			if True:
+				m0 = datapoint[0]
+				eff = datapoint[-1]
+				xsec = self._getRefXsec(m0)
+				if lumi * xsec * eff < 1e-2:
+					if eff > 0.: squished += 1
+					eff = 0.
+					datapoint[-1] = eff
+					
+			
+			dataset.append(datapoint)
+
+			if eff == 0.: x = 0
+			else:
+				x = int(-np.log10(eff)) + 1
+			count[x] += 1
+
+		for n,c in enumerate(count[:10]):
+			if n == 0: p = 0
+			else: p = 10**-n
+			logger.debug("# effs at/below %s: %s" % (p, c))
+
+		logger.debug("length of dataset: %s" %len(dataset))
+		logger.debug("number of eff squished to 0: %s (%s%%)" % (squished, 100*round(squished/totalLen,2)))
+		logger.debug("percentage of 0 efficiencies: %s%%" %(100*round(count[0]/totalLen,2)))
+		
+		return dataset
+		
+
+
+	def _createDataset(self, netType, sampleSize = None):
 
 		"""
 		Generates datasets for training and evaluation and returns them as custom 'Data' class
@@ -324,17 +378,16 @@ class DatasetBuilder():
 
 		"""
 
-		if sampleSize == None: sampleSize = self.paramDataset["sampleSize"]
+
+		if sampleSize == None: sampleSize = self.sampleSize
 		samplesLeft = sampleSize
 
 		dataset = []
-		particles = [0 for _ in range(self.inputDimension)]
+		particles = [0 for _ in range(self.full_dim)]
 		tx = self.txNameData
 
 		width = tx.widthPosition
 		rescaleInputs = width != []
-
-		#print(width)
 
 		if type(self.og_PCA) == type(None):
 			t0 = time()
@@ -352,17 +405,21 @@ class DatasetBuilder():
 		self.logger.info("drawing points..")
 
 		if netType == 'regression':
-		
+
+			fileName = "../slha/xsecsquark13.txt"
+			self._readRefXsecs(fileName)
+			lumi = 31.6
 
 			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(sampleSize)
 			
 			zeroes = 0
 			drawnPoints = []
+
 			for n, cluster in enumerate(self.m_c):
 
 				mean = np.mean(cluster, axis = 0)
 				std = np.std(cluster, axis = 0)
-				print("cluster %s/%s" % (n+1, len(self.m_c))) #self.logger.debug
+				logger.debug("cluster %s/%s" % (n+1, len(self.m_c)))
 				pointsLeft = pointsToDrawPerCluster[n]
 
 				while pointsLeft > 0:
@@ -377,9 +434,21 @@ class DatasetBuilder():
 
 					# temporary test
 					if val != None:
-						if val < 1e-6: val = 0.
+						x0 = x
+						while type(x0) == list or type(x0) == tuple: x0 = x0[0]
+						x0 = x0.asNumber(GeV)
+						xsec = self._getRefXsec(x0)
 
-					if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random.random() < 0.1) ):
+						thresh = lumi * xsec * val
+
+						#print("mass: %s\txsec: %s\tval: %s\tthresh: %s" % (int(x0), xsec, round(val, 5), round(thresh, 5)))
+
+						if thresh < 1e-2:
+							val = 0.
+						#else: print("thresh: %s\tval: %s" % (thresh, val))
+						#if val < 1e-6: val = 0.
+
+					if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random.random() < 0.15) ): #0.1
 						
 						pointsLeft -= 1
 						
@@ -393,9 +462,9 @@ class DatasetBuilder():
 
 						drawnPoints.append(strippedUnits)
 
-			print("%s%% are Zero." % round(100.*(zeroes/len(drawnPoints)), 3)) #self.logger.debug
+			logger.debug("%s%% are Zero." % round(100.*(zeroes/len(drawnPoints)), 3))
 						
-		else:
+		elif False:
 
 			hullPoints = self._getHullPoints()
 
@@ -474,31 +543,34 @@ class DatasetBuilder():
 
 		self.logger.info("done. %ss" % round(time()-t0, 3))
 
-		"""
-		from sklearn.preprocessing import MinMaxScaler
-		scaler = MinMaxScaler(feature_range=(1, 40))
+		return drawnPoints
 
-		### transform everything except values ###
-		splitA, splitB = [], []
-		for dP in drawnPoints:
-			splitA.append(dP[0:-1])
-			splitB.append(dP[-1])
 
-		scaler = scaler.fit(splitA)
-		splitA = scaler.transform(splitA)
-		splitA = np.array(splitA)
-		splitB = np.array(splitB)
-		splitB = splitB[np.newaxis, :].T
-		drawnPoints = np.concatenate((splitA, splitB), axis=1)
-		### --- ###
 
-		#scaler = scaler.fit(drawnPoints)
-		#drawnPoints = scaler.transform(drawnPoints)
-		"""
+	def run(self, nettype, sampleSize = None, splitData = True):
 
-		#for dp in drawnPoints[0:20]:
-		#	print(dp)
-		if shuffleData: shuffle(drawnPoints)
-		dataset = Data(drawnPoints, self.inputDimension, self.device)
-		return dataset
+		self.nettype = nettype
 
+		if self.loadFile != None:
+			points = self._loadDataset()
+		else:
+			points = self._createDataset(sampleSize)
+
+		scaler = MinMaxScaler(feature_range=(1, 100))
+
+		scaler = scaler.fit(points)
+		points = scaler.transform(points)
+
+		shuffle(points)
+		dataset = Data(points, self.full_dim, self.device)
+
+		self.dataset = {"full": dataset, "scaler": scaler}
+		self.dataset["rescaleParameter"] = dataset.rescaleParameter
+		if splitData:
+			splitset = dataset.split(self.sampleSplit)
+			self.dataset["training"]   = splitset[0]
+			self.dataset["testing"]    = splitset[1]
+			self.dataset["validation"] = splitset[2]
+
+		return self.dataset
+	

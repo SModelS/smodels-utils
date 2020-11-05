@@ -1,77 +1,9 @@
+
 import torch
 import torch.nn as nn
 import numpy as np
 import os
-
-
-
-
-
-def listModels(db, analyses, txNames, dataselector, superseded, nonValidated):
-
-	#db = Database(databasePath)
-
-	dataselector = "upperLimit"
-
-	expres = db.getExpResults(analysisIDs = analyses, txnames = txNames, dataTypes = dataselector, useSuperseded = superseded, useNonValidated = nonValidated)
-
-
-	txnames = []
-	for e in expres:
-		for dataset in e.datasets:
-			for txname in dataset.txnameList:
-				tx = txname.txName
-				if not tx in txnames:
-					txnames.append(tx)
-
-	colLen = max(len(txname) for txname in txnames) + 2
-
-	for e in expres:
-
-		print("\n  " + e.id() + ":")
-
-		txnames = []
-		for dataset in e.datasets:
-			for txname in dataset.txnameList:
-				tx = txname.txName
-				if not tx in txnames:
-					txnames.append(tx)
-
-		
-
-
-		if isinstance(txnames, list):
-
-			for txname in txnames:
-
-				model = loadModel(e, txname)
-				if model != None:
-					lossReg = model.getValidationLoss("regression").item()
-					lossCla = model.getValidationLoss("classification").item()
-					speedFactor = 1. / model.getSpeedFactor()
-
-					performance = str(round(lossReg, 3)) + " / " + str(round(lossCla, 3)) + " / " + str(round(speedFactor, 3))
-				else: 
-					performance = "N/A"
-
-				print("  " + txname.ljust(colLen) + performance)
-
-
-	return
-
-	dbPath = expres.path
-	for i in range(len(dbPath)):
-		if dbPath[i:i+8] == 'database':
-			dbPath = dbPath[i:]
-			break
-	savePath = os.getcwd() + "/" + dbPath + "/models/"
-	# ---
-
-	fileName = txName + '.pth'
-
-
-
-
+from smodels.tools.smodelsLogging import logger
 
 def getNodesPerLayer(shape, nodes, layer, inputNum):
 
@@ -133,13 +65,13 @@ def getNodesPerLayer(shape, nodes, layer, inputNum):
 	return [net, nodes_total]
 
 
-class NN_combined(nn.Module):
+class DatabaseNetwork(nn.Module):
 
-	def __init__(self, model_reg, model_cla):
+	def __init__(self, winner):
     	
-		super(NN_combined, self).__init__()
-		self["regression"] = model_reg
-		self["classification"] = model_cla
+		super(DatabaseNetwork, self).__init__()
+		self["regression"] = winner["regression"]["model"]
+		self["classification"] = winner["classification"]["model"]
 
 	def __setitem__(self, netType, model):
 		self.__dict__[netType] = model
@@ -165,16 +97,47 @@ class NN_combined(nn.Module):
 	def forward(self, x):
 
 		onHull = self["classification"](x) == 1.
-
-		if onHull:
-			return self["regression"](x)
-
+		if onHull: return self["regression"](x)
 		return 0.
+
+	def save(self, expres, txNameData):
+
+		#path = os.getcwd() + "/" + relFolderPath + "/"
+		#path = "model.pth"
+
+		dbPath = expres.path
+		for i in range(len(dbPath)):
+			if dbPath[i:i+8] == 'database':
+				dbPath = dbPath[i:]
+				break
+		path = os.getcwd() + "/" + dbPath + "/models/" + str(txNameData) + ".pth"
+
+		torch.save(self, path)
+		logger.info("model saved at '%s'" % path)
+
+
+	def load(expres, txNameData):
+	
+		dbPath = expres.path
+		for i in range(len(dbPath)):
+			if dbPath[i:i+8] == 'database':
+				dbPath = dbPath[i:]
+				break
+		path = os.getcwd() + "/" + dbPath + "/models/" + str(txNameData) + ".pth"
+
+		print(path)
+
+		try:
+			model = torch.load(path)
+			model.eval()
+		except: model = None
+
+		return model
 
 
 class Net_cla(nn.Module):
  
-	def __init__(self, netShape, activFunc, rescaleParameter):
+	def __init__(self, netShape, activFunc, rescaleParameter, scaler):
 
 		super(Net_cla, self).__init__()
 		self.seq = nn.Sequential()
@@ -205,12 +168,20 @@ class Net_cla(nn.Module):
 				#self.seq.add_module('drp{}'.format(i), nn.Dropout(0.2))			
 
 		self._rescaleParameter = rescaleParameter
+		self._scaler = scaler
 
 	def setValidationLoss(self, meanError):
 		self._validationLoss = meanError
 
 	def getValidationLoss(self):
 		return self._validationLoss
+
+	def setScaler(self,scaler):
+		self._scaler = scaler
+
+	@property
+	def scaler(self):
+		return self._scaler
 
 	def forward(self, x):#input_):
 
@@ -227,7 +198,7 @@ class Net_cla(nn.Module):
 
 class Net_reg(nn.Module):
 
-	def __init__(self, netShape, activFunc, rescaleParameter):
+	def __init__(self, netShape, activFunc, rescaleParameter, scaler):
     	
 		super(Net_reg, self).__init__()
 		self.seq = nn.Sequential()
@@ -252,11 +223,9 @@ class Net_reg(nn.Module):
 			if activFunc == "lrel" and i != lastLayer:
 				self.seq.add_module('lrel{}'.format(i), nn.LeakyReLU()) 
 
-			# REMOVE -> testing for LLP (width) maps with BCE loss
-			#if i == lastLayer:
-			#	self.seq.add_module('sgm{}'.format(i), nn.Sigmoid())
     	
 		self._rescaleParameter = rescaleParameter
+		self._scaler = scaler
 
 		for m in self.modules():
 			if isinstance(m, nn.Linear):
@@ -272,34 +241,35 @@ class Net_reg(nn.Module):
 	def getValidationLoss(self):
 		return self._validationLoss
 
-	def forward(self, x):
+	def setScaler(self,scaler):
+		self._scaler = scaler
 
-		#if self.rescaleParameter["method"] == "standardScore":
-		#	mean = self.rescaleParameter["parameter"]["mean"]
-		#	std = self.rescaleParameter["parameter"]["std"]
-		#	x = ( x - mean ) / std
+	@property
+	def scaler(self):
+		return self._scaler
+
+	def forward(self, x):
 
 		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
-		#x = torch.abs(x)
 
 		return x
 	
 
 
-def createNet(hyperParameter, fullDataset, netType):
+def createNet(hyper, rescaleParameter, scaler, full_dim, nettype):
 
-	shape = hyperParameter["shape"]
-	nodes = hyperParameter["nodes"]
-	layer = hyperParameter["layer"]
-	activationFunction = hyperParameter["activationFunction"]
+	shape = hyper["shape"]
+	nodes = hyper["nodes"]
+	layer = hyper["layer"]
+	activ = hyper["activationFunction"]
 
-	netshape, nodesTotal = getNodesPerLayer(shape, nodes, layer, fullDataset.inputDimension)
+	netshape, nodesTotal = getNodesPerLayer(shape, nodes, layer, full_dim)
 
-	if netType == 'regression':
-		model = Net_reg(netshape, activationFunction, fullDataset.rescaleParameter)
-	elif netType == 'classification':
-		model = Net_cla(netshape, activationFunction, fullDataset.rescaleParameter)
+	if nettype == 'regression':
+		model = Net_reg(netshape, activ, rescaleParameter, scaler)
+	elif nettype == 'classification':
+		model = Net_cla(netshape, activ, rescaleParameter, scaler)
 	
 	return model
 
