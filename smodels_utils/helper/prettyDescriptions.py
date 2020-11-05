@@ -413,7 +413,7 @@ motherDict = {"T1" :  "gluino",
     'TRHadGM1' : 'gluino',
     'TRHadQM1' : 'squark',
     'TRHadUM1' : 'stop',
-    'TRHadDM1' : 'sbottom',        
+    'TRHadDM1' : 'sbottom',
     "T5Gamma" : "gluino",
     "T5ZGamma" : "gluino",
     "T5HGamma" : "gluino",
@@ -612,12 +612,28 @@ def prettyTxname(txname,outputtype="root"):
         return None
 
 def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
-                            collaboration = None ):
-    """ create good TeX version of pretty name 
+                            collaboration = None, anaid = None ):
+    """ create good TeX version of pretty name
     :param sqrts: if not None, add <sqrts> TeV to name
     :param dropEtmiss: if True, then Etmiss gets dropped
-    :param collaboration: if not None, prefix with collaboration name
+    :param collaboration: if not None, prefix with collaboration name. if True and
+                          anaid is given, then infer collaboration name from anaid
+    :param anaid: analysis id. if given, then we also query a dictionary
     """
+
+    prettyNames = { "ATLAS-SUSY-2013-02": "ATL multijet, 8 TeV",
+        "ATLAS-SUSY-2013-15": "ATL 1$\ell$ stop, 8 TeV",
+        "ATLAS-SUSY-2016-07": "ATL multijet, 13 TeV",
+        "ATLAS-SUSY-2016-16": "ATL 1$\ell$ stop, 13 TeV",
+        "CMS-SUS-13-012": "CMS multijet, 8 TeV",
+        "CMS-SUS-16-050": "CMS $0\ell$ stop, 13 TeV"
+    }
+    if anaid != None and anaid in prettyNames:
+        return prettyNames[anaid]
+    if anaid != None and collaboration == True:
+        collaboration = "CMS"
+        if "ATLAS" in anaid:
+            collaboration = "ATL"
     pn = prettyname.replace(">","$>$").replace("<","$<$")
     pn = pn.replace("0 or $>$=1 leptons +","" )
     pn = pn.replace("photon photon","$\gamma\gamma$" )
@@ -628,12 +644,12 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("same-sign","SS" )
     pn = pn.replace("Multilepton","multi-l" )
     pn = pn.replace("multilepton","multi-l" )
-    pn = pn.replace("0 leptons","0$\ell$" )
     pn = pn.replace("leptons","l's" )
     pn = pn.replace("lepton","l" )
     pn = pn.replace("1L","1$\ell$" )
     pn = pn.replace("0L","0$\ell$" )
     pn = pn.replace("1 l","1$\ell$" )
+    pn = pn.replace("0 leptons","0$\ell$" )
     pn = pn.replace("dilepton","di\-l" )
     pn = pn.replace("productions with decays to","prod, to ")
     pn = pn.replace("photon","$\gamma$" )
