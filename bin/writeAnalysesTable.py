@@ -20,6 +20,7 @@ except:
     import commands as C ## python2
 from smodels.tools.physicsUnits import fb, TeV
 from smodels_utils.helper.various import hasLLHD
+from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
 from smodels_utils.helper.bibtexTools import BibtexWriter
 import IPython
 
@@ -177,34 +178,7 @@ class Writer:
             lines[0]+="%s &" % ananr
         lines[0] += "%s & " % Id
         if self.prettyNames:
-            pn = prettyName.replace(">","$>$").replace("<","$<$")
-            pn = pn.replace("0 or $>$=1 leptons +","" )
-            pn = pn.replace("photon photon","$\gamma\gamma$" )
-            pn = pn.replace("SF OS","SFOS" )
-            pn = pn.replace("jet multiplicity","n$_{jets}$" )
-            pn = pn.replace("Higgs","H" )
-            pn = pn.replace("searches in","to" )
-            pn = pn.replace("same-sign","SS" )
-            pn = pn.replace("Multilepton","multi-l" )
-            pn = pn.replace("multilepton","multi-l" )
-            pn = pn.replace("leptons","l's" )
-            pn = pn.replace("lepton","l" )
-            pn = pn.replace("dilepton","di\-l" )
-            pn = pn.replace("productions with decays to","prod, to ")
-            pn = pn.replace("photon","$\gamma$" )
-            pn = pn.replace("Photon","$\gamma$" )
-            pn = pn.replace("-$>$","$\\rightarrow$" )
-            pn = pn.replace("final states","")
-            pn = pn.replace("final state","")
-            pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
-            pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
-            pn = pn.replace("MET","$\\not{\!\!E}_T$")
-            pn = pn.replace("M_CT","M$_CT$" )
-            pn = pn.replace("alpha_T","$\\alpha_T$" )
-            if len(pn)>0 and pn[-1]==")":
-                pos = pn.rfind ( "(" )
-                pn = pn[:pos]
-            # pn = prettyName[:30]
+            pn = prettyTexAnalysisName ( prettyName )
             lines[0] += "%s &" % pn
         if self.topos:
             lines[0] += "%s &" % ( alltxes )

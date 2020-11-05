@@ -12,6 +12,7 @@
 import logging
 from sympy import var
 from math import floor, log10
+from smodels.tools.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
 x,y,z = var('x y z')
 
@@ -609,6 +610,61 @@ def prettyTxname(txname,outputtype="root"):
         return prodString + ", " + decayString
     else:
         return None
+
+def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
+                            collaboration = None ):
+    """ create good TeX version of pretty name 
+    :param sqrts: if not None, add <sqrts> TeV to name
+    :param dropEtmiss: if True, then Etmiss gets dropped
+    :param collaboration: if not None, prefix with collaboration name
+    """
+    pn = prettyname.replace(">","$>$").replace("<","$<$")
+    pn = pn.replace("0 or $>$=1 leptons +","" )
+    pn = pn.replace("photon photon","$\gamma\gamma$" )
+    pn = pn.replace("SF OS","SFOS" )
+    pn = pn.replace("jet multiplicity","n$_{jets}$" )
+    pn = pn.replace("Higgs","H" )
+    pn = pn.replace("searches in","to" )
+    pn = pn.replace("same-sign","SS" )
+    pn = pn.replace("Multilepton","multi-l" )
+    pn = pn.replace("multilepton","multi-l" )
+    pn = pn.replace("0 leptons","0$\ell$" )
+    pn = pn.replace("leptons","l's" )
+    pn = pn.replace("lepton","l" )
+    pn = pn.replace("1L","1$\ell$" )
+    pn = pn.replace("0L","0$\ell$" )
+    pn = pn.replace("1 l","1$\ell$" )
+    pn = pn.replace("dilepton","di\-l" )
+    pn = pn.replace("productions with decays to","prod, to ")
+    pn = pn.replace("photon","$\gamma$" )
+    pn = pn.replace("Photon","$\gamma$" )
+    pn = pn.replace("-$>$","$\\rightarrow$" )
+    pn = pn.replace("final states","")
+    pn = pn.replace("final state","")
+    if dropEtmiss:
+        for etm in [ "ETmiss", "Etmiss", "MET" ]:
+            pn = pn.replace(" + "+etm,"")
+            pn = pn.replace("+ "+etm,"")
+            pn = pn.replace("+"+etm,"")
+            pn = pn.replace(etm,"")
+    pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
+    pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
+    pn = pn.replace("MET","$\\not{\!\!E}_T$")
+    pn = pn.replace("M_CT","M$_CT$" )
+    pn = pn.replace("alpha_T","$\\alpha_T$" )
+    if len(pn)>0 and pn[-1]==")":
+        pos = pn.rfind ( "(" )
+        pn = pn[:pos]
+    pn = pn.strip()
+    if sqrts != None:
+        try:
+            sqrts = sqrts.asNumber(TeV)
+        except Exception as e:
+            pass
+        pn += ", %d TeV" % sqrts
+    if collaboration != None:
+        pn = collaboration + " " + pn
+    return pn
 
 def prettyAxes(txname,axes):
     """
