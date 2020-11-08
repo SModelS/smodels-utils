@@ -3,7 +3,7 @@
 # super simple script that runs the hiscore and state updater on a worker.
 # in between updates it waits 10 mins
 
-ml --latest singularity
+## ml --latest singularity
 
 # cd /users/wolfgan.waltenberger/git/projects/singularity/
 

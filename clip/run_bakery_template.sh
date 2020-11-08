@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ml --latest singularity
+## ml --latest singularity
 
 cd /users/wolfgan.waltenberger/git/projects/singularity/
 
