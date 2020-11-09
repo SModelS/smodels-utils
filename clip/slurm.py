@@ -50,7 +50,8 @@ def startServer ( rundir, dry_run, time ):
         print ( "returned: %s" % a )
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
-                cheatcode, rundir, maxsteps, select, do_combine, record_history ):
+                cheatcode, rundir, maxsteps, select, do_combine, record_history,
+                seed ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -69,6 +70,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param do_combine: if true, then also perform combinations, either via
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
+    :param seed: the random seed for the walker
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -88,8 +90,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, select='%s', do_combine=%s, record_history=%s )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps, select, do_combine, record_history ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps,
+                    seed, select, do_combine, record_history ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     Dir = getDirname ( rundir )
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
@@ -102,7 +105,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
 
-    ram = max ( 7500, 3500. * ( jmax - jmin ) )
+    ram = max ( 8000, 3500. * ( jmax - jmin ) )
     if "comb" in rundir: ## combinations need more RAM
         ram = ram * 1.2
     if "history" in rundir: ## history runs need more RAM
@@ -551,6 +554,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
+    argparser.add_argument ( '--seed', nargs='?', help='the random seed [None]',
+                        type=int, default=None )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-N', '--nmax', nargs='?',
@@ -665,7 +670,7 @@ def main():
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select, args.do_combine, args.record_history )
+                            args.select, args.do_combine, args.record_history, args.seed )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -679,7 +684,9 @@ def main():
                     imax = imin + nwalkers
                     p = multiprocessing.Process ( target = runOneJob,
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
-                                     args.keep, args.time, cheatcode, rundir, args.maxsteps, args.select, args.do_combine, args.record_history ) )
+                                     args.keep, args.time, cheatcode, rundir, args.maxsteps, 
+                                     args.select, args.do_combine, args.record_history,
+                                     args.seed ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
