@@ -1,12 +1,21 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-import os, sys, torch
+import os
+import sys
+import torch
 import numpy as np
+from time import time
 from copy import deepcopy
-from random import shuffle
+from random import random, shuffle
+from sklearn.cluster import MeanShift
+from system.auxiliary import loadGridPoints
 from torch.utils.data import Dataset # better import?
-from sklearn.preprocessing import MinMaxScaler	
-from smodels.theory.auxiliaryFunctions import rescaleWidth #, unscaleWidth, removeUnits
+from sklearn.preprocessing import MinMaxScaler
+from smodels.theory.auxiliaryFunctions import rescaleWidth, removeUnits#, unscaleWidth
+from smodels.tools import physicsUnits
 from smodels.tools.smodelsLogging import logger
+from smodels.tools.physicsUnits import GeV, fb, pb
 
 class Data(Dataset):
 
@@ -33,6 +42,13 @@ class Data(Dataset):
 
 
 	def split(self, sampleSplit):
+
+		"""
+		Method to split dataset into different parts. Mainly training, testing and validation.
+
+		:param sampleSplit: dict of floats that ideally add up to 1.
+
+		"""
 
 		if sum(sampleSplit) != 1.:
 			logger.error("Dataset splice ratios don't add up to 1")
@@ -61,7 +77,7 @@ class DatasetBuilder():
 
 	"""
 	Outputs a Dataset class that is used for training and evaluation of neural networks
-	Needs metainfo of analysis and training parameters (usually loaded from nn_parameters.info file) as well as a device to send Dataset class to
+	Needs metainfo of analysis and training parameters (usually loaded from nn_parameters.info file) as well as a device to send 'Dataset' class to
 	(cpu or specific gpu)
 
 	"""
@@ -70,7 +86,7 @@ class DatasetBuilder():
 
 		"""
 		Sets up the dataset generation for a specific map
-		var:parameter can be a simple dict, or the custom class introduced in 'readParameter.py'
+		:param parameter: Holds all neccessary information to create or load datasets. Can be a simple dict, or the custom class introduced in 'readParameter.py'
 
 		""" 
 
@@ -78,8 +94,11 @@ class DatasetBuilder():
 		self.utilsPath = parameter["utilsPath"]
 
 		self.expres = parameter["expres"]
-		self.txNameData = parameter["txNameData"]
-		self.full_dim = self.txNameData.full_dimensionality
+		self.txnameData = parameter["txName"].txnameData
+		self.dataselector = parameter["dataselector"]
+		self.signalRegion = parameter["signalRegion"]
+		self.full_dim = self.txnameData.full_dimensionality
+		self.luminosity = parameter["txName"].globalInfo.getInfo("lumi").asNumber(1/fb)
 
 		self.sampleSize 	= parameter["sampleSize"]
 		self.sampleSplit 	= parameter["sampleSplit"]
@@ -95,15 +114,7 @@ class DatasetBuilder():
 		if self.loadFile != None:
 			self.massColumns = parameter["massColumns"]
 
-		logger.info("builder completed for %s" % parameter["txNameData"])
-		
-		#self._loadOrigData()
-
-		#self._origData		= None
-		#self._origData_Info	= None
-		#self._origData_PCA	= None
-		#self._origData_MC	= None
-
+		logger.info("builder completed for %s" % self.txnameData)
 
 
 	def _removeBigWidths(self):
@@ -114,7 +125,7 @@ class DatasetBuilder():
 
 		"""
 
-		width = self.txNameData.widthPosition
+		width = self.txnameData.widthPosition
 		if width == []:
 			return
 
@@ -133,10 +144,12 @@ class DatasetBuilder():
 
 		"""
 		Load grid points from databse/../analysis/sr/Tx.txt
+		Function loadGridPoints returns (masspoints, values, units),
+		but we are only interested in mass points
 
 		"""
 
-		self.origData = getOrigExpresData(self.paramDatabase, stripUnits = True)
+		self._origData = loadGridPoints(self.expres, self.txnameData, self.dataselector, self.signalRegion, stripUnits = True)[0]
 		#if removeBigWidths: self._removeBigWidths()
 
 		#self.origData, self.origValues, self.units	= self._getOrigData()
@@ -149,11 +162,13 @@ class DatasetBuilder():
 		"""
 		Perform PCA on any given masspoints (default = original grid points)
 
+		:param data: alternative datapoints, default are original gridpoints of current map
+
 		"""
 
 		if data == None: data = self._origData
 
-		tx = self.txNameData
+		tx = self.txnameData
 		ogOrdered = []
 
 		if tx.widthPosition != []:
@@ -170,28 +185,26 @@ class DatasetBuilder():
 			for og in data:			
 				ogOrdered.append(tx.coordinatesToData(og))
 
-		#self.og_PCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
-		data_PCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
-
-		return data_PCA
+		self._origPCA = np.array([tx.dataToCoordinates(m, rotMatrix = tx._V, transVector = tx.delta_x) for m in ogOrdered])
 
 
-	def _clusterData(self, bw = 8):
+	def _clusterData(self, bandWidth = 8):
 
 		"""
 		Perform meanshift analysis on PCA grid points
 
+		:param bandWidth: bandwidth for the sklearn.cluster.Meanshift method
+
 		"""
 
-		clustering = MeanShift(bandwidth = bw).fit(self.og_PCA)
+		clustering = MeanShift(bandwidth = bandWidth).fit(self._origPCA)
 			
-		m_c = [[] for _ in range(len(clustering.cluster_centers_))]
-		#drawnPoints_PCA = []
+		cluster = [[] for _ in range(len(clustering.cluster_centers_))]
 		
 		for n, label in enumerate(clustering.labels_):
-			m_c[label].append(self.og_PCA[n])
+			cluster[label].append(self._origPCA[n])
 
-		self.m_c = m_c
+		self._origCluster = cluster
 
 
 	def _addClusterBias(self, sampleSize):
@@ -201,10 +214,10 @@ class DatasetBuilder():
 
 		"""
 
-		tx = self.txNameData
+		tx = self.txnameData
 		clusterMeanVals = []
 		zeroClusters, nonZeroClusters = 0, 0
-		for n, cluster in enumerate(self.m_c):
+		for n, cluster in enumerate(self._origCluster):
 
 				mean = np.mean(cluster, axis = 0)
 
@@ -222,7 +235,7 @@ class DatasetBuilder():
 		factor = max((sampleSize - zeroClusters) / nonZeroClusters, 1)
 
 		pointsToDraw = []
-		for n, cluster in enumerate(self.m_c):
+		for n, cluster in enumerate(self._origCluster):
 
 			if clusterMeanVals[n] > 0:
 				pointsToDraw.append(int(factor*len(cluster))+1)
@@ -311,7 +324,6 @@ class DatasetBuilder():
 
 	def _loadDataset(self):
 
-		lumi = 31.6
 		logger.info("loading dataset (%s)" % self.nettype)
 		
 		with open(self.loadFile) as txtFile:
@@ -335,16 +347,17 @@ class DatasetBuilder():
 					datapoint.append(float(values[x]))
 
 
-			if True:
+			
+			if self.refXsecs != None:
 				m0 = datapoint[0]
 				eff = datapoint[-1]
 				xsec = self._getRefXsec(m0)
-				if lumi * xsec * eff < 1e-2:
+				if self.luminosity * xsec * eff < 1e-4: #1e-2
 					if eff > 0.: squished += 1
 					eff = 0.
 					datapoint[-1] = eff
 					
-			
+			#if eff != 0.:
 			dataset.append(datapoint)
 
 			if eff == 0.: x = 0
@@ -365,7 +378,7 @@ class DatasetBuilder():
 		
 
 
-	def _createDataset(self, netType, sampleSize = None):
+	def _createDataset(self, sampleSize = None):
 
 		"""
 		Generates datasets for training and evaluation and returns them as custom 'Data' class
@@ -378,48 +391,40 @@ class DatasetBuilder():
 
 		"""
 
-
 		if sampleSize == None: sampleSize = self.sampleSize
 		samplesLeft = sampleSize
 
 		dataset = []
 		particles = [0 for _ in range(self.full_dim)]
-		tx = self.txNameData
+		tx = self.txnameData
 
 		width = tx.widthPosition
 		rescaleInputs = width != []
 
-		if type(self.og_PCA) == type(None):
-			t0 = time()
-			self.logger.info("PCA on orig data..")
-			self.og_PCA = self._PCA()
-			self.logger.info("done. %ss" % round(time()-t0, 3))
+		if not hasattr(self, "_origData"):
+			self._loadOrigData()
 
-		if type(self.m_c) == type(None):
-			t0 = time()
-			self.logger.info("clustering..")
+		if not hasattr(self, "_origPCA"):
+			self._PCA()
+
+		if not hasattr(self, "_origCluster"):
 			self._clusterData()
-			self.logger.info("done. %ss" % round(time()-t0, 3))
 
 		t0 = time()
-		self.logger.info("drawing points..")
+		logger.info("drawing points..")
 
-		if netType == 'regression':
-
-			fileName = "../slha/xsecsquark13.txt"
-			self._readRefXsecs(fileName)
-			lumi = 31.6
+		if self.nettype == 'regression':
 
 			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(sampleSize)
 			
 			zeroes = 0
 			drawnPoints = []
 
-			for n, cluster in enumerate(self.m_c):
+			for n, cluster in enumerate(self._origCluster):
 
 				mean = np.mean(cluster, axis = 0)
 				std = np.std(cluster, axis = 0)
-				logger.debug("cluster %s/%s" % (n+1, len(self.m_c)))
+				logger.debug("cluster %s/%s" % (n+1, len(self._origCluster)))
 				pointsLeft = pointsToDrawPerCluster[n]
 
 				while pointsLeft > 0:
@@ -432,31 +437,24 @@ class DatasetBuilder():
 					val = tx.getValueFor(x)
 					val = removeUnits(val,physicsUnits.standardUnits)
 
-					# temporary test
-					if val != None:
+					if self.refXsecs != None and val != None:
 						x0 = x
 						while type(x0) == list or type(x0) == tuple: x0 = x0[0]
 						x0 = x0.asNumber(GeV)
 						xsec = self._getRefXsec(x0)
 
-						thresh = lumi * xsec * val
-
-						#print("mass: %s\txsec: %s\tval: %s\tthresh: %s" % (int(x0), xsec, round(val, 5), round(thresh, 5)))
+						thresh = self.luminosity * xsec * val
 
 						if thresh < 1e-2:
 							val = 0.
-						#else: print("thresh: %s\tval: %s" % (thresh, val))
-						#if val < 1e-6: val = 0.
 
-					if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random.random() < 0.15) ): #0.1
+					if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random() < 0.15) ): #0.1
 						
 						pointsLeft -= 1
 						
 						if val == 0.:
 							zeroes += 1
 
-						#val += 1e-5
-						
 						strippedUnits = tx.dataToCoordinates(x)
 						strippedUnits.append(val)
 
@@ -464,7 +462,7 @@ class DatasetBuilder():
 
 			logger.debug("%s%% are Zero." % round(100.*(zeroes/len(drawnPoints)), 3))
 						
-		elif False:
+		else:
 
 			hullPoints = self._getHullPoints()
 
@@ -513,12 +511,12 @@ class DatasetBuilder():
 			samplesLeft = 0
 			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(samplesLeft)
 
-			for n, cluster in enumerate(self.m_c):
+			for n, cluster in enumerate(self._origCluster):
 
 				mean = np.mean(cluster, axis = 0)
 				std = np.std(cluster, axis = 0)
 
-				self.logger.debug("cluster %s/%s" % (n+1, len(self.m_c)))
+				logger.debug("cluster %s/%s" % (n+1, len(self._origCluster)))
 				pointsLeft = pointsToDrawPerCluster[n]
 
 				while pointsLeft > 0:
@@ -541,17 +539,20 @@ class DatasetBuilder():
 
 					drawnPoints.append(strippedUnits)
 
-		self.logger.info("done. %ss" % round(time()-t0, 3))
+		logger.info("done. %ss" % round(time()-t0, 3))
 
 		return drawnPoints
 
 
 
-	def run(self, nettype, sampleSize = None, splitData = True):
+	def run(self, nettype, sampleSize = None, splitData = True, loadFromFile = None):
 
 		self.nettype = nettype
 
-		if self.loadFile != None:
+		if loadFromFile == None:
+			loadFromFile = self.loadFile != None
+
+		if loadFromFile:
 			points = self._loadDataset()
 		else:
 			points = self._createDataset(sampleSize)

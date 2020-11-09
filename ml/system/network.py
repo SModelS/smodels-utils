@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import os
+from pathlib import Path
 from smodels.tools.smodelsLogging import logger
 
 def getNodesPerLayer(shape, nodes, layer, inputNum):
@@ -102,15 +103,14 @@ class DatabaseNetwork(nn.Module):
 
 	def save(self, expres, txNameData):
 
-		#path = os.getcwd() + "/" + relFolderPath + "/"
-		#path = "model.pth"
-
 		dbPath = expres.path
 		for i in range(len(dbPath)):
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
 		path = os.getcwd() + "/" + dbPath + "/models/" + str(txNameData) + ".pth"
+
+		Path(path).mkdir(parents=True, exist_ok=True)
 
 		torch.save(self, path)
 		logger.info("model saved at '%s'" % path)
@@ -124,8 +124,6 @@ class DatabaseNetwork(nn.Module):
 				dbPath = dbPath[i:]
 				break
 		path = os.getcwd() + "/" + dbPath + "/models/" + str(txNameData) + ".pth"
-
-		print(path)
 
 		try:
 			model = torch.load(path)
