@@ -652,6 +652,8 @@ def main():
             runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
             continue
 
+        seed = args.seed
+
         with open("run_walker.sh","rt") as f:
             lines=f.readlines()
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
@@ -670,7 +672,7 @@ def main():
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select, args.do_combine, args.record_history, args.seed )
+                            args.select, args.do_combine, args.record_history, seed )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -682,11 +684,13 @@ def main():
                 for i in range(nprocesses):
                     imin = nmin + i*nwalkers
                     imax = imin + nwalkers
+                    if seed != None: ## we count up
+                        seed += args.seed
                     p = multiprocessing.Process ( target = runOneJob,
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps, 
                                      args.select, args.do_combine, args.record_history,
-                                     args.seed ) )
+                                     seed ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
@@ -707,5 +711,7 @@ def main():
         if totjobs == 0:
             col = colorama.Fore.RED
         print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
+        if seed != None: ## count up
+            seed += 100*args.seed
 
 main()
