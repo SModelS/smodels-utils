@@ -224,11 +224,12 @@ class Parameter(dict):
 
 		for tx in txList:
 			if str(tx) == txName:
-				txNameData = tx.txnameData
+				#txNameData = tx.txnameData
 				break
 
 		self._parameter["expres"] = expres
-		self._parameter["txNameData"] = txNameData
+		self._parameter["txName"] = tx
+		#self._parameter["txNameData"] = txNameData
 
 		
 	def set(self, key, value):

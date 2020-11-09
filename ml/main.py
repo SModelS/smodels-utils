@@ -3,7 +3,7 @@
 
 """
 .. module:: main.py
-   :synopsis: front end of training new neural networks
+   :synopsis: main script to train and validate new neural networks
 .. moduleauthor:: Philipp Neuhuber <ph.neuhuber@gmail.com>
 
 """
@@ -11,8 +11,8 @@
 import argparse
 from parameter import Parameter
 from system.dataset import DatasetBuilder, Data #set
-from system.modelTrainer import ModelTrainer
-from system.initnet import DatabaseNetwork
+from system.trainer import ModelTrainer
+from system.network import DatabaseNetwork
 
 def main(parameter):
 
@@ -78,7 +78,7 @@ def main(parameter):
 			# output will be custom Dataset class used by torch #
 			# ------------------------------------------------- #
 
-			dataset = builder.run(nettype)
+			dataset = builder.run(nettype, loadFromFile = True)
 
 			# ------------------------------------------------------- #
 			# initializing trainer class for current map and net type #
@@ -91,13 +91,20 @@ def main(parameter):
 			# --------------------------------------------------------------------------------------- #
 
 			winner[nettype] = trainer.run()
+
+			# ---------------- #
+			# saving loss plot #
+			# ---------------- #
+
+			if parameter["lossPlot"]:
+				trainer.saveLossPlot()
 		
 		# -------------------------------------------------------------------------------------------- #
 		# combining best performing regression and classification networks into final ensemble network #
 		# -------------------------------------------------------------------------------------------- #
 
 		ensemble = DatabaseNetwork(winner)
-		ensemble.save(parameter["expres"], parameter["txNameData"])
+		ensemble.save(parameter["expres"], parameter["txName"].txnameData)
 
 
 
