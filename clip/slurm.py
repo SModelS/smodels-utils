@@ -99,7 +99,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     tf = "%s/RUN%s_%s.sh" % ( rundir, Dir, jmin )
     with open(tf,"wt") as f:
         for line in lines:
-                    f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
+            f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     #remove ( tf, keep )
