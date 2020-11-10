@@ -12,17 +12,13 @@ def main():
         lines = h.readlines()
         # [walkingWorker] starting 45 @ /scratch-cbe/users/wolfgan.waltenberger/rundir.lfake4/ with cheatcode 0
         h.close()
-        idx = 0
         for line in lines:
-            if "Lmod has detected the following error" in line:
-                idx = 12
-                continue ## "ml --latest singularity" error
             if "oom" in line or "rror" in line:
-                ooms.append ( lines[idx] )
+                ooms.append ( lines[0] )
                 oofs.append ( f )
                 print ( "[listFailedWalks] in file:", f )
-                print ( "[listFailedWalks] line 0", lines[idx] )
-                print ( "[listFailedWalks] line", line )
+                print ( "[listFailedWalks] line 0: >>>%s<<<" % lines[0] )
+                print ( "[listFailedWalks] line with error:", line )
                 print ( )
                 break
     submitsh = "submit.sh"
