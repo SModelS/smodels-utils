@@ -893,7 +893,9 @@ class TxNameInput(Locker):
                         massArray[i][j] = M
             dataList.append([massArray, value])
 
+
         if not dataList:
+            logger.warning('Could not retrieve data for %s (plane %s)' %(self,plane))
             return False
         #Add data to txname. If dataLabel already exists, extend it
         if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
