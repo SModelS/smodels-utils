@@ -2,7 +2,7 @@
 
 """ remove the slurm log files of the walkers before a certain slurm job id """
 
-import glob, os
+import glob, os, fire
 
 def remove ( before ):
     files = glob.glob ( "walk-*.out" )
@@ -13,5 +13,6 @@ def remove ( before ):
             os.unlink ( f )
 
 if __name__ == "__main__":
-    before = 12049757
-    remove ( before )
+    fire.Fire ( remove )
+#    before = 12049757
+#    remove ( before )
