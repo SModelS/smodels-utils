@@ -602,6 +602,8 @@ def main():
 
     totjobs = 0
 
+    seed = args.seed
+
     for rundir in rundirs:
         time.sleep ( random.uniform ( .002, .005 ) )
         dbpath = args.dbpath
@@ -652,8 +654,6 @@ def main():
             runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
             continue
 
-        seed = args.seed
-
         with open("run_walker.sh","rt") as f:
             lines=f.readlines()
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
@@ -688,7 +688,7 @@ def main():
                         seed += args.seed
                     p = multiprocessing.Process ( target = runOneJob,
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
-                                     args.keep, args.time, cheatcode, rundir, args.maxsteps, 
+                                     args.keep, args.time, cheatcode, rundir, args.maxsteps,
                                      args.select, args.do_combine, args.record_history,
                                      seed ) )
                     jobs.append ( p )
