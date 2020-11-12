@@ -145,7 +145,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/smodels-utils/prototools/moretools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
+            f.write ("%s/protomodels/ptools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -160,7 +160,7 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/smodels-utils/prototools/moretools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
+            f.write ("%s/protomodels/ptools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
                      ( codedir, nprocs, rundir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
@@ -371,7 +371,7 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools/moretools')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/protomodels/ptools')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
