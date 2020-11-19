@@ -417,16 +417,6 @@ if __name__ == "__main__":
             model = parser.get("options","model")
     generateData = _doGenerate ( parser )
 
-#    try:
-#        import ROOT
-#        if args.verbose == 'warning':
-#            ROOT.gErrorIgnoreLevel = ROOT.kWarning
-#        elif args.verbose == 'error':
-#            ROOT.gErrorIgnoreLevel = ROOT.kError
-#        else:
-#            ROOT.gErrorIgnoreLevel = ROOT.kInfo
-#    except:
-#        pass
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
