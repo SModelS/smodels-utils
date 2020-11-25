@@ -636,6 +636,8 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         collaboration = "CMS"
         if "ATLAS" in anaid:
             collaboration = "ATL"
+    if prettyname == None:
+        prettyname = "???"
     pn = prettyname.replace(">","$>$").replace("<","$<$")
     pn = pn.replace("0 or $>$=1 leptons +","" )
     pn = pn.replace("photon photon","$\gamma\gamma$" )
