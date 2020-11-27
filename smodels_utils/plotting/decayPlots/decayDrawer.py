@@ -158,6 +158,10 @@ class DecayDrawer:
                 continue
             if ctr>0 and ctr % 2 != 0:
                 l+=",\\,"
+            if label == "mu":
+                label= "$\\mu$"
+            if label == "tau":
+                print ( "[decayDrawer] FIXME do we need to latex the tau?" )
             #if matrixMode:
             #    label="$"+label+"$"
             l+=label
@@ -175,6 +179,8 @@ class DecayDrawer:
         self.addNode ( 0., d )
         t = self.G.add_edge ( tn, d )
         edge=self.G.get_edge ( tn, d )
+        if "l" == "mu":
+            l="$\\mu$"
         edge.attr['label']=l
 
     def addEdges ( self, name, decs, rmin = 0.0 ):
