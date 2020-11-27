@@ -51,7 +51,7 @@ def startServer ( rundir, dry_run, time ):
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                 cheatcode, rundir, maxsteps, select, do_combine, record_history,
-                seed ):
+                seed, update_hiscores ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -71,6 +71,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
     :param seed: the random seed for the walker
+    :param update_hiscores: update the hiscores at the end
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -90,9 +91,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s )\n" % \
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s )\n" % \
                   ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps,
-                    seed, select, do_combine, record_history ) )
+                    seed, select, do_combine, record_history, update_hiscores ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     Dir = getDirname ( rundir )
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
@@ -110,6 +111,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         ram = ram * 1.2
     if "history" in rundir: ## history runs need more RAM
         ram = ram * 1.3
+    if update_hiscores: ## make sure we have a bit more for that
+        ram = ram * 1.1
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
         ram = ram *.8
@@ -512,7 +515,7 @@ def main():
             action="store_true" )
     argparser.add_argument ( '--do_combine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
-    argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
+    argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
     argparser.add_argument ( '--record_history', help='turn on the history recorder',
                              action="store_true" )
@@ -642,10 +645,11 @@ def main():
             clean_dirs( rundir, clean_all = True )
             continue
         if args.updater:
+            ## update flag given standalone
             if args.maxsteps == None:
                 args.maxsteps = 1
-            runUpdater( args.dry_run, args.time, rundir, args.maxsteps )
-            continue
+                runUpdater( args.dry_run, args.time, rundir, args.maxsteps )
+                continue
         if args.scan != -1:
             rewrite = True # args.rewrite
             runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir )
@@ -666,13 +670,15 @@ def main():
             nprocesses = nworkers
 
         restartctr = 0
+        update_hiscores = args.updater ## False
         if args.maxsteps == None:
             args.maxsteps = 1000
         while True:
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select, args.do_combine, args.record_history, seed )
+                            args.select, args.do_combine, args.record_history, seed,
+                            update_hiscores )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -682,6 +688,9 @@ def main():
                     nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
                 jobs = []
                 for i in range(nprocesses):
+                    update_hiscores = False
+                    if args.updater and i == nprocesses-1:
+                        update_hiscores = True
                     imin = nmin + i*nwalkers
                     imax = imin + nwalkers
                     if seed != None: ## we count up
@@ -690,7 +699,7 @@ def main():
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
                                      args.select, args.do_combine, args.record_history,
-                                     seed ) )
+                                     seed, update_hiscores ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
