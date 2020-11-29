@@ -557,7 +557,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
-    argparser.add_argument ( '--seed', nargs='?', help='the random seed [None]',
+    argparser.add_argument ( '--seed', nargs='?', help='the random seed. 0 means random. None means, do not set. [None]',
                         type=int, default=None )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
                         type=int, default=0 )
@@ -606,8 +606,10 @@ def main():
     totjobs = 0
 
     seed = args.seed
-    if seed != None and type(seed)==int and seed>2**32-1:
-        seed = seed % 4294967294
+    if seed == 0:
+        seed = int ( random.uniform ( 10**6, 10**8 ) )
+    if seed != None and type(seed)==int and seed>2**31-1:
+        seed = seed % 1073741823
 
     for rundir in rundirs:
         time.sleep ( random.uniform ( .004, .009 ) )
