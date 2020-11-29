@@ -3,26 +3,23 @@
 """ various helper functions around the clip cluster that do not fit in any of
 the more specific modules """
 
-def describeSet( s ):
+def describeSet( inp ):
     """ describe a given set of indices in compact form.
     returns: a string
     """
-    # tmp = str(s)
-    if type(s) in [ tuple, list ]:
-        s = set(s)
+    s = set()
+    for i in inp:
+        s.add(int(i))
+    # return str( s )
     ret = ""
     firstIndex = s.pop() ## enter first element
     lastIndex = firstIndex
     for i in s:
-        # print ( "i", i, "first", firstIndex, "last", lastIndex, i == lastIndex+1 )
         if i == lastIndex+1:
             lastIndex=i
         else:
             ret += "%d-%d, " % ( firstIndex, lastIndex )
             firstIndex = i
             lastIndex= i
-    ret += "%d-%d" % ( firstIndex, lastIndex-1 )
-    #if len(ret)>2:
-    #    ret=ret[:-2]
-    # return str( s )
+    ret += "%d-%d" % ( firstIndex, lastIndex )
     return ret
