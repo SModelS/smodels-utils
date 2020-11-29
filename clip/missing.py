@@ -26,7 +26,7 @@ def missing ( pattern ):
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="list missing walkers")
-    argparser.add_argument ( '-P', '--pattern', help='grep for pattern [real]',
+    argparser.add_argument ( '-p', '--pattern', help='grep for pattern [real]',
                              type=str, default="real" )
     args=argparser.parse_args()
     missing ( args.pattern )

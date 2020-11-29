@@ -78,7 +78,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     line = "run walkers %d - %d" % ( jmin, jmax-1 )
     if jmax == jmin + 1:
         line = "run walker %d" % jmin
-    print ( "[runOneJob:%d] %s" % ( pid, line ) )
+    # print ( "[runOneJob:%d] %s" % ( pid, line ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
     dump_trainingdata = False
@@ -606,9 +606,11 @@ def main():
     totjobs = 0
 
     seed = args.seed
+    if seed != None and type(seed)==int and seed>2**32-1:
+        seed = seed % 4294967294
 
     for rundir in rundirs:
-        time.sleep ( random.uniform ( .002, .005 ) )
+        time.sleep ( random.uniform ( .004, .009 ) )
         dbpath = args.dbpath
         if dbpath == "real":
             dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
