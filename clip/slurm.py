@@ -51,7 +51,7 @@ def startServer ( rundir, dry_run, time ):
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                 cheatcode, rundir, maxsteps, select, do_combine, record_history,
-                seed, update_hiscores ):
+                seed, update_hiscores, stopTeleportationAfter ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -72,6 +72,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param record_history: if true, turn on the history recorder
     :param seed: the random seed for the walker
     :param update_hiscores: update the hiscores at the end
+    :param stopTeleportationAfter: stop teleportation after this step.
+           if -1, dont run teleportation at all.
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -91,9 +93,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, maxsteps,
-                    seed, select, do_combine, record_history, update_hiscores ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, \
+                    maxsteps, seed, select, do_combine, record_history, update_hiscores, \
+                    stopTeleportationAfter  ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     Dir = getDirname ( rundir )
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
@@ -578,6 +581,9 @@ def main():
                         type=str, default=None )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
                         type=str, default="T3GQ" )
+    argparser.add_argument ( '--stopTeleportationAfter',
+                        help='stop teleportation after this step [-1]',
+                        type=int, default=-1 )
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
@@ -675,6 +681,8 @@ def main():
 
         restartctr = 0
         update_hiscores = args.updater ## False
+        if args.stopTeleportationAfter == None:
+            args.stopTeleportationAfter = -1
         if args.maxsteps == None:
             args.maxsteps = 1000
         while True:
@@ -682,7 +690,7 @@ def main():
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
                             args.select, args.do_combine, args.record_history, seed,
-                            update_hiscores )
+                            update_hiscores, args.stopTeleportationAfter )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -703,7 +711,7 @@ def main():
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
                                      args.select, args.do_combine, args.record_history,
-                                     seed, update_hiscores ) )
+                                     seed, update_hiscores, args.stopTeleportationAfter ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
