@@ -12,7 +12,16 @@ def remove ( before ):
         if nr < before:
             os.unlink ( f )
 
+def grep ( pattern ):
+    files = glob.glob ( "walk-*.out" )
+    for f in files:
+        with open ( f, "rt" ) as h:
+            txt = h.read()
+            if pattern in txt:
+                print ( "removing", f )
+                os.unlink ( f )
+
 if __name__ == "__main__":
-    fire.Fire ( remove )
+    fire.Fire ( { "remove": remove, "grep": grep } )
 #    before = 12049757
 #    remove ( before )
