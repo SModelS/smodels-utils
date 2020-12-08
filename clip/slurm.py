@@ -381,7 +381,7 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=not batchjob, uploadTo='latest' )\n" % \
+        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=not batchjob, uploadTo=None )\n" % \
                   ( rundir, maxiterations ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
@@ -656,9 +656,10 @@ def main():
             continue
         if args.updater:
             ## update flag given standalone
-            if args.maxsteps == None:
-                args.maxsteps = 1
-                runUpdater( args.dry_run, args.time, rundir, args.maxsteps )
+            maxsteps = args.maxsteps
+            if maxsteps == None:
+                maxsteps = 1
+                runUpdater( args.dry_run, args.time, rundir, maxsteps )
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
