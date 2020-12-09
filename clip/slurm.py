@@ -611,13 +611,13 @@ def main():
 
     totjobs = 0
 
-    seed = args.seed
-    if seed == 0:
-        seed = int ( random.uniform ( 10**6, 10**8 ) )
-    if seed != None and type(seed)==int and seed>2**31-1:
-        seed = seed % 1073741823
-
     for rundir in rundirs:
+        seed = args.seed
+        if seed == 0:
+            seed = int ( random.uniform ( 10**6, 10**8 ) )
+        if seed != None and type(seed)==int and seed>2**31-1:
+            seed = seed % 1073741823
+
         time.sleep ( random.uniform ( .004, .009 ) )
         dbpath = args.dbpath
         if dbpath == "real":
@@ -707,7 +707,7 @@ def main():
                     imin = nmin + i*nwalkers
                     imax = imin + nwalkers
                     if seed != None: ## we count up
-                        seed += args.seed
+                        seed += (1+len(rundirs))*(1+nprocesses)
                     p = multiprocessing.Process ( target = runOneJob,
                             args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
@@ -734,6 +734,6 @@ def main():
             col = colorama.Fore.RED
         print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
         if seed != None: ## count up
-            seed += 100*args.seed
+            seed += (1+len(rundirs))*(1+nprocesses)
 
 main()
