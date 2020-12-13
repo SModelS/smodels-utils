@@ -161,7 +161,7 @@ class DecayDrawer:
             if label == "mu":
                 label= "$\\mu$"
             if label == "tau":
-                print ( "[decayDrawer] FIXME do we need to latex the tau?" )
+                label= "$\\tau$"
             #if matrixMode:
             #    label="$"+label+"$"
             l+=label
