@@ -115,7 +115,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     if "history" in rundir: ## history runs need more RAM
         ram = ram * 1.3
     if update_hiscores: ## make sure we have a bit more for that
-        ram = ram * 1.1
+        ram = ram * 1.2
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
         ram = ram *.8
@@ -611,8 +611,10 @@ def main():
 
     totjobs = 0
 
-    for rundir in rundirs:
+    for rd,rundir in enumerate(rundirs):
         seed = args.seed
+        if seed != None and seed > 0 and rd>0:
+            seed += (len(nprocesses)+1)*rd
         if seed == 0:
             seed = int ( random.uniform ( 10**6, 10**8 ) )
         if seed != None and type(seed)==int and seed>2**31-1:
