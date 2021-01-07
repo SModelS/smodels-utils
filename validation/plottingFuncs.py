@@ -360,7 +360,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     widths = None
     if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
         from sympy import var
-        x__,y__,z__ = var( "x y z" )
+        x__,y__,z__,x__ = var( "x y z w" )
         ax = eval ( vPlot.axes )
         widths = []
         widthsbr, massbr = [], []
@@ -531,7 +531,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                 x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals['x'],xvals['y']
+                x = xvals["x"]
+                if "y" in xvals:
+                    y = xvals['y']
+                elif "w" in xvals:
+                    y = xvals['w']
         else:
             x,y = pt['axes']
 
@@ -816,7 +820,12 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                 x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals['x'],xvals['y']
+                x = xvals["x"]
+                if "y" in xvals:
+                    y = xvals['y']
+                elif "w" in xvals:
+                    y = xvals['w']
+                    
         else:
             x,y = xvals
         if logY:

@@ -14,7 +14,7 @@ from sympy import var
 from math import floor, log10
 from smodels.tools.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
-x,y,z = var('x y z')
+x,y,z,w = var('x y z w')
 
 # pretty name of particle:
 
