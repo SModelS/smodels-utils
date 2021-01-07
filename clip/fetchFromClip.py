@@ -58,7 +58,7 @@ def main():
               "fake": [ "fake*.pcl", "signal*.pcl" ],
               "copy": [ "hiscoreCopy.hi" ],
               "slha": [ "hiscore.slha" ],
-              "dbdict": [ "d*.dict" ],
+              "dbdict": [ "d*.dict", "my.signal" ],
               "pmodels": [ "pmodel?.py" ],
               "history": [ "history*.list" ],
               "png": [ "*.png" ],
