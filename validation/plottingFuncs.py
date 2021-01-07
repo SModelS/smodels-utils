@@ -360,7 +360,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     widths = None
     if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
         from sympy import var
-        x__,y__,z__,x__ = var( "x y z w" )
+        x__,y__,z__,w__ = var( "x y z w" )
         ax = eval ( vPlot.axes )
         widths = []
         widthsbr, massbr = [], []
