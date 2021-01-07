@@ -777,7 +777,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     p1 = A.find("(")
     p2 = A.find(")")
     py = A.find("y")
-    #print ( "axes", A )
+    if py == -1:
+        py = A.find("w")
     if p1 < py < p2 and A[py-1]==",":
         logY = True
         xlabel = "x [mass, GeV]"
