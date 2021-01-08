@@ -67,7 +67,7 @@ def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file [database.pcl]', default="database.pcl" )
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
-    # ap.add_argument('-l', '--fastlim', help='add fastlim results when pickling', action="store_true" )
+    ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
@@ -134,7 +134,7 @@ def main():
         nvlist = ",".join(which)
         print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
         sys.exit()
-    cmd = "mv %s ./%s" % ( dbname, pclfilename )
+    cmd = "cp %s ./%s" % ( dbname, pclfilename )
     ssh = True
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
@@ -158,6 +158,15 @@ def main():
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
+    if args.latest:
+        latestfile = "latest"
+        if not args.remove_fastlim:
+            latestfile = "latest_fastlim"
+        cmd = "cp ../../smodels.github.io/database/%s ../../smodels.github.io/database/%s" %\
+               ( infofile, latestfile )
+        if not args.dry_run:
+            a=CMD.getoutput ( cmd )
+            print ( "[publishDatabasePickle] update latest:", cmd, a )
     cmd = "cd ../../smodels.github.io/; git pull; git add database/%s; git commit -m 'auto-commited by publishDatabasePickle.py'; git push" % infofile
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
