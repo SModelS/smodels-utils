@@ -54,6 +54,7 @@ def getModelError(model, dataset, netType, returnMean = True):
 			else:
 				e = p
 
+
 			error.append(e)
 
 	else:

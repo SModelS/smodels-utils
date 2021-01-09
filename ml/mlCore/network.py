@@ -6,6 +6,9 @@ import os
 from pathlib import Path
 from smodels.tools.smodelsLogging import logger
 
+from scipy.special import inv_boxcox
+#from sklearn.preprocessing import MinMaxScaler
+
 def getNodesPerLayer(shape, nodes, layer, inputNum):
 
 	net = []
@@ -68,11 +71,13 @@ def getNodesPerLayer(shape, nodes, layer, inputNum):
 
 class DatabaseNetwork(nn.Module):
 
-	def __init__(self, winner):
+	def __init__(self, winner):#, scaler, lmbda):
     	
 		super(DatabaseNetwork, self).__init__()
 		self["regression"] = winner["regression"]["model"]
 		self["classification"] = winner["classification"]["model"]
+		#self.scaler = scaler
+		#self.lmbda = lmbda
 
 	def __setitem__(self, netType, model):
 		self.__dict__[netType] = model
@@ -95,10 +100,23 @@ class DatabaseNetwork(nn.Module):
 	def getSpeedFactor(self):
 		return self._speedFactor
 
-	def forward(self, x):
+	def forward(self, x, rescaleTarget = True):
 
-		onHull = self["classification"](x) == 1.
-		if onHull: return self["regression"](x)
+		#x = self.scaler.inverse_transform(inputs)
+		
+		if self["classification"] == None:
+			onHull = True
+		else:
+			onHull = True #self["classification"](x) == 1.
+
+		if onHull:
+			target = self["regression"](x)
+
+			#if rescaleTarget:
+			#	from scipy.special import inv_boxcox
+			#	target = inv_boxcox(target, self.lmbda)
+
+			return target
 		return 0.
 
 	def save(self, expres, txNameData):
@@ -108,9 +126,9 @@ class DatabaseNetwork(nn.Module):
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
-		path = os.getcwd() + "/" + dbPath + "/models/" + str(txNameData) + ".pth"
-
+		path = os.getcwd() + "/" + dbPath + "/models"
 		Path(path).mkdir(parents=True, exist_ok=True)
+		path += "/" + str(txNameData) + ".pth"
 
 		torch.save(self, path)
 		logger.info("model saved at '%s'" % path)
@@ -135,7 +153,7 @@ class DatabaseNetwork(nn.Module):
 
 class Net_cla(nn.Module):
  
-	def __init__(self, netShape, activFunc, rescaleParameter, scaler):
+	def __init__(self, netShape, activFunc):
 
 		super(Net_cla, self).__init__()
 		self.seq = nn.Sequential()
@@ -165,8 +183,7 @@ class Net_cla(nn.Module):
 			#elif i == 0:
 				#self.seq.add_module('drp{}'.format(i), nn.Dropout(0.2))			
 
-		self._rescaleParameter = rescaleParameter
-		self._scaler = scaler
+		#self._rescaleParameter = rescaleParameter
 
 	def setValidationLoss(self, meanError):
 		self._validationLoss = meanError
@@ -174,12 +191,15 @@ class Net_cla(nn.Module):
 	def getValidationLoss(self):
 		return self._validationLoss
 
-	def setScaler(self,scaler):
-		self._scaler = scaler
+	def setRescaleParameter(self, parameter):
+		self._rescaleParameter = parameter
 
-	@property
-	def scaler(self):
-		return self._scaler
+	#def setScaler(self,scaler):
+	#	self._scaler = scaler
+
+	#@property
+	#def scaler(self):
+	#	return self._scaler
 
 	def forward(self, x):#input_):
 
@@ -196,7 +216,7 @@ class Net_cla(nn.Module):
 
 class Net_reg(nn.Module):
 
-	def __init__(self, netShape, activFunc, rescaleParameter, scaler):
+	def __init__(self, netShape, activFunc):
     	
 		super(Net_reg, self).__init__()
 		self.seq = nn.Sequential()
@@ -222,8 +242,6 @@ class Net_reg(nn.Module):
 				self.seq.add_module('lrel{}'.format(i), nn.LeakyReLU()) 
 
     	
-		self._rescaleParameter = rescaleParameter
-		self._scaler = scaler
 
 		for m in self.modules():
 			if isinstance(m, nn.Linear):
@@ -239,23 +257,61 @@ class Net_reg(nn.Module):
 	def getValidationLoss(self):
 		return self._validationLoss
 
-	def setScaler(self,scaler):
-		self._scaler = scaler
+	def setRescaleParameter(self, parameter):
+		self._rescaleParameter = parameter
 
-	@property
-	def scaler(self):
-		return self._scaler
+
 
 	def forward(self, x):
 
-		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
+		if not self.training and "_rescaleParameter" in self.__dict__:
+			if "masses" in self._rescaleParameter:
+				if self._rescaleParameter["masses"]["method"] == "minmaxScaler":
+					print("RESCALING INPUTS")
+
+					scaler = self._rescaleParameter["masses"]["scaler"]
+					x = scaler.transform(x)
+					x = torch.tensor(x, dtype=torch.float64)
+
+
+		#print(x)
+		#x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
 
+		if not self.training and "_rescaleParameter" in self.__dict__:
+			if "targets" in self._rescaleParameter:
+
+				method = self._rescaleParameter["targets"]["method"]
+
+				if method == "boxcox":
+					print("RESCALING TARGETS BOXCOX")
+
+					lmbda = self._rescaleParameter["targets"]["lambda"]
+					print("LMBDA:", lmbda)
+					x = x.detach().numpy()
+					x = [inv_boxcox(t, lmbda)[0] for t in x]
+
+				elif method == "log":
+
+					print("RESCALING TARGETS LOG")
+
+					x = x.detach().numpy()
+					x = [(10**t)[0] for t in x]
+
+				else:
+
+					print("NO RESCALING TARGETS")
+
+					x = x.detach().numpy()
+					x = [t[0] for t in x]
+
+		#x = x.detach().numpy()
+		#x = [t[0] for t in x]
 		return x
 	
 
 
-def createNet(hyper, rescaleParameter, scaler, full_dim, nettype):
+def createNet(hyper, rescaleParameter, full_dim, nettype):
 
 	shape = hyper["shape"]
 	nodes = hyper["nodes"]
@@ -265,9 +321,9 @@ def createNet(hyper, rescaleParameter, scaler, full_dim, nettype):
 	netshape, nodesTotal = getNodesPerLayer(shape, nodes, layer, full_dim)
 
 	if nettype == 'regression':
-		model = Net_reg(netshape, activ, rescaleParameter, scaler)
+		model = Net_reg(netshape, activ)
 	elif nettype == 'classification':
-		model = Net_cla(netshape, activ, rescaleParameter, scaler)
+		model = Net_cla(netshape, activ)
 	
 	return model
 
