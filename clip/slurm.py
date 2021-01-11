@@ -372,6 +372,11 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
     runner = "%s/upHi.py" % ( rundir )
     if maxiterations == None:
         maxiterations = 1000
+    uploadTo="None"
+    rd=rundir[rundir.find("rundir.")+7:]
+    if rd.endswith("/"):
+        rd=rd[:-1]
+    uploadTo=f"2020_PioneerStudy/{rd}"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -381,8 +386,8 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=not batchjob, uploadTo=None )\n" % \
-                  ( rundir, maxiterations ) )
+        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=not batchjob, uploadTo='%s' )\n" % \
+                  ( rundir, maxiterations, uploadTo ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
