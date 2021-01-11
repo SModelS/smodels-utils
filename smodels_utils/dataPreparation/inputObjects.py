@@ -15,12 +15,12 @@ import os
 import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
-from smodels_utils.dataPreparation.particleNames import elementsInStr, ptcDic
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.theory.element import Element
+from smodels.theory.auxiliaryFunctions import elementsInStr
 from smodels.installation import version
 import copy
 
@@ -32,12 +32,6 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.WARNING)
-
-hscp=False ## central switch for smodels v1.1 versus smodels v1.2
-if version()[:3]=="1.2" or version()[0]=="2":
-    hscp=True
-## smodels v1.2 has final states for hscp patch
-
 quenchNegativeMasses = False ## set to true, if you wish to
 # quench the warning about negative masses
 
@@ -537,18 +531,14 @@ class DataSetInput(Locker):
         for tx in self._txnameList:
             for el in elementsInStr(tx.constraint):
                 newEl = None
-                if hasattr(tx, 'finalState'):
-                    fs = tx.finalState
-                else:
-                    fs = ['MET','MET']
+                fs = tx.finalState
+                midState = tx.intermediateState
                 try:
-                    newEl = Element(el,fs)
-                except:
-                    try:
-                        newEl = Element(el,fs,model=tx._particles)
-                    except:
-                        logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
-                        sys.exit()
+                    newEl = Element(el,finalState=fs,intermediateState=midState,model=tx._particles)
+                except Exception as e:
+                    logger.error(str(e))
+                    logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+                    sys.exit()
 
                 datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
@@ -585,9 +575,9 @@ class TxNameInput(Locker):
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
-    if hscp:
-        infoAttr.append ( 'finalState' )
-        requiredAttr.append ( 'finalState' )
+    infoAttr.append ( 'finalState' )
+    infoAttr.append ( 'intermediateState' )
+    requiredAttr.append ( 'finalState' )
 
 
     def __init__(self,txName):
@@ -604,11 +594,9 @@ class TxNameInput(Locker):
         self.round_to = 5 ## number of digits to round to
         self._name = txName
         self._smallerThanError = 0
-        self._particles = None
-#        self._countErrors = 0
         self.txName = txName
-        if hscp:
-            self.finalState = ['MET','MET']
+        self.finalState = ['MET','MET']
+        self.intermediateState = None
         self.susyProcess = prettyDescriptions.prettyTxname(txName,outputtype="text")
         self._txDecay = TxDecay(self._name)
         if not self._txDecay:
@@ -617,15 +605,25 @@ class TxNameInput(Locker):
         self._planes = []
         self._goodPlanes = []
         self._dataLabels = []
+        self.setDefaultParticles()
 
 
     def __str__(self):
 
         return self._name
 
+    def setDefaultParticles(self):
+        """
+        Load the default particles contained in the smodels/experiment/defaultFinalStates.py.
+        """
+
+        from smodels.experiment.defaultFinalStates import finalStates
+        self._particles = finalStates
+
+
     def setParticlesFromFile(self,particlesFile):
         """
-        Load the particles contained in the particlesFile. These are stored in self._getParticles
+        Load the particles contained in the particlesFile. These are stored in self._particles
         and used to build the txname elements.
         """
 
@@ -645,7 +643,6 @@ class TxNameInput(Locker):
             #set model name to file location:
             modelFile.finalStates.label = os.path.basename(pFile)
             self._particles = modelFile.finalStates
-
 
     def addMassPlane(self, plane):
 
@@ -674,30 +671,16 @@ class TxNameInput(Locker):
         else:
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
-
-        #Make sure the database particles have been defined (only needed for v2.xx):
-        if not hasattr(self,'particles') or self.particles is None:
-            try:
-                from smodels.experiment.defaultFinalStates import finalStates
-                self._particles = finalStates
-            except:
-                pass
-
-        #Try to build element (for backward compatibility):
         try:
-            #v1.xx:
-            element = Element(elementsInStr(self.constraint,removeQuotes=False)[0])
-        except:
-            try:
-                #v2.xx:
-                if not hasattr(self,'_particles') or self._particles is None:
-                    from smodels.experiment.defaultFinalStates import finalStates
-                    self._particles = finalStates
-                    logger.info("Using particle definitions from smodels.experiment.defaultFinalStates")
-                element = Element(elementsInStr(self.constraint,removeQuotes=False)[0], model = self._particles)
-            except:
-                logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
-                sys.exit()
+            element = Element(elementsInStr(self.constraint,removeQuotes=False)[0],
+                            intermediateState=self.intermediateState,
+                            finalState=self.finalState,
+                            model = self._particles)
+        except Exception as e:
+            logger.error(str(e))
+            logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+            sys.exit()
+
 
         #Checks for new input
         if len(massArray) != len(element.branches):
@@ -832,7 +815,6 @@ class TxNameInput(Locker):
         dataList = []
         for ptDict in dataHandler:
 
-
             if len(ptDict) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
                 sys.exit()
@@ -861,6 +843,7 @@ class TxNameInput(Locker):
             #Check if mass array is consistent with the mass constraints given by the
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):
+                print('Mass=',massArray,'failing')
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
@@ -878,15 +861,7 @@ class TxNameInput(Locker):
                     for j,M in enumerate(br):
                         if isinstance(M,tuple):
                             m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-#                            self._countErrors += 1
-#                            if self._countErrors < 4:
-#                                logger.error ( "FIXME whats the units we are using for lifetime?" )
-                            # M[1] is in ATLAS-SUSY_2016-08 given in [ns],
-                            # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
-                            # lets convert it to a width [GeV]
                             m1 = M[1] * GeV ## width in GeV
-                            # m1 = hbar / M[1] * GeV ## width in GeV
-                            # m1 = 4.3135
                             M = ( m0, m1 )
                         if isinstance(M,(float,int)):
                             M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
@@ -938,57 +913,26 @@ class TxNameInput(Locker):
         mass constraint [['m > 169.+169.'],['m > 169.+169.']].
         """
 
-        #Build mass dictionary for all particles
-        massDict = {'Z': 86., 'W+': 76.,'W-' : 76.,'t': 169.,
-                    't-': 169.,'h': 118., 'higgs': 118., 'ta+' : 1.7, 'ta-' : 1.7}
-        #(if they do not appear in masssDict, replace by zero)
-        for key in rEven.values():
-            if not key in massDict:
-                massDict[key] = 0.
-        #Set masses for inclusive labels (use lowest mass)
-        for key,ptclist in ptcDic.items():
-            if key in massDict:
-                continue
-            minMass = [massDict[ptc] for ptc in ptclist if ptc in massDict]
-            if not minMass:
-                minMass = 0.
-            else:
-                minMass = min(minMass)
-            massDict[key] = minMass
 
         #Replace particles appearing in the vertices by their mass
         self.massConstraints = []
         for el in elementsInStr(self.constraint,removeQuotes=False):
-            if isinstance(el,str):
-                #use dummy labels to evaluate elements without strings
-                dummyLabels = dict([[label,label] for label in rEven.values()])
-                dummyLabels.update(dict([[label,label] for label in ptcDic]))
-                newDummyLabels = copy.deepcopy ( dummyLabels )
-                for key,val in dummyLabels.items():
-                    newkey = key.replace('+','_p').replace('-','_m')
-                    newDummyLabels[ newkey ] = val
-                    massDict[newkey ] = massDict [ key ]
-                dummyLabels = copy.deepcopy ( newDummyLabels )
-                el = el.replace('+','_p').replace('-','_m')
-                el = eval(el,newDummyLabels)
-            #Replace particles in element by their masses
-            massConstraint = []
-            for ibr,br in enumerate(el):
-                massConstraint.append([])
-                for vertex in br:
-                    #print ( "ibr=",ibr, "vertex=",vertex )
-                    #print ( "massDict=",massDict )
-                    massConstraint[ibr].append([massDict[ptc] for ptc in vertex])
+            try:
+                element = Element(el,
+                                intermediateState=self.intermediateState,
+                                finalState=self.finalState,
+                                model = self._particles)
+            except Exception as e:
+                logger.error(str(e))
+                logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+                sys.exit()
+            #Get even particles from vertices:
+            particles = element.evenParticles
+            #Compute minimum mass difference (sum over SM final state masses)
+            massConstraint = [["dm >= "
+                            + str(sum([ptc.mass.asNumber(GeV) if hasattr(ptc,'mass') else 0.0 for ptc in vertex ]))
+                            for vertex in branch] for branch in particles]
             self.massConstraints.append(massConstraint)
-
-        #Now convert the constraints to inequality expressions:
-        for el in self.massConstraints:
-            for branch in el:
-                for iv,vertex in enumerate(branch):
-                    eqStr = "dm >= "
-                    massValue = sum(vertex)
-                    eqStr += str(massValue)
-                    branch[iv] = eqStr
 
     def checkMassConstraints(self,massArray):
         """
