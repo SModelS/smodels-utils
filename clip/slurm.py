@@ -452,7 +452,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
-    cmd += [ "--ntasks-per-node", str(nproc) ]
+    # cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
     if True:
         time = 48
@@ -655,6 +655,7 @@ def main():
             for i in range(args.nbakes):
                 bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
                        args.nprocesses, rundir )
+                totjobs += 1
         if args.clean:
             clean_dirs( rundir, clean_all = False )
             continue
