@@ -252,7 +252,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     logger.info('-- Running validation...')
 
 
-    print(analysisIDs, datasetIDs, txnames, dataTypes)
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
                   dataTypes, useSuperseded=True, useNonValidated=True)
