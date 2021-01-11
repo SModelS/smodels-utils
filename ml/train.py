@@ -9,10 +9,10 @@
 """
 
 import argparse
-from parameter import Parameter
-from system.dataset import DatasetBuilder, Data #set
-from system.trainer import ModelTrainer
-from system.network import DatabaseNetwork
+from parameterParser import Parameter
+from mlCore.dataset import DatasetBuilder, Data #set
+from mlCore.trainer import ModelTrainer
+from mlCore.network import DatabaseNetwork
 
 def main(parameter):
 
@@ -21,9 +21,7 @@ def main(parameter):
 	Reads the parameter file and trains networks for all
 	maps it can find.
 
-	:param parameter: Custom parameter dictionary
-
-	:return x: Coordinate value (float)
+	:param parameter: Custom parameter dictionary generated from parameterParser.py by reading nn_parameters.ini file. See respective files for more information.
 
 	"""
 
@@ -39,9 +37,9 @@ def main(parameter):
 
 	while(thingsToTrain.incrIndex):
 
-		# ----------------------------------------------- #
-		# load experimental data of current configuration #
-		# ----------------------------------------------- #
+		# ------------------------------------------------------------------------------------ #
+		# load experimental data of current configuration. Stored in key "expres" and "txName" #
+		# ------------------------------------------------------------------------------------ #
 
 		parameter.loadExpres
 
@@ -70,7 +68,7 @@ def main(parameter):
 		# ---------------------------------------------------------------------------- #
 
 		winner = {}
-		for nettype in ["regression","classification"]:
+		for nettype in ["regression", "classification"]:
 			parameter.set("nettype", nettype)
 
 			# ------------------------------------------------- #
@@ -78,7 +76,14 @@ def main(parameter):
 			# output will be custom Dataset class used by torch #
 			# ------------------------------------------------- #
 
-			dataset = builder.run(nettype, loadFromFile = True)
+			#dataDict = builder.run(nettype, loadFromFile = True)
+			
+			builder.run(nettype, loadFromFile = True)
+			builder.shuffle()
+			builder.rescaleMasses()
+			builder.rescaleTargets(method = "boxcox")
+
+			dataset = builder.getDataset()
 
 			# ------------------------------------------------------- #
 			# initializing trainer class for current map and net type #

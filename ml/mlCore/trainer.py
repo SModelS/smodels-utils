@@ -13,10 +13,11 @@ import torch
 import matplotlib.pyplot as plt
 from copy import deepcopy
 from pathlib import Path
-from scipy.optimize import minimize
-from system.network import createNet
-from system.auxiliary import loadLossFunction, loadOptimizer, getModelError
 from torch.utils.data import DataLoader
+from scipy.optimize import minimize
+from mlCore.dataset import Data
+from mlCore.network import createNet
+from mlCore.auxiliary import loadLossFunction, loadOptimizer, getModelError
 from smodels.tools.smodelsLogging import logger
 from smodels.tools.smodelsLogging import getLogLevel
 
@@ -45,8 +46,7 @@ class ModelTrainer():
 		self.cores = parameter["cores"]
 
 		self.full_dim = self.txnameData.full_dimensionality
-		self.rescaleParameter = dataset["rescaleParameter"]
-		self.scaler = dataset["scaler"]
+		self.rescaleParameter = dataset["rescaleParams"]
 
 		self.outputPath = parameter["outputPath"]
 
@@ -90,11 +90,13 @@ class ModelTrainer():
 
 				self.winner["model"].setValidationLoss(self.winner["error"])
 
+		self.winner["model"].setRescaleParameter(self.rescaleParameter)
+
 		return self.winner
 
 
 
-	def runCurrentConfiguration(self, secondRun = True):
+	def runCurrentConfiguration(self, secondRun = False):
 
 		"""
 		Parent method of actual training. Handles training differencies between
@@ -104,7 +106,7 @@ class ModelTrainer():
 		:param secondRun: rerun model training with subset of inaccurate dataset predictions
 		"""
 
-		self.model = createNet(self.hyper[-1], self.rescaleParameter, self.scaler, self.full_dim, self.type).double().to(self.device)
+		self.model = createNet(self.hyper[-1], self.rescaleParameter, self.full_dim, self.type).double().to(self.device)
 		self.trainModel()
 
 		if self.type == "regression" and secondRun:
@@ -137,9 +139,12 @@ class ModelTrainer():
 		if optimizer == None: 	 optimizer 	  = loadOptimizer(self.hyper["optimizer"], self.model, self.hyper["learnRate"])
 		if lossFunction == None: lossFunction = loadLossFunction(self.hyper["lossFunction"], self.device)
 
+		lossFunc2 = loadLossFunction("MSE", self.device)
+		alpha, beta = 1., 50.
+
 		trainloader = DataLoader(training, batch_size = batchSize, shuffle = True, num_workers = self.cores)
 
-		bestLossLocal, bestEpochLocal, bestModelLocal  = 1e5, 0, deepcopy(self.model)
+		bestLossLocal, bestEpochLocal, bestModelLocal  = 1e6, 0, deepcopy(self.model)
 
 		for epoch in range(epochNum):
 
@@ -149,7 +154,9 @@ class ModelTrainer():
 
 				optimizer.zero_grad()
 				inputs, labels = data[0], data[1]
-				loss = lossFunction(self.model(inputs), labels)
+				loss1 = lossFunction(self.model(inputs), labels)
+				loss2 = lossFunc2(self.model(inputs), labels)
+				loss = alpha * loss1 + beta * loss2
 				loss.backward()
 				optimizer.step()
 
@@ -172,7 +179,8 @@ class ModelTrainer():
 					#bestEpochLocal = epoch
 			
 			if getLogLevel() <= 20: # 20 == info
-				print("\repoch: %d/%d | loss: %s (%s)     " %(epoch+1,epochNum, round(bestLossLocal.item(), 5), round(testingLoss.item(), 5)), end = "" if epoch+1 < epochNum else "\n")
+				#print("\repoch: %d/%d | loss: %f (%f)     " %(epoch+1,epochNum, round(bestLossLocal.item(), 5), round(testingLoss.item(), 5)), end = "" if epoch+1 < epochNum else "\n")
+				print("\repoch: %d/%d | loss: %f (%f) %s %s   " %(epoch+1,epochNum, bestLossLocal, testingLoss, loss1.item(), beta*loss2.item()), end = "" if epoch+1 < epochNum else "\n")
 
 		self.model = bestModelLocal
 
@@ -188,18 +196,24 @@ class ModelTrainer():
 
 		whichset = self.dataset #self.training
 
-		from system.dataset import Data
 		error = getModelError(self.model, whichset, self.type, returnMean = False)
+		print(error)
 		subset = []
+		#newInputs = []
+		#newLabels = []
 
 		for n,e in enumerate(error):
 
 			if e > maxError:
+				#newInputs.append(i.item() for i in whichset.inputs[n])
+				#newLabels.append(whichset.labels[n].item())
 				raw = [i.item() for i in whichset.inputs[n]]
 				raw.append(whichset.labels[n].item())
 				subset.append(raw)
 
 		subset = Data(subset, self.full_dim, self.device)
+		#subset = Data((newInputs, newLabels), self.full_dim, self.device)
+		print(len(subset))
 		return subset
 
 
