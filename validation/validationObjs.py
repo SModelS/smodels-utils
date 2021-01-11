@@ -210,7 +210,7 @@ class ValidationPlot():
             #if 0. < y < 1e-6:
             #    y = unscaleWidth(y)
             # print ( "%d: %f,%f" % ( i, xt, y ) )
-            print ( "%d: %f,%g" % ( i, xt, y ) )
+            # print ( "%d: %f,%g" % ( i, xt, y ) )
 
     def computeHulls ( self ):
         """ compute the convex hulls from the Voronoi
@@ -462,12 +462,14 @@ class ValidationPlot():
             if "THSCPM7" in filename:
                 n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
                 ## so all works out if we just slice at one after the half
-            elif not "T3GQ" in filename and not "T5GQ" in filename:
+            elif not "T3GQ" in filename and not "T5GQ" in filename and not "T2Disp" in filename:
                 print ( "[validationObjs] mass vector %s is asymmetrical. dont know what to do" % masses )
             # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
         if "T5GQ" in filename:
             ret = [ masses[:n+1], masses[n+1:] ]
+        if "T2Disp" in filename:
+            ret = [ masses[:2], masses[:2] ]
         return ret
 
     def topologyHasWidths ( self ):
@@ -500,8 +502,10 @@ class ValidationPlot():
                 ret = None
         if "T3GQ" in filename: ## fixme we sure?
             ret = [ masses[1][0], masses[1][1] ]
-        if "T5GQ" in filename: ## fixme we sure?
+        if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
             ret = [ masses[0][0], masses[0][1] ]
+        #if "T2Disp" in filename:
+        #    ret = [ masses[0][0], masses[0][1] ]
         #if "TGQ12" in filename:
         #    ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:

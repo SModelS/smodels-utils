@@ -355,6 +355,9 @@ if __name__ == "__main__":
         dataTypes = ['efficiencyMap']
         datasetIDs = ['all']
         combine=True
+    elif dataselector == "all":
+        dataTypes = ['all']
+        datasetIDs = ['all']
     else:
         #dataTypes = ['all']
         dataTypes = ['efficiencyMap']
