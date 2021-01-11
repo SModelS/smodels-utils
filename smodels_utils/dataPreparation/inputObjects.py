@@ -843,7 +843,6 @@ class TxNameInput(Locker):
             #Check if mass array is consistent with the mass constraints given by the
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):
-                print('Mass=',massArray,'failing')
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
