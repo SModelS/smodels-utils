@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
+source /mnt/hephy/pheno/opt/root/bin/thisroot.sh
 cd /scratch-cbe/users/wolfgan.waltenberger/git/em-creator
 ./bake.py @@ARGS@@
 sleep 5
