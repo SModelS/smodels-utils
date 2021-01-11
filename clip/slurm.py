@@ -694,7 +694,7 @@ def main():
             args.stopTeleportationAfter = -1
         if args.maxsteps == None:
             args.maxsteps = 1000
-        while True:
+        while True and args.bake!="":
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
