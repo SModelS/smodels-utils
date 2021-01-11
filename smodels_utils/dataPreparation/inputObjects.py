@@ -815,6 +815,7 @@ class TxNameInput(Locker):
         dataList = []
         for ptDict in dataHandler:
 
+
             if len(ptDict) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
                 sys.exit()
@@ -826,19 +827,23 @@ class TxNameInput(Locker):
             #Get the (upper limit, efficiency,..) value:
             value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
             massArray = plane.getParticleMasses(**xDict)
-
+            skipMass = False
+            #Check if the massArray is positive and value is positive:
             for br in massArray:
                 for M in br:
-            #Check if the massArray is positive and value is positive:
                     if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
+                        skipMass = True
                         if not quenchNegativeMasses:
                             logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
                         continue
                     if type(M) == tuple and M[1]<0.:
+                        skipMass = True
                         logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
                         continue
             if value < 0.:
+                skipMass = True
                 logger.warning("Negative value for %s found. Point %s will be ignored." %(self,str(massArray)))
+            if skipMass:
                 continue
             #Check if mass array is consistent with the mass constraints given by the
             #txname constraint. If not, skip this mass.
@@ -928,10 +933,22 @@ class TxNameInput(Locker):
             #Get even particles from vertices:
             particles = element.evenParticles
             #Compute minimum mass difference (sum over SM final state masses)
-            massConstraint = [["dm >= "
-                            + str(sum([ptc.mass.asNumber(GeV) if hasattr(ptc,'mass') else 0.0 for ptc in vertex ]))
-                            for vertex in branch] for branch in particles]
-            self.massConstraints.append(massConstraint)
+            elConstraint = []
+            for branch in particles:
+                branchConstraint = []
+                for vertex in branch:
+                    vertexMasses = []
+                    for ptc in vertex:
+                        if not hasattr(ptc,'mass'):
+                            continue
+                        elif isinstance(ptc.mass,list):
+                            vertexMasses.append(max(ptc.mass).asNumber(GeV))
+                        else:
+                            vertexMasses.append(ptc.mass.asNumber(GeV))
+                    vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
+                    branchConstraint.append(vertexConstraint)
+                elConstraint.append(branchConstraint)
+            self.massConstraints.append(elConstraint)
 
     def checkMassConstraints(self,massArray):
         """
