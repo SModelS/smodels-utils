@@ -344,6 +344,10 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         ## work around an issue with THSCPM1b, they only
         ## give one branch in the slha file names
         tokens += tokens[-2:]
+    if vPlot.txName in [ "T2Disp" ]:
+        ## work around an issue with THSCPM1b, they only
+        ## give one branch in the slha file names
+        tokens += tokens[1:]
     if vPlot.txName in [ "THSCPM6" ]:
         ## work around an issue with THSCPM1b, they only
         ## give one branch in the slha file names
