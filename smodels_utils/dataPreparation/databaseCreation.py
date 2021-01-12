@@ -310,8 +310,9 @@ class DatabaseCreator(list):
                         i=0
                         for pointDict in exclusion:
                             point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                            if not 'y' in point:
+                                point['y'] = 0.0
                             try:
-                                fx,fy = float(point['x']),float(point['y'])
                                 if plane.branches == None:
                                     from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
                                     plane = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
