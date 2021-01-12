@@ -9,5 +9,5 @@ coords["THSCPM3"]={ "masses": [[1,2],[1,2]], "widths": [[3],[3]] }
 coords["THSCPM4"]={ "masses": [[1,2],[1,2]], "widths": [[3],[3]] }
 #coords["THSCPM5"]={ "masses": [[1,2],[1,2]], "widths": [[4],[4]] }
 coords["T2Disp"]={ "masses": [[1,2],[1,2]], "widths": [[3],[3]] }
-coords["T5Disp"]={ "masses": [[1],[3]], "widths": [[2]] }
+coords["T5Disp"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
 coords["TGQ"]={ "masses": [[1,2],[3,4]], "widths": None }
