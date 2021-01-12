@@ -489,7 +489,32 @@ class ValidationPlot():
         """ is this a topology with a width-dependency? """
         return "(" in self.axes
 
+
     def getXYFromSLHAFileName ( self, filename, asDict=False ):
+        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
+        Meant as fallback for when no ExptRes is available.
+        :param asDict: if True, return { "x": x, "y": y } dict, else list
+        """
+        from filenameCoords import coords
+        if not self.txName in coords:
+            return getXYFromSLHAFileNameOld ( filename, asDict )
+        oldc = coords[self.txName]
+        tname = filename.replace(".slha","")
+        tokens = tname.split("_")
+        replacedc = copy.deepcopy ( oldc )
+        for ib,b in enumerate(oldc["masses"]):
+            for iv,v in enumerate(b):
+                replacedc["masses"][ib][iv]=float(tokens[v])
+        for ib,b in enumerate(oldc["widths"]):
+            for iv,v in enumerate(b):
+                replacedc["widths"][ib][iv]=float(tokens[v])
+        massPlane = MassPlane.fromString(self.txName,self.axes)
+        varsDict = massPlane.getXYValues(replacedc["masses"],replacedc["widths"])
+        if varsDict == None or asDict:
+            return varsDict
+        return (varsDict["x"],varsDict["y"])
+
+    def getXYFromSLHAFileNameOld ( self, filename, asDict=False ):
         """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
         Meant as fallback for when no ExptRes is available.
         :param asDict: if True, return { "x": x, "y": y } dict, else list
