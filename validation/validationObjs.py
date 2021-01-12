@@ -296,10 +296,13 @@ class ValidationPlot():
         for point in self.data:
             if "error" in point.keys():
                 continue
+            y=0.
             try: ## we seem to have two different ways of writing the x,y values
-                x,y=point["axes"]['x'],point["axes"]['y']
+                x=point["axes"]['x']
+                y=point["axes"]['y']
             except Exception as e:
-                x,y=point["axes"][0],point["axes"][1]
+                pass
+                #x,y=point["axes"][0],point["axes"][1]
             w = 1.
             if weighted:
                 w = self.computeWeight ( [x,y] )
