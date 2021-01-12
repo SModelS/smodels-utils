@@ -497,7 +497,7 @@ class ValidationPlot():
         """
         from filenameCoords import coords
         if not self.txName in coords:
-            return getXYFromSLHAFileNameOld ( filename, asDict )
+            return self.getXYFromSLHAFileNameOld ( filename, asDict )
         oldc = coords[self.txName]
         tname = filename.replace(".slha","")
         tokens = tname.split("_")
@@ -505,9 +505,10 @@ class ValidationPlot():
         for ib,b in enumerate(oldc["masses"]):
             for iv,v in enumerate(b):
                 replacedc["masses"][ib][iv]=float(tokens[v])
-        for ib,b in enumerate(oldc["widths"]):
-            for iv,v in enumerate(b):
-                replacedc["widths"][ib][iv]=float(tokens[v])
+        if type(oldc["widths"]) == list:
+            for ib,b in enumerate(oldc["widths"]):
+                for iv,v in enumerate(b):
+                    replacedc["widths"][ib][iv]=float(tokens[v])
         massPlane = MassPlane.fromString(self.txName,self.axes)
         varsDict = massPlane.getXYValues(replacedc["masses"],replacedc["widths"])
         if varsDict == None or asDict:
