@@ -445,6 +445,19 @@ class ValidationPlot():
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
 
+    def getWidthsFromSLHAFileName ( self, filename ):
+        """ try to guess the mass vector from the SLHA file name """
+        tokens = filename.replace(".slha","").split("_")
+        if not tokens[0].startswith ( "T" ):
+            print ( "why does token 0 not start with a T??? %s" % tokens[0] )
+            sys.exit(-1)
+        widths = list ( map ( float, tokens[1:] ) )
+        ret = []
+        for m in widths:
+            if m>0. and m<1e-10:
+                ret.append ( m )
+        return ret
+
     def getMassesFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """
         tokens = filename.replace(".slha","").split("_")
@@ -454,7 +467,7 @@ class ValidationPlot():
         masses = list ( map ( float, tokens[1:] ) )
         for m in masses:
             if m>0. and m<1e-10:
-                pass
+                continue
                 # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
                 # sys.exit()
         n=int(len(masses)/2)
@@ -474,15 +487,15 @@ class ValidationPlot():
 
     def topologyHasWidths ( self ):
         """ is this a topology with a width-dependency? """
-        if "THSCP" in self.txName:
-            return True
-        return False
+        return "(" in self.axes
 
-    def getXYFromSLHAFileName ( self, filename ):
+    def getXYFromSLHAFileName ( self, filename, asDict=False ):
         """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
         Meant as fallback for when no ExptRes is available.
+        :param asDict: if True, return { "x": x, "y": y } dict, else list
         """
         masses = self.getMassesFromSLHAFileName ( filename )
+        widths = self.getWidthsFromSLHAFileName ( filename )
         if ".5" in self.axes:
             if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.1:
                 masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
@@ -494,24 +507,19 @@ class ValidationPlot():
             ret = [ masses[0][0], masses[1][0] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
 
-        if not self.topologyHasWidths():
-            varsDict = massPlane.getXYValues(masses,None)
-            if varsDict != None and "y" in varsDict:
-                ret = [ varsDict["x"], varsDict["y"] ]
-            if varsDict == None: ## not on this plane!!!
-                ret = None
+        varsDict = massPlane.getXYValues(masses,None)
+        if varsDict != None and "y" in varsDict:
+            ret = [ varsDict["x"], varsDict["y"] ]
+        if varsDict == None: ## not on this plane!!!
+            ret = None
         if "T3GQ" in filename: ## fixme we sure?
             ret = [ masses[1][0], masses[1][1] ]
         if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
             ret = [ masses[0][0], masses[0][1] ]
-        #if "T2Disp" in filename:
-        #    ret = [ masses[0][0], masses[0][1] ]
-        #if "TGQ12" in filename:
-        #    ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
             ret = [ masses[0][0], masses[0][2] ]
-        #if "THSCPM1b" in filename:
-        #    ret = [ masses[0][0], masses[1][0] ]
+        if asDict and ret !=None:
+            return { "x": ret[0], "y": ret[1] }
         return ret
 
     def getDataFromPlanes(self):
@@ -588,12 +596,9 @@ class ValidationPlot():
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
                 ## still get the masses from the slhafile name
-                xy = self.getXYFromSLHAFileName ( slhafile )
+                axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
                 ## log also the errors in the py file
-                Dict = { 'slhafile': slhafile, 'error': 'no results' }
-                if xy !=None:
-                    axes = { 'x': xy[0], 'y': xy[1] }
-                    Dict['axes'] = axes
+                Dict = { 'slhafile': slhafile, 'error': 'no results', 'axes': axes }
                 self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']

@@ -336,78 +336,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
     return plane
 
-def getXYFromSLHAFile ( slhafile, vPlot ):
-    """ get coordinates from the slhafile name, given
-        a validationPlot object vPlot """
-    tokens = slhafile.replace(".slha","").split("_" )
-    if vPlot.txName in [ "THSCPM1b", "THSCPM2b" ]:
-        ## work around an issue with THSCPM1b, they only
-        ## give one branch in the slha file names
-        tokens += tokens[-2:]
-    if vPlot.txName in [ "T2Disp" ]:
-        ## work around an issue with THSCPM1b, they only
-        ## give one branch in the slha file names
-        tokens += tokens[1:]
-    if vPlot.txName in [ "THSCPM6" ]:
-        ## work around an issue with THSCPM1b, they only
-        ## give one branch in the slha file names
-        tokens = tokens[:5] + [ tokens[5] ]*2 + [ tokens [ 6 ] ] * 2
-    masses = list ( map ( float, tokens[1:] ) )
-    massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
-    nM = int ( len(masses)/2 ) ## number of masses per branch
-    if vPlot.txName in [ "T5GQ" ]:
-        nM+=1
-    if len(masses) % 2 != 0:
-        logger.debug("asymmetrical branch. Dont know how to handle" )
-    #if masses[:nM] != masses[nM:]: ## actually seems to work
-    #    logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
-    widths = None
-    if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
-        from sympy import var
-        x__,y__,z__,w__ = var( "x y z w" )
-        ax = eval ( vPlot.axes )
-        widths = []
-        widthsbr, massbr = [], []
-        tmpmasses = []
-        # print ( "ax=", ax )
-        ctr = 0
-        for br in ax:
-            for v in br:
-                if type(v) == tuple:
-                    massbr.append ( masses[ctr] )
-                    ctr += 1
-                    widthsbr.append ( masses[ctr] )
-                else:
-                    massbr.append ( masses[ctr] )
-                ctr += 1
-            widths.append ( widthsbr )
-            widthsbr = []
-            tmpmasses.append ( massbr )
-            massbr = []
-        masses = tmpmasses
-    else:
-        masses = [ masses[:nM], masses[nM:] ]
-    if vPlot.txName in [ "THSCPM6" ]:
-        masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
-        widths = [ list(map(float,[ tokens[5] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM5" ]:
-        masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
-        widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM7" ]:
-        masses = list(map(float,tokens[1:4 ] ) ), [ float(tokens[1]), float(tokens[3]) ]
-        # masses = [ [ float(tokens[1]), float(tokens[3]) ], [ list(map(float,tokens[1:4 ] ) ) ] ]
-        widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM8", "THSCPM3" ]:
-        masses = [ list(map(float,tokens[1:3 ] ) ) ] * 2
-        widths = [ list(map(float,[ tokens[3] ] ) ) ] * 2
-    # print ( "[plottingFuncs] slhafile", slhafile )
-    # print ( "[plottingFuncs] masses", masses )
-    # print ( "[plottingFuncs] widths", widths )
-    varsDict = massPlane.getXYValues( masses, widths )
-    # print ( "[plottingFuncs] -> vars", varsDict )
-    ## FIXME take into account axis
-    return varsDict
-
 def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
@@ -500,7 +428,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             print ( "[plottingFuncs] emergency break" )
             break
         if "error" in pt.keys():
-            vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
+            vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
             # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
             if vD != None:
                 # print ( "adding no-result point", noresult.GetN(), vD )
@@ -809,7 +737,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         # IPython.embed()
         if not "axes" in pt:
             ## try to get axes from slha file
-            pt["axes"] = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
+            pt["axes"] = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
         xvals = pt['axes']
         if xvals == None: ## happens when not on the plane I think
             continue
