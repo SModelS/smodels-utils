@@ -437,7 +437,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                     y_ = copy.deepcopy ( vD["y"] )
                 if y_ is None:
                     if not hasIssued1dErrorMsg:
-                        logger.error ( "the data is 1d. FIXME cannot handle" )
+                        logger.error ( "the data is 1d." ) # can handle now?
                         hasIssued1dErrorMsg = True
                     y_ = 0.
                 noresult.SetPoint(noresult.GetN(), x_, y_ )
@@ -550,6 +550,16 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
     if official:
+        if len(xvals) == 1:
+            for i in official:
+                print ( "1d official plot!" )
+                if i.GetN() == 1:
+                    xtmp,ytmp=ctypes.c_double(),ctypes.c_double()
+                    i.GetPoint(0,xtmp,ytmp)
+                    yn = 1.1
+                    if ytmp.value > .5:
+                        yn = 0.
+                    i.SetPoint(1, xtmp, yn )
         for i in official:
             base.Add( i, "L")
     if not official == None:
