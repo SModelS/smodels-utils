@@ -46,7 +46,7 @@ def isIn ( i, txnames ):
 class Writer:
     def __init__ ( self, db, experiment, sqrts, keep, caption, numbers, prettyNames,
                    superseded, topos, showsqrts, longtable = False, likelihoods = False,
-                   extended_llhds = False, bibtex=False ):
+                   extended_llhds = False, bibtex=False, colors = False, href = False ):
         """ writer class
         :param experiment: select on experiment, e.g. CMS, ATLAS, or both
         :param sqrts: select on sqrts (str)
@@ -60,6 +60,8 @@ class Writer:
         :param likelihoods: add likelihood information
         :param extended_likelihoods: add extended likelihood information
         :param bibtex: add bibtex references
+        :param colors: use colors according to likelihood availability
+        :param href: add href links
         """
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
@@ -68,11 +70,13 @@ class Writer:
         if bibtex:
             self.bibtex = BibtexWriter ( args.database )
         self.getExpResults ( superseded = superseded )
+        self.href = href
         self.experiment = experiment 
         self.likelihoods = likelihoods
         self.extended_likelihoods = extended_llhds
         self.addcombos = extended_llhds
         self.sqrts = sqrts.lower()
+        self.colors = colors
         self.sqrts = self.sqrts.replace("*","").replace("tev","").replace("both","all").replace("none","all")
         if self.sqrts == "":
             self.sqrts = "all"
@@ -110,6 +114,13 @@ class Writer:
         ana1n = ana1n.replace("-agg","" )
         ana2n = ana2n.replace("-agg","" )
         return ana1n == ana2n
+
+    def addColor ( self, text ):
+        if not self.colors:
+            return text
+        if self.colors:
+            text="\\colorbox{"+self.currentcolor+"}{"+str(text)+"}"
+        return text
 
     def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
         """ write the entry of a single analysis 
@@ -157,12 +168,18 @@ class Writer:
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
+        self.currentcolor = "red!80"
         llhds = "no"
         if hasLLHD ( ana ):
             llhds = "yes"
         if nextIsSame:
             llhds = "yes"
             dt = "ul, eff"
+        if "ul" in dt:
+            if hasLLHD ( ana ):
+                self.currentcolor = "orange!80"
+        if nextIsSame or "eff" in dt:
+            self.currentcolor = "green!80"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
         gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
         Url = ana.globalInfo.url
@@ -171,24 +188,31 @@ class Writer:
             # alltxes="xxx"
         #    Url="http://www.google.com"
         #    gi_id="vvv"
-        Id = "\\href{%s}{%s}" % ( Url, gi_id )
+        if self.href:
+            Id = "\\href{%s}{%s}" % ( Url, gi_id )
+        else:
+            Id = gi_id
+        Id = self.addColor ( Id )
         if self.bibtex != None:
             citeme = gi_id
             citeme = self.bibtex.query ( gi_id )
             Id += "~\cite{%s}" % citeme
         if self.numbers:
-            lines[0]+="%s &" % ananr
+            lines[0]+="%s &" % self.addColor ( ananr )
         lines[0] += "%s & " % Id
         if self.prettyNames:
             pn = prettyTexAnalysisName ( prettyName )
+            # pn = self.addColor ( pn )
             lines[0] += "%s &" % pn
         if self.topos:
             lines[0] += "%s &" % ( alltxes )
         if not self.extended_likelihoods:
             lines[0] += "%s &" % ( dt )
-        lines[0] += "%s " % ( ana.globalInfo.lumi.asNumber(1/fb) )
+        lumi = ana.globalInfo.lumi.asNumber(1/fb)
+        # lumi = self.addColor ( lumi )
+        lines[0] += "%s " % lumi
         if self.showsqrts:
-            lines[0] += "& %s " % ( sqrts )
+            lines[0] += "& %s " % ( self.addColor ( sqrts ) )
         if self.likelihoods:
             lines[0] += f"& {llhds}"
         if self.extended_likelihoods:
@@ -353,7 +377,7 @@ class Writer:
         swbg=""
         if whiteBG:
             swbg="-alpha off"
-        cmd = "convert %s -density 300 -trim %s %s" % ( swbg, pdffile, pngfile )
+        cmd = "convert %s -antialias -density 600 -trim %s %s" % ( swbg, pdffile, pngfile )
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
@@ -404,6 +428,12 @@ if __name__ == "__main__":
         argparser.add_argument('-b', '--bibtex', 
                             help='add bibtex references', 
                             action='store_true' )
+        argparser.add_argument('--colors', 
+                            help='use colors according to availability of likelihood', 
+                            action='store_true' )
+        argparser.add_argument( '-H','--href', 
+                            help='add href links', 
+                            action='store_true' )
         args=argparser.parse_args()
         writer = Writer( db = args.database, experiment=args.experiment,
                          sqrts = args.sqrts,
@@ -413,7 +443,8 @@ if __name__ == "__main__":
                          showsqrts=args.show_sqrts, longtable = args.longtable,
                          likelihoods = args.likelihoods, 
                          extended_llhds = args.extended_likelihoods,
-                         bibtex = args.bibtex )
+                         bibtex = args.bibtex, colors = args.colors,
+                         href = args.href )
         #Generate table:
         writer.generateAnalysisTable( args.output )
         # create pdf
