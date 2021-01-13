@@ -13,7 +13,7 @@
 """
 
 from __future__ import print_function
-import sys
+import sys, os
 try:
     import subprocess as C ## python3
 except:
@@ -46,7 +46,7 @@ def isIn ( i, txnames ):
 class Writer:
     def __init__ ( self, db, experiment, sqrts, keep, caption, numbers, prettyNames,
                    superseded, topos, showsqrts, longtable = False, likelihoods = False,
-                   extended_llhds = False ):
+                   extended_llhds = False, bibtex=False ):
         """ writer class
         :param experiment: select on experiment, e.g. CMS, ATLAS, or both
         :param sqrts: select on sqrts (str)
@@ -59,12 +59,14 @@ class Writer:
         :param longtable: longtable or tabular latex environment
         :param likelihoods: add likelihood information
         :param extended_likelihoods: add extended likelihood information
+        :param bibtex: add bibtex references
         """
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
         #Creat analyses list:
         self.bibtex = None
-        self.bibtex = BibtexWriter ( args.database )
+        if bibtex:
+            self.bibtex = BibtexWriter ( args.database )
         self.getExpResults ( superseded = superseded )
         self.experiment = experiment 
         self.likelihoods = likelihoods
@@ -311,12 +313,18 @@ class Writer:
         base = "smodels"
         if self.experiment != "both":
             base = self.experiment
+        if self.sqrts != "all":
+            base += str(self.sqrts)
         print ( "now latexing smodels.tex" )
         o1 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         o2 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
         print ( "done latexing, see %s.pdf" % base )
+        if os.path.exists ( "/bin/pdftrimwhite" ):
+            trimcmd = "pdftrimwhite %s.pdf %strimmed.pdf" % ( base, base )
+            C.getoutput ( trimcmd )
+            print ( f"trimmed version: {base}trimmed.pdf" )
         if self.experiment != "both":
             C.getoutput ( "mv smodels.pdf %s.pdf" % base )
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
@@ -336,10 +344,16 @@ class Writer:
         base = "smodels"
         if self.experiment != "both":
             base = self.experiment
+        if self.sqrts != "all":
+            base += str(self.sqrts)
         pngfile= base + ".png"
         pdffile= base + ".pdf"
-        print ( "now creating %s-X.png" % base )
-        cmd = "convert -trim %s %s" % ( pdffile, pngfile )
+        print ( "now creating %s.png" % base )
+        whiteBG = True
+        swbg=""
+        if whiteBG:
+            swbg="-alpha off"
+        cmd = "convert %s -density 300 -trim %s %s" % ( swbg, pdffile, pngfile )
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
@@ -387,6 +401,9 @@ if __name__ == "__main__":
         argparser.add_argument('-N', '--prettyNames', 
                             help='add column for description of analyses', 
                             action='store_true' )
+        argparser.add_argument('-b', '--bibtex', 
+                            help='add bibtex references', 
+                            action='store_true' )
         args=argparser.parse_args()
         writer = Writer( db = args.database, experiment=args.experiment,
                          sqrts = args.sqrts,
@@ -395,7 +412,8 @@ if __name__ == "__main__":
                          superseded = args.superseded, topos = args.topologies,
                          showsqrts=args.show_sqrts, longtable = args.longtable,
                          likelihoods = args.likelihoods, 
-                         extended_llhds = args.extended_likelihoods )
+                         extended_llhds = args.extended_likelihoods,
+                         bibtex = args.bibtex )
         #Generate table:
         writer.generateAnalysisTable( args.output )
         # create pdf
