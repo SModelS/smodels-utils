@@ -10,6 +10,7 @@
 """
 
 from __future__ import print_function
+import ctypes
 import sys
 import os
 import logging
@@ -21,6 +22,11 @@ from sympy import var
 x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
+
+## for debugging, if set to true, allow for the acceptance files
+## to have multiple entries for the same mass point. that is obviously a bug,
+## so use this feature with great care
+allowMultipleAcceptances = False
 
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
@@ -75,7 +81,7 @@ class DataHandler(object):
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error("Coordinate map %s is not consistent with number of dimensions (%i)"
-                         %(coordinateMap,self.dimensions))
+                         %(coordinateMap,self.dimensions+1))
             sys.exit()
         for xv in self.xvars:
             if not xv in coordinateMap:
@@ -134,6 +140,9 @@ class DataHandler(object):
         strictlyPositive = False
         if self._unit in [ "fb", "pb" ]:
             strictlyPositive = True
+        if not hasattr ( self, self.fileType ):
+            logger.error ( "Format type '%s' is not defined. Try either one of 'root', 'csv', 'txt', 'embaked', 'mscv', 'effi', 'cMacro', 'canvas', 'svg', 'pdf' instead. " % self.fileType )
+            sys.exit(-1)
         for point in getattr(self,self.fileType)():
             ptDict = self.mapPoint(point) #Convert point to dictionary
             if self.allowNegativeValues:
@@ -266,16 +275,21 @@ class DataHandler(object):
             for i,xvals in enumerate(self.getX()):
                 #Get the point in the data which matches the one in self
                 pts = data.getPointsWith(**xvals)
+                if pts and len(pts)>1 and allowMultipleAcceptances:
+                    logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error("But allowMultipleAcceptances is set to true, so will choose first value!" )
+                    pts = [ pts[0] ]
                 if not pts:
                     continue
-                elif len(pts) > 1.:
+                elif len(pts) > 1:
                     logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error("(If you want to allow for this happen, then set dataHandlerObjects.allowMultipleAcceptances = True)" )
                     sys.exit()
                 else:
                     pt = pts[0]
                     oldpt = self.data[i]  #Old point
                     for key,val in oldpt.items():
-                        if key in xvals or not key in pt:
+                        if str(key) in xvals.keys() or not key in pt:
                             continue
                         factor = pt[key]
                         oldpt[key] = oldpt[key]*factor  #Rescale values which do not appear in xvals
@@ -304,6 +318,10 @@ class DataHandler(object):
             #Skip variables without indices (relevant for exclusion curves)
             if i is None:
                 continue
+            if i >= len(point):
+                logger.error( "asking for %dth element of %s in %s" % \
+                              (i, point, self.path ) )
+                logger.error( "coordinate map is %s" % self.coordinateMap )
             ptDict[xvar] = point[i]
 
         return ptDict
@@ -406,7 +424,7 @@ class DataHandler(object):
         :return: True if value greater (or equals) 0 or allowNegativeValues == True
         """
 
-        if self.allowNegativeValues: 
+        if self.allowNegativeValues:
             return True
         for value in values:
 
@@ -425,7 +443,7 @@ class DataHandler(object):
         preprocessing txt-files containing only columns with
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
 
         txtFile = open(self.path,'r')
@@ -454,13 +472,74 @@ class DataHandler(object):
 
             yield values
 
+    def pdf(self):
+        """
+        iterable method
+        preprocessing pdf-files
+        floats
+
+        :yield: list with values as float, one float for every column
+        """
+        from .PDFLimitReader import PDFLimitReader
+        tokens = self.index.split(";")
+        ## boundaries in the plot!
+        lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
+        logz = True ## are the colors in log scale?
+        for token in tokens:
+            axis = token[0]
+            lims = token[1:].replace("[","").replace("]","")
+            lims = lims.split(",")
+            if len(lims)>2:
+                if lims[2].lower() in [ "log", "true" ]:
+                    logz = True
+                elif lims[2].lower() in [ "false", "nolog" ]:
+                    logz = False
+                else:
+                    print ( "Error: do not understand %s. I expected log or nolog" % lims[2] )
+            lims = tuple ( map ( float, lims[:2] ) )
+            lim[axis]=lims
+        print("[dataHandlerObjects] limits %s" % lim )
+
+        data =  {
+            'name': self.path.replace(".pdf",""),
+            'x':{'limits': lim["x"]},
+            'y':{'limits': lim["y"]},
+            'z':{'limits': lim["z"], 'log':logz },
+            }
+        r = PDFLimitReader( data )
+        logger.warn ( "This is just a prototype of a PDF reader!" )
+        logger.warn ( f"{len(r.main_shapes)} shapes in pdf file." )
+        import numpy
+        data = []
+        lastz = float("inf")
+        dx = r.deltax
+        while dx < 15.:
+            dx = 2*dx
+        dy = r.deltay
+        while dy < 15.:
+            dy = 2*dy
+        for xi in numpy.arange ( lim["x"][0]+.5*r.deltax, lim["x"][1]+1e-6, dx ):
+            for yi in numpy.arange ( lim["y"][0]+.5*r.deltay, lim["y"][1]+1e-6, dy ):
+                if yi > xi:
+                    continue
+                z = r.get_limit ( xi, yi )
+                if z == None:
+                    continue
+                #if z == lastz:
+                #    continue
+                # print ( "xyz", xi, yi, z )
+                data.append ( ( xi, yi, z ) )
+                lastz = z
+        for d in data:
+            yield d
+
     def csv(self):
         """
         iterable method
         preprocessing csv-files
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
         import csv
 
@@ -471,6 +550,7 @@ class DataHandler(object):
         has_waited = False
         if waitFor == None:
             has_waited = True
+        yields = []
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
@@ -497,8 +577,18 @@ class DataHandler(object):
                     if self.unit[1]=="X:60":
                         frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
                         fr[1]=frx
-                yield fr
+                yields.append ( fr )
             csvfile.close()
+            # sort upper limits and efficiencies but not points in exclusion lines.
+            if "xclusion" in self.name:
+                xs,ys=[],[]
+                for yr in yields:
+                    xs.append ( yr[0] )
+                    ys.append ( yr[1] )
+            else:
+                yields.sort()
+            for yr in yields:
+                yield yr
 
     def mcsv(self):
         """
@@ -506,14 +596,14 @@ class DataHandler(object):
         preprocessing multiple csv-files, and multiplying the last values
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
         ret = 1.
         npaths = []
         keys = set()
         for ctr,p in enumerate(self.path):
             path = {}
-            ret = list( self.csvForPath( p ) ) 
+            ret = list( self.csvForPath( p ) )
             for point in ret:
                 key = tuple(point[:-1])
                 keys.add ( key )
@@ -579,19 +669,22 @@ class DataHandler(object):
         preprocessing python dictionaries as defined by the em bakery
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
         SR = self.objectName
         with open(self.path) as f:
             D=eval(f.read())
-        for pt,values in D.items():
+        keys = list(D.keys() )
+        keys.sort()
+        for pt in keys:
+            values = D[pt]
             ret = list(pt)
             eff = 0.
             if SR in values.keys():
                 eff = values[SR]
             ret += [ eff ]
             yield ret
-        
+
 
     def effi(self):
 
@@ -600,7 +693,7 @@ class DataHandler(object):
         preprocessing txt-files containing fastlim efficiency maps
         (only columns with floats)
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
 
         txtFile = open(self.path,'r')
@@ -826,7 +919,7 @@ class DataHandler(object):
                 xRange = range(1,xAxis.GetNbins() + 1, 2)
             else:
                 logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
-                
+
 
 
 
@@ -877,14 +970,17 @@ class DataHandler(object):
             sys.exit()
 
 
-        x, y, z = ROOT.Double(0.),ROOT.Double(0.),ROOT.Double(0.)
+        x, y, z = ctypes.c_double(0.),ctypes.c_double(0.),ctypes.c_double(0.)
+        # x, y, z = ROOT.Double(0.),ROOT.Double(0.),ROOT.Double(0.)
         for i in range(0, graph.GetN()):
             if isinstance(graph,ROOT.TGraph):
                 graph.GetPoint(i, x, y)
-                yield [float(x), float(y)]
+                yield [ x.value, y.value ]
+                # yield [float(x), float(y)]
             elif isinstance(graph,ROOT.TGraph2D):
                 graph.GetPoint(i, x, y, z)
-                yield [float(x), float(y), float(z)]
+                yield [ x.value, y.value, z.value ]
+                # yield [float(x), float(y), float(z)]
 
 
 class ExclusionHandler(DataHandler):
@@ -900,7 +996,7 @@ class ExclusionHandler(DataHandler):
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param name: name as string
-        :param coordinateMap: A dictionary mapping the index of the variables 
+        :param coordinateMap: A dictionary mapping the index of the variables
                in the data and the
                corresponding x,y,.. coordinates used to define the plane axes.
                (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
@@ -1011,3 +1107,42 @@ class ExclusionHandler(DataHandler):
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
                 yield [x,y]
+
+
+    def pdf(self):
+
+        """
+        iterable method for  processing files with coordinates in pdf format.
+        :yield: [x-value in GeV, y-value in GeV]
+        """
+        #print ( "[dataHandlerObjects] here!!", self.path  )
+        #print ( )
+        from .PDFLimitReader import PDFLimitReader
+        tokens = self.index.split(";")
+        ## boundaries in the plot!
+        lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
+        logz = True ## are the colors in log scale?
+        for token in tokens:
+            axis = token[0]
+            lims = token[1:].replace("[","").replace("]","")
+            lims = lims.split(",")
+            if len(lims)>2:
+                if lims[2].lower() in [ "log", "true" ]:
+                    logz = True
+                elif lims[2].lower() in [ "false", "nolog" ]:
+                    logz = False
+                else:
+                    print ( "Error: do not understand %s. I expected log or nolog" % lims[2] )
+            lims = tuple ( map ( float, lims[:2] ) )
+            lim[axis]=lims
+
+        data =  {
+            'name': self.path.replace(".pdf",""),
+            'x':{'limits': lim["x"]},
+            'y':{'limits': lim["y"]},
+            'z':{'limits': lim["z"], 'log':logz },
+            }
+        r = PDFLimitReader( data )
+        points = r.exclusions [ self.name ]
+        for p in points:
+            yield p

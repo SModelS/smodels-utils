@@ -22,12 +22,12 @@ Upper limit computer works and returns a result. Tried to find the same upper li
 -with only Region A: 3.2 fb (for regions B and C, pyhf is crashing)  
 -by combining all three regions: 3.4 fb
 
-| masses(sbottom, chi2, chi1) [GeV]| official 95% CL UL [fb] | pyhf combined 95% CL UL [fb] | inclusive 95% CL UL [fb] |
-|---|---|---|---|
-|900,250,60|3|3.2|A : 3.2|
-|800,450,60|2|2.07|A : 1.98, C : 1.72|
-|900,550,60|0.9|0.99|A : 0.96, C : 6.4|
-|1300,950,60|0.3|0.27|A : 0.30, C : 6.4|
+| masses(sbottom, chi2, chi1) [GeV] | official 95% CL UL [fb] | pyhf combined 95% CL UL [fb] | inclusive 95% CL UL [fb] |
+|-----------------------------------|-------------------------|------------------------------|--------------------------|
+| 900,250,60                        | 3                       | 3.2                          | A : 3.2                  |
+| 800,450,60                        | 2                       | 2.07                         | A : 1.98, C : 1.72       |
+| 900,550,60                        | 0.9                     | 0.99                         | A : 0.96, C : 6.4        |
+| 1300,950,60                       | 0.3                     | 0.27                         | A : 0.30, C : 6.4        |
 
 If the results is not shown, it's because it was crashing due to the mu bounds problem that is now solved.
 
@@ -52,7 +52,7 @@ Infinite loop with some mass points and initial rescaling factor of 10 (changing
 It appears that ATLAS-SUSY-2018-31 is performing a poor person's combination, i.e., all three regions (A, B and C) have subregions. These subregions then get combined into three seperate "inclusive" likelihoods, amongst which the inclusive regions giving the best expected limit is picked to compute the observed limit.
 Such combination will bring small complications. We'v decided we'd rather try getting the pyhf interface to work with ATLAS-SUSY-2018-04 first which doesn't have this kind of poor person's combination.
 
-- [ ] think about a way to perform this poor person's combination (outside of pyhfInterface.py)
+- [x] think about a way to perform this poor person's combination (outside of pyhfInterface.py)
 
 # Testing ATLAS-SUSY-2018-04
 
@@ -122,15 +122,27 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [ ] add another column with best excepted upper limit (problem with nan upper limits)
 - [x] try using expected backgrounds of [aux. table 02](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-04/tabaux_02.png) : see [ULtab-aux.md](https://github.com/SModelS/smodels-utils/blob/develop/pyhfintegration/ULtab-aux.md)
 
+# Running validation
+
+Validation plots can be found in [validation folder](https://github.com/SModelS/smodels-database/blob/pyhf/13TeV/ATLAS/ATLAS-SUSY-2018-04-eff/validation/) SModelS interface to pyhf is slightly over excluding for ATLAS-SUSY-2018-04 but it is much closer than for the EM vlaidation plot.
+For ATLAS-SUSY-2018-31, there are two cases :
+- the first mass plane is a bit better than EM but still under excluding
+- the second mass plane is worse than EM
+
 # To do list
 
-- [x] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison
-- [x] create a SModelS "pyhf" branch off the "develop" branch
-- [x] add pyhf into smodels/share/requirements.txt
-- [x] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key (and `datasetOrder`?)
-- [x] put the code into smodels/tools.
-- [x] change datasetObj.py:getCombinedUpperLimitFor
 - [x] add best expected combination in datasetObj.py:getCombinedUpperLimitFor
-- [x] add pyhf in datasetObj.py:combinedLikelihood
-- [ ] add pyhf in datasetObj.py:totalChi2
-- [ ] add a unit test
+- [x] added `jsonFiles` attribute into `smodels-utils/smodels_utils/dataPreparation/inputObjects.py`
+- [x] implement the likelihood method and interface it to SModelS
+- [x] implement the chi2 method and interface it to SModelS
+- [x] add a unit test
+- [x] integration test
+- [ ] some tests failed -> on hold for now
+- [x] check if simplified likelihood still works (see testSL.md)
+- [x] "forked" covariances/drawBestSRs.py to drawBestCB.py that now takes `combination` instead of `dataset`
+  - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination? -> for now, added a `best combination` key in the python output
+- [x] add the `best combination` to the `validationData` output
+- [x] validation doesn't really work for ATLAS-SUSY-2018-06 efficiency map; solved with k-factor = 1
+- [x] try `del model` at each loop -> doesn't work
+- [ ] try rescaling signals without re-instantiating the `model` variable at every loop
+- [ ] why ATLAS-SUSY-2018-06 gives same exp and obs UL with pyhf -> two POIs ?

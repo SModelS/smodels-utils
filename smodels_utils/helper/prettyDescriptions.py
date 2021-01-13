@@ -12,8 +12,9 @@
 import logging
 from sympy import var
 from math import floor, log10
+from smodels.tools.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
-x,y,z = var('x y z')
+x,y,z,w = var('x y z w')
 
 # pretty name of particle:
 
@@ -131,6 +132,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5':'gluino  --> quark squark, squark --> quark lsp',
     'T5GQ' : 'gluino --> quark quark, squark --> quark gluino',
     'T5Disp':'gluino  --> quark quark lsp',
+    'T2Disp':'gluino  --> g lsp',
     'T5gg':'gluino --> quark lsp',
     'T6gg':' squark --> quark lsp',
     'T5WW':'gluino  --> quark antiquark chargino^pm_1, chargino^pm_1 --> W lsp',
@@ -211,8 +213,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
       'TChiH': 'neutralino_1 --> Z/h gravitino',
     'TChiZZ':'neutralino_2 --> Z lsp lsp ',
     'TChiWWoff':'chargino^pm_1 --> W^* lsp lsp ',
+    'TChiWWoffDisp':'chargino^pm_1 --> pion lsp lsp ',
     'TChiWZ':'neutralino_2 chargino^pm_1 --> Z W lsp lsp ',
     'TChiWZoff':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
+    'TChiWZoffDisp':'neutralino_2 chargino^pm_1 --> pion pion lsp lsp ',
     'TChiWZoffqq':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
     'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
     'TChipChimStauSnu':'chargino^pm_1 --> neutrino stau ( tau sneutrino ), stau --> tau lsp, sneutrino --> neutrino lsp ',
@@ -227,19 +231,22 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TSelSel':'selectron --> electron lsp ',
     'TSmuSmu':'smuon --> muon lsp ',
     'TStauStau':'stau  --> tau lsp ',
-    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 
+    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
     'THSCPM1b' : 'stau stau --> stau stau',
     'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
-    'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 
+    'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
     'THSCPM2b' : 'stau lsp --> stau lsp',
-    'THSCPM3' : 'squark --> quark chargino^pm_1', 
+    'THSCPM3' : 'squark --> quark chargino^pm_1',
     'THSCPM4' : 'squark --> quark chargino^pm_1, squark --> quark lsp',
     'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
     'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau stau_1',
     'THSCPM7' : 'squark --> quark chargino_1 | quark neutralino_1, neutralino_1 --> W chargino_1',
-    'THSCPM8' : 'squark --> quark quark stau_1', 
+    'THSCPM8' : 'squark --> quark quark stau_1',
+    'THSCPM9' : 'squark --> quark quark stau_1, squark --> quark quark lsp',
     'TRHadGM1' : 'gluino gluino --> gluino gluino',
-    'TRHadQM1' : 'stop stop --> stop stop',
+    'TRHadQM1' : 'squark squark --> squark squark',
+    'TRHadUM1' : 'stop stop --> stop stop',
+    'TRHadDM1' : 'sbottom sbottom --> sbottom sbottom',
     "T5Gamma" :    "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino y",
     "T5ZGamma" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino Z/y",
     "T5HGamma" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino H/y",
@@ -291,6 +298,7 @@ motherDict = {"T1" :  "gluino",
     'T4bnutaubnutau': 'stop',
     "T5WW" :  "gluino",
     "T5Disp" :  "gluino",
+    "T2Disp" :  "gluino",
     "T5WWoff" :  "gluino",
     "T5ttbbWW" :  "gluino",
     "T5ttbbWWoff" :  "gluino",
@@ -373,10 +381,12 @@ motherDict = {"T1" :  "gluino",
     "TChiWH" :  "neutralino_2 chargino^pm_1",
     "TChiWW" :  "chargino^pm_1 chargino^mp_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
+    "TChiWWoffDisp" :  "chargino^+_1 chargino^-_1",
     "TChiWZ" :  "neutralino_2 chargino^pm_1",
     "TChiH" :  "neutralino_1",
     "TChiZZ" :  "neutralino_2",
     "TChiWZoff" :  "neutralino_2 chargino^pm_1",
+    "TChiWZoffDisp" :  "neutralino_2 chargino^pm_1",
     "TChiWZoffqq" :  "neutralino_2 chargino^pm_1",
     "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1",
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1",
@@ -405,8 +415,11 @@ motherDict = {"T1" :  "gluino",
     "THSCPM6" : "squark",
     "THSCPM7" : "squark",
     "THSCPM8" : "squark",
+    "THSCPM9" : "squark",
     'TRHadGM1' : 'gluino',
-    'TRHadQM1' : 'stop',
+    'TRHadQM1' : 'squark',
+    'TRHadUM1' : 'stop',
+    'TRHadDM1' : 'sbottom',
     "T5Gamma" : "gluino",
     "T5ZGamma" : "gluino",
     "T5HGamma" : "gluino",
@@ -450,7 +463,7 @@ def latexfy(instr):
             outstr = outstr.replace(' '+key,' '+rep)
         if '/'+key in outstr:
             outstr = outstr.replace('/'+key,'/'+rep)
-            
+
 
     outstr = outstr.replace('-->','#rightarrow')
     outstr = outstr.lstrip().rstrip()
@@ -603,6 +616,79 @@ def prettyTxname(txname,outputtype="root"):
         return prodString + ", " + decayString
     else:
         return None
+
+def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
+                            collaboration = None, anaid = None ):
+    """ create good TeX version of pretty name
+    :param sqrts: if not None, add <sqrts> TeV to name
+    :param dropEtmiss: if True, then Etmiss gets dropped
+    :param collaboration: if not None, prefix with collaboration name. if True and
+                          anaid is given, then infer collaboration name from anaid
+    :param anaid: analysis id. if given, then we also query a dictionary
+    """
+
+    prettyNames = { "ATLAS-SUSY-2013-02": "ATL multijet, 8 TeV",
+        "ATLAS-SUSY-2013-15": "ATL 1$\ell$ stop, 8 TeV",
+        "ATLAS-SUSY-2016-07": "ATL multijet, 13 TeV",
+        "ATLAS-SUSY-2016-16": "ATL 1$\ell$ stop, 13 TeV",
+        "CMS-SUS-13-012": "CMS multijet, 8 TeV",
+        "CMS-SUS-16-050": "CMS $0\ell$ stop, 13 TeV"
+    }
+    if anaid != None and anaid in prettyNames:
+        return prettyNames[anaid]
+    if anaid != None and collaboration == True:
+        collaboration = "CMS"
+        if "ATLAS" in anaid:
+            collaboration = "ATL"
+    if prettyname == None:
+        prettyname = "???"
+    pn = prettyname.replace(">","$>$").replace("<","$<$")
+    pn = pn.replace("0 or $>$=1 leptons +","" )
+    pn = pn.replace("photon photon","$\gamma\gamma$" )
+    pn = pn.replace("SF OS","SFOS" )
+    pn = pn.replace("jet multiplicity","n$_{jets}$" )
+    pn = pn.replace("Higgs","H" )
+    pn = pn.replace("searches in","to" )
+    pn = pn.replace("same-sign","SS" )
+    pn = pn.replace("Multilepton","multi-l" )
+    pn = pn.replace("multilepton","multi-l" )
+    pn = pn.replace("leptons","l's" )
+    pn = pn.replace("lepton","l" )
+    pn = pn.replace("1L","1$\ell$" )
+    pn = pn.replace("0L","0$\ell$" )
+    pn = pn.replace("1 l","1$\ell$" )
+    pn = pn.replace("0 leptons","0$\ell$" )
+    pn = pn.replace("dilepton","di\-l" )
+    pn = pn.replace("productions with decays to","prod, to ")
+    pn = pn.replace("photon","$\gamma$" )
+    pn = pn.replace("Photon","$\gamma$" )
+    pn = pn.replace("-$>$","$\\rightarrow$" )
+    pn = pn.replace("final states","")
+    pn = pn.replace("final state","")
+    if dropEtmiss:
+        for etm in [ "ETmiss", "Etmiss", "MET" ]:
+            pn = pn.replace(" + "+etm,"")
+            pn = pn.replace("+ "+etm,"")
+            pn = pn.replace("+"+etm,"")
+            pn = pn.replace(etm,"")
+    pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
+    pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
+    pn = pn.replace("MET","$\\not{\!\!E}_T$")
+    pn = pn.replace("M_CT","M$_CT$" )
+    pn = pn.replace("alpha_T","$\\alpha_T$" )
+    if len(pn)>0 and pn[-1]==")":
+        pos = pn.rfind ( "(" )
+        pn = pn[:pos]
+    pn = pn.strip()
+    if sqrts != None:
+        try:
+            sqrts = sqrts.asNumber(TeV)
+        except Exception as e:
+            pass
+        pn += ", %d TeV" % sqrts
+    if collaboration != None:
+        pn = collaboration + " " + pn
+    return pn
 
 def prettyAxes(txname,axes):
     """

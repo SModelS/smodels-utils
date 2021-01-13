@@ -14,6 +14,13 @@ from __future__ import print_function
 
 import sys
 sys.path.append('../../')
+import logging
+import logging.config
+from smodels_utils import SModelSUtils
+from . import setPath
+from smodels_utils.plotting import decayPlots
+import os
+from ptools import sparticleNames
 
 def draw( slhafile, outfile, options, offset=0.,
           verbosity="info", ssmultipliers = None ):
@@ -21,9 +28,6 @@ def draw( slhafile, outfile, options, offset=0.,
     :param offset: FIXME what does that one do?
     :param ssmultipliers: signal strength multipliers
     """
-    import logging
-    import logging.config
-    from smodels_utils import SModelSUtils
     verbosity = verbosity.lower()
     levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
                "debug": logging.DEBUG }
@@ -34,9 +38,6 @@ def draw( slhafile, outfile, options, offset=0.,
             logging.basicConfig ( level = logLevel )
     logger = logging.getLogger(__name__)
 
-    import setPath
-    from smodels_utils.plotting import decayPlots
-    import os
     out=os.path.basename ( slhafile ).replace(".slha","")
     if outfile!="":
         out=outfile
@@ -65,26 +66,45 @@ def draw( slhafile, outfile, options, offset=0.,
         reader.printDecay("~g")
         logger.debug ( "%s" % reader.getDecays("~g",0.9) )
 
-    tmp=[    "~g", "~q", "~b", "~t", "~t_1", "~t_2", "~b_1", "~b_2" ]
+    # tmp=[    "~g", "~q", "~b", "~t", "~t_1", "~t_2", "~b_1", "~b_2" ]
+    tmp = { 1000021, 1000001, 1000005, 1000006, 2000005, 2000006 }
+
     if options["squarks"]:
+        for pre in [ 1, 2 ]:
+            for post in [ 1, 2, 3, 4 ]:
+                tmp.add ( pre*1000000 + post )
+        """
         for i in [ "u", "d", "c", "s", "b", "t", "q" ]:
             for c in ["L", "R", "1", "2" ]:
                 tmp.append ("~%s_%s" % ( i, c) )
                 tmp.append ("~%s%s" % ( i, c) )
+        """
 
     if options["sleptons"]:
+        for pre in [ 1, 2 ]:
+            for post in [ 11, 12, 13, 14, 15, 16 ]:
+                tmp.add ( pre*1000000 + post )
+        """
         for i in [ "l", "e", "mu", "tau", "nu", "nu_e", "nu_mu", "nu_tau" ]:
             for c in ["L", "R", "1", "2" ]:
                 tmp.append ("~%s_%s" % ( i, c) )
                 tmp.append ("~%s%s" % ( i, c) )
+        """
 
     if options["weakinos"]:
+        weakinos = { 1000022, 1000023, 1000024, 1000025, 1000035, 1000037 }
+        tmp.update ( weakinos )
+        """
         for p_ in [ "~chi1+", "~chi2+", "~chi20", "~chi30" ]:
             tmp.append ( p_ )
+        """
 
     starters=[]
 
     for i in tmp:
+        if reader.hasTeVScaleMass(i):
+            starters.append ( i )
+        """
         if type ( reader.getMass(i) ) == type ( 5.0 ) or \
            type ( reader.getMass(i) ) == type ( 5 ):
             if reader.getMass(i)<100000:
@@ -92,8 +112,10 @@ def draw( slhafile, outfile, options, offset=0.,
         else:
             # add all else
             starters.append ( i )
+        """
 
-    colorizer=decayPlots.ByNameColorizer ( )
+    print ( "[decayPlotters] we start with", starters )
+    namer = sparticleNames.SParticleNames ( susy=False )
 
     ps=reader.getRelevantParticles ( reader.filterNames(starters), 
                                      rmin = options["rmin"] )
@@ -124,15 +146,19 @@ def draw( slhafile, outfile, options, offset=0.,
         drawer.tex=True
 
     # now construct the nodes and the edges
-    for name in ps:
+    for pid in ps:
         color="#000000"
         if options["color"]:
-            color=colorizer.getColor ( name )
-        drawer.addNode ( reader.getMass ( name ), name, \
-                options["masses"], color, reader.fermionic ( name ) )
-        decs=reader.getDecays ( name, rmin=options["rmin"] )
+            color=namer.rgbColor ( pid )
+            # print ( "[decayPlotter] color of", pid,"is", color )
+        m = reader.getMass ( pid )
+        if m > 9e5: ## skip frozen particles
+            continue
+        drawer.addNode ( m, pid, \
+                options["masses"], color, reader.fermionic ( pid ) )
+        decs=reader.getDecays ( pid, rmin=options["rmin"] )
         # print ( "decays for", name, options["rmin"], decs )
-        drawer.addEdges ( name, decs, rmin=options["rmin"] )
+        drawer.addEdges ( pid, decs, rmin=options["rmin"] )
 
     ## drawer.addMassScale ( )
 

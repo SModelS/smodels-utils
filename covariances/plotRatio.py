@@ -21,6 +21,14 @@ warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
+def hasDebPkg():
+    """ do we have the package installed """
+    a = subprocess.getoutput ( "dpkg -l cm-super-minimal | tail -n 1" )
+    if a.startswith("ii"):
+        return True
+    print ( "error, you need cm-super-minimal installed! (apt install cm-super-minimal)" )
+    sys.exit(-1)
+
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
     axes = copy.deepcopy(newa)
@@ -38,7 +46,7 @@ def axisHash ( axes_ ):
     ret = 0
     axes = convertNewAxes ( axes_ )
     for ctr,a in enumerate(axes):
-        ret += 10**(3*ctr)*int(a)
+        ret += 10**(4*ctr)*int(a)
     return ret
 
 def getExclusionsFrom ( rootpath, txname, axes=None ):
@@ -115,15 +123,18 @@ def getExclusionLine ( line ):
       y_v.append(copy.deepcopy(y))
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy ):
+def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
+    hasDebPkg()
     uls={}
     nsr=""
     noaxes = 0
-    for point in imp1.validationData:
+    for ctr,point in enumerate(imp1.validationData):
         if not "axes" in point:
             noaxes+=1
             if noaxes < 5:
-                print ( "no axes in", imp1.__file__, ",", point["slhafile"] )
+                f1 = imp1.__file__.replace(dbpath,"")
+                slhapoint = point["slhafile"].replace(".slha","")
+                print ( "INFO: no axes in %s:%s" % ( f1, slhapoint ) )
             if noaxes == 5:
                 print ( " ... (more error msgs like these) " )
             continue
@@ -132,23 +143,26 @@ def draw ( imp1, imp2, copy ):
         h = axisHash ( axes )
         if not "UL" in point:
             continue
+        if point["axes"]["x"]<point["axes"]["y"]:
+            print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
         uls[ h ] = point["UL" ] / point["signal"]
-
 
     err_msgs = 0
 
     ipoints = imp2.validationData
     points = []
 
-    for point in ipoints:
+    for ctr,point in enumerate(ipoints):
         axes = convertNewAxes ( point["axes"] )
         h = axisHash ( axes )
         ul1 = None
         if h in uls.keys():
             ul1 = uls[h]
-        if ul1 and "UL" in point:
-            ul2 = point["UL"] / point["signal"] ##  point["efficiency"]
-            ratio = ul1 / ul2
+        if ul1 and ul1>0. and "UL" in point:
+            ul2 = point["UL"] / point["signal"]
+            ratio = float("nan")
+            if ul2 > 0.:
+                ratio = ul1 / ul2
             # print ( "ratio",axes[0],axes[1],ratio )
             points.append ( (axes[0],axes[1],ratio ) )
         else:
@@ -160,49 +174,52 @@ def draw ( imp1, imp2, copy ):
     points = numpy.array ( points )
     x = points[::,1].tolist()
     y = points[::,0].tolist()
-    col = points[::,2].tolist()
-    x_ = numpy.arange ( min(x), max(x), ( max(x)-min(x)) / 1000. )
-    y_ = numpy.arange ( min(y), max(y), ( max(y)-min(y)) / 1000. )
+    # coll = points[::,2].tolist()
+    minx, maxx = min(x), max(x)
+    miny, maxy = min(y), max(y)
+    nx, ny = 250, 250
+    x_ = numpy.arange ( minx, maxx, ( maxx-minx) / nx )
+    y_ = numpy.arange ( miny, maxy, ( maxy-miny) / ny )
     logScale = False
-    if max(y) < 1e-10 and min(y) > 1e-40:
+    if False: # max(y) < 1e-10 and min(y) > 1e-40:
         logScale = True
-        y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), 1000 )
-    #print ( "y", y[:10] )
-    #print ( "x", x[:10] )
-    #print ( "y_", y_[:10] )
-    #print ( "x_", x_[:10] )
-    # yx = numpy.array(list(itertools.product( y ,x )) )
+        y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), ny )
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
     col = griddata ( points[::,0:2], points[::,2], yx, rescale=True )
+    for i in range(len(x)):
+        if abs(x[i]-200.) < 10. and abs(y[i]-400.)< 20.:
+            print ( "pt", x[i], y[i], yx[i] )
 
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( imp2.validationData ) ) )
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
-    vmax = 1.5
-    vmax = numpy.nanmax ( col )*1.1
-    vmin = numpy.nanmin ( col )*0.9
+    vmin,vmax= .5, 1.7
+    if False:
+        vmax = numpy.nanmax ( col )*1.1
+        vmin = numpy.nanmin ( col )*0.9
     opts = { }
-    if vmax > 5.:
-        opts = { "norm": matplotlib.colors.LogNorm()  }
     #print ( "vmax", vmax )
     #if logScale:
     #    vmin = 1e-5
     #    vmax = 0.5
-    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm,
+    if vmax > 5.:
+        opts = { "norm": matplotlib.colors.LogNorm()  }
+        
+    scatter = plt.scatter ( x, y, s=0.35, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
+    plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
+    plt.xlabel ( "m [GeV]", size=13 )
     if logScale:
         ax.set_yscale("log")
         ax.set_ylim ( min(y)*.2, max(y)*5. )
-        plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
-        plt.xlabel ( "m [GeV]", size=13 )
-    ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
-    if not logScale:
-        ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
+    #ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
+    #if not logScale:
+    #    ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
     plt.rcParams.update({'font.size': 14})
     #plt.rcParams['xtick.labelsize'] = 14
     #plt.rcParams['ytick.labelsize'] = 14
@@ -214,7 +231,9 @@ def draw ( imp1, imp2, copy ):
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
 
-    plt.title ( "$f$: %s, %s" % ( imp1.ana.replace("-andre",""), topo) )
+    anaId = imp1.ana.replace("-andre","")
+    anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
+    plt.title ( "ratio: %s, %s" % ( anaId, topo) )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
@@ -239,7 +258,11 @@ def draw ( imp1, imp2, copy ):
         plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
         label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
-    smodels_line = getSModelSExclusion ( smodels_root )
+    if not os.path.exists ( smodels_root ):
+        print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
+        smodels_line = []
+    else:
+        smodels_line = getSModelSExclusion ( smodels_root )
     el2 = getExclusionLine ( smodels_line )
     print ( "[plotRatio] Found SModelS exclusion line with %d points." % ( len(el2) ) )
     label="SModelS exclsuion"
@@ -258,14 +281,20 @@ def draw ( imp1, imp2, copy ):
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
+    if output != None:
+        # figname = output.replace("@t", topo ).replace("@a",analysis.replace("validation","") )
+        figname = output.replace("@t", topo )
     #if srs1 !="all":
     #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
+    """
     a1, a2 = "$a_1$", "$a_2$"
     for ide,label in { "andre": "andre", "eff": "suchi" }.items():
         if ide in imp1.ana:
             a1 = label
         if ide in imp2.ana:
             a2 = label
+    """
+    a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
         ypos = min(y)*30.
@@ -276,9 +305,12 @@ def draw ( imp1, imp2, copy ):
     plt.savefig ( figname )
     if copy:
       cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
-      print ( cmd )
+      print ( "plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
-    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
+    rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
+    with open ( "ratios.txt", "at") as f:
+        f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
+    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
     plt.clf()
 
 def getModuleFromPath ( ipath, analysis ):
@@ -301,15 +333,20 @@ def getModule ( dbpath, analysis, validationfile ):
 def writeMDPage( copy ):
     """ write the markdown page that lists all plots """ 
     with open("ratioplots.md","wt") as f:
-        f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
+        # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
+        f.write ( "# ratio plots on the upper limits\n" )
         f.write ( "as of %s\n" % time.asctime() )
         f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
+        files += glob.glob("atlas_*png" )
+        files += glob.glob("cms_*png" )
         files.sort()
+        ctr = 0
+        t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
             src = "https://smodels.github.io/ratioplots/%s" % i
-            f.write ( '| <img src="%s" /> ' % src )
+            f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
         if ctr % 2 == 0:
@@ -334,6 +371,15 @@ def main():
     argparser.add_argument ( "-a2", "--analysis2",
             help="second analysis name, like the directory name [CMS-EXO-13-006-eff]",
             type=str, default="CMS-EXO-13-006-eff" )
+    argparser.add_argument ( "-l1", "--label1",
+            help="label in the legend for analysis1 [andre]",
+            type=str, default="andre" )
+    argparser.add_argument ( "-o", "--output",
+            help="outputfile [None]",
+            type=str, default=None )
+    argparser.add_argument ( "-l2", "--label2",
+            help="label in the legend for analysis2 [suchi]",
+            type=str, default="suchi" )
     argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
                              default="../../smodels-database/" )
     argparser.add_argument ( "-D", "--default", action="store_true",
@@ -354,14 +400,17 @@ def main():
         imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
         imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy )
+        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output )
 
     writeMDPage( args.copy )
 
-    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
+    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
+        print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
         o = subprocess.getoutput ( cmd )
-    print ( "[plotRatio] cmd %s: %s" % (cmd, o ) )
+    else:
+        if args.copy:
+            print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
 
 main()

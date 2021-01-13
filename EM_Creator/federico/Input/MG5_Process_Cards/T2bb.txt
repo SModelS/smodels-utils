@@ -1,3 +1,0 @@
-import mssm
-generate p p > b1 b1~ 
-output T2bb

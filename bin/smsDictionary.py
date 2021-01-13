@@ -16,7 +16,8 @@
 from __future__ import print_function
 import setPath
 from smodels.experiment.databaseObj import Database
-import os
+import os, time
+
 try:
     import commands as C
 except:
@@ -61,14 +62,9 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 """ % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver, self.ver, self.ver ) )
 
     def footer( self ):
+        self.f.write ( "\n<font color='grey'>This page was created %s</font>\n" % \
+                       time.asctime() )
         return
-        self.f.write (
-"""
-
-N.B.: Each "()" group corresponds to a branch
-
-"""
-    )
 
     def tableHeader ( self ):
         columns=[ "#", "Tx", "Topology", "Graph" ]
@@ -223,7 +219,7 @@ N.B.: Each "()" group corresponds to a branch
         self.f.write ( "<BR>".join ( ltxes ) )
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
-        constraint = constraint.replace ( "jet", "q" )
+        # constraint = constraint.replace ( "jet", "q" )
         if self.drawFeyn:
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
@@ -296,18 +292,12 @@ if __name__ == '__main__':
     print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
-        #import socket
-        #hostname = socket.gethostname()
         dest="straight"
         if args.xkcd:
             dest="xkcd"
         cmd = "cp ../feyn/T*.p* ../../smodels.github.io/feyn/straight/"
-        #cmd = "cp ../feyn/T*p* /var/www/feyn/%s/" % dest
-        #if hostname == "smodels":
-        #    print ( "WARNING: made the plots on smodels, via X tunneling. this may create problems (a bug in pyfeyn?). Check the plots! Or make the plots from your desktop." )
-        #if hostname != "smodels":
-        #    cmd = "scp ../feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
         import subprocess
-        print ( cmd )
+        print ( "[smsDictionary] %s" % cmd )
         a = subprocess.getoutput ( cmd )
-        print ( a )
+        if len(a)>0:
+            print ( "[smsDictionary] error: %s" % a )

@@ -1,3 +1,0 @@
-import model_v4 mssm
-generate p p > b1 b1~ 
-add process p p > b1 b1~ j 

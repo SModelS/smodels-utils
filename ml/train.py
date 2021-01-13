@@ -1,61 +1,129 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-import os
-os.environ["KERAS_BACKEND"] = "tensorflow"
-import numpy as np
+"""
+.. module:: main.py
+   :synopsis: main script to train and validate new neural networks
+.. moduleauthor:: Philipp Neuhuber <ph.neuhuber@gmail.com>
 
-from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Input
-from keras import callbacks
-import time
-import IPython
+"""
 
-#inputs = Input(shape=(1,))
-#preds = Dense(1,activation='linear')(inputs)
-#model = Model ( inputs=inputs, outputs=preds )
-## define the network
-model = Sequential()
-model.add(Dense(4, activation="linear", input_shape=(2,)))
-model.add(Dense(16, activation="relu"))
-model.add(Dense(4, activation="relu"))
-model.add(Dense(1, activation="linear" ))
-model.summary()
+import argparse
+from parameterParser import Parameter
+from mlCore.dataset import DatasetBuilder, Data #set
+from mlCore.trainer import ModelTrainer
+from mlCore.network import DatabaseNetwork
 
-model.compile ( loss="mean_squared_error", optimizer="adam", metrics=["mse"] )
-# model.compile ( loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"] )
+def main(parameter):
 
-print ( "Now loading data" )
-import pickle
-f=open("data.pcl","rb")
-tr_data=pickle.load ( f )
-tr_labels=pickle.load ( f )
-val_data=pickle.load ( f )
-val_labels=pickle.load ( f )
-f.close()
+	"""
+	Example usage of neural network training methods.
+	Reads the parameter file and trains networks for all
+	maps it can find.
+
+	:param parameter: Custom parameter dictionary generated from parameterParser.py by reading nn_parameters.ini file. See respective files for more information.
+
+	"""
+
+	# ----------------------------------------------------------------------------------- #
+	# custom dictionary class that automatically permutates all possible map combinations #
+	# ----------------------------------------------------------------------------------- #
+
+	thingsToTrain = parameter["database"]
+
+	# -------------------------------------------------------------------------------- #
+	# loop over all analysis map combinations of the parameter file [database] section #
+	# -------------------------------------------------------------------------------- #
+
+	while(thingsToTrain.incrIndex):
+
+		# ------------------------------------------------------------------------------------ #
+		# load experimental data of current configuration. Stored in key "expres" and "txName" #
+		# ------------------------------------------------------------------------------------ #
+
+		parameter.loadExpres
+
+		# -------------------------------------------------------------- #
+		# load custom class that will generate our datasets for training #
+		# -------------------------------------------------------------- #
+
+		builder = DatasetBuilder(parameter)
+
+		# -------------------------------------------------------------------------------------- #
+		# add optional reference xsec cut if efficiencies get too small.						 #
+		# training of unneccessarily small effs undermines the performance of the whole network. #
+		# cutoff formula: lumi * eff * refxsec(m0) > 1e-2										 #
+		# -------------------------------------------------------------------------------------- #
+
+		#builder.addrefXsecCut() #"filename", columns = {..}
+
+		# --------------------------------------------------------------- #
+		# optional filter condition for loaded or generated datasets. NYI #			
+		# --------------------------------------------------------------- #
+
+		#builder.addFilterCondition(column, condition) eg bigwidths filter, or only every x-th datapoint accepted
+
+		# ---------------------------------------------------------------------------- #
+		# train both model types separately, combine them afterwards into one ensemble #
+		# ---------------------------------------------------------------------------- #
+
+		winner = {}
+		for nettype in ["regression", "classification"]:
+			parameter.set("nettype", nettype)
+
+			# ------------------------------------------------- #
+			# generate or load dataset used for training 		#
+			# output will be custom Dataset class used by torch #
+			# ------------------------------------------------- #
+
+			#dataDict = builder.run(nettype, loadFromFile = True)
+			
+			builder.run(nettype, loadFromFile = True)
+			builder.shuffle()
+			builder.rescaleMasses()
+			builder.rescaleTargets(method = "boxcox")
+
+			dataset = builder.getDataset()
+
+			# ------------------------------------------------------- #
+			# initializing trainer class for current map and net type #
+			# ------------------------------------------------------- #
+
+			trainer = ModelTrainer(parameter, dataset)
+
+			# --------------------------------------------------------------------------------------- #
+			# running trainer on all hyperparam configurations and saving the best performing network #
+			# --------------------------------------------------------------------------------------- #
+
+			winner[nettype] = trainer.run()
+
+			# ---------------- #
+			# saving loss plot #
+			# ---------------- #
+
+			if parameter["lossPlot"]:
+				trainer.saveLossPlot()
+		
+		# -------------------------------------------------------------------------------------------- #
+		# combining best performing regression and classification networks into final ensemble network #
+		# -------------------------------------------------------------------------------------------- #
+
+		ensemble = DatabaseNetwork(winner)
+		ensemble.save(parameter["expres"], parameter["txName"].txnameData)
 
 
-def hash ( A ):
-    return int(A[0]*10000.+A[1])
 
-X={}
-for d,l in zip (tr_data,tr_labels):
-    X[hash(d)]=l
+if __name__=='__main__':
 
-#cbk=callbacks.TensorBoard ( "logs/log_test_"+str(time.time()), histogram_freq=1, write_graph=True )
-cbk=callbacks.TensorBoard ( "logs/log.me", histogram_freq=1, write_graph=True )
-cbk.set_model ( model )
-            
-print ( "Now fitting ... " )
-history=model.fit ( np.array(tr_data), np.array(tr_labels), \
-                    validation_data = ( np.array(val_data), np.array(val_labels) ), 
-                    batch_size=50, epochs=200, callbacks = [ cbk ] )
-print ( "Done fitting" )
-mass = np.array( [ [ 600, 200 ], [ 700, 200 ], [ 800, 200 ], [ 900, 200 ], [ 1000, 200 ] ] )
-preds=model.predict ( mass )
-print ( "Now predict" ) 
-for m,p in zip ( mass,preds ):
-    print ( "%s -> %s, %s" % ( m,p[0], X[hash(m)] ) )
+	ap = argparse.ArgumentParser(description="Trains and finds best performing neural networks for database analyses via hyperparameter search")
+	ap.add_argument('-p', '--parfile', 
+			help='parameter file', default='nn_parameters.ini')
+	ap.add_argument('-l', '--log', 
+			help='specifying the level of verbosity (error, warning, info, debug)',
+			default = 'info', type = str)
+	args = ap.parse_args()
 
-model.save("model.h5")
-model.save_weights("weights.h5")
-# IPython.embed()
+	parameter = Parameter(args.parfile, args.log)
+
+	main(parameter)
+

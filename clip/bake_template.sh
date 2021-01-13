@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-# cd /scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator
-cd /scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator
+source /mnt/hephy/pheno/opt/root/bin/thisroot.sh
+cd /scratch-cbe/users/wolfgan.waltenberger/git/em-creator
 ./bake.py @@ARGS@@
+sleep 5
+rm $0

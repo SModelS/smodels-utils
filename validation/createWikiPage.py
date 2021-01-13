@@ -66,17 +66,17 @@ class WikiPageCreator:
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
-            print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
-            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*orig\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
+            print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
-            print ( "%s: %s" % ( cmd, a ) )
+            print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
             has_uploaded = True
         if self.force_upload and not has_uploaded:
-            print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             # cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
-            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*orig\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
+            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
-            print ( "%s: %s" % ( cmd, a ) )
+            print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
             has_uploaded = True
         else:
             print ( "Database seems already copied to %s. Good." % self.localdir )
@@ -117,7 +117,7 @@ class WikiPageCreator:
             C.getoutput ( cmd )
 
     def writeHeader ( self ):
-        print ( 'Creating wiki file (%s)....' % self.fName )
+        print ( '[createWikiPage] Creating wiki file (%s)....' % self.fName )
         whatIsIncluded = "Superseded and Fastlim results are included"
         if not self.include_fastlim:
             whatIsIncluded = "Superseded results are listed; fastlim results are not"
@@ -136,6 +136,10 @@ There is also a [list of all analyses](ListOfAnalyses%s), and
 a list of [all SMS topologies](SmsDictionary%s).
 
 The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. If a covariance matrix has been published, we present the combined limit of all signal regions. The experimental upper limits are compared with the theoretical predictions for that signal region.
+
+Note that the SModelS validation plots show on- and off-shell regions
+separately (e.g., T2tt and T2ttoff) while the exclusion lines given by ATLAS or
+CMS are for on- and off-shell at once.
 
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
         self.dotlessv, self.dotlessv ) )
@@ -235,12 +239,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
         id = expRes.globalInfo.id
+        print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " ) 
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
-        txns_discussed=[]
         if id in [ "ATLAS-SUSY-2016-07" ]:
             for txn in txnames:
-                if txn.txName == "TGQ":
+                if False: # txn.txName == "TGQ":
                     txn2 = copy.deepcopy ( txn )
                     txn2.txName = "TGQ12"
                     txnames.append ( txn2 )
@@ -253,6 +257,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     txnames.append ( txn2 )
                 #print ( id, txn.txName )
         txnames.sort()
+        txns_discussed=set()
         for txname in txnames:
             validated = txname.getInfo('validated')
             if not self.ignore_validated and validated != True: 
@@ -261,18 +266,26 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             txn = txname.txName
             if txn in txns_discussed:
                 continue
-            txns_discussed.append ( txn )
+            txns_discussed.add ( txn )
             ltxn += 1
-        #line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
-        line = "| [%s](%s)" %( id, expRes.getValuesFor('url')[0] )
+        # line = "| [%s](%s)" %( id, expRes.getValuesFor('url')[0] )
+        line = ""
         hadTxname = False
-        txns_discussed=[]
         nfigs = 0
+        # url = expRes.getValuesFor('url')[0]
+        url = expRes.globalInfo.url
+        if ";" in url:
+            url = url.split(";")[0]
+        print ( "%d txnames: " % len(txns_discussed), flush=True, end="" )
+        txns_discussed=set()
         for txname in txnames:
             txn = txname.txName
             if txn in txns_discussed:
                 continue
-            txns_discussed.append ( txn )
+            if hadTxname:
+                print ( ",", end="" )
+            print ( txn, flush=True, end= "" )
+            txns_discussed.add ( txn )
             validated = txname.getInfo('validated')
             if not self.ignore_validated and validated != True: 
                 continue
@@ -289,8 +302,10 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 dataset = self.getDatasetName ( txname )
                 if dataset == "data":
                     continue
-            if hadTxname: ## not the first txname for this expres?
-                line += "| "
+            #if hadTxname: ## not the first txname for this expres?
+            #    line += "| "
+            line += "| [%s](%s) " %( id, url )
+
             hadTxname = True
             line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
             line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
@@ -300,10 +315,11 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             line += "|"
             #line += "||"
             hasFig=False
-            ## print ( "databasePath=",self.databasePath )
             vDir = valDir.replace ( self.databasePath,"")
             altpath = self.databasePath.replace ( "/home", "/nfsdata" )
             vDir = vDir.replace ( altpath, "" )
+            #vDir = vDir.replace("/media/linux/walten/git/smodels-database","/validation/%s" % self.dotlessv )
+            vDir = vDir.replace("/media/linux/walten/git/smodels-database","" )
             if vDir[0]=="/":
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
@@ -315,13 +331,15 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     if not "pretty" in i:
                         files.append ( i )
             files.sort()
+            t0=time.time()-159000000
+            valDir = valDir.replace("/media/linux/walten/git/smodels-database","" )
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
                 figPath = dirPath+"/"+figName
                 figC = "https://smodels.github.io"+figPath
-                line += '<a href="%s"><img src="%s" /></a>' % ( figC, figC )
+                line += '<a href="%s"><img src="%s?%d" /></a>' % ( figC, figC, t0 )
                 line += "<BR>"
                 hasFig=True
                 nfigs += 1
@@ -359,21 +377,14 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 subprocess.getoutput ( mvCmd )
                 addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
                 line += addl
-                # print ( "[createWikiPage] adding srplot", srplot, addl )
             line += " |\n" # End the line
+        print ( )
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
         elif "#FF0000" in line: self.false_lines.append(line)
         else: self.true_lines.append(line)
         self.nlines += 1
         logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
-
-    """
-    def removeFastLim ( self, expRes ):
-        # remove fastlim results from list of results 
-        print ( "removing fastlim results", type(expRes) )
-        return expRes
-    """
 
     def describeSource ( self, txname ):
         """ describe the source of the data
@@ -423,6 +434,33 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     return "eUL"
         return False
 
+    def compileOldAnaIds ( self ):
+        """ compile the list of analysis ids in the comparison database,
+        i.e. create self.OldAnaIds, and self.topos
+        """
+        expRs = self.comparison_db.getExpResults( useSuperseded = True, 
+                      useNonValidated = self.ignore_validated )
+        anaIds = [ x.globalInfo.id for x in expRs ]
+        self.OldAnaIds = set ( anaIds )
+        self.topos = {}
+        for r in expRs:
+            anaId = r.globalInfo.id
+            if not anaId in self.topos.keys():
+                self.topos[anaId]=[]
+            topos = r.getTxNames()
+            topos.sort()
+            Type = "-ul"
+            if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
+                Type = "-eff"
+            for t in topos:
+                name = t.txName+Type 
+                self.topos[anaId].append ( name )
+        # print ( "the old analysis ids are", self.OldAnaIds )
+        if self.comparison_db.databaseVersion == "1.2.3":
+            print ( "[createWikiPage] adding ATLAS-SUSY-2016-24:TSlepSlep-eff" )
+            self.topos["ATLAS-SUSY-2016-24"].append ( 'TSlepSlep-eff' )
+
+
     def isNewAnaID ( self, id, txname, tpe ):
         """ is analysis id <id> new?
         :param id: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
@@ -433,24 +471,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             # no comparison database given. So nothing is new.
             return False
         if not hasattr ( self, "OldAnaIds" ):
-            expRs = self.comparison_db.getExpResults( useSuperseded = True, 
-                          useNonValidated = self.ignore_validated )
-            anaIds = [ x.globalInfo.id for x in expRs ]
-            self.OldAnaIds = set ( anaIds )
-            self.topos = {}
-            for r in expRs:
-                anaId = r.globalInfo.id
-                if not anaId in self.topos.keys():
-                    self.topos[anaId]=[]
-                topos = r.getTxNames()
-                topos.sort()
-                Type = "-ul"
-                if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
-                    Type = "-eff"
-                for t in topos:
-                    name = t.txName+Type 
-                    self.topos[anaId].append ( name )
-            ## print ( "the old analysis ids are", self.OldAnaIds )
+            self.compileOldAnaIds()
         if not id in self.OldAnaIds: ## whole ana is new?
             return True
         myType = "-ul"
@@ -531,7 +552,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         for sqrts in [ 13, 8 ]:
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
-                    print ( "Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
+                    print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     self.writeExperimentType ( sqrts, exp, tpe, expResList )
 

@@ -19,6 +19,9 @@ try:
 except:
     import commands as C ## python2
 from smodels.tools.physicsUnits import fb, TeV
+from smodels_utils.helper.various import hasLLHD
+from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
+from smodels_utils.helper.bibtexTools import BibtexWriter
 import IPython
 
 try:
@@ -42,7 +45,8 @@ def isIn ( i, txnames ):
 
 class Writer:
     def __init__ ( self, db, experiment, sqrts, keep, caption, numbers, prettyNames,
-                         superseded, topos, showsqrts, longtable = False ):
+                   superseded, topos, showsqrts, longtable = False, likelihoods = False,
+                   extended_llhds = False ):
         """ writer class
         :param experiment: select on experiment, e.g. CMS, ATLAS, or both
         :param sqrts: select on sqrts (str)
@@ -53,16 +57,26 @@ class Writer:
         :param topos: add column for list of topologies (bool)
         :param showsqrts: show sqrts column (bool)
         :param longtable: longtable or tabular latex environment
+        :param likelihoods: add likelihood information
+        :param extended_likelihoods: add extended likelihood information
         """
         from smodels.experiment.databaseObj import Database
-        database = Database ( args.database )
+        self.database = Database ( args.database )
         #Creat analyses list:
-        self.listOfAnalyses = database.getExpResults( useSuperseded=superseded )
+        self.bibtex = None
+        self.bibtex = BibtexWriter ( args.database )
+        self.getExpResults ( superseded = superseded )
         self.experiment = experiment 
+        self.likelihoods = likelihoods
+        self.extended_likelihoods = extended_llhds
+        self.addcombos = extended_llhds
         self.sqrts = sqrts.lower()
         self.sqrts = self.sqrts.replace("*","").replace("tev","").replace("both","all").replace("none","all")
         if self.sqrts == "":
             self.sqrts = "all"
+        if self.sqrts == "8":
+            print ( "[writeAnalysesTable] sqrts is 8, so no column for combos" )
+            self.addcombos = False
         self.keep = keep
         self.topos = topos
         self.caption = caption
@@ -77,6 +91,17 @@ class Writer:
         if longtable:
             self.table = "longtable"
 
+    def getExpResults ( self, superseded ):
+        """ get the experimental results, and filter 
+        :param superseded: allow superseded results
+        """
+        self.listOfAnalyses = []
+        ers = self.database.getExpResults( useSuperseded=superseded )
+        for er in ers:
+            if hasattr ( er.globalInfo, "contact" ) and "fastlim" in er.globalInfo.contact:
+                continue
+            self.listOfAnalyses.append ( er )
+
     def sameAnaIds ( self, ana1, ana2 ):
         ana1n = ana1.globalInfo.id
         ana2n = ana2.globalInfo.id
@@ -84,8 +109,11 @@ class Writer:
         ana2n = ana2n.replace("-agg","" )
         return ana1n == ana2n
 
-    def writeSingleAna ( self, ana, nextIsSame ):
-        """ write the entry of a single analysis """
+    def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
+        """ write the entry of a single analysis 
+        :param nextIsSame: true, if next is same
+        :param nextAna: the next analysis (if same)
+        """
         lines= [ "" ]
         sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) ) 
         if sqrts != self.lasts and self.lasts != None:
@@ -127,7 +155,11 @@ class Writer:
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
+        llhds = "no"
+        if hasLLHD ( ana ):
+            llhds = "yes"
         if nextIsSame:
+            llhds = "yes"
             dt = "ul, eff"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
         gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
@@ -138,44 +170,47 @@ class Writer:
         #    Url="http://www.google.com"
         #    gi_id="vvv"
         Id = "\\href{%s}{%s}" % ( Url, gi_id )
+        if self.bibtex != None:
+            citeme = gi_id
+            citeme = self.bibtex.query ( gi_id )
+            Id += "~\cite{%s}" % citeme
         if self.numbers:
             lines[0]+="%s &" % ananr
         lines[0] += "%s & " % Id
         if self.prettyNames:
-            pn = prettyName.replace(">","$>$").replace("<","$<$")
-            pn = pn.replace("0 or $>$=1 leptons +","" )
-            pn = pn.replace("photon photon","$\gamma\gamma$" )
-            pn = pn.replace("SF OS","SFOS" )
-            pn = pn.replace("jet multiplicity","n$_{jets}$" )
-            pn = pn.replace("Higgs","H" )
-            pn = pn.replace("searches in","to" )
-            pn = pn.replace("same-sign","SS" )
-            pn = pn.replace("Multilepton","multi-l" )
-            pn = pn.replace("multilepton","multi-l" )
-            pn = pn.replace("leptons","l's" )
-            pn = pn.replace("lepton","l" )
-            pn = pn.replace("dilepton","di\-l" )
-            pn = pn.replace("productions with decays to","prod, to ")
-            pn = pn.replace("photon","$\gamma$" )
-            pn = pn.replace("Photon","$\gamma$" )
-            pn = pn.replace("-$>$","$\\rightarrow$" )
-            pn = pn.replace("final states","")
-            pn = pn.replace("final state","")
-            pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
-            pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
-            pn = pn.replace("MET","$\\not{\!\!E}_T$")
-            pn = pn.replace("M_CT","M$_CT$" )
-            pn = pn.replace("alpha_T","$\\alpha_T$" )
-            if len(pn)>0 and pn[-1]==")":
-                pos = pn.rfind ( "(" )
-                pn = pn[:pos]
-            # pn = prettyName[:30]
+            pn = prettyTexAnalysisName ( prettyName )
             lines[0] += "%s &" % pn
         if self.topos:
             lines[0] += "%s &" % ( alltxes )
-        lines[0] += "%s & %s " % ( dt, ana.globalInfo.lumi.asNumber(1/fb) )
+        if not self.extended_likelihoods:
+            lines[0] += "%s &" % ( dt )
+        lines[0] += "%s " % ( ana.globalInfo.lumi.asNumber(1/fb) )
         if self.showsqrts:
             lines[0] += "& %s " % ( sqrts )
+        if self.likelihoods:
+            lines[0] += f"& {llhds}"
+        if self.extended_likelihoods:
+            ulobs, ulexp, em = " ", " ", " "
+            check = "\\checkmark" ## check="x"
+            if "ul" in dt:
+                ulobs = check
+                if hasLLHD ( ana ):
+                    ulexp = check
+            if "eff" in dt:
+                em = check
+            #ulobs, ulexp, em, comb = "x", "x", "x", "JSON"
+            lines[0] += f"& {ulobs} & {ulexp} & {em}"
+        if self.addcombos:
+            comb = " "
+            if hasattr ( ana.globalInfo, "jsonFiles" ):
+                comb = "JSON"
+            if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
+                comb = "JSON"
+            if hasattr ( ana.globalInfo, "covariance" ):
+                comb = "Cov."
+            if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
+                comb = "Cov."
+            lines[0] += f"& {comb}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
@@ -202,23 +237,39 @@ class Writer:
         writes it to texfile (if not None), and returns it as its return value. 
         :param texfile: where the tex gets written to, e.g. tab.tex
         """
-        frmt = "|l|l|c|c|c|"
-        if self.prettyNames:
-            frmt = "|l|l|l|c|c|c|"
+        frmt = "|l"
         if self.numbers:
             frmt = "|r" + frmt
+        if not self.extended_likelihoods:
+            frmt += "|l"
+        if self.prettyNames:
+            frmt += "|l"
+        frmt += "|c|c|c|"
+        if self.likelihoods:
+            frmt = frmt + "r|"
+        if self.extended_likelihoods:
+            frmt = frmt + "c|c|c|c|"
         toprint = "\\begin{%s}{%s}\n\hline\n" % ( self.table, frmt )
         if self.numbers:
             toprint +="{\\bf \#} &"
         toprint += "{\\bf ID} & "
         if self.prettyNames:
-            toprint += "{\\bf Pretty Name} & "
+            # toprint += "{\\bf Pretty Name} & "
+            toprint += "{\\bf Short Description} & "
             
         if self.topos:
             toprint += "{\\bf Topologies} &"
-        toprint += "{\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } "
+        if not self.extended_likelihoods:
+            toprint += "{\\bf Type} & "
+        toprint += "{\\bf $\\mathcal{L}$ [fb$^{-1}$] } "
         if self.showsqrts:
             toprint += "& {\\bf $\\sqrt s$ } "
+        if self.likelihoods:
+            toprint += "& {\\bf likelihoods}"
+        if self.extended_likelihoods:
+            toprint += "& {\\bf UL$_\mathrm{obs}$} & {\\bf UL$_\mathrm{exp}$} & {\\bf EM}"
+        if self.addcombos:
+            toprint += "& {\\bf comb.}"
         toprint += "\\\\\n\hline\n"
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
         for ctr,ana in enumerate(self.listOfAnalyses):
@@ -232,7 +283,10 @@ class Writer:
                     nextIsSame = True
             if self.experimentIsMet ( ana.globalInfo.id ):
                 if self.sqrtsIsMet ( ana.globalInfo.sqrts ):
-                    tp, n_topos = self.writeSingleAna ( ana, nextIsSame )
+                    nextAna = None
+                    if nextIsSame:
+                        nextAna = self.listOfAnalyses[ctr+1]
+                    tp, n_topos = self.writeSingleAna ( ana, nextIsSame, nextAna )
                     toprint += tp
         toprint += "\\hline\n"
         if self.caption:
@@ -258,8 +312,8 @@ class Writer:
         if self.experiment != "both":
             base = self.experiment
         print ( "now latexing smodels.tex" )
-        C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
-        C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
+        o1 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
+        o2 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
         print ( "done latexing, see %s.pdf" % base )
@@ -320,6 +374,10 @@ if __name__ == "__main__":
                             action='store_true' )
         argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
                             action='store_true' )
+        argparser.add_argument('-L', '--likelihoods', help='add likelihood info', 
+                            action='store_true' )
+        argparser.add_argument('-X', '--extended_likelihoods', help='add extended likelihood info', 
+                            action='store_true' )
         argparser.add_argument('-t', '--topologies', help='add topologies', 
                             action='store_true' )
         argparser.add_argument('-l', '--longtable', help='use longtable not tabular', 
@@ -335,7 +393,9 @@ if __name__ == "__main__":
                          keep = args.keep, caption = args.caption,
                          numbers = args.enumerate, prettyNames=args.prettyNames,
                          superseded = args.superseded, topos = args.topologies,
-                         showsqrts=args.show_sqrts, longtable = args.longtable )
+                         showsqrts=args.show_sqrts, longtable = args.longtable,
+                         likelihoods = args.likelihoods, 
+                         extended_llhds = args.extended_likelihoods )
         #Generate table:
         writer.generateAnalysisTable( args.output )
         # create pdf

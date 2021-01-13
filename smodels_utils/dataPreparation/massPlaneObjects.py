@@ -215,7 +215,7 @@ class MassPlane(object):
             #Define the default 1D coordinate mapping for exclusion curves
             if not coordinateMap:
                 coordinateMap = {x : 0, y : 1, 'value' : None}
-            dataObject = ExclusionHandler(dataLabel,coordinateMap,[x,y])
+            dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars)
             self._exclusionCurves.append(dataObject)
 
         dataObject.dataUrl = self.dataUrl
@@ -226,6 +226,7 @@ class MassPlane(object):
         setattr(self,dataLabel,dataObject)
 
     def _removePoints_ ( self, points, obj ):
+        """ remove all points within an area spanned by <points> """
         hull = Delaunay ( points )
         newdata=[]
         for i in obj.data:
@@ -254,6 +255,8 @@ class MassPlane(object):
         the masses of the particles of each branch in GeV
         """
 
+        if self.branches == None:
+            return []
         massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
 
@@ -266,7 +269,7 @@ class MassPlane(object):
         :param massArray: list containing two other lists. Each list contains floats,
         representing the masses of the particles of each branch in GeV
         :param widthArray: list containing two other lists. Each list contains floats,
-        representing the widths of the particles of each branch in GeV. If None, 
+        representing the widths of the particles of each branch in GeV. If None,
         we assume a width-independent plane.
         :raise massArrayLenError: if length of mass array is unequal 2
         :raise unequalXYValuesError: if the branches return different values for x or y

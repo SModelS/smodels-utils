@@ -21,6 +21,10 @@ if not hasattr ( pyx.text, "defaulttextrunner" ):
     pyx.text.set(pyx.text.LatexRunner)
 
 from pyfeyn.user import color
+from smodels.tools import runtime
+from smodels.experiment.defaultFinalStates import SMfinalStates as SMList
+from smodels.experiment.defaultFinalStates import BSMfinalStates as BSMList
+from smodels.theory.model import Model
 
 def cleanConstraint ( inp ):
     """ cleanup constraint string """
@@ -30,12 +34,12 @@ def cleanConstraint ( inp ):
         print ( "[feynmanGraph] modified", inp, "->", c )
     return c
 
-def printParticle_ ( label, jet ):
+def printParticle_ ( label ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
     label = str ( label )
-    if not jet and label=="jet": label=r"q"
-    if jet and label=="jet": label=r"jet"
+    # if not jet and label=="jet": label=r"q"
+    # if jet and label=="jet": label=r"jet"
     if label in [ "gamma", "photon" ]: return r"\gamma" # r"\Pgamma"
     if label in [ "hi", "higgs" ]: label="H"
     if label in [ "f" ]: return r"\Pfermion"
@@ -201,13 +205,12 @@ class Drawer:
                 a2=i.addParallelArrow( pos=.44,displace=-.0003,
                         length=unit.length(1.60*f / float(len(P2a))), size=.0001)
 
-    def draw ( self, filename="bla.pdf", straight=False, inparts=True, 
-                     italic=False, jet=False ):
+    def draw ( self, filename="bla.pdf", straight=False, inparts=True,
+                     italic=False ):
         """ plot a lessagraph, write into pdf/eps/png file called <filename>
             :param straight: draw straight lines, or xkcd style
             :param inparts: draw the incoming lines and the big production blob?
             :param italic: labels in italic
-            :param jet: write "jet" as label for jets. Default: "q"
         """
         verbose = self.verbose
         element = self.element
@@ -285,7 +288,7 @@ class Drawer:
                         p=Point ( x_c, y_c )
                         # print "add point at",x_c,y_c
                         ## print "branch=",branch
-                        label=printParticle_ ( insertion, jet )
+                        label=printParticle_ ( insertion )
                         ## ff=Fermion(v1,p).addLabel ( label )
                         # if italic: label="$%s$" % label
                         # print "label=",label
@@ -358,8 +361,6 @@ if __name__ == "__main__":
                                  action='store_true' )
         argparser.add_argument ( '-v', '--verbose', help='be verbose',
                                  action='store_true' )
-        argparser.add_argument ( '-j', '--jet', help='write "jet" instead of "q"',
-                                 action='store_true' )
         args=argparser.parse_args()
 
         from smodels.theory import crossSection, element
@@ -388,7 +389,7 @@ if __name__ == "__main__":
                         # mergefiles += "plus.pdf "
                     if i > 0:
                         c="["+c
-                    cc = cleanConstraint ( c ) 
+                    cc = cleanConstraint ( c )
                     E = element.Element ( cc )
                     drawer = Drawer ( E, args.verbose )
                     drawer.draw ( out, straight=strt, inparts=args.incoming,
@@ -424,7 +425,9 @@ if __name__ == "__main__":
                     print ( "o=", o )
                 sys.exit()
             constraint = cleanConstraint ( args.constraint )
-            E=element.Element ( constraint, fs )
+            runtime.modelFile = 'smodels.share.models.mssm'
+            model = Model( BSMparticles=BSMList, SMparticles=SMList )
+            E=element.Element ( constraint, fs, model=model )
             if args.long_lived:
                 if not args.long_lived.count("[")==3 or not args.long_lived.count("]")==3:
                     print ( "error: syntax for long lived: [[i,j],[k,l]]. Give the indices of the long lived particles for each branch." )
@@ -453,6 +456,6 @@ if __name__ == "__main__":
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
         drawer = Drawer ( E, args.verbose )
         drawer.draw ( args.output, straight=args.straight, inparts=args.incoming,
-                      italic=args.italic, jet=args.jet )
+                      italic=args.italic )
         del drawer ## no fucking clue why this is needed
         """

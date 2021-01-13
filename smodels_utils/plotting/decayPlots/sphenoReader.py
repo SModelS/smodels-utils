@@ -136,16 +136,17 @@ class SPhenoReader:
         import copy
         ret2={}
         ret2id={}
-        for mother in start:
-            m=self.pdgId ( mother )
-            if len(self.getDecays(m))>0:
-                ret2[mother]=1
+        for m in start:
+            # m=self.pdgId ( mother )
+            # print ( "[getRelevantParticles] pdgId", m )
+            if len(self.getDecays(m,rmin))>0:
+                ret2[m]=1
             if not m in self.decays.keys ( ):
                 continue
             for (daughter,right) in self.decays[m].items():
               for (radiator,r) in right.items():
                 if r>rmin:
-                    ret2[self.name(daughter)]=1
+                    ret2[daughter]=1
                     ret2id[daughter]=1
         for nsteps in range(2):
             ret3id=copy.deepcopy(ret2id)
@@ -155,7 +156,7 @@ class SPhenoReader:
                 for (daughter,right) in self.decays[i].items():
                     for (radiator,r) in right.items():
                         if r>rmin:
-                            ret2[self.name(daughter)]=1
+                            ret2[daughter]=1
                             ret3id[daughter]=1
             ret2id=copy.deepcopy(ret3id)
         names = list( ret2.keys() )
@@ -173,7 +174,25 @@ class SPhenoReader:
           return self.masses[pdgid]
         return 0.
 
-    def spin ( self, name ):
+    def hasTeVScaleMass ( self, name ):
+        """ does <name> have a mass and is it < 10 TeV? 
+        :param name: can be a name or a pid
+        """
+        pdgid=self.pdgId ( name )
+        if pdgid in self.masses.keys ( ):
+            m = self.masses[pdgid]
+            if m < 10000. and m > 0.:
+                return True
+            else:
+                return False
+        return False
+
+    def spin ( self, pid ):
+        """ get the spin of pid, assuming SUSY """
+        if pid in [ 1000022, 1000023, 1000024, 1000021, 1000025, 1000035, 1000037 ]:
+            return 0.5
+        return 0
+        """
         if name=="~g" or name[:4]=="~chi":
           return 0.5
         if name[:3] in [ "~u_", "~d_", "~l_", "~b_", "~s_", "~c_", "~t_", "~q_", "~e_" ]:
@@ -181,11 +200,18 @@ class SPhenoReader:
         if name[:3] in [ "~nu", "~mu", "~ta" ]:
           return 0
         return 0
+        """
 
-    def fermionic ( self, name ):
+    def fermionic ( self, pid ):
+        """ is pid fermionic (in SUSY notation) """
+        if pid in [ 1000022, 1000023, 1000024, 1000021, 1000025, 1000035, 1000037 ]:
+            return True
+        return False
+        """
         if name=="~g" or name[:4]=="~chi":
           return True
         return False
+        """
 
     def bosonic ( self, name ):
         return not self.fermionic ( name )
@@ -388,19 +414,20 @@ class SPhenoReader:
           return ret
         return 0.0
 
-    def getDecays ( self, particle, rmin=0.5, full=False ):
+    def getDecays ( self, pid, rmin=0.5, full=False ):
         """ get the leading decays, until rmin percentage of the branching ratio
-            is covered """
+            is covered 
+        :param full: use self.fulldecays, not self.decays ?
+        """
         ret={}
-        p=self.pdgId ( particle )
-        if not p in self.decays.keys ():
+        # p=self.pdgId ( particle )
+        if not pid in self.decays.keys ():
           return ret
 
-        ## sort by value (hightest branchings first 
         sorted_decays={}
-        items=self.decays[p].items()
+        items=self.decays[pid].items()
         if full:
-          items=self.fulldecays[p].items()
+          items=self.fulldecays[pid].items()
         for (daughter,right) in items:
           for (radiator,r) in right.items():
             #if type(r)==type("a"):
@@ -421,7 +448,7 @@ class SPhenoReader:
           daughter=sorted_decays[t]
           if not daughter in has_counted.keys():
             has_counted[daughter]={}
-          right=self.decays[p][daughter]
+          right=self.decays[pid][daughter]
           if full:
             right=self.fulldecays[p][daughter]
           if str(right) in has_counted[daughter].keys ():
@@ -429,17 +456,10 @@ class SPhenoReader:
           has_counted[daughter][str(right)]=True
           for (radiator,r) in right.items():
             if r>rmin:
-              # add this to return table!
-              dname=self.name ( daughter )
-              if full:
-                dname=self.fullName ( daughter )
-              if not dname in ret.keys ( ):
-                ret[dname]={}
-              ret[dname][radiator]=r
-              # print ( "adding",particle,dname,radiator,r )
+              if not daughter in ret.keys ( ):
+                ret[daughter]={}
+              ret[daughter][radiator]=r
               ret_r+=r
-              #if ret_r>rmin:
-              #  return ret
         return ret
 
     def __init__ ( self, filename, integrateLeptons=True, \

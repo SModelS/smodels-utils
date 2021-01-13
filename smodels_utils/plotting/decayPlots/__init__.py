@@ -1,5 +1,4 @@
-__all__ = [ "sphenoReader", "decayDrawer", "byNameColorizer" ]
+__all__ = [ "sphenoReader", "decayDrawer" ]
 
 from .sphenoReader import SPhenoReader
-from .byNameColorizer import ByNameColorizer
 from .decayDrawer import DecayDrawer

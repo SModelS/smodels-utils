@@ -6,6 +6,7 @@ https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
 and stored in the xsec*.txt files. """
 
 import os, subprocess, sys
+import pyslha
 
 def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
     """ add to file F cross sections for pid1, pid2 
@@ -13,8 +14,16 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
                   (LO=0, NLO=1, NLL=2, ... )
     :param comment: comment to be added to xsec line
     """
+    
+    slhaData = pyslha.readSLHAFile(F)    
     tokens = F.split("_")
-    mass = float(tokens[1])
+    mass1 = slhaData.blocks['MASS'][abs(pid1)]
+    mass2 = slhaData.blocks['MASS'][abs(pid2)]
+    if abs(mass1-mass2) > 1.0:
+        print('[addRefXSecs] Can not compute xsecs for pair production of sparticles with distinct masses')
+        return
+    else:
+        mass = (mass1+mass2)/2.
     xsec = interpolate ( mass, xsecs )
     if xsec == None:
         print ( "[addRefXSecs] skipping %d" % mass )
@@ -30,7 +39,10 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
     f=open( F, "wt" )
     isInXSec=False
     ssqrt = "%1.3G" % (sqrts*1000)
-    ssqrt = ssqrt.replace("E","0E")
+    if sqrts > 10:
+        ssqrt = ssqrt.replace("E","0E")
+    else:
+        ssqrt = ssqrt.replace("E",".00E")
     for line in lines:
         if "XSECTION" in line and " "+str(pid1) in line and " "+str(pid2) in line and ssqrt in line:
             #f.write ( "# %s ## replaced\n" % line.strip() )
@@ -124,26 +136,26 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         isEWK=False
         order = 2 # 4
     if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
-        filename = "xsecN2C1m13.txt"
+        filename = "xsecN2C1m%d.txt" % sqrts
         order = 2
         isEWK=True
         pb = False
     if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
-        filename = "xsecN2C1p13.txt"
+        filename = "xsecN2C1p%d.txt" % sqrts
         order = 2
         pb = False
         isEWK=True
     if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
-        filename = "xsecN2C1p13.txt"
+        filename = "xsecN2C1p%d.txt" % sqrts
         order = 2
         pb = False
         isEWK=True
     if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
-        filename = "xsecN2C1m13.txt"
+        filename = "xsecN2C1m%d.txt" % sqrts
         order = 2
         isEWK=True
         pb = False
-    if pid1 in [ -1000005, -1000006 ] and pid2 == -pid1:
+    if pid1 in [ -1000005, -1000006, -2000006 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecstop%d.txt" % sqrts
         order = 2 #3
@@ -169,6 +181,9 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         filename = filename.replace(".txt","hino.txt" )
     if isEWK:
         comment = " (%s)" % ewk
+    if not os.path.exists ( filename ):
+        print ( "[addRefXSecs] %s missing" % filename )
+        sys.exit()
     xsecs = getXSecsFrom ( filename, pb, columns )
     return xsecs,order,comment
 
@@ -218,12 +233,16 @@ def main():
     if args.pid2 < args.pid1:
         print ( "[addRefXSecs] will swap pids %d and %d" % ( args.pid1, args.pid2) )
         args.pid1, args.pid2 = args.pid2, args.pid1
-    xsecs,order,comment = getXSecsFor ( args.pid1, args.pid2, args.sqrts, args.ewk )
-    # print ( "xsecs", xsecs )
-    for F in files: # [:3]:
-        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run, order, comment )
-        if args.clean:
-            clean ( F )
+    sqrts = [ args.sqrts ]
+    if sqrts == [ 0 ]:
+        sqrts = [ 8, 13 ]
+    for s in sqrts:
+        xsecs,order,comment = getXSecsFor ( args.pid1, args.pid2, s, args.ewk )
+        # print ( "xsecs", xsecs )
+        for F in files: # [:3]:
+            addToFile ( F, args.pid1, args.pid2, xsecs, s, args.dry_run, order, comment )
+            if args.clean:
+                clean ( F )
     if args.zip:
         zipThem ( files )
 

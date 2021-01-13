@@ -1,9 +1,0 @@
-endpoint: two
-setup key: aea6355d-a340-4b38-8037-1e11a0d53544
-
-endpoint: hepgpu
-seutp key: 84eb7160-7c20-49d5-89a9-d8849348a3a6
-
-vpn-slice:
-https://gist.github.com/stefancocora/686bbce938f27ef72649a181e7bd0158
-pip3 install https://github.com/dlenski/vpn-slice/archive/master.zip

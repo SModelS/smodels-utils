@@ -28,7 +28,7 @@ try:
     from smodels.theory.auxiliaryFunctions import removeUnits
 except:
     from backwardCompatibility import removeUnits
-    
+
 
 #Set nice ROOT color palette for temperature plots:
 stops = [0.00, 0.34, 0.61, 0.84, 1.00]
@@ -43,7 +43,9 @@ TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
 def clean ( obj ):
-    """ check for some issues with the exclusion line """
+    """ check for some issues with the exclusion line
+    :param obj: the ROOT.TGraph
+    """
     ret = obj.ReadObj()
     n = ret.GetN()
     # x, y = Double(), Double()
@@ -66,7 +68,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
 
     :param expResult: an ExpResult object
     :param txname: the TxName in string format (i.e. T1tttt)
-    :param axes: the axes definition in string format (i.e. 2*Eq(mother,x)_Eq(lsp,y))
+    :param axes: the axes definition in string format (e.g. [x, y, 60.0], [x, y, 60.0]])
     :param get_all: Get also the +-1 sigma curves?
 
     :return: a dictionary, where the keys are the TxName strings
@@ -334,74 +336,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
     return plane
 
-def getXYFromSLHAFile ( slhafile, vPlot ):
-    """ get coordinates from the slhafile name, given
-        a validationPlot object vPlot """
-    tokens = slhafile.replace(".slha","").split("_" )
-    if vPlot.txName in [ "THSCPM1b", "THSCPM2b" ]:
-        ## work around an issue with THSCPM1b, they only
-        ## give one branch in the slha file names
-        tokens += tokens[-2:]
-    if vPlot.txName in [ "THSCPM6" ]:
-        ## work around an issue with THSCPM1b, they only
-        ## give one branch in the slha file names
-        tokens = tokens[:5] + [ tokens[5] ]*2 + [ tokens [ 6 ] ] * 2
-    masses = list ( map ( float, tokens[1:] ) )
-    massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
-    nM = int ( len(masses)/2 ) ## number of masses per branch
-    if vPlot.txName in [ "T5GQ" ]:
-        nM+=1
-    if len(masses) % 2 != 0:
-        logger.debug("asymmetrical branch. Dont know how to handle" )
-    #if masses[:nM] != masses[nM:]: ## actually seems to work
-    #    logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
-    widths = None
-    if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
-        from sympy import var
-        x__,y__,z__ = var( "x y z" )
-        ax = eval ( vPlot.axes )
-        widths = []
-        widthsbr, massbr = [], []
-        tmpmasses = []
-        # print ( "ax=", ax )
-        ctr = 0
-        for br in ax:
-            for v in br:
-                if type(v) == tuple:
-                    massbr.append ( masses[ctr] )
-                    ctr += 1
-                    widthsbr.append ( masses[ctr] )
-                else:
-                    massbr.append ( masses[ctr] )
-                ctr += 1
-            widths.append ( widthsbr )
-            widthsbr = []
-            tmpmasses.append ( massbr )
-            massbr = []
-        masses = tmpmasses
-    else:
-        masses = [ masses[:nM], masses[nM:] ]
-    if vPlot.txName in [ "THSCPM6" ]:
-        masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
-        widths = [ list(map(float,[ tokens[5] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM5" ]:
-        masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
-        widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM7" ]:
-        masses = list(map(float,tokens[1:4 ] ) ), [ float(tokens[1]), float(tokens[3]) ]
-        # masses = [ [ float(tokens[1]), float(tokens[3]) ], [ list(map(float,tokens[1:4 ] ) ) ] ]
-        widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM8", "THSCPM3" ]:
-        masses = [ list(map(float,tokens[1:3 ] ) ) ] * 2
-        widths = [ list(map(float,[ tokens[3] ] ) ) ] * 2
-    # print ( "[plottingFuncs] slhafile", slhafile )
-    # print ( "[plottingFuncs] masses", masses )
-    # print ( "[plottingFuncs] widths", widths )
-    varsDict = massPlane.getXYValues( masses, widths ) 
-    # print ( "[plottingFuncs] -> vars", varsDict )
-    ## FIXME take into account axis
-    return varsDict
-
 def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
@@ -411,7 +345,7 @@ def getGridPoints ( validationPlot ):
         txNameObj = None
         for ctr,txn in enumerate(dataset.txnameList):
             if txn.txName == validationPlot.txName:
-                txNameObj = dataset.txnameList[ctr] 
+                txNameObj = dataset.txnameList[ctr]
                 break
         if txNameObj == None:
             logger.info ( "no grid points: did not find txName" )
@@ -433,13 +367,16 @@ def getGridPoints ( validationPlot ):
     return ret
 
 def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
-                    weightedAgreementFactor=False ):
+                    preliminary=False, weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "ugly" exclusion plot
 
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
+    :param extraInfo: add additional info to plot: agreement factor, time spent,
+                      time stamp, hostname
+    :param preliminary: if true, write "preliminary" over the plot
     :param weightedAgreementFactor: weight points for the agreement factor with
                                     the area of their Voronoi cell
     :return: TCanvas object containing the plot
@@ -491,7 +428,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             print ( "[plottingFuncs] emergency break" )
             break
         if "error" in pt.keys():
-            vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
+            vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
             # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
             if vD != None:
                 # print ( "adding no-result point", noresult.GetN(), vD )
@@ -500,7 +437,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                     y_ = copy.deepcopy ( vD["y"] )
                 if y_ is None:
                     if not hasIssued1dErrorMsg:
-                        logger.error ( "the data is 1d. FIXME cannot handle" )
+                        logger.error ( "the data is 1d." ) # can handle now?
                         hasIssued1dErrorMsg = True
                     y_ = 0.
                 noresult.SetPoint(noresult.GetN(), x_, y_ )
@@ -526,7 +463,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                 x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals['x'],xvals['y']
+                x = xvals["x"]
+                if "y" in xvals:
+                    y = xvals['y']
+                elif "w" in xvals:
+                    y = xvals['w']
         else:
             x,y = pt['axes']
 
@@ -582,33 +523,43 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     dx = .12 ## top, left
     nleg = 5
     from sympy import var
-    xvar_,yvar_,zvar_ = var( "xvar_ yvar_ zvar_" )
-    g=eval(validationPlot.axes.replace("x","xvar_").replace("y","yvar_").replace("z","zvar_"))
+    xvar_,yvar_,zvar_,wvar_ = var( "xvar_ yvar_ zvar_ wvar_" )
+    g=eval(validationPlot.axes.replace("x","xvar_").replace("y","yvar_").replace("z","zvar_").replace("w","wvar_" ) )
     reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
     if reverse: ## if it is an [x,*],[y,*] plot, put legend to right, not left
         dx = .53
     leg = TLegend( dx,0.82-0.040*nleg,0.35+dx,0.88)
     setOptions(leg)
     leg.SetTextSize(0.04)
-    if allowed.GetN()>0: 
+    if allowed.GetN()>0:
         base.Add(allowed, "P")
         leg.AddEntry ( allowed, "allowed", "P" )
-    if excluded.GetN()>0: 
+    if excluded.GetN()>0:
         base.Add(excluded, "P")
         leg.AddEntry ( excluded, "excluded", "P" )
-    if allowed_border.GetN()>0: 
+    if allowed_border.GetN()>0:
         base.Add(allowed_border, "P")
         leg.AddEntry(allowed_border, "allowed (but close)", "P")
-    if excluded_border.GetN()>0: 
+    if excluded_border.GetN()>0:
         base.Add(excluded_border, "P")
         leg.AddEntry(excluded_border, "excluded (but close)", "P")
-    if cond_violated.GetN()>0: 
+    if cond_violated.GetN()>0:
         base.Add(cond_violated, "P")
         leg.AddEntry( cond_violated, "condition violated", "P" )
-    if noresult.GetN()>0: 
+    if noresult.GetN()>0:
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
     if official:
+        if len(xvals) == 1:
+            for i in official:
+                print ( "1d official plot!" )
+                if i.GetN() == 1:
+                    xtmp,ytmp=ctypes.c_double(),ctypes.c_double()
+                    i.GetPoint(0,xtmp,ytmp)
+                    yn = 1.1
+                    if ytmp.value > .5:
+                        yn = 0.
+                    i.SetPoint(1, xtmp, yn )
         for i in official:
             base.Add( i, "L")
     if not official == None:
@@ -621,7 +572,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             #i.Draw("LP SAME" )
             if ctr == 0:
                 leg.AddEntry ( i, "official exclusion", "L" )
-    if gridpoints.GetN()>0: 
+    if gridpoints.GetN()>0:
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
@@ -629,6 +580,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
     subtitle = "%d datasets: " % len(validationPlot.expRes.datasets)
+    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
+        ## pyhf combination
+        subtitle = "pyhf combining %d SRs: " % len(validationPlot.expRes.datasets)
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
@@ -722,18 +676,37 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         l9.DrawLatex ( .93, .65, time.strftime("%b %d, %Y, %H:%M") )
         base.l9 = l9
 
+    if preliminary:
+        ## preliminary label, ugly plot
+        tprel = TLatex()
+        tprel.SetNDC()
+        tprel.SetTextSize(0.055)
+        tprel.SetTextFont(42)
+        tprel.SetTextColor ( kBlue+3 )
+        tprel.SetTextAngle(-25.)
+        tprel.DrawLatex(.6,.85,"SModelS preliminary")
+        #tprel.SetTextAngle(25.)
+        #tprel.DrawLatex(.05,.7,"SModelS preliminary")
+        base.tprel = tprel
+
     if not silentMode:
         _ = raw_input("Hit any key to close\n")
 
     return plane,base
 
-def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
+def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
+                      looseness = 1.2, style = "", legendplacement = "top right" ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
 
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
+    :param preliminary: if true, write "preliminary" over the plot
+    :param looseness: ?
+    :param style: allow for styles, currently "", and "sabine"
+    :param legendplacement: placement of legend. One of:
+                      "automatic", "top right", "top left"
     :return: TCanvas object containing the plot
     """
 
@@ -746,7 +719,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     p1 = A.find("(")
     p2 = A.find(")")
     py = A.find("y")
-    #print ( "axes", A )
+    if py == -1:
+        py = A.find("w")
     if p1 < py < p2 and A[py-1]==",":
         logY = True
         xlabel = "x [mass, GeV]"
@@ -773,7 +747,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         # IPython.embed()
         if not "axes" in pt:
             ## try to get axes from slha file
-            pt["axes"] = getXYFromSLHAFile ( pt["slhafile"], validationPlot ) 
+            pt["axes"] = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
         xvals = pt['axes']
         if xvals == None: ## happens when not on the plane I think
             continue
@@ -789,7 +763,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals['x'],xvals['y']
+                x = xvals["x"]
+                if "y" in xvals:
+                    y = xvals['y']
+                elif "w" in xvals:
+                    y = xvals['w']
+                    
         else:
             x,y = xvals
         if logY:
@@ -828,13 +807,17 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, smearing X values")
         buff = tgr.GetX()
-        buff.SetSize(sys.maxsize)
+        buff.reshape((tgr.GetN(),))
+        #buff.SetSize(sys.maxsize)
+        #print ( "count", tgr.GetN(), type(buff), buff.shape )
         xpts = numpy.frombuffer(buff,count=tgr.GetN())
         buff = tgr.GetY()
-        buff.SetSize(sys.maxsize)
+        buff.reshape((tgr.GetN(),))
+        #buff.SetSize(sys.maxsize)
         ypts = numpy.frombuffer(buff,count=tgr.GetN())
         buff = tgr.GetZ()
-        buff.SetSize(sys.maxsize)
+        buff.reshape((tgr.GetN(),))
+        #buff.SetSize(sys.maxsize)
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
@@ -858,7 +841,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             for i in range(n):
                 contour.GetPoint(i,x,y)
                 # print ( "y",y,rescaleWidth(y) )
-                contour.SetPoint(i,x,rescaleWidth(y) )
+                contour.SetPoint(i,x.value,rescaleWidth(y.value) )
 
     if silentMode: gROOT.SetBatch()
     setOptions(tgr, Type='allowed')
@@ -969,6 +952,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         tgr.l2=l2
 
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
+    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
+        ## pyhf combination
+        subtitle = "pyhf combining %d SRs" % len(validationPlot.expRes.datasets)
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
         subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
@@ -988,9 +974,18 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
-    lsub.SetTextAlign(31)
-    lsub.SetTextSize(.025)
-    lsub.DrawLatex(.98,.086,subtitle)
+    if style == "sabine":
+        lsub.SetTextSize(.037)
+        if legendplacement == "top left": # then we move to top right with this
+            lsub.DrawLatex(.57,.79,subtitle)
+        else:
+            lsub.DrawLatex(.15,.79,subtitle)
+    else:
+        lsub.SetTextAlign(31)
+        # lsub.SetTextSize(.025)
+        lsub.SetTextSize(.035)
+        # lsub.DrawLatex(.81,.068,subtitle)
+        lsub.DrawLatex(.91,.068,subtitle)
     tgr.lsub=lsub
 
     nleg = 1
@@ -1001,7 +996,21 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     dx = 0. ## top, left
     dx = .33 ## top, right
     hasExclLines = False
-    leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    # placement = "top left" ## "automatic", "top right", "top left"
+    possibleplacements = [ "automatic", "auto", "top left", "top right" ]
+    legendplacement = legendplacement.replace("'","")
+    legendplacement = legendplacement.replace('"',"")
+    legendplacement = legendplacement.lower()
+    legendplacement = legendplacement.strip()
+    if legendplacement not in possibleplacements:
+        print ( "[plottingFuncs] ERROR placement %s not in %s" % \
+                ( legendplacement, ", ".join( possibleplacements ) ) )
+        sys.exit(-1)
+    leg = TLegend() ## automatic placement
+    if legendplacement == "top right":
+        leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    if legendplacement == "top left":
+        leg = TLegend(0.15,0.75-0.040*nleg,0.495,0.83)
     setOptions(leg)
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
@@ -1030,6 +1039,16 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if hasExclLines:
         leg.Draw()
     tgr.leg = leg
+    if preliminary:
+        ## preliminary label, pretty plot
+        tprel = TLatex()
+        tprel.SetTextColor ( kBlue+3 )
+        tprel.SetNDC()
+        tprel.SetTextAngle(25.)
+        tprel.SetTextSize(0.055)
+        tprel.SetTextFont(42)
+        tprel.DrawLatex(.1,.7,"SModelS preliminary")
+        tgr.tprel = tprel
     plane.Update()
 
     if not silentMode:

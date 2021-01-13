@@ -11,17 +11,18 @@ import logging
 import argparse,time
 
 try:
-    from ConfigParser import SafeConfigParser
+    from ConfigParser import SafeConfigParser, NoOptionError
 except ImportError as e:
-    from configparser import ConfigParser
+    from configparser import ConfigParser, NoOptionError
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
-                  combine=False,pngAlso = False, weightedAgreementFactor = True,
-                  model = "default" ):
+                  preliminary=False, combine=False,pngAlso = False,
+                  weightedAgreementFactor = True, model = "default",
+                  style = "", legendplacement = "top right" ):
     """
     Creates a validation plot and saves its output.
 
@@ -35,32 +36,37 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     all theory prediction values
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
 
-    :param pretty: If True it will generate "pretty" plots, if "both", will 
+    :param pretty: If True it will generate "pretty" plots, if "both", will
                    generate pretty *and* non-pretty
 
     :param generateData: If True, run SModelS on the slha files.
                          If False, use the already existing *.py files in the
                          validation folder.  If None, run SModelS only if
                          needed.
-    :param limitPoints: Limit the total number of points to <n> (integer). 
+    :param limitPoints: Limit the total number of points to <n> (integer).
                         Points are chosen randomly.
                         If None or negative, take all points.
     :param extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
+    :param preliminary: if True, write a big "preliminary" label over the plot.
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
     :param weightedAgreementFactor: when computing the agreement factor,
                                     weight points by the area of their Voronoi cell
     :param model: the model to use (e.g. mssm, nmssm, idm)
+    :param style: currently only "" and "sabine" are known
+                  style "sabine": SR label "pyhf combining 2 SRs" gets moved to
+                  top left corner of temperature p lot in pretty print
+    :param legendplacement: placement of legend. One of: top right, top left, auto
     :return: True on success
     """
 
     logger.info("Generating validation plot for " + expRes.globalInfo.id
                 +", "+txnameStr+", "+axes)
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
-                    limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,
-                    weightedAgreementFactor = weightedAgreementFactor,
-                    model = model )
+                    limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
+                    combine=combine, weightedAgreementFactor = weightedAgreementFactor,
+                    model = model, style= style, legendplacement = legendplacement )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -156,14 +162,15 @@ def run ( expResList, axis, pretty, generateData ):
             if not isinstance(txname.axes,list):
                 axes = [txname.axes]
             else:
-                axes = txname.axes     
+                axes = txname.axes
             if axis is None:
                 for ax in axes:
                     doGenerate = generateData # local flag
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                     doGenerate,limitPoints,extraInfo,combine,pngAlso,
-                                     weightedAgreementFactor, model )
+                                     doGenerate,limitPoints,extraInfo,preliminary,
+                                     combine,pngAlso, weightedAgreementFactor, model,
+                                     style = style, legendplacement = legendplacement )
                         doGenerate = False
             else:
                 from sympy import var
@@ -171,8 +178,9 @@ def run ( expResList, axis, pretty, generateData ):
                 ax = str(eval(axis)) ## standardize the string
                 for p in prettyorugly:
                     validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                 generateData,limitPoints,extraInfo,combine,pngAlso,
-                                 weightedAgreementFactor, model )
+                                 generateData,limitPoints,extraInfo, preliminary,
+                                 combine,pngAlso, weightedAgreementFactor, model,
+                                 style = style, legendplacement = legendplacement )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -180,9 +188,9 @@ def run ( expResList, axis, pretty, generateData ):
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
-        limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
+        limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
         weightedAgreementFactor=True, model = "default", axis=None,
-        force_load = None ):
+        force_load = None, style = "", legendplacement = "top right" ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -204,17 +212,22 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param generateData: If True, run SModelS on the slha files.
               If False, use the already existing *.py files in the validation folder.
               None: generate them if needed.
-    :param limitPoints: Limit the number of tested model points to <n> randomly 
+    :param limitPoints: Limit the number of tested model points to <n> randomly
               chosen points. If None or negative, test all points.
     :param extraInfo: add additional info to plot: agreement factor, time spent,
               time stamp, hostname
-
+    :param preliminary: if True, write a big "preliminary" label over the plot.
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
     :param model: the model to use (mssm, nmssm, idm, ... )
     :param axis: specify the axes, if None get them from sms.root
     :param force_load: force loading the text database ("txt"), or the
            binary database ("pcl"), dont force anything if None
+    :param style: currently only "" and "sabine" are known
+                  style "sabine": SR label "pyhf combining 2 SRs" gets moved to
+                  top left corner of temperature p lot in pretty print
+    :param legendplacement: placement of legend: one of:
+                            top left, top right, auto [top right]
     """
 
     if not os.path.isdir(databasePath):
@@ -246,7 +259,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     if not expResList:
         logger.error("No experimental results found.")
 
-    if ncpus < 0: 
+    if ncpus < 0:
         from smodels.tools import runtime
         ncpus = runtime.nCPUs() + ncpus + 1
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
@@ -325,22 +338,30 @@ if __name__ == "__main__":
     force_load = None
     if args.force_build:
         force_load = "txt"
-            
+
+    dataselector = "upperLimit"
+    try:
+        dataselector = parser.get("database", "dataselector")
+    except NoOptionError as e:
+        logger.warning ( "setting 'dataselector' in section 'database' to 'upperLimit'" )
     combine=False
-    if parser.get("database", "dataselector") == "efficiencyMap":
+    if dataselector == "efficiencyMap":
         dataTypes = ['efficiencyMap']
         datasetIDs = ['all']
-    elif parser.get("database", "dataselector") == "upperLimit":
+    elif dataselector == "upperLimit":
         dataTypes = ['upperLimit']
         datasetIDs = ['all']
-    elif parser.get("database", "dataselector") == "combined":
+    elif dataselector == "combined":
         dataTypes = ['efficiencyMap']
-        # datasetIDs = ['combined']
         datasetIDs = ['all']
         combine=True
-    else:
+    elif dataselector == "all":
         dataTypes = ['all']
-        datasetIDs = parser.get("database", "dataselector").split(",")
+        datasetIDs = ['all']
+    else:
+        #dataTypes = ['all']
+        dataTypes = ['efficiencyMap']
+        datasetIDs = dataselector.split(",")
 
     kfactorDict = dict(parser.items("kfactors"))
     slhadir = parser.get("path", "slhaPath")
@@ -360,6 +381,7 @@ if __name__ == "__main__":
     pretty = False ## only pretty plots, only ugly plots, or both
     limitPoints=None ## limit the number of points to run on
     extraInfo = False ## add extra info to the plot?
+    preliminary = False ## add preliminary to plot?
     weightedAgreementFactor = False ## do we weight the points for the agreement factor?
     model = "default" ## which model to use (default = mssm)
     if parser.has_section("options"):
@@ -375,6 +397,8 @@ if __name__ == "__main__":
                 pretty = True
             if spretty in [ "*", "all", "both" ]:
                 pretty = "both"
+            if pretty == False and spretty in [ "none", "neither", "dontplot" ]:
+                pretty = None
             if pretty == False and spretty not in [ "false", "0", "no" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
@@ -382,25 +406,23 @@ if __name__ == "__main__":
             limitPoints = parser.getint("options","limitPoints")
         if parser.has_option("options","extraInfo"):
             extraInfo = parser.getboolean("options", "extraInfo")
+        if parser.has_option("options","preliminary"):
+            preliminary = parser.getboolean("options", "preliminary")
+        style = ""
+        if parser.has_option("options","style"):
+            style = parser.get("options", "style")
+        legendplacement = "top right"
+        if parser.has_option("options","legendplacement"):
+            legendplacement = parser.get("options", "legendplacement")
         if parser.has_option("options","weightedAgreementFactor"):
             weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
             model = parser.get("options","model")
     generateData = _doGenerate ( parser )
 
-#    try:
-#        import ROOT
-#        if args.verbose == 'warning':
-#            ROOT.gErrorIgnoreLevel = ROOT.kWarning
-#        elif args.verbose == 'error':
-#            ROOT.gErrorIgnoreLevel = ROOT.kError
-#        else:
-#            ROOT.gErrorIgnoreLevel = ROOT.kInfo
-#    except:
-#        pass
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,combine,pngAlso,weightedAgreementFactor, model, axis,
-         force_load )
+         extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
+         force_load, style, legendplacement )

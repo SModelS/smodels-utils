@@ -28,6 +28,7 @@ def checkNonValidated( database ):
     has_nonValidated = False
     expResults = database.getExpResults( useNonValidated=True )
     has_nonValidated = False
+    nonValidateds = set()
     for e in expResults:
         for ds in e.datasets:
             for tx in ds.txnameList:
@@ -36,7 +37,8 @@ def checkNonValidated( database ):
                 print ( "Non-validated result: %s,%s, %s: %s " % \
                         ( e.globalInfo.id, ds, tx, tx.validated) )
                 has_nonValidated = True
-    return has_nonValidated
+                nonValidateds.add ( e.globalInfo.id )
+    return has_nonValidated, nonValidateds
 
 def removeFastLim ( db ):
     """ remove fastlim results """
@@ -65,7 +67,7 @@ def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file [database.pcl]', default="database.pcl" )
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
-    # ap.add_argument('-l', '--fastlim', help='add fastlim results when pickling', action="store_true" )
+    ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
@@ -75,6 +77,7 @@ def main():
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
     has_nonValidated = False
+    nonValidated = []
     discard_zeroes=True
     if "test" in dbname:
         discard_zeroes = False
@@ -93,7 +96,8 @@ def main():
             d.txt_meta.hasFastLim = False
         dbname = d.pcl_meta.pathname
         if not args.skipValidation:
-            has_nonValidated = checkNonValidated(d)
+            validated, which = checkNonValidated(d)
+            has_nonValidated = validated
         else:
             has_nonValidated = False
         fastlim = d.pcl_meta.hasFastLim
@@ -127,9 +131,10 @@ def main():
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
     if has_nonValidated:
-        print ( "has non-validated results. Stopping the procedure." )
+        nvlist = ",".join(which)
+        print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
         sys.exit()
-    cmd = "mv %s ./%s" % ( dbname, pclfilename )
+    cmd = "cp %s ./%s" % ( dbname, pclfilename )
     ssh = True
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
@@ -153,6 +158,19 @@ def main():
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
+    if args.latest:
+        latestfile = "latest"
+        if not args.remove_fastlim:
+            latestfile = "latest_fastlim"
+        cmd = "cp ../../smodels.github.io/database/%s ../../smodels.github.io/database/%s" %\
+               ( infofile, latestfile )
+        if not args.dry_run:
+            a=CMD.getoutput ( cmd )
+            print ( "[publishDatabasePickle] update latest:", cmd, a )
+    cmd = "cd ../../smodels.github.io/; git pull; git add database/%s; git commit -m 'auto-commited by publishDatabasePickle.py'; git push" % infofile
+    if not args.dry_run:
+        a=CMD.getoutput ( cmd )
+        print ( a )
     if ssh:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
         print ( "%s[publishDatabasePickle] Now please execute manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -162,6 +180,8 @@ def main():
         print ( "%s[publishDatabasePickle] then do also manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "ssh lxplus.cern.ch smodels/www/database/create.py" )
         print ( )
+        print ( "now point your browser to: " )
+        print ( "https://smodels.web.cern.ch/smodels/database/" )
 
 
 main()

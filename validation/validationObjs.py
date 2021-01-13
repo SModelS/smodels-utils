@@ -21,7 +21,7 @@ except:
 from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.experiment.exceptions import SModelSExperimentError as SModelSError              
+from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
 from sympy import var
 import pyslha
 import string
@@ -46,11 +46,13 @@ class ValidationPlot():
                    If None or negative, take all points.
     :ivar extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
+    :ivar preliminary: if true, write "preliminary" over the plot
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False,
-                 weightedAgreementFactor=True, model="default" ):
+                 kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
+                 combine=False, weightedAgreementFactor=True, model="default",
+                 style = "", legendplacement = "top right" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
@@ -60,6 +62,7 @@ class ValidationPlot():
         self.model = model
         self.txName = TxNameStr
         self.axes = Axes.strip()
+        self.style = style
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
@@ -67,8 +70,10 @@ class ValidationPlot():
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
+        self.preliminary = preliminary
         self.weightedAF = weightedAgreementFactor
         self.combine = combine
+        self.legendplacement = legendplacement
 
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
@@ -205,7 +210,7 @@ class ValidationPlot():
             #if 0. < y < 1e-6:
             #    y = unscaleWidth(y)
             # print ( "%d: %f,%f" % ( i, xt, y ) )
-            print ( "%d: %f,%g" % ( i, xt, y ) )
+            # print ( "%d: %f,%g" % ( i, xt, y ) )
 
     def computeHulls ( self ):
         """ compute the convex hulls from the Voronoi
@@ -291,10 +296,13 @@ class ValidationPlot():
         for point in self.data:
             if "error" in point.keys():
                 continue
+            y=0.
             try: ## we seem to have two different ways of writing the x,y values
-                x,y=point["axes"]['x'],point["axes"]['y']
+                x=point["axes"]['x']
+                y=point["axes"]['y']
             except Exception as e:
-                x,y=point["axes"][0],point["axes"][1]
+                pass
+                #x,y=point["axes"][0],point["axes"][1]
             w = 1.
             if weighted:
                 w = self.computeWeight ( [x,y] )
@@ -440,6 +448,19 @@ class ValidationPlot():
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
 
+    def getWidthsFromSLHAFileName ( self, filename ):
+        """ try to guess the mass vector from the SLHA file name """
+        tokens = filename.replace(".slha","").split("_")
+        if not tokens[0].startswith ( "T" ):
+            print ( "why does token 0 not start with a T??? %s" % tokens[0] )
+            sys.exit(-1)
+        widths = list ( map ( float, tokens[1:] ) )
+        ret = []
+        for m in widths:
+            if m>0. and m<1e-10:
+                ret.append ( m )
+        return ret
+
     def getMassesFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """
         tokens = filename.replace(".slha","").split("_")
@@ -449,7 +470,7 @@ class ValidationPlot():
         masses = list ( map ( float, tokens[1:] ) )
         for m in masses:
             if m>0. and m<1e-10:
-                pass
+                continue
                 # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
                 # sys.exit()
         n=int(len(masses)/2)
@@ -457,25 +478,53 @@ class ValidationPlot():
             if "THSCPM7" in filename:
                 n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
                 ## so all works out if we just slice at one after the half
-            elif not "T3GQ" in filename and not "T5GQ" in filename:
+            elif not "T3GQ" in filename and not "T5GQ" in filename and not "T2Disp" in filename:
                 print ( "[validationObjs] mass vector %s is asymmetrical. dont know what to do" % masses )
             # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
         if "T5GQ" in filename:
             ret = [ masses[:n+1], masses[n+1:] ]
+        if "T2Disp" in filename:
+            ret = [ masses[:2], masses[:2] ]
         return ret
 
     def topologyHasWidths ( self ):
         """ is this a topology with a width-dependency? """
-        if "THSCP" in self.txName:
-            return True
-        return False
+        return "(" in self.axes
 
-    def getXYFromSLHAFileName ( self, filename ):
+
+    def getXYFromSLHAFileName ( self, filename, asDict=False ):
         """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
         Meant as fallback for when no ExptRes is available.
+        :param asDict: if True, return { "x": x, "y": y } dict, else list
+        """
+        from filenameCoords import coords
+        if not self.txName in coords:
+            return self.getXYFromSLHAFileNameOld ( filename, asDict )
+        oldc = coords[self.txName]
+        tname = filename.replace(".slha","")
+        tokens = tname.split("_")
+        replacedc = copy.deepcopy ( oldc )
+        for ib,b in enumerate(oldc["masses"]):
+            for iv,v in enumerate(b):
+                replacedc["masses"][ib][iv]=float(tokens[v])
+        if type(oldc["widths"]) == list:
+            for ib,b in enumerate(oldc["widths"]):
+                for iv,v in enumerate(b):
+                    replacedc["widths"][ib][iv]=float(tokens[v])
+        massPlane = MassPlane.fromString(self.txName,self.axes)
+        varsDict = massPlane.getXYValues(replacedc["masses"],replacedc["widths"])
+        if varsDict == None or asDict:
+            return varsDict
+        return (varsDict["x"],varsDict["y"])
+
+    def getXYFromSLHAFileNameOld ( self, filename, asDict=False ):
+        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
+        Meant as fallback for when no ExptRes is available.
+        :param asDict: if True, return { "x": x, "y": y } dict, else list
         """
         masses = self.getMassesFromSLHAFileName ( filename )
+        widths = self.getWidthsFromSLHAFileName ( filename )
         if ".5" in self.axes:
             if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.1:
                 masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
@@ -486,23 +535,20 @@ class ValidationPlot():
         else:
             ret = [ masses[0][0], masses[1][0] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
-            
-        if not self.topologyHasWidths():
-            varsDict = massPlane.getXYValues(masses,None)
-            if varsDict != None and "y" in varsDict:
-                ret = [ varsDict["x"], varsDict["y"] ]
-            if varsDict == None: ## not on this plane!!!
-                ret = None
+
+        varsDict = massPlane.getXYValues(masses,None)
+        if varsDict != None and "y" in varsDict:
+            ret = [ varsDict["x"], varsDict["y"] ]
+        if varsDict == None: ## not on this plane!!!
+            ret = None
         if "T3GQ" in filename: ## fixme we sure?
             ret = [ masses[1][0], masses[1][1] ]
-        if "T5GQ" in filename: ## fixme we sure?
+        if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
             ret = [ masses[0][0], masses[0][1] ]
-        #if "TGQ12" in filename:
-        #    ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
             ret = [ masses[0][0], masses[0][2] ]
-        #if "THSCPM1b" in filename:
-        #    ret = [ masses[0][0], masses[1][0] ]
+        if asDict and ret !=None:
+            return { "x": ret[0], "y": ret[1] }
         return ret
 
     def getDataFromPlanes(self):
@@ -544,7 +590,7 @@ class ValidationPlot():
         t0=time.time()
         """ Test all input points """
         modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
-                 listOfExpRes, 1000, False, parameterFile)
+                 listOfExpRes, 5000, False, parameterFile)
         dt=(time.time()-t0) / len(fileList) ## for now we just write out avg time
 
         #Define original plot
@@ -579,12 +625,9 @@ class ValidationPlot():
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
                 ## still get the masses from the slhafile name
-                xy = self.getXYFromSLHAFileName ( slhafile )
+                axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
                 ## log also the errors in the py file
-                Dict = { 'slhafile': slhafile, 'error': 'no results' }
-                if xy !=None:
-                    axes = { 'x': xy[0], 'y': xy[1] }
-                    Dict['axes'] = axes
+                Dict = { 'slhafile': slhafile, 'error': 'no results', 'axes': axes }
                 self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']
@@ -680,6 +723,9 @@ class ValidationPlot():
                     except SModelSError as e:
                         logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
                         Dict=None
+            logger.debug('expres keys : {}'.format(expRes.keys()))
+            if 'best combination' in expRes.keys():
+                Dict['best combination'] = expRes['best combination']
 
             if Dict:
                 self.data.append(Dict)
@@ -707,7 +753,8 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createUglyPlot(self,silentMode=silentMode,
-                extraInfo=self.extraInfo,weightedAgreementFactor=self.weightedAF )
+                extraInfo=self.extraInfo,preliminary=self.preliminary,
+                weightedAgreementFactor=self.weightedAF )
 
     def getPrettyPlot(self,silentMode=True):
         """
@@ -716,7 +763,9 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode)
+        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
+                               preliminary=self.preliminary,
+                               style = self.style, legendplacement = self.legendplacement )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
@@ -807,7 +856,7 @@ class ValidationPlot():
 
         return True
 
-    def getDataFile(self,validationDir,fformat='.pdf'):
+    def getDataFile(self,validationDir,fformat='pdf'):
         """
         Defines the name of the .py file and returns it
 
@@ -815,12 +864,15 @@ class ValidationPlot():
 
         :return: name of the .py file
         """
-
+        if fformat.startswith("."):
+            fformat = fformat[1:]
         datafile = self.getPlotFile(validationDir,fformat)
         datafile = datafile.rstrip(fformat)
-        return datafile+'.py'
+        if not datafile.endswith ( "." ):
+            datafile += "."
+        return datafile+'py'
 
-    def getPlotFile(self,validationDir,fformat='.pdf'):
+    def getPlotFile(self,validationDir,fformat='pdf'):
         """
         Defines the name of the plot file and returns it
 
@@ -829,8 +881,13 @@ class ValidationPlot():
         :return: name of the plot file
         """
 
+        if fformat.startswith("."):
+            fformat = fformat[1:]
+
         filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
+        if self.combine:
+            filename += '_combined'
         filename += '.'+fformat
 
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
@@ -849,11 +906,11 @@ class ValidationPlot():
         :return: string with a nicer representation of the axes (more suitable for printing)
         """
 
-        x,y,z = var('x y z')
+        x,y,z,w = var('x y z w')
         if axesStr == "":
             logger.error ( "Axes field is empty: cannot validate." )
             return None
-        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
+        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
 
         eqList = []
         for ib,br in enumerate(axes):
@@ -883,7 +940,3 @@ class ValidationPlot():
         eqStr = eqStr.replace(" ","")
 
         return eqStr
-
-
-
-

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob, stat, os, time, subprocess
+import glob, stat, os, time, subprocess, colorama
 
 def getRundir():
     # ret="/scratch-cbe/users/wolfgan.waltenbergerrundir/"
@@ -42,6 +42,8 @@ def prettyPrint ( myset ):
         ret = ret[:-1]
     if len(ret)==0:
         ret="none"
+    if len(ret)>150:
+        ret=ret[:147]+"..."
     return ret
 
 def running_stats():
@@ -59,7 +61,7 @@ def running_stats():
         lognr =  int ( log[walkerp+6:-4] )
         if lognr > 1000:
             continue
-        if ds/60. > 60: ## in minutes
+        if ds/60. > 120: ## in minutes
             pending.add ( lognr )
         else:
             running.add ( lognr )
@@ -73,19 +75,59 @@ def running_stats():
             notaccounted.add ( i )
     print ( "    stuck (%d):" % len(pending), prettyPrint ( pending ) )
     print ( "  running (%d):" % len(running), prettyPrint ( running ) )
-    print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
+    if len(notaccounted)>0:
+        print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
+
+    a = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" )
+    print ( )
+    print ( "most recent jobs:" )
+    print ( "=====================" )
+    print ( a )
+
+    a = subprocess.getoutput ( "slurm q | tail -n 2" )
+    print ( )
+    print ( "longest running jobs:" )
+    print ( "=====================" )
+    print ( a )
 
 def count_jobs():
-    print ( "slurm q says:" )
-    print ( "=============" )
+    #print ( "slurm q says:" )
+    #print ( "=============" )
     pend = subprocess.getoutput ( "slurm q | grep PEND | wc -l" )
-    print ( "pending", pend )
+    try:
+        pend = int (pend )
+    except:
+        pass
     running = subprocess.getoutput ( "slurm q | grep RUNNING | wc -l" )
-    print ( "running", running )
+    try:
+        running= int ( running )
+    except:
+        pass
+    lpend = "%s%s%s" % ( colorama.Fore.YELLOW, pend, colorama.Fore.RESET )
+    lrun = "%s%s%s" % ( colorama.Fore.GREEN, running, colorama.Fore.RESET )
+    ltot = "%s%s%s" % ( colorama.Fore.RED, pend+running, colorama.Fore.RESET )
+    print ( "pending", lpend, "running", lrun, "total", ltot )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
         print ( "remaining", remaining )
 
+def count_dupes():
+    A = subprocess.getoutput ( "slurm q" )
+    jobs = []
+    for a in A.split("\n"):
+        tokens = a.split(" ")
+        T = ""
+        for t in tokens:
+            if "RUN" in t and "_" in t:
+                T = t
+        if "." in T:
+            T=T[:T.find(".")]
+        jobs.append ( T )
+    for j in set(jobs):
+        if jobs.count(j)>1:
+            print ( "job",j,"#",jobs.count(j) )
+
 if __name__ == "__main__":
+    #count_dupes()
     count_jobs()
     running_stats()

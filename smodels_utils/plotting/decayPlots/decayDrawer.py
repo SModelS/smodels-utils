@@ -1,4 +1,3 @@
-import pygraphviz, sys, math
 ##    # -*- coding: UTF-8 -*-
 
 """
@@ -9,11 +8,15 @@ import pygraphviz, sys, math
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
+
+import pygraphviz, sys, math, os
+import logging
+from ptools import sparticleNames
+
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
     """
     def __init__ ( self, options, ps, offset, extra={}, verbose="warn", html=False ):
-        import logging
         self.logger = logging.getLogger(__name__)
         verbosity = verbose.lower()
         levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
@@ -35,6 +38,7 @@ class DecayDrawer:
         self.G=pygraphviz.AGraph(directed=True)
         self.verbose=verbose
         self.html=html
+        self.namer = sparticleNames.SParticleNames ( susy = False )
 
     def draw ( self, out ):
         prog=sys.argv[0]
@@ -97,6 +101,8 @@ class DecayDrawer:
     def addNode ( self, mass, name, include_masses=False,
             color='#FFFFFF', isFermionic=True ):
         """ add a node """
+        if type(name) == int:
+            name = self.texName ( name, dollars=True )
         llabel=self.prettyName ( name )
         if include_masses:
             try:
@@ -110,8 +116,10 @@ class DecayDrawer:
             self.minmass=mass
         if mass > self.maxmass:
             self.maxmass=mass
-        self.G.add_node ( name )
-        node=self.G.get_node ( name )
+        tname = self.texName ( name, dollars=True )
+        # print ( "Here1, adding", tname )
+        self.G.add_node ( tname )
+        node=self.G.get_node ( tname )
         node.attr['color']=color
         self.massctr+=1
         fmass=0.
@@ -150,6 +158,10 @@ class DecayDrawer:
                 continue
             if ctr>0 and ctr % 2 != 0:
                 l+=",\\,"
+            if label == "mu":
+                label= "$\\mu$"
+            if label == "tau":
+                label= "$\\tau$"
             #if matrixMode:
             #    label="$"+label+"$"
             l+=label
@@ -162,8 +174,13 @@ class DecayDrawer:
                 l+=",\\,\\\\\\\\"
         if matrixMode: ## make a matrix
             l+="\\\\end{matrix}$"
-        t = self.G.add_edge ( name, daughter )
-        edge=self.G.get_edge ( name, daughter )
+        tn = self.texName ( name, dollars=True )
+        d = self.texName ( daughter, dollars=True )
+        self.addNode ( 0., d )
+        t = self.G.add_edge ( tn, d )
+        edge=self.G.get_edge ( tn, d )
+        if "l" == "mu":
+            l="$\\mu$"
         edge.attr['label']=l
 
     def addEdges ( self, name, decs, rmin = 0.0 ):
@@ -184,109 +201,30 @@ class DecayDrawer:
         """ add a ruler that lists the masses """
         for m in range ( int( math.ceil ( minmass/100.)) *100, \
                 int(math.floor ( maxmass/100.))*100+1,100):
+            #print ( "Here2, adding", m )
             self.G.add_node ( str(m) )
             node=self.G.get_node( str(m) )
             node.attr['pos']="%f,%f" % ( 0, m )
             node.attr['color']='#FFFFFF'
             node.attr['label']=str(m)+' GeV'
 
-    def simpleName ( self, name ):
-        """ simple names for slha names """
-        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T",
-                 "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU",
-                 "~d_R":"DR", "~s_R": "SR", "~chi2+":"C2", "~chi40":"C4",
-                 "~chi2+":"C2", "~chi10":"C1", "~chi30":"C3" }
-        nname=name
-        for (From,To) in reps.items(): nname=nname.replace(From,To)
-        # print name,"->",nname
-        return nname
-
-    def texName ( self, name, color = False, dollars = True ):
-        """ map slha particle names to latex names
+    def texName ( self, pid, color = False, dollars = True ):
+        """ get tex name for pid 
         :param color: add color tag
         :param dollars: need dollars for math mode
         """
-        if name.find(" ")>-1:
-            names=name.split()
-            texed=[]
-            for n in names:
-                texed.append ( self.texName ( n, color ) )
-            return " ".join ( texed )
-        def huge(x):
-            return x
-            #return "\\\\Huge{\\\\textbf{%s}}" % x
-        def large(x):
-            return x
-            #return "\\\\large{%s}" % x
-        def math(x): 
-            if dollars:
-                return "$%s$" % x
-            return x
-        def green(x,usecol):
-            if not usecol:
-                return x
-            return "\\color[rgb]{0,.5,0}%s" % x
-        def blue(x,usecol):
-            if not usecol:
-                return x
-            return "\\color[rgb]{0,0,.5}%s" % x
-        def brown(x,usecol):
-            if not usecol:
-                return x
-            return "\\color{brown}%s" % x
-        def red(x,usecol):
-            if not usecol:
-                return x
-            return "\\color[rgb]{.5,0,0}%s" % x
-        def tilde(x): ## x is in tilde
-            return "\\\\tilde{%s}" % (x)
-            # return "\\\\tilde{\\\\mathrm{%s}}" % (x)
-        name=name.replace("_","")
-        tsup=name[-1:]
-        tsub=name[-2:-1]
-        second=name[1:2]
-        first=name[:1]
-        if first=="~" and name.find("chi")>-1: # weakinos
-            sup,sub="",""
-            if tsup in [ "+", "-", "0" ]: sup="^{%s}" % tsup
-            if tsub in [ "1", "2", "3", "4", "5" ]: sub="_{%s}" % tsub
-            return huge ( green ( math ( tilde ( "\\\\chi" ) + sup + sub ), color ) )
 
-        if name[:4]=="~tau": # stau
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
-        squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
-        if first=="~" and second in squarks: # squarks and selectron
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            return huge ( blue ( math ( tilde ( second ) + sub ), color ) )
-        if name[:3]=="~mu": # smuon
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            return huge ( brown ( math ( tilde ( "\\\\mu" ) + sub ), color ) )
-        if name=="~g": return huge ( red ( math ( tilde ( "g" ) ), color ) )
-        if name[:3]=="~nu": # sneutrinos:
-            flavor=name[3:-1]
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
-            if flavor in [ "mu", "tau" ]: sub="_{\\\\%s%s}" % (flavor,sub)
-            if flavor in [ "e" ]: sub="_{%s%s}" % (flavor,sub)
-            return huge ( brown ( math ( tilde ( "\\\\nu" ) + sub ), color ) )
-        if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
-        if name=="gamma": return large ( math ( "\gamma" ) )
-        if name=="nu": return large ( math ( "\\\\nu" ) )
-        if name=="mu": return large ( math ( "\\\\mu" ) )
-        if name=="tau": return large ( math ( "\\\\tau" ) )
-        if name=="h1": return large ( "h" )
-        if name=="h2": return large ( "H" )
-        if name=="a0": return large ( math("A") )
-        if name=="a1": return large ( math("A^{1}") )
-        #if name=="nu nu": return large ( math ( "\\\\nu \\\\nu" ) )
-        #if name=="nu l": return large ( math ( "\\\\nu l" ) )
-        #if name=="l nu": return large ( math ( "l \\\\nu" ) )
-        return large ( name )
+        # print ( "[decayDrawer] find texName for", pid, type(pid) )
+        if type(pid)==int:
+            ret = self.namer.texColor(pid ) + self.namer.name ( pid )
+            if dollars:
+                ret = f"${ret}$"
+            # print ( "ret=", ret )
+            return ret
+        return pid
 
     def htmlName ( self, name ):
+        print (  "find htmlName for", name )
         ### name=name.replace ( "+", "" )
         reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+",
            "chi2+":"chi&#8322;+", "chi3+":"chi&#8323;+", "chi20":"chi&#8322;&#8304;",
@@ -308,15 +246,18 @@ class DecayDrawer:
             return self.simpleName ( name )
         if self.tex:
             # return self.simpleName ( name )
-            ret = "$" + self.texName ( name, self.options["color"], dollars=False ) + "$"
+            ret = self.texName ( name, self.options["color"], dollars=True ) 
             # print ( "ret", name, ret )
             return ret
         return self.htmlName ( name )
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
+        fname = "%s.tex"%out 
+        if not os.path.exists ( fname ):
+            return
         self.logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
-        f=open("%s.tex"%out)
+        f=open( fname )
         lines=f.readlines()
         f.close()
         f=open("%s.tex"%out,"w")
@@ -347,12 +288,14 @@ class DecayDrawer:
             outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        self.logger.info (  "%s" % pdfcmd )
+        self.logger.error (  "%s" % pdfcmd )
         output=subprocess.getoutput(pdfcmd )
         self.logger.debug ( output )
 
         if self.options["nopng"]==False:
-            cmd='convert +profile "*" -antialias -density 300x300 %s.pdf %s.png' % ( out, out )
+            args = '+profile "*" -antialias -density 300x300'
+            args += ' -background white -flatten'
+            cmd='convert %s %s.pdf %s.png' % ( args, out, out )
             import subprocess
             self.logger.info ( cmd )
             o = subprocess.getoutput ( cmd )

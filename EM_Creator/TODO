@@ -1,2 +1,0 @@
--) clean up ma5.template versus ma5. Idea is, ma5 becomes output directory, ma5.template is input director for MadAnalysis5.
--) add option in mg5Wrapper to add running ma5 immediately after.
