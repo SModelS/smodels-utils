@@ -179,7 +179,18 @@ class Writer:
             if hasLLHD ( ana ):
                 self.currentcolor = "orange!80"
         if nextIsSame or "eff" in dt:
-            self.currentcolor = "green!80"
+            self.currentcolor = "green!60"
+        hasComb = False
+        if hasattr ( ana.globalInfo, "jsonFiles" ):
+            hasComb = True
+        if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
+            hasComb = True
+        if hasattr ( ana.globalInfo, "covariance" ):
+            hasComb = True
+        if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
+            hasComb = True
+        if hasComb:
+            self.currentcolor = "green"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
         gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
         Url = ana.globalInfo.url
