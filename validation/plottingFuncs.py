@@ -613,6 +613,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         base.GetYaxis().SetTitle(ylabel)
     except:
         pass
+    if len(xvals) == 1:
+        base.GetYaxis().SetRangeUser(0.0,2.0)
+
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
@@ -768,7 +771,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                     y = xvals['y']
                 elif "w" in xvals:
                     y = xvals['w']
-                    
+
         else:
             x,y = xvals
         if logY:
