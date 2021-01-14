@@ -16,7 +16,7 @@ def execute(cmd):
 
 def exec(cmd, dry_run ):
     if dry_run:
-        print ( f"Dry-run: Would execute {cmd}" )
+        print ( f"Dry-run: Would execute {' '.join(cmd)}" )
         return
     for line in execute ( cmd ):
         print ( line, end="" )
