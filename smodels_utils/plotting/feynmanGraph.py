@@ -390,7 +390,8 @@ if __name__ == "__main__":
                     if i > 0:
                         c="["+c
                     cc = cleanConstraint ( c )
-                    E = element.Element ( cc )
+                    model = Model( BSMparticles=BSMList, SMparticles=SMList )
+                    E = element.Element ( cc, model=model )
                     drawer = Drawer ( E, args.verbose )
                     drawer.draw ( out, straight=strt, inparts=args.incoming,
                                   italic=args.italic )
