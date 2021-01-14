@@ -14,7 +14,10 @@ def execute(cmd):
     if return_code:
         raise subprocess.CalledProcessError(return_code, cmd)
 
-def exec(cmd):
+def exec(cmd, dry_run ):
+    if dry_run:
+        print ( f"Dry-run: Would execute {cmd}" )
+        return
     for line in execute ( cmd ):
         print ( line, end="" )
 
@@ -39,6 +42,9 @@ def main():
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
             action='store_true' )
+    argparser.add_argument ( '-d', '--dry_run', 
+            help='dry run, write commands, do not execute them',
+            action='store_true' )
     argparser.add_argument ( '-c', '--commit', 
             help='git-commit and git-push to smodels.github.io',
             action='store_true' )
@@ -56,15 +62,15 @@ def main():
     cmd = [ "./listOfAnalyses.py", "-a", "-l" ]
     if A.ignore:
         cmd += [ "-i" ]
-    exec ( cmd )
-    exec ( cmd + [ "-n" ] )
+    exec ( cmd, A.dry_run )
+    exec ( cmd + [ "-n" ], A.dry_run )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
         cmd = [ "./listOfAnalyses.py", "-l" ]
         if A.ignore:
             cmd += [ "-i" ]
-        exec ( cmd )
-        exec ( cmd + [ "-n" ] )
+        exec ( cmd, A.dry_run )
+        exec ( cmd + [ "-n" ], A.dry_run )
     else:
         print ( "Update only versioned files" )
 
@@ -73,24 +79,24 @@ def main():
     cmd = [ "./smsDictionary.py", "-a" ]
     if A.feynman:
         cmd += [ "-f", "-c" ]
-    exec ( cmd )
+    exec ( cmd, A.dry_run )
     if A.non_versioned:
-        exec ( [ "./smsDictionary.py" ] )
+        exec ( [ "./smsDictionary.py" ], A.dry_run )
 
     if not A.no_pickle:
         print ( "\nCreate and publish database pickle" )
-        exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ] )
-        exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ] )
+        exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
 
     gprint ( "create Validation wiki" )
     cmd = [ "../validation/createWikiPage.py", "-c", ref_db ]
     if A.ignore:
         cmd += [ "-i" ]
-    exec ( cmd + [ "-a", "-s", "-f" ] )
-    exec ( cmd + [ "-a", "-u" ] )
+    exec ( cmd + [ "-a", "-s", "-f" ], A.dry_run )
+    exec ( cmd + [ "-a", "-u" ], A.dry_run )
     if A.non_versioned:
-        exec ( cmd + [ "-s", "-f" ] )
-        exec ( cmd + [ "-u" ] )
+        exec ( cmd + [ "-s", "-f" ], A.dry_run )
+        exec ( cmd + [ "-u" ], A.dry_run )
     if A.commit:
         gitPush()
 
