@@ -360,6 +360,8 @@ CMS are for on- and off-shell at once.
                 if hasChanged == "eUL":
                     line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
             line += "<br><font color='grey'>source: %s</font><br>" % self.describeSource ( txname )
+            if txname.validated not in [ "True", True ]:
+                line += "validated: %s" % txname.validated
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
