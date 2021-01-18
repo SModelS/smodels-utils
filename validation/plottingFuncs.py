@@ -366,6 +366,19 @@ def getGridPoints ( validationPlot ):
     ## we will need this for .dataToCoordinates
     return ret
 
+def yIsLog ( validationPlot ):
+    """ determine if to use log for y axis """
+    logY = False
+    A = validationPlot.axes.replace(" ","")
+    p1 = A.find("(")
+    p2 = A.find(")")
+    py = A.find("y")
+    if py == -1:
+        py = A.find("w")
+    if p1 < py < p2 and A[py-1]==",":
+        logY = True
+    return logY
+
 def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                     preliminary=False, weightedAgreementFactor=False ):
     """
@@ -402,6 +415,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     gridpoints.SetName ( "gridpoints" )
     cond_violated=TGraph()
     kfactor=None
+    logY = yIsLog ( validationPlot )
     tavg = 0.
 
     countPts = 0 ## count good points
@@ -421,6 +435,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     print ( " "*int(45+nmax/dn), end="<\r" )
     print ( "[plottingFuncs] checking validation points >", end="" )
     hasIssued1dErrorMsg = False ## error msg to appear only once
+    ycontainer=[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
@@ -435,6 +450,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                 x_, y_ = copy.deepcopy ( vD["x"] ), None
                 if "y" in vD.keys():
                     y_ = copy.deepcopy ( vD["y"] )
+                elif "w" in vD.keys():
+                    y_ = copy.deepcopy ( vD["w"] )
                 if y_ is None:
                     if not hasIssued1dErrorMsg:
                         logger.error ( "the data is 1d." ) # can handle now?
@@ -470,7 +487,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                     y = xvals['w']
         else:
             x,y = pt['axes']
-
+        ycontainer.append ( y )
 
         if pt['condition'] and pt['condition'] > 0.05:
             logger.warning("Condition violated at %f for file %s" % ( pt['condition'], pt['slhafile']) )
@@ -528,7 +545,12 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
     if reverse: ## if it is an [x,*],[y,*] plot, put legend to right, not left
         dx = .53
-    leg = TLegend( dx,0.82-0.040*nleg,0.35+dx,0.88)
+    x1_, x2_ = dx, 0.35+dx
+    y1_, y2_ = 0.82-0.040*nleg,0.88
+    if logY: # move it to top right
+        x1_, x2_ = 0.37+dx, 0.775+dx
+        y1_, y2_ = 0.78-0.040*nleg,0.84
+    leg = TLegend( x1_,y1_,x2_,y2_ )
     setOptions(leg)
     leg.SetTextSize(0.04)
     if allowed.GetN()>0:
@@ -600,14 +622,18 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
 
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
-    if y>1e-24 and y<1e-6:
-        ## assume that its a "width" axis
-        plane.SetLogy()
+    base.SetTitle(title)
     base.Draw("APsame")
+    if logY: # y>1e-24 and y<1e-6:
+        ## assume that its a "width" axis
+        # print ( "set log", ycontainer )
+        plane.SetLogy()
+        ymin = min ( ycontainer ) * 0.5
+        ymax = max ( ycontainer ) * 2.
+        base.GetYaxis().SetRangeUser( ymin, ymax )
     leg.Draw()
     #base.Draw("Psame")
     base.leg = leg
-    base.SetTitle(title)
     try:
         base.GetXaxis().SetTitle(xlabel)
         base.GetYaxis().SetTitle(ylabel)
@@ -717,15 +743,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     tgr = TGraph2D()
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
-    logY = False
-    A = validationPlot.axes.replace(" ","")
-    p1 = A.find("(")
-    p2 = A.find(")")
-    py = A.find("y")
-    if py == -1:
-        py = A.find("w")
-    if p1 < py < p2 and A[py-1]==",":
-        logY = True
+    logY = yIsLog ( validationPlot )
+    if logY:
         xlabel = "x [mass, GeV]"
         ylabel = "y [width, GeV]"
 
