@@ -28,8 +28,11 @@ def getNiceAxes(axesStr):
     :return: string with a nicer representation of the axes (more suitable for printing)
     """
 
-    x,y,z = var('x y z')
-    axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
+    x,y,z,w = var('x y z w')
+    if axesStr:
+        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w' : w})
+    else:
+        return 'True'
 
     eqList = []
     for ib,br in enumerate(axes):
