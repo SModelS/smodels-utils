@@ -173,8 +173,9 @@ def main():
         print ( a )
     if ssh:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
-        print ( "%s[publishDatabasePickle] Now please execute manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( cmd2 )
+        CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
         print ( )
         print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         print ( "%s[publishDatabasePickle] then do also manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
