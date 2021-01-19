@@ -153,8 +153,8 @@ def main():
             print ( "[publishDatabasePickle] %s" % a )
     cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
-    print("\n\t -----> The json file has to be updated in the smodels.github.io:master/database repository.\n")
-    print("\n\t -----> The .pcl file can be uploaded through https://cernbox.cern.ch/index.php/s/jt7xJCepuXTRWPL\n\n")
+    # print("\n\t -----> The json file has to be updated in the smodels.github.io[master]:database repository.\n")
+    # print("\n\t -----> The .pcl file can be uploaded through https://cernbox.cern.ch/index.php/s/jt7xJCepuXTRWPL\n\n")
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
@@ -167,10 +167,16 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
-    cmd = "cd ../../smodels.github.io/; git pull; git add database/%s; git commit -m 'auto-commited by publishDatabasePickle.py'; git push" % infofile
-    if not args.dry_run:
+    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "  
+    if args.latest:
+        cmd += f"git add database/{latestfile}; "
+    cmd += "git commit -m 'auto-commited by publishDatabasePickle.py'; git push"
+    if args.dry_run:
+        print ( f"suppressing execution of: {cmd}" )
+    else:
         a=CMD.getoutput ( cmd )
         print ( a )
+        
     if ssh:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -183,6 +189,5 @@ def main():
         print ( )
         print ( "now point your browser to: " )
         print ( "https://smodels.web.cern.ch/smodels/database/" )
-
 
 main()
