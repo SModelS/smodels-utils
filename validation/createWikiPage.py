@@ -362,7 +362,10 @@ CMS are for on- and off-shell at once.
                     line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
             line += "<br><font color='grey'>source: %s</font><br>" % self.describeSource ( txname )
             if txname.validated not in [ "True", True ]:
-                line += "validated: %s<br>" % txname.validated
+                font, endfont = "", ""
+                if txname.validated in [ "False", False ]:
+                    font, endfont = "<font color='red'>", "</font>"
+                line += "%svalidated: %s%s<br>" % (font, txname.validated, endfont )
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
