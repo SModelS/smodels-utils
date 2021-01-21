@@ -982,6 +982,9 @@ class TxNameInput(Locker):
                     m2 = massArray[ib][iv+1]
                     if type(m2) == tuple:
                         m2 = m2[0]
+                    if type(m1)==str and type(m2)==str:
+                        logger.warn ( f"expected masses/floats, got strings: {m1},{m2}. skip it." )
+                        continue
                     massDiff = m1-m2
                     if massDiff < 0.:
                         self._smallerThanError += 1

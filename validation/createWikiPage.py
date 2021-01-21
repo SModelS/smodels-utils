@@ -201,7 +201,8 @@ CMS are for on- and off-shell at once.
                             tname = tn.txName
                             if not self.ignore_validated and validated in [ "n/a" ]: 
                                 continue
-                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe )
+                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe, 
+                                                      validated )
                             hasChanged = self.anaHasChanged ( expRes.globalInfo.id, tn.txName, tpe )
                             if "efficiency" in tpe:
                                 dataset = self.getDatasetName ( tn )
@@ -351,7 +352,7 @@ CMS are for on- and off-shell at once.
                 line = line[:line.rfind("<<BR>>")] + "|"
 
             ## add comments
-            if self.isNewAnaID ( id, txname.txName, tpe ):
+            if self.isNewAnaID ( id, txname.txName, tpe, validated ):
                 line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
             else:
                 hasChanged = self.anaHasChanged ( id, txname.txName, tpe )
@@ -361,7 +362,7 @@ CMS are for on- and off-shell at once.
                     line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
             line += "<br><font color='grey'>source: %s</font><br>" % self.describeSource ( txname )
             if txname.validated not in [ "True", True ]:
-                line += "validated: %s" % txname.validated
+                line += "validated: %s<br>" % txname.validated
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
@@ -463,12 +464,16 @@ CMS are for on- and off-shell at once.
             self.topos["ATLAS-SUSY-2016-24"].append ( 'TSlepSlep-eff' )
 
 
-    def isNewAnaID ( self, id, txname, tpe ):
+    def isNewAnaID ( self, id, txname, tpe, validated ):
         """ is analysis id <id> new?
         :param id: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
         :param txname: topology name, e.g. T1 (str)
         :param tpe: type of result, e.g. "upper limits" (str)
+        :param validated: is it validated? for if it is not, it won't
+                          be marked as new
         """
+        if validated == False:
+            return False
         if self.comparison_db == None:
             # no comparison database given. So nothing is new.
             return False

@@ -328,6 +328,9 @@ class DatabaseCreator(list):
                             except ValueError:
                                 logger.info ( "cannot convert to coordinates: %s" % point )
                                 continue
+                            if type(point["x"])==str or type(point["y"])==str:
+                                logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
+                                continue
                             stGraph.SetPoint(i,point['x'],point['y'])
                             i+=1
                         stGraph.SetLineColor(ROOT.kBlack)
