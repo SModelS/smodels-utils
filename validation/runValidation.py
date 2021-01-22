@@ -169,7 +169,7 @@ def run ( expResList, axis, pretty, generateData ):
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
                                      doGenerate,limitPoints,extraInfo,preliminary,
-                                     combine,pngAlso, weightedAgreementFactor, model,
+                                     combine, pngAlso, weightedAgreementFactor, model,
                                      style = style, legendplacement = legendplacement )
                         doGenerate = False
             else:
@@ -179,7 +179,7 @@ def run ( expResList, axis, pretty, generateData ):
                 for p in prettyorugly:
                     validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
                                  generateData,limitPoints,extraInfo, preliminary,
-                                 combine,pngAlso, weightedAgreementFactor, model,
+                                 combine, pngAlso, weightedAgreementFactor, model,
                                  style = style, legendplacement = legendplacement )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))

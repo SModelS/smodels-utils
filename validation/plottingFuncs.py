@@ -602,7 +602,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
     subtitle = "%d datasets: " % len(validationPlot.expRes.datasets)
-    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
+    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and \
+            validationPlot.combine == True:
         ## pyhf combination
         subtitle = "pyhf combining %d SRs: " % len(validationPlot.expRes.datasets)
     for dataset in validationPlot.expRes.datasets:
@@ -612,7 +613,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         dataId = str(dataset.dataInfo.dataId)
         subtitle+=dataId+", "
     subtitle = subtitle[:-2]
-    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
+            validationPlot.combine == True:
         subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
     if len(subtitle) > 100:
         subtitle = subtitle[:100] + " ..."
