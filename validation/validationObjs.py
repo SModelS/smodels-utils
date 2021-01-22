@@ -445,7 +445,7 @@ class ValidationPlot():
 
         #Save data to file
         f = open(datafile,'r')
-        self.data = eval(f.read().replace("validationData = ",""))
+        self.data = eval(f.readlines()[0].replace("validationData = ",""))
         f.close()
 
     def getWidthsFromSLHAFileName ( self, filename ):
@@ -851,7 +851,12 @@ class ValidationPlot():
         dataStr = str(self.data)
         dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
         dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
-        f.write("validationData = "+dataStr)
+        f.write("validationData = "+dataStr+"\n")
+        from smodels import installation
+        from smodels_utils import SModelSUtils
+        meta = { "smodelsver": installation.version(), 
+                 "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        f.write("meta = %s\n" % str(meta) )
         f.close()
 
         return True
