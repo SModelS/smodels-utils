@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """ Identify a good example for how to combine results. """
 
@@ -12,6 +12,16 @@ import pickle
 import tempfile
 import os
 import argparse
+
+
+def useNames ( aggs, datasets ):
+    ret = []
+    for agg in aggs:
+        tmp = []
+        for i in agg:
+            tmp.append ( datasets[i] )
+        ret.append ( tmp )
+    return ret
 
 def main():
     ap = argparse.ArgumentParser( description= "find aggregate regions based on correlations." )
@@ -39,7 +49,7 @@ def main():
     def getDatasets():
         datasets={}
         for _,ds in enumerate ( result.datasets ):
-            i=_+1
+            i=_ # +1
     #        print ( i, ds.dataInfo.dataId )
             datasets[i]=ds.dataInfo.dataId
             datasets[ ds.dataInfo.dataId ] = i
@@ -55,7 +65,8 @@ def main():
         for j in range(i+1,n):
             cor = cov[i][j]/sqrt(cov[i][i]*cov[j][j] )
             # print ( "cov[%d,%d]=%f" % ( i+1,j+1, cor) )
-            pairs[cor] = [i+1,j+1] 
+            pairs[cor] = [i,j] 
+            # pairs[cor] = [i+1,j+1] 
 
     corrs = list(pairs.keys())
     corrs.sort(reverse=True)
@@ -115,5 +126,6 @@ def main():
     for i in aggs: 
         for j in i: c.add ( j )
     print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), aggs ) )
+    print ( "with names", useNames ( aggs, getDatasets() ) )
 
 main()
