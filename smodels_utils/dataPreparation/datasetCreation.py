@@ -114,6 +114,10 @@ def aggregateDataSets ( aggregates, origDataSets, covariance, lumi ):
         datasets.append ( myaggs )
     return datasets
 
+def createAggregationOrder ( aggregate ):
+    """ create the right string for the datasetOrder field in globalInfo """
+    dsorder = [ '"ar%d"' % (x+1) for x in range(len(aggregate)) ]
+    return ",".join(dsorder)
 
 class DatasetsFromLatex:
     """
@@ -224,8 +228,7 @@ class DatasetsFromLatex:
         """ now that the datasets are created, aggregate them. """
         self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
         self.origDataSets = copy.deepcopy ( self.datasets )
-        dsorder = [ '"ar%d"' % (x+1) for x in range(len(self.aggregate)) ]
-        self.datasetOrder = dsorder
+        self.datasetOrder = createAggregationOrder ( self.aggregate )
         self.datasets = aggregateDataSets ( self.aggregate, self.origDataSets, \
                 databaseCreator.metaInfo.covariance, databaseCreator.metaInfo.lumi )
         #self.datasets = [] ## rebuild
