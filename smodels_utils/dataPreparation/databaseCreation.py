@@ -121,6 +121,16 @@ class DatabaseCreator(list):
         name=""
         print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
+    def addDatasets(self,datasetObjects):
+        """
+        adds list of datasets in a bulk
+
+        :param datasetObjects: list of DataSetInput object
+        :raise Error: if there is already a dataset instance with same name
+        """
+        for ds in datasetObjects:
+            self.addDataset ( ds )
+
     def addDataset(self,datasetObject):
 
         """

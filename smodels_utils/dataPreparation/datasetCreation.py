@@ -50,6 +50,70 @@ def createAggregationList ( aggregationborders ):
         last=a
     return ret
 
+def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi):
+    """ aggregate one list of datasets to a single dataset.
+    :param origDataSets: the original DataSets, as a list
+    :param covariance: covariance matrix
+    :param aggidx: number of aggregate region
+    :param lumi: luminosity, in fb^-1
+    :returns: list of aggregated DataSets
+    """
+    newds = copy.deepcopy ( origDataSets[ agg[0]-1 ] )
+    newds._name = "ar%d" % (aggidx+1)
+    aggregated = ""
+    observedN, expectedBG, bgError2 = 0, 0., 0.
+    for a in agg:
+        ds = origDataSets[ (a-1) ]
+        observedN += ds.observedN
+        expectedBG += ds.expectedBG
+        bgError2 += ds.bgError**2 ## FIXME this comes from the cov mat
+        aggregated += ds.dataId + ";"
+    newds.observedN = observedN
+    newds.expectedBG = expectedBG
+    oldBgError = math.sqrt ( bgError2 )
+    bgErr2 = covariance[aggidx][aggidx]
+    newds.bgError = math.sqrt ( bgErr2 )
+    if ( oldBgError - newds.bgError ) / newds.bgError > .2:
+        logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( aggidx+1, oldBgError, newds.bgError  ) )
+        if oldBgError > newds.bgError:
+            logger.error ( "since direct computation is more conservative, I will use that one." )
+            newds.bgError = oldBgError
+    ntoys, alpha = 200000, .05
+    # lumi = eval ( databaseCreator.metaInfo.lumi )
+    # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
+    comp = UpperLimitComputer ( ntoys, 1. - alpha )
+    m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
+    try:
+        ul = comp.ulSigma ( m, marginalize=False ) / lumi.asNumber ( 1./fb )
+        #ul = comp.ulSigma ( m, marginalize=False ).asNumber ( fb )
+    except Exception as e:
+        print ( "Exception", e )
+        print ( "observed:",newds.observedN )
+        sys.exit()
+    newds.upperLimit = str("%f*fb" % ul )
+    # ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
+    ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
+    newds.expectedUpperLimit =  str("%f*fb" % ule )
+    newds.aggregated = aggregated[:-1]
+    newds.dataId = "ar%d" % (aggidx+1) ## for now the dataset id is the agg region id
+    return newds
+
+def aggregateDataSets ( aggregates, origDataSets, covariance, lumi ):
+    """ aggregate the DataSets
+    :param aggregates: the aggregates, list of lists of indices of SRs
+
+    :returns: the aggregate datasets
+    """
+    if type(covariance)==str:
+        covariance=eval(covariance)
+    if type(lumi)==str:
+        lumi=eval(lumi)
+    datasets = []
+    for ctr,agg in enumerate( aggregates ):
+        myaggs = aggregateToOne ( origDataSets, covariance, ctr, agg, lumi )
+        datasets.append ( myaggs )
+    return datasets
+
 
 class DatasetsFromLatex:
     """
@@ -111,7 +175,7 @@ class DatasetsFromLatex:
         tokens = list ( map ( float, tokens ) )
         bg=tokens[0]
         stat=max(tokens[1],tokens[2])
-        syst=0.        
+        syst=0.
         if len(tokens)>4:
             syst=max(tokens[3],tokens[4])
         bgerr=math.sqrt(stat**2+syst**2)
@@ -156,57 +220,18 @@ class DatasetsFromLatex:
         if self.aggregate != None:
             self.aggregateDSs()
 
-    def aggregateToOne ( self, ctr, agg ):
-        """ aggregate one list of datasets to a single dataset. """
-        newds = copy.deepcopy ( self.origDataSets[ agg[0]-1 ] )
-        newds._name = "ar%d" % (ctr+1)
-        aggregated = ""
-        observedN, expectedBG, bgError2 = 0, 0., 0.
-        for a in agg:
-            ds = self.origDataSets[ (a-1) ]
-            observedN += ds.observedN
-            expectedBG += ds.expectedBG
-            bgError2 += ds.bgError**2 ## FIXME this comes from the cov mat
-            aggregated += ds.dataId + ";"
-        newds.observedN = observedN
-        newds.expectedBG = expectedBG
-        oldBgError = math.sqrt ( bgError2 )
-        bgErr2 = eval(databaseCreator.metaInfo.covariance)[ctr][ctr]
-        newds.bgError = math.sqrt ( bgErr2 )
-        if ( oldBgError - newds.bgError ) / newds.bgError > .2:
-            logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( ctr+1, oldBgError, newds.bgError  ) )
-            if oldBgError > newds.bgError:
-                logger.error ( "since direct computation is more conservative, I will use that one." )
-                newds.bgError = oldBgError
-        ntoys, alpha = 200000, .05
-        lumi = eval ( databaseCreator.metaInfo.lumi )
-        # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-        comp = UpperLimitComputer ( ntoys, 1. - alpha )
-        m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
-        try:
-            ul = comp.ulSigma ( m, marginalize=False ) / lumi.asNumber ( 1./fb )
-            #ul = comp.ulSigma ( m, marginalize=False ).asNumber ( fb )
-        except Exception as e:
-            print ( "Exception", e )
-            print ( "observed:",newds.observedN )
-            sys.exit()
-        newds.upperLimit = str("%f*fb" % ul )
-        # ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
-        ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
-        newds.expectedUpperLimit =  str("%f*fb" % ule )
-        newds.aggregated = aggregated[:-1]
-        newds.dataId = "ar%d" % (ctr+1) ## for now the dataset id is the agg region id
-        return newds
-
     def aggregateDSs ( self ):
         """ now that the datasets are created, aggregate them. """
         self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
         self.origDataSets = copy.deepcopy ( self.datasets )
         dsorder = [ '"ar%d"' % (x+1) for x in range(len(self.aggregate)) ]
         self.datasetOrder = dsorder
-        self.datasets = [] ## rebuild
-        for ctr,agg in enumerate(self.aggregate):
-            self.datasets.append (self.aggregateToOne ( ctr, agg ) )
+        self.datasets = aggregateDataSets ( self.aggregate, self.origDataSets, \
+                databaseCreator.metaInfo.covariance, databaseCreator.metaInfo.lumi )
+        #self.datasets = [] ## rebuild
+        #for ctr,agg in enumerate(self.aggregate):
+        #    myaggs = aggregateToOne ( self.origDataSets, eval(databaseCreator.metaInfo.covariance), ctr, agg, eval ( databaseCreator.metaInfo.lumi ) )
+        #    self.datasets.append ( myaggs )
         databaseCreator.clear() ## reset list in databasecreator
         for i in self.datasets:
             databaseCreator.addDataset ( i )
