@@ -26,7 +26,7 @@ def getPathName ( dbpath, analysis, valfile ):
         potentially with wildcards """
     import glob
     if not valfile.endswith(".py"): valfile += ".py"
-    analysis = analysis.replace("agg"," (agg)" )
+    # analysis = analysis.replace("agg"," (agg)" )
     experiment = "ATLAS"
     if "CMS" in analysis:
         experiment = "CMS"
@@ -36,7 +36,7 @@ def getPathName ( dbpath, analysis, valfile ):
         if os.path.exists ( anadir ):
             break
     if sqrts == -1:
-        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis1 )
+        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis )
         sys.exit()
     ipath = "%s%dTeV/%s/%s/validation/%s" % \
              ( dbpath, sqrts, experiment, analysis, valfile )

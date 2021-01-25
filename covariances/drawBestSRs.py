@@ -42,6 +42,11 @@ def draw( validationfile, max_x, max_y ):
     p2b = validationfile.find("-andre" )
     if p2 < 1:
         p2 = p2b
+    hasAgg = ""
+    if "agg" in validationfile:
+        hasAgg = "_agg"
+    if p2 < 1:
+        p2 = validationfile.find("-agg" )
     anaId = validationfile[p+1+len(coll):p2]
     p3 = validationfile.find("validation/")
     p4 = validationfile[p3+10:].find("_")
@@ -72,6 +77,7 @@ def draw( validationfile, max_x, max_y ):
         if max_y != None and axes[0]>max_y:
             continue
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
+        print ( "append", point["dataset"] )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
         print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
@@ -164,8 +170,8 @@ def draw( validationfile, max_x, max_y ):
     if "andre" in validationfile:
         andre="-andre"
     plt.title ( "Best Signal Region, %s (%s)" % ( anaId+andre, topo ) )
-    fname = "bestSR_%s%s_%s.png" % ( anaId, andre, topo )
-    print ( "[drawBestSRs} saving to %s" % fname )
+    fname = "bestSR_%s%s_%s%s.png" % ( anaId, andre, topo, hasAgg )
+    print ( "[drawBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
     return fname
