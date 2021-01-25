@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" simple plot of best signal region, should be turned into 
+""" simple plot of best signal region, should be turned into
 a full blown script """
 
 import matplotlib.pyplot as plt
@@ -26,7 +26,10 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def draw( validationfile ):
+def draw( validationfile, max_x, max_y ):
+    """ plot.
+    :param validationfile: T*.py file
+    """
     warnings.simplefilter("ignore")
     anaId = "???"
     coll = "CMS"
@@ -57,9 +60,17 @@ def draw( validationfile ):
             err = point["error"]
             if "axes" in point:
                 axes = convertNewAxes ( point["axes"] )
+                if max_x != None and axes[1]>max_x:
+                    continue
+                if max_y != None and axes[0]>max_y:
+                    continue
                 noResults.append ( ( axes[1], axes[0] ) )
             continue
         axes = convertNewAxes ( point["axes"] )
+        if max_x != None and axes[1]>max_x:
+            continue
+        if max_y != None and axes[0]>max_y:
+            continue
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
@@ -93,7 +104,11 @@ def draw( validationfile ):
     occs = list ( cCounts.keys() )
     occs.sort( reverse=True )
     ctr = 0
-    origcolors = [ "r", "g", "b", "c", "m", "y", "#ffa500", '#115f6a', "#A52A2A", "k" ]
+    origcolors = [ "r", "g", "b", "c", "m", "y", "k" ] # "#ffa500", '#115f6a', "#A52A2A", "k" ]
+    #origcolors += [ "navy", "teal", "maroon", "coral", "lime", "aqua", "indigo", "wheat" ]
+    #origcolors += [ "slate" ]
+    for i in range(30):
+        origcolors.append ( "k" )
     colors = copy.deepcopy ( origcolors )
     for occ in occs:
         if occ == 0:
@@ -120,9 +135,21 @@ def draw( validationfile ):
                 y.append ( y_ )
         if len(x)==0:
             continue
-        plt.scatter ( x, y, s=25, c=[colors[n]]*len(x), label=nrDict[n] )
+        col = colors[n]
+        label = nrDict[n]
+        if col == "k":
+            label = "others"
+        plt.scatter ( x, y, s=25, c=[ col ]*len(x), label=label )
     plt.scatter ( noRx, noRy, s=2, c=["grey"]*len(noRx), label="no result" )
-    plt.legend( loc="upper right" )
+    handles, labels = plt.gca().get_legend_handles_labels()
+    i =1
+    while i<len(labels):
+        if labels[i] in labels[:i]:
+            del(labels[i])
+            del(handles[i])
+        else:
+            i +=1
+    plt.legend(handles, labels, loc="upper left" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
     if min(y)>1e-30 and max(y)<1e-1:
@@ -173,23 +200,31 @@ def writeBestSRs( push = False ):
     if push:
         o = subprocess.getoutput ( cmd )
     print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
-    
+
 if __name__ == "__main__":
     import argparse
-    argparser = argparse.ArgumentParser( description = "plot of best (expected) signal region per point" )
-    argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
-                             default="../../smodels-database/" )
-    argparser.add_argument ( "-a", "--analysis", 
-            help="analysis name, like the directory name [CMS-EXO-13-006-eff]", 
+    argparser = argparse.ArgumentParser(
+            description = "plot of best (expected) signal region per point" )
+    argparser.add_argument ( "-d", "--dbpath",
+            help="path to database [../../smodels-database/]",
+            type=str, default="../../smodels-database/" )
+    argparser.add_argument ( "-x", "--max_x",
+            help="upper bound on x axis [None]",
+            type=float, default=None )
+    argparser.add_argument ( "-y", "--max_y",
+            help="upper bound on y axis [None]",
+            type=float, default=None )
+    argparser.add_argument ( "-a", "--analysis",
+            help="analysis name, like the directory name [CMS-EXO-13-006-eff]",
             type=str, default="CMS-EXO-13-006-eff" )
-    argparser.add_argument ( "-v", "--validationfile", 
-            help="validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
+    argparser.add_argument ( "-v", "--validationfile",
+            help="validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]",
             type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
-    argparser.add_argument ( "-D", "--default", action="store_true", 
+    argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
-    argparser.add_argument ( "-c", "--copy", action="store_true", 
+    argparser.add_argument ( "-c", "--copy", action="store_true",
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
-    argparser.add_argument ( "-p", "--push", action="store_true", 
+    argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
     if not args.default and not args.analysis.endswith("-eff"):
@@ -199,14 +234,14 @@ if __name__ == "__main__":
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
                 print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
-                fname = draw( ipath )
+                fname = draw( ipath, args.max_x, args.max_y )
                 if args.copy:
                     cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
                     o = subprocess.getoutput ( cmd )
                     print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
         ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-        fname = draw( ipath )
+        fname = draw( ipath, args.max_x, args.max_y )
         if args.copy:
             cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
             o = subprocess.getoutput ( cmd )
