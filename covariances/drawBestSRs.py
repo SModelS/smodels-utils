@@ -77,7 +77,6 @@ def draw( validationfile, max_x, max_y ):
         if max_y != None and axes[0]>max_y:
             continue
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
-        print ( "append", point["dataset"] )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
         print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )

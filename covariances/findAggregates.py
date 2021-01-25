@@ -29,8 +29,8 @@ def main():
                     default = "CMS-SUS-16-050", type=str )
     ap.add_argument('-c','--corr',help="correlation needed to cluster [.5]",
                     default = .5, type=float )
-    ap.add_argument('-d','--database',help="path to database [official]",
-                    default = "official", type=str )
+    ap.add_argument('-d','--database',help="path to database [../../smodels-database]",
+                    default = "../../smodels-database", type=str )
     args = ap.parse_args()
     # dbname="http://smodels.hephy.at/database/official113"
     # dbname="/home/walten/git/smodels-database"
@@ -80,7 +80,7 @@ def main():
         #if k < .1:
         #    break
         v = pairs[k]
-        print ( "%.2f: %s" % ( k, v ) )
+        # print ( "%.2f: %s" % ( k, v ) )
         if v[0] in done and v[1] in done:
             ## all taken care of
             continue
@@ -126,6 +126,6 @@ def main():
     for i in aggs: 
         for j in i: c.add ( j )
     print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), aggs ) )
-    print ( "with names", useNames ( aggs, getDatasets() ) )
+    # print ( "with names", useNames ( aggs, getDatasets() ) )
 
 main()
