@@ -15,7 +15,7 @@ import math, ctypes
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue )
+                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue,kOrange )
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -658,18 +658,19 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     weighted = weightedAgreementFactor # compute weighted agreement factor?
     agreement = round(100.*validationPlot.computeAgreementFactor(
                        signal_factor = signal_factor, weighted = weighted ))
-    logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % (agreement,"%",len(validationPlot.data)) )
+    logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % \
+                  ( agreement,"%",len(validationPlot.data) ) )
     if extraInfo:
         lex=TLatex()
         lex.SetNDC()
-        # lex.SetTextColor( kGray )
+        lex.SetTextColor( kBlue+2 ) # kCyan-5 kMagenta-5 kBlue-5
         lex.SetTextSize(.026 )
         import socket
         hn=socket.gethostname()
         phn = hn.find(".")
         if phn > 0:
             hn = hn[:phn]
-        lex.DrawLatex(.59,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
+        lex.DrawLatex(.63,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
         base.lex=lex
 
     if figureUrl:
@@ -683,7 +684,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     l2.SetTextSize(.025)
     l2.SetTextAngle(90.)
     l2.SetTextColor( kGray )
-    l2.DrawLatex(.93,.15,"k-factor %.2f" % kfactor)
+    if True: # abs ( kfactor - 1. ) > 1e-5:
+        l2.DrawLatex(.93,.18,"k-factor %.2f" % kfactor)
     base.l2=l2
 
     l3=TLatex()
