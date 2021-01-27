@@ -50,6 +50,7 @@ prettySUSYParticle = {
     'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
+    'pion' : '#pi',            #Chargino
     'chargino^pm_1' : '#tilde{#chi}^{#pm}_{0}',            #Chargino
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
@@ -209,14 +210,13 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiChipmStauL':'neutralino_2 chargino^pm_1  --> tau stau ( neutrino sneutrino ) tau sneutrino ( neutrino stau ), stau --> tau lsp, sneutrino --> neutrino lsp',
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
     'TChiWH':'neutralino_2 chargino^pm_1 --> H W lsp lsp ',
-    'TChiWW':'chargino^pm_1 --> W lsp lsp ',
+    'TChiWW':'chargino^pm_1 --> W lsp ',
       'TChiH': 'neutralino_1 --> Z/h gravitino',
-    'TChiZZ':'neutralino_2 --> Z lsp lsp ',
-    'TChiWWoff':'chargino^pm_1 --> W^* lsp lsp ',
-    'TChiWWoffDisp':'chargino^pm_1 --> pion lsp lsp ',
+    'TChiZZ':'neutralino_2 --> Z lsp  ',
+    'TChiWWoff':'chargino^pm_1 --> W^* lsp ',
+    'TDTM1F':'chargino^pm_1 --> pion^pm lsp ',
     'TChiWZ':'neutralino_2 chargino^pm_1 --> Z W lsp lsp ',
     'TChiWZoff':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
-    'TChiWZoffDisp':'neutralino_2 chargino^pm_1 --> pion pion lsp lsp ',
     'TChiWZoffqq':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
     'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
     'TChipChimStauSnu':'chargino^pm_1 --> neutrino stau ( tau sneutrino ), stau --> tau lsp, sneutrino --> neutrino lsp ',
@@ -381,12 +381,11 @@ motherDict = {"T1" :  "gluino",
     "TChiWH" :  "neutralino_2 chargino^pm_1",
     "TChiWW" :  "chargino^pm_1 chargino^mp_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
-    "TChiWWoffDisp" :  "chargino^+_1 chargino^-_1",
+    "TDTM1F" :  "chargino^pm_1 chargino^mp_1",
     "TChiWZ" :  "neutralino_2 chargino^pm_1",
     "TChiH" :  "neutralino_1",
     "TChiZZ" :  "neutralino_2",
     "TChiWZoff" :  "neutralino_2 chargino^pm_1",
-    "TChiWZoffDisp" :  "neutralino_2 chargino^pm_1",
     "TChiWZoffqq" :  "neutralino_2 chargino^pm_1",
     "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1",
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1",
