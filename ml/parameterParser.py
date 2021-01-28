@@ -12,7 +12,11 @@ import sys, os, torch
 from configparser import ConfigParser
 
 
-
+# ------------------------------------------------------------------ #
+# main parameter file layout that is referenced in multiple methods  #
+# all of these keys will be read from the nn_parameters.ini file and #
+# if not found set to 'None' in the main parameter dict              #
+# ------------------------------------------------------------------ #
 
 TrainingParameter = {
 	"pathing": 	[("databasePath", str), 
@@ -26,7 +30,7 @@ TrainingParameter = {
 				("overwrite", str)],
 	"dataset": 	[("sampleSize", int), 
 				("sampleSplit", float), 
-				("loadFile", str),
+				("externalFile", str),
 				("massColumns", int), 
 				("refXsecFile", str), 
 				("refXsecColumns", int)],
@@ -44,12 +48,21 @@ TrainingParameter = {
 				("layer", int), 
 				("nodes", int), 
 				("shape", str), 
-				("rescaleMethod", str)]
+				("rescaleMethodMasses", str),
+				("rescaleMethodTargets", str)]
 }
 
 
 
 class PermutationDictionary():
+
+	"""
+	Custom permutation dictionary that automatically computes all possible combinations of stored lists.
+	Individual combinations can be accessed via indexing or iterated through via the 'self.incrIndex' property.
+	Suggested use is within a while loop as demonstrated in the 'train.py' method where the current configuration is returned
+	through the (very unprofessional) -1 index.
+
+	"""
 
 	def __init__(self, parameterDict):
 
@@ -130,7 +143,21 @@ class PermutationDictionary():
 
 class Parameter(dict):
 
+	"""
+	Main parameter dictionary that is used throughout the machine learning process. Although individual custom dictionaries may be freely used,
+	the aim of this custom dictionary is to manage all necessary parameters more compact and elegantly.
+
+	"""
+
 	def __init__(self, fileName, logLevel):
+
+		"""
+		Reads the parameter file and configurates all nested custom (permuation) dictionaries.
+		Loads smodels, utils and database and generates a global logger.
+
+		:param fileName: the parameter file that will be read. Defaults to nn_parameters.ini on the same level as this method (string)
+		:param logLevel: verbosity level of our logger
+		"""
 
 		print("reading %s.." %fileName)
 
@@ -214,6 +241,11 @@ class Parameter(dict):
 	@property
 	def loadExpres(self):
 
+		"""
+		Load current experimental analysis from smodels database
+
+		"""
+
 		analysis 	 = self["analysis"]
 		txName 		 = self["txName"]
 		dataSelector = self["dataselector"]
@@ -236,6 +268,12 @@ class Parameter(dict):
 		self._parameter[key] = value
 
 	def __getitem__(self, targetKey):
+
+		"""
+		Overload the dictionary indexing method by allowing to bypass sub dictionary notation for easier and less convoluted access to parameters.
+		Instead of lets say this[dataset][sampleSize], sampleSize can be directly accessed with this[sampleSize].
+
+		"""
 
 		target = None
 
@@ -264,243 +302,5 @@ class Parameter(dict):
 		for key, value in self._parameter.items():
 			print(value)
 
-			
-"""	
 
-
-def readParameterFile(logger, parameterFile):
-
-	parser = ConfigParser( inline_comment_prefixes=(';', ) )
-	parser.allow_no_value = True
-	parser.read(parameterFile)
-
-	############################################
-	# Add smodels and smodels-database to path #
-	############################################
-
-	sct = "path"
-	if parser.has_section(sct):
-		
-		smodelsPath = parser.get(sct, "smodelsPath")
-		databasePath = parser.get(sct, "databasePath")
-		utilsPath = parser.get(sct, "utilsPath")
-		sys.path.append(smodelsPath)
-		sys.path.append(databasePath)
-		sys.path.append(utilsPath)
-		import smodels
-		from smodels.experiment.databaseObj import Database
-
-		outputPath = parser.get(sct, "outputPath")
-		if outputPath == "": outputPath = None
-
-		paramPath = {"smodels": smodelsPath, "database": databasePath, "utils": utilsPath, "outputPath": outputPath}
-
-	else:
-		logger.info("No '{}' section found. Skipping Database import.".format(sct))
-		paramPath = None
-
-
-	###############################################
-	# Select analysis and topologies for training #
-	###############################################
-
-	sct = "database"
-	if parser.has_section(sct):
-
-		analysisID = parser.get(sct, "analysis").split(",")
-		txName = parser.get(sct, "txName").split(",")
-		dataselector = parser.get(sct, "dataselector").split(",")
-		signalRegion = parser.get(sct, "signalRegion").split(",")
-		for n, sr in enumerate(signalRegion):
-			if sr == "None": 
-				signalRegion[n] = None
-
-		paramDatabase = {"analysisID": analysisID, "txName": txName, "dataselector": dataselector, "signalRegion": signalRegion}
-
-		# Check wether you want to override old NN with new results		
-		
-		overwrite = parser.get(sct, "overwrite")
-		if not (overwrite == "always" or overwrite == "never" or overwrite == "outperforming"):
-			logger.info("Invalid overwrite parameter. Allowed options: 'always' 'never' and 'outperforming'. Setting parameter to 'never'")
-			overwrite = "never"
-
-	else:
-		logger.info("No '{}' section found. Skipping map selection".format(sct))
-		paramDatabase = None
-
-	##############################################################
-	# Dataset settings used for training, testing and validation #
-	##############################################################
-
-	sct = "dataset"
-	
-	if parser.has_section(sct):
-
-		params = [("sampleSize", int), ("sampleSplit", float), ("loadFile", str),
-			("massColumns", int), ("refXsecFile", str), ("refXsecColumns", int)]
-
-		paramDataset = {}
-
-		for param in params:
-
-			key = param[0]
-			form = param[1]
-
-			try:
-				p = parser.get(sct, key).split(",")
-
-				if form != str:
-					p = [form(x) for x in p]
-			except: p = [None]
-
-			paramDataset[key] = p
-
-		print(paramDataset)
-		'''
-		sampleSize 	= int(parser.get(sct, "sampleSize"))
-		sampleSplit = parser.get(sct, "sampleSplit").split(",")
-		sampleSplit = [float(x) for x in sampleSplit]
-		loadFile 	= parser.get(sct, "loadFile")
-		massColumns = parser.get(sct, "massColumns").split(",")
-		massColumns = [float(x) for x in massColumns]
-		refXsecFile	= parser.get(sct, "refXsecFile")
-		refXsecColumns = parser.get(sct, "refXsecColumns").split(",")
-		refXsecColumns = [float(x) for x in refXsecColumns]
-
-		paramDataset = {"sampleSize": sampleSize, "sampleSplit": sampleSplit, "loadFile": loadFile, "massColumns": massColumns, "refXsecFile": refXsecFile, "refXsecColumns": refXsecColumns}
-		'''
-	else:
-		logger.info("No '{}' section found. Skipping dataset specifications".format(sct))
-		paramDataset = None
-
-	######################################
-	# Choose wether to run on CPU or GPU #
-	######################################
-
-	sct = "device"
-	if parser.has_section(sct):
-
-		whichDevice = int(parser.get(sct, "device"))
-		deviceCount = torch.cuda.device_count()
-		if torch.cuda.is_available() and whichDevice >= 0 and whichDevice <= deviceCount:
-			device = torch.device("cuda:" + str(whichDevice))
-			logger.info("Running on GPU:%d" %deviceCount)
-		else:
-			device = torch.device("cpu")
-			logger.info("Running on CPU")
-
-		cores = int(parser.get(sct, "cores"))
-
-		paramDevice = {"device": device, "cores": cores}
-		
-	else:
-		logger.info("No '{}' section found. Default set to single-core CPU".format(sct))
-		device = torch.device("cpu")
-		paramDevice = {"device": "cpu", "cores": 1}
-
-
-	
-	'''
-	#Select which NNs to train
-	whichNN = parser.get("options", "whichNN")
-	if whichNN == "both": whichNN = ["regression", "classification"]
-	elif whichNN == "regression" or whichNN == "classification":
-		whichNN = [whichNN]
-	else:
-		logger.error("Invalid NN type selected. Allowed options: 'regression'  'classification' and 'both'")
-	'''
-
-	##########################
-	# Load analysis options #
-	##########################
-
-	sct = "analysis"
-	if parser.has_section(sct):
-
-		logFile = parser.getboolean(sct, "logFile")
-		lossPlot = parser.getboolean(sct, "lossPlot")
-		runPerformance = parser.getboolean(sct, "runPerformance")
-
-		paramAnalysis = {"logFile": logFile, "lossPlot": lossPlot, "runPerformance": runPerformance}
-
-	else:
-		logger.info("No '{}' section found. Not going to produce any logfiles or performance outputs".format(sct))
-		paramAnalysis = None
-
-
-	#######################
-	# Load Hyperparameter #
-	#######################
-
-	hyperParameter = {}
-
-	params = [("optimizer", str), ("lossFunction", str), ("batchSize", int),
-			("activationFunction", str), ("epochNum", int), ("learnRate", float),
-			("layer", int), ("nodes", int), ("shape", str), ("rescaleMethod", str)]
-
-	for netType in ["regression", "classification"]:
-
-		if parser.has_section(netType):
-
-			hP = {}
-
-			for param in params:
-
-				key = param[0]
-				form = param[1]
-
-				try:
-					p = parser.get(netType, key).split(",")
-
-					if form != str:
-						p = [form(x) for x in p]
-				except: p = [None]
-
-				hP[key] = p
-			
-			#hP = HyperParameter(hp)
-
-		else:
-			logger.info("No '{}' section found. No hyperparameters loaded".format(netType))
-			hP = None
-
-		hyperParameter[netType] = hP
-		
-	
-	parameters = {"path": paramPath, 
-			"database": paramDatabase, 
-			"dataset": paramDataset, 
-			"device": paramDevice, 
-			"analysis": paramAnalysis, 
-			"hyperParameter": hyperParameter}
-
-	return parameters
-	
-
-
-if __name__=='__main__':
-
-	ap = argparse.ArgumentParser(description = "Reads parameter file for neural network training")
-	ap.add_argument('-p', '--parfile', 
-			help='parameter file specifying the plots to be checked', default = 'nn_parameters.ini')
-	ap.add_argument('-l', '--log', 
-			help='specifying the level of verbosity (error, warning, info, debug)',
-			default = 'info', type = str)
-           
-	args = ap.parse_args()
-    
-	if not os.path.isfile(args.parfile):
-		logger.error("Parameters file %s not found" %args.parfile)
-	else:
-		logger.info("Reading validation parameters from %s" %args.parfile)
-
-
-	# Control output level
-
-	numeric_level = getattr(logging,args.log.upper(), None)
-	logger.setLevel(level=numeric_level)
-
-	readParameterFile(logger, args.parfile)
-
-"""
 

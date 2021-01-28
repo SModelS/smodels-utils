@@ -11,6 +11,12 @@ from scipy.special import inv_boxcox
 
 def getNodesPerLayer(shape, nodes, layer, inputNum):
 
+	"""
+	Translates shape strings of parameter file into actual model architectures.
+	Since 'trap' has been a clear winner, this method is partially outdated and will be reworked for the final push
+
+	"""
+
 	net = []
 	nodes_total = 0
 	
@@ -71,7 +77,19 @@ def getNodesPerLayer(shape, nodes, layer, inputNum):
 
 class DatabaseNetwork(nn.Module):
 
+	"""
+	Ensemble module that contains both regression and classification network. This is the final product of the machine learning system and will be stored in the database.
+
+	"""
+
 	def __init__(self, winner):#, scaler, lmbda):
+
+		"""
+		Takes both best performing models of one analysis and stores them.
+
+		:param winner: dict or both 'regression' and 'classification' models (dict:torch.nn.Module)
+
+		"""
     	
 		super(DatabaseNetwork, self).__init__()
 		self["regression"] = winner["regression"]["model"]
@@ -152,6 +170,12 @@ class DatabaseNetwork(nn.Module):
 
 
 class Net_cla(nn.Module):
+
+	"""
+	Classification network
+	More information will be added
+
+	"""
  
 	def __init__(self, netShape, activFunc):
 
@@ -203,7 +227,34 @@ class Net_cla(nn.Module):
 
 	def forward(self, x):#input_):
 
-		#x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
+		"""
+
+
+		"""
+
+		if "_rescaleParameter" in self.__dict__:
+			method = self._rescaleParameter["masses"]["method"]
+		else:
+			method = None
+
+		if not self.training and method != None:
+
+			x = x.detach().numpy()
+
+			if method == "minmaxScaler":
+
+				#x = [x.detach().tolist()] # <--- SKETCHY
+				scaler = self._rescaleParameter["masses"]["scaler"]
+				x = scaler.transform(x)
+
+			elif method == "standardScore":
+
+				mean = self._rescaleParameter["masses"]["mean"]
+				std = self._rescaleParameter["masses"]["std"]
+				x = (x - mean) / std
+
+			x = torch.tensor(x, dtype=torch.float64)
+
 		x = self.seq(x)
 		
 		if not self.training and self._delimiter != 0.:
@@ -215,6 +266,12 @@ class Net_cla(nn.Module):
 
 
 class Net_reg(nn.Module):
+
+	"""
+	Regression network
+	More information will be added
+
+	"""
 
 	def __init__(self, netShape, activFunc):
     	
@@ -264,54 +321,74 @@ class Net_reg(nn.Module):
 
 	def forward(self, x):
 
-		if not self.training and "_rescaleParameter" in self.__dict__:
-			if "masses" in self._rescaleParameter:
-				if self._rescaleParameter["masses"]["method"] == "minmaxScaler":
-					print("RESCALING INPUTS")
-
-					scaler = self._rescaleParameter["masses"]["scaler"]
-					x = scaler.transform(x)
-					x = torch.tensor(x, dtype=torch.float64)
+		"""
 
 
-		#print(x)
-		#x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
+		"""
+
+		if "_rescaleParameter" in self.__dict__:
+			method = self._rescaleParameter["masses"]["method"]
+		else:
+			method = None
+
+		if not self.training and method != None:
+
+			x = x.detach().numpy()
+
+			if method == "minmaxScaler":
+
+				scaler = self._rescaleParameter["masses"]["scaler"]
+				x = scaler.transform(x)
+
+			elif method == "standardScore":
+
+				mean = self._rescaleParameter["masses"]["mean"]
+				std = self._rescaleParameter["masses"]["std"]
+				x = (x - mean) / std
+
+			x = torch.tensor(x, dtype=torch.float64)
+
 		x = self.seq(x)
 
-		if not self.training and "_rescaleParameter" in self.__dict__:
-			if "targets" in self._rescaleParameter:
+		if "_rescaleParameter" in self.__dict__:
+			method = self._rescaleParameter["targets"]["method"]
+		else:
+			method = None
 
-				method = self._rescaleParameter["targets"]["method"]
+		if not self.training: # and method != None:
 
-				if method == "boxcox":
-					print("RESCALING TARGETS BOXCOX")
+			x = x.detach().numpy()
 
-					lmbda = self._rescaleParameter["targets"]["lambda"]
-					print("LMBDA:", lmbda)
-					x = x.detach().numpy()
-					x = [inv_boxcox(t, lmbda)[0] for t in x]
+			if method == "boxcox":
 
-				elif method == "log":
+				lmbda = self._rescaleParameter["targets"]["lambda"]
+				x = [inv_boxcox(t, lmbda)[0] for t in x]
 
-					print("RESCALING TARGETS LOG")
+			elif method == "log":
 
-					x = x.detach().numpy()
-					x = [(10**t)[0] for t in x]
+				x = [(10**t)[0] for t in x]
 
-				else:
+			elif method == "standardScore":
 
-					print("NO RESCALING TARGETS")
+				mean = self._rescaleParameter["targets"]["mean"]
+				std = self._rescaleParameter["targets"]["std"]
+				x = x * std + mean
 
-					x = x.detach().numpy()
-					x = [t[0] for t in x]
+			else:
 
-		#x = x.detach().numpy()
-		#x = [t[0] for t in x]
+				x = [t[0] for t in x]
+
 		return x
 	
 
 
 def createNet(hyper, rescaleParameter, full_dim, nettype):
+
+	"""
+	Translates parameter instruction strings into actual models for training.
+	This method is partially outdated and will be reworked for the final push
+
+	"""
 
 	shape = hyper["shape"]
 	nodes = hyper["nodes"]

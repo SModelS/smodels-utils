@@ -21,7 +21,7 @@ def main(parameter):
 	Reads the parameter file and trains networks for all
 	maps it can find.
 
-	:param parameter: Custom parameter dictionary generated from parameterParser.py by reading nn_parameters.ini file. See respective files for more information.
+	:param parameter: Custom parameter dictionary generated from parameterParser.py by reading nn_parameters.ini file. See respective files for more information or parameterParser.py for a full list of keys and values.
 
 	"""
 
@@ -49,14 +49,6 @@ def main(parameter):
 
 		builder = DatasetBuilder(parameter)
 
-		# -------------------------------------------------------------------------------------- #
-		# add optional reference xsec cut if efficiencies get too small.						 #
-		# training of unneccessarily small effs undermines the performance of the whole network. #
-		# cutoff formula: lumi * eff * refxsec(m0) > 1e-2										 #
-		# -------------------------------------------------------------------------------------- #
-
-		#builder.addrefXsecCut() #"filename", columns = {..}
-
 		# --------------------------------------------------------------- #
 		# optional filter condition for loaded or generated datasets. NYI #			
 		# --------------------------------------------------------------- #
@@ -71,6 +63,7 @@ def main(parameter):
 		for nettype in ["regression", "classification"]:
 			parameter.set("nettype", nettype)
 
+
 			# ------------------------------------------------- #
 			# generate or load dataset used for training 		#
 			# output will be custom Dataset class used by torch #
@@ -78,10 +71,11 @@ def main(parameter):
 
 			#dataDict = builder.run(nettype, loadFromFile = True)
 			
-			builder.run(nettype, loadFromFile = True)
+			builder.createDataset(nettype)
 			builder.shuffle()
+
 			builder.rescaleMasses()
-			builder.rescaleTargets(method = "boxcox")
+			builder.rescaleTargets()
 
 			dataset = builder.getDataset()
 

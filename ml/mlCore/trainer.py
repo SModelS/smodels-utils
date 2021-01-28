@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from scipy.optimize import minimize
 from mlCore.dataset import Data
 from mlCore.network import createNet
-from mlCore.auxiliary import loadLossFunction, loadOptimizer, getModelError
+from mlCore.lossFunctionsAndOptimizers import loadLossFunction, loadOptimizer, getModelError
 from smodels.tools.smodelsLogging import logger
 from smodels.tools.smodelsLogging import getLogLevel
 
@@ -116,10 +116,13 @@ class ModelTrainer():
 		
 		self.meanError = getModelError(self.model, self.validation, self.type)[0]
 
-		#if self.netType == "classification":
+		print(self.type)
+		if self.type == "classification":
+			predictions, labels = self.model(self.validation.inputs).detach().numpy(), self.validation.labels.detach().numpy()
+			self.model._delimiter = minimize(self._findDelimiter, 0.5, args=(predictions, labels), method="Powell").x.tolist()
 
 		#	predictions, labels = self.model(self.validationSet.inputs).detach().numpy(), self.validationSet.labels.detach().numpy()
-		#	self.model._delimiter = minimize(self._findDelimiter, 0.5, args=(predictions, labels), method="Powell").x.tolist()
+		
 		#	#lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
 		#	#self.meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
 
@@ -157,7 +160,7 @@ class ModelTrainer():
 				loss1 = lossFunction(self.model(inputs), labels)
 				loss2 = lossFunc2(self.model(inputs), labels)
 				loss = alpha * loss1 + beta * loss2
-				loss.backward()
+				loss1.backward()
 				optimizer.step()
 
 			self.model.eval()
@@ -265,6 +268,9 @@ class ModelTrainer():
 		x = trainingLoss
 		y = testingLoss
 
+		#fig = 11
+		#if self.type == "classification": fig += 1
+
 		title = "epoch loss for %s:%s" % (str(self.txnameData), self.type)
 
 		plt.figure(11)
@@ -275,5 +281,6 @@ class ModelTrainer():
 		plt.plot(e, y, label = "testing set")
 		plt.legend()
 		plt.savefig(path)
+		plt.close(11)
 		logger.info("lossplot saved at %s" % path)
 
