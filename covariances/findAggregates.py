@@ -29,6 +29,8 @@ def main():
                     default = "CMS-SUS-16-050", type=str )
     ap.add_argument('-c','--corr',help="correlation needed to cluster [.5]",
                     default = .5, type=float )
+    ap.add_argument( '-t','--takeout',help="dont cluster these SRs", nargs="*",
+                     type=int )
     ap.add_argument('-d','--database',help="path to database [../../smodels-database]",
                     default = "../../smodels-database", type=str )
     args = ap.parse_args()
@@ -73,8 +75,15 @@ def main():
 
     done = []
     aggs = []
+    excls = []
         
     frac=args.corr
+
+    if args.takeout != None:
+        for i in args.takeout:
+            done.append ( i )
+            excls.append ( i )
+            aggs.append ( [ i ] )
 
     for k in corrs:
         #if k < .1:
@@ -96,7 +105,7 @@ def main():
                 aggs.append ( [ v[0] ] )
                 aggs.append ( [ v[1] ] )
         if v[0] in done and not v[1] in done:
-            if k > frac:
+            if k > frac and not v[1] in excls and not v[0] in excls:
                 ## v0 is already in a region. lets add v1.
                 for a in aggs:
                     if v[0] in a:
