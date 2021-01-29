@@ -4,7 +4,7 @@
 a full blown script """
 
 import matplotlib.pyplot as plt
-import copy
+import copy, os
 import numpy
 import importlib
 import warnings
@@ -25,6 +25,24 @@ def convertNewAxes ( newa ):
         return axes[::-1]
     print ( "cannot convert this axis" )
     return None
+
+def getExclLine ( dirname, topo ):
+    """ retrieve validation file """
+    smsfile = dirname + "sms.root"
+    if not os.path.exists ( smsfile ):
+        print ( "[drawBestSRs] cannot find exclusion line. skip it." )
+        return None
+    import uproot
+    F = uproot.open(smsfile)
+    K = f"{topo}/obsExclusion_[[x, y], [x, y]];1" ## for now we hardcode this
+    if not K in F:
+        print ( f"[drawBestSRs] cannot find {K} in file. skip it." )
+        return None
+    graph = F[K]
+    x = graph.members["fX"]
+    y = graph.members["fY"]
+    return { "x": x,"y": y }
+
 
 def draw( validationfile, max_x, max_y ):
     """ plot.
@@ -51,6 +69,7 @@ def draw( validationfile, max_x, max_y ):
     p3 = validationfile.find("validation/")
     p4 = validationfile[p3+10:].find("_")
     topo = validationfile[p3+10+1:p3+p4+10]
+    line = getExclLine ( validationfile[:p3], topo )
     spec = importlib.util.spec_from_file_location( "output", validationfile )
     output_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(output_module)
@@ -155,6 +174,9 @@ def draw( validationfile, max_x, max_y ):
         else:
             i +=1
     plt.legend(handles, labels, loc="upper left" )
+    if line != None:
+        plt.plot ( line["x"], line["y"], linewidth=4, color="white" )
+        plt.plot ( line["x"], line["y"], linewidth=2, color="black" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
     if min(y)>1e-30 and max(y)<1e-1:
@@ -220,11 +242,11 @@ if __name__ == "__main__":
             help="upper bound on y axis [None]",
             type=float, default=None )
     argparser.add_argument ( "-a", "--analysis",
-            help="analysis name, like the directory name [CMS-EXO-13-006-eff]",
-            type=str, default="CMS-EXO-13-006-eff" )
+            help="analysis name, like the directory name [CMS-SUS-16-050-eff]",
+            type=str, default="CMS-SUS-16-050-eff" )
     argparser.add_argument ( "-v", "--validationfile",
-            help="validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]",
-            type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
+            help="validation file [T2tt_2EqMassAx_EqMassBy.py]",
+            type=str, default="T2tt_2EqMassAx_EqMassBy.py" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
