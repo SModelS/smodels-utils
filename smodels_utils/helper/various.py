@@ -46,6 +46,11 @@ def getPathName ( dbpath, analysis, valfile ):
         sys.exit()
     if len(files)>1:
         print ( "[plotRatio] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
+        for f in files[:2]:
+            p = f.rfind("/")
+            if p > 0:
+                f = f[p+1:]
+            print ( "[plotRatio] example filename: %s" % ( f ) )
         sys.exit()
     ipath = files[0]
     return ipath
