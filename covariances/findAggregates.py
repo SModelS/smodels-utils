@@ -116,8 +116,8 @@ def main():
                 done.append ( v[1] )
                 aggs.append ( [ v[1] ] )
         if v[1] in done and not v[0] in done:
-            if k > frac:
-                ## v0 is already in a region. can we add v1?
+            if k > frac and not v[0] in excls and not v[1] in excls:
+                ## v1 is already in a region. can we add v0?
                 for a in aggs:
                     if v[1] in a:
                         ## lets assume yes
