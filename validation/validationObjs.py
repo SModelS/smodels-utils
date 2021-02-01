@@ -696,6 +696,8 @@ class ValidationPlot():
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
+            if 'expected upper limit (fb)' in expRes:
+                Dict['eUL']=expRes["expected upper limit (fb)"]
             if "efficiency" in expRes.keys():
                 Dict["efficiency"] = expRes['efficiency']
             if expRes['dataType'] == 'efficiencyMap':
