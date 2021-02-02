@@ -24,7 +24,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-logger.setLevel(level=logging.ERROR)
+logger.setLevel(level=logging.WARNING)
 
 limitCache={}
 
@@ -230,6 +230,7 @@ class DatabaseCreator(list):
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
+        self._checkType()
 
     def createDatasets(self,datasetList,newDatasets):
         """
@@ -437,7 +438,6 @@ class DatabaseCreator(list):
                             txold.close()
                             setattr(tx,'validated',oldVal)
         return
-
 
     def _setImplementedBy(self):
 
@@ -696,6 +696,29 @@ class DatabaseCreator(list):
         vStr = vStr.replace('],[[','],\n[[')
 
         return vStr
+
+    def _checkType(self):
+        """
+        Check if the result depends on width. If it does and the field type has not been explicitly defined,
+        issue a warning.
+        """
+
+        hasWidths = False
+        for dataset in self:
+            for txname in dataset._txnameList:
+                for plane in txname._planes:
+                    #Simply look for parenthesis in the axes definitions:
+                    if '(' in str(plane.axes) and '(' in str(plane.axes):
+                        hasWidths = True
+                        break
+                if hasWidths:
+                    break
+            if hasWidths:
+                break
+
+        if hasWidths:
+            if not ('type' in self.metaInfo.__dict__):
+                logger.warning("The result appears to depend on width/lifetime, but the result type has not been defined. For displaced results, please define type = 'displaced' in globalInfo.")
 
 
 def round_list(x, n ):
