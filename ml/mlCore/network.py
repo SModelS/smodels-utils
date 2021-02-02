@@ -9,11 +9,15 @@ from smodels.tools.smodelsLogging import logger
 from scipy.special import inv_boxcox
 #from sklearn.preprocessing import MinMaxScaler
 
-def getNodesPerLayer(shape, nodes, layer, inputNum):
+def getNodesPerLayer(shape, nodes, layer, fullDim):
 
 	"""
-	Translates shape strings of parameter file into actual model architectures.
-	Since 'trap' has been a clear winner, this method is partially outdated and will be reworked for the final push
+	Translates shape parameter into nodes per layer
+
+	:param shape: (str) shape of the model: trap, lin, ramp
+	:param nodes: (int) number of nodes in largest layer
+	:param layer: (int) number of hidden layer
+	:param fullDim: (int) number of mass inputs
 
 	"""
 
@@ -64,7 +68,7 @@ def getNodesPerLayer(shape, nodes, layer, inputNum):
 			n_count += n[i]				
 
 		if lay == 0:
-			n[0] = inputNum
+			n[0] = fullDim
 		if lay == layer - 1:
 			n[1] = 1
 			n_count = 0
@@ -82,7 +86,7 @@ class DatabaseNetwork(nn.Module):
 
 	"""
 
-	def __init__(self, winner):#, scaler, lmbda):
+	def __init__(self, winner):
 
 		"""
 		Takes both best performing models of one analysis and stores them.
@@ -94,8 +98,10 @@ class DatabaseNetwork(nn.Module):
 		super(DatabaseNetwork, self).__init__()
 		self["regression"] = winner["regression"]["model"]
 		self["classification"] = winner["classification"]["model"]
-		#self.scaler = scaler
-		#self.lmbda = lmbda
+
+		self["regression"].trainingMode = False
+		self["classification"].trainingMode = False
+
 
 	def __setitem__(self, netType, model):
 		self.__dict__[netType] = model
@@ -118,9 +124,16 @@ class DatabaseNetwork(nn.Module):
 	def getSpeedFactor(self):
 		return self._speedFactor
 
-	def forward(self, x, rescaleTarget = True):
+	def forward(self, x):
 
-		#x = self.scaler.inverse_transform(inputs)
+		"""
+		Main method that is called with model(input)
+		Sends the input masses to the classification network. If the classifier outputs 1 (on hull) 
+		the masses get sent to the regression model for a target prediction
+
+		:param x: (tensor) input masses
+
+		"""
 		
 		if self["classification"] == None:
 			onHull = True
@@ -129,10 +142,6 @@ class DatabaseNetwork(nn.Module):
 
 		if onHull:
 			target = self["regression"](x)
-
-			#if rescaleTarget:
-			#	from scipy.special import inv_boxcox
-			#	target = inv_boxcox(target, self.lmbda)
 
 			return target
 		return 0.
@@ -173,7 +182,6 @@ class Net_cla(nn.Module):
 
 	"""
 	Classification network
-	More information will be added
 
 	"""
  
@@ -181,6 +189,7 @@ class Net_cla(nn.Module):
 
 		super(Net_cla, self).__init__()
 		self.seq = nn.Sequential()
+		self.trainingMode = True
 		self._delimiter = 0.
 		lastLayer = len(netShape) - 1
 
@@ -207,7 +216,6 @@ class Net_cla(nn.Module):
 			#elif i == 0:
 				#self.seq.add_module('drp{}'.format(i), nn.Dropout(0.2))			
 
-		#self._rescaleParameter = rescaleParameter
 
 	def setValidationLoss(self, meanError):
 		self._validationLoss = meanError
@@ -218,17 +226,15 @@ class Net_cla(nn.Module):
 	def setRescaleParameter(self, parameter):
 		self._rescaleParameter = parameter
 
-	#def setScaler(self,scaler):
-	#	self._scaler = scaler
-
-	#@property
-	#def scaler(self):
-	#	return self._scaler
 
 	def forward(self, x):#input_):
 
 		"""
+		Main method that is called with model(input)
+		Rescaling parameters are saved during training and should never be changed afterwards
+		Output is either (scaled) torch.tensor or unscaled np.array depending on whether model is in self.trainingMode
 
+		:param x: (tensor) input masses
 
 		"""
 
@@ -237,13 +243,13 @@ class Net_cla(nn.Module):
 		else:
 			method = None
 
-		if not self.training and method != None:
+		if not self.trainingMode and method != None:
 
 			x = x.detach().numpy()
 
 			if method == "minmaxScaler":
 
-				#x = [x.detach().tolist()] # <--- SKETCHY
+				x = [x] # <--- SKETCHY
 				scaler = self._rescaleParameter["masses"]["scaler"]
 				x = scaler.transform(x)
 
@@ -257,7 +263,7 @@ class Net_cla(nn.Module):
 
 		x = self.seq(x)
 		
-		if not self.training and self._delimiter != 0.:
+		if not self.trainingMode and self._delimiter != 0.:
 			for n in range(len(x)):
 				if self._delimiter < x[n]: x[n] = 1.
 				else: x[n] = 0.
@@ -269,7 +275,6 @@ class Net_reg(nn.Module):
 
 	"""
 	Regression network
-	More information will be added
 
 	"""
 
@@ -277,6 +282,7 @@ class Net_reg(nn.Module):
     	
 		super(Net_reg, self).__init__()
 		self.seq = nn.Sequential()
+		self.trainingMode = True
 
 		lastLayer = len(netShape) - 1
 
@@ -304,9 +310,6 @@ class Net_reg(nn.Module):
 			if isinstance(m, nn.Linear):
 				nn.init.xavier_normal_(m.weight)
 
-				#nn.init.xavier_uniform(m.weight)
-				#nn.init.normal(m.weight, mean=0, std=0.01)
-				#nn.init.constant(m.bias, 0)
 
 	def setValidationLoss(self, meanError):
 		self._validationLoss = meanError
@@ -322,7 +325,11 @@ class Net_reg(nn.Module):
 	def forward(self, x):
 
 		"""
+		Main method that is called with model(input)
+		Rescaling parameters are saved during training and should never be changed afterwards
+		Output is either (scaled) torch.tensor or unscaled np.array depending on whether model is in self.trainingMode
 
+		:param x: (tensor) input masses
 
 		"""
 
@@ -355,7 +362,7 @@ class Net_reg(nn.Module):
 		else:
 			method = None
 
-		if not self.training: # and method != None:
+		if not self.trainingMode: # and method != None:
 
 			x = x.detach().numpy()
 

@@ -471,7 +471,8 @@ def main(parameter, nettypes):
 
 	while(thingsToEvaluate.incrIndex):
 
-		parameter.loadExpres
+		if not parameter.loadExpres(): continue
+
 		builder = DatasetBuilder(parameter)
 
 		for nettype in nettypes: #,"classification"]:

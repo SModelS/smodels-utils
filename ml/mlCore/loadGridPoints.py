@@ -51,7 +51,6 @@ def loadInternalGridPoints(expres, txnameData, dataselector, signalRegion, singl
 			data = value
 			break
 
-	# endcopy #
 
 	origData, values = [], []
 

@@ -41,7 +41,7 @@ def main(parameter):
 		# load experimental data of current configuration. Stored in key "expres" and "txName" #
 		# ------------------------------------------------------------------------------------ #
 
-		parameter.loadExpres
+		if not parameter.loadExpres(): continue
 
 		# -------------------------------------------------------------- #
 		# load custom class that will generate our datasets for training #

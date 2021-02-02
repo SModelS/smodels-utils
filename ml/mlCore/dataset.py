@@ -20,26 +20,32 @@ from smodels.tools import physicsUnits
 from smodels.tools.smodelsLogging import logger
 from smodels.tools.physicsUnits import GeV, fb, pb
 
+
 class Data(Dataset):
 
 	"""
-	Holds the actual datasets in torch.tensor format for training and evaluation
+	Holds the actual datasets in torch.tensor format, can copy and split itself into subsets
 
 	"""
 
-	def __init__(self, dataset, inputDimension, device, rescaleInputs = False, rescaleLabels = False):
+	def __init__(self, dataset, device):
+
+		"""
+		:param dataset: (2dim list:float) or (tuple:list:float) masses and targets to be converted into torch.tensor format
+		:param device: (str) 'cpu' or 'gpu:n' n=0,1,... device to run torch on
+
+		"""
+
 
 		if isinstance(dataset, tuple):
+			inputDimension = len(dataset[0][0])
 			self.inputs = torch.tensor(dataset[0], dtype=torch.float64).to(device)
 			self.labels = torch.tensor(dataset[1], dtype=torch.float64).to(device)
 		else:
-			self.inputs = torch.tensor(dataset, dtype=torch.float64).narrow(1, 0, inputDimension).to(device) #.double().to(device)
-			self.labels = torch.tensor(dataset, dtype=torch.float64).narrow(1, inputDimension, 1).to(device) #.double().to(device)
+			inputDimension = len(dataset[0][:-1])
+			self.inputs = torch.tensor(dataset, dtype=torch.float64).narrow(1, 0, inputDimension).to(device)
+			self.labels = torch.tensor(dataset, dtype=torch.float64).narrow(1, inputDimension, 1).to(device)
 
-		#mean = torch.mean(self.inputs)	#[torch.mean(self.inputs), torch.mean(self.labels)]
-		#std = torch.std(self.inputs)	#[torch.std(self.inputs), torch.std(self.labels)]
-
-		#self.rescaleParameter = {"mean": mean, "std": std}
 		self.inputDimension = inputDimension
 		self.device = device
 
@@ -53,7 +59,7 @@ class Data(Dataset):
 		"""
 		Split dataset into subsets that inherit all parameter such as input dimension or device used.
 
-		:param sampleSplit: Instruction on how to split dataset. Sum of elements has to be 1 (list:float)
+		:param sampleSplit: (list:float) how to split dataset. sum of elements has to be 1 
 
 		"""
 
@@ -92,8 +98,7 @@ class DatasetBuilder():
 
 		"""
 		Sets up the dataset generation for a specific map
-		:param parameter: Holds all neccessary information to create or load datasets. Can be a simple dict, or the custom class introduced in 'readParameter.py'. If using a custom parameter dictionary make sure to include every key parsed in this init method. (dict:string/float)
-						
+		:param parameter: Holds all neccessary information to create or load datasets. Can be a simple dict, or the custom class introduced in 'readParameter.py'. If using a custom parameter dictionary make sure to include every key parsed in this init method. (dict:string/float)	
 
 		""" 
 
@@ -425,14 +430,16 @@ class DatasetBuilder():
 	def _drawRandomPointsRegression(self):
 
 		"""
-
+		Draws random sample points for regression dataset
+		1. add bias to each cluster to draw more points from high density regions
+		2. draw points for each cluster
 
 		"""
 
 		particles = [0 for _ in range(self.full_dim)]
 		tx = self.txnameData
 
-		rescaleInputs = tx.widthPosition != []
+		#rescaleInputs = tx.widthPosition != []
 
 		drawnMasses = []
 		drawnTargets = []
@@ -489,7 +496,12 @@ class DatasetBuilder():
 	def _drawRandomPointsClassification(self):
 
 		"""
-
+		Draws random sample points for classification dataset
+		1. get hull points
+		2. delauney triangulation for hull vertices only
+		3. PCA on hull points
+		4. draw points around hull edges
+		5. fill rest of dataset with random points of grid point clusters
 
 		"""
 
@@ -499,7 +511,7 @@ class DatasetBuilder():
 		tx = self.txnameData
 
 		width = tx.widthPosition
-		rescaleInputs = width != []
+		#rescaleInputs = width != []
 
 		drawnMasses = []
 		drawnTargets = []
@@ -590,10 +602,7 @@ class DatasetBuilder():
 		Generates datasets for training and evaluation and returns them as custom 'Data' class
 		1. reads original grid points and PCA's them to reduce dimensionality
 		2. mean-shift clusters PCA data to get points of high information density
-		if classification:
-			3. finds edges of original grid points
-			4. draw points around edges
-		5. draws points for each m-s cluster
+		3. draw random points
 
 		"""
 
@@ -628,9 +637,9 @@ class DatasetBuilder():
 		self.nettype = nettype
 
 		if not hasattr(self, "_gridPoints"):
-			self._loadGridPoints()
+			self._loadGridPoints()	
 
-		
+
 		if self.nettype == "regression":
 
 			if self.externalFile != None:
@@ -642,10 +651,10 @@ class DatasetBuilder():
 
 
 		elif self.nettype == "classification":
-			#self._drawRandomPoints()
+			self._drawRandomPoints()
 
-			self.masses = np.array(self._gridPoints)
-			self.targets = np.array(self._gridTargets)
+			#self.masses = np.array(self._gridPoints)
+			#self.targets = np.array(self._gridTargets)
 
 
 	def rescaleMasses(self, method = None):
@@ -789,7 +798,7 @@ class DatasetBuilder():
 				output["rescaleParams"] = {"masses": {"method": None}, "targets": {"method": None}}
 
 		if fullSet or splitSet:
-			full = Data((self.masses, self.targets), self.full_dim, self.device)
+			full = Data((self.masses, self.targets), self.device)
 
 		if fullSet:
 			output["full"] = full

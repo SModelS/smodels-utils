@@ -96,7 +96,6 @@ class PermutationDictionary():
 						paramIndex[key] = 0
 						endOfDict = True
 						done = key == lastKey
-						#if key == lastKey: done = True
 
 			if not done:
 				self.numOfCombinations += 1
@@ -119,7 +118,6 @@ class PermutationDictionary():
 
 	def __len__(self):
 		return self.numOfCombinations
-
 
 	def __getitem__(self, index):
 
@@ -167,7 +165,7 @@ class Parameter(dict):
 
 		self._parameter = {}
 
-		netTypes = ["regression","classification"]
+		netTypes = ["regression", "classification"]
 
 		for net in netTypes:
 			TrainingParameter[net] = TrainingParameter["hyparam"]
@@ -194,7 +192,7 @@ class Parameter(dict):
 					loadedValues[keyword] = param
 
 			else:
-				print("No '{}' section found. Skipping..".format(key)) #logger.info
+				print("no '{}' section found. Skipping..".format(key)) #logger.info
 				loadedValues = None
 
 
@@ -202,8 +200,8 @@ class Parameter(dict):
 
 
 		if not self._parameter["database"]["overwrite"][0] in ["always","never","outperforming"]:
-			self._parameter["database"]["overwrite"] = ["never"]
-			#logger.warning("Invalid overwrite parameter. Allowed options: 'always' 'never' and 'outperforming'. Setting parameter to 'never'")
+			self._parameter["database"]["overwrite"] = ["outperforming"]
+			print("invalid overwrite parameter. Allowed options: 'always' 'never' and 'outperforming'. Setting parameter to 'outperforming'") #logger.warning
 
 		self._parameter["database"] = PermutationDictionary(self._parameter["database"])
 		hyperParameter = {}
@@ -213,18 +211,6 @@ class Parameter(dict):
 		self._parameter["hyperParameter"] = hyperParameter
 
 
-		try: device = int(self["device"])
-		except: device = self["device"]
-		deviceCount = torch.cuda.device_count()
-		if isinstance(device, int) and torch.cuda.is_available() and device < deviceCount:
-			device = torch.device("cuda:" + str(device))
-			#logger.info("Running on GPU:%d" %device)
-		else:
-			device = torch.device("cpu")
-			#logger.info("Running on CPU")
-		self._parameter["computation"]["device"] = device
-
-		
 		self._parameter["pathing"]["smodelsPath"] = os.path.abspath(self["smodelsPath"])
 		self._parameter["pathing"]["utilsPath"] = os.path.abspath(self["utilsPath"])
 		self._parameter["pathing"]["databasePath"] = os.path.abspath(self["databasePath"])
@@ -236,9 +222,20 @@ class Parameter(dict):
 
 		import smodels.tools.smodelsLogging as log
 		log.setLogLevel(logLevel)
+		from smodels.tools.smodelsLogging import logger
+
+		try: device = int(self["device"])
+		except: device = self["device"]
+		deviceCount = torch.cuda.device_count()
+		if isinstance(device, int) and torch.cuda.is_available() and device < deviceCount:
+			device = torch.device("cuda:" + str(device))
+			logger.info("running on GPU:%d" %device)
+		else:
+			device = torch.device("cpu")
+			logger.info("running on CPU")
+		self._parameter["computation"]["device"] = device
 
 
-	@property
 	def loadExpres(self):
 
 		"""
@@ -251,17 +248,21 @@ class Parameter(dict):
 		dataSelector = self["dataselector"]
 		signalRegion = self["signalRegion"]
 
-		expres = self["smodels-db"].getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
-		txList = expres.getDataset(signalRegion).txnameList #"SR1FULL_175"
+		try:
+			expres = self["smodels-db"].getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
+			txList = expres.getDataset(signalRegion).txnameList
+		except:
+			print("No result found for %s: %s [%s] (%s)" % (analysis, txName, signalRegion, dataSelector))
+			return False
 
 		for tx in txList:
 			if str(tx) == txName:
-				#txNameData = tx.txnameData
 				break
 
 		self._parameter["expres"] = expres
 		self._parameter["txName"] = tx
-		#self._parameter["txNameData"] = txNameData
+
+		return True
 
 		
 	def set(self, key, value):

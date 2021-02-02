@@ -34,6 +34,7 @@ class ModelTrainer():
 
 		:param parameter: Custom parameter dictionary holding all meta and hyper param informations
 		:param dataset: dict of customized torch Dataset classes for training, testing and validation
+
 		"""
 
 		self.dataset = dataset
@@ -69,8 +70,6 @@ class ModelTrainer():
 
 		"""
 
-		##logger.info("Starting grid search for %s: %s (%s)" % (self.paramDatabase["analysisID"], self.paramDatabase["txName"], self.netType))
-
 		self.hyper.resetIndex
 		while(self.hyper.incrIndex):
 
@@ -104,6 +103,7 @@ class ModelTrainer():
 		the validation set.
 
 		:param secondRun: rerun model training with subset of inaccurate dataset predictions
+
 		"""
 
 		self.model = createNet(self.hyper[-1], self.rescaleParameter, self.full_dim, self.type).double().to(self.device)
@@ -116,15 +116,10 @@ class ModelTrainer():
 		
 		self.meanError = getModelError(self.model, self.validation, self.type)[0]
 
-		print(self.type)
 		if self.type == "classification":
 			predictions, labels = self.model(self.validation.inputs).detach().numpy(), self.validation.labels.detach().numpy()
 			self.model._delimiter = minimize(self._findDelimiter, 0.5, args=(predictions, labels), method="Powell").x.tolist()
 
-		#	predictions, labels = self.model(self.validationSet.inputs).detach().numpy(), self.validationSet.labels.detach().numpy()
-		
-		#	#lossFunction = loadLossFunction(self.currentHyperParamConfig["lossFunction"], self.device)
-		#	#self.meanError = lossFunction(self.model(self.validationSet.inputs), self.validationSet.labels)
 
 
 	def trainModel(self, optimizer = None, lossFunction = None, batchSize = 0, epochNum = 0, training = None, testing = None):
@@ -137,8 +132,8 @@ class ModelTrainer():
 
 		if training == None:  	training	  = self.training
 		if testing == None: 	 testing 	  = self.testing
-		if batchSize == 0: 		 batchSize 	  = self.hyper["batchSize"] #self.currentHyperParamConfig
-		if epochNum == 0: 		 epochNum 	  = self.hyper["epochNum"]  #self.currentHyperParamConfig
+		if batchSize == 0: 		 batchSize 	  = self.hyper["batchSize"]
+		if epochNum == 0: 		 epochNum 	  = self.hyper["epochNum"]
 		if optimizer == None: 	 optimizer 	  = loadOptimizer(self.hyper["optimizer"], self.model, self.hyper["learnRate"])
 		if lossFunction == None: lossFunction = loadLossFunction(self.hyper["lossFunction"], self.device)
 
@@ -172,9 +167,6 @@ class ModelTrainer():
 
 				self.epochLoss["training"].append(trainingLoss)
 				self.epochLoss["testing"].append(testingLoss)
-							
-				#self.lossPerEpoch['training'].append(trainingLoss.item())
-				#self.lossPerEpoch['testing'].append(testingLoss.item())
 									
 				if testingLoss < bestLossLocal:
 					bestLossLocal  = testingLoss
@@ -182,7 +174,6 @@ class ModelTrainer():
 					#bestEpochLocal = epoch
 			
 			if getLogLevel() <= 20: # 20 == info
-				#print("\repoch: %d/%d | loss: %f (%f)     " %(epoch+1,epochNum, round(bestLossLocal.item(), 5), round(testingLoss.item(), 5)), end = "" if epoch+1 < epochNum else "\n")
 				print("\repoch: %d/%d | loss: %f (%f) %s %s   " %(epoch+1,epochNum, bestLossLocal, testingLoss, loss1.item(), beta*loss2.item()), end = "" if epoch+1 < epochNum else "\n")
 
 		self.model = bestModelLocal
@@ -200,23 +191,16 @@ class ModelTrainer():
 		whichset = self.dataset #self.training
 
 		error = getModelError(self.model, whichset, self.type, returnMean = False)
-		print(error)
 		subset = []
-		#newInputs = []
-		#newLabels = []
 
 		for n,e in enumerate(error):
 
 			if e > maxError:
-				#newInputs.append(i.item() for i in whichset.inputs[n])
-				#newLabels.append(whichset.labels[n].item())
 				raw = [i.item() for i in whichset.inputs[n]]
 				raw.append(whichset.labels[n].item())
 				subset.append(raw)
 
-		subset = Data(subset, self.full_dim, self.device)
-		#subset = Data((newInputs, newLabels), self.full_dim, self.device)
-		print(len(subset))
+		subset = Data(subset, self.device)
 		return subset
 
 
@@ -247,7 +231,7 @@ class ModelTrainer():
 	def saveLossPlot(self):
 
 		"""
-		Plot and save loss progression over training epochs of winning model.
+		Plot and save loss progression over training epochs of best performing model.
 
 		"""
 
@@ -264,12 +248,7 @@ class ModelTrainer():
 		trainingLoss = self.winner["epochLoss"]["training"]
 		testingLoss = self.winner["epochLoss"]["testing"]
 
-		e = [n+1 for n in range(len(trainingLoss))]
-		x = trainingLoss
-		y = testingLoss
-
-		#fig = 11
-		#if self.type == "classification": fig += 1
+		epo = [n+1 for n in range(len(trainingLoss))]
 
 		title = "epoch loss for %s:%s" % (str(self.txnameData), self.type)
 
@@ -277,8 +256,8 @@ class ModelTrainer():
 		plt.title(title, fontsize=20)
 		plt.xlabel("epoch")
 		plt.ylabel("loss")
-		plt.plot(e, x, label = "training set")
-		plt.plot(e, y, label = "testing set")
+		plt.plot(epo, trainingLoss, label = "training set")
+		plt.plot(epo, testingLoss, label = "testing set")
 		plt.legend()
 		plt.savefig(path)
 		plt.close(11)
