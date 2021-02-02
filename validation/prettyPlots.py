@@ -40,7 +40,8 @@ TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
 def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
-                      looseness = 1.2, style = "", legendplacement = "top right" ):
+                      looseness = 1.2, style = "", legendplacement = "top right",
+                      drawExpected = True ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
@@ -52,6 +53,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     :param style: allow for styles, currently "", and "sabine"
     :param legendplacement: placement of legend. One of:
                       "automatic", "top right", "top left"
+    :param drawExpected: if true, then draw also lines for expected limits
     :return: TCanvas object containing the plot
     """
 
@@ -70,6 +72,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         ## sys.exit()
     # Get excluded and allowed points:
     condV = 0
+    hasExpected = False
     for pt in validationPlot.data:
         #if "error" in pt.keys():
         #    continue
@@ -95,6 +98,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         if not "error" in pt.keys():
             r = pt['signal']/pt ['UL']
             if "eUL" in pt:
+                hasExpected = True
                 rexp = pt['signal']/pt ['eUL']
         if r > 3.:
             r=3.
@@ -126,7 +130,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             if not "error" in pt.keys():
                 tgr.SetPoint(tgr.GetN(), x, y, r)
                 etgr.SetPoint(etgr.GetN(), x, y, rexp )
-
+    if drawExpected in [ "auto" ]:
+        drawExpected = hasExpected
     if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
         return (None,None)
@@ -262,8 +267,12 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
+    if drawExpected:
+        contVals = [1.,1.,1.]
     cgraphs = getContours(tgr,contVals)
-    # cgraphs = getContours(etgr,contVals)
+    ecgraphs = {}
+    if drawExpected:
+        ecgraphs = getContours(etgr,contVals)
 
     #Draw temp plot:
     h = tgr.GetHistogram()
@@ -310,6 +319,16 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         for gr in grlist:
             setOptions(gr, Type='official')
             gr.SetLineColor(kGray+2)
+            gr.SetLineStyle(ls)
+            gr.Draw("L SAME")
+    for cval,grlist in ecgraphs.items():
+        if cval == 1.0:
+            ls = 2
+        else:
+            continue
+        for gr in grlist:
+            setOptions(gr, Type='official')
+            gr.SetLineColor(kRed)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
     if official:
@@ -383,8 +402,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         elif legendplacement == "top right": # then we move to top right with this
             lsub.DrawLatex(.15,.79,subtitle)
         else:
-            lsub.DrawLatex(.57,.79,subtitle)
-            # lsub.DrawLatex(.15,.79,subtitle)
+            # lsub.DrawLatex(.57,.79,subtitle)
+            lsub.DrawLatex(.15,.79,subtitle)
     else:
         lsub.SetTextAlign(31)
         # lsub.SetTextSize(.025)
@@ -433,6 +452,17 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
             hasExclLines = True
             added = True
+    if drawExpected:
+        for cval,grlist in ecgraphs.items():
+            if not grlist:
+                continue
+            if cval == 1.0:
+                leg.AddEntry(grlist[0],"exp. excl (SModelS)","L")
+                hasExclLines = True
+            elif (cval == looseness or cval == 1./looseness) and not added:
+                leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
+                hasExclLines = True
+                added = True
     if official != None:
         added = False
         for gr in official:
@@ -445,7 +475,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                 added = True
         for gr in expectedOfficialCurves:
             if 'xclusion_' in gr.GetTitle():
-                leg.AddEntry(gr,"exp. excl. (off.)","L")
+                leg.AddEntry(gr,"exp. excl. (official)","L")
                 hasExclLines = True
             elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
                 leg.AddEntry(gr,"#pm1#sigma (official)","L")

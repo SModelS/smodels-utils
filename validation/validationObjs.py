@@ -54,7 +54,7 @@ class ValidationPlot():
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default",
-                 style = "", legendplacement = "top right" ):
+                 style = "", legendplacement = "top right", drawExpected = True ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
@@ -65,10 +65,14 @@ class ValidationPlot():
         self.txName = TxNameStr
         self.axes = Axes.strip()
         self.style = style
+        self.drawExpected = drawExpected
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
-        self.officialCurves = self.getOfficialCurve( get_all = True, expected = False )
+        if self.drawExpected:
+            self.officialCurves = [ self.getOfficialCurve( get_all = False, expected = False ) ]
+        else:
+            self.officialCurves = self.getOfficialCurve( get_all = True, expected = False )
         self.expectedOfficialCurves = [ self.getOfficialCurve( get_all = False, expected = True ) ]
         self.kfactor = kfactor
         self.limitPoints = limitPoints
@@ -702,6 +706,8 @@ class ValidationPlot():
                     'dataset': expRes['DataSetID'] }
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
+                if self.drawExpected == "auto":
+                    self.drawExpected = True
             if "efficiency" in expRes.keys():
                 Dict["efficiency"] = expRes['efficiency']
             if expRes['dataType'] == 'efficiencyMap':
@@ -770,8 +776,8 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
-                               preliminary=self.preliminary,
-                               style = self.style, legendplacement = self.legendplacement )
+                   preliminary=self.preliminary, style = self.style, 
+                   legendplacement = self.legendplacement, drawExpected = self.drawExpected )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """

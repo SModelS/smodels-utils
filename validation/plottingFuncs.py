@@ -665,7 +665,7 @@ def getContours(tgraph,contVals):
         curv = contLevel.First()
         cgraphs[cVals[i]] = []
         for j in range(contLevel.GetSize()):
-            cgraphs[cVals[i]].append(curv)
+            cgraphs[cVals[i]].append(curv.Clone() )
             curv = contLevel.After(curv)
 
     return cgraphs
