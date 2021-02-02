@@ -18,8 +18,9 @@ try:
 except:
     from backwardCompatibility import addUnit,rescaleWidth
 
-from plottingFuncs import createUglyPlot, getExclusionCurvesFor
+from plottingFuncs import getExclusionCurvesFor
 from prettyPlots import createPrettyPlot
+from uglyPlots import createUglyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError

@@ -20,17 +20,12 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import yIsLog, getFigureUrl
+from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
 except:
     pass
-try:
-    from smodels.theory.auxiliaryFunctions import removeUnits
-except:
-    from backwardCompatibility import removeUnits
-
 
 #Set nice ROOT color palette for temperature plots:
 stops = [0.00, 0.34, 0.61, 0.84, 1.00]
@@ -61,7 +56,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     """
 
     # Check if data has been defined:
-    tgr = TGraph2D()
+    tgr, etgr = TGraph2D(), TGraph2D()
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
     logY = yIsLog ( validationPlot )
@@ -96,11 +91,15 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             logger.warning( "no UL for %s" % xvals )
-        r = float("nan")
+        r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             r = pt['signal']/pt ['UL']
+            if "eUL" in pt:
+                rexp = pt['signal']/pt ['eUL']
         if r > 3.:
             r=3.
+        if rexp > 3.:
+            rexp=3.
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
@@ -126,6 +125,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         else:
             if not "error" in pt.keys():
                 tgr.SetPoint(tgr.GetN(), x, y, r)
+                etgr.SetPoint(etgr.GetN(), x, y, rexp )
 
     if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
@@ -164,6 +164,37 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
+    if etgr.GetYmax() == etgr.GetYmin():
+        logger.info("1d data detected, smearing Y values")
+        etgrN = etgr.GetN()
+        buff = etgr.GetX()
+        buff.SetSize(etgrN)
+        xpts = numpy.frombuffer(buff,count=etgrN)
+        buff = etgr.GetY()
+        buff.SetSize(etgrN)
+        ypts = numpy.frombuffer(buff,count=etgrN)
+        buff = etgr.GetZ()
+        buff.SetSize(etgrN)
+        zpts = numpy.frombuffer(buff,count=etgrN)
+        for i in range(etgrN):
+            etgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
+    if etgr.GetXmax() == etgr.GetXmin():
+        logger.info("1d data detected, smearing X values")
+        buff = etgr.GetX()
+        buff.reshape((etgr.GetN(),))
+        #buff.SetSize(sys.maxsize)
+        #print ( "count", etgr.GetN(), type(buff), buff.shape )
+        xpts = numpy.frombuffer(buff,count=etgr.GetN())
+        buff = etgr.GetY()
+        buff.reshape((etgr.GetN(),))
+        #buff.SetSize(sys.maxsize)
+        ypts = numpy.frombuffer(buff,count=etgr.GetN())
+        buff = etgr.GetZ()
+        buff.reshape((etgr.GetN(),))
+        #buff.SetSize(sys.maxsize)
+        zpts = numpy.frombuffer(buff,count=etgr.GetN())
+        for i in range(etgr.GetN()):
+            etgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
 
     expectedOfficialCurves = None
     # Check if official exclusion curve has been defined:
@@ -208,6 +239,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
 
     if silentMode: gROOT.SetBatch()
     setOptions(tgr, Type='allowed')
+    setOptions(etgr, Type='allowed')
     title = validationPlot.expRes.globalInfo.id
     types = []
     for dataset in validationPlot.expRes.datasets:
@@ -231,6 +263,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
     cgraphs = getContours(tgr,contVals)
+    # cgraphs = getContours(etgr,contVals)
 
     #Draw temp plot:
     h = tgr.GetHistogram()
@@ -347,8 +380,11 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         lsub.SetTextSize(.037)
         if legendplacement == "top left": # then we move to top right with this
             lsub.DrawLatex(.57,.79,subtitle)
-        else:
+        elif legendplacement == "top right": # then we move to top right with this
             lsub.DrawLatex(.15,.79,subtitle)
+        else:
+            lsub.DrawLatex(.57,.79,subtitle)
+            # lsub.DrawLatex(.15,.79,subtitle)
     else:
         lsub.SetTextAlign(31)
         # lsub.SetTextSize(.025)
@@ -377,10 +413,13 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         sys.exit(-1)
     leg = TLegend() ## automatic placement
     if legendplacement == "top right":
-        leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
-    if legendplacement == "top left":
-        leg = TLegend(0.15,0.75-0.040*nleg,0.495,0.83)
+        leg = TLegend(0.23+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    elif legendplacement == "top left":
+        leg = TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
+    else:
+        leg = TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
     setOptions(leg)
+    leg.SetMargin(.13)
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
     added = False
@@ -432,356 +471,3 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         ans = raw_input("Hit any key to close\n")
 
     return plane,tgr
-
-def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
-                    signal_factor =1.):
-    """
-    Uses the data in validationPlot.data and the official exclusion curve
-    in validationPlot.officialCurves to generate temperature plots, showing
-    e.g. upper limits or R values
-
-    :param validationPlot: ValidationPlot object
-    :param silentMode: If True the plot will not be shown on the screen
-    :param what: what is to be plotted ("upperlimits", "crosssections", "R")
-    :param nthpoint: label only every nth point
-    :param signal_factor: an additional factor that is multiplied with the signal cross section.
-     Makes it easier to account for multiplicative factors, like K-factors.
-    :return: TCanvas object containing the plot
-    """
-    kfactor=None
-
-    grTemp = TGraph2D()
-    excluded = TGraph()
-    if not validationPlot.data:
-        logger.warning("Data for validation plot is not defined.")
-        return None
-    else:
-        # Get points:
-        for pt in validationPlot.data:
-            if kfactor == None:
-                kfactor = pt['kfactor']
-            if abs(kfactor - pt['kfactor'])> 1e-5:
-                logger.error("kfactor not a constant throughout the plane!")
-                sys.exit()
-
-            if isinstance(pt['axes'],dict):
-                if len(pt['axes']) == 1:
-                    x, y = pt['axes']['x'], pt['signal']/pt['UL']
-                else:
-                    x, y = pt['axes']['x'],pt['axes']['y']
-            else:
-                x,y = pt['axes']
-            pt['signal'] = pt['signal']*signal_factor
-            if what == 'R':
-                z = pt['signal']/pt['UL']
-            elif what == 'upperlimits':
-                z = pt['UL'].asNumber(pb)
-            elif what == 'crosssections':
-                z = pt['signal'].asNumber(pb)
-            else:
-                logger.error("Unknown plotting variable: %s" %what)
-                return None
-            grTemp.SetPoint(grTemp.GetN(),x,y,z)
-            if pt['signal'] > pt['UL']:
-                excluded.SetPoint(excluded.GetN(), x, y )
-
-    zlabel = ""
-    if what == "R":
-        zlabel = "#sigma_{theory}/#sigma_{UL}"
-    elif what == "crosssections":
-        zlabel="Theory Predictions [pb]"
-    elif what == "upperlimits":
-        zlabel = "Upper Limits [pb]"
-
-    # Check if official exclusion curve has been defined:
-    if not validationPlot.officialCurves:
-        logger.warning("Official curve for validation plot is not defined.")
-        official = None
-    else:
-        official = validationPlot.officialCurves
-        if isinstance(official,list): official = official[0]
-    #Get envelopes:
-    exclenvelop = TGraph(getEnvelope(excluded))
-    setOptions(exclenvelop, Type='excluded')
-
-    if silentMode: gROOT.SetBatch()
-    setOptions(grTemp, Type='temperature')
-    if official:
-        setOptions(official, Type='official')
-
-    base = grTemp
-    title = validationPlot.expRes.globalInfo.id + "_" \
-            + validationPlot.txName\
-            + "_" + validationPlot.niceAxes
-            # + "_" + validationPlot.axes
-    figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
-    plane.SetRightMargin(0.16)
-    plane.SetLeftMargin(0.15)
-    plane.SetBottomMargin(0.15)
-    set_palette(gStyle)
-    h = grTemp.GetHistogram()
-    setOptions(h, Type='temperature')
-    h.Draw("COLZ")
-    h.GetZaxis().SetTitle(zlabel)
-    if official:
-        official.Draw("SAMEL")
-    exclenvelop.Draw("SAMEL")
-    base.SetTitle(title)
-    if figureUrl:
-        figUrl=TLatex()
-        figUrl.SetNDC()
-        figUrl.SetTextSize(.02)
-        """figUrl.DrawLatex(.12,.1,"%s" % figureUrl)"""
-        base.figUrl = figUrl
-    if abs(signal_factor-1.0)>.0001:
-        sigFac=TLatex()
-        sigFac.SetNDC()
-        sigFac.SetTextSize(.04)
-        sigFac.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
-        base.sigFac = sigFac
-    leg = TLegend(0.5,0.5,0.7,0.7,"")
-    leg.AddEntry(official,"Official Exclusion","L")
-    leg.Draw()
-
-    plane.base = base
-    plane.official = official
-
-    if not silentMode:
-        ans = raw_input("Hit any key to close\n")
-    plane.Print("test.png")
-
-    return plane
-
-
-def setOptions(obj,Type=None):
-    """
-    Define global options for the plotting object according to its type.
-    :param obj: a plotting object (TGraph, TMultiGraph, TCanvas,...)
-    :param type: a string defining the object (allowed, excluded, official,...)
-    """
-
-    #Defaul settings:
-    if isinstance(obj,TCanvas):
-        obj.SetLeftMargin(0.1097891)
-        obj.SetRightMargin(0.02700422)
-        obj.SetTopMargin(0.02796053)
-        obj.SetBottomMargin(0.14796053)
-        obj.SetFillColor(0)
-        obj.SetBorderSize(0)
-        obj.SetFrameBorderMode(0)
-    elif isinstance(obj,TGraph):
-        obj.GetYaxis().SetTitleFont(132)
-        obj.GetYaxis().SetTitleSize(0.075)
-        obj.GetYaxis().CenterTitle(True)
-        obj.GetYaxis().SetTitleOffset(1.15)
-        obj.GetXaxis().SetTitleFont(132)
-        obj.GetXaxis().SetTitleSize(0.075)
-        obj.GetXaxis().CenterTitle(True)
-        obj.GetXaxis().SetTitleOffset(1.2)
-        obj.GetYaxis().SetLabelFont(132)
-        obj.GetXaxis().SetLabelFont(132)
-        obj.GetYaxis().SetLabelSize(0.055)
-        obj.GetXaxis().SetLabelSize(0.06)
-    elif isinstance(obj,TLegend):
-        obj.SetBorderSize(1)
-        obj.SetMargin(0.35)
-        obj.SetTextFont(132)
-        obj.SetTextSize(0.05)
-        obj.SetLineColor(kBlack)
-        obj.SetLineStyle(1)
-        obj.SetLineWidth(1)
-        obj.SetFillColorAlpha(kWhite,.7)
-        obj.SetFillStyle(1001)
-    elif isinstance(obj,TGraph2D) or isinstance(obj,TH2D):
-        obj.GetZaxis().SetTitleFont(132)
-        obj.GetZaxis().SetTitleSize(0.06)
-        obj.GetZaxis().CenterTitle(True)
-        obj.GetZaxis().SetTitleOffset(0.7)
-        obj.GetZaxis().SetLabelFont(132)
-        obj.GetZaxis().SetLabelSize(0.05)
-        obj.GetYaxis().SetTitleFont(132)
-        obj.GetYaxis().SetTitleSize(0.075)
-        obj.GetYaxis().CenterTitle(True)
-        obj.GetYaxis().SetTitleOffset(1.15)
-        obj.GetXaxis().SetTitleFont(132)
-        obj.GetXaxis().SetTitleSize(0.075)
-        obj.GetXaxis().CenterTitle(True)
-        obj.GetXaxis().SetTitleOffset(1.2)
-        obj.GetYaxis().SetLabelFont(132)
-        obj.GetXaxis().SetLabelFont(132)
-        obj.GetYaxis().SetLabelSize(0.055)
-        obj.GetXaxis().SetLabelSize(0.06)
-
-#Type-specific settings:
-    if not Type: return True
-    elif Type == 'allowed':
-        obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kGreen)
-    elif Type == 'gridpoints':
-        obj.SetMarkerStyle(28)
-        markersize=.1 ## super small for > 155555
-        ngpoints = obj.GetN()
-        if ngpoints < 1500:
-            markersize = .15
-        if ngpoints < 1000:
-            markersize = .25
-        if ngpoints < 500:
-            markersize = .45
-        if ngpoints < 150:
-            markersize = .7
-        if ngpoints < 50:
-            markersize = .9
-        obj.SetMarkerSize(markersize)
-        obj.SetMarkerColorAlpha(kBlue,.5)
-    elif Type == 'noresult':
-        obj.SetMarkerStyle(20)
-        obj.SetMarkerSize(.5)
-        obj.SetMarkerColor(kGray)
-    elif Type == 'cond_violated':
-        obj.SetMarkerStyle(23)
-        obj.SetMarkerColor(kGreen)
-    elif Type == 'excluded':
-        obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kRed)
-#        obj.SetFillColorAlpha(kRed,0.15)
-        obj.SetLineColor(kRed)
-        obj.SetLineWidth(4)
-        obj.SetLineStyle(2)
-    elif Type == 'allowed_border':
-        obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kGreen+3)
-    elif Type == 'excluded_border':
-        obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kOrange+1)
-    elif Type == 'official':
-        obj.SetLineWidth(3)
-        obj.SetLineColor(kBlack)
-    elif Type == 'smodels':
-        obj.SetLineWidth(4)
-        obj.SetLineColor(kRed)
-    elif Type == 'temperature':
-        obj.SetMarkerStyle(20)
-        obj.SetMarkerSize(1.5)
-        obj.SetTitle("")
-    elif Type == 'pretty':
-        obj.GetXaxis().SetTitleFont(12)
-        obj.GetXaxis().SetTitleOffset(0.7)
-        obj.GetYaxis().SetTitleFont(12)
-        obj.GetYaxis().SetTitleOffset(0.8)
-        obj.GetZaxis().CenterTitle()
-        obj.GetZaxis().SetTitleOffset(1.05)
-        obj.GetXaxis().SetLabelSize(0.045)
-        obj.GetYaxis().SetLabelSize(0.045)
-        obj.GetZaxis().SetLabelSize(0.04)
-        obj.GetXaxis().SetTitleSize(0.06)
-        obj.GetYaxis().SetTitleSize(0.06)
-        obj.GetZaxis().SetTitleSize(0.051)
-
-
-def getContours(tgr,contVals):
-    """
-    Returns a list of TGraphs containing the curves corresponding to the
-    contour values contVals from the input TGraph2D object
-    :param tgr: ROOT TGraph2D object containing the x,y,r points
-    :param contVals: r-values for the contour graphs
-
-    :return: a dictionary, where the keys are the contour values
-             and the values are a list of TGraph objects containing the curves
-             for the respective contour value (e.g. {1. : [TGraph1,TGraph2],...})
-    """
-
-    if tgr.GetN() == 0:
-        logger.info("No excluded points found for %s" %tgr.GetName())
-        return None
-
-    cVals = sorted(contVals)
-    if tgr.GetN() < 4:
-        print ( "Error: Cannot create a contour with fewer than 3 input vertices" )
-        return None
-    h = tgr.GetHistogram()
-    #Get contour graphs:
-    c1 = TCanvas()
-    h.SetContour(3,array('d',cVals))
-    h.Draw("CONT Z LIST")
-    c1.Update()
-    clist = gROOT.GetListOfSpecials().FindObject("contours")
-    cgraphs = {}
-    for i in range(clist.GetSize()):
-        contLevel = clist.At(i)
-        curv = contLevel.First()
-        cgraphs[cVals[i]] = []
-        for j in range(contLevel.GetSize()):
-            cgraphs[cVals[i]].append(curv)
-            curv = contLevel.After(curv)
-
-    return cgraphs
-
-def getEnvelope(excludedGraph):
-    """
-    Tries to return the envelope curve of the points in the
-    excluded graph (ROOT TGraph).
-    :param excludedGraph: ROOT TGraph object containing the excluded points.
-    :return: a TGraph object containing the envelope curve
-    """
-    if excludedGraph.GetN() == 0:
-        logger.info("No excluded points found for %s" %excludedGraph.GetName())
-        return excludedGraph
-
-    envelop = TGraph()
-    envelop.SetName("envelope")
-    curve = TGraph(excludedGraph)
-    curve.Sort()
-    # x1, y1 = Double(), Double()
-    x1, y1 = ctypes.c_double(), ctypes.c_double()
-    curve.GetPoint(0, x1, y1)
-    yline = []
-    for ipt in range(curve.GetN() + 1):
-        # x, y = Double(), Double()
-        x, y = ctypes.c_double(), ctypes.c_double()
-        dmin = 0.
-        if ipt < curve.GetN(): curve.GetPoint(ipt, x, y)
-        if ipt != curve.GetN() and x == x1: yline.append(y)
-        else:
-            yline = sorted(yline, reverse = True)
-            dy = [abs(yline[i] - yline[i + 1]) for i in range(len(yline) - 1)]
-            if len(yline) <= 3 or envelop.GetN() == 0:
-                newy = max(yline)
-                if len(dy) > 2: dmin = min([abs(yline[i] - yline[i + 1]) for i in range(len(yline) - 1)])
-            else:
-                newy = max(yline)
-        #        dmin = min(dy)
-                dmin = sum(dy) / float(len(dy))
-                for iD in range(len(dy) - 1):
-                    if dy[iD] <= dmin and dy[iD + 1] <= dmin:
-                        newy = yline[iD]
-                        break
-            envelop.SetPoint(envelop.GetN(), x1, newy + dmin/2.)
-            x1 = x
-            yline = [y]
-
-    # x2, y2 = Double(), Double()
-    x2, y2 = ctypes.c_double(), ctypes.c_double()
-    envelop.GetPoint(envelop.GetN() - 1, x2, y2)
-    envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
-    return envelop
-
-def set_palette(gStyle, ncontours=999):
-    """Set a color palette from a given RGB list
-    stops, red, green and blue should all be lists of the same length
-    see set_decent_colors for an example"""
-
-    # default palette, looks cool
-    stops = [0.00, 0.34, 0.61, 0.84, 1.00]
-    red   = [0.00, 0.00, 0.87, 1.00, 0.51]
-    green = [0.00, 0.81, 1.00, 0.20, 0.00]
-    blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
-
-    s = array('d', stops)
-    r = array('d', red)
-    g = array('d', green)
-    b = array('d', blue)
-
-    npoints = len(s)
-    TColor.CreateGradientColorTable(npoints, s, r, g, b, ncontours)
-    gStyle.SetNumberContours(ncontours)
