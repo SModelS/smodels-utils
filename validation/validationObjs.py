@@ -18,7 +18,8 @@ try:
 except:
     from backwardCompatibility import addUnit,rescaleWidth
 
-from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
+from plottingFuncs import createUglyPlot, getExclusionCurvesFor
+from prettyPlots import createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -66,7 +67,8 @@ class ValidationPlot():
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
-        self.officialCurves = self.getOfficialCurve( get_all = True )
+        self.officialCurves = self.getOfficialCurve( get_all = True, expected = False )
+        self.expectedOfficialCurves = [ self.getOfficialCurve( get_all = False, expected = True ) ]
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
@@ -275,7 +277,7 @@ class ValidationPlot():
 
         """
         import ROOT
-        curve = self.getOfficialCurve( get_all = False )
+        curve = self.getOfficialCurve( get_all = False, expected = False )
         if not curve:
             logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
             return 1.0
@@ -377,17 +379,18 @@ class ValidationPlot():
             logger.error("%s is not a file nor a folder" %self.slhaDir)
             sys.exit()
 
-    def getOfficialCurve(self, get_all=True ):
+    def getOfficialCurve(self, get_all=True, expected = False ):
         """
         Reads the root file associated to the ExpRes and
         obtain the experimental exclusion curve for the corresponding TxName and Axes.
 
         :param get_all: get also the +- 1 sigma curves
+        :param expected: if true, get expected instead of observed
 
         :return: a root TGraph object
         """
         tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
-                                           axes=self.axes, get_all = get_all )
+                                  axes=self.axes, get_all = get_all, expected=expected )
         if not tgraphDict: return None
         tgraph = tgraphDict[self.txName]
         if get_all:
