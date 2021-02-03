@@ -22,7 +22,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
                   preliminary=False, combine=False,pngAlso = False,
                   weightedAgreementFactor = True, model = "default",
-                  style = "", legendplacement = "top right", drawExpected = True ):
+                  style = "", legendplacement = "top right", drawExpected = True,
+                  namedTarball = None ):
     """
     Creates a validation plot and saves its output.
 
@@ -59,6 +60,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   top left corner of temperature p lot in pretty print
     :param legendplacement: placement of legend. One of: top right, top left, auto
     :param drawExpected: if True, then draw also expected lines
+    :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :return: True on success
     """
 
@@ -68,7 +70,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
                     combine=combine, weightedAgreementFactor = weightedAgreementFactor,
                     model = model, style= style, legendplacement = legendplacement,
-                    drawExpected = drawExpected )
+                    drawExpected = drawExpected, namedTarball = namedTarball )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -141,12 +143,14 @@ def run ( expResList, axis, pretty, generateData ):
             txnameStr = txname.txName
             txt0 = time.time()
             logger.info("------ \033[31m validating  %s \033[0m" %txnameStr)
+            namedTarball = None
             if not tarfiles:
                 tarfile = txnameStr+".tar.gz"
             else:
                 tarfile = os.path.basename(tarfiles[itx])
             if hasattr ( txname, "validationTarball" ):
                 tarfile = txname.validationTarball
+                namedTarball = tarfile
                 logger.info("Database entry specifies a validation tarball: %s. Will use it." % tarfile )
             tarfile = os.path.join(slhadir,tarfile)
 
@@ -170,10 +174,10 @@ def run ( expResList, axis, pretty, generateData ):
                     doGenerate = generateData # local flag
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                     doGenerate,limitPoints,extraInfo,preliminary,
-                                     combine, pngAlso, weightedAgreementFactor, model,
-                                     style = style, legendplacement = legendplacement, 
-                                     drawExpected = drawExpected )
+                                 doGenerate,limitPoints,extraInfo,preliminary,
+                                 combine, pngAlso, weightedAgreementFactor, model,
+                                 style = style, legendplacement = legendplacement,
+                                 drawExpected = drawExpected, namedTarball =namedTarball )
                         doGenerate = False
             else:
                 from sympy import var

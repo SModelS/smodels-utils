@@ -54,15 +54,18 @@ class ValidationPlot():
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default",
-                 style = "", legendplacement = "top right", drawExpected = True ):
+                 style = "", legendplacement = "top right", drawExpected = True,
+                 namedTarball = None ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
+        :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         """
 
         self.expRes = copy.deepcopy(ExptRes)
         self.model = model
         self.txName = TxNameStr
+        self.namedTarball = namedTarball
         self.axes = Axes.strip()
         self.style = style
         self.drawExpected = drawExpected
@@ -869,6 +872,8 @@ class ValidationPlot():
         from smodels_utils import SModelSUtils
         meta = { "smodelsver": installation.version(),
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if self.namedTarball != None:
+            meta["tarball"]=self.namedTarball
         f.write("meta = %s\n" % str(meta) )
         f.close()
 
