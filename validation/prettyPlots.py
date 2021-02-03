@@ -331,7 +331,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     for gr in expectedOfficialCurves:
         # validationPlot.completeGraph ( gr )
         setOptions(gr, Type='official')
-        gr.SetLineColor ( kRed )
+        gr.SetLineColor ( kOrange+2 )
         gr.Draw("L SAME")
 
     #Draw additional info
