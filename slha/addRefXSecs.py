@@ -20,7 +20,7 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
     mass1 = slhaData.blocks['MASS'][abs(pid1)]
     mass2 = slhaData.blocks['MASS'][abs(pid2)]
     if abs(mass1-mass2) > 1.0:
-        print('[addRefXSecs] Can not compute xsecs for pair production of sparticles with distinct masses')
+        print('[addRefXSecs] Can not compute xsecs for pair production of sparticles with distinct masses: %d!=%d' % ( mass1, mass2 ) )
         return
     else:
         mass = (mass1+mass2)/2.
