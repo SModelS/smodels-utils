@@ -97,7 +97,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             r = pt['signal']/pt ['UL']
-            if "eUL" in pt:
+            if "eUL" in pt and pt["eUL"] != None:
                 hasExpected = True
                 rexp = pt['signal']/pt ['eUL']
         if r > 3.:
