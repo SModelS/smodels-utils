@@ -96,7 +96,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
     newds.aggregated = aggregated[:-1]
-    newds.dataId = "ar%d" % (aggidx+1) ## for now the dataset id is the agg region id
+    newds.dataId = "%s%d" % (aggprefix, aggidx+1) ## for now the dataset id is the agg region id
     return newds
 
 def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix ):
