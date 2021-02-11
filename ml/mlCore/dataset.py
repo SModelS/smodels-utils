@@ -11,7 +11,8 @@ from random import random, shuffle
 from scipy.spatial import ConvexHull#, convex_hull_plot_2d
 from scipy.spatial import Delaunay
 from sklearn.cluster import MeanShift
-from mlCore.auxiliary import loadGridPoints
+from mlCore.loadGridPoints import loadInternalGridPoints, loadExternalGridPoints
+#from mlCore.auxiliary import loadGridPoints
 from torch.utils.data import Dataset # better import?
 from sklearn.preprocessing import MinMaxScaler
 from smodels.theory.auxiliaryFunctions import rescaleWidth, removeUnits#, unscaleWidth
@@ -19,26 +20,32 @@ from smodels.tools import physicsUnits
 from smodels.tools.smodelsLogging import logger
 from smodels.tools.physicsUnits import GeV, fb, pb
 
+
 class Data(Dataset):
 
 	"""
-	Holds the actual datasets in torch.tensor format for training and evaluation
+	Holds the actual datasets in torch.tensor format, can copy and split itself into subsets
 
 	"""
 
-	def __init__(self, dataset, inputDimension, device, rescaleInputs = False, rescaleLabels = False):
+	def __init__(self, dataset, device):
+
+		"""
+		:param dataset: (2dim list:float) or (tuple:list:float) masses and targets to be converted into torch.tensor format
+		:param device: (str) 'cpu' or 'gpu:n' n=0,1,... device to run torch on
+
+		"""
+
 
 		if isinstance(dataset, tuple):
+			inputDimension = len(dataset[0][0])
 			self.inputs = torch.tensor(dataset[0], dtype=torch.float64).to(device)
 			self.labels = torch.tensor(dataset[1], dtype=torch.float64).to(device)
 		else:
-			self.inputs = torch.tensor(dataset, dtype=torch.float64).narrow(1, 0, inputDimension).to(device) #.double().to(device)
-			self.labels = torch.tensor(dataset, dtype=torch.float64).narrow(1, inputDimension, 1).to(device) #.double().to(device)
+			inputDimension = len(dataset[0][:-1])
+			self.inputs = torch.tensor(dataset, dtype=torch.float64).narrow(1, 0, inputDimension).to(device)
+			self.labels = torch.tensor(dataset, dtype=torch.float64).narrow(1, inputDimension, 1).to(device)
 
-		mean = torch.mean(self.inputs)	#[torch.mean(self.inputs), torch.mean(self.labels)]
-		std = torch.std(self.inputs)	#[torch.std(self.inputs), torch.std(self.labels)]
-
-		self.rescaleParameter = {"mean": mean, "std": std}
 		self.inputDimension = inputDimension
 		self.device = device
 
@@ -50,9 +57,9 @@ class Data(Dataset):
 	def split(self, sampleSplit):
 
 		"""
-		Method to split dataset into different parts. Mainly training, testing and validation.
+		Split dataset into subsets that inherit all parameter such as input dimension or device used.
 
-		:param sampleSplit: dict of floats that ideally add up to 1.
+		:param sampleSplit: (list:float) how to split dataset. sum of elements has to be 1 
 
 		"""
 
@@ -82,9 +89,8 @@ class Data(Dataset):
 class DatasetBuilder():
 
 	"""
-	Outputs a Dataset class that is used for training and evaluation of neural networks
-	Needs metainfo of analysis and training parameters (usually loaded from nn_parameters.info file) as well as a device to send 'Dataset' class to
-	(cpu or specific gpu)
+	The goal of this class is to simplify generating datasets. Possesses numerous methods of data manipulation such as reading and formatting original gridpoints, performing PCA on datapoints, building convex hulls,
+	and generating and rescaling datasets. All required meta information is parsed via the parameter dictionary. See parameterParser.py for the content of the parameter dictionary.
 
 	"""
 
@@ -92,7 +98,7 @@ class DatasetBuilder():
 
 		"""
 		Sets up the dataset generation for a specific map
-		:param parameter: Holds all neccessary information to create or load datasets. Can be a simple dict, or the custom class introduced in 'readParameter.py'
+		:param parameter: Holds all neccessary information to create or load datasets. Can be a simple dict, or the custom class introduced in 'readParameter.py'. If using a custom parameter dictionary make sure to include every key parsed in this init method. (dict:string/float)	
 
 		""" 
 
@@ -106,9 +112,11 @@ class DatasetBuilder():
 		self.full_dim = self.txnameData.full_dimensionality
 		self.luminosity = parameter["txName"].globalInfo.getInfo("lumi").asNumber(1/fb)
 
-		self.sampleSize 	= parameter["sampleSize"]
-		self.sampleSplit 	= parameter["sampleSplit"]
-		self.device 		= parameter["device"]
+		self.sampleSize 		  = {"regression": parameter["sampleSize"][0], "classification": parameter["sampleSize"][1]}
+		self.sampleSplit 		  = parameter["sampleSplit"]
+		self.rescaleMethodMasses  = {"regression": parameter["regression"]["rescaleMethodMasses"], "classification": parameter["classification"]["rescaleMethodMasses"]}
+		self.rescaleMethodTargets = {"regression": parameter["regression"]["rescaleMethodTargets"], "classification": parameter["classification"]["rescaleMethodTargets"]}
+		self.device 			  = parameter["device"]
 
 		self.refXsecFile = parameter["refXsecFile"]
 		if self.refXsecFile != None:
@@ -116,159 +124,65 @@ class DatasetBuilder():
 			self._readRefXsecs()
 		else: self.refXsecs = None
 
-		self.loadFile = parameter["loadFile"]
-		if self.loadFile != None:
-			self.massColumns = parameter["massColumns"]
+		self.externalFile = parameter["externalFile"]
 
+		if self.externalFile != None:
+			if os.path.isfile(self.externalFile):
+				self.massColumns = parameter["massColumns"]
+			else:
+				logger.warning("can't find external file (%s) -> will instead try to load grid points from database" %self.externalFile)
+				self.externalFile = None
+			
+			
 		logger.info("builder completed for %s" % self.txnameData)
 
 
 
 
-	def _loadGridPoints(self, loadFromFile, includeExtremata = False, targetMinimum = 1e-14):
+	def _loadGridPoints(self, includeExtremata = False, targetMinimum = 1e-14):
 
 		"""
 		Load grid points from either txnameData orig points or an external file and store them in self._gridPoints and self._gridTargets
 		This method is still under construction and subject of constant change, so code is not very pretty at the moment.
 		If masses or targets are rescaled - depending on the rescaling method - it is advised to include minima and maxima of each parameter axis in the dataset
 
-		:param loadFromFile: flag if loading from external file string stored in self.loadFile (boolean)
-		:param includeExtremata: flag to make sure we include minima and maxima of each axis in the dataset (boolean)
-		:param targetMinimum: target values (effs/ULs) below this threshold will be set to this number instead to avoid having 0s or really small targets in the dataset
+		:param includeExtremata: (boolean) (optional) flag to make sure we include minima and maxima of each axis in the dataset
+		:param targetMinimum: (float) (optional) target values (effs/ULs) below this threshold will be set to this number instead to avoid having 0s or really small targets in the dataset
 
 		"""
 
-		if not loadFromFile:
-			self._gridPoints = loadGridPoints(self.expres, self.txnameData, self.dataselector, self.signalRegion, stripUnits = True)[0]
-			return
 
+		if self.externalFile == None:
 
-		logger.info("loading dataset (%s)" % self.nettype)
+			logger.info("loading gridpoints from %s.txt" % self.txnameData)
+			self._gridPoints, self._gridTargets = loadInternalGridPoints(self.expres, self.txnameData, self.dataselector, self.signalRegion, stripUnits = True)[:-1]
+
+		else:
+
+			logger.info("loading gridpoints from %s" % self.externalFile)
+			self._gridPoints, self._gridTargets = loadExternalGridPoints(self.externalFile, self.massColumns, includeExtremata, targetMinimum)
+
 		
-		with open(self.loadFile) as txtFile:
-			raw = txtFile.read()
+		if self.refXsecs != None:
 
-		lines = raw.split("\n")[1:]
+			count = 0
+			targetMinimum = 1e-14
+			for n,point in enumerate(self._gridPoints):
 
-		dataset_masses = []
-		dataset_targets = []
-		count = [0 for n in range(20)]
-		squished = 0
-		totalLen = len(lines) - 1
-
-		minimum = [[[1e4 for _ in range(self.full_dim)], [0]] for _ in range(self.full_dim)]
-		maximum = [[[0. for _ in range(self.full_dim)], [0]] for _ in range(self.full_dim)]
-
-		#X = []
-		#Y = []
-		tmax = 0
-
-		for line in lines[:-1]:
-			values = line.split()
-			masses = []
-
-			width = 0
-
-			for x in self.massColumns[:-1]:
-				if x < 0:
-					x = -x
-					
-					width = float(values[x])
-
-					### set 0 width to 1e-30
-					#if values[x] == 0.:
-					#	masses.append(rescaleWidth(1e-30))
-					#else:
-					###
-
-					masses.append(rescaleWidth(float(values[x])))
-				else:
-					masses.append(float(values[x]))
-
-			target = float(values[self.massColumns[-1]])
-			
-			
-			if self.refXsecs != None:
-				m0 = masses[0]
+				m0 = point[0]
 				xsec = self._getRefXsec(m0)
+				fac = self.luminosity * xsec * self._gridTargets[n]
 
-				if self.luminosity * xsec * target < 1e-2:
+				if fac < 1e-2:
 					
-					if target > 0.: squished += 1
-					target = 0.
-			
+					logger.debug("refXsec: %s at %s is below threshhold (%s)" % (point, self._gridTargets[n], fac))
+					self._gridTargets[n] = targetMinimum
+					count += 1
 
-			#if target < targetMinimum: target = targetMinimum
-
-			for n,mass in enumerate(masses):
-				if minimum[n][0][n] > mass:
-					minimum[n] = [masses, target]
-				elif maximum[n][0][n] < mass:
-					maximum[n] = [masses, target]
+			logger.info("refXsec: %s/%s gridpoints were set to %s" % (count, len(self._gridTargets), targetMinimum))
 					
-
-			#if target > 1e-14:# and m0 > 250. and width < 1e-17:
-			#if target > targetMinimum:# or random() > 0.9:
-			if target != 0.:
-				dataset_masses.append(masses)
-				dataset_targets.append(target)
-
-				#if m0 == 140.:
-					#print("%s\t%s"%(width, target))
-
-				#	X.append(np.log10(width))
-				#	Y.append(np.log10(target))
-
-			
-
-			if target == 0.: x = 0
-			else:
-				x = int(-np.log10(target)) + 1
-			count[x] += 1
-
-		"""
-		import matplotlib.pyplot as plt
-		plt.figure(55)
-		plt.title(r"SR1FULL_175, THSCPM1b, $m_{HSCP}$ = 140 GeV", fontsize=14)
-		plt.xlabel("widths [log10]")
-		plt.ylabel("effs [log10]")
-		plt.plot(X,Y)
-		plt.show()
-
-		"""
-		
-		if includeExtremata:
-
-			for mini in minimum:
-				if not mini[0] in dataset_masses:
-					target = max(targetMinimum,mini[1])
-					print("t:", target)
-					dataset_masses.append(mini[0])
-					dataset_targets.append(target)
-			for maxi in maximum:
-				if not maxi[0] in dataset_masses:
-					target = max(targetMinimum,maxi[1])
-					dataset_masses.append(maxi[0])
-					dataset_targets.append(target)
-		
-		for n,c in enumerate(count[:10]):
-			if n == 0: p = 0
-			else: p = 10**-n
-			logger.debug("# effs at ~%s: %s" % (p, c))
-
-		
-		self._gridPoints = dataset_masses
-		self._gridTargets = dataset_targets
-
-		logger.debug("length of dataset: %s" %len(dataset_masses))
-		logger.debug("number of eff squished to 0: %s (%s%%)" % (squished, 100*round(squished/totalLen,2)))
-		logger.debug("percentage of 0 efficiencies: %s%%" %(round(100*count[0]/totalLen, 2)))
-		logger.debug("taget minimum: %s" % min(self._gridTargets))
-		logger.debug("taget maximum: %s" % max(self._gridTargets))
-
-		
-
-		
+		else:
+			logger.info("no refXsec file specified")
 
 
 	def _PCA(self, data = None):
@@ -276,7 +190,7 @@ class DatasetBuilder():
 		"""
 		Perform PCA on any given masspoints (default = original grid points)
 
-		:param data: alternative datapoints, default are original gridpoints of current map
+		:param data: (2dimlist, float) alternative datapoints, default are original gridpoints of current map
 
 		"""
 
@@ -312,7 +226,7 @@ class DatasetBuilder():
 		"""
 		Perform meanshift analysis on PCA grid points
 
-		:param bandWidth: bandwidth for the sklearn.cluster.Meanshift method
+		:param bandWidth: (int) (optional) bandwidth of the sklearn.cluster.Meanshift method
 
 		"""
 
@@ -331,6 +245,8 @@ class DatasetBuilder():
 		"""
 		Adding a bias to draw more points from clusters with non-zero values
 
+		:param sampleSize: (float) inherited from the self._drawRandomPoints method
+
 		"""
 
 		tx = self.txnameData
@@ -338,15 +254,11 @@ class DatasetBuilder():
 		zeroClusters, nonZeroClusters = 0, 0
 		for n, cluster in enumerate(self._origCluster):
 
-				print(cluster)
 				mean = np.mean(cluster, axis = 0)
-				print(mean)
 				x = tx.coordinatesToData(mean, rotMatrix = tx._V, transVector = tx.delta_x)
-				print(x)
+
 				val = tx.getValueFor(x)
 				val = removeUnits(val,physicsUnits.standardUnits)
-
-				print("VAL: %s" %val)
 
 				clusterMeanVals.append(val)
 
@@ -360,9 +272,6 @@ class DatasetBuilder():
 		pointsToDraw = []
 		for n, cluster in enumerate(self._origCluster):
 
-			#print("cluster[%s] = %s"%(n, cluster))
-
-			print("meanval: %s" %clusterMeanVals[n])
 			if clusterMeanVals[n] > 0:
 				pointsToDraw.append(int(factor*len(cluster))+1)
 			else:
@@ -375,20 +284,16 @@ class DatasetBuilder():
 	def _getHullPoints(self):
 
 		"""
-		Algorithm that finds hull edges from original datapoints
-		Used to generate convex hull dataset for classifaction network
+		Algorithm that finds all hull edges of original gridpoints. The reason we use this in addition 
+		to the scipy.spatial.ConvexHull method is that CH only identifies vertices.
+		Used to generate convex hull dataset for the classification network
 
 		"""
 
 		massesSorted = [sorted(self._gridPoints,key=lambda l:l[n]) for n in range(len(self._gridPoints[0]))]
-		#massesHull = []
-
 		massesHull = [[] for _ in range(len(massesSorted))]
 
 		for k in range(len(massesSorted)):
-
-			#if k == widthPos:
-			#	continue
 
 			massesSortedReduced = []
 			lastMass = 0.
@@ -406,17 +311,8 @@ class DatasetBuilder():
 					else: break
 
 				massesSortedReduced.append(np.max(subset, axis=0).tolist())
-				#massesSortedReduced.append(max(subset, key=lambda x:x[k])) this should work but doesnt for some reason?
 
 			massesHull[k] = massesSortedReduced
-
-			#if "massesHull" in locals():
-			#	massesHull = np.append(massesHull, massesSortedReduced, axis=0)
-			#else:
-			#	massesHull = massesSortedReduced
-			#	#print(massesHull)
-
-			#massesHull.append(massesSortedReduced)
 
 
 		# getting rid of duplicate axes
@@ -437,8 +333,7 @@ class DatasetBuilder():
 	def _readRefXsecs(self):
 
 		"""
-		Load reference cross sections for an eff cutoff given by
-		luminosity * eff * refXsec[m0] > 1e-2 to ignore irrelevent effs and improve model performance
+		Load reference cross sections for the current analysis.
 
 		"""
 
@@ -463,6 +358,14 @@ class DatasetBuilder():
 
 	def _getRefXsec(self, mother):
 
+		"""
+		Returns an approximation of the reference cross section for a given mass point and topology.
+		The respective xsec file is read in self._readRefXsecs. 
+
+		:param mother: (float) the mother particle of a given mass point
+
+		"""
+
 		for n, mass in enumerate(self.refXsecs["masses"]):
 			if mass > mother:
 				return self.refXsecs["xsecs"][n]
@@ -475,31 +378,46 @@ class DatasetBuilder():
 	def _isOnHull(self, point):
 
 		"""
-		:param point: massPoint eg [m0,m1,w]
-		returns boolean if within convex hull of grid points
+		Returns boolean if parsed mass point is within the convex hull of original grid points
+
+		:param point: (float) single mass point array
 
 		"""
-		return self._delauney.find_simplex(point)>=0
+
+		mp = [point[n] for n in self._delauneyAxes]
+
+		if self._delauney.find_simplex(mp)>=0:
+			return 1.
+		
+		return 0.
 
 
 	def _getHullDelauney(self):
 
 		"""
-		first calculates convex hull of self._gridPoints
-		then performs delauney triangulation of vertices for easy determination
-		if drawn mass points are within convex hull
-
+		Calculates convex hull of self._gridPoints, weeds out any non vertex points
+		and generates delauney triangulation so we can build a classification dataset without smodels delauney
+		The first part gets rid of duplicate axes which would cause problems with scipy.spatial.ConvexHull
 
 		"""
 
-		axis, dupl = [], []
-		for n,c in enumerate(self.massColumns[:-1]):
-			if not c in dupl:
-				dupl.append(c)
-				axis.append(n)
-			
+		if self.externalFile != None:
+			axes, dupl = [], []
+			for n,c in enumerate(self.massColumns[:-1]):
+				if not c in dupl:
+					dupl.append(c)
+					axes.append(n)
+		else:
+			axes, dupl = [], []
+			for n, m in enumerate(self._gridPoints[0]):
+				if not m in dupl:
+					dupl.append(m)
+					axes.append(n)
 
-		splicedData = np.array([np.array(self._gridPoints)[:, a] for a in axis]).T
+
+		self._delauneyAxes = axes
+
+		splicedData = np.array([np.array(self._gridPoints)[:, a] for a in axes]).T
 		hull = ConvexHull(splicedData)
 
 		hullPoints = []
@@ -508,47 +426,185 @@ class DatasetBuilder():
 
 		self._delauney = Delaunay(hullPoints)
 
-		"""
-		### get some visual confirmation ###
-		import matplotlib.pyplot as plt
-		plt.plot(splicedData[:,0], splicedData[:,1], 'o')
-		for simplex in hull.simplices:
-			plt.plot(splicedData[simplex, 0], splicedData[simplex, 1], 'k-')
 
-
-		plt.plot(splicedData[hull.vertices,0], splicedData[hull.vertices,1], 'r--', lw=2)
-		plt.plot(splicedData[hull.vertices[0],0], splicedData[hull.vertices[0],1], 'ro')
-		plt.show()
-		### --- ###
-		"""
-
-
-	def _drawRandomPoints(self, sampleSize = None):
+	def _drawRandomPointsRegression(self):
 
 		"""
-		Generates datasets for training and evaluation and returns them as custom 'Data' class
-		1. reads original grid points and PCA's them to reduce dimensionality
-		2. mean-shift clusters PCA data to get points of high information density
-		if classification:
-			3. finds edges of original grid points
-			4. draw points around edges
-		5. draws points for each m-s cluster
+		Draws random sample points for regression dataset
+		1. add bias to each cluster to draw more points from high density regions
+		2. draw points for each cluster
 
 		"""
 
-		if sampleSize == None: sampleSize = self.sampleSize
-		samplesLeft = sampleSize
+		particles = [0 for _ in range(self.full_dim)]
+		tx = self.txnameData
 
+		#rescaleInputs = tx.widthPosition != []
+
+		drawnMasses = []
+		drawnTargets = []
+
+		clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(self.sampleSize["regression"])
+			
+		zeroes = 0
+
+		for n, cluster in enumerate(self._origCluster):
+
+			mean = np.mean(cluster, axis = 0)
+			std = np.std(cluster, axis = 0)
+			logger.debug("cluster %s/%s" % (n+1, len(self._origCluster)))
+			pointsLeft = pointsToDrawPerCluster[n]
+
+			while pointsLeft > 0:
+
+				rand = []
+				for i in range(tx.dimensionality):
+					rand.append(np.random.normal(mean[i], 50. + 4.*std[i]))
+
+				x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
+				val = tx.getValueFor(x)
+				val = removeUnits(val,physicsUnits.standardUnits)
+
+				if self.refXsecs != None and val != None:
+					x0 = x
+					while type(x0) == list or type(x0) == tuple: x0 = x0[0]
+					x0 = x0.asNumber(GeV)
+					xsec = self._getRefXsec(x0)
+
+					thresh = self.luminosity * xsec * val
+
+					if thresh < 1e-2:
+						val = 0.
+
+				if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random() < 0.15) ): #0.1
+						
+					pointsLeft -= 1
+						
+					if val == 0.:
+						zeroes += 1
+
+					strippedUnits = tx.dataToCoordinates(x)
+					drawnMasses.append(strippedUnits)
+					drawnTargets.append(val)
+
+		logger.debug("%s%% are zero." % round(100.*(zeroes/len(drawnMasses)), 3))
+
+		self.masses = np.array(drawnMasses)
+		self.targets = np.array(drawnTargets)
+
+
+	def _drawRandomPointsClassification(self):
+
+		"""
+		Draws random sample points for classification dataset
+		1. get hull points
+		2. delauney triangulation for hull vertices only
+		3. PCA on hull points
+		4. draw points around hull edges
+		5. fill rest of dataset with random points of grid point clusters
+
+		"""
+
+		samplesLeft = self.sampleSize["classification"]
 
 		particles = [0 for _ in range(self.full_dim)]
 		tx = self.txnameData
 
 		width = tx.widthPosition
-		rescaleInputs = width != []
+		#rescaleInputs = width != []
 
 		drawnMasses = []
 		drawnTargets = []
 
+		hullPoints = self._getHullPoints()
+		self._getHullDelauney()
+
+		hP_PCA = []
+		numOfHullPoints = 0
+		for axisPoints in hullPoints:
+			numOfHullPoints += len(axisPoints)
+
+			temp = self._PCA(axisPoints)
+			hP_PCA.append(temp)
+
+		samplesPerHullPoint = max(1,int(( self.sampleSize["classification"] / numOfHullPoints ) * 0.95)) #0.15)
+
+
+		for currentMassHull in hP_PCA:
+
+			#mean = np.mean(currentMassHull, axis = 0)
+			std = np.std(currentMassHull, axis = 0)
+
+			for point in currentMassHull:
+
+				samplesPerHullPointLeft = samplesPerHullPoint
+
+				while(samplesPerHullPointLeft > 0):
+
+					rand = []
+					for i in range(tx.dimensionality):
+						rand.append(np.random.normal(point[i], 0.15*std[i]))
+
+					masses = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
+					masses = tx.dataToCoordinates(masses)
+
+					if all([m >= 0 for m in masses]):
+
+						val = self._isOnHull(masses)
+
+						drawnMasses.append(masses)
+						drawnTargets.append(val)
+
+						samplesLeft -= 1
+						samplesPerHullPointLeft -= 1
+
+						logger.debug("points drawn: %s" % len(drawnMasses))
+
+			
+		samplesLeft = 0
+		clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(samplesLeft)
+
+		for n, cluster in enumerate(self._origCluster):
+
+			mean = np.mean(cluster, axis = 0)
+			std = np.std(cluster, axis = 0)
+			std = [max(s,10) for s in std]
+
+			pointsLeft = pointsToDrawPerCluster[n]
+
+			while pointsLeft > 0:
+
+				rand = []
+				for i in range(tx.dimensionality):
+					rand.append(np.random.normal(mean[i], 2.5*std[i]))
+
+				masses = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
+				masses = tx.dataToCoordinates(masses)
+
+				if all([m >= 0 for m in masses]):
+
+					val = self._isOnHull(masses)
+
+					drawnMasses.append(masses)
+					drawnTargets.append(val)
+							
+					pointsLeft -= 1
+			
+
+		self.masses = np.array(drawnMasses)
+		self.targets = np.array(drawnTargets)
+	
+
+
+	def _drawRandomPoints(self):
+
+		"""
+		Generates datasets for training and evaluation and returns them as custom 'Data' class
+		1. reads original grid points and PCA's them to reduce dimensionality
+		2. mean-shift clusters PCA data to get points of high information density
+		3. draw random points
+
+		"""
 
 		if not hasattr(self, "_origPCA"):
 			self._PCA()
@@ -557,193 +613,36 @@ class DatasetBuilder():
 			self._clusterData()
 
 		t0 = time()
-		logger.info("drawing points..")
+		logger.info("generating dataset.. ")
 
-		if self.nettype == 'regression':
+		if self.nettype == "regression":
+			self._drawRandomPointsRegression()
 
-			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(sampleSize)
-			
-			zeroes = 0
-
-			for n, cluster in enumerate(self._origCluster):
-
-				mean = np.mean(cluster, axis = 0)
-				std = np.std(cluster, axis = 0)
-				logger.debug("cluster %s/%s" % (n+1, len(self._origCluster)))
-				pointsLeft = pointsToDrawPerCluster[n]
-
-				while pointsLeft > 0:
-
-					rand = []
-					for i in range(tx.dimensionality):
-						rand.append(np.random.normal(mean[i], 250. + 4.*std[i]))
-
-					x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
-					val = tx.getValueFor(x)
-					val = removeUnits(val,physicsUnits.standardUnits)
-
-					if self.refXsecs != None and val != None:
-						x0 = x
-						while type(x0) == list or type(x0) == tuple: x0 = x0[0]
-						x0 = x0.asNumber(GeV)
-						xsec = self._getRefXsec(x0)
-
-						thresh = self.luminosity * xsec * val
-
-						if thresh < 1e-2:
-							val = 0.
-
-					if type(val) != type(None) and ( clusterMeanVals[n] == 0 or (val != 0. or random() < 0.15) ): #0.1
-						
-						pointsLeft -= 1
-						
-						if val == 0.:
-							zeroes += 1
-
-						strippedUnits = tx.dataToCoordinates(x)
-						drawnMasses.append(strippedUnits)
-						drawnTargets.append(val)
-
-			logger.debug("%s%% are Zero." % round(100.*(zeroes/len(drawnMasses)), 3))
-						
 		else:
+			self._drawRandomPointsClassification()
 
-			hullPoints = self._getHullPoints()
-
-
-			"""
-			X = [p[0] for p in hullPoints[0]]
-			Y = [p[2] for p in hullPoints[0]]
-			import matplotlib.pyplot as plt
-			plt.figure(55)
-			plt.title(r"SR1FULL_175, THSCPM1b, $m_{HSCP}$ = 140 GeV", fontsize=14)
-			plt.xlabel("m0 [GeV]")
-			plt.ylabel("widths [log10(w+1)]")
-			plt.plot(X,Y)
-			plt.show()
-			"""
-
-			hP_PCA = []
-			numOfHullPoints = 0
-			for axisPoints in hullPoints:
-				numOfHullPoints += len(axisPoints)
-
-				temp = self._PCA(axisPoints)
-				hP_PCA.append(temp)
-
-			samplesPerHullPoint = max(1,int(( sampleSize / numOfHullPoints ) * 0.75)) #0.15)
+		logger.info("dataset generation completed (%ss)" % (round(time() - t0, 3)))
 
 
-			for currentMassHull in hP_PCA:
-
-				#mean = np.mean(currentMassHull, axis = 0)
-				std = np.std(currentMassHull, axis = 0)
-
-				for point in currentMassHull:
-
-					samplesPerHullPointLeft = samplesPerHullPoint
-
-					while(samplesPerHullPointLeft > 0):
-
-						rand = []
-						for i in range(tx.dimensionality):
-							rand.append(np.random.normal(point[i], 0))#1.25*std[i]))
-
-						x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
-						val = tx.getValueFor(x)
-						val = removeUnits(val,physicsUnits.standardUnits)
-
-						if type(val) != type(None): val = 0.
-						else: val = 1.
-
-						strippedUnits = tx.dataToCoordinates(x)
-						drawnMasses.append(strippedUnits)
-						drawnTargets.append(val)
-
-						samplesLeft -= 1
-						samplesPerHullPointLeft -= 1
-
-						logger.debug("points drawn: %s" % len(drawnMasses))
-
-			"""
-			samplesLeft = 0
-			clusterMeanVals, pointsToDrawPerCluster = self._addClusterBias(samplesLeft)
-
-			for n, cluster in enumerate(self._origCluster):
-
-				mean = np.mean(cluster, axis = 0)
-				std = np.std(cluster, axis = 0)
-
-				logger.debug("cluster %s/%s" % (n+1, len(self._origCluster)))
-				pointsLeft = pointsToDrawPerCluster[n]
-
-				while pointsLeft > 0:
-
-					rand = []
-					for i in range(tx.dimensionality):
-						rand.append(np.random.normal(mean[i], 2.*std[i]))
-
-					x = tx.coordinatesToData(rand, rotMatrix = tx._V, transVector = tx.delta_x)
-					val = tx.getValueFor(x)
-					val = removeUnits(val,physicsUnits.standardUnits)
-
-					if type(val) != type(None): val = 0.
-					else: val = 1.
-						
-					pointsLeft -= 1
-	
-					strippedUnits = tx.dataToCoordinates(x)
-
-					drawnMasses.append(strippedUnits)
-					drawnTargets.append(val)
-					logger.debug("points drawn: %s" % len(drawnMasses))
-			"""
-
-		self.masses = drawnMasses
-		self.targets = drawnTargets
-
-
-
-		X = [m[0] for m in self.masses]
-		Y = [m[2] for m in self.masses]
-		import matplotlib.pyplot as plt
-		plt.figure(55)
-		plt.title(r"SR1FULL_175, THSCPM1b", fontsize=14)
-		plt.xlabel("m0 [GeV]")
-		plt.ylabel("widths [log10(w+1)]")
-		plt.scatter(X,Y)
-		plt.show()
-		
-
-		logger.info("done. %ss" % round(time()-t0, 3))
-
-
-
-
-	def run(self, nettype, loadFromFile = None, sampleSize = None):
+	def createDataset(self, nettype):
 
 		"""
 		Generate self.masses and self.targets for the dataset. Points will either be drawn randomly from the txnamedata interpolation
 		or read from an external file.
 
 		:param nettype: (string) 'regression' or 'classification' type dataset will be generated.
-		:param loadFromFile: (optional) (boolean) Specify drawing points via interpolation method or read an external file.
-		:param sampleSize: (optional) (float) Override the number of points drawn. Only used when using interpolation, default = self.sampleSize.
 
 		"""
 
 		self.nettype = nettype
 
-		if loadFromFile == None:
-			loadFromFile = self.loadFile != None
-
 		if not hasattr(self, "_gridPoints"):
-			self._loadGridPoints(loadFromFile)
+			self._loadGridPoints()	
 
-		
+
 		if self.nettype == "regression":
 
-			if loadFromFile:
+			if self.externalFile != None:
 				self.masses = np.array(self._gridPoints)
 				self.targets = np.array(self._gridTargets)
 
@@ -751,43 +650,24 @@ class DatasetBuilder():
 				self._drawRandomPoints()
 
 
-
 		elif self.nettype == "classification":
+			self._drawRandomPoints()
 
-			self.masses = np.array(self._gridPoints)
-			self.targets = np.array(self._gridTargets)
-
-			"""
-
-			if loadFromFile:
-				print("get hull")
-				if not hasattr(self, "_delauney"):
-					self._getHullDelauney()
-
-				print("draw points")
-				self._drawRandomPoints()
-
-			else:
-				#self._getHullPoints()
-				#self._addClusterBias()
-				self._drawRandomPoints()
-
-			"""
-
-			#self.masses, self.targets = np.array(self._gridPoints), np.array(self._gridTargets)
-			#masses, targets = self._gridPoints, self._gridTargets = self._gridPoints #self._createDataset(sampleSize)
-	
-	
+			#self.masses = np.array(self._gridPoints)
+			#self.targets = np.array(self._gridTargets)
 
 
-	def rescaleMasses(self, method = "minmaxScaler"):
+	def rescaleMasses(self, method = None):
 
 		"""
 		Rescale masses either via minmax scaler or standard score.
 
-		:param method: (optional) (string) Specify which method to use. Currently available: 'minmaxScaler' and 'standardScore'.
+		:param method: (optional) (string) Specify which method to use. Currently available: 'minmaxScaler' and 'standardScore'. You can override the stored rescale method with 'null' argument
 
 		"""
+
+		if method == None:
+			method = self.rescaleMethodMasses[self.nettype]
 
 		if method == "minmaxScaler":
 			scaler = MinMaxScaler(feature_range=(1, 100))
@@ -801,24 +681,35 @@ class DatasetBuilder():
 
 		elif method == "standardScore":
 
+			mean = np.mean(self.masses, axis = 0)
+			std = np.std(self.masses, axis = 0)
+			self.masses = (self.masses - mean) / std
+
 			if not "rescale" in self.__dict__:
 				self.rescale = {}
 
-			# TBD
+			self.rescale["masses"] = {"method": method, "mean": mean, "std": std}
+
+		elif method == "null":
+			logger.info("masses will not be rescaled")
+
 		else:
 			logger.error("%s: unrecognized rescale method." % method)
 
 
 
-	def rescaleTargets(self, method = "log", lmbda = None):
+	def rescaleTargets(self, method = None, lmbda = None):
 
 		"""
-		Rescale targets via boxcox method. Mainly used for LLP maps with very low and lots of 0 efficiencies.
+		Rescale targets via boxcox method or log. Mainly used for LLP maps with very low efficiencies.
 
-		:param method: (optional) (string) Method used for rescaling. Options: log, boxcox.
+		:param method: (optional) (string) Overwrite rescaling method. Options: 'log', 'boxcox'.
 		:param lmbda: (optional) (float) Used for a fixed boxcox transformation. If set to 'None' boxcox will find an optimal lmbda automatically. Default = None
 
 		"""
+
+		if method == None:
+			method = self.rescaleMethodTargets[self.nettype]
 
 		if method == "boxcox":
 
@@ -829,33 +720,48 @@ class DatasetBuilder():
 			else:
 				self.targets = boxcox(self.targets, lmbda)
 
-			logger.debug("lambda: %f" % lmbda)
+			logger.info("lambda: %f" % lmbda)
 
-			
-			#self.targets = np.array(self.targets)[np.newaxis]
-			#self.targets = self.targets.T
+			if not "rescale" in self.__dict__:
+				self.rescale = {}
 
+			self.rescale["targets"] = {"method": method, "lambda": lmbda}
 			#self.targets = -self.targets
 
 		elif method == "log":
 
+			if not "rescale" in self.__dict__:
+				self.rescale = {}
+
 			self.targets = np.log10(self.targets)
+
+			self.rescale["targets"] = {"method": method}
+
+		elif method == "standardScore":
+
+			mean = np.mean(self.targets, axis = 0)
+			std = np.std(self.targets, axis = 0)
+			self.targets = (self.targets - mean) / std
+
+			if not "rescale" in self.__dict__:
+				self.rescale = {}
+
+			self.rescale["targets"] = {"method": method, "mean": mean, "std": std}
+
+
+		elif method == "null":
+			logger.info("targets will not be rescaled")
 
 
 		self.targets = np.array(self.targets)[np.newaxis]
 		self.targets = self.targets.T
 
-		if not "rescale" in self.__dict__:
-				self.rescale = {}
-
-		self.rescale["targets"] = {"method": method, "lambda": lmbda}
-
-
 
 	def shuffle(self):
 
 		"""
-		Shuffle masses and targets if necessary.
+		Simply shuffle current masses and targets.
+
 		"""
 
 		indices = np.arange(self.targets.shape[0])
@@ -892,7 +798,7 @@ class DatasetBuilder():
 				output["rescaleParams"] = {"masses": {"method": None}, "targets": {"method": None}}
 
 		if fullSet or splitSet:
-			full = Data((self.masses, self.targets), self.full_dim, self.device)
+			full = Data((self.masses, self.targets), self.device)
 
 		if fullSet:
 			output["full"] = full
