@@ -115,7 +115,7 @@ def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="a
         datasets.append ( myaggs )
     return datasets
 
-def createAggregationOrder ( aggregate, aggprefix ):
+def createAggregationOrder ( aggregate, aggprefix="ar" ):
     """ create the right string for the datasetOrder field in globalInfo 
     :param aggprefix: prefix used for aggregate regions, e.g. "ar"
     """
