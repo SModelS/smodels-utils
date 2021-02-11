@@ -99,7 +99,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     newds.dataId = "%s%d" % (aggprefix, aggidx+1) ## for now the dataset id is the agg region id
     return newds
 
-def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix ):
+def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="ar" ):
     """ aggregate the DataSets
     :param aggregates: the aggregates, list of lists of indices of SRs
 
