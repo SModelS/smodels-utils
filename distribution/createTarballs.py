@@ -181,8 +181,9 @@ def fetchDatabase(tag,dirname):
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
              ( dirname, dbversion )
     run( cmd )
+    ## remove cruft
     rmcmd = "cd %s/smodels-database; " \
-            "rm -rf .git .gitignore *.py *.sh *.tar *.pyc" % \
+            "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \
             ( dirname )
     run( rmcmd )
 
@@ -416,7 +417,7 @@ def main():
                     default="database" )
     ap.add_argument('-c', '--clear', help='remove output from previous run', 
                     action="store_true" )
-    ap.add_argument('-t', '--tag', help='database version [1.2.4]', default='1.2.4')
+    ap.add_argument('-t', '--tag', help='database version [2.0.0-beta]', default='2.0.0-beta')
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', 
                     default='../../smodels')
 
