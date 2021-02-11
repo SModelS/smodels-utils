@@ -14,4 +14,4 @@ coords["T5Disp"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
 coords["TGQ"]={ "masses": [[1,2],[3,4]], "widths": None }
 coords["TDTM1F"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
 coords["TDTM2F"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
-coords["TDTM1M2F"]={ "masses": [[1,3],[4,5,7]], "widths": [[2],[6]] }
+coords["TDTM1M2F"]={ "masses": [[1,3],[4,6]], "widths": [[2],[5]] }
