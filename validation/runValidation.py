@@ -23,7 +23,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   preliminary=False, combine=False,pngAlso = False,
                   weightedAgreementFactor = True, model = "default",
                   style = "", legendplacement = "top right", drawExpected = True,
-                  namedTarball = None ):
+                  namedTarball = None, keep = False ):
     """
     Creates a validation plot and saves its output.
 
@@ -61,6 +61,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param legendplacement: placement of legend. One of: top right, top left, auto
     :param drawExpected: if True, then draw also expected lines
     :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
+    :param keep: keep temporary directories
     :return: True on success
     """
 
@@ -70,7 +71,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
                     combine=combine, weightedAgreementFactor = weightedAgreementFactor,
                     model = model, style= style, legendplacement = legendplacement,
-                    drawExpected = drawExpected, namedTarball = namedTarball )
+                    drawExpected = drawExpected, namedTarball = namedTarball,
+                    keep = keep )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -111,13 +113,14 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
         i.Destructor()
     return True
 
-def run ( expResList, axis, pretty, generateData ):
+def run ( expResList, axis, pretty, generateData, keep ):
     """
     Loop over experimental results and validate plots
     :param axis: Plot only for these axes. If none, get axes from sms.root
     :param pretty: if true, then make pretty plot, else make ugly plot
     :param generateData: if true, generate dpy dict file, if "ondemand" only generate
                          if needed.
+    :param keep: keep temporary directories
     """
     for expRes in expResList:
         expt0 = time.time()
@@ -177,7 +180,8 @@ def run ( expResList, axis, pretty, generateData ):
                                  doGenerate,limitPoints,extraInfo,preliminary,
                                  combine, pngAlso, weightedAgreementFactor, model,
                                  style = style, legendplacement = legendplacement,
-                                 drawExpected = drawExpected, namedTarball =namedTarball )
+                                 drawExpected = drawExpected, namedTarball =namedTarball,
+                                 keep = keep )
                         doGenerate = False
             else:
                 from sympy import var
@@ -199,7 +203,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
         weightedAgreementFactor=True, model = "default", axis=None,
         force_load = None, style = "", legendplacement = "top right",
-        drawExpected = True ):
+        drawExpected = True, keep = False ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -237,6 +241,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                   top left corner of temperature p lot in pretty print
     :param legendplacement: placement of legend: one of:
                             top left, top right, auto [top right]
+    :param keep: keep temporary directories
     """
 
     if not os.path.isdir(databasePath):
@@ -274,7 +279,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    run ( expResList, axis, pretty, generateData )
+    run ( expResList, axis, pretty, generateData, keep )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
@@ -305,6 +310,7 @@ if __name__ == "__main__":
             help='parameter file specifying the validation options [validation_parameters.ini]', default='./validation_parameters.ini')
     ap.add_argument('-f', '--force_build', action="store_true",
             help='force building of database pickle file (you may want to do this for the grid datapoints in the ugly plots)' )
+    ap.add_argument('-k', '--keep', action="store_true", help='keep temp dir' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
@@ -436,9 +442,8 @@ if __name__ == "__main__":
             model = parser.get("options","model")
     generateData = _doGenerate ( parser )
 
-
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
          extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
-         force_load, style, legendplacement, drawExpected )
+         force_load, style, legendplacement, drawExpected, args.keep )

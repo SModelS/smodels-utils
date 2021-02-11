@@ -55,15 +55,17 @@ class ValidationPlot():
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default",
                  style = "", legendplacement = "top right", drawExpected = True,
-                 namedTarball = None ):
+                 namedTarball = None, keep = False ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
+        :param keep: keep temporary directories
         """
 
         self.expRes = copy.deepcopy(ExptRes)
         self.model = model
+        self.keep = keep
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
@@ -747,7 +749,7 @@ class ValidationPlot():
                 self.data.append(Dict)
 
         #Remove temporary folder
-        if slhaDir != self.slhaDir: shutil.rmtree(slhaDir)
+        if slhaDir != self.slhaDir and not self.keep: shutil.rmtree(slhaDir)
 
         if self.data == []:
             logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
