@@ -15,7 +15,7 @@ import math, ctypes
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue,kOrange )
+                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue )
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -309,6 +309,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             ls = 1
         else:
             ls = 2
+        if len(ecgraphs)>0 and drawExpected:
+            ls = 2 ## when expected are drawn also, make this dashed
         for gr in grlist:
             setOptions(gr, Type='official')
             gr.SetLineColor(kGray+2)
@@ -321,18 +323,23 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             continue
         for gr in grlist:
             setOptions(gr, Type='official')
-            gr.SetLineColor(kRed)
+            gr.SetLineColor(kRed+2) # Orange+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
     for gr in official:
         # validationPlot.completeGraph ( gr )
         setOptions(gr, Type='official')
+        gr.SetLineColor ( kBlack )
+        if "P1" in gr.GetTitle() or "M1" in gr.GetTitle():
+            gr.SetLineWidth(1)
+            # gr.SetLineStyle(0)
         gr.Draw("L SAME")
-    for gr in expectedOfficialCurves:
-        # validationPlot.completeGraph ( gr )
-        setOptions(gr, Type='official')
-        gr.SetLineColor ( kOrange+2 )
-        gr.Draw("L SAME")
+    if drawExpected:
+        for gr in expectedOfficialCurves:
+            # validationPlot.completeGraph ( gr )
+            setOptions(gr, Type='official')
+            gr.SetLineColor ( kRed )
+            gr.Draw("L SAME")
 
     #Draw additional info
     ltx=TLatex()
