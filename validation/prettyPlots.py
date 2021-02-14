@@ -376,7 +376,10 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         subtitle = "pyhf combining %d SRs" % len(validationPlot.expRes.datasets)
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
-        subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
+        nagg = len(validationPlot.expRes.datasets)
+        if hasattr ( validationPlot, "meta" ) and "naggregates" in validationPlot.meta:
+            nagg = validationPlot.meta["naggregates"]
+        subtitle = "%d aggregate datasets" % nagg
         dataId = str(dataset.dataInfo.dataId)
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):

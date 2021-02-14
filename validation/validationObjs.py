@@ -459,7 +459,10 @@ class ValidationPlot():
 
         #Save data to file
         f = open(datafile,'r')
-        self.data = eval(f.readlines()[0].replace("validationData = ",""))
+        lines = f.readlines()
+        self.data = eval(lines[0].replace("validationData = ",""))
+        if len(lines)>1 and lines[1].startswith ( "meta" ):
+            self.meta = eval(lines[1].replace("meta = ",""))
         f.close()
 
     def getWidthsFromSLHAFileName ( self, filename ):
