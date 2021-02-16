@@ -15,7 +15,7 @@ import math, ctypes
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue,kOrange )
+                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue )
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -40,7 +40,8 @@ TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
 def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
-                      looseness = 1.2, style = "", legendplacement = "top right" ):
+                      looseness = 1.2, style = "", legendplacement = "top right",
+                      drawExpected = True ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
@@ -52,6 +53,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     :param style: allow for styles, currently "", and "sabine"
     :param legendplacement: placement of legend. One of:
                       "automatic", "top right", "top left"
+    :param drawExpected: if true, then draw also lines for expected limits
     :return: TCanvas object containing the plot
     """
 
@@ -70,6 +72,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         ## sys.exit()
     # Get excluded and allowed points:
     condV = 0
+    hasExpected = False
     for pt in validationPlot.data:
         #if "error" in pt.keys():
         #    continue
@@ -94,7 +97,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             r = pt['signal']/pt ['UL']
-            if "eUL" in pt:
+            if "eUL" in pt and pt["eUL"] != None and pt["eUL"] > 0.:
+                hasExpected = True
                 rexp = pt['signal']/pt ['eUL']
         if r > 3.:
             r=3.
@@ -126,7 +130,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             if not "error" in pt.keys():
                 tgr.SetPoint(tgr.GetN(), x, y, r)
                 etgr.SetPoint(etgr.GetN(), x, y, rexp )
-
+    if drawExpected in [ "auto" ]:
+        drawExpected = hasExpected
     if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
         return (None,None)
@@ -134,20 +139,24 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
     #necessary to smear the points if they rest in a single line.
     if tgr.GetYmax() == tgr.GetYmin():
+        logger.info("1d data detected, not plotting pretty plot.")
+        return None, None
         logger.info("1d data detected, smearing Y values")
         tgrN = tgr.GetN()
         buff = tgr.GetX()
-        buff.SetSize(tgrN)
+        #buff.SetSize(tgrN)
         xpts = numpy.frombuffer(buff,count=tgrN)
         buff = tgr.GetY()
-        buff.SetSize(tgrN)
+        #buff.SetSize(tgrN)
         ypts = numpy.frombuffer(buff,count=tgrN)
         buff = tgr.GetZ()
-        buff.SetSize(tgrN)
+        #buff.SetSize(tgrN)
         zpts = numpy.frombuffer(buff,count=tgrN)
         for i in range(tgrN):
             tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
     if tgr.GetXmax() == tgr.GetXmin():
+        logger.info("1d data detected, not plotting pretty plot.")
+        return None, None
         logger.info("1d data detected, smearing X values")
         buff = tgr.GetX()
         buff.reshape((tgr.GetN(),))
@@ -168,13 +177,13 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         logger.info("1d data detected, smearing Y values")
         etgrN = etgr.GetN()
         buff = etgr.GetX()
-        buff.SetSize(etgrN)
+        #buff.SetSize(etgrN)
         xpts = numpy.frombuffer(buff,count=etgrN)
         buff = etgr.GetY()
-        buff.SetSize(etgrN)
+        #buff.SetSize(etgrN)
         ypts = numpy.frombuffer(buff,count=etgrN)
         buff = etgr.GetZ()
-        buff.SetSize(etgrN)
+        #buff.SetSize(etgrN)
         zpts = numpy.frombuffer(buff,count=etgrN)
         for i in range(etgrN):
             etgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
@@ -196,27 +205,19 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         for i in range(etgr.GetN()):
             etgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
 
-    expectedOfficialCurves = None
+    official = validationPlot.officialCurves
     # Check if official exclusion curve has been defined:
-    if not validationPlot.officialCurves:
+    if official == []:
         logger.warning("Official curve for validation plot is not defined.")
-        official = None
     else:
-        official = validationPlot.officialCurves
         logger.debug("Official curves have length %d" % len (official) )
 
+    expectedOfficialCurves = validationPlot.expectedOfficialCurves
     # Check if official exclusion curve has been defined:
-    if not validationPlot.expectedOfficialCurves:
+    if expectedOfficialCurves == []:
         logger.info("No expected official curves found.")
-        expectedOfficialCurves = None
-    else:
-        expectedOfficialCurves = validationPlot.expectedOfficialCurves
-        logger.debug("Official curves have length %d" % len (official) )
 
     if logY:
-        if official is None:
-            logger.error("could not find any exclusion lines for %s" % validationPlot.txName )
-            official = []
         for contour in official:
             # x, y = Double(), Double()
             x, y = ctypes.c_double(), ctypes.c_double()
@@ -225,9 +226,6 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                 contour.GetPoint(i,x,y)
                 # print ( "y",y,rescaleWidth(y) )
                 contour.SetPoint(i,x.value,rescaleWidth(y.value) )
-        if expectedOfficialCurves is None:
-            logger.error("could not find any exclusion lines for %s" % validationPlot.txName )
-            expectedOfficialCurves = []
         for contour in expectedOfficialCurves:
             # x, y = Double(), Double()
             x, y = ctypes.c_double(), ctypes.c_double()
@@ -262,8 +260,12 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
+    if drawExpected:
+        contVals = [1.,1.,1.]
     cgraphs = getContours(tgr,contVals)
-    # cgraphs = getContours(etgr,contVals)
+    ecgraphs = {}
+    if drawExpected:
+        ecgraphs = getContours(etgr,contVals)
 
     #Draw temp plot:
     h = tgr.GetHistogram()
@@ -307,21 +309,36 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             ls = 1
         else:
             ls = 2
+        if len(ecgraphs)>0 and drawExpected:
+            ls = 2 ## when expected are drawn also, make this dashed
         for gr in grlist:
             setOptions(gr, Type='official')
             gr.SetLineColor(kGray+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
-    if official:
-        for gr in official:
-            # validationPlot.completeGraph ( gr )
+    for cval,grlist in ecgraphs.items():
+        if cval == 1.0:
+            ls = 2
+        else:
+            continue
+        for gr in grlist:
             setOptions(gr, Type='official')
+            gr.SetLineColor(kRed) # Orange+2)
+            gr.SetLineStyle(ls)
             gr.Draw("L SAME")
-    if expectedOfficialCurves:
+    for gr in official:
+        # validationPlot.completeGraph ( gr )
+        setOptions(gr, Type='official')
+        gr.SetLineColor ( kBlack )
+        if "P1" in gr.GetTitle() or "M1" in gr.GetTitle():
+            gr.SetLineWidth(1)
+            # gr.SetLineStyle(0)
+        gr.Draw("L SAME")
+    if drawExpected:
         for gr in expectedOfficialCurves:
             # validationPlot.completeGraph ( gr )
             setOptions(gr, Type='official')
-            gr.SetLineColor ( kRed )
+            gr.SetLineColor ( kRed+2 )
             gr.Draw("L SAME")
 
     #Draw additional info
@@ -383,8 +400,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         elif legendplacement == "top right": # then we move to top right with this
             lsub.DrawLatex(.15,.79,subtitle)
         else:
-            lsub.DrawLatex(.57,.79,subtitle)
-            # lsub.DrawLatex(.15,.79,subtitle)
+            # lsub.DrawLatex(.57,.79,subtitle)
+            lsub.DrawLatex(.15,.79,subtitle)
     else:
         lsub.SetTextAlign(31)
         # lsub.SetTextSize(.025)
@@ -433,24 +450,34 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
             hasExclLines = True
             added = True
-    if official != None:
-        added = False
-        for gr in official:
-            if 'xclusion_' in gr.GetTitle():
-                leg.AddEntry(gr,"exclusion (official)","L")
+    if drawExpected:
+        for cval,grlist in ecgraphs.items():
+            if not grlist:
+                continue
+            if cval == 1.0:
+                leg.AddEntry(grlist[0],"exp. excl (SModelS)","L")
                 hasExclLines = True
-            elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
-                leg.AddEntry(gr,"#pm1#sigma (official)","L")
-                hasExclLines = True
-                added = True
-        for gr in expectedOfficialCurves:
-            if 'xclusion_' in gr.GetTitle():
-                leg.AddEntry(gr,"exp. excl. (off.)","L")
-                hasExclLines = True
-            elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
-                leg.AddEntry(gr,"#pm1#sigma (official)","L")
+            elif (cval == looseness or cval == 1./looseness) and not added:
+                leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
                 hasExclLines = True
                 added = True
+    added = False
+    for gr in official:
+        if 'xclusion_' in gr.GetTitle():
+            leg.AddEntry(gr,"exclusion (official)","L")
+            hasExclLines = True
+        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
+            leg.AddEntry(gr,"#pm1#sigma (official)","L")
+            hasExclLines = True
+            added = True
+    for gr in expectedOfficialCurves:
+        if 'xclusion_' in gr.GetTitle():
+            leg.AddEntry(gr,"exp. excl. (official)","L")
+            hasExclLines = True
+        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
+            leg.AddEntry(gr,"#pm1#sigma (official)","L")
+            hasExclLines = True
+            added = True
 
     if hasExclLines:
         leg.Draw()

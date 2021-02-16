@@ -50,23 +50,24 @@ def createAggregationList ( aggregationborders ):
         last=a
     return ret
 
-def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi):
+def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     """ aggregate one list of datasets to a single dataset.
     :param origDataSets: the original DataSets, as a list
     :param covariance: covariance matrix
     :param aggidx: number of aggregate region
     :param lumi: luminosity, in fb^-1
+    :param aggprefix: prefix to use for aggregate SRs, typically "ar"
     :returns: list of aggregated DataSets
     """
     newds = copy.deepcopy ( origDataSets[ agg[0]-1 ] )
-    newds._name = "ar%d" % (aggidx+1)
+    newds._name = "%s%d" % ( aggprefix, aggidx+1 )
     aggregated = ""
     observedN, expectedBG, bgError2 = 0, 0., 0.
     for a in agg:
         ds = origDataSets[ (a-1) ]
         observedN += ds.observedN
         expectedBG += ds.expectedBG
-        bgError2 += ds.bgError**2 ## FIXME this comes from the cov mat
+        bgError2 += ds.bgError**2 ## F
         aggregated += ds.dataId + ";"
     newds.observedN = observedN
     newds.expectedBG = expectedBG
@@ -95,10 +96,10 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi):
     ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
     newds.aggregated = aggregated[:-1]
-    newds.dataId = "ar%d" % (aggidx+1) ## for now the dataset id is the agg region id
+    newds.dataId = "%s%d" % (aggprefix, aggidx+1) ## for now the dataset id is the agg region id
     return newds
 
-def aggregateDataSets ( aggregates, origDataSets, covariance, lumi ):
+def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="ar" ):
     """ aggregate the DataSets
     :param aggregates: the aggregates, list of lists of indices of SRs
 
@@ -110,21 +111,24 @@ def aggregateDataSets ( aggregates, origDataSets, covariance, lumi ):
         lumi=eval(lumi)
     datasets = []
     for ctr,agg in enumerate( aggregates ):
-        myaggs = aggregateToOne ( origDataSets, covariance, ctr, agg, lumi )
+        myaggs = aggregateToOne ( origDataSets, covariance, ctr, agg, lumi, aggprefix )
         datasets.append ( myaggs )
     return datasets
 
-def createAggregationOrder ( aggregate ):
-    """ create the right string for the datasetOrder field in globalInfo """
-    dsorder = [ '"ar%d"' % (x+1) for x in range(len(aggregate)) ]
-    return ",".join(dsorder)
+def createAggregationOrder ( aggregate, aggprefix="ar" ):
+    """ create the right string for the datasetOrder field in globalInfo 
+    :param aggprefix: prefix used for aggregate regions, e.g. "ar"
+    """
+    dsorder = [ '"%s%d"' % (aggprefix, x+1) for x in range(len(aggregate)) ]
+    ret = ",".join(dsorder) 
+    return ret
 
 class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
     """
     def __init__( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0",
-                  aggregate = None ):
+                  aggregate = None, aggprefix="ar" ):
         """
         :param texfile: file to parse
         :param max_datasets: consider a maximum of n datasets
@@ -137,6 +141,7 @@ class DatasetsFromLatex:
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         """
         self.texfile = texfile
+        self.aggprefix = aggprefix
         self.max_datasets = max_datasets
         self.c_obs = c_obs
         self.c_bg = c_bg
@@ -157,7 +162,7 @@ class DatasetsFromLatex:
     def setDataSetOrder ( self, info ):
         """ set the datasetOrder for the covariance matrix.
             'info' is the MetaInfoInput object. """
-        info.datasetOrder = ",". join ( self.datasetOrder )
+        info.datasetOrder = self.datasetOrder# ",". join ( self.datasetOrder )
 
     def __iter__ ( self ):
         return self
@@ -228,9 +233,10 @@ class DatasetsFromLatex:
         """ now that the datasets are created, aggregate them. """
         self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
         self.origDataSets = copy.deepcopy ( self.datasets )
-        self.datasetOrder = createAggregationOrder ( self.aggregate )
+        self.datasetOrder = createAggregationOrder ( self.aggregate, self.aggprefix )
         self.datasets = aggregateDataSets ( self.aggregate, self.origDataSets, \
-                databaseCreator.metaInfo.covariance, databaseCreator.metaInfo.lumi )
+                databaseCreator.metaInfo.covariance, databaseCreator.metaInfo.lumi,
+                self.aggprefix )
         #self.datasets = [] ## rebuild
         #for ctr,agg in enumerate(self.aggregate):
         #    myaggs = aggregateToOne ( self.origDataSets, eval(databaseCreator.metaInfo.covariance), ctr, agg, eval ( databaseCreator.metaInfo.lumi ) )

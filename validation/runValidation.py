@@ -22,7 +22,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
                   preliminary=False, combine=False,pngAlso = False,
                   weightedAgreementFactor = True, model = "default",
-                  style = "", legendplacement = "top right" ):
+                  style = "", legendplacement = "top right", drawExpected = True,
+                  namedTarball = None ):
     """
     Creates a validation plot and saves its output.
 
@@ -58,6 +59,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   style "sabine": SR label "pyhf combining 2 SRs" gets moved to
                   top left corner of temperature p lot in pretty print
     :param legendplacement: placement of legend. One of: top right, top left, auto
+    :param drawExpected: if True, then draw also expected lines
+    :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :return: True on success
     """
 
@@ -66,7 +69,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
                     limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
                     combine=combine, weightedAgreementFactor = weightedAgreementFactor,
-                    model = model, style= style, legendplacement = legendplacement )
+                    model = model, style= style, legendplacement = legendplacement,
+                    drawExpected = drawExpected, namedTarball = namedTarball )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -139,12 +143,14 @@ def run ( expResList, axis, pretty, generateData ):
             txnameStr = txname.txName
             txt0 = time.time()
             logger.info("------ \033[31m validating  %s \033[0m" %txnameStr)
+            namedTarball = None
             if not tarfiles:
                 tarfile = txnameStr+".tar.gz"
             else:
                 tarfile = os.path.basename(tarfiles[itx])
             if hasattr ( txname, "validationTarball" ):
                 tarfile = txname.validationTarball
+                namedTarball = tarfile
                 logger.info("Database entry specifies a validation tarball: %s. Will use it." % tarfile )
             tarfile = os.path.join(slhadir,tarfile)
 
@@ -168,9 +174,10 @@ def run ( expResList, axis, pretty, generateData ):
                     doGenerate = generateData # local flag
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                     doGenerate,limitPoints,extraInfo,preliminary,
-                                     combine, pngAlso, weightedAgreementFactor, model,
-                                     style = style, legendplacement = legendplacement )
+                                 doGenerate,limitPoints,extraInfo,preliminary,
+                                 combine, pngAlso, weightedAgreementFactor, model,
+                                 style = style, legendplacement = legendplacement,
+                                 drawExpected = drawExpected, namedTarball =namedTarball )
                         doGenerate = False
             else:
                 from sympy import var
@@ -180,7 +187,8 @@ def run ( expResList, axis, pretty, generateData ):
                     validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
                                  generateData,limitPoints,extraInfo, preliminary,
                                  combine, pngAlso, weightedAgreementFactor, model,
-                                 style = style, legendplacement = legendplacement )
+                                 style = style, legendplacement = legendplacement,
+                                 drawExpected = drawExpected )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -190,7 +198,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
         limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
         weightedAgreementFactor=True, model = "default", axis=None,
-        force_load = None, style = "", legendplacement = "top right" ):
+        force_load = None, style = "", legendplacement = "top right",
+        drawExpected = True ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -384,9 +393,16 @@ if __name__ == "__main__":
     preliminary = False ## add preliminary to plot?
     weightedAgreementFactor = False ## do we weight the points for the agreement factor?
     model = "default" ## which model to use (default = mssm)
+    drawExpected = "auto"
     if parser.has_section("options"):
         if parser.has_option("options","ncpus"):
             ncpus = parser.getint("options","ncpus")
+        if parser.has_option("options","drawExpected"):
+            drawExpected = parser.get("options","drawExpected")
+            if drawExpected in [ "1", "true", "True", True, 1, "yes" ]:
+                drawExpected = True
+            if drawExpected in [ "0", "false", "False", False, 0, "no" ]:
+                drawExpected = False
         if parser.has_option("options","pngPlots"):
             pngAlso = parser.getboolean("options", "pngPlots" )
         if parser.has_option("options","axis"):
@@ -411,7 +427,7 @@ if __name__ == "__main__":
         style = ""
         if parser.has_option("options","style"):
             style = parser.get("options", "style")
-        legendplacement = "top right"
+        legendplacement = "automatic"
         if parser.has_option("options","legendplacement"):
             legendplacement = parser.get("options", "legendplacement")
         if parser.has_option("options","weightedAgreementFactor"):
@@ -425,4 +441,4 @@ if __name__ == "__main__":
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
          extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
-         force_load, style, legendplacement )
+         force_load, style, legendplacement, drawExpected )

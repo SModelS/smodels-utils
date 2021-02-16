@@ -54,22 +54,28 @@ class ValidationPlot():
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default",
-                 style = "", legendplacement = "top right" ):
+                 style = "", legendplacement = "top right", drawExpected = True,
+                 namedTarball = None ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
+        :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         """
 
         self.expRes = copy.deepcopy(ExptRes)
         self.model = model
         self.txName = TxNameStr
+        self.namedTarball = namedTarball
         self.axes = Axes.strip()
         self.style = style
+        self.drawExpected = drawExpected
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
-        self.officialCurves = self.getOfficialCurve( get_all = True, expected = False )
-        self.expectedOfficialCurves = [ self.getOfficialCurve( get_all = False, expected = True ) ]
+        self.officialCurves = self.getOfficialCurves( get_all = not self.drawExpected,
+                expected = False )
+        self.expectedOfficialCurves = self.getOfficialCurves( get_all = False,
+                expected = True )
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
@@ -278,11 +284,12 @@ class ValidationPlot():
 
         """
         import ROOT
-        curve = self.getOfficialCurve( get_all = False, expected = False )
-        if not curve:
+        curve = self.getOfficialCurves( get_all = False, expected = False )
+        if curve == []:
             logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
             return 1.0
-        elif isinstance(curve,list):
+        curve = curve[0]
+        if isinstance(curve,list):
             for c in curve:
                 objName = c.GetName()
                 if 'exclusion_' in objName:
@@ -380,7 +387,7 @@ class ValidationPlot():
             logger.error("%s is not a file nor a folder" %self.slhaDir)
             sys.exit()
 
-    def getOfficialCurve(self, get_all=True, expected = False ):
+    def getOfficialCurves(self, get_all=True, expected = False ):
         """
         Reads the root file associated to the ExpRes and
         obtain the experimental exclusion curve for the corresponding TxName and Axes.
@@ -388,16 +395,17 @@ class ValidationPlot():
         :param get_all: get also the +- 1 sigma curves
         :param expected: if true, get expected instead of observed
 
-        :return: a root TGraph object
+        :return: a container of root TGraph objects
         """
         tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
                                   axes=self.axes, get_all = get_all, expected=expected )
-        if not tgraphDict: return None
+        if not tgraphDict:
+            return []
         tgraph = tgraphDict[self.txName]
         if get_all:
             return tgraph
         else:
-            return tgraph[0]
+            return [ tgraph[0] ]
 
     def getParameterFile(self,tempdir=None):
         """
@@ -702,6 +710,8 @@ class ValidationPlot():
                     'dataset': expRes['DataSetID'] }
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
+                if self.drawExpected == "auto":
+                    self.drawExpected = True
             if "efficiency" in expRes.keys():
                 Dict["efficiency"] = expRes['efficiency']
             if expRes['dataType'] == 'efficiencyMap':
@@ -770,8 +780,8 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
-                               preliminary=self.preliminary,
-                               style = self.style, legendplacement = self.legendplacement )
+                   preliminary=self.preliminary, style = self.style,
+                   legendplacement = self.legendplacement, drawExpected = self.drawExpected )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
@@ -860,8 +870,10 @@ class ValidationPlot():
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
-        meta = { "smodelsver": installation.version(), 
+        meta = { "smodelsver": installation.version(),
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if self.namedTarball != None:
+            meta["tarball"]=self.namedTarball
         f.write("meta = %s\n" % str(meta) )
         f.close()
 

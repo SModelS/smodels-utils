@@ -604,7 +604,7 @@ if __name__ == "__main__":
     if not os.path.exists(os.path.expanduser(args.database)): 
             args.database = "~/tools/smodels-database/"
     if not os.path.exists(os.path.expanduser(args.comparison_database)): 
-        print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args._comparison_database )
+        print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args.comparison_database )
         args.comparison_database = ""
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 

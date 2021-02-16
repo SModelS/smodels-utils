@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """ A script that splits up the results into official and fastlim.
     (maybe later even more packages ) """
 
 import os
-import commands
+import subprocess
 import sys
 sys.path.insert(0,"." )
 
@@ -14,15 +14,15 @@ fastlimdir = "../../smodels-fastlim"
 
 def run ( cmd, dryrun=False ):
     if dryrun:
-        print "Dry-run: skipping %s." % cmd
+        print ( "Dry-run: skipping %s." % cmd )
     else:
-        print "Executing: %s." % cmd
-        commands.getoutput ( cmd )
+        print ( "Executing: %s." % cmd )
+        subprocess.getoutput ( cmd )
 
 def backupScript():
     ## first we copy ourself to /tmp
     cmd="cp ./moveFastlimResults.py /tmp/"
-    commands.getoutput ( cmd )
+    subprocess.getoutput ( cmd )
 
 def rmDirs():
     if os.path.exists ( fastlimdir ):
@@ -36,7 +36,7 @@ def mkDirs():
 def isFastlim ( path, dryrun ):
     dname = os.path.dirname ( path )
     bname = os.path.basename ( path )
-    print "%s is fastlim!" % bname
+    print ( "%s is fastlim!" % bname )
     cmd = "mkdir -p %s/%s" % ( fastlimdir, dname )
     run ( cmd )
     cmd = "mv %s %s/%s" % ( path, fastlimdir, dname )
@@ -80,7 +80,7 @@ def traverse( dryrun ):
                 gif.close()
 
 def error ( text ):
-    print "ERROR: %s" % text
+    print ( "ERROR: %s" % text )
 
 def moveBibFile ( dryrun ):
     """ move fastlim-specific bibliography file """

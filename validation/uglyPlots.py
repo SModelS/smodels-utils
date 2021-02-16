@@ -165,12 +165,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         return ( None, None )
     tavg = tavg / len (validationPlot.data )
 
+    official = validationPlot.officialCurves
     # Check if official exclusion curve has been defined:
-    if not validationPlot.officialCurves:
+    if official == []:
         logger.warning("Official curve for validation plot is not defined.")
-        official = None
     else:
-        official = validationPlot.officialCurves
         logger.debug("Official curves have length %d" % len (official) )
 
     if silentMode: gROOT.SetBatch()
@@ -181,9 +180,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     setOptions(excluded_border, Type='excluded_border')
     setOptions(noresult, Type='noresult')
     base = TMultiGraph()
-    if official:
-        for i in official:
-            setOptions( i, Type='official')
+    for i in official:
+        setOptions( i, Type='official')
     setOptions(gridpoints, Type='gridpoints')
     dx = .12 ## top, left
     nleg = 5
@@ -219,29 +217,27 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     if noresult.GetN()>0:
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
-    if official:
-        if len(xvals) == 1:
-            for i in official:
-                print ( "1d official plot!" )
-                if i.GetN() == 1:
-                    xtmp,ytmp=ctypes.c_double(),ctypes.c_double()
-                    i.GetPoint(0,xtmp,ytmp)
-                    yn = 1.1
-                    if ytmp.value > .5:
-                        yn = 0.
-                    i.SetPoint(1, xtmp, yn )
+    if len(xvals) == 1:
         for i in official:
-            base.Add( i, "L")
-    if not official == None:
-        for ctr,i in enumerate(official):
-            completed = copy.deepcopy ( i )
-            validationPlot.completeGraph ( completed )
-            completed.SetLineColor( kGray )
-            completed.SetLineStyle( 3 ) # show also how plot is completed
-            completed.Draw("LP SAME" )
-            #i.Draw("LP SAME" )
-            if ctr == 0:
-                leg.AddEntry ( i, "official exclusion", "L" )
+            print ( "1d official plot!" )
+            if i.GetN() == 1:
+                xtmp,ytmp=ctypes.c_double(),ctypes.c_double()
+                i.GetPoint(0,xtmp,ytmp)
+                yn = 1.1
+                if ytmp.value > .5:
+                    yn = 0.
+                i.SetPoint(1, xtmp, yn )
+    for i in official:
+        base.Add( i, "L")
+    for ctr,i in enumerate(official):
+        completed = copy.deepcopy ( i )
+        validationPlot.completeGraph ( completed )
+        completed.SetLineColor( kGray )
+        completed.SetLineStyle( 3 ) # show also how plot is completed
+        completed.Draw("LP SAME" )
+        #i.Draw("LP SAME" )
+        if ctr == 0:
+            leg.AddEntry ( i, "official exclusion", "L" )
     if gridpoints.GetN()>0:
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
