@@ -39,13 +39,13 @@ class Lister:
         ret = ret.replace ( "_CT", "<sub>CT</sub>" )
         return ret
 
-    def yesno ( self, B ):
-        if B in [ True, "True" ]: return "&#10004;"
-        if B in [ False, "False" ]: return ""
-        return "?"
-        #if B in [ True, "True" ]: return "Yes"
-        #if B in [ False, "False" ]: return "No"
-        #return "?"
+    def whatLlhdInfo ( self, B ):
+        """ what llhd info does that analysis have, if any? """
+        if hasattr ( B.globalInfo, "jsonFiles" ):
+            return "json"
+        if hasattr ( B.globalInfo, "covariance" ):
+            return "cov."
+        return ""
 
     def header( self ):
         """
@@ -89,7 +89,8 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
         self.f.write ( "<a name='A2'>(2)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
+        self.f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
+        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'cov' = a covariance matrix for a simplified likelihood. 'json' = full likelihoods as pyhf json files.\n" )
         self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
         self.f.close()
 
@@ -107,7 +108,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
                     for ana in a:
                         anas[exp].add ( ana.globalInfo.id )
             self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
-                
+
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
                     nMaps = 0
@@ -152,13 +153,22 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
                     self.f.write ( " * [%s %s](#%s%s%d): %d %s analyses, %s%s%s results%s\n" % \
                               ( exp, tpe, exp, stpe, sqrts, len(a), aflim, nres, flim, llp, mapsCountS ) )
 
-    def fields ( self ):
+    def fields ( self, isEffMap ):
+        """ get list of all columns.
+        :param isEffMap: is efficiency map table? In which case we might add a column
+                         for the likelihoods.
+        :returns: list
+        """
         ret = [ "ID", "short description", "L [1/fb]", "Tx names" ]
         # fields = [ "ID", "short description", "&radic;s", "L", "Tx names" ]
         if self.superSeded:
             ret.append ( "superseded by" )
         if self.likelihoods:
-            ret.append ( "likeli- hoods" )
+            if isEffMap:
+                ret.append ( "SR comb. [(4)](#A4)" )
+            else:
+                ret.append ( "expected ULs" )
+            # ret.append ( "likeli- hoods" )
         return ret
 
     def moveToGithub( self ):
@@ -172,14 +182,16 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
     def experimentHeader ( self, experiment, Type, sqrts, nr ):
         self.f.write ( "\n" )
         stype = "efficiency maps"
+        isEffMap = True
         if Type == "upperLimit":
+            isEffMap = False
             stype = "upper limits"
         self.f.write ( '<a name="%s%s%d"></a>\n' % \
                   (experiment, stype.replace(" ",""), sqrts) )
         self.f.write ( "## %s, %s, %d TeV (%d analyses)\n\n" % \
                   (experiment,stype,sqrts,nr ) )
         lengths = []
-        for i in self.fields ( ):
+        for i in self.fields ( isEffMap  ):
             # f.write ( "||<#EEEEEE:> '''%s'''" % i )
             self.f.write ( "| **%s** " % i )
             lengths.append ( len(i)+6 )
@@ -188,7 +200,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             self.f.write ( "|" +"-"*l )
         self.f.write ( "|\n" )
 
-    def emptyLine( self, ana_name ):
+    def emptyLine( self, ana_name, isEffMap ):
         label = "Publications"
         if "PAS" in ana_name:
             label = "Physics Analysis Summaries"
@@ -196,12 +208,15 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         if "CONF" in ana_name:
             label = "Conf Notes"
         self.f.write ( "| %s" % "**%s**" % label )
-        self.f.write ( " |"*( len(self.fields() ) ) )
+        self.f.write ( " |"*( len(self.fields( isEffMap ) ) ) )
         self.f.write ( "\n" )
 
     def writeOneTable ( self, experiment, Type, sqrts, anas ):
         version = self.database.databaseVersion
         dotlessv = ""
+        isEffMap = True
+        if Type == "upperLimit":
+            isEffMap = False
         if self.add_version:
             dotlessv = version.replace(".","")
         keys, anadict = [], {}
@@ -224,11 +239,11 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         # print ( keys )
         previous = keys[0]
 
-        self.emptyLine( previous )
+        self.emptyLine( previous, isEffMap )
 
         for ana_name in keys:
             if len ( ana_name ) != len ( previous ):
-                self.emptyLine( ana_name )
+                self.emptyLine( ana_name, isEffMap )
             previous = ana_name
             ana = anadict[ana_name]
             try:
@@ -288,9 +303,18 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             if self.superSeded:
                 self.f.write ( "%s |" % ssuperseded )
             if self.likelihoods:
-                llhd = self.yesno ( hasLLHD ( ana ) )
-                self.f.write ( "%s |" % llhd )
+                if isEffMap:
+                    llhd = self.whatLlhdInfo ( ana )
+                    self.f.write ( "%s |" % llhd )
+                else:
+                    llhd = self.yesno ( hasLLHD ( ana ) )
+                    self.f.write ( "%s |" % llhd )
             self.f.write ( "\n" )
+
+    def yesno ( self, B ):
+        if B in [ True, "True" ]: return "&#10004;"
+        if B in [ False, "False" ]: return ""
+        return "?"
 
     def selectAnalyses ( self, sqrts, experiment, Type ):
         ret = []
