@@ -305,10 +305,10 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             if self.likelihoods:
                 if isEffMap:
                     llhd = self.whatLlhdInfo ( ana )
-                    self.f.write ( "%s |" % llhd )
+                    self.f.write ( " %s |" % llhd )
                 else:
                     llhd = self.yesno ( hasLLHD ( ana ) )
-                    self.f.write ( "%s |" % llhd )
+                    self.f.write ( " %s |" % llhd )
             self.f.write ( "\n" )
 
     def yesno ( self, B ):
