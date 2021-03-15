@@ -328,7 +328,8 @@ class BibtexWriter:
         self.success += 1
         self.log ( "Success!" )
         sqrts = self.getSqrts ( Id )
-        self.stats[sqrts][Id]={"cached":0 }
+        coll = self.findCollaboration ( Id )
+        self.stats[coll][Id]={"cached":0 }
         self.f.write ( bib )
         self.f.write ( "\n" )
         if self.write_cache:
