@@ -25,6 +25,7 @@ from smodels_utils.helper.various import hasLLHD
 class Lister:
     def __init__ ( self ):
         self.n_homegrown = 0
+        self.stats = set()
 
     def convert ( self, string ):
         ret = string.replace ( ">=", "&ge;" )
@@ -67,6 +68,7 @@ class Lister:
         n_topos = set()
         n_anas = set()
         for expR in self.expRes:
+            self.stats.add ( expR.id() )
             n_anas.add ( expR.id() )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )
@@ -316,6 +318,15 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         if B in [ False, "False" ]: return ""
         return "?"
 
+    def writeStatsFile ( self ):
+        """ write out the stats file """
+        statsfile = "analyses.py"
+        print ( f"Writing stats file {statsfile}." )
+        f = open ( statsfile, "wt" )
+        f.write ( "# superseded: %d\n" % self.superSeded )
+        f.write ( "A=" + str ( self.stats )+"\n" )
+        f.close()
+
     def selectAnalyses ( self, sqrts, experiment, Type ):
         ret = []
         T=Type.replace(" ","" ).lower().replace("maps","map").replace("limits","limit" )
@@ -400,6 +411,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.footer ( )
         self.diff()
         self.moveToGithub( )
+        self.writeStatsFile()
 
 if __name__ == '__main__':
     lister = Lister()

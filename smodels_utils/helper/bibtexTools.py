@@ -536,9 +536,15 @@ class BibtexWriter:
         sqrtses = list ( self.stats.keys() )
         sqrtses.sort()
         f.write ( "D={ 'CMS':{}, 'ATLAS':{} }\n" )
+        f.write ( "I={}\n" )
         for coll,anas in self.stats.items():
             for ana,values in anas.items():
                 f.write ( "D['%s']['%s'] = %s\n" % ( coll, ana, str(values) ) )
+                bibtex = values["bibtex"]
+                ivalues = values
+                ivalues.pop ( "bibtex" )
+                ivalues["anaid"]=ana
+                f.write ( "I['%s'] = %s\n" % ( bibtex, str(ivalues) ) )
         f.close()
 
 if __name__ == "__main__":
