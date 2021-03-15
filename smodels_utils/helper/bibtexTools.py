@@ -230,7 +230,11 @@ class BibtexWriter:
     def bibtexFromWikiUrl ( self, url, label=None ):
         """ get the bibtex entry from the atlas wiki """
         self.log ( " * fetching from wiki: %s" % url )
-        f=urlopen ( url )
+        try:
+            f=urlopen ( url )
+        except urllib.error.HTTPError as e:
+            self.log( "   `- error %s, not fetching from wiki" % e )
+            return None
         lines = f.readlines()
         f.close()
         lines = list ( map ( str, lines ) )
