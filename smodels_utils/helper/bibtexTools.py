@@ -14,7 +14,7 @@ from __future__ import print_function
 
 from smodels.tools.smodelsLogging import setLogLevel
 import bibtexparser
-import urllib, colorama
+import urllib, colorama, subprocess
 import os, sys
 from smodels.experiment.databaseObj import Database
 
@@ -66,7 +66,7 @@ class BibtexWriter:
             os.mkdir( self.unuseddir )
 
     def openHandles ( self ):
-        """ open all file handles. """ 
+        """ open all file handles. """
         self.f=open ( "refs.bib", "w" )
         self.h=open ( "failed.txt", "w" )
         self.i=open ( "database.bib", "w" )
@@ -345,7 +345,7 @@ class BibtexWriter:
         Id = expRes.globalInfo.id
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
-            
+
         backup = self.tryFetchFromCache( Id )
         if backup != False:
             self.success += 1
@@ -444,7 +444,41 @@ class BibtexWriter:
                 collaboration = "CMS"
         return collaboration
 
-    def createSummaryCitation ( self, bibtex, experiment ):
+    def createTestTex ( self, bibtex ):
+        """ create the test.tex file, to check """
+        print ( "Writing test.tex." )
+        f = open ( "test.tex", "wt" )
+        f.write ( "\documentclass[a4paper,11pt]{article}\n" )
+        f.write ( "\\usepackage{amssymb}\n" )
+        f.write ( "\\usepackage{amsmath}\n" )
+        f.write ( "\\usepackage{hyperref}\n" )
+        f.write ( "\\begin{document}\n" )
+        for i in [ "CMS", "ATLAS" ]:
+            r = self.createSummaryCitation ( bibtex, i, False )
+            f.write ( r + "\\newline\n\n" )
+        f.write (
+"""\\bibliographystyle{elsarticle-num}
+\\bibliography{database}
+\end{document}
+""" )
+        f.close()
+        f = open ( "latex.sh", "wt" )
+        f.write ( "#!/bin/bash\n" )
+        cmds = [ "pdflatex -interaction nonstopmode test.tex", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex" ]
+        cmds = [ "latexmk -pvs -ps test" ]
+        cmds = []
+        for cmd in cmds:
+            f.write ( cmd + "\n" )
+        f.close()
+        os.chmod ( "latex.sh", 0o755 )
+        print ( "Execute latex.sh if you want a test document" )
+        # subprocess.getoutput ( "./latex.sh" )
+        # os.system ( "./latex.sh" )
+
+    def createSummaryCitation ( self, bibtex, experiment, commentOut=True ):
+        """ create summary citation 
+        :param commentOut: if true, prepend with %
+        """
         entries = bibtex.entries
         filtered = []
         for entry in entries:
@@ -452,8 +486,13 @@ class BibtexWriter:
             if not experiment == collaboration:
                 continue
             filtered.append ( entry )
-        ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
-        ret+= "% \cite{"
+        ret = ""
+        if commentOut:
+            ret += "% "
+        ret += "Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
+        if commentOut:
+            ret += "% "
+        ret+= "\cite{"
         labels = self.getLabels ( bibtex )
         for entry in filtered:
             ID = entry["ID"]
@@ -531,6 +570,7 @@ class BibtexWriter:
         self.i.write ( self.createSummaryCitation ( bibtex, "ATLAS" ) )
         self.i.write ( "\n" )
         self.i.close()
+        self.createTestTex ( bibtex )
         commands.getoutput ( "cat refs.bib >> database.bib" )
 
     def createStatsFile ( self ):
