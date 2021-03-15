@@ -92,7 +92,8 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
         self.f.write ( "<a name='A2'>(2)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'cov' = a covariance matrix for a simplified likelihood. 'json' = full likelihoods as pyhf json files.\n" )
+        self.f.write ( "<a name='A4'>(4)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        self.f.write ( "<a name='A5'>(5)</a> Likelihood information for combination of signal regions ('SR comb.'): 'cov' = a covariance matrix for a simplified likelihood. 'json' = full likelihoods as pyhf json files.\n" )
         self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
         self.f.close()
 
@@ -167,9 +168,9 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             ret.append ( "superseded by" )
         if self.likelihoods:
             if isEffMap:
-                ret.append ( "SR comb. [(4)](#A4)" )
+                ret.append ( "SR comb. [(5)](#A5)" )
             else:
-                ret.append ( "expected ULs" )
+                ret.append ( "exp. ULs [(4)](#A4)" )
             # ret.append ( "likeli- hoods" )
         return ret
 
