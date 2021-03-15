@@ -46,6 +46,7 @@ class BibtexWriter:
         self.success = 0
         self.nomatch = 0
         self.fastlim = 0
+        self.stats = { "CMS":{}, "ATLAS":{} } ## stats
         self.specialcases = {
             "CMS-PAS-SUS-13-018": "https://cds.cern.ch/record/1693164",
             "CMS-PAS-SUS-13-023": "http://cds.cern.ch/record/2044441",
@@ -104,6 +105,7 @@ class BibtexWriter:
         self.log ( "failed: %d" % self.nfailed )
         self.g.close()
         self.h.close()
+        self.createStatsFile()
 
     def bibtexFromCDS ( self, url, label=None ):
         """ get the bibtex entry from cds """
@@ -285,7 +287,7 @@ class BibtexWriter:
         """ search for the publication on the summary wiki page """
         return None
 
-    def tryFetchFromBackup ( self, Id ):
+    def tryFetchFromCache ( self, Id ):
         """ there is a local file with the entry?
         convenient! we use it! """
         fname = "%s/%s.tex" % ( self.cachedir, Id )
@@ -295,18 +297,38 @@ class BibtexWriter:
         f=open( fname, "r" )
         txt=f.read()
         f.close()
+        sqrts = self.getSqrts ( Id )
+        coll = self.findCollaboration ( Id )
+        self.stats[coll][Id] = { "cached": 1 }
         return txt
 
     def writeCache ( self, Id, bib ):
+        """ write the cache entry for analysis id <Id>, bibtex text is <bib> """
         self.log ( "Now write cache file %s/%s.tex" % ( self.cachedir, Id ) )
         cachef = open ( "%s/%s.tex" % ( self.cachedir, Id ) , "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
         cachef.close()
 
+    def getSqrts ( self, Id ):
+        """ given analysis id <Id>, determine sqrts """
+        year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
+        year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
+        year = year.replace("CONF-","")
+        p1 = year.find("-")
+        year = year[:p1]
+        if year.startswith("20"):
+            year = year[2:]
+        year = int ( year )
+        if year < 15:
+            return 8
+        return 13
+
     def writeBibEntry ( self, bib, Id ):
         self.success += 1
         self.log ( "Success!" )
+        sqrts = self.getSqrts ( Id )
+        self.stats[sqrts][Id]={"cached":0 }
         self.f.write ( bib )
         self.f.write ( "\n" )
         if self.write_cache:
@@ -319,7 +341,7 @@ class BibtexWriter:
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
             
-        backup = self.tryFetchFromBackup( Id )
+        backup = self.tryFetchFromCache( Id )
         if backup != False:
             self.success += 1
             self.log ( "Success!" )
@@ -338,7 +360,10 @@ class BibtexWriter:
                 self.log ( "Special treatment failed." )
 
         contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
+        sqrts = self.getSqrts ( Id )
+        coll = self.findCollaboration ( Id )
         if contact and "fastlim" in contact:
+            # self.stats[coll][Id]={ "fastlim": 1 }
             self.fastlim += 1
             self.success += 1
             self.log ( "Fastlim. Skipping.\n" )
@@ -393,6 +418,12 @@ class BibtexWriter:
         self.addSummaries()
 
     def findCollaboration ( self, entry ):
+        if type(entry) == str:
+            if "ATLAS" in entry:
+                return "ATLAS"
+            if "CMS" in entry:
+                return "CMS"
+            return "???"
         collaboration=""
         ID = entry["ID"]
         if "collaboration" in entry.keys():
@@ -408,7 +439,8 @@ class BibtexWriter:
                 collaboration = "CMS"
         return collaboration
 
-    def createSummaryCitation ( self, entries, experiment ):
+    def createSummaryCitation ( self, bibtex, experiment ):
+        entries = bibtex.entries
         filtered = []
         for entry in entries:
             collaboration = self.findCollaboration ( entry )
@@ -417,11 +449,48 @@ class BibtexWriter:
             filtered.append ( entry )
         ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
         ret+= "% \cite{"
+        labels = self.getLabels ( bibtex )
         for entry in filtered:
             ID = entry["ID"]
+            label = labels [ ID ]
+            sqrts = self.getSqrts ( label )
+            coll = self.findCollaboration ( label )
+            if label in self.stats[coll]:
+                self.stats[coll][label]["bibtex"]=ID
             ret += "%s, " % ID
         ret = str(ret[:-2]+"}")
         return ret
+
+    def getLabels ( self, bibtex ):
+        """ given a bibtex object, extract a dictionary of the labels,
+            both ways, so anaid <-> bibtex name.
+        """
+        biblabels = bibtex.entries_dict.keys()
+        labels = {}
+        for label,entry in bibtex.entries_dict.items():
+            for i in [ "label", "reportnumber", "number" ]:
+                if i in entry:
+                    name = entry[i].split(",")[0]
+                    name = name.split(".")[0]
+                    if not label in labels:
+                        labels[label]=name
+                    if not name in labels:
+                        labels[ name ] = label
+                    break
+        names = { "ATLAS-SUSY-2016-07": "Aaboud:2017vwy",
+                  "ATLAS-SUSY-2016-16": "Aaboud:2017aeu",
+                  "CMS-SUS-16-050": "Sirunyan:2291344",
+                  "ATLAS-CONF-2013-047": "ATLAS-CONF-2013-047",
+                  "CMS-SUS-13-012": "Chatrchyan:2014lfa",
+                  "ATLAS-SUSY-2013-02": "Aad:2014wea",
+                  "CMS-SUS-19-006": "Sirunyan:2686457",
+        }
+        labels.update ( names )
+        reverse = {}
+        for k,v in labels.items():
+            reverse[v]=k
+        labels.update ( reverse )
+        return labels
 
     def query ( self, anaid: str ):
         """ get the bibtex name of anaid
@@ -435,28 +504,9 @@ class BibtexWriter:
             bibtex=bibtexparser.load ( f )
             f.close()
             biblabels = bibtex.entries_dict.keys()
-            labels = {}
-            for label,entry in bibtex.entries_dict.items():
-                for i in [ "label", "number", "reportnumber" ]:
-                    if i in entry:
-                        name = entry[i].split(",")[0]
-                        name = name.split(".")[0]
-                        if not label in labels:
-                            labels[label]=name
-                        if not name in labels:
-                            labels[ name ] = label
+            labels = self.getLabels ( bibtex )
             if anaid in labels:
                 return labels[anaid]
-        names = { "ATLAS-SUSY-2016-07": "Aaboud:2017vwy",
-                  "ATLAS-SUSY-2016-16": "Aaboud:2017aeu",
-                  "CMS-SUS-16-050": "Sirunyan:2291344",
-                  "ATLAS-CONF-2013-047": "ATLAS-CONF-2013-047",
-                  "CMS-SUS-13-012": "Chatrchyan:2014lfa",
-                  "ATLAS-SUSY-2013-02": "Aad:2014wea",
-                  "CMS-SUS-19-006": "Sirunyan:2686457",
-        }
-        if anaid in names:
-            return names[anaid]
         return "FIXME"
 
     def interactive ( self ):
@@ -471,12 +521,25 @@ class BibtexWriter:
         bibtex=bibtexparser.load ( f )
         f.close()
         self.i.write ( "\n" )
-        self.i.write ( self.createSummaryCitation ( bibtex.entries, "CMS" ) )
+        self.i.write ( self.createSummaryCitation ( bibtex, "CMS" ) )
         self.i.write ( "\n" )
-        self.i.write ( self.createSummaryCitation ( bibtex.entries, "ATLAS" ) )
+        self.i.write ( self.createSummaryCitation ( bibtex, "ATLAS" ) )
         self.i.write ( "\n" )
         self.i.close()
         commands.getoutput ( "cat refs.bib >> database.bib" )
+
+    def createStatsFile ( self ):
+        """ create a file that contains the stats of this process """
+        statsfile = "bib.py"
+        print ( f"Writing {statsfile}." )
+        f = open ( statsfile,"wt" )
+        sqrtses = list ( self.stats.keys() )
+        sqrtses.sort()
+        f.write ( "D={ 'CMS':{}, 'ATLAS':{} }\n" )
+        for coll,anas in self.stats.items():
+            for ana,values in anas.items():
+                f.write ( "D['%s']['%s'] = %s\n" % ( coll, ana, str(values) ) )
+        f.close()
 
 if __name__ == "__main__":
     import argparse
