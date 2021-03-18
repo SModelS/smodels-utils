@@ -12,7 +12,7 @@ def create ( infile, outfile, filtered ):
     """
     db = Database ( infile )
     olders = db.expResultList
-    newers, supers = [], []
+    newers, supers, fastlims = [], [], []
     superseded = []
     for er in olders:
         gI = er.globalInfo
@@ -23,9 +23,10 @@ def create ( infile, outfile, filtered ):
         gI = er.globalInfo
         if hasattr ( gI, "supersededBy" ) or gI.id in superseded:
             newers.append ( er )
+        elif hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
+                fastlims.append ( er )
         else:
-            if not hasattr ( gI, "contact" ) or not "fastlim" in gI.contact:
-                supers.append ( er )
+            supers.append ( er )
     if filtered:
         db.subs[0].expResultList = supers
     else:
