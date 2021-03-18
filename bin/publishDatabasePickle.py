@@ -10,7 +10,6 @@ import colorama
 if sys.version[0]=="2":
     import commands as CMD
 else:
-    print ( "you sure you want to run this with python3?" )
     import subprocess as CMD
 
 def sizeof_fmt(num, suffix='B'):
@@ -94,15 +93,20 @@ def main():
             d = removeFastLim ( d )
             d.pcl_meta.hasFastLim = False
             d.txt_meta.hasFastLim = False
-        dbname = d.pcl_meta.pathname
+        dbname = d.txt_meta.pathname
+        picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+        fastlim = d.txt_meta.hasFastLim
+        if hasattr ( d, "pcl_meta" ):
+            dbname = d.pcl_meta.pathname
+            picklefile = d.pcl_meta.pathname
+            fastlim = d.pcl_meta.hasFastLim
         if not args.skipValidation:
             validated, which = checkNonValidated(d)
             has_nonValidated = validated
         else:
             has_nonValidated = False
-        fastlim = d.pcl_meta.hasFastLim
 
-    p=open(dbname,"rb")
+    p=open(picklefile,"rb")
     meta=pickle.load(p)
     fastlim = meta.hasFastLim
     print ( meta )
