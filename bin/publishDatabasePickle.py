@@ -81,6 +81,7 @@ def main():
     if "test" in dbname:
         discard_zeroes = False
     fastlim = True
+    picklefile = dbname
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
@@ -93,13 +94,6 @@ def main():
             d = removeFastLim ( d )
             d.pcl_meta.hasFastLim = False
             d.txt_meta.hasFastLim = False
-        dbname = d.txt_meta.pathname
-        picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
-        fastlim = d.txt_meta.hasFastLim
-        if hasattr ( d, "pcl_meta" ):
-            dbname = d.pcl_meta.pathname
-            picklefile = d.pcl_meta.pathname
-            fastlim = d.pcl_meta.hasFastLim
         if not args.skipValidation:
             validated, which = checkNonValidated(d)
             has_nonValidated = validated
