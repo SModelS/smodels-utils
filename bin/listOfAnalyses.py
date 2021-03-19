@@ -82,7 +82,7 @@ class Lister:
 # List Of Analyses %s %s
 List of analyses and topologies in the SMS results database,
 comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
-The list has been created from the database version `%s`.
+The list has been created from the database version `%s.`
 Results from FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
 %s.
     """ % ( version, titleplus, n_maps, n_results, len(n_topos),
