@@ -39,7 +39,7 @@ def checkNonValidated( database ):
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
 
-def removeSupersded ( db ):
+def removeSuperseded ( db ):
     """ remove superseded results """
     print ( "before removal of superseded",len(db.getExpResults()),"results" )
     filteredList = []
@@ -117,7 +117,7 @@ def main():
         from smodels.experiment.databaseObj import Database
         d = Database ( dbname, discard_zeroes=discard_zeroes )
         if args.remove_superseded:
-            d = removeSupersded ( d )
+            d = removeSuperseded ( d )
         if args.remove_fastlim:
             d = removeFastLim ( d )
             d.pcl_meta.hasFastLim = False
@@ -139,8 +139,16 @@ def main():
     sfastlim=""
     if fastlim:
         sfastlim="_fastlim"
+
     infofile = "official%s%s" % ( ver, sfastlim )
     pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
+    if "superseded" in ver:
+        infofile = "superseded%s%s" % ( ver.replace("superseded",""), sfastlim )
+        pclfilename = "superseded%s%s.pcl" % ( ver.replace("superseded",""), sfastlim )
+    if "fastlim" in ver:
+        infofile = "fastlim%s%s" % ( ver.replace("fastlim",""), sfastlim )
+        pclfilename = "fastlim%s%s.pcl" % ( ver.replace("fastlim",""), sfastlim )
+
     if ver == "unittest":
         smodels_ver = "112"
         infofile = "unittest%s" % smodels_ver

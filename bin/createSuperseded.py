@@ -21,21 +21,25 @@ def create ( infile, outfile, filtered ):
 
     for er in olders:
         gI = er.globalInfo
-        if hasattr ( gI, "supersededBy" ) or gI.id in superseded:
+        if hasattr ( gI, "supersededBy" ): # or gI.id in superseded:
+            print ( gI.id, "is superseded" )
             newers.append ( er )
         elif hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
                 fastlims.append ( er )
         else:
             supers.append ( er )
+            print ( gI.id, "keep" )
     if filtered:
         db.subs[0].expResultList = supers
     else:
         db.subs[0].expResultList = newers
     db.subs = [ db.subs[0] ]
+    print ( "storing", len(db.expResultList), "superseded results" )
     sstring = "superseded"
     if filtered:
-        sstring = "nosuperseded"
+        sstring = "" # "nosuperseded"
     db.subs[0].txt_meta.databaseVersion = db.databaseVersion + sstring
+    print ( "writing to", outfile )
     db.createBinaryFile ( outfile )
 
 def main( ):
