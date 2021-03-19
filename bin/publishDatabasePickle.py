@@ -153,7 +153,7 @@ def main():
 
     f=open ( infofile, "w" )
     mtime = time.asctime(time.localtime(meta.mtime))
-    Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(dbname).st_size,
+    Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(picklefile).st_size,
              "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
