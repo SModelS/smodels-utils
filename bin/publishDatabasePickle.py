@@ -39,9 +39,32 @@ def checkNonValidated( database ):
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
 
+def removeSupersded ( db ):
+    """ remove superseded results """
+    print ( "before removal of superseded",len(db.getExpResults()),"results" )
+    filteredList = []
+    ctr = 0
+    superseded = []
+    for er in olders:
+        gI = er.globalInfo
+        if hasattr ( gI, "supersedes" ):
+            superseded.append ( gI.supersedes )
+    for er in olders:
+        gI = er.globalInfo
+        if hasattr ( gI, "supersededBy" ) or gI.id in superseded:
+            newers.append ( er )
+        else:
+            supers.append ( er )
+    db.subs[0].expResultList = newers
+    db.subs = [ db.subs[0] ]
+    print ( "after removal of superseded",len(db.getExpResults()),"results" )
+    db.createBinaryFile()
+    return db
+
+
 def removeFastLim ( db ):
     """ remove fastlim results """
-    print ( "before removal",len(db.getExpResults()),"results" )
+    print ( "before removal of fastlim",len(db.getExpResults()),"results" )
     filteredList = []
     ctr = 0
     for e in db.getExpResults():
@@ -55,11 +78,12 @@ def removeFastLim ( db ):
         else:
 
             filteredList.append ( e )
-    db.expResultList = filteredList
-    print ( "after removal",len(db.getExpResults()),"results" )
-    db.pcl_meta.hasFastLim = False
+    db.subs[0].expResultList = filteredList
+    db.subs = [ db.subs[0] ]
+    print ( "after removal of fastlim",len(db.getExpResults()),"results" )
     db.txt_meta.hasFastLim = False
-    db.createBinaryFile()
+    db.createBinaryFile( )
+    db.subs[0].pcl_meta.hasFastLim = False
     return db
 
 def main():
@@ -69,6 +93,7 @@ def main():
     ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
+    ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     args = ap.parse_args()
@@ -90,6 +115,8 @@ def main():
         print ( "[publishDatabasePickle] building database with %s" % os.path.dirname ( smodels.__file__ ) )
         from smodels.experiment.databaseObj import Database
         d = Database ( dbname, discard_zeroes=discard_zeroes )
+        if args.remove_superseded:
+            d = removeSupersded ( d )
         if args.remove_fastlim:
             d = removeFastLim ( d )
             d.pcl_meta.hasFastLim = False
@@ -99,6 +126,7 @@ def main():
             has_nonValidated = validated
         else:
             has_nonValidated = False
+        picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
@@ -132,7 +160,7 @@ def main():
         nvlist = ",".join(which)
         print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
         sys.exit()
-    cmd = "cp %s ./%s" % ( dbname, pclfilename )
+    cmd = "cp %s ./%s" % ( picklefile, pclfilename )
     ssh = True
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
