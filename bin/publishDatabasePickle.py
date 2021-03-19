@@ -41,7 +41,7 @@ def checkNonValidated( database ):
 
 def removeSuperseded ( db ):
     """ remove superseded results """
-    print ( "before removal of superseded",len(db.getExpResults()),"results" )
+    print ( "[publishDatabasePickle] before removal of superseded",len(db.expResultList),"results" )
     filteredList = []
     ctr = 0
     superseded, supers, newers = [], [], []
@@ -52,38 +52,38 @@ def removeSuperseded ( db ):
             superseded.append ( gI.supersedes )
     for er in olders:
         gI = er.globalInfo
-        if hasattr ( gI, "supersededBy" ) or gI.id in superseded:
+        if hasattr ( gI, "supersededBy" ): # or gI.id in superseded:
             newers.append ( er )
         else:
             supers.append ( er )
     db.subs[0].expResultList = supers
     db.subs = [ db.subs[0] ]
-    print ( "after removal of superseded",len(db.getExpResults()),"results" )
-    db.createBinaryFile()
+    print ( "[publishDatabasePickle] after removal of superseded",len(db.expResultList),"results" )
+    db.createBinaryFile( "temp.pcl" )
     return db
 
 
 def removeFastLim ( db ):
     """ remove fastlim results """
-    print ( "before removal of fastlim",len(db.getExpResults()),"results" )
+    print ( "[publishDatabasePickle] before removal of fastlim",len(db.expResultList),"results" )
     filteredList = []
     ctr = 0
-    for e in db.getExpResults():
+    for e in db.expResultList:
         gI = e.globalInfo
         if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
             ctr+=1
             if ctr < 4:
                 print ( "removing", gI.id )
-            if ctr == 4:
-                print ( "(removing more ... )" )
         else:
 
             filteredList.append ( e )
+    if ctr > 3:
+        print ( f"(removed a total of {ctr} ... )" )
     db.subs[0].expResultList = filteredList
     db.subs = [ db.subs[0] ]
-    print ( "after removal of fastlim",len(db.getExpResults()),"results" )
+    print ( "[publishDatabasePickle] after removal of fastlim",len(db.expResultList),"results" )
     db.txt_meta.hasFastLim = False
-    db.createBinaryFile( )
+    db.createBinaryFile( "temp.pcl" )
     db.subs[0].pcl_meta.hasFastLim = False
     return db
 
@@ -132,8 +132,9 @@ def main():
     p=open(picklefile,"rb")
     meta=pickle.load(p)
     fastlim = meta.hasFastLim
+    if args.remove_fastlim:
+        fastlim = False
     print ( meta )
-    print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(dbname).st_size ) )
     ver = meta.databaseVersion.replace(".","")
     p.close()
     sfastlim=""
@@ -159,9 +160,22 @@ def main():
             infofile = "unittest%s" % smodels_ver
             pclfilename = "%s.pcl" % infofile
 
+    #cmd = "cp %s ./%s" % ( picklefile, pclfilename )
+    ssh = True
+    if os.path.exists ( eosdir ): ## eos exists locally? copy!
+        ssh = False
+    if args.build:
+        print ( f"[publishDatabasePickle] writing {pclfilename}" )
+        if not args.dry_run:
+            d.createBinaryFile ( pclfilename )
+    #if not args.dry_run and not args.build:
+    #    print ( "[publishDatabasePickle] %s" % cmd )
+    #    a=CMD.getoutput ( cmd )
+    #    print ( "[publishDatabasePickle] %s" % a )
+    print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(pclfilename).st_size ) )
     f=open ( infofile, "w" )
     mtime = time.asctime(time.localtime(meta.mtime))
-    Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(picklefile).st_size,
+    Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(pclfilename).st_size,
              "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
@@ -169,14 +183,6 @@ def main():
         nvlist = ",".join(which)
         print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
         sys.exit()
-    cmd = "cp %s ./%s" % ( picklefile, pclfilename )
-    ssh = True
-    if os.path.exists ( eosdir ): ## eos exists locally? copy!
-        ssh = False
-    if not args.dry_run:
-        print ( "[publishDatabasePickle] %s" % cmd )
-        a=CMD.getoutput ( cmd )
-        print ( "[publishDatabasePickle] %s" % a )
     sexec="executing:"
     if args.dry_run:
         sexec="suppressing execution of:"
@@ -188,8 +194,6 @@ def main():
             print ( "[publishDatabasePickle] %s" % a )
     cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
-    # print("\n\t -----> The json file has to be updated in the smodels.github.io[master]:database repository.\n")
-    # print("\n\t -----> The .pcl file can be uploaded through https://cernbox.cern.ch/index.php/s/jt7xJCepuXTRWPL\n\n")
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
