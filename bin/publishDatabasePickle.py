@@ -44,7 +44,8 @@ def removeSupersded ( db ):
     print ( "before removal of superseded",len(db.getExpResults()),"results" )
     filteredList = []
     ctr = 0
-    superseded = []
+    superseded, supers, newers = [], [], []
+    olders = db.expResultList
     for er in olders:
         gI = er.globalInfo
         if hasattr ( gI, "supersedes" ):
@@ -55,7 +56,7 @@ def removeSupersded ( db ):
             newers.append ( er )
         else:
             supers.append ( er )
-    db.subs[0].expResultList = newers
+    db.subs[0].expResultList = supers
     db.subs = [ db.subs[0] ]
     print ( "after removal of superseded",len(db.getExpResults()),"results" )
     db.createBinaryFile()
