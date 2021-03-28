@@ -137,6 +137,12 @@ class DataHandler(object):
             logger.error("File type for %s has not been defined" %self.path)
             sys.exit()
 
+        if self.fileType == "csv" and type(self.path) == tuple:
+            if errorcounts["pathtupleerror"] == False:
+                print ( f"[dataHandlerObjects] error {self.path} is a tuple. will switch to mcsv as your dataformat." )
+                errorcounts["pathtupleerror"]  = True
+            self.fileType = "mcsv"
+
         #Load data
         self.data = []
         strictlyPositive = False
@@ -553,11 +559,6 @@ class DataHandler(object):
         if waitFor == None:
             has_waited = True
         yields = []
-        if type(self.path == tuple):
-            if errorcounts["pathtupleerror"] == False:
-                print ( f"[dataHandlerObjects] error {self.path} is a tuple. will switch to mcsv as your dataformat." )
-                errorcounts["pathtupleerror"]  = True
-            return self.mcsv()
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
