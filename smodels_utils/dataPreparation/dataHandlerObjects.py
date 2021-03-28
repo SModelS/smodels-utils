@@ -139,7 +139,7 @@ class DataHandler(object):
 
         if self.fileType == "csv" and type(self.path) == tuple:
             if errorcounts["pathtupleerror"] == False:
-                print ( f"[dataHandlerObjects] error {self.path} is a tuple. will switch to mcsv as your dataformat." )
+                print ( f"[dataHandlerObjects] warning: {self.path} is a tuple. will switch from csv to mcsv as your dataformat." )
                 errorcounts["pathtupleerror"]  = True
             self.fileType = "mcsv"
 
