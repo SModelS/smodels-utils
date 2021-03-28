@@ -28,6 +28,8 @@ hbar = 6.582119514e-16 # in GeV * ns
 ## so use this feature with great care
 allowMultipleAcceptances = False
 
+errorcounts = { "pathtupleerror": False }
+
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
     for l in lst:
@@ -551,6 +553,11 @@ class DataHandler(object):
         if waitFor == None:
             has_waited = True
         yields = []
+        if type(self.path == tuple):
+            if errorcounts["pathtupleerror"] == False:
+                print ( f"[dataHandlerObjects] error {self.path} is a tuple. will switch to mcsv as your dataformat." )
+                errorcounts["pathtupleerror"]  = True
+            return self.mcsv()
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
