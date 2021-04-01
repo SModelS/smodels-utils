@@ -6,6 +6,8 @@ a pickle file that should work with both python2 and python3. """
 
 from __future__ import print_function
 import pickle, os, sys, argparse, time
+from smodels.experiment.databaseObj import Database
+import smodels
 import colorama
 if sys.version[0]=="2":
     import commands as CMD
@@ -108,13 +110,13 @@ def main():
         discard_zeroes = False
     fastlim = True
     picklefile = dbname
+    if not args.build:
+        d = Database ( dbname, discard_zeroes=discard_zeroes )
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
-        import smodels
         print ( "[publishDatabasePickle] building database with %s" % os.path.dirname ( smodels.__file__ ) )
-        from smodels.experiment.databaseObj import Database
         d = Database ( dbname, discard_zeroes=discard_zeroes )
         if args.remove_superseded:
             d = removeSuperseded ( d )
@@ -164,10 +166,9 @@ def main():
     ssh = True
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
-    if args.build:
-        print ( f"[publishDatabasePickle] writing {pclfilename}" )
-        if not args.dry_run:
-            d.createBinaryFile ( pclfilename )
+    print ( f"[publishDatabasePickle] writing {pclfilename}" )
+    if not args.dry_run:
+        d.createBinaryFile ( pclfilename )
     #if not args.dry_run and not args.build:
     #    print ( "[publishDatabasePickle] %s" % cmd )
     #    a=CMD.getoutput ( cmd )
