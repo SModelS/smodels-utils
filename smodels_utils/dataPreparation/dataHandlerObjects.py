@@ -562,9 +562,16 @@ class DataHandler(object):
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
+                if "@@EOF@@" in r:
+                    break
                 if len(r)<2:
                     continue
-                #print ( "line >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
+                hasLatexStuff=False
+                for _ in r:
+                    if "\\tilde" in _: # sometimes its a latex line
+                        hasLatexStuff = True
+                if hasLatexStuff:
+                    continue
                 if not has_waited:
                     for i in r:
                         if waitFor in i:
@@ -594,6 +601,7 @@ class DataHandler(object):
                     xs.append ( yr[0] )
                     ys.append ( yr[1] )
             else:
+                print ( "yields", yields )
                 yields.sort()
             for yr in yields:
                 yield yr
