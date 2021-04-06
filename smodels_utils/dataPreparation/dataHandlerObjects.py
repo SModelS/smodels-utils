@@ -601,7 +601,6 @@ class DataHandler(object):
                     xs.append ( yr[0] )
                     ys.append ( yr[1] )
             else:
-                print ( "yields", yields )
                 yields.sort()
             for yr in yields:
                 yield yr
