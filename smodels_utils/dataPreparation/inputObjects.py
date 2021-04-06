@@ -855,6 +855,8 @@ class TxNameInput(Locker):
                     value = value / 100.
                 elif dataHandler.unit == "/10000":
                     value = value / 10000.
+                elif dataHandler.unit == "/1000000":
+                    value = value / 1000000.
                 else:
                     value = value*eval(dataHandler.unit,
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
