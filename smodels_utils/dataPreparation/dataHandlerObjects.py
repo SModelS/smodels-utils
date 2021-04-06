@@ -621,11 +621,15 @@ class DataHandler(object):
             ret = list( self.csvForPath( p ) )
             for point in ret:
                 key = tuple(point[:-1])
+                hasLatexStuff = False
+                for k in key:
+                    if type(k) == str and "\\tilde" in k:
+                        hasLatexStuff = True
+                if hasLatexStuff:
+                    continue
                 keys.add ( key )
                 path[key] = point[-1]
             npaths.append ( path )
-        # print ( "paths", paths[:2] )
-        # print ( "keys", keys)
         for k in keys:
             ret = 1.
             for p in npaths:
