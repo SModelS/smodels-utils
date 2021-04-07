@@ -855,8 +855,13 @@ class TxNameInput(Locker):
                     value = value / 100.
                 elif dataHandler.unit == "/10000":
                     value = value / 10000.
-                elif dataHandler.unit == "/1000000":
-                    value = value / 1000000.
+                elif dataHandler.unit.startswith ( "/" ):
+                    factor = dataHandler.unit[1:]
+                    try:
+                        factor = float ( factor )
+                    except ValueError as e:
+                        logger.error ( f"unit starting with / is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
+                    value = value / factor
                 else:
                     value = value*eval(dataHandler.unit,
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
