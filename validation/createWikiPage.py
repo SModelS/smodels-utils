@@ -424,10 +424,10 @@ CMS are for on- and off-shell at once.
             dataTypes.append ( "efficiencyMap" )
         newR = self.db.getExpResults( analysisIDs = [ id ], 
                     txnames = [ txname ], dataTypes = dataTypes,
-                    useSuperseded = True, useNonValidated = self.ignore_validated )
+                    useNonValidated = self.ignore_validated )
         oldR = self.comparison_db.getExpResults( analysisIDs = [ id ], 
                     txnames = [ txname ], dataTypes = dataTypes,
-                    useSuperseded = True, useNonValidated = self.ignore_validated )
+                    useNonValidated = self.ignore_validated )
         if len(newR) == 0 or len(oldR) == 0:
             return False
         oldDS = oldR[0].datasets
@@ -444,8 +444,7 @@ CMS are for on- and off-shell at once.
         """ compile the list of analysis ids in the comparison database,
         i.e. create self.OldAnaIds, and self.topos
         """
-        expRs = self.comparison_db.getExpResults( useSuperseded = True, 
-                      useNonValidated = self.ignore_validated )
+        expRs = self.comparison_db.getExpResults( useNonValidated = self.ignore_validated )
         anaIds = [ x.globalInfo.id for x in expRs ]
         self.OldAnaIds = set ( anaIds )
         self.topos = {}
@@ -543,8 +542,7 @@ CMS are for on- and off-shell at once.
         T="upperLimit"
         if "efficiency" in tpe: T="efficiencyMap"
         tmpList = self.db.getExpResults( dataTypes=[ T ], 
-                         useNonValidated=self.ignore_validated, 
-                         useSuperseded=True )
+                         useNonValidated=self.ignore_validated )
         expResList = []
         for i in tmpList:
             if not exp in i.globalInfo.id: continue

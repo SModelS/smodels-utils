@@ -170,7 +170,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
-                  dataTypes, useSuperseded=True, useNonValidated=True)
+                  dataTypes, useNonValidated=True)
 
     if not expResList:
         logger.error("No experimental results found.")
@@ -246,7 +246,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         if update:
             db = Database(databasePath)
             expResList = db.getExpResults(analysisIDs, datasetIDs, txnames,
-                      dataTypes, useSuperseded=True, useNonValidated=True)
+                      dataTypes, useNonValidated=True )
         for expRes in expResList:
 #             print expRes
             dataset = expRes.datasets[0]
