@@ -603,7 +603,15 @@ class DataHandler(object):
             else:
                 yields.sort()
             for yr in yields:
-                yield yr
+                yld = yr
+                if type ( self.index ) in [ list, tuple ]:
+                    ret = []
+                    for i in self.index:
+                        ret.append ( yr[i] )
+                    yld = ret
+                if type ( self.index ) in [ int ]:
+                    yld = yr[:self.dimensions] + [ yr[self.index] ]
+                yield yld
 
     def mcsv(self):
         """
