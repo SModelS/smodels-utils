@@ -82,8 +82,8 @@ class DataHandler(object):
 
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
-            logger.error("Coordinate map %s is not consistent with number of dimensions (%i)"
-                         %(coordinateMap,self.dimensions+1))
+            logger.error("Coordinate map %s is not consistent with number of dimensions (%i) in %s"
+                         %(coordinateMap,self.dimensions+1, dataLabel))
             sys.exit()
         for xv in self.xvars:
             if not xv in coordinateMap:

@@ -145,6 +145,11 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         order = 2
         pb = False
         isEWK=True
+    if pid1 in [ 1000023 ] and pid2 in [ 1000023 ]:
+        filename = "xsecN2N1p%d.txt" % sqrts
+        order = 2
+        pb = False
+        isEWK=True
     if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
         filename = "xsecN2C1p%d.txt" % sqrts
         order = 2
