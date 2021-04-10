@@ -316,8 +316,8 @@ class DataHandler(object):
         """
 
         if len(point) < self.dimensions+1:
-            logger.error("Data should have at least %i dimensions (%i dimensions found)"
-                         %(self.dimensions+1,len(point)))
+            logger.error("%s should have at least %i dimensions (%i dimensions found)"
+                         %(self.name, self.dimensions+1,len(point)))
             sys.exit()
 
         ptDict = {}
