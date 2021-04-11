@@ -46,7 +46,7 @@ class WikiPageCreator:
         self.moveFile = moveFile
         if ugly: ## in ugly mode we always ignore validated, and superseded
             self.ignore_validated = True
-            self.ignore_superseded = True
+            self.ignore_superseded = False
         self.comparison_db = None
         if self.comparison_dbPath:
             self.comparison_db = Database ( self.comparison_dbPath )
@@ -126,7 +126,7 @@ class WikiPageCreator:
             if not self.include_fastlim:
                 whatIsIncluded = "Neither superseded nor fastlim results are not listed in this table"
         self.file.write( """
-# Validation plots for SModelS-v%s 
+# Validation plots for SModelS-v%s
 
 This page lists validation plots for all analyses and topologies available in
 the SMS results database that can be validated against official results.
@@ -141,7 +141,7 @@ Note that the SModelS validation plots show on- and off-shell regions
 separately (e.g., T2tt and T2ttoff) while the exclusion lines given by ATLAS or
 CMS are for on- and off-shell at once.
 
-""" % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
+""" % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion,
         self.dotlessv, self.dotlessv ) )
         if self.ugly:
             self.file.write ( "\nTo [official validation plots](Validation%s)\n\n" % self.db.databaseVersion.replace(".","") )
@@ -199,9 +199,9 @@ CMS are for on- and off-shell at once.
                         for tn in expRes.getTxNames():
                             validated = tn.getInfo('validated')
                             tname = tn.txName
-                            if not self.ignore_validated and validated in [ "n/a" ]: 
+                            if not self.ignore_validated and validated in [ "n/a" ]:
                                 continue
-                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe, 
+                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe,
                                                       validated )
                             hasChanged = self.anaHasChanged ( expRes.globalInfo.id, tn.txName, tpe )
                             if "efficiency" in tpe:
@@ -234,13 +234,13 @@ CMS are for on- and off-shell at once.
         return r
 
     def writeExpRes( self, expRes, tpe ):
-        """ write the experimental result expRes 
+        """ write the experimental result expRes
         :param tpe: data type (ul or em)
         """
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
         id = expRes.globalInfo.id
-        print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " ) 
+        print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " )
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         if id in [ "ATLAS-SUSY-2016-07" ]:
@@ -261,7 +261,7 @@ CMS are for on- and off-shell at once.
         txns_discussed=set()
         for txname in txnames:
             validated = txname.getInfo('validated')
-            if not self.ignore_validated and validated != True: 
+            if not self.ignore_validated and validated != True:
                 continue
             # if validated == "n/a": continue
             txn = txname.txName
@@ -288,7 +288,7 @@ CMS are for on- and off-shell at once.
             print ( txn, flush=True, end= "" )
             txns_discussed.add ( txn )
             validated = txname.getInfo('validated')
-            if not self.ignore_validated and validated != True: 
+            if not self.ignore_validated and validated != True:
                 continue
             #if validated == "n/a": continue
             color=""
@@ -409,7 +409,7 @@ CMS are for on- and off-shell at once.
 
 
     def anaHasChanged ( self, id, txname, tpe ):
-        """ has analysis id <id> changed? 
+        """ has analysis id <id> changed?
         :param id: analysis id, e.g. ATLAS-SUSY-2013-02  (str)
         :param txname: topology name, e.g. T1 (str)
         :param tpe: type of result, e.g. "upper limits" (str)
@@ -422,10 +422,10 @@ CMS are for on- and off-shell at once.
             dataTypes.append ( "upperLimit" )
         if tpe in [ "efficiency maps" ]:
             dataTypes.append ( "efficiencyMap" )
-        newR = self.db.getExpResults( analysisIDs = [ id ], 
+        newR = self.db.getExpResults( analysisIDs = [ id ],
                     txnames = [ txname ], dataTypes = dataTypes,
                     useNonValidated = self.ignore_validated )
-        oldR = self.comparison_db.getExpResults( analysisIDs = [ id ], 
+        oldR = self.comparison_db.getExpResults( analysisIDs = [ id ],
                     txnames = [ txname ], dataTypes = dataTypes,
                     useNonValidated = self.ignore_validated )
         if len(newR) == 0 or len(oldR) == 0:
@@ -458,7 +458,7 @@ CMS are for on- and off-shell at once.
             if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
                 Type = "-eff"
             for t in topos:
-                name = t.txName+Type 
+                name = t.txName+Type
                 self.topos[anaId].append ( name )
         # print ( "the old analysis ids are", self.OldAnaIds )
         if self.comparison_db.databaseVersion == "1.2.3":
@@ -494,7 +494,7 @@ CMS are for on- and off-shell at once.
         return False
 
     def writeExperimentType ( self, sqrts, exp, tpe, expResList ):
-        """ write the table for a specific sqrts, experiment, data Type 
+        """ write the table for a specific sqrts, experiment, data Type
         """
         stype=tpe.replace(" ","")
         nres = 0
@@ -509,7 +509,7 @@ CMS are for on- and off-shell at once.
                 if name in txnames:
                     continue
                 validated = tn.getInfo('validated')
-                if not self.ignore_validated and validated != True: 
+                if not self.ignore_validated and validated != True:
                     continue
                 # if validated in [ "n/a" ]: continue
                 if "efficiency" in tpe:
@@ -522,8 +522,8 @@ CMS are for on- and off-shell at once.
                 return
         self.true_lines.append ( '\n\n<a name="%s%s%d"></a>\n' % ( exp,stype,sqrts ) )
         self.true_lines.append ( "## %s %s, %d TeV: %d analyses, %d results total\n\n" % (exp,tpe,sqrts, nexpRes, nres ) )
-        self.writeTableHeader ( tpe )
         expResList.sort()
+        self.writeTableHeader ( tpe )
         for expRes in expResList:
             # print ( "id=",expRes.globalInfo.id )
             if self.ignore_superseded and hasattr(expRes.globalInfo,'supersededBy'):
@@ -541,7 +541,7 @@ CMS are for on- and off-shell at once.
             dsids = [ 'all' ]
         T="upperLimit"
         if "efficiency" in tpe: T="efficiencyMap"
-        tmpList = self.db.getExpResults( dataTypes=[ T ], 
+        tmpList = self.db.getExpResults( dataTypes=[ T ],
                          useNonValidated=self.ignore_validated )
         expResList = []
         for i in tmpList:
@@ -565,7 +565,7 @@ CMS are for on- and off-shell at once.
                     self.writeExperimentType ( sqrts, exp, tpe, expResList )
 
         #Copy/update the database plots and generate the wiki table
-        for line in self.none_lines + self.true_lines + self.false_lines: 
+        for line in self.none_lines + self.true_lines + self.false_lines:
             self.file.write(line)
 
 
@@ -579,14 +579,14 @@ if __name__ == "__main__":
                     action='store_true')
     ap.add_argument('-M', '--dontmove', help='dont move file at the end',
                     action='store_true')
-    ap.add_argument('-f', '--force_upload', 
+    ap.add_argument('-f', '--force_upload',
                     help='force upload of pics to ../../smodels.github.io.',
                     action='store_true')
     ap.add_argument('-F', '--include_fastlim', help='include fastlim results',
                     action='store_true')
-    ap.add_argument('-a', '--add_version', help='add version labels in links', 
+    ap.add_argument('-a', '--add_version', help='add version labels in links',
                     action='store_true')
-    ap.add_argument('-s', '--ignore_superseded', help='ignore superseded results', 
+    ap.add_argument('-s', '--ignore_superseded', help='ignore superseded results',
                     action='store_true')
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     ap.add_argument('-v', '--verbose',
@@ -599,13 +599,13 @@ if __name__ == "__main__":
             help='specify the location of the database [~/git/smodels-database]',
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
-    if not os.path.exists(os.path.expanduser(args.database)): 
+    if not os.path.exists(os.path.expanduser(args.database)):
             args.database = "~/tools/smodels-database/"
-    if not os.path.exists(os.path.expanduser(args.comparison_database)): 
+    if not os.path.exists(os.path.expanduser(args.comparison_database)):
         print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args.comparison_database )
         args.comparison_database = ""
     setLogLevel ( args.verbose )
-    creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
+    creator = WikiPageCreator( args.ugly, args.database, args.add_version,
                                args.private, args.force_upload,
                                args.comparison_database, args.ignore_superseded,
                                args.ignore, not args.dontmove, args.include_fastlim )
