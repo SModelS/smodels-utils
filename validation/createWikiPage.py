@@ -15,6 +15,7 @@ sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV, fb
 from smodels.tools.smodelsLogging import setLogLevel, logger
+from smodels_utils.helper.databaseManipulations import filterSuperseded
 import subprocess
 setLogLevel("debug" )
 
@@ -35,6 +36,9 @@ class WikiPageCreator:
         """
         :param ugly: ugly mode, produces the ValidationUgly pages with more info
         :param include_fastlim: include fastlim results
+        :param ignore_superseded: if True, then filter out superseded results
+        :param ignore: if true, then add also validated results 
+               (i.e. ignore the validation field)
         """
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
@@ -407,7 +411,6 @@ CMS are for on- and off-shell at once.
             return "SModelS"
         return "unknown2"
 
-
     def anaHasChanged ( self, id, txname, tpe ):
         """ has analysis id <id> changed?
         :param id: analysis id, e.g. ATLAS-SUSY-2013-02  (str)
@@ -425,6 +428,8 @@ CMS are for on- and off-shell at once.
         newR = self.db.getExpResults( analysisIDs = [ id ],
                     txnames = [ txname ], dataTypes = dataTypes,
                     useNonValidated = self.ignore_validated )
+        if self.ignore_superseded:
+            newR = filterSuperseded ( newR )
         oldR = self.comparison_db.getExpResults( analysisIDs = [ id ],
                     txnames = [ txname ], dataTypes = dataTypes,
                     useNonValidated = self.ignore_validated )
@@ -543,6 +548,8 @@ CMS are for on- and off-shell at once.
         if "efficiency" in tpe: T="efficiencyMap"
         tmpList = self.db.getExpResults( dataTypes=[ T ],
                          useNonValidated=self.ignore_validated )
+        if self.ignore_validated:
+            tmpList = filterSuperseded ( tmpList )
         expResList = []
         for i in tmpList:
             if not exp in i.globalInfo.id: continue
@@ -562,6 +569,8 @@ CMS are for on- and off-shell at once.
                 for tpe in [ "upper limits", "efficiency maps" ]:
                     print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
                     expResList = self.getExpList ( sqrts, exp, tpe )
+                    if self.ignore_superseded:
+                        expResList = filterSuperseded ( expResList )
                     self.writeExperimentType ( sqrts, exp, tpe, expResList )
 
         #Copy/update the database plots and generate the wiki table

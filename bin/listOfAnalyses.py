@@ -21,7 +21,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD
-import createSuperseded
+from smodels_utils.helper.databaseManipulations import createSuperseded
 
 class Lister:
     def __init__ ( self ):
@@ -204,13 +204,18 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             self.f.write ( "|" +"-"*l )
         self.f.write ( "|\n" )
 
-    def emptyLine( self, ana_name, isEffMap ):
+    def getLabel ( self, ana_name ):
+        """ get the type of ana: Publication, PAS, conf note """
         label = "Publications"
         if "PAS" in ana_name:
             label = "Physics Analysis Summaries"
             label = "PAS"
         if "CONF" in ana_name:
             label = "Conf Notes"
+        return label
+
+    def emptyLine( self, ana_name, isEffMap ):
+        label = self.getLabel ( ana_name )
         self.f.write ( "| %s" % "**%s**" % label )
         self.f.write ( " |"*( len(self.fields( isEffMap ) ) ) )
         self.f.write ( "\n" )
@@ -246,7 +251,8 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.emptyLine( previous, isEffMap )
 
         for ana_name in keys:
-            if len ( ana_name ) != len ( previous ):
+            #print ( "ana_name", ana_name, "previous", previous, len ( ana_name ) != len ( previous ) )
+            if self.getLabel ( ana_name ) != self.getLabel ( previous ):
                 self.emptyLine( ana_name, isEffMap )
             previous = ana_name
             ana = anadict[ana_name]
@@ -377,8 +383,8 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
 
     def createSuperseded ( self ):
         """ create the database of superseded results """
-        print ( "creating database of superseded results" )
-        createSuperseded.create ( self.dbpath, "superseded.pcl", False )
+        print ( "[listOfAnalyses] creating database of superseded results" )
+        createSuperseded ( self.dbpath, "superseded.pcl", False )
 
     def main( self ):
         import argparse
