@@ -54,4 +54,5 @@ def main( ):
         args.outfile = "filtered.pcl"
     create ( args.infile, args.outfile, args.filter )
 
-main()
+if __name__ == "__main__":
+    main()
