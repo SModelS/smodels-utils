@@ -198,6 +198,9 @@ def zipThem ( files ):
     cmd = "tar czvf %s.tar.gz %s*slha" % ( topo, topo )
     print ( cmd )
     subprocess.getoutput ( cmd )
+    cmd = "rm %s*slha" % topo
+    print ( cmd )
+    subprocess.getoutput ( cmd )
 
 def main():
     import argparse, glob
