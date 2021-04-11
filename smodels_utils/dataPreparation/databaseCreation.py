@@ -265,7 +265,7 @@ class DatabaseCreator(list):
         for a in allFiles:
             if not a in usedFiles:
                 leftFiles.append ( a )
-        strFiles = ", ".join ( leftFiles )
+        strFiles = " ".join ( leftFiles )
         if len( leftFiles ) > 0:
             self.timeStamp ( "unused cruft files 'orig': %s" % strFiles,
                              c="green" )
