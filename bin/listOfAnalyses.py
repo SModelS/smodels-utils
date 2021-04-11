@@ -413,7 +413,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags
         self.expRes = self.database.getExpResults ( )
-        if self.superSeded:
+        if not self.superSeded:
             self.expRes = filterSuperseded ( self.expRes )
         self.backup()
         self.f = open ( filename, "w" )
