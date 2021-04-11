@@ -246,11 +246,21 @@ class DatabaseCreator(list):
         self._checkType()
         self._reportCruftFiles()
 
+    def getUsedFiles ( self ):
+        ret = []
+        for x in self.allInputFiles:
+            if type(x) in [ str ]:
+                ret.append ( x.replace("orig/","") )
+            if type(x) in [ tuple, list ]:
+                for y in x:
+                    ret.append ( y.replace("orig/","") )
+        return ret
+
     def _reportCruftFiles ( self ):
         """ report cruft files in orig """
         allFiles = glob.glob("orig/*")
         allFiles = [ x.replace("orig/","") for x in allFiles ]
-        usedFiles = [ x.replace("orig/","") for x in self.allInputFiles ]
+        usedFiles = self.getUsedFiles()
         leftFiles = []
         for a in allFiles:
             if not a in usedFiles:
