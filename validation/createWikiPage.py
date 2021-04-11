@@ -112,12 +112,12 @@ class WikiPageCreator:
         return dataset
 
     def close ( self ):
-        print ( 'Done.\n' )
+        print ( '[createWikiPage] Done.\n' )
         self.file.write ( "\nThis page was created %s\n" % time.asctime() )
         self.file.close()
         if self.moveFile:
             cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
-            print ( cmd )
+            print ( "[createWikiPage]",cmd )
             C.getoutput ( cmd )
 
     def writeHeader ( self ):
@@ -548,7 +548,7 @@ CMS are for on- and off-shell at once.
         if "efficiency" in tpe: T="efficiencyMap"
         tmpList = self.db.getExpResults( dataTypes=[ T ],
                          useNonValidated=self.ignore_validated )
-        if self.ignore_validated:
+        if self.ignore_superseded:
             tmpList = filterSuperseded ( tmpList )
         expResList = []
         for i in tmpList:
@@ -609,7 +609,8 @@ if __name__ == "__main__":
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
     if not os.path.exists(os.path.expanduser(args.database)):
-            args.database = "~/tools/smodels-database/"
+        print ( f"[createWikiPage] cannot find {args.database}" )
+        sys.exit()
     if not os.path.exists(os.path.expanduser(args.comparison_database)):
         print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args.comparison_database )
         args.comparison_database = ""
