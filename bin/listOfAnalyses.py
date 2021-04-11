@@ -21,7 +21,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD
-from smodels_utils.helper.databaseManipulations import createSuperseded
+from smodels_utils.helper.databaseManipulations import createSuperseded, filterSuperseded
 
 class Lister:
     def __init__ ( self ):
@@ -412,7 +412,9 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.filename = filename
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags
-        self.expRes = self.database.getExpResults ( useSuperseded = self.superSeded )
+        self.expRes = self.database.getExpResults ( )
+        if self.superSeded:
+            self.expRes = filterSuperseded ( self.expRes )
         self.backup()
         self.f = open ( filename, "w" )
         self.header()
