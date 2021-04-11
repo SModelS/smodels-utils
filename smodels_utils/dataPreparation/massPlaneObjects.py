@@ -64,6 +64,7 @@ class MassPlane(object):
         self._txDecay = txDecay
         self.figureUrl = None
         self.dataUrl = None
+        self.allInputFiles = []
         for i,brMasses in enumerate(massArray):
             if not isinstance(brMasses,list):
                 logger.error("Mass array must be in the format [[m1,m2,..],[m3,m4,..]]")
@@ -149,6 +150,8 @@ class MassPlane(object):
         :param scales: Lists of floats to rescale the data
 
         """
+        for d in dataFiles:
+            self.allInputFiles.append ( d )
 
         #Make sure input is consistent:
         optionalInput = { "objectNames": objectNames, "indices": indices,
@@ -199,6 +202,7 @@ class MassPlane(object):
         :param scale: Float to reescale the data
 
         """
+        self.allInputFiles.append ( dataFile )
 
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
