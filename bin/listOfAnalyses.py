@@ -21,6 +21,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD
+import createSuperseded
 
 class Lister:
     def __init__ ( self ):
@@ -374,6 +375,11 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             return
         print ( "%s has changed (%d changes)" % ( self.filename, len(o.split() ) ) )
 
+    def createSuperseded ( self ):
+        """ create the database of superseded results """
+        print ( "creating database of superseded results" )
+        createSuperseded.create ( self.dbpath, "superseded.pcl", False )
+
     def main( self ):
         import argparse
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
@@ -388,7 +394,9 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         setLogLevel ( args.verbose )
         self.superSeded = not args.no_superseded
         self.likelihoods = args.likelihoods
-        self.database = Database ( args.database, discard_zeroes=True )
+        self.dbpath = args.database
+        self.createSuperseded()
+        self.database = Database ( self.dbpath, discard_zeroes=True )
         ver = ""
         if args.add_version:
             ver = self.database.databaseVersion.replace(".","")
