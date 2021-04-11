@@ -209,7 +209,7 @@ def main():
                            type=int, default = -1000015 )
     argparser.add_argument('-q', '--pid2', help="first particle id [1000015]",
                            type=int, default = 1000015 )
-    argparser.add_argument('-s', '--sqrts', help="sqrts [13]",
+    argparser.add_argument('-s', '--sqrts', help="sqrts, in TeV. If 0, then both 8 and 13. [13]",
                            type=int, default = 13 )
     argparser.add_argument('-e', '--ewk', help="specify the ewkino process, hino or wino [wino]",
                            type=str, default = "wino" )
