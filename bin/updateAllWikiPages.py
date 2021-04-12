@@ -24,9 +24,11 @@ def exec(cmd, dry_run ):
 def gprint ( line ):
     print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
 
-def gitPush():
+def gitPush( dry_run ):
     cmd = "cd ../../smodels.github.io/; git pull; git commit -am 'automated update'; git push"
     print ( "[updateAllWikiPages.py] %s" % cmd )
+    if dry_run:
+        return
     o = subprocess.getoutput ( cmd )
     print ( "[updateAllWikiPages.py] %s" % o )
 
@@ -98,7 +100,7 @@ def main():
         exec ( cmd + [ "-s", "-f" ], A.dry_run )
         exec ( cmd + [ "-u" ], A.dry_run )
     if A.commit:
-        gitPush()
+        gitPush( A.dry_run )
 
 if __name__ == "__main__":
     main()

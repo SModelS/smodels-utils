@@ -268,7 +268,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
-                  dataTypes, useSuperseded=True, useNonValidated=True)
+                  dataTypes, useNonValidated=True)
 
     if not expResList:
         logger.error("No experimental results found.")

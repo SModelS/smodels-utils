@@ -105,7 +105,7 @@ class TemplateFile(object):
                         self.tags.append(t)
 
     def createFileFor( self,ptDict,slhaname=None,computeXsecs=False,
-                       massesInFileName = False, nevents = 10000 ):
+                       massesInFileName = False, nevents = 10000, sqrts=None ):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values in pt.
@@ -116,8 +116,11 @@ class TemplateFile(object):
         :param computeXsecs: if True, will compute NLL cross-sections for the file using 10k events
         :param massesInFileName: if True, put the masses in the name of the slha file (eg T5WW_2200_1300_60_2200_1300_60.slha)
         :param nevents: how many events to generate
+        :param sqrts: sqrtses (list)
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
+        if sqrts == None:
+           sqrts = [[8,13]]
 
         masses = self.massPlane.getParticleMasses(**ptDict)
         massDict = {}
@@ -177,7 +180,7 @@ class TemplateFile(object):
         return slhaname
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
-                        nevents = 10000 ):
+                        nevents = 10000, sqrts = None ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -185,13 +188,18 @@ class TemplateFile(object):
         :param pts: list of dicts with values for the plot in GeV
                     (e.g. [{'x' : x1, 'y' : y1}, {'x' : x2, 'y' : y2}, ...])
         :param nevents: number of events to generate
+        :param sqrts: sqrtses (list)
         :return: list of SLHA file names generated.
         """
+                
+        if sqrts == None:
+           sqrts = [[8,13]]
 
         slhafiles = []
         for pt in pts:
             slhafile = self.createFileFor( pt, computeXsecs=False,
-                                      massesInFileName=massesInFileName, nevents=nevents )
+                                      massesInFileName=massesInFileName, nevents=nevents,
+                                      sqrts=sqrts )
             if slhafile:
                 slhafiles.append(slhafile)
         #Compute cross-sections
@@ -203,7 +211,7 @@ class TemplateFile(object):
                 if self.pythiaVersion == 6:
                     xargs.pythia6 = True
                     xargs.pythia8 = False
-                xargs.sqrts = [[8, 13]]
+                xargs.sqrts = sqrts
                 xargs.ncpus = self.nprocesses
                 xargs.nevents = nevents
                 xargs.pythiacard = self.pythiaCard
@@ -401,6 +409,8 @@ if __name__ == "__main__":
         type=int, default=-1 )
     argparser.add_argument('-c', '--clear', action='store_true',
         help="clear cruft files")
+    argparser.add_argument ( '-s', '--sqrts', help='center-of-mass energies [8 13]',
+        type=int, nargs="*", default=None )
     argparser.add_argument('-k', '--keep', action='store_true',
         help="keep temp files")
     argparser.add_argument('-X', '--xsecs', action='store_true',
@@ -446,8 +456,12 @@ if __name__ == "__main__":
             else:
                 print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
         sys.exit()
+    sqrts = args.sqrts
+    if sqrts == None:
+        sqrts = [ 8, 13 ]
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs, 
-                       massesInFileName=True, nevents=args.nevents )
+                       massesInFileName=True, nevents=args.nevents, 
+                       sqrts = [ sqrts ] )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     print ( "Now build new tarball in %s/" % newtemp )

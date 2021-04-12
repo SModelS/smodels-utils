@@ -14,6 +14,7 @@ import sys
 import os
 import shutil
 import logging
+import glob
 import multiprocessing
 from datetime import date
 from math import floor, log10
@@ -62,6 +63,7 @@ class DatabaseCreator(list):
         self.exclusions = []
         self.metaInfo = None
         self.base = os.getcwd() + '/'
+        self.allInputFiles = []
         self.origPath = './orig/'
         self.validationPath = './validation/'
         self.smsrootFile = "./sms.root"
@@ -108,9 +110,11 @@ class DatabaseCreator(list):
             colors = {}
             if self.colorScheme == "light":
                 colors = { "info": '\x1b[33m', "error": '\x1b[31m',
+                           "green": "\x1b[32m",
                            "warn": '\x1b[34m', "debug": '\x1b[37m' }
             if self.colorScheme == "dark":
                 colors = { "info": '\x1b[33m', "error": '\x1b[31m',
+                           "green": "\x1b[32m",
                            "warn": '\x1b[34m', "debug": '\x1b[30m' }
             if c in colors:
                 color = colors[c]
@@ -129,10 +133,10 @@ class DatabaseCreator(list):
         :raise Error: if there is already a dataset instance with same name
         """
         for ds in datasetObjects:
+            self.updateInputFileList ( ds )
             self.addDataset ( ds )
 
     def addDataset(self,datasetObject):
-
         """
         Checks if databaseCreator already contains
         a dataset object with the same id. If not, append dataset.
@@ -145,7 +149,15 @@ class DatabaseCreator(list):
             logger.error("Dataset %s has already been defined" %datasetObject._name)
             sys.exit()
         else:
+            self.updateInputFileList ( datasetObject )
             self.append(datasetObject)
+
+    def updateInputFileList ( self, ds ):
+        """ update the list of input files, from a DataSetInput object """
+        for txn in ds._txnameList:
+            for p in txn._planes:
+                for x in p.allInputFiles:
+                    self.allInputFiles.append ( x )
 
     def updateDataset(self,datasetObject):
 
@@ -165,6 +177,7 @@ class DatabaseCreator(list):
         #Find index of dataset with the same name
         i = self.index(datasetObject)
         self[i] = datasetObject
+        self.updateInputFileList ( datasetObject )
 
     def create(self, createAdditional=False):
 
@@ -231,6 +244,35 @@ class DatabaseCreator(list):
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
         self._checkType()
+        self._reportCruftFiles()
+
+    def getUsedFiles ( self ):
+        ret = []
+        for x in self.allInputFiles:
+            if type(x) in [ str ]:
+                ret.append ( x.replace("orig/","") )
+            if type(x) in [ tuple, list ]:
+                for y in x:
+                    ret.append ( y.replace("orig/","") )
+        return ret
+
+    def saveFile ( self, name ):
+        """ mark orig file as worthy to be saved """
+        self.allInputFiles.append ( name )
+
+    def _reportCruftFiles ( self ):
+        """ report cruft files in orig """
+        allFiles = glob.glob("orig/*")
+        allFiles = [ x.replace("orig/","") for x in allFiles ]
+        usedFiles = self.getUsedFiles()
+        leftFiles = []
+        for a in allFiles:
+            if not a in usedFiles:
+                leftFiles.append ( a )
+        strFiles = " ".join ( leftFiles )
+        if len( leftFiles ) > 0:
+            self.timeStamp ( "unused cruft files 'orig': %s" % strFiles,
+                             c="green" )
 
     def createDatasets(self,datasetList,newDatasets):
         """

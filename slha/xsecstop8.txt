@@ -1,4 +1,5 @@
 # Interactions - stops/sbottoms Nominal (pb) +- Uncertainty
+# https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections8TeVstopsbottom
 100 GeV 559.757 +- 16.1085%
 105 GeV 448.456 +- 15.9732%
 110 GeV 361.917 +- 16.1134%

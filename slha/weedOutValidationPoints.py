@@ -18,7 +18,11 @@ def distance ( d1, d2 ):
 def mkstring ( d ):
     return "_".join ( map(str,map(int,d)))
 
-def weed ( dists, maxDistance, massgaps, verbose ):
+def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
+    """ weed out points
+    :param keep60s: if true, then keep points with m(LSP)=60 GeV
+    :returns: points that survived the weeding
+    """
     if len(dists)==0:
         return
     keepIt = {}
@@ -32,6 +36,9 @@ def weed ( dists, maxDistance, massgaps, verbose ):
         if x % 200 == 0:
             print ( "Checking point #%d %.1f [s]. weeded: %d" % (x,time.time()-t0, nWeeded ) )
         sd1=mkstring(d1)
+        if keep60s and abs ( d1[2] - 60. ) < 1e-5:
+            ## keep all at mlsp=60
+            keepIt[sd1]=True
         if sd1 in keepIt: ## can only be false
             continue
         nhalf = int(len(d1)/2)
@@ -100,6 +107,8 @@ def main():
             help='require mass gaps, e.g. (0,80.). Used to make sure that some particle is onshell. E.g. (0,80.) is to acertain that a W in the second cascade is onshell. Auto means, guess from topo name. [auto]',
             default = "auto", type = str )
     ap.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
+    ap.add_argument ( '--keep60s', help='keep points with m(LSP)=60 GeV', 
+                      action='store_true' )
     args = ap.parse_args()
     tarball = "../slha/%s.tar.gz" % args.topo
     if not os.path.exists ( tarball ):
@@ -124,7 +133,8 @@ def main():
             massgaps = "(0.,80.)"
     if massgaps == "auto": ## still?
         massgaps = ""
-    weeded = weed ( dists, args.distance**2, massgaps, args.verbose )
+    keep60s = args.keep60s # False
+    weeded = weed ( dists, args.distance**2, massgaps, args.verbose, keep60s )
     print ( "%d points after weeding, from %d points before." % ( len(weeded ), npoints ) )
     print ( "(Took %d seconds)" % ( time.time() - t0 ) )
     #a = open("weed.pcl","wb")

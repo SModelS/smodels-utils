@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,time,math,numpy,copy,ctypes
+import logging,os,sys,time,math,numpy,copy,ctypes,random
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
@@ -373,9 +373,8 @@ class ValidationPlot():
                 tar = tarfile.open(self.slhaDir,'r:gz')
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 members=tar.getmembers()
+                random.shuffle ( members )
                 if self.limitPoints != None and self.limitPoints > 0:
-                    import random
-                    random.shuffle ( members )
                     members=members[:self.limitPoints]
                 tar.extractall(path=tempdir,members=members)
                 tar.close()

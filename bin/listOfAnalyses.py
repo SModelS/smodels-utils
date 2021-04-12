@@ -21,6 +21,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD
+from smodels_utils.helper.databaseManipulations import createSuperseded, filterSuperseded
 
 class Lister:
     def __init__ ( self ):
@@ -82,7 +83,7 @@ class Lister:
 # List Of Analyses %s %s
 List of analyses and topologies in the SMS results database,
 comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
-The list has been created from the database version `%s`.
+The list has been created from the database version `%s.`
 Results from FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
 %s.
     """ % ( version, titleplus, n_maps, n_results, len(n_topos),
@@ -203,13 +204,18 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             self.f.write ( "|" +"-"*l )
         self.f.write ( "|\n" )
 
-    def emptyLine( self, ana_name, isEffMap ):
+    def getLabel ( self, ana_name ):
+        """ get the type of ana: Publication, PAS, conf note """
         label = "Publications"
         if "PAS" in ana_name:
             label = "Physics Analysis Summaries"
             label = "PAS"
         if "CONF" in ana_name:
             label = "Conf Notes"
+        return label
+
+    def emptyLine( self, ana_name, isEffMap ):
+        label = self.getLabel ( ana_name )
         self.f.write ( "| %s" % "**%s**" % label )
         self.f.write ( " |"*( len(self.fields( isEffMap ) ) ) )
         self.f.write ( "\n" )
@@ -245,7 +251,8 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.emptyLine( previous, isEffMap )
 
         for ana_name in keys:
-            if len ( ana_name ) != len ( previous ):
+            #print ( "ana_name", ana_name, "previous", previous, len ( ana_name ) != len ( previous ) )
+            if self.getLabel ( ana_name ) != self.getLabel ( previous ):
                 self.emptyLine( ana_name, isEffMap )
             previous = ana_name
             ana = anadict[ana_name]
@@ -374,6 +381,11 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             return
         print ( "%s has changed (%d changes)" % ( self.filename, len(o.split() ) ) )
 
+    def createSuperseded ( self ):
+        """ create the database of superseded results """
+        print ( "[listOfAnalyses] creating database of superseded results" )
+        createSuperseded ( self.dbpath, "superseded.pcl", False )
+
     def main( self ):
         import argparse
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
@@ -388,7 +400,9 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         setLogLevel ( args.verbose )
         self.superSeded = not args.no_superseded
         self.likelihoods = args.likelihoods
-        self.database = Database ( args.database, discard_zeroes=True )
+        self.dbpath = args.database
+        self.createSuperseded()
+        self.database = Database ( self.dbpath, discard_zeroes=True )
         ver = ""
         if args.add_version:
             ver = self.database.databaseVersion.replace(".","")
@@ -398,7 +412,9 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.filename = filename
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags
-        self.expRes = self.database.getExpResults ( useSuperseded = self.superSeded )
+        self.expRes = self.database.getExpResults ( )
+        if not self.superSeded:
+            self.expRes = filterSuperseded ( self.expRes )
         self.backup()
         self.f = open ( filename, "w" )
         self.header()

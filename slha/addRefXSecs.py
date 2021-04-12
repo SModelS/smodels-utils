@@ -145,6 +145,11 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         order = 2
         pb = False
         isEWK=True
+    if pid1 in [ 1000023 ] and pid2 in [ 1000023 ]:
+        filename = "xsecN2N1p%d.txt" % sqrts
+        order = 2
+        pb = False
+        isEWK=True
     if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
         filename = "xsecN2C1p%d.txt" % sqrts
         order = 2
@@ -193,6 +198,9 @@ def zipThem ( files ):
     cmd = "tar czvf %s.tar.gz %s*slha" % ( topo, topo )
     print ( cmd )
     subprocess.getoutput ( cmd )
+    cmd = "rm %s*slha" % topo
+    print ( cmd )
+    subprocess.getoutput ( cmd )
 
 def main():
     import argparse, glob
@@ -204,7 +212,7 @@ def main():
                            type=int, default = -1000015 )
     argparser.add_argument('-q', '--pid2', help="first particle id [1000015]",
                            type=int, default = 1000015 )
-    argparser.add_argument('-s', '--sqrts', help="sqrts [13]",
+    argparser.add_argument('-s', '--sqrts', help="sqrts, in TeV. If 0, then both 8 and 13. [13]",
                            type=int, default = 13 )
     argparser.add_argument('-e', '--ewk', help="specify the ewkino process, hino or wino [wino]",
                            type=str, default = "wino" )
