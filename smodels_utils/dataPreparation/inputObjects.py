@@ -380,7 +380,7 @@ class DataSetInput(Locker):
 
 
     infoAttr = ['dataId','dataType','observedN','expectedBG','bgError', 'comment',
-                'upperLimit', 'expectedUpperLimit', 'aggregated', 'jsonfile' ]
+                'upperLimit', 'expectedUpperLimit', 'aggregated', 'jsonfile', 'lumi' ]
     internalAttr = ['_name','_txnameList']
 
     requiredAttr = ['dataType', 'dataId']
