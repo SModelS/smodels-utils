@@ -606,7 +606,7 @@ class DataHandler(object):
                 try:
                     yields.sort()
                 except TypeError as e:
-                    logger.error ( "type error when sorting: %s." % e ) 
+                    logger.error ( "type error when sorting: %s." % e )
                     culprits = ""
                     for lno,y in enumerate(yields):
                         for x in y:
@@ -655,7 +655,8 @@ class DataHandler(object):
             ret = 1.
             for p in npaths:
                 if not k in p.keys():
-                    logger.error ( "it seems that point %s is not in all paths?" % str(k) )
+                    logger.error ( "it seems that point %s is not in all paths? in %s" % \
+                                   (str(k), self.path ) )
                     break
                 ret = ret * p[k]
             y = list(k)+[ret]
