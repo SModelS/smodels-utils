@@ -256,6 +256,10 @@ class DatabaseCreator(list):
                     ret.append ( y.replace("orig/","") )
         return ret
 
+    def saveFile ( self, name ):
+        """ mark orig file as worthy to be saved """
+        self.allInputFiles.append ( name )
+
     def _reportCruftFiles ( self ):
         """ report cruft files in orig """
         allFiles = glob.glob("orig/*")
