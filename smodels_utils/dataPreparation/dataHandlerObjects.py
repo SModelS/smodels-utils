@@ -570,6 +570,8 @@ class DataHandler(object):
                 for _ in r:
                     if "\\tilde" in _: # sometimes its a latex line
                         hasLatexStuff = True
+                    if "[GeV]" in _:
+                        hasLatexStuff = True
                 if hasLatexStuff:
                     continue
                 if not has_waited:
@@ -601,7 +603,18 @@ class DataHandler(object):
                     xs.append ( yr[0] )
                     ys.append ( yr[1] )
             else:
-                yields.sort()
+                try:
+                    yields.sort()
+                except TypeError as e:
+                    logger.error ( "type error when sorting: %s." % e ) 
+                    culprits = ""
+                    for lno,y in enumerate(yields):
+                        for x in y:
+                            if type(x) not in ( float, int ):
+                                culprits += f"''{x}'' "
+                    logger.error ( "the culprits might be %s in %s" % \
+                                   ( culprits, self.path ) )
+                    sys.exit()
             for yr in yields:
                 yld = yr
                 if type ( self.index ) in [ list, tuple ]:
