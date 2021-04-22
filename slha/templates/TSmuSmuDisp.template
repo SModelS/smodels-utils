@@ -70,11 +70,11 @@ BLOCK MASS  # Mass Spectrum
    2000005     1.00000000E+05   # ~b_2
    1000006     1.00000000E+05   # ~t_1
    2000006     1.00000000E+05   # ~t_2
-   1000011     M0           # ~e_L
-   2000011     M0           # ~e_R
+   1000011     1.00000000E+05   # ~e_L
+   2000011     1.00000000E+05   # ~e_R
    1000012     1.00000000E+05   # ~nu_eL
-   1000013     1.00000000E+05   # ~mu_L
-   2000013     1.00000000E+05   # ~mu_R
+   1000013     M0               # ~mu_L
+   2000013     M0               # ~mu_R
    1000014     1.00000000E+05   # ~nu_muL
    1000015     1.00000000E+05   # ~tau_1
    2000015     1.00000000E+05   # ~tau_2
@@ -194,15 +194,15 @@ DECAY   1000005     0.00000000E+00   # sbottom1 decays
 DECAY   2000005     0.00000000E+00   # sbottom2 decays
 DECAY   1000006     0.00000000E+00   # stop1 decays
 DECAY   2000006     0.00000000E+00   # stop2 decays
-DECAY   2000011     W0   # selectron_L decays
+DECAY   2000011     0.00000000E+00   # selectron_L decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    1000039    11
-DECAY   1000011     W0   # selectron_R decays
+DECAY   1000011     0.00000000E+00   # selectron_R decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    1000039    11
-DECAY   2000013     0.00000000E+00   # smuon_L decays
+DECAY   2000013     W0   # smuon_L decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    1000039    13
-DECAY   1000013     0.00000000E+00   # smuon_R decays
+DECAY   1000013     W0   # smuon_R decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    1000022    13
