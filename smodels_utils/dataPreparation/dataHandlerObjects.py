@@ -122,7 +122,7 @@ class DataHandler(object):
             unitString = "%"
 
         if unitString:
-            units = ['/10000','%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
+            units = ['/10000','%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60'), ( 'GeV', 'ns', '/1' ) ]
             if not unitString in units and not unitString.startswith("/"):
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
