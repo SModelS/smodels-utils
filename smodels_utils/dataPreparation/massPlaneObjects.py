@@ -524,7 +524,7 @@ class Axes(object):
 
         :param massArray: list containing  floats, representing
         the masses of the particles in GeV
-        :return: None if the the mass array does not satify the mass equations.
+        :return: None if the mass array does not satify the mass equations.
                 Otherwise, returns a dictionary:
                 {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
@@ -535,14 +535,15 @@ class Axes(object):
             self._setXYFunction()
 
         massInput = {}
-        #print ( "X massArray", massArray )
-        #print ( "X widthArray", widthArray )
-        #print ( "X _massVars", self._massVars )
-        #print ( "X _widthVars", self._widthVars )
+        if False:
+            print ( "X massArray", massArray )
+            print ( "X widthArray", widthArray )
+            print ( "X _massVars", self._massVars )
+            print ( "X _widthVars", self._widthVars )
+        #    len(massArray) == len(self._massVars) + len(self._widthVars) and \
         if len(massArray)>len(self._massVars) and len(self._widthVars)>0 and \
-            len(massArray) == len(self._massVars) + len(self._widthVars) and \
             widthArray == None:
-                ## it seems the widths ended up in the mass array
+            ## it seems the widths ended up in the mass array
             widthArray = massArray[1::2]
             massArray = massArray[0::2]
         for im,mass in enumerate(massArray):
@@ -550,6 +551,14 @@ class Axes(object):
                 massInput[ str(self._massVars[im]) ] = mass[0]
                 massInput[ str(self._widthVars[im]) ] = mass[1]
             else:
+                if False:
+                    print ( "----------------" )
+                    print ( "mass", mass )
+                    print ( "massArray", massArray )
+                    print ( "widthArray", widthArray )
+                    print ( "im", im )
+                    print ( "massVars", self._massVars )
+                    print ( "widthVars", self._widthVars )
                 massInput[ str(self._massVars[im]) ] = mass
         if widthArray is None:
             wv = str(self._widthVars[im])
@@ -602,7 +611,7 @@ class Axes(object):
             d = distance(m,ma )
             if d > 0.11: #Masses differ
                 return None
-
+        # print ( "xValues", xValues )
         return xValues
 
     def __str__(self):

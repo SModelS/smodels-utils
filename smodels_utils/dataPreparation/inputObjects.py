@@ -780,6 +780,15 @@ class TxNameInput(Locker):
         if not hasattr(self,'validated'):
             self.validated = 'TBD'
 
+
+    def widthsInNs ( self, units ):
+        """ find out if widths are meant to be given in ns """
+        if type(units) != tuple:
+            return False
+        if len(units)<2:
+            return False
+        return units[1]=="ns"
+
     def addDataFrom(self, plane, dataLabel):
 
         """
@@ -855,7 +864,9 @@ class TxNameInput(Locker):
                     value = value / 100.
                 elif dataHandler.unit == "/10000":
                     value = value / 10000.
-                elif dataHandler.unit.startswith ( "/" ):
+                elif self.widthsInNs(dataHandler.unit):
+                    pass # 
+                elif type(dataHandler.unit) == str and dataHandler.unit.startswith ( "/" ):
                     factor = dataHandler.unit[1:]
                     try:
                         factor = float ( factor )
@@ -872,7 +883,10 @@ class TxNameInput(Locker):
                     for j,M in enumerate(br):
                         if isinstance(M,tuple):
                             m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                            m1 = M[1] * GeV ## width in GeV
+                            if self.widthsInNs(dataHandler.unit):
+                                m1 = hbar / M[1] * GeV
+                            else:
+                                m1 = M[1] * GeV ## width in GeV
                             M = ( m0, m1 )
                         if isinstance(M,(float,int)):
                             M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
