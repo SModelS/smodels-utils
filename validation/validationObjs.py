@@ -523,7 +523,13 @@ class ValidationPlot():
         replacedc = copy.deepcopy ( oldc )
         for ib,b in enumerate(oldc["masses"]):
             for iv,v in enumerate(b):
-                replacedc["masses"][ib][iv]=float(tokens[v])
+                try:
+                    replacedc["masses"][ib][iv]=float(tokens[v])
+                except ValueError as e:
+                    print ( f"[validationObjs] caught ValueError {e}" )
+                    if v == 0:
+                        print ( "[validationObj] seems like you used index 0 in filenameCoords.py, which points to the tx name" )
+                    sys.exit(-1)
         if type(oldc["widths"]) == list:
             for ib,b in enumerate(oldc["widths"]):
                 for iv,v in enumerate(b):
