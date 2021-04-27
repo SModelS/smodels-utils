@@ -80,13 +80,12 @@ BLOCK MASS  # Mass Spectrum
    2000015     1.00000000E+05   # ~tau_2
    1000016     1.00000000E+05   # ~nu_tauL
    1000021     1.00000000E+05   # ~g
-   1000022     1.00000000E+05  # ~chi_10
+   1000022     M1               # ~chi_10
    1000023     1.00000000E+05   # ~chi_20
    1000024     1.00000000E+05   # ~chi_1+
    1000025     1.00000000E+05   # ~chi_30
    1000035     1.00000000E+05   # ~chi_40
    1000037     1.00000000E+05   # ~chi_2+
-   1000039     M1               # ~G
 # /
 BLOCK NMIX  # Neutralino Mixing Matrix
   1  1     9.79183656E-01   # N_11
@@ -196,13 +195,13 @@ DECAY   1000006     0.00000000E+00   # stop1 decays
 DECAY   2000006     0.00000000E+00   # stop2 decays
 DECAY   2000011     0.00000000E+00   # selectron_L decays
 #           BR         NDA      ID1       ID2       ID3
-     1.00000000E+00    2    1000039    11
+     1.00000000E+00    2    1000022    11
 DECAY   1000011     0.00000000E+00   # selectron_R decays
 #           BR         NDA      ID1       ID2       ID3
-     1.00000000E+00    2    1000039    11
+     1.00000000E+00    2    1000022    11
 DECAY   2000013     W0   # smuon_L decays
 #           BR         NDA      ID1       ID2       ID3
-     1.00000000E+00    2    1000039    13
+     1.00000000E+00    2    1000022    13
 DECAY   1000013     W0   # smuon_R decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    1000022    13
