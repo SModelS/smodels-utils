@@ -39,7 +39,7 @@ def convertNewAxes ( newa ):
         if "z" in newa:
             axes.append ( newa["z"] )
         return axes[::-1]
-    print ( "cannot convert this axis" )
+    print ( "[plotRatio] cannot convert axis '%s'" % newa )
     return None
 
 def axisHash ( axes_ ):
