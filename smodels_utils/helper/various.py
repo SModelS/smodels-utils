@@ -31,12 +31,14 @@ def getPathName ( dbpath, analysis, valfile ):
     if "CMS" in analysis:
         experiment = "CMS"
     sqrts = 8
+    if not dbpath.endswith ( "/"):
+        dbpath += "/"
     for sqrts in [ 8, 13, 14, -1 ]:
         anadir = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
         if os.path.exists ( anadir ):
             break
     if sqrts == -1:
-        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis )
+        print ( "[various] could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis )
         sys.exit()
     ipath = "%s%dTeV/%s/%s/validation/%s" % \
              ( dbpath, sqrts, experiment, analysis, valfile )
