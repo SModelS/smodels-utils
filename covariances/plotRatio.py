@@ -256,7 +256,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
 
     isEff = False
-    if "-eff" in imp1.ana or "-eff" in mp2.ana:
+    if "-eff" in imp1.ana or "-eff" in imp2.ana:
         isEff = True
     anaId = imp1.ana.replace("-andre","")
     anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
