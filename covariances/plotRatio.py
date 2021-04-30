@@ -298,7 +298,8 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     if output != None:
-        figname = output.replace("@t", topo )
+        figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
+        figname = figname.replace( "@a",anaId )
     a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
@@ -346,6 +347,7 @@ def writeMDPage( copy ):
         f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
+        files = glob.glob("ratios_*.png" )
         files += glob.glob("atlas_*png" )
         files += glob.glob("cms_*png" )
         files.sort()
@@ -373,20 +375,20 @@ def main():
             help="second validation file. If empty, then same as v1. [""]",
             type=str, default="" )
     argparser.add_argument ( "-a1", "--analysis1",
-            help="first analysis name, like the directory name [ATLAS-CONF-2013-007]",
-            type=str, default="ATLAS-CONF-2013-007" )
-    argparser.add_argument ( "-a2", "--analysis2",
-            help="second analysis name, like the directory name [ATLAS-SUSY-2013-09]",
+            help="first analysis name, like the directory name [ATLAS-SUSY-2013-09]",
             type=str, default="ATLAS-SUSY-2013-09" )
+    argparser.add_argument ( "-a2", "--analysis2",
+            help="second analysis name, like the directory name [ATLAS-CONF-2013-007]",
+            type=str, default="ATLAS-CONF-2013-007" )
     argparser.add_argument ( "-l1", "--label1",
-            help="label in the legend for analysis1 [conf]",
-            type=str, default="conf" )
+            help="label in the legend for analysis1 [susy]",
+            type=str, default="susy" )
     argparser.add_argument ( "-o", "--output",
-            help="outputfile [None]",
-            type=str, default=None )
+            help="outputfile [ratios_@t_@a.png]",
+            type=str, default="ratios_@t_@a.png" )
     argparser.add_argument ( "-l2", "--label2",
-            help="label in the legend for analysis2 [pub]",
-            type=str, default="pub" )
+            help="label in the legend for analysis2 [conf]",
+            type=str, default="conf" )
     argparser.add_argument ( "-d", "--dbpath", 
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
@@ -397,6 +399,8 @@ def main():
     argparser.add_argument ( "-p", "--push", action="store_true", 
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
+    if not args.validationfile1.endswith ( ".py" ):
+        args.validationfile1 += ".py"
 
     valfiles = [ args.validationfile1 ]
     if args.default:
