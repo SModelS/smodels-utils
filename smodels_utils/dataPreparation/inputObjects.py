@@ -446,7 +446,11 @@ class DataSetInput(Locker):
             sys.exit()
 
 
-        lumi = getattr(databaseCreator.metaInfo,'lumi')
+        #First check if a luminosity has been defined for the dataset
+        if hasattr(self,"lumi"):
+            lumi = self.lumi
+        else:
+            lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
         alpha = .05
