@@ -242,7 +242,9 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     #plt.rcParams['ytick.labelsize'] = 14
     slhafile=imp2.validationData[0]["slhafile"]
     Dir=os.path.dirname ( imp1.__file__ )
+    Dir2=os.path.dirname ( imp2.__file__ )
     smsrootfile = Dir.replace("validation","sms.root" )
+    smsrootfile2 = Dir2.replace("validation","sms.root" )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo=slhafile[:slhafile.find("_")]
     # print ( "smsrootfile", smsrootfile )
@@ -272,12 +274,21 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     el = []
     hasLegend = False
     line = getExclusionsFrom ( smsrootfile, topo )
+    line2 = getExclusionsFrom ( smsrootfile2, topo )
     if line is not False:
         el = getExclusionLine ( line )
+    if line2 is not False:
+        el2 = getExclusionLine ( line2 )
     label = "official exclusion"
+    label = anaId
     for E in el:
         hasLegend = True
         plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
+        label = ""
+    for E in el2:
+        label = anaId2
+        hasLegend = True
+        plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=4, label=label )
         label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
