@@ -891,7 +891,8 @@ class ValidationPlot():
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
-        meta = { "smodelsver": installation.version(),
+        meta = { "smodelsver": installation.version(), "axes": self.axes,
+                 "axesStr": self.niceAxes,
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if self.namedTarball != None:
             meta["tarball"]=self.namedTarball
