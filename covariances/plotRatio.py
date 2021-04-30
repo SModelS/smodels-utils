@@ -130,7 +130,11 @@ def getExclusionLine ( line ):
       y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
+def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
+    """ plot.
+    :params vmin: the minimum z value, e.g. .5
+    :params vmax: the maximum z value, e.g. .5
+    """
     hasDebPkg()
     uls={}
     nsr=""
@@ -214,9 +218,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
-    vmin,vmax= .5, 1.7
-    if False:
+    # vmin,vmax= .5, 1.7
+    if vmax is None or abs(vmax)<1e-5:
         vmax = numpy.nanmax ( col )*1.1
+    if vmin is None or abs(vmin)<1e-5:
         vmin = numpy.nanmin ( col )*0.9
     opts = { }
     #print ( "vmax", vmax )
@@ -250,6 +255,9 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
 
+    isEff = False
+    if "-eff" in imp1.ana or "-eff" in mp2.ana:
+        isEff = True
     anaId = imp1.ana.replace("-andre","")
     anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
     anaId2 = imp2.ana.replace("-andre","")
@@ -283,12 +291,14 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     label = anaId
     for E in el:
         hasLegend = True
-        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
+        plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=3, label=label )
         label = ""
     for E in el2:
         label = anaId2
         hasLegend = True
-        plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=4, label=label )
+        plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+        plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
         label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
@@ -317,6 +327,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
+        repeff = ""
+        if isEff:
+            repeff = "-eff"
+        figname = figname.replace("@e",repeff)
     a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
@@ -402,10 +416,16 @@ def main():
             type=str, default="susy" )
     argparser.add_argument ( "-o", "--output",
             help="outputfile [ratios_@t_@a.png]",
-            type=str, default="ratios_@t_@a.png" )
+            type=str, default="ratios_@t_@a@e.png" )
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2 [conf]",
             type=str, default="conf" )
+    argparser.add_argument ( "-z", "--zmin",
+            help="minimum z value, 0. means auto [.5]",
+            type=float, default=.5 )
+    argparser.add_argument ( "-Z", "--zmax",
+            help="maximum Z value, 0. means auto [1.7]",
+            type=float, default=1.7 )
     argparser.add_argument ( "-d", "--dbpath", 
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
@@ -429,7 +449,8 @@ def main():
         imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
         imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output )
+        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output,
+               args.zmin, args.zmax )
 
     writeMDPage( args.copy )
 
