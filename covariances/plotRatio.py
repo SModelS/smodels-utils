@@ -21,6 +21,8 @@ warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
+errMsgIssued = { "axis": False }
+
 def hasDebPkg():
     """ do we have the package installed """
     a = subprocess.getoutput ( "dpkg -l cm-super-minimal | tail -n 1" )
@@ -39,7 +41,9 @@ def convertNewAxes ( newa ):
         if "z" in newa:
             axes.append ( newa["z"] )
         return axes[::-1]
-    print ( "[plotRatio] cannot convert axis '%s'" % newa )
+    if not errMsgIssued["axis"]:
+        print ( "[plotRatio] cannot convert axis '%s'" % newa )
+        errMsgIssued["axis"]=True
     return None
 
 def axisHash ( axes_ ):
@@ -161,6 +165,8 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
 
     for ctr,point in enumerate(ipoints):
         axes = convertNewAxes ( point["axes"] )
+        if axes == None:
+            continue
         h = axisHash ( axes )
         ul1 = None
         if h in uls.keys():

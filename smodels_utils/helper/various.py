@@ -47,12 +47,12 @@ def getPathName ( dbpath, analysis, valfile ):
         print ( "could not find validation file %s" % ipath )
         sys.exit()
     if len(files)>1:
-        print ( "[plotRatio] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
+        print ( "[helper/various] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
         for f in files[:2]:
             p = f.rfind("/")
             if p > 0:
                 f = f[p+1:]
-            print ( "[plotRatio] example filename: %s" % ( f ) )
+            print ( "[helper/various] found: %s" % ( f ) )
         sys.exit()
     ipath = files[0]
     return ipath
