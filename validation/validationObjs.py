@@ -308,13 +308,18 @@ class ValidationPlot():
         for point in self.data:
             if "error" in point.keys():
                 continue
-            y=0.
+            x,y=None, None
             try: ## we seem to have two different ways of writing the x,y values
                 x=point["axes"]['x']
                 y=point["axes"]['y']
             except Exception as e:
                 pass
-                #x,y=point["axes"][0],point["axes"][1]
+            try:
+                x,y=point["axes"][0],point["axes"][1]
+            except Exception as e:
+                pass
+            if x == None:
+                continue
             w = 1.
             if weighted:
                 w = self.computeWeight ( [x,y] )
@@ -322,7 +327,7 @@ class ValidationPlot():
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
             really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
-            inside = curve.IsInside ( x,y )
+            inside = curve.IsInside ( x, y )
             pts["total"]+=w
             s=""
             if excluded:
@@ -459,10 +464,15 @@ class ValidationPlot():
         #Save data to file
         f = open(datafile,'r')
         lines = f.readlines()
-        self.data = eval("\n".join(lines[:-1]).replace("validationData = ",""))
+        f.close()
+        nlines = len(lines)
+        txt = "\n".join(lines[:-1])
+        if nlines == 1:
+            txt = "\n".join(lines[:])
+        # print ( "txt", txt )
+        self.data = eval(txt.replace("validationData = ",""))
         if len(lines)>1 and lines[1].startswith ( "meta" ):
             self.meta = eval(lines[1].replace("meta = ",""))
-        f.close()
 
     def getWidthsFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """

@@ -3,7 +3,7 @@
 """ Plot the ratio between the upper limit from the UL map, and our
 own upper limit computed from combining the efficiency maps. """
 
-import math, os, numpy, copy, sys, glob
+import math, os, numpy, copy, sys, glob, ctypes
 import matplotlib.pyplot as plt
 import matplotlib
 import ROOT
@@ -115,12 +115,15 @@ def getExclusionLine ( line ):
             xs = getExclusionLine ( l )[0]
             x.append ( xs )
         return x
-    x,y=ROOT.Double(),ROOT.Double()
+    # x,y=ROOT.Double(),ROOT.Double()
+    x,y= ctypes.c_double(),ctypes.c_double()
     x_v,y_v=[],[]
     for i in range(line.GetN()):
       line.GetPoint(i,x,y)
-      x_v.append(copy.deepcopy(x))
-      y_v.append(copy.deepcopy(y))
+      #x_v.append(copy.deepcopy(x.value))
+      #y_v.append(copy.deepcopy(y.value))
+      x_v.append( x.value )
+      y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
 def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
@@ -139,6 +142,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
                 print ( " ... (more error msgs like these) " )
             continue
         axes_ = point["axes"]
+        if axes_ is None:
+            continue
+            #print ( f"[plotRatio] the axis field is 'None' in {imp1.__file__}. Will stop." )
+            #sys.exit()
         axes = convertNewAxes ( axes_ )
         h = axisHash ( axes )
         if not "UL" in point:
@@ -169,6 +176,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
             err_msgs += 1
             #if err_msgs < 5:
             #    print ( "cannot find data for point", point["slhafile"] )
+
+    if len(points) == 0:
+        print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {imp2.__file__}" )
+        sys.exit()
 
     points.sort()
     points = numpy.array ( points )
@@ -233,7 +244,12 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
 
     anaId = imp1.ana.replace("-andre","")
     anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
-    plt.title ( "ratio: %s, %s" % ( anaId, topo) )
+    anaId2 = imp2.ana.replace("-andre","")
+    anaId2 = anaId2.replace("-orig","").replace("-old","").replace("-eff","")
+    title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
+    if anaId2 == anaId:
+        title = "ratio: %s, %s" % ( anaId, topo )
+    plt.title ( title )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
@@ -282,23 +298,14 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     if output != None:
-        # figname = output.replace("@t", topo ).replace("@a",analysis.replace("validation","") )
         figname = output.replace("@t", topo )
-    #if srs1 !="all":
-    #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    """
-    a1, a2 = "$a_1$", "$a_2$"
-    for ide,label in { "andre": "andre", "eff": "suchi" }.items():
-        if ide in imp1.ana:
-            a1 = label
-        if ide in imp2.ana:
-            a2 = label
-    """
     a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
         ypos = min(y)*30.
-    plt.text ( max(x)+.30*(max(x)-min(x)), ypos, "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), fontsize=13, rotation = 90)
+    plt.text ( max(x)+.30*(max(x)-min(x)), ypos, 
+               "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), 
+               fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
@@ -366,22 +373,23 @@ def main():
             help="second validation file. If empty, then same as v1. [""]",
             type=str, default="" )
     argparser.add_argument ( "-a1", "--analysis1",
-            help="first analysis name, like the directory name [CMS-EXO-13-006-andre]",
-            type=str, default="CMS-EXO-13-006-andre" )
+            help="first analysis name, like the directory name [ATLAS-CONF-2013-007]",
+            type=str, default="ATLAS-CONF-2013-007" )
     argparser.add_argument ( "-a2", "--analysis2",
-            help="second analysis name, like the directory name [CMS-EXO-13-006-eff]",
-            type=str, default="CMS-EXO-13-006-eff" )
+            help="second analysis name, like the directory name [ATLAS-SUSY-2013-09]",
+            type=str, default="ATLAS-SUSY-2013-09" )
     argparser.add_argument ( "-l1", "--label1",
-            help="label in the legend for analysis1 [andre]",
-            type=str, default="andre" )
+            help="label in the legend for analysis1 [conf]",
+            type=str, default="conf" )
     argparser.add_argument ( "-o", "--output",
             help="outputfile [None]",
             type=str, default=None )
     argparser.add_argument ( "-l2", "--label2",
-            help="label in the legend for analysis2 [suchi]",
-            type=str, default="suchi" )
-    argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
-                             default="../../smodels-database/" )
+            help="label in the legend for analysis2 [pub]",
+            type=str, default="pub" )
+    argparser.add_argument ( "-d", "--dbpath", 
+            help="path to database [../../smodels-database/]", type=str,
+            default="../../smodels-database/" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
