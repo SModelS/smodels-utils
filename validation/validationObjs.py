@@ -459,7 +459,7 @@ class ValidationPlot():
         #Save data to file
         f = open(datafile,'r')
         lines = f.readlines()
-        self.data = eval(lines[0].replace("validationData = ",""))
+        self.data = eval("\n".join(lines[:-1]).replace("validationData = ",""))
         if len(lines)>1 and lines[1].startswith ( "meta" ):
             self.meta = eval(lines[1].replace("meta = ",""))
         f.close()
@@ -877,6 +877,7 @@ class ValidationPlot():
         dataStr = str(self.data)
         dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
         dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        dataStr = dataStr.replace( "}, {" , "},\n{" )
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
