@@ -81,6 +81,7 @@ def getExclusionsFrom ( rootpath, txname, axes=None ):
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
             txnames[tx].append(obj.ReadObj())
+            print ( "and we add more", objName, "tx", tx, "txname", txname, "axes", axes )
             nplots += 1
     if not nplots:
         logger.warning("No exclusion curve found.")
@@ -133,7 +134,7 @@ def getExclusionLine ( line ):
 def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     """ plot.
     :params vmin: the minimum z value, e.g. .5
-    :params vmax: the maximum z value, e.g. .5
+    :params vmax: the maximum z value, e.g. 1.7
     """
     hasDebPkg()
     uls={}
@@ -281,8 +282,11 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     # plt.colorbar( format="%.1g" )
     el = []
     hasLegend = False
-    line = getExclusionsFrom ( smsrootfile, topo )
-    line2 = getExclusionsFrom ( smsrootfile2, topo )
+    axes = None
+    print ( "getting excls", axes_ )
+    line = getExclusionsFrom ( smsrootfile, topo, axes )
+    line2 = getExclusionsFrom ( smsrootfile2, topo, axes )
+    print ( "/getting excls", axes_ )
     if line is not False:
         el = getExclusionLine ( line )
     if line2 is not False:
@@ -374,8 +378,8 @@ def writeMDPage( copy ):
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
         f.write ( "# ratio plots on the upper limits\n" )
-        f.write ( "as of %s\n" % time.asctime() )
-        f.write ( "see also [best signal regions](bestSRs)\n\n" )
+        f.write ( "as of %s\n\n" % time.asctime() )
+        # f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
         files = glob.glob("ratios_*.png" )
@@ -415,8 +419,8 @@ def main():
             help="label in the legend for analysis1 [susy]",
             type=str, default="susy" )
     argparser.add_argument ( "-o", "--output",
-            help="outputfile [ratios_@t_@a.png]",
-            type=str, default="ratios_@t_@a@e.png" )
+            help="outputfile, the @x's get replaced [ratios_@a@e_@t.png]",
+            type=str, default="ratios_@a@e_@t.png" )
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2 [conf]",
             type=str, default="conf" )
