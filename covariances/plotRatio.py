@@ -260,9 +260,9 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     if "-eff" in imp1.ana or "-eff" in imp2.ana:
         isEff = True
     anaId = imp1.ana.replace("-andre","")
-    anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
+    anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
     anaId2 = imp2.ana.replace("-andre","")
-    anaId2 = anaId2.replace("-orig","").replace("-old","").replace("-eff","")
+    anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
     title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
     if anaId2 == anaId:
         title = "ratio: %s, %s" % ( anaId, topo )
@@ -333,10 +333,6 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
-        repeff = ""
-        if isEff:
-            repeff = "-eff"
-        figname = figname.replace("@e",repeff)
     a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
@@ -421,8 +417,8 @@ def main():
             help="label in the legend for analysis1 [susy]",
             type=str, default="susy" )
     argparser.add_argument ( "-o", "--output",
-            help="outputfile, the @x's get replaced [ratios_@a@e_@t.png]",
-            type=str, default="ratios_@a@e_@t.png" )
+            help="outputfile, the @x's get replaced [ratios_@a_@t.png]",
+            type=str, default="ratios_@a_@t.png" )
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2 [conf]",
             type=str, default="conf" )
