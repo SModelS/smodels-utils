@@ -53,7 +53,7 @@ def axisHash ( axes_ ):
         ret += 10**(4*ctr)*int(a)
     return ret
 
-def getExclusionsFrom ( rootpath, txname, axes=None ):
+def getExclusionsFrom ( rootpath, txname, axes ):
     """
     :param axes: only specific axes
     """
@@ -81,7 +81,7 @@ def getExclusionsFrom ( rootpath, txname, axes=None ):
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
             txnames[tx].append(obj.ReadObj())
-            print ( "and we add more", objName, "tx", tx, "txname", txname, "axes", axes )
+            # print ( "and we add more", objName, "tx", tx, "txname", txname, "axes", axes )
             nplots += 1
     if not nplots:
         logger.warning("No exclusion curve found.")
@@ -283,10 +283,12 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     el = []
     hasLegend = False
     axes = None
-    print ( "getting excls", axes_ )
+    if hasattr ( imp1, "meta" ) and "axes" in imp1.meta:
+        axes = imp1.meta["axes"]
+    if hasattr ( imp2, "meta" ) and "axes" in imp2.meta:
+        axes = imp2.meta["axes"]
     line = getExclusionsFrom ( smsrootfile, topo, axes )
     line2 = getExclusionsFrom ( smsrootfile2, topo, axes )
-    print ( "/getting excls", axes_ )
     if line is not False:
         el = getExclusionLine ( line )
     if line2 is not False:
