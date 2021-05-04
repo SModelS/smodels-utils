@@ -300,8 +300,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
     agreement = 0.
     weighted = weightedAgreementFactor # compute weighted agreement factor?
-    agreement = round(100.*validationPlot.computeAgreementFactor(
-                       signal_factor = signal_factor, weighted = weighted ))
+    af = validationPlot.computeAgreementFactor( signal_factor = signal_factor, 
+                                                weighted = weighted )
+    agreement = 0.
+    if math.isfinite(af):
+        agreement = round(100.*af)
     logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % \
                   ( agreement,"%",len(validationPlot.data) ) )
     if extraInfo:

@@ -318,7 +318,7 @@ class ValidationPlot():
                 x,y=point["axes"][0],point["axes"][1]
             except Exception as e:
                 pass
-            if x == None:
+            if x == None or y == None:
                 continue
             w = 1.
             if weighted:

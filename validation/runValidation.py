@@ -259,7 +259,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     try:
         db = Database(databasePath, force_load, subpickle = True )
     except Exception as e:
-        logger.error("Error loading database at %s" %databasePath)
+        logger.error("Error loading database at %s" % ( databasePath ) )
         logger.error("Error: %s" % str(e) )
         sys.exit()
 
