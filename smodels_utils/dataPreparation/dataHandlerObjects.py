@@ -28,7 +28,7 @@ hbar = 6.582119514e-16 # in GeV * ns
 ## so use this feature with great care
 allowMultipleAcceptances = False
 
-errorcounts = { "pathtupleerror": False }
+errorcounts = { "pathtupleerror": False, "smallerthanzero": False }
 
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
@@ -660,6 +660,12 @@ class DataHandler(object):
                     break
                 ret = ret * p[k]
             y = list(k)+[ret]
+            if ret <= 0.:
+                ret = 0.
+                if errorcounts["smallerthanzero"] == False:
+                    errorcounts["smallerthanzero"] = True
+                    logger.warning ( "found value of %s you sure you want that?" % ret )
+            #if ret > 0.:
             yield y
 
 
