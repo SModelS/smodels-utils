@@ -69,16 +69,14 @@ class WikiPageCreator:
             print ( "Creating %s" % self.localdir )
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
+        cmd = "rsync -a --prune-empty-dirs --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
-            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
             has_uploaded = True
         if self.force_upload and not has_uploaded:
             print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
-            # cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
-            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
             has_uploaded = True
