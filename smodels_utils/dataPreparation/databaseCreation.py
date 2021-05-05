@@ -270,9 +270,14 @@ class DatabaseCreator(list):
             if not a in usedFiles:
                 leftFiles.append ( a )
         strFiles = " ".join ( leftFiles )
+        strFiles = strFiles.replace("(","\\(").replace(")","\\)")
         if len( leftFiles ) > 0:
             self.timeStamp ( "unused cruft files 'orig': %s" % strFiles,
                              c="green" )
+        cmd = f"cd orig; rm {strFiles}"
+        if False:
+            import subprocess
+            subprocess.getoutput ( cmd )
 
     def createDatasets(self,datasetList,newDatasets):
         """
