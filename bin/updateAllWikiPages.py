@@ -89,8 +89,9 @@ def main():
         print ( "\nCreate and publish database pickle" )
         #exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
         #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-s", "-r", "-b", "-f", db ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-f", "./fastlim.pcl" ], A.dry_run )
 
 
     gprint ( "create Validation wiki" )

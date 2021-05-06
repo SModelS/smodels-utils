@@ -5,8 +5,9 @@ The script is deliberately run with python2. That way we get
 a pickle file that should work with both python2 and python3. """
 
 from __future__ import print_function
-import pickle, os, sys, argparse, time
+import pickle, os, sys, argparse, time, copy
 from smodels.experiment.databaseObj import Database
+from smodels_utils.helper.databaseManipulations import removeFastLim, removeSuperseded
 import smodels
 import colorama
 if sys.version[0]=="2":
@@ -35,59 +36,12 @@ def checkNonValidated( database ):
             for tx in ds.txnameList:
                 if tx.validated in [ False, True, "N/A", "n/a" ]:
                     continue
-                print ( "Non-validated result: %s,%s, %s: %s " % \
-                        ( e.globalInfo.id, ds, tx, tx.validated) )
+                print ( "[publishDatabasePickle] %sNon-validated result: %s%s, %s, %s: %s " % \
+                        ( colorama.Fore.RED, e.globalInfo.id, colorama.Fore.RESET, \
+                          ds, tx, tx.validated) )
                 has_nonValidated = True
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
-
-def removeSuperseded ( db ):
-    """ remove superseded results """
-    print ( "[publishDatabasePickle] before removal of superseded",len(db.expResultList),"results" )
-    filteredList = []
-    ctr = 0
-    superseded, supers, newers = [], [], []
-    olders = db.expResultList
-    for er in olders:
-        gI = er.globalInfo
-        if hasattr ( gI, "supersedes" ):
-            superseded.append ( gI.supersedes )
-    for er in olders:
-        gI = er.globalInfo
-        if hasattr ( gI, "supersededBy" ): # or gI.id in superseded:
-            newers.append ( er )
-        else:
-            supers.append ( er )
-    db.subs[0].expResultList = supers
-    db.subs = [ db.subs[0] ]
-    print ( "[publishDatabasePickle] after removal of superseded",len(db.expResultList),"results" )
-    db.createBinaryFile( "temp.pcl" )
-    return db
-
-
-def removeFastLim ( db ):
-    """ remove fastlim results """
-    print ( "[publishDatabasePickle] before removal of fastlim",len(db.expResultList),"results" )
-    filteredList = []
-    ctr = 0
-    for e in db.expResultList:
-        gI = e.globalInfo
-        if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
-            ctr+=1
-            if ctr < 4:
-                print ( "removing", gI.id )
-        else:
-
-            filteredList.append ( e )
-    if ctr > 3:
-        print ( f"(removed a total of {ctr} ... )" )
-    db.subs[0].expResultList = filteredList
-    db.subs = [ db.subs[0] ]
-    print ( "[publishDatabasePickle] after removal of fastlim",len(db.expResultList),"results" )
-    db.txt_meta.hasFastLim = False
-    db.createBinaryFile( "temp.pcl" )
-    db.subs[0].pcl_meta.hasFastLim = False
-    return db
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
@@ -121,7 +75,10 @@ def main():
         if args.remove_superseded:
             d = removeSuperseded ( d )
         if args.remove_fastlim:
-            d = removeFastLim ( d )
+            e = copy.deepcopy( d )
+            ## create fastlim only
+            e = removeFastLim ( e, invert = True, picklefile = "fastlim.pcl" )
+            d = removeFastLim ( d, picklefile = "official.pcl" )
             d.pcl_meta.hasFastLim = False
             d.txt_meta.hasFastLim = False
         if not args.skipValidation:
@@ -224,7 +181,8 @@ def main():
         CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
         print ( )
         print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
-        print ( "%s[publishDatabasePickle] then do also manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "%s[publishDatabasePickle] then do also manually:%s" % \
+                ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "ssh lxplus.cern.ch smodels/www/database/create.py" )
         print ( )
         print ( "now point your browser to: " )
