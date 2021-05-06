@@ -110,7 +110,7 @@ class WikiPageCreator:
         return dataset
 
     def close ( self ):
-        print ( '[createWikiPage] Done.\n' )
+        # print ( '[createWikiPage] Done.\n' )
         self.file.write ( "\nThis page was created %s\n" % time.asctime() )
         self.file.close()
         if self.moveFile:
@@ -242,7 +242,7 @@ CMS are for on- and off-shell at once.
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
         id = expRes.globalInfo.id
-        print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " )
+        # print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " )
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         if id in [ "ATLAS-SUSY-2016-07" ]:
@@ -565,7 +565,7 @@ CMS are for on- and off-shell at once.
         for sqrts in [ 13, 8 ]:
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
-                    print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
+                    # print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     if self.ignore_superseded:
                         expResList = filterSuperseded ( expResList )
