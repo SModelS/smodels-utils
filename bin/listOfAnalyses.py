@@ -55,12 +55,14 @@ class Lister:
         :params database: database handle
         """
         version = self.database.databaseVersion
+        if "+" in version:
+            version = version [ :version.find("+") ]
         dotlessv = ""
         if self.add_version:
             dotlessv = version.replace(".","")
         titleplus = ""
         referToOther = "Link to list of results [including superseded results](ListOfAnalyses%sWithSuperseded)" % dotlessv
-        if self.superSeded:
+        if self.includeSuperseded:
             referToOther = "Link to list of results [without superseded results](ListOfAnalyses%s)" % dotlessv
             add=", including superseded results."
             titleplus = "(including superseded results)"
@@ -165,7 +167,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         """
         ret = [ "ID", "short description", "L [1/fb]", "Tx names" ]
         # fields = [ "ID", "short description", "&radic;s", "L", "Tx names" ]
-        if self.superSeded:
+        if self.includeSuperseded:
             ret.append ( "superseded by" )
         if self.likelihoods:
             if isEffMap:
@@ -310,7 +312,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             short_desc = self.convert ( ana.globalInfo.prettyName )
             self.f.write ( " | %s | %s | %s |" % ( short_desc,
                    ana.globalInfo.lumi.asNumber(), topos_s ) )
-            if self.superSeded:
+            if self.includeSuperseded:
                 self.f.write ( "%s |" % ssuperseded )
             if self.likelihoods:
                 if isEffMap:
@@ -331,7 +333,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         statsfile = "analyses.py"
         print ( f"Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
-        f.write ( "# superseded: %d\n" % self.superSeded )
+        f.write ( "# superseded: %d\n" % self.includeSuperseded )
         f.write ( "A=" + str ( self.stats )+"\n" )
         f.close()
 
@@ -389,7 +391,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
     def main( self ):
         import argparse
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
-        argparser.add_argument ( '-n', '--no_superseded', help='ignore superseded results', action='store_true' )
+        argparser.add_argument ( '-n', '--no_superseded', help='ignore (filter out) superseded results', action='store_true' )
         argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
         argparser.add_argument ( '-v', '--verbose', help='verbosity level (error, warning, info, debug) [info]', type=str, default='info' )
@@ -398,22 +400,27 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         argparser.add_argument ( '-a', '--add_version', help='add version labels to links', action='store_true' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
-        self.superSeded = not args.no_superseded
+        self.includeSuperseded = not args.no_superseded
         self.likelihoods = args.likelihoods
         self.dbpath = args.database
         self.createSuperseded()
-        self.database = Database ( self.dbpath, discard_zeroes=True )
+        dbpath = self.dbpath
+        if self.includeSuperseded:
+            dbpath += "+./superseded.pcl"
+        self.database = Database ( dbpath, discard_zeroes=True )
         ver = ""
         if args.add_version:
             ver = self.database.databaseVersion.replace(".","")
+        if "+" in ver:
+            ver = ver [ :ver.find("+") ]
         filename = "ListOfAnalyses%s" % ver
-        if self.superSeded:
+        if self.includeSuperseded:
             filename = "ListOfAnalyses%sWithSuperseded" % ver
         self.filename = filename
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags
-        self.expRes = self.database.getExpResults ( )
-        if not self.superSeded:
+        self.expRes = self.database.getExpResults ( useSuperseded = self.includeSuperseded )
+        if not self.includeSuperseded:
             self.expRes = filterSuperseded ( self.expRes )
         self.backup()
         self.f = open ( filename, "w" )

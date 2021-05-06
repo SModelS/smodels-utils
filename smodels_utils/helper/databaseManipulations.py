@@ -43,7 +43,7 @@ def createSuperseded ( infile, outfile = "./superseded.pcl", filtered = False ):
                 fastlims.append ( er )
         else:
             supers.append ( er )
-            print ( "[databaseManipulations] keep", gI.id )
+            # print ( "[databaseManipulations] keep", gI.id )
     if filtered:
         db.subs[0].expResultList = supers
     else:
