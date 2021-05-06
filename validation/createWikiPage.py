@@ -279,7 +279,7 @@ CMS are for on- and off-shell at once.
         url = expRes.globalInfo.url
         if ";" in url:
             url = url.split(";")[0]
-        print ( "%d txnames: " % len(txns_discussed), flush=True, end="" )
+        # print ( "%d txnames: " % len(txns_discussed), flush=True, end="" )
         txns_discussed=set()
         for txname in txnames:
             txn = txname.txName
