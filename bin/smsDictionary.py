@@ -24,12 +24,17 @@ except:
     import subprocess as C
 
 class SmsDictWriter:
+    feynpath = "../../smodels.github.io/feyn/straight/"
+
     def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private,
-                   dryrun ):
+                   dryrun, checkfirst, copy ):
         self.databasePath = database
+        self.hasWarned=False
         self.drawFeyn = drawFeyn
         self.dryrun =  dryrun
+        self.copy = copy
         self.xkcd = xkcd
+        self.checkfirst = checkfirst
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
         self.private = private
@@ -109,7 +114,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     stxname = str ( txname )
                     if txname in topos:
                         if txname.constraint != topos[stxname]:
-                            print ( "txnames for %s mismatch: %s != %s" %
+                            print ( "[smsDictionary] txnames for %s mismatch: %s != %s" %
                                     ( txname, txname.constraint, topos[stxname] ) )
                     if not stxname in topos.keys():
                         topos[stxname]=set()
@@ -222,6 +227,17 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         # constraint = constraint.replace ( "jet", "q" )
         if self.drawFeyn:
             for txname in txnames:
+                exists = os.path.exists ( f"{SmsDictWriter.feynpath}/{txname}.png" )
+                if not self.checkfirst and self.copy and exists and not self.hasWarned:
+                    print ( f"[smsDictionary] WARNING: will overwrite {SmsDictWriter.feynpath}/{txname}.png" )
+                    print ( "[smsDictionary] use -s if that is not what you wanted" )
+                    self.hasWarned = True
+                if self.checkfirst and exists:
+                    print ( "[smsDictionary] skipping %s.png" % txname )
+                    if self.hasWarned == False:
+                        self.hasWarned=True
+                        print ( "[smsDictionary] (it exists already and you specified to skip existing graphs. if that is not what you want, do not use -s)." )
+                    continue
                 self.createFeynGraph ( txname, constraint )
         constraint = constraint.replace ( "photon", "y" )
         constraint = constraint.replace ( "higgs", "h" )
@@ -241,7 +257,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         ## now "Appears in" column
         if self.hasResultsColumn:
             self.f.write ( " | " )
-            results = self.database.getExpResults ( txnames = txnames, useSuperseded = True )
+            results = self.database.getExpResults ( txnames = txnames )
             if first:
                 # self.f.write ( "<25%>" ) ## make sure the last column isnt too small
                 pass
@@ -270,6 +286,8 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Write Wiki page that lists all SMSes, their constraints, and draws a Feynman graph, see http://smodels.hephy.at/wiki/SmsDictionary')
     argparser.add_argument ( '-f', '--feynman', help='also create Feynman Graphs',
                              action='store_true' )
+    argparser.add_argument ( '-s', '--checkfirst', help=f'create only Feynman Graphs that do not exist in {SmsDictWriter.feynpath}',
+                             action='store_true' )
     argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
                              action='store_true' )
     argparser.add_argument ( '-D', '--dry_run', help='dry run, dont actually draw',
@@ -288,14 +306,15 @@ if __name__ == '__main__':
         args.feynman = True
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.add_version,
-            private = args.private, dryrun = args.dry_run  )
+            private = args.private, dryrun = args.dry_run,
+            checkfirst = args.checkfirst, copy = args.copy )
     print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
         dest="straight"
         if args.xkcd:
             dest="xkcd"
-        cmd = "cp ../feyn/T*.p* ../../smodels.github.io/feyn/straight/"
+        cmd = f"cp ../feyn/T*.p* {SmsDictWriter.feynpath}"
         import subprocess
         print ( "[smsDictionary] %s" % cmd )
         a = subprocess.getoutput ( cmd )

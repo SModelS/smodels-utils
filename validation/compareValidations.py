@@ -102,8 +102,7 @@ def getValidationStatus ( f, db ):
         anaId = anaId.replace("-eff","")
     # print ( "get val stat for %s:%s[%s]" % ( anaId, topo, dtype ) )
     er = db.getExpResults ( analysisIDs = [ anaId ], txnames = [ topo ], 
-                            dataTypes = [ dtype ], useSuperseded = True, 
-                            useNonValidated = True )
+                            dataTypes = [ dtype ], useNonValidated = True )
     if len(er)==0:
         return "could not find"
     if len(er)>1:

@@ -34,7 +34,7 @@ badTemplates = []
 goodTemplates = []
 errorTemplates = []
 database = Database(os.path.expanduser("~/smodels-database/"))
-for expRes in database.getExpResults(useSuperseded=True, useNonValidated=True):
+for expRes in database.getExpResults(useNonValidated=True):
     #Skip efficiency-map analyses:
 #     if 'efficiencyMap' in expRes.getValuesFor('dataType'): continue
     for txname in expRes.getTxNames():

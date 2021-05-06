@@ -3,7 +3,7 @@
 """ Plot the ratio between the upper limit from the UL map, and our
 own upper limit computed from combining the efficiency maps. """
 
-import math, os, numpy, copy, sys, glob
+import math, os, numpy, copy, sys, glob, ctypes
 import matplotlib.pyplot as plt
 import matplotlib
 import ROOT
@@ -20,6 +20,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
+
+errMsgIssued = { "axis": False }
 
 def hasDebPkg():
     """ do we have the package installed """
@@ -39,7 +41,9 @@ def convertNewAxes ( newa ):
         if "z" in newa:
             axes.append ( newa["z"] )
         return axes[::-1]
-    print ( "cannot convert this axis" )
+    if not errMsgIssued["axis"]:
+        print ( "[plotRatio] cannot convert axis '%s'" % newa )
+        errMsgIssued["axis"]=True
     return None
 
 def axisHash ( axes_ ):
@@ -49,7 +53,7 @@ def axisHash ( axes_ ):
         ret += 10**(4*ctr)*int(a)
     return ret
 
-def getExclusionsFrom ( rootpath, txname, axes=None ):
+def getExclusionsFrom ( rootpath, txname, axes ):
     """
     :param axes: only specific axes
     """
@@ -77,6 +81,7 @@ def getExclusionsFrom ( rootpath, txname, axes=None ):
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
             txnames[tx].append(obj.ReadObj())
+            # print ( "and we add more", objName, "tx", tx, "txname", txname, "axes", axes )
             nplots += 1
     if not nplots:
         logger.warning("No exclusion curve found.")
@@ -115,15 +120,22 @@ def getExclusionLine ( line ):
             xs = getExclusionLine ( l )[0]
             x.append ( xs )
         return x
-    x,y=ROOT.Double(),ROOT.Double()
+    # x,y=ROOT.Double(),ROOT.Double()
+    x,y= ctypes.c_double(),ctypes.c_double()
     x_v,y_v=[],[]
     for i in range(line.GetN()):
       line.GetPoint(i,x,y)
-      x_v.append(copy.deepcopy(x))
-      y_v.append(copy.deepcopy(y))
+      #x_v.append(copy.deepcopy(x.value))
+      #y_v.append(copy.deepcopy(y.value))
+      x_v.append( x.value )
+      y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
+def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
+    """ plot.
+    :params vmin: the minimum z value, e.g. .5
+    :params vmax: the maximum z value, e.g. 1.7
+    """
     hasDebPkg()
     uls={}
     nsr=""
@@ -139,6 +151,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
                 print ( " ... (more error msgs like these) " )
             continue
         axes_ = point["axes"]
+        if axes_ is None:
+            continue
+            #print ( f"[plotRatio] the axis field is 'None' in {imp1.__file__}. Will stop." )
+            #sys.exit()
         axes = convertNewAxes ( axes_ )
         h = axisHash ( axes )
         if not "UL" in point:
@@ -154,6 +170,8 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
 
     for ctr,point in enumerate(ipoints):
         axes = convertNewAxes ( point["axes"] )
+        if axes == None:
+            continue
         h = axisHash ( axes )
         ul1 = None
         if h in uls.keys():
@@ -169,6 +187,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
             err_msgs += 1
             #if err_msgs < 5:
             #    print ( "cannot find data for point", point["slhafile"] )
+
+    if len(points) == 0:
+        print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {imp2.__file__}" )
+        sys.exit()
 
     points.sort()
     points = numpy.array ( points )
@@ -197,9 +219,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
-    vmin,vmax= .5, 1.7
-    if False:
+    # vmin,vmax= .5, 1.7
+    if vmax is None or abs(vmax)<1e-5:
         vmax = numpy.nanmax ( col )*1.1
+    if vmin is None or abs(vmin)<1e-5:
         vmin = numpy.nanmin ( col )*0.9
     opts = { }
     #print ( "vmax", vmax )
@@ -225,15 +248,25 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     #plt.rcParams['ytick.labelsize'] = 14
     slhafile=imp2.validationData[0]["slhafile"]
     Dir=os.path.dirname ( imp1.__file__ )
+    Dir2=os.path.dirname ( imp2.__file__ )
     smsrootfile = Dir.replace("validation","sms.root" )
+    smsrootfile2 = Dir2.replace("validation","sms.root" )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo=slhafile[:slhafile.find("_")]
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
 
+    isEff = False
+    if "-eff" in imp1.ana or "-eff" in imp2.ana:
+        isEff = True
     anaId = imp1.ana.replace("-andre","")
-    anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
-    plt.title ( "ratio: %s, %s" % ( anaId, topo) )
+    anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
+    anaId2 = imp2.ana.replace("-andre","")
+    anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
+    title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
+    if anaId2 == anaId:
+        title = "ratio: %s, %s" % ( anaId, topo )
+    plt.title ( title )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
@@ -249,13 +282,29 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     # plt.colorbar( format="%.1g" )
     el = []
     hasLegend = False
-    line = getExclusionsFrom ( smsrootfile, topo )
+    axes = None
+    if hasattr ( imp1, "meta" ) and "axes" in imp1.meta:
+        axes = imp1.meta["axes"]
+    if hasattr ( imp2, "meta" ) and "axes" in imp2.meta:
+        axes = imp2.meta["axes"]
+    line = getExclusionsFrom ( smsrootfile, topo, axes )
+    line2 = getExclusionsFrom ( smsrootfile2, topo, axes )
     if line is not False:
         el = getExclusionLine ( line )
+    if line2 is not False:
+        el2 = getExclusionLine ( line2 )
     label = "official exclusion"
+    label = anaId
     for E in el:
         hasLegend = True
-        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
+        plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=3, label=label )
+        label = ""
+    for E in el2:
+        label = anaId2
+        hasLegend = True
+        plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+        plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
         label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
@@ -282,23 +331,15 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     if output != None:
-        # figname = output.replace("@t", topo ).replace("@a",analysis.replace("validation","") )
-        figname = output.replace("@t", topo )
-    #if srs1 !="all":
-    #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    """
-    a1, a2 = "$a_1$", "$a_2$"
-    for ide,label in { "andre": "andre", "eff": "suchi" }.items():
-        if ide in imp1.ana:
-            a1 = label
-        if ide in imp2.ana:
-            a2 = label
-    """
+        figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
+        figname = figname.replace( "@a",anaId )
     a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
         ypos = min(y)*30.
-    plt.text ( max(x)+.30*(max(x)-min(x)), ypos, "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), fontsize=13, rotation = 90)
+    plt.text ( max(x)+.30*(max(x)-min(x)), ypos, 
+               "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), 
+               fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
@@ -335,10 +376,11 @@ def writeMDPage( copy ):
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
         f.write ( "# ratio plots on the upper limits\n" )
-        f.write ( "as of %s\n" % time.asctime() )
-        f.write ( "see also [best signal regions](bestSRs)\n\n" )
+        f.write ( "as of %s\n\n" % time.asctime() )
+        # f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
+        files = glob.glob("ratios_*.png" )
         files += glob.glob("atlas_*png" )
         files += glob.glob("cms_*png" )
         files.sort()
@@ -366,22 +408,29 @@ def main():
             help="second validation file. If empty, then same as v1. [""]",
             type=str, default="" )
     argparser.add_argument ( "-a1", "--analysis1",
-            help="first analysis name, like the directory name [CMS-EXO-13-006-andre]",
-            type=str, default="CMS-EXO-13-006-andre" )
+            help="first analysis name, like the directory name [ATLAS-SUSY-2013-09]",
+            type=str, default="ATLAS-SUSY-2013-09" )
     argparser.add_argument ( "-a2", "--analysis2",
-            help="second analysis name, like the directory name [CMS-EXO-13-006-eff]",
-            type=str, default="CMS-EXO-13-006-eff" )
+            help="second analysis name, like the directory name [ATLAS-CONF-2013-007]",
+            type=str, default="ATLAS-CONF-2013-007" )
     argparser.add_argument ( "-l1", "--label1",
-            help="label in the legend for analysis1 [andre]",
-            type=str, default="andre" )
+            help="label in the legend for analysis1 [susy]",
+            type=str, default="susy" )
     argparser.add_argument ( "-o", "--output",
-            help="outputfile [None]",
-            type=str, default=None )
+            help="outputfile, the @x's get replaced [ratios_@a_@t.png]",
+            type=str, default="ratios_@a_@t.png" )
     argparser.add_argument ( "-l2", "--label2",
-            help="label in the legend for analysis2 [suchi]",
-            type=str, default="suchi" )
-    argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
-                             default="../../smodels-database/" )
+            help="label in the legend for analysis2 [conf]",
+            type=str, default="conf" )
+    argparser.add_argument ( "-z", "--zmin",
+            help="minimum z value, 0. means auto [.5]",
+            type=float, default=.5 )
+    argparser.add_argument ( "-Z", "--zmax",
+            help="maximum Z value, 0. means auto [1.7]",
+            type=float, default=1.7 )
+    argparser.add_argument ( "-d", "--dbpath", 
+            help="path to database [../../smodels-database/]", type=str,
+            default="../../smodels-database/" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
@@ -389,6 +438,8 @@ def main():
     argparser.add_argument ( "-p", "--push", action="store_true", 
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
+    if not args.validationfile1.endswith ( ".py" ):
+        args.validationfile1 += ".py"
 
     valfiles = [ args.validationfile1 ]
     if args.default:
@@ -400,7 +451,8 @@ def main():
         imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
         imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output )
+        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output,
+               args.zmin, args.zmax )
 
     writeMDPage( args.copy )
 

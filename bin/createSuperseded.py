@@ -4,39 +4,6 @@
 results only. """
 
 import argparse
-from smodels.experiment.databaseObj import Database
-
-def create ( infile, outfile, filtered ):
-    """
-    :param filtered: if true, then remove superseded entries instead of the other way round
-    """
-    db = Database ( infile )
-    olders = db.expResultList
-    newers, supers, fastlims = [], [], []
-    superseded = []
-    for er in olders:
-        gI = er.globalInfo
-        if hasattr ( gI, "supersedes" ):
-            superseded.append ( gI.supersedes )
-
-    for er in olders:
-        gI = er.globalInfo
-        if hasattr ( gI, "supersededBy" ) or gI.id in superseded:
-            newers.append ( er )
-        elif hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
-                fastlims.append ( er )
-        else:
-            supers.append ( er )
-    if filtered:
-        db.subs[0].expResultList = supers
-    else:
-        db.subs[0].expResultList = newers
-    db.subs = [ db.subs[0] ]
-    sstring = "superseded"
-    if filtered:
-        sstring = "nosuperseded"
-    db.subs[0].txt_meta.databaseVersion = db.databaseVersion + sstring
-    db.createBinaryFile ( outfile )
 
 def main( ):
     ap = argparse.ArgumentParser( description="script that creates a database pickle file with superseded results only" )
@@ -48,6 +15,8 @@ def main( ):
 
     if args.filter and args.outfile == "superseded.pcl":
         args.outfile = "filtered.pcl"
-    create ( args.infile, args.outfile, args.filter )
+    from smodels_utils.helper.databaseManipulations import createSuperseded
+    createSuperseded ( args.infile, args.outfile, args.filter )
 
-main()
+if __name__ == "__main__":
+    main()

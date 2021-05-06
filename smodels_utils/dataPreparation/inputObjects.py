@@ -784,6 +784,30 @@ class TxNameInput(Locker):
         if not hasattr(self,'validated'):
             self.validated = 'TBD'
 
+
+    def widthsInNs ( self, units ):
+        """ find out if widths are meant to be given in ns """
+        if type(units) != tuple:
+            return False
+        if len(units)<2:
+            return False
+        return units[1]=="ns"
+
+    def getValueUnit ( self, unit ):
+        """ get the unit of the 'value' field, so eff or UL
+        :param nmasses: number of o
+        """
+        if type(unit)==str:
+            return unit
+        if unit[-1].startswith ( "/1" ):
+            return unit[-1]
+        if unit[-1] in [ "%", "" ]:
+            return unit[-1]
+        if unit[-1] in [ "GeV", "ns", "GeV" ]:
+            return ""
+        logger.error ( f"cannot determine the unit of the values from {unit}" )
+        return ""
+
     def addDataFrom(self, plane, dataLabel):
 
         """
@@ -855,13 +879,22 @@ class TxNameInput(Locker):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
-                if dataHandler.unit == "%":
+                unit = self.getValueUnit ( dataHandler.unit )
+                if unit == "%":
                     value = value / 100.
-                elif dataHandler.unit == "/10000":
+                elif unit == "/10000":
                     value = value / 10000.
+                elif self.widthsInNs(dataHandler.unit):
+                    pass #
+                elif type(unit) == str and unit.startswith ( "/" ):
+                    factor = unit[1:]
+                    try:
+                        factor = float ( factor )
+                    except ValueError as e:
+                        logger.error ( f"unit starting with / is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
+                    value = value / factor
                 else:
-                    value = value*eval(dataHandler.unit,
-                                   {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
+                    value = value*eval(unit, {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
                 for i,br in enumerate(massArray):
                     if isinstance(br,str):  #Allow for string identifiers in the mass array
@@ -869,7 +902,10 @@ class TxNameInput(Locker):
                     for j,M in enumerate(br):
                         if isinstance(M,tuple):
                             m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                            m1 = M[1] * GeV ## width in GeV
+                            if self.widthsInNs(dataHandler.unit):
+                                m1 = hbar / M[1] * GeV
+                            else:
+                                m1 = M[1] * GeV ## width in GeV
                             M = ( m0, m1 )
                         if isinstance(M,(float,int)):
                             M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})

@@ -50,13 +50,18 @@ def clean ( obj ):
     n = ret.GetN()
     # x, y = Double(), Double()
     x, y = ctypes.c_double(), ctypes.c_double()
+    warnedX, warnedY = False, False
     for i in range(n):
         ret.GetPoint(i,x,y)
         if x.value < 0.:
-            print ( "[plottingFuncs] ERROR: x value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % x.value )
+            if not warnedY:
+                print ( "[plottingFuncs] ERROR: x value %s of %s smaller than zero! Will set to zero and suppress future warnings." % ( x.value, obj.GetName() ) )
+                warnedX = True
             ret.SetPoint ( i, 0., y.value )
         if y.value < 0.:
-            print ( "[plottingFuncs] ERROR: y value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % y.value )
+            if not warnedY:
+                print ( "[plottingFuncs] ERROR: y value %s of %s smaller than zero! Will set to zero and suppress future warnings." % ( y.value, obj.GetName() ) )
+                warnedY = True
             ret.SetPoint ( i, x.value, 0. )
     return ret
 

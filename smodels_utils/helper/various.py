@@ -31,12 +31,14 @@ def getPathName ( dbpath, analysis, valfile ):
     if "CMS" in analysis:
         experiment = "CMS"
     sqrts = 8
+    if not dbpath.endswith ( "/"):
+        dbpath += "/"
     for sqrts in [ 8, 13, 14, -1 ]:
         anadir = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
         if os.path.exists ( anadir ):
             break
     if sqrts == -1:
-        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis )
+        print ( "[various] could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis )
         sys.exit()
     ipath = "%s%dTeV/%s/%s/validation/%s" % \
              ( dbpath, sqrts, experiment, analysis, valfile )
@@ -45,12 +47,12 @@ def getPathName ( dbpath, analysis, valfile ):
         print ( "could not find validation file %s" % ipath )
         sys.exit()
     if len(files)>1:
-        print ( "[plotRatio] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
+        print ( "[helper/various] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
         for f in files[:2]:
             p = f.rfind("/")
             if p > 0:
                 f = f[p+1:]
-            print ( "[plotRatio] example filename: %s" % ( f ) )
+            print ( "[helper/various] found: %s" % ( f ) )
         sys.exit()
     ipath = files[0]
     return ipath

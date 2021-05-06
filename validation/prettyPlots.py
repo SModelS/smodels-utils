@@ -458,7 +458,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             if not grlist:
                 continue
             if cval == 1.0:
-                leg.AddEntry(grlist[0],"exp. excl (SModelS)","L")
+                leg.AddEntry(grlist[0],"exp. excl. (SModelS)","L")
                 hasExclLines = True
             elif (cval == looseness or cval == 1./looseness) and not added:
                 leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
@@ -475,7 +475,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             added = True
     for gr in expectedOfficialCurves:
         if 'xclusion_' in gr.GetTitle():
-            leg.AddEntry(gr,"exp. excl. (official)","L")
+            if drawExpected:
+                leg.AddEntry(gr,"exp. excl. (official)","L")
             hasExclLines = True
         elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
             leg.AddEntry(gr,"#pm1#sigma (official)","L")

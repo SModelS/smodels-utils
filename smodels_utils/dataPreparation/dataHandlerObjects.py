@@ -28,6 +28,8 @@ hbar = 6.582119514e-16 # in GeV * ns
 ## so use this feature with great care
 allowMultipleAcceptances = False
 
+errorcounts = { "pathtupleerror": False, "smallerthanzero": False }
+
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
     for l in lst:
@@ -80,8 +82,8 @@ class DataHandler(object):
 
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
-            logger.error("Coordinate map %s is not consistent with number of dimensions (%i)"
-                         %(coordinateMap,self.dimensions+1))
+            logger.error("Coordinate map %s is not consistent with number of dimensions (%i) in %s"
+                         %(coordinateMap,self.dimensions+1, dataLabel))
             sys.exit()
         for xv in self.xvars:
             if not xv in coordinateMap:
@@ -120,8 +122,8 @@ class DataHandler(object):
             unitString = "%"
 
         if unitString:
-            units = ['/10000','%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
-            if not unitString in units:
+            units = ['/10000','%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60'), ( 'GeV', 'ns', '/1' ), ( 'GeV', 'ns', '%' ), ( 'GeV', 'ns', '/10000' ) ]
+            if not unitString in units and not unitString.startswith("/"):
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
             self._unit = unitString
@@ -134,6 +136,12 @@ class DataHandler(object):
         if not self.fileType:
             logger.error("File type for %s has not been defined" %self.path)
             sys.exit()
+
+        if self.fileType == "csv" and type(self.path) == tuple:
+            if errorcounts["pathtupleerror"] == False:
+                print ( f"[dataHandlerObjects] warning: {self.path} is a tuple. will switch from csv to mcsv as your dataformat." )
+                errorcounts["pathtupleerror"]  = True
+            self.fileType = "mcsv"
 
         #Load data
         self.data = []
@@ -308,8 +316,8 @@ class DataHandler(object):
         """
 
         if len(point) < self.dimensions+1:
-            logger.error("Data should have at least %i dimensions (%i dimensions found)"
-                         %(self.dimensions+1,len(point)))
+            logger.error("%s should have at least %i dimensions (%i dimensions found)"
+                         %(self.name, self.dimensions+1,len(point)))
             sys.exit()
 
         ptDict = {}
@@ -554,9 +562,18 @@ class DataHandler(object):
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
+                if "@@EOF@@" in r:
+                    break
                 if len(r)<2:
                     continue
-                #print ( "line >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
+                hasLatexStuff=False
+                for _ in r:
+                    if "\\tilde" in _: # sometimes its a latex line
+                        hasLatexStuff = True
+                    if "[GeV]" in _:
+                        hasLatexStuff = True
+                if hasLatexStuff:
+                    continue
                 if not has_waited:
                     for i in r:
                         if waitFor in i:
@@ -586,9 +603,28 @@ class DataHandler(object):
                     xs.append ( yr[0] )
                     ys.append ( yr[1] )
             else:
-                yields.sort()
+                try:
+                    yields.sort()
+                except TypeError as e:
+                    logger.error ( "type error when sorting: %s." % e )
+                    culprits = ""
+                    for lno,y in enumerate(yields):
+                        for x in y:
+                            if type(x) not in ( float, int ):
+                                culprits += f"''{x}'' "
+                    logger.error ( "the culprits might be %s in %s" % \
+                                   ( culprits, self.path ) )
+                    sys.exit()
             for yr in yields:
-                yield yr
+                yld = yr
+                if type ( self.index ) in [ list, tuple ]:
+                    ret = []
+                    for i in self.index:
+                        ret.append ( yr[i] )
+                    yld = ret
+                if type ( self.index ) in [ int ]:
+                    yld = yr[:self.dimensions] + [ yr[self.index] ]
+                yield yld
 
     def mcsv(self):
         """
@@ -606,19 +642,30 @@ class DataHandler(object):
             ret = list( self.csvForPath( p ) )
             for point in ret:
                 key = tuple(point[:-1])
+                hasLatexStuff = False
+                for k in key:
+                    if type(k) == str and "\\tilde" in k:
+                        hasLatexStuff = True
+                if hasLatexStuff:
+                    continue
                 keys.add ( key )
                 path[key] = point[-1]
             npaths.append ( path )
-        # print ( "paths", paths[:2] )
-        # print ( "keys", keys)
         for k in keys:
             ret = 1.
             for p in npaths:
                 if not k in p.keys():
-                    logger.error ( "it seems that point %s is not in all paths?" % str(k) )
+                    logger.error ( "it seems that point %s is not in all paths? in %s" % \
+                                   (str(k), self.path ) )
                     break
                 ret = ret * p[k]
             y = list(k)+[ret]
+            if ret <= 0.:
+                ret = 0.
+                if errorcounts["smallerthanzero"] == False:
+                    errorcounts["smallerthanzero"] = True
+                    logger.warning ( "found value of %s you sure you want that?" % ret )
+            #if ret > 0.:
             yield y
 
 
