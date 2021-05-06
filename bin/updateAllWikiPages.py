@@ -87,8 +87,11 @@ def main():
 
     if not A.no_pickle:
         print ( "\nCreate and publish database pickle" )
-        exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
+        #exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
+        #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-s", "-r", "-b", "-f", db ], A.dry_run )
+
 
     gprint ( "create Validation wiki" )
     cmd = [ "../validation/createWikiPage.py", "-c", ref_db ]
