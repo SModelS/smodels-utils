@@ -17,6 +17,8 @@ bin/ListOfAnalyses
 bin/ListOfAnalysesWithSuperseded
 *.py~
 old/
+temp/
+du-h
 slha/T*.slha
 validation/twiki/twiki*.txt
 validation/results
