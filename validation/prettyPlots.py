@@ -304,6 +304,47 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     palette.SetX2NDC(0.895)
     palette.SetY1NDC(0.16)
     palette.SetY2NDC(0.84)
+    isEqual = {}
+    x1,x2 = ctypes.c_double(), ctypes.c_double()
+    y1,y2 = ctypes.c_double(), ctypes.c_double()
+    for cval,grlist in cgraphs.items():
+        isEqual[cval]={}
+        if not cval in ecgraphs:
+            continue
+        tmpe = ecgraphs[cval]
+        for i,gr in enumerate(grlist):
+            isEqual[cval][i]=False
+            if i+1>len(tmpe):
+                continue
+            if gr.GetN() != tmpe[i].GetN():
+                continue
+            hasDiscrepancy = False
+            for j in range(gr.GetN()):
+                gr.GetPoint(j,x1,y1 )
+                tmpe[i].GetPoint(j,x2,y2 )
+                dx = abs ( (x1.value-x2.value) / ( x1.value+x2.value ) )
+                dy = abs ( (y1.value-y2.value) / ( y1.value+y2.value ) )
+                if dx > 1e-3 or dy > 1e-3:
+                    hasDiscrepancy = True
+                    break
+            if not hasDiscrepancy:
+                isEqual[cval][i]=True
+
+    for cval,grlist in ecgraphs.items():
+        if cval == 1.0:
+            ls = 2
+        else:
+            continue
+        for i,gr in enumerate(grlist):
+            if isEqual[cval][i]: ## is equal we need to add noise!
+                for j in range(gr.GetN()):
+                    gr.GetPoint(j,x1,y1 )
+                    gr.SetPoint(j,x1.value*random.gauss(1.,.001),y1.value*random.gauss(1.,.001))
+
+            setOptions(gr, Type='official')
+            gr.SetLineColor(kRed) # Orange+2)
+            gr.SetLineStyle(ls)
+            gr.Draw("L SAME")
     for cval,grlist in cgraphs.items():
         if cval == 1.0:
             ls = 1
@@ -314,16 +355,6 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         for gr in grlist:
             setOptions(gr, Type='official')
             gr.SetLineColor(kGray+2)
-            gr.SetLineStyle(ls)
-            gr.Draw("L SAME")
-    for cval,grlist in ecgraphs.items():
-        if cval == 1.0:
-            ls = 2
-        else:
-            continue
-        for gr in grlist:
-            setOptions(gr, Type='official')
-            gr.SetLineColor(kRed) # Orange+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
     for gr in official:
@@ -443,16 +474,6 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
     added = False
-    for cval,grlist in cgraphs.items():
-        if not grlist:
-            continue
-        if cval == 1.0:
-            leg.AddEntry(grlist[0],"exclusion (SModelS)","L")
-            hasExclLines = True
-        elif (cval == looseness or cval == 1./looseness) and not added:
-            leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
-            hasExclLines = True
-            added = True
     if drawExpected:
         for cval,grlist in ecgraphs.items():
             if not grlist:
@@ -464,19 +485,29 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                 leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
                 hasExclLines = True
                 added = True
+    for cval,grlist in cgraphs.items():
+        if not grlist:
+            continue
+        if cval == 1.0:
+            leg.AddEntry(grlist[0],"exclusion (SModelS)","L")
+            hasExclLines = True
+        elif (cval == looseness or cval == 1./looseness) and not added:
+            leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
+            hasExclLines = True
+            added = True
     added = False
-    for gr in official:
+    for gr in expectedOfficialCurves:
         if 'xclusion_' in gr.GetTitle():
-            leg.AddEntry(gr,"exclusion (official)","L")
+            if drawExpected:
+                leg.AddEntry(gr,"exp. excl. (official)","L")
             hasExclLines = True
         elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
             leg.AddEntry(gr,"#pm1#sigma (official)","L")
             hasExclLines = True
             added = True
-    for gr in expectedOfficialCurves:
+    for gr in official:
         if 'xclusion_' in gr.GetTitle():
-            if drawExpected:
-                leg.AddEntry(gr,"exp. excl. (official)","L")
+            leg.AddEntry(gr,"exclusion (official)","L")
             hasExclLines = True
         elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
             leg.AddEntry(gr,"#pm1#sigma (official)","L")
