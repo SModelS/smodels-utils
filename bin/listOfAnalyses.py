@@ -92,7 +92,7 @@ The list has been created from the database version `%s.`
 %sThere is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
 %s.
     """ % ( version, titleplus, n_maps, n_results, len(n_topos),
-            len(n_anas), version, dotlessv, sfastliminc, dotlessv, referToOther ) )
+            len(n_anas), version, sfastliminc, dotlessv, dotlessv, referToOther ) )
 
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
