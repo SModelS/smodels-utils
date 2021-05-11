@@ -79,20 +79,16 @@ class Lister:
                 ds = expR.getDataset ( d )
                 n_results += 1
                 n_maps += len ( ds.txnameList )
-        sfastliminc = ""
+        self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
+        self.f.write ( "List of analyses and topologies in the SMS results database," )
+        self.f.write ( f"comprising {n_maps} individual maps from {n_results} distinct signal regions, ")
+        self
+        self.f.write ( f"{len(n_topos)} different SMS topologies, from a total of {len(n_anas)} analyses.\n" )
+        self.f.write ( f"The list has been created from the database version `{version}.`\n")
         if self.includeFastlim:
-            sfastliminc="Results from FastLim are included. "
-        self.f.write (
-    """
-
-# List Of Analyses %s %s
-List of analyses and topologies in the SMS results database,
-comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
-The list has been created from the database version `%s.`
-%sThere is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
-%s.
-    """ % ( version, titleplus, n_maps, n_results, len(n_topos),
-            len(n_anas), version, sfastliminc, dotlessv, dotlessv, referToOther ) )
+            self.f.write ( "Results from FastLim are included. " )
+        self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
+        self.f.write ( referToOther + ".\n" )
 
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
