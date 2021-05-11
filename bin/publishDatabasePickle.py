@@ -7,7 +7,8 @@ a pickle file that should work with both python2 and python3. """
 from __future__ import print_function
 import pickle, os, sys, argparse, time, copy
 from smodels.experiment.databaseObj import Database
-from smodels_utils.helper.databaseManipulations import removeFastLim, removeSuperseded
+from smodels_utils.helper.databaseManipulations import \
+    filterFastLimFromList, removeSupersededFromDB
 import smodels
 import colorama
 if sys.version[0]=="2":
@@ -73,12 +74,12 @@ def main():
         print ( "[publishDatabasePickle] building database with %s" % os.path.dirname ( smodels.__file__ ) )
         d = Database ( dbname, discard_zeroes=discard_zeroes )
         if args.remove_superseded:
-            d = removeSuperseded ( d )
+            d = removeSupersededFromDB ( d )
         if args.remove_fastlim:
             e = copy.deepcopy( d )
             ## create fastlim only
-            e = removeFastLim ( e, invert = True, picklefile = "fastlim.pcl" )
-            d = removeFastLim ( d, picklefile = "official.pcl" )
+            e = filterFastLimFromList ( e, invert = True, picklefile = "fastlim.pcl" )
+            d = filterFastLimFromList ( d, picklefile = "official.pcl" )
             d.pcl_meta.hasFastLim = False
             d.txt_meta.hasFastLim = False
         if not args.skipValidation:

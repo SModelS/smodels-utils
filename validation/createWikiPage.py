@@ -15,7 +15,7 @@ sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV, fb
 from smodels.tools.smodelsLogging import setLogLevel, logger
-from smodels_utils.helper.databaseManipulations import filterSuperseded
+from smodels_utils.helper.databaseManipulations import filterSupersededFromList
 import subprocess
 setLogLevel("debug" )
 
@@ -427,7 +427,7 @@ CMS are for on- and off-shell at once.
                     txnames = [ txname ], dataTypes = dataTypes,
                     useNonValidated = self.ignore_validated )
         if self.ignore_superseded:
-            newR = filterSuperseded ( newR )
+            newR = filterSupersededFromList ( newR )
         oldR = self.comparison_db.getExpResults( analysisIDs = [ id ],
                     txnames = [ txname ], dataTypes = dataTypes,
                     useNonValidated = self.ignore_validated )
@@ -547,7 +547,7 @@ CMS are for on- and off-shell at once.
         tmpList = self.db.getExpResults( dataTypes=[ T ],
                          useNonValidated=self.ignore_validated )
         if self.ignore_superseded:
-            tmpList = filterSuperseded ( tmpList )
+            tmpList = filterSupersededFromList ( tmpList )
         expResList = []
         for i in tmpList:
             if not exp in i.globalInfo.id: continue
@@ -568,7 +568,7 @@ CMS are for on- and off-shell at once.
                     # print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     if self.ignore_superseded:
-                        expResList = filterSuperseded ( expResList )
+                        expResList = filterSupersededFromList ( expResList )
                     self.writeExperimentType ( sqrts, exp, tpe, expResList )
 
         #Copy/update the database plots and generate the wiki table

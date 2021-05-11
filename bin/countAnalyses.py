@@ -15,6 +15,7 @@ import sys, colorama
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.smodelsLogging import setLogLevel
+from smodels_utils.helper import databaseManipulations as manips
 setLogLevel("debug")
 
 def discussExperiment ( anas, experiment, title, verbose ):
@@ -58,37 +59,6 @@ def discussExperiment ( anas, experiment, title, verbose ):
 
     print ()
 
-def filterSqrts ( anas, sqrts ):
-    sqrts = int ( sqrts)
-    ret = []
-    for ana in anas:
-        contact = ""
-        anaS = int ( ana.globalInfo.sqrts.asNumber(TeV) )
-        if sqrts != anaS:
-            continue
-        ret.append ( ana )
-    return ret
-
-def filterFastlim ( anas, really=True, update="" ):
-    if not really:
-        return anas
-    ret = []
-    for ana in anas:
-        contact = ""
-        if hasattr ( ana.globalInfo, "contact" ):
-            contact = getattr ( ana.globalInfo, "contact" )
-        if update != "":
-            lu = getattr ( ana.globalInfo, "lastUpdate" )
-            from datetime import datetime
-            after = datetime.strptime ( update, "%Y/%m/%d" )
-            this = datetime.strptime ( lu, "%Y/%m/%d" )
-            if this < after:
-                continue
-        if "fastlim" in contact:
-            continue
-        ret.append ( ana )
-    return ret
-
 def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
     print ()
     print ( "---------------" )
@@ -105,9 +75,10 @@ def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
         title += "all runs, "
     else:
         title += "%s TeV only, " % sqrts
-    if sqrts != "all":
-        anas = filterSqrts ( anas, sqrts )
-    anas = filterFastlim ( anas, filter_fastlim, update )
+    if sqrts not in [ "all", "both" ]:
+        anas = manips.filterSqrtsFromList ( anas, sqrts )
+    anas = manips.filterFastLimFromList ( anas, invert=False, 
+                                          really=filter_fastlim, update=update )
     cms,atlas=[],[]
     for expRes in anas:
         Id=expRes.globalInfo.id
@@ -118,7 +89,7 @@ def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
 
 def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
     e = db.getExpResults( useSuperseded = superseded )
-    anas = filterFastlim ( e, filter_fastlim, update )
+    anas = manips.filterFastlimFromList ( e, False, filter_fastlim, update )
     topos = set()
     topos_roff = set()
     for i in anas:
@@ -141,7 +112,7 @@ def main():
     argparser.add_argument ( '-f', '--fastlim', help='show fastlim results (yes/no/both) [both]',
               type=str, default="both" )
     argparser.add_argument ( '-S', '--sqrts', help='select sqrts (8/13/all) [all]',
-              type=str, default="both" )
+              type=str, default="all" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     argparser.add_argument ( '-t', '--topologies', help='list topologies, also', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official_fastlim]',

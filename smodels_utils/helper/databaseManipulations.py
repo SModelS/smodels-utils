@@ -4,33 +4,20 @@
 
 from smodels.experiment.databaseObj import Database
 
-def removeFastLim ( db, invert = False, picklefile = "temp.pcl" ):
+def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     """ remove fastlim results from database db 
+    :param db: database object
     :param invert: if True, then invert the selection, keep *only* fastlim
     :param picklefile: picklefile to store fastlim-free database
     """
     print ( "[databaseManipulations] before removal of fastlim",len(db.expResultList),\
             "results" )
-    fastlimList,filteredList = [], []
-    ctr = 0
-    for e in db.expResultList:
-        gI = e.globalInfo
-        if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
-            ctr+=1
-            if ctr < 4:
-                print ( "removing", gI.id )
-            fastlimList.append ( e )
-        else:
-            filteredList.append ( e )
-    if ctr > 3:
-        print ( f"(removed a total of {ctr} ... )" )
+    filtered = filterFastLimFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     dbverold = dbverold.replace(".","")
+    db.subs[0].expResultList = filtered
     if invert:
-        db.subs[0].expResultList = fastlimList
         db.subs[0].txt_meta.databaseVersion = "fastlim" + dbverold
-    else:
-        db.subs[0].expResultList = filteredList
     db.subs = [ db.subs[0] ]
     print ( "[databaseManipulations] after removal of fastlim",len(db.expResultList),
             "results" )
@@ -42,7 +29,61 @@ def removeFastLim ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
-def removeSuperseded ( db ):
+def filterFastLimFromList ( expResList, invert = False, really = True, update = None ):
+    """ remove fastlim results from list of experimental list
+    :param expResList: list of experiment results
+    :param invert: if True, then invert the selection, return *only* fastlim
+    :param really: if False, then do not actually filter
+    :param update: consider entries only after this date (yyyy/mm/dd)
+    """
+    if not really:
+        return expResList
+    fastlimList,filteredList = [], []
+    ctr = 0
+    for e in expResList:
+        gI = e.globalInfo
+        if update not in [ "" , None ]:
+            lu = getattr ( e.globalInfo, "lastUpdate" )
+            if type(lu) != str:
+                print ( "[databaseManipulations] we have lastUpdate that reads %s in %s" % \
+                        (lu, e.globalInfo.id ) )
+                import sys
+                sys.exit(-1)
+            from datetime import datetime
+            after = datetime.strptime ( update, "%Y/%m/%d" )
+            this = datetime.strptime ( lu, "%Y/%m/%d" )
+            if this < after:
+                continue
+        if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
+            ctr+=1
+            if ctr < 4:
+                print ( "removing", gI.id )
+            fastlimList.append ( e )
+        else:
+            filteredList.append ( e )
+    if invert:
+        return fastlimList
+    return filteredList
+
+def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
+    """ filter list of exp results by sqrts
+    :param sqrts: sqrts (int) to keep
+    :param invert: if True, then invert, discard the given sqrts
+    :returns: list of exp results, all at sqrts TeV
+    """
+    sqrts = int(sqrts)
+    ret = []
+    for ana in expResultList:
+        contact = ""
+        ress = int ( ana.globalInfo.sqrts.asNumber(TeV) )
+        if invert and sqrts == ress:
+            continue
+        if not invert and sqrts != ress:
+            continue
+        ret.append ( ana )
+    return ret
+
+def removeSupersededFromDB ( db ):
     """ remove superseded results from database db """
     print ( "[databaseManipulations] before removal of superseded",len(db.expResultList),\
             "results" )
@@ -50,17 +91,7 @@ def removeSuperseded ( db ):
     ctr = 0
     superseded, supers, newers = [], [], []
     olders = db.expResultList
-    #for er in olders:
-    #    gI = er.globalInfo
-    #    if hasattr ( gI, "supersedes" ):
-    #        superseded.append ( gI.supersedes )
-    #for er in olders:
-    #    gI = er.globalInfo
-    #    if hasattr ( gI, "supersededBy" ): # or gI.id in superseded:
-    #        newers.append ( er )
-    #    else:
-    #        supers.append ( er )
-    supers = filterSuperseded ( olders )
+    supers = filterSupersededFromList ( olders )
     db.subs[0].expResultList = supers
     db.subs = [ db.subs[0] ]
     print ( "[databaseManipulations] after removal of superseded",len(db.expResultList),
@@ -68,9 +99,7 @@ def removeSuperseded ( db ):
     db.createBinaryFile( "temp.pcl" )
     return db
 
-
-
-def filterSuperseded ( expRes, invert=False ):
+def filterSupersededFromList ( expRes, invert=False ):
     """ filter out superseded results,
     :returns: list of non-superseded results if invert is False, else return
               list of superseded results
@@ -85,7 +114,7 @@ def filterSuperseded ( expRes, invert=False ):
         return ss
     return ret
 
-def createSuperseded ( infile, outfile = "./superseded.pcl", filtered = False ):
+def createSupersededPickle ( infile, outfile = "./superseded.pcl", filtered = False ):
     """ create the superseded pickle file from a database path
     :param filtered: if true, then remove superseded entries instead of the other way round
     :param outfile: write to outfile. If None or "", then to write out.

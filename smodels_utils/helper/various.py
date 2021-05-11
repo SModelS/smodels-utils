@@ -10,17 +10,6 @@
 
 import os, sys
 
-def removeFastlim ( database ):
-    """ given a "Database" object, remove the fastlim results """
-    newRes = []
-    for expRes in database.expResultList:
-        contact = "unknown"
-        if hasattr ( expRes.globalInfo, "contact" ):
-            contact = expRes.globalInfo.contact
-        if not "fastlim" in contact:
-                newRes.append ( expRes )
-    database.expResultList = newRes
-
 def getPathName ( dbpath, analysis, valfile ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name
         potentially with wildcards """

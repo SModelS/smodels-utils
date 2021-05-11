@@ -21,7 +21,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD
-from smodels_utils.helper.databaseManipulations import createSuperseded, filterSuperseded
+from smodels_utils.helper import databaseManipulations as manips
 
 class Lister:
     def __init__ ( self ):
@@ -79,6 +79,9 @@ class Lister:
                 ds = expR.getDataset ( d )
                 n_results += 1
                 n_maps += len ( ds.txnameList )
+        sfastliminc = ""
+        if self.includeFastlim:
+            sfastliminc="Results from FastLim are included. "
         self.f.write (
     """
 
@@ -86,17 +89,18 @@ class Lister:
 List of analyses and topologies in the SMS results database,
 comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
 The list has been created from the database version `%s.`
-Results from FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
+%sThere is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
 %s.
     """ % ( version, titleplus, n_maps, n_results, len(n_topos),
-            len(n_anas), version, dotlessv, dotlessv, referToOther ) )
+            len(n_anas), version, dotlessv, sfastliminc, dotlessv, referToOther ) )
 
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
-        self.f.write ( "<a name='A2'>(2)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
-        self.f.write ( "<a name='A5'>(5)</a> Likelihood information for combination of signal regions ('SR comb.'): 'cov' = a covariance matrix for a simplified likelihood. 'json' = full likelihoods as pyhf json files.\n" )
+        self.f.write ( "<a name='A2'>(2)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
+        self.f.write ( "<a name='A3'>(3)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'cov' = a covariance matrix for a simplified likelihood. 'json' = full likelihoods as pyhf json files.\n" )
+        if self.includeFastlim:
+            self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
         self.f.close()
 
@@ -171,9 +175,9 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             ret.append ( "superseded by" )
         if self.likelihoods:
             if isEffMap:
-                ret.append ( "SR comb. [(5)](#A5)" )
+                ret.append ( "SR comb. [(4)](#A4)" )
             else:
-                ret.append ( "exp. ULs [(4)](#A4)" )
+                ret.append ( "exp. ULs [(3)](#A3)" )
             # ret.append ( "likeli- hoods" )
         return ret
 
@@ -273,8 +277,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
                     homegrownd[str(i)] = " [(1)](#A1)"
                 if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                    homegrownd[str(i)] = " [(3)](#A3)"
-                    #homegrownd[str(i)] = " [[#A3|(3)]]"
+                    homegrownd[str(i)] = " [(2)](#A2)"
 
             topos.sort()
             # print ( topos )
@@ -290,7 +293,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
             topos_s = topos_s[2:]
             if fastlim:
                 # topos_s += " (from FastLim (2))"
-                topos_s += " (from FastLim [(2)](#A2))"
+                topos_s += " (from FastLim [(5)](#A5))"
                 pass
             url = ana.globalInfo.url
             if url.find ( " " ) > 0:
@@ -386,18 +389,28 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
     def createSuperseded ( self ):
         """ create the database of superseded results """
         print ( "[listOfAnalyses] creating database of superseded results" )
-        createSuperseded ( self.dbpath, "superseded.pcl", False )
+        manips.createSupersededPickle ( self.dbpath, "superseded.pcl", False )
 
     def main( self ):
         import argparse
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
-        argparser.add_argument ( '-n', '--no_superseded', help='ignore (filter out) superseded results', action='store_true' )
-        argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
+        argparser.add_argument ( '-n', '--no_superseded', action='store_true',
+                                 help='ignore (filter out) superseded results' )
+        argparser.add_argument ( '-d', '--database', 
+                                 help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
-        argparser.add_argument ( '-v', '--verbose', help='verbosity level (error, warning, info, debug) [info]', type=str, default='info' )
-        argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
-        argparser.add_argument ( '-l', '--likelihoods', help='add info about likelihoods', action='store_true' )
-        argparser.add_argument ( '-a', '--add_version', help='add version labels to links', action='store_true' )
+        argparser.add_argument ( '-v', '--verbose', 
+                                 help='verbosity level (error, warning, info, debug) [info]', 
+                                 type=str, default='info' )
+        argparser.add_argument ( '-i', '--ignore', action='store_true',
+                                  help='ignore the validation flags of analysis '\
+                                  '(i.e. also add non-validated results)' )
+        argparser.add_argument ( '-l', '--likelihoods', action='store_true',
+                                 help='add info about likelihoods' )
+        argparser.add_argument ( '-f', '--fastlim', action='store_true',
+                                 help='add fastlim results' )
+        argparser.add_argument ( '-a', '--add_version', action='store_true',
+                                 help='add version labels to links' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
         self.includeSuperseded = not args.no_superseded
@@ -419,9 +432,12 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.filename = filename
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags
+        self.includeFastlim = args.fastlim
         self.expRes = self.database.getExpResults ( useSuperseded = self.includeSuperseded )
         if not self.includeSuperseded:
-            self.expRes = filterSuperseded ( self.expRes )
+            self.expRes = manips.filterSupersededFromList ( self.expRes )
+        if not self.includeFastlim:
+            self.expRes = manips.filterFastLimFromList ( self.expRes )
         self.backup()
         self.f = open ( filename, "w" )
         self.header()
