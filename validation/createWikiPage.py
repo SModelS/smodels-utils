@@ -69,7 +69,7 @@ class WikiPageCreator:
             print ( "Creating %s" % self.localdir )
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
-        cmd = "rsync -a --prune-empty-dirs --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
+        cmd = "rsync -a --prune-empty-dirs --exclude \\*.tgz --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             a= C.getoutput ( cmd )
@@ -110,7 +110,6 @@ class WikiPageCreator:
         return dataset
 
     def close ( self ):
-        # print ( '[createWikiPage] Done.\n' )
         self.file.write ( "\nThis page was created %s\n" % time.asctime() )
         self.file.close()
         if self.moveFile:
@@ -285,9 +284,9 @@ CMS are for on- and off-shell at once.
             txn = txname.txName
             if txn in txns_discussed:
                 continue
-            if hadTxname:
-                print ( ",", end="" )
-            print ( txn, flush=True, end= "" )
+            #if hadTxname:
+            #    print ( ",", end="" )
+            # print ( txn, flush=True, end= "" )
             txns_discussed.add ( txn )
             validated = txname.getInfo('validated')
             if not self.ignore_validated and validated != True:
@@ -386,7 +385,7 @@ CMS are for on- and off-shell at once.
                 addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
                 line += addl
             line += " |\n" # End the line
-        print ( )
+        # print ( )
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
         elif "#FF0000" in line: self.false_lines.append(line)
@@ -562,6 +561,7 @@ CMS are for on- and off-shell at once.
         return expResList
 
     def createTables ( self ):
+        print ( "[createWikiPage] create tables" )
         for sqrts in [ 13, 8 ]:
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:

@@ -61,14 +61,14 @@ def main():
     ref_db = os.path.expanduser( ref_db )
     ## list of analyses, with and without superseded
     gprint ( "\nCreate list of analyses" )
-    cmd = [ "./listOfAnalyses.py", "-a", "-l" ]
+    cmd = [ "./listOfAnalyses.py", "-a", "-l", "-f" ]
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd, A.dry_run )
     exec ( cmd + [ "-n" ], A.dry_run )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
-        cmd = [ "./listOfAnalyses.py", "-l" ]
+        cmd = [ "./listOfAnalyses.py", "-l", "-f" ]
         if A.ignore:
             cmd += [ "-i" ]
         exec ( cmd, A.dry_run )
