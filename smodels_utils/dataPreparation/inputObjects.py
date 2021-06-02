@@ -805,6 +805,8 @@ class TxNameInput(Locker):
             return unit[-1]
         if unit[-1] in [ "GeV", "ns", "GeV" ]:
             return ""
+        if unit[-1] in [ "fb", "pb" ]:
+            return unit[-1]
         logger.error ( f"cannot determine the unit of the values from {unit}" )
         return ""
 
