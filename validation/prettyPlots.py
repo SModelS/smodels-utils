@@ -336,10 +336,14 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         else:
             continue
         for i,gr in enumerate(grlist):
-            if isEqual[cval][i]: ## is equal we need to add noise!
-                for j in range(gr.GetN()):
-                    gr.GetPoint(j,x1,y1 )
-                    gr.SetPoint(j,x1.value*random.gauss(1.,.001),y1.value*random.gauss(1.,.001))
+            try:
+                if isEqual[cval][i]: ## is equal we need to add noise!
+                    for j in range(gr.GetN()):
+                        gr.GetPoint(j,x1,y1 )
+                        gr.SetPoint(j,x1.value*random.gauss(1.,.001),y1.value*random.gauss(1.,.001))
+            except KeyError as e:
+                ## may not exist
+                pass
 
             setOptions(gr, Type='official')
             gr.SetLineColor(kRed) # Orange+2)
