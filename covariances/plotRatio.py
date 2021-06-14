@@ -139,6 +139,11 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     :param xlabel: label on x axis, default: m$_{mother}$ [GeV]
     :param ylabel: label on y axis, default: m$_{LSP}$ [GeV]
     """
+    if xlabel in [  None, "" ]:
+       xlabel = "m$_{mother}$ [GeV]" 
+    if ylabel in [  None, "" ]:
+       ylabel = "m$_{LSP}$ [GeV]" 
+        
     hasDebPkg()
     uls={}
     nsr=""
@@ -206,7 +211,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     x_ = numpy.arange ( minx, maxx, ( maxx-minx) / nx )
     y_ = numpy.arange ( miny, maxy, ( maxy-miny) / ny )
     logScale = False
-    if False: # max(y) < 1e-10 and min(y) > 1e-40:
+    if max(y) < 1e-10 and min(y) > 1e-40:
         logScale = True
         y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), ny )
     yx = numpy.array(list(itertools.product(y_,x_)) )
@@ -238,8 +243,8 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     scatter = plt.scatter ( x, y, s=0.35, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
-    plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
-    plt.xlabel ( "m [GeV]", size=13 )
+    plt.ylabel ( ylabel, size=13 )
+    plt.xlabel ( xlabel, size=13 )
     if logScale:
         ax.set_yscale("log")
         ax.set_ylim ( min(y)*.2, max(y)*5. )
@@ -425,11 +430,11 @@ def main():
             help="label in the legend for analysis2 [conf]",
             type=str, default="conf" )
     argparser.add_argument ( "-yl", "--ylabel",
-            help="label on the y axis [m$_{LSP}$ [GeV]]",
-            type=str, default="m$_{LSP}$ [GeV]" )
+            help="label on the y axis",
+            type=str, default=None )
     argparser.add_argument ( "-xl", "--xlabel",
-            help="label on the x axis [m$_{mother}$ [GeV]]",
-            type=str, default="m$_{mother}$ [GeV]" )
+            help="label on the x-axis",
+            type=str, default=None )
     argparser.add_argument ( "-z", "--zmin",
             help="minimum z value, 0. means auto [.5]",
             type=float, default=.5 )
