@@ -131,10 +131,13 @@ def getExclusionLine ( line ):
       y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
+def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax, 
+           xlabel, ylabel ):
     """ plot.
-    :params vmin: the minimum z value, e.g. .5
-    :params vmax: the maximum z value, e.g. 1.7
+    :param vmin: the minimum z value, e.g. .5
+    :param vmax: the maximum z value, e.g. 1.7
+    :param xlabel: label on x axis, default: m$_{mother}$ [GeV]
+    :param ylabel: label on y axis, default: m$_{LSP}$ [GeV]
     """
     hasDebPkg()
     uls={}
@@ -269,14 +272,13 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax ):
     plt.title ( title )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
-        plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
+        plt.xlabel ( xlabel, fontsize=13 )
     plt.rc('text', usetex=True)
-    label = "m$_{LSP}$ [GeV]"
     if "052" in analysis:
       # label = "$\Delta m$(mother, daughter) [GeV]"
       label = "m$_{mother}$ - m$_{daughter}$ [GeV]"
     if not logScale:
-        plt.ylabel ( label, fontsize=13 )
+        plt.ylabel ( ylabel, fontsize=13 )
 
     plt.colorbar()
     # plt.colorbar( format="%.1g" )
@@ -422,6 +424,12 @@ def main():
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2 [conf]",
             type=str, default="conf" )
+    argparser.add_argument ( "-yl", "--ylabel",
+            help="label on the y axis [m$_{LSP}$ [GeV]]",
+            type=str, default="m$_{LSP}$ [GeV]" )
+    argparser.add_argument ( "-xl", "--xlabel",
+            help="label on the x axis [m$_{mother}$ [GeV]]",
+            type=str, default="m$_{mother}$ [GeV]" )
     argparser.add_argument ( "-z", "--zmin",
             help="minimum z value, 0. means auto [.5]",
             type=float, default=.5 )
@@ -452,7 +460,7 @@ def main():
         imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
         draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output,
-               args.zmin, args.zmax )
+               args.zmin, args.zmax, args.xlabel, args.ylabel )
 
     writeMDPage( args.copy )
 
