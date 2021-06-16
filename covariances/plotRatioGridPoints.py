@@ -19,6 +19,8 @@ def main():
     argparser.add_argument ( "-a", "--analysis",
             help="analysis [ATLAS-SUSY-2018-14]",
             type=str, default="ATLAS-SUSY-2018-14" )
+    argparser.add_argument ( "-e", "--efficiencies",
+            help="plot efficiencies, not ratios", action="store_true" )
     args = argparser.parse_args()
     db = Database ( "../../smodels-database" )
     for txname in [ "TSelSelDisp", "TSmuSmuDisp" ]:
@@ -42,15 +44,27 @@ def main():
                 if eul/eff < maxeul:
                     maxeul = eul/eff
                     maxoul = oul/eff
-            z.append ( float ( maxoul / point[1] ) )
-        plt.scatter ( x, y, c=z )
+            if args.efficiencies:
+                z.append ( eff )
+            else:
+                z.append ( float ( maxoul / point[1] ) )
+        plt.scatter ( x, y, c=z, norm = matplotlib.colors.LogNorm()  )
         cb = plt.colorbar()
-        cb.set_label ( "ratio eff / ul" )
+        if args.efficiencies:
+            zlabel = "eff of best SR" 
+        else:
+            zlabel = "ratio eff / ul"
+        cb.set_label ( zlabel )
+        
         plt.title ( f"ATLAS-SUSY-2018-14:{txname}" )
         plt.yscale ( "log" )
         plt.xlabel ( "mass(mother) [GeV]" )
         plt.ylabel ( "width(mother) [GeV]" )
-        plt.savefig ( f"ratio_{txname}.png" )
+        if args.efficiencies:
+            fname = f"eff_{txname}.png"
+        else:
+            fname = f"ratio_{txname}.png"
+        plt.savefig ( fname )
         plt.clf()
 
 main()
