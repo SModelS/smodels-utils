@@ -54,6 +54,7 @@ def main():
     ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
+    ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     args = ap.parse_args()
     dbname = args.filename
     if args.smodelsPath:
@@ -140,8 +141,11 @@ def main():
     f.close()
     if has_nonValidated:
         nvlist = ",".join(which)
-        print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
-        sys.exit()
+        if args.ignore:
+            print ( "has non-validated results (%s), but you requested to continue." % nvlist )
+        else:
+            print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
+            sys.exit()
     sexec="executing:"
     if args.dry_run:
         sexec="suppressing execution of:"
