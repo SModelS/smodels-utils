@@ -42,8 +42,9 @@ def main():
         files = [f for f in tar.getnames() if '.slha' in f and args.lifetime in f ]
         erf = db.getExpResults ( analysisIDs = [ args.analysis ], useNonValidated=True,
                                  dataTypes = [ "efficiencyMap" ], txnames = [ txname ] )[0]
-        era = db.getExpResults ( analysisIDs = [ args.analysis ], useNonValidated=True,
-                                 dataTypes = [ "all" ], txnames = [ txname ] )[0]
+        #era = db.getExpResults ( analysisIDs = [ args.analysis ], useNonValidated=True,
+        #                         dataTypes = [ "all" ], txnames = [ txname ] )
+        #print ( "era", len(era) )
         x,yUL,yBestSR,yPyhf=[],[],[],[]
         for f in files:
             fobj = tar.extractfile(f)
@@ -67,36 +68,39 @@ def main():
             toplist = decomposer.decompose ( model, 0.01*fb, True, True, 5.*GeV )
             preds = theoryPredictionsFor ( erf, toplist, combinedResults=False,
                                            useBestDataset=True )
-            cpreds = theoryPredictionsFor ( erf, toplist, combinedResults=True,
-                                           useBestDataset=False )
             if type(preds) != type(None):
                 # llhd = preds[0].llhd
                 x.append ( mslep )
+                lumi = preds[0].dataset.globalInfo.lumi
                 llhd = preds[0].getLikelihood()
-                oul = preds[0].getUpperLimit().asNumber(fb)
-                eul = preds[0].getUpperLimit( expected = True ).asNumber(fb)
-                lumi = preds[0].dataset.globalInfo.lumi.asNumber(1./fb)
-                nsig = xsec * lumi #  * preds[0].eff
+                oul = float ( preds[0].getUpperLimit()*lumi )
+                eul = float ( preds[0].getUpperLimit( expected = True )*lumi )
+                nsig = (xsec * lumi).asNumber() #  * preds[0].eff
                 ulllhd = likelihoodFromLimits ( oul, eul, nsig, nll=True ) 
                 if type(llhd) == type(None):
                     yBestSR.append ( float("nan") )
                 else:
-                    # print ( "best SR mass", mslep, "nll", - math.log ( llhd ) )
+                    print ( "best SR mass", mslep, "nll", - math.log ( llhd ) )
                     yBestSR.append ( - math.log ( llhd ) * random.uniform(.9,1.1 ) )
                 if type(ulllhd) == type(None):
                     yUL.append ( float("nan") )
                 else:
-                    # print ( "best SR mass", mslep, "nll", - math.log ( llhd ) )
+                    # print ( "UL-based mass", mslep, "nll", ulllhd )
                     if ulllhd > 500.:
                         ulllhd = 500.
                     yUL.append ( ulllhd )
+
+            cpreds = theoryPredictionsFor ( erf, toplist, combinedResults=True,
+                                           useBestDataset=False )
             if type(cpreds) != type(None):
+                print ( "cpreds", cpreds[0].dataType() )
                 # llhd = preds[0].llhd
-                cllhd = cpreds[0].getLikelihood()
+                cpreds[0].computeStatistics()
+                cllhd = cpreds[0].likelihood
                 if type(cllhd) == type(None):
                     yPyhf.append( float ("nan" ) )
                 else:
-                    # print ( "comb mass", mslep, "nll", - math.log ( cllhd ) )
+                    print ( "comb mass", mslep, "nll", - math.log ( cllhd ) )
                     yPyhf.append ( - math.log ( cllhd ) )
             # oul = eru.getUpperLimitFor ( None, expected=False, txname=txname, mass = massvec )
             # print ( oul )
