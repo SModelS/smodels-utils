@@ -1,0 +1,33 @@
+Hallo Wolfgang,
+
+ja natürlich. Leider ist er tatsächlich sehr messy
+
+Ich hab es so gemacht, dass ich mir SModelS geforkt habe, in "meiner" Version
+habe ich die Funktionen angepasst, das ganze habe ich dann in die Notebooks
+eingebunden.
+
+https://github.com/Pastinak/smodels/blob/master/smodels/tools/statistics.py
+
+Hier hab ich die Approximierungsroutine so angepasst, dass sie als Argument
+nimmt was bei underfuctuations getan werden soll, außerdem ist da die Funktion
+drin die die Analytischen Momente für den trunc. Gauss berechnet.
+
+https://github.com/Pastinak/smodels/blob/master/smodels/tools/simplifiedLikelihoods.py
+
+Hier hab ich in marginalizedLLHD1D die Option eingefügt mit einer
+Lognormalverteilung zu marginalisieren wie Dus gesagt hast.
+
+https://github.com/Pastinak/protomodels/tree/master/likelihoodApprox
+
+Hier sind die drei Notebooks drin, ich habe lokal noch ein Paar (die verleiten
+		einen irgendwie dazu messy zu sein), aber ich glaube in den dreien ist
+alles wichtige drin. LikelihoodComparison macht die ganzen Hists und Plots
+(auch mit modifizierten underflucts),
+
+LikelihoodModifierComparison macht Hists und Plots um verschiedene Werte vom x
+zu Vergleichen, und LikelihoodComparison-plots produziert die Plots die in der
+Thesis drin sind.
+
+Ich hoffe das passt so und du findest dich halbwegs zurecht darin.
+
+LG Leo
