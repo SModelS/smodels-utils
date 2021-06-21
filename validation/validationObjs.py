@@ -651,7 +651,7 @@ class ValidationPlot():
                 continue
             # print ( "reading %s" % fout )
             ff = open(fout,'r')
-            cmd = ff.read().replace('\n','')
+            cmd = ff.read().replace('\n','').replace("inf","float('inf')")
             exec( cmd, globals() )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
