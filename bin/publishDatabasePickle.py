@@ -74,6 +74,7 @@ def main():
             sys.exit()
         print ( "[publishDatabasePickle] building database with %s" % os.path.dirname ( smodels.__file__ ) )
         d = Database ( dbname, discard_zeroes=discard_zeroes )
+        dbver = d.databaseVersion
         if args.remove_superseded:
             d = removeSupersededFromDB ( d )
         if args.remove_fastlim:
@@ -83,15 +84,13 @@ def main():
             d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
             d.pcl_meta.hasFastLim = False
             d.txt_meta.hasFastLim = False
-            dbver = d.databaseVersion
-            d.subs[0].databaseVersion = dbver.replace("fastlim","official")
+            d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         if not args.skipValidation:
             validated, which = checkNonValidated(d)
             has_nonValidated = validated
         else:
             has_nonValidated = False
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
-        print ( "dbname", d.databaseVersion )
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
