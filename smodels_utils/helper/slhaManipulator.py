@@ -10,12 +10,37 @@
 
 """
 
+def extractSLHAFileFromTarball ( slhafile, tarball=None ):
+    """
+    extract one specific slha file from a tarball
+    :param tarball: if supplied, extract from that tarball,
+                    if None, look for tarball in smodels-utils/slha/
+    :returns: path to slhafile
+    """
+    ret = slhafile
+    if tarball == None:
+        p1 = slhafile.find("_")
+        import os, tarfile
+        from smodels_utils import SModelSUtils
+        tarf = slhafile[:p1]+".tar.gz"
+        tarball = os.path.join ( SModelSUtils.installDirectory(), "slha", tarf )
+    tar = tarfile.open ( tarball, "r:gz" )
+    fobj = tar.extractfile ( slhafile )
+    txt = fobj.read()
+    with open ( slhafile, "wt" ) as f:
+        f.write ( txt.decode("ascii") )
+        f.close()
+    tar.close()
+    
+    return ret
+
+
 def removeXSecs ( In, Out=None ):
     """ 
-        removes all XSECTION blocks 
-        :params In: name of input filename
-        :params Out: name of output filename. If None, In is overwritten.
-        :params In: name of input filename
+    removes all XSECTION blocks 
+    :params In: name of input filename
+    :params Out: name of output filename. If None, In is overwritten.
+    :params In: name of input filename
 
     """
     f=open(In)

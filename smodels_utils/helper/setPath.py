@@ -18,4 +18,4 @@ def configure():
 configure()
 
 if __name__ == "__main__":
-    print configure()
+    print ( configure() )
