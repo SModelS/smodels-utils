@@ -4,6 +4,59 @@
 
 from smodels.experiment.databaseObj import Database
 
+def combineResults( database, anas_and_SRs : dict, debug=False ):
+    """ combine the <anas_and_SRs> results in <database> 
+        to a single result with a diagonal covariance matrix
+    :param anas_and_SRs: dictionary with analysis Ids as keys and lists of signal regions
+        as values, e.g.: { "ATLAS-SUSY-2016-07": ['2j_Meff_1200', '2j_Meff_1600'] }
+    :returns: a combined ExpResults
+    """
+    import copy
+    anaids = anas_and_SRs.keys()
+    expResults = database.getExpResults( analysisIDs = anaids,
+                                         dataTypes = [ "efficiencyMap" ] )
+    datasets,datasetorder,covariance_matrix = [], [], []
+    anaIds = []
+    ctdses = 0
+    n_datasets = 0
+    for i,er in enumerate(expResults):
+        anaId = er.globalInfo.id
+        anaIds.append ( anaId )
+        SRs = anas_and_SRs[anaId]
+        for sr in SRs:
+            ds = er.getDataset ( sr )
+            if ds != None:
+                n_datasets+=1
+
+    ctds=0
+    for i,er in enumerate(expResults):
+        anaId = er.globalInfo.id
+        anaIds.append ( anaId )
+        SRs = anas_and_SRs[anaId]
+        for sr in SRs:
+            ds = er.getDataset ( sr )
+            if ds != None:
+                datasets.append ( ds )
+            datasetorder.append ( ds.dataInfo.dataId )
+            cov_row = [0.]*n_datasets
+            cov_row[ctds]= ds.dataInfo.bgError**2
+            ctds += 1
+            covariance_matrix.append ( cov_row )
+        #er.datasets = er.datasets[:1]
+
+    if debug:
+        print ( "[:combineResults] cov_matrx", covariance_matrix )
+        print ( "[:combineResults] datasets", datasets )
+        print ( "[:combineResults] anaIds", anaIds )
+    ## construct a fake result with these <n> datasets and and
+    ## an nxn covariance matrix
+    er = copy.deepcopy ( expResults[0] )
+    er.datasets = datasets
+    er.anaIds = anaIds
+    er.globalInfo.datasetOrder = datasetorder
+    er.globalInfo.covariance = covariance_matrix
+    return er
+
 def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     """ remove fastlim results from database db 
     :param db: database object
