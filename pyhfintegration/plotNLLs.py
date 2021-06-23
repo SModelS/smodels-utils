@@ -3,10 +3,12 @@
 """ Plot NLLs for various approximations of the likelihood """
 
 import matplotlib.pyplot as plt
+import pickle
 import random
 import matplotlib
 import pyslha, math
-import tarfile
+import subprocess
+import os
 from smodels.tools import runtime
 runtime._experimental = True
 from smodels_utils.helper import prettyDescriptions
@@ -20,8 +22,46 @@ from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
 from smodels.tools.physicsUnits import GeV, pb, fb
 from smodels.tools.statistics import likelihoodFromLimits
+from smodels_utils.helper import slhaManipulator
+        
+def writeToPickle( D ):
+    """ write these guys to a pickle file """
+    fname = "nlls.pcl" 
+    if os.path.exists ( fname ):
+        cmd = f"cp {fname} old.pcl"
+        subprocess.getoutput ( cmd )
+    with open ( fname, "wb" ) as f:
+        pickle.dump ( D, f )
+        f.close()
 
-def main():
+def loadFromPickle():
+    """ write these guys to a pickle file """
+    fname = "nlls.pcl" 
+    with open ( fname, "rb" ) as f:
+        D = pickle.load ( f )
+        f.close()
+    return D
+
+def plot ( D ):
+    """ plot content of dictionary D """
+    x=D["x"]
+    yUL = D["yUL"]
+    yBestSR = D["yBestSR"]
+    yUL = D["yUL"]
+    yPyhf = D["yPyhf"]
+    plt.plot ( x, yUL, label="likelihoods from limits" )
+    plt.plot ( x, yBestSR, label="best signal region" )
+    plt.plot ( x, yPyhf, label="pyhf combo" )
+    plt.legend()
+    plt.title ( f"Comparison of NLLs" )
+    #plt.yscale ( "log" )
+    plt.xlabel ( "mass(mother) [GeV]" )
+    plt.ylabel ( "NLL")
+    plt.savefig ( f"nll_comparison.png" )
+    plt.clf()
+
+def create():
+    """ create the dictionary / pickle file """
     import argparse
     argparser = argparse.ArgumentParser( description = "plot NLLs for various approximations of the likelihood" )
     argparser.add_argument ( "-a", "--analysis",
@@ -61,12 +101,13 @@ def main():
         #                         dataTypes = [ "all" ], txnames = [ txname ] )
         #print ( "era", len(era) )
         x,yUL,yBestSR,yPyhf=[],[],[],[]
-        for f in files:
-            fobj = tar.extractfile(f)
-            txt = fobj.read()# .replace("\\n","\n" )
+        print ( f"[plotNLLs] we have {len(files)} points." )
+        for f in files[:]:
+            slhafile = slhaManipulator.extractSLHAFileFromTarball ( f )
             model = Model(BSMparticles=BSMList, SMparticles=SMList)
-            model.updateParticles ( inputFile="../slha/" + f )
-            pyfile=pyslha.readSLHA( txt.decode("ascii") )
+            model.updateParticles ( inputFile=slhafile )
+            # model.updateParticles ( inputFile="../slha/" + f )
+            pyfile=pyslha.readSLHAFile ( slhafile )
             masses=pyfile.blocks["MASS"]
             mmother = masses[1000023]
             reallsp = masses[1000022]
@@ -80,7 +121,6 @@ def main():
                     if order != "NLO+LL":
                         continue
                     xsec += xs.value
-            fobj.close()
             mothervec = mmother*GeV
             if args.lifetime != None:
                 mothervec = ( mmother*GeV, args.lifetime*GeV )
@@ -127,15 +167,14 @@ def main():
                     yPyhf.append ( - math.log ( cllhd ) )
             # oul = eru.getUpperLimitFor ( None, expected=False, txname=txname, mass = massvec )
             # print ( oul )
-        plt.plot ( x, yUL, label="likelihoods from limits" )
-        plt.plot ( x, yBestSR, label="best signal region" )
-        plt.plot ( x, yPyhf, label="pyhf combo" )
-        plt.legend()
-        plt.title ( f"Comparison of NLLs" )
-        #plt.yscale ( "log" )
-        plt.xlabel ( "mass(mother) [GeV]" )
-        plt.ylabel ( "NLL")
-        plt.savefig ( f"nll_comparison.png" )
-        plt.clf()
+            os.unlink ( slhafile )
+    D = { "x": x, "yUL": yUL, "yBestSR": yBestSR, "yPyhf": yPyhf }
+    writeToPickle( D )
+    return D
+
+def main():
+    D = create()
+    # D = loadFromPickle()
+    plot ( D )
 
 main()

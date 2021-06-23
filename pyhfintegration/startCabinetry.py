@@ -11,10 +11,12 @@ import json
 # pyhf patchset apply SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_360_200_Staus.json --name stau_360_200 --output-file atlas_susy_2018_04.json --> did not work
 # jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_360_200_Staus.json > Staus_360_200.json
 # jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_440_80_Staus.json > Staus_440_80.json
+# jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/test.json > BkgOnly.json
 
 
 # jsonf = "bottom-squarks.json"
-jsonf = "Staus_440_80.json"
+jsonf = "BkgOnly.json"
+# jsonf = "Staus_440_80.json"
 
 # get channel names
 
@@ -31,6 +33,7 @@ fit_results = cabinetry.fit.fit(model, data)
 cm = fit_results.corr_mat.tolist()
 
 ed = model.expected_data( fit_results.bestfit )
+# ed = model.expected_data( [0.]*len(fit_results.bestfit) )
 
 boundaries = cabinetry.model_utils._get_channel_boundary_indices ( model )
 boundaries = [0] + boundaries + [99999]
