@@ -47,28 +47,34 @@ def main():
     argparser.add_argument ( '-d', '--dry_run', 
             help='dry run, write commands, do not execute them',
             action='store_true' )
+    argparser.add_argument('-D', '--database', help='path to database  [../../smodels-database]', 
+                    type=str, default="../../smodels-database" )
+    argparser.add_argument('-R', '--reference_database', help='path to reference database  [../../smodels-database-release]', 
+                    type=str, default="../../smodels-database-release" )
     argparser.add_argument ( '-c', '--commit', 
             help='git-commit and git-push to smodels.github.io',
             action='store_true' )
     argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     A = argparser.parse_args()
-    db = "~/git/smodels-database/"
+    #db = "~/git/smodels-database/"
+    db = A.database
     db = os.path.expanduser(db)
     if not os.path.exists(db):
         db = "~/tools/smodels-database/"
         db = os.path.expanduser(db)
-    ref_db = "~/git/smodels-database-release/"
+    # ref_db = "~/git/smodels-database-release/"
+    ref_db = A.reference_database
     ref_db = os.path.expanduser( ref_db )
     ## list of analyses, with and without superseded
     gprint ( "\nCreate list of analyses" )
-    cmd = [ "./listOfAnalyses.py", "-a", "-l", "-f" ]
+    cmd = [ "./listOfAnalyses.py", "-a", "-l", "-f", "-d", db ]
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd, A.dry_run )
     exec ( cmd + [ "-n" ], A.dry_run )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
-        cmd = [ "./listOfAnalyses.py", "-l", "-f" ]
+        cmd = [ "./listOfAnalyses.py", "-l", "-f", "-d", db ]
         if A.ignore:
             cmd += [ "-i" ]
         exec ( cmd, A.dry_run )
@@ -78,12 +84,12 @@ def main():
 
     ## SmsDictionary page
     gprint ( "\nCreate SmsDictionary" )
-    cmd = [ "./smsDictionary.py", "-a" ]
+    cmd = [ "./smsDictionary.py", "-a", "-d", db ]
     if A.feynman:
         cmd += [ "-f", "-c" ]
     exec ( cmd, A.dry_run )
     if A.non_versioned:
-        exec ( [ "./smsDictionary.py" ], A.dry_run )
+        exec ( [ "./smsDictionary.py" ], A.dry_run, "-d", d, "-d", dbb )
 
     if not A.no_pickle:
         print ( "\nCreate and publish database pickle" )
@@ -95,7 +101,7 @@ def main():
 
 
     gprint ( "create Validation wiki" )
-    cmd = [ "../validation/createWikiPage.py", "-c", ref_db ]
+    cmd = [ "../validation/createWikiPage.py", "-c", ref_db, "-d", db ]
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd + [ "-a", "-s", "-f" ], A.dry_run )
