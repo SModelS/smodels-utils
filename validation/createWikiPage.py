@@ -321,7 +321,9 @@ CMS are for on- and off-shell at once.
             altpath = self.databasePath.replace ( "/home", "/nfsdata" )
             vDir = vDir.replace ( altpath, "" )
             #vDir = vDir.replace("/media/linux/walten/git/smodels-database","/validation/%s" % self.dotlessv )
-            vDir = vDir.replace("/media/linux/walten/git/smodels-database","" )
+            # vDir = vDir.replace("/media/linux/walten/git/smodels-database","" )
+            if "smodels-database" in vDir:
+                vDir = vDir [ vDir.find("smodels-database")+17: ]
             if vDir[0]=="/":
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
