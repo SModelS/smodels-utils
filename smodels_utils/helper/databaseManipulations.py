@@ -45,9 +45,9 @@ def combineResults( database, anas_and_SRs : dict, debug=False ):
         #er.datasets = er.datasets[:1]
 
     if debug:
-        print ( "[:combineResults] cov_matrx", covariance_matrix )
-        print ( "[:combineResults] datasets", datasets )
-        print ( "[:combineResults] anaIds", anaIds )
+        print ( "[combineResults] cov_matrx", covariance_matrix )
+        print ( "[combineResults] datasets", datasets )
+        print ( "[combineResults] anaIds", anaIds )
     ## construct a fake result with these <n> datasets and and
     ## an nxn covariance matrix
     er = copy.deepcopy ( expResults[0] )
