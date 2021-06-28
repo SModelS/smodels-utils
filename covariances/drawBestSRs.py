@@ -12,6 +12,7 @@ import subprocess
 import time
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName
+from smodels_utils.helper import uprootTools
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
@@ -25,24 +26,6 @@ def convertNewAxes ( newa ):
         return axes[::-1]
     print ( "cannot convert this axis" )
     return None
-
-def getExclLine ( dirname, topo ):
-    """ retrieve validation file """
-    smsfile = dirname + "sms.root"
-    if not os.path.exists ( smsfile ):
-        print ( "[drawBestSRs] cannot find exclusion line. skip it." )
-        return None
-    import uproot
-    F = uproot.open(smsfile)
-    K = f"{topo}/obsExclusion_[[x, y], [x, y]];1" ## for now we hardcode this
-    if not K in F:
-        print ( f"[drawBestSRs] cannot find {K} in file. skip it." )
-        return None
-    graph = F[K]
-    x = graph.members["fX"]
-    y = graph.members["fY"]
-    return { "x": x,"y": y }
-
 
 def draw( validationfile, max_x, max_y ):
     """ plot.
@@ -69,7 +52,7 @@ def draw( validationfile, max_x, max_y ):
     p3 = validationfile.find("validation/")
     p4 = validationfile[p3+10:].find("_")
     topo = validationfile[p3+10+1:p3+p4+10]
-    line = getExclLine ( validationfile[:p3], topo )
+    line = uprootTools.getExclusionLine ( validationfile[:p3], topo )
     spec = importlib.util.spec_from_file_location( "output", validationfile )
     output_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(output_module)
