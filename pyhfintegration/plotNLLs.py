@@ -60,6 +60,16 @@ def plot ( D ):
     plt.savefig ( f"nll_comparison.png" )
     plt.clf()
 
+def matches ( f, args ):
+    """ report if filename matches requirements """
+    if not f.endswith ( ".slha" ):
+        return False
+    if args.lifetime != None and not args.lifetime in f:
+        return False
+    if args.mlsp != None and not "_%s_" % args.mlsp in f:
+        return False
+    return True
+
 def create():
     """ create the dictionary / pickle file """
     import argparse
@@ -85,16 +95,8 @@ def create():
     for txname in [ args.txname ]: # , "TSmuSmuDisp" ]:
         tarball="../slha/%s.tar.gz" % txname
         tar = tarfile.open(tarball,"r:gz")
-        def matches ( f ):
-            if not f.endswith ( ".slha" ):
-                return False
-            if args.lifetime != None and not args.lifetime in f:
-                return False
-            if args.mlsp != None and not "_%s_" % args.mlsp in f:
-                return False
-            return True
 
-        files = [f for f in tar.getnames() if matches ( f ) ]
+        files = [f for f in tar.getnames() if matches ( f, args ) ]
         erf = db.getExpResults ( analysisIDs = [ args.analysis ], useNonValidated=True,
                                  dataTypes = [ "efficiencyMap" ], txnames = [ txname ] )[0]
         #era = db.getExpResults ( analysisIDs = [ args.analysis ], useNonValidated=True,
