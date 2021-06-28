@@ -34,7 +34,7 @@ result, result_obj = pyhf.infer.mle.fit(
 
 # sample parameters from multivariate Gaussian and evaluate model
 sampled_parameters = np.random.multivariate_normal(
-    result_obj.minuit.values, result_obj.minuit.covariance, size=10000 )
+    result_obj.minuit.values, result_obj.minuit.covariance, size=50000 )
 model_predictions = [
     model.expected_data(p, include_auxdata=False) for p in sampled_parameters
 ]
@@ -58,11 +58,17 @@ ncov = np.cov(model_predictions, rowvar=False)
 print(f"covariance:\n{ncov}")
 print(f"correlation:\n{np.corrcoef(model_predictions, rowvar=False)}")
 
-## indices of signal regions
-indices = np.array ( [ 1,3 ] )
-print ( f"covariance of SRs (1,3):\n{ncov[indices[:,None],indices]}" )
 indices = np.array ( [ 2,3 ] )
 print ( f"covariance of SRs (2,3):\n{ncov[indices[:,None],indices]}" )
+
+indices = np.array ( [ 1,3 ] )
+scov = ncov[indices[:,None],indices]
+## indices of signal regions
+print ( f"covariance of SRs (1,3):\n{scov}" )
+for i in indices.tolist():
+    ncov[i][i]=ncov[i][i]-yields[i]
+scov = ncov[indices[:,None],indices]
+print ( f"covariance of SRs w/o Poissonian (1,3):\n{scov}" )
 
 import IPython
 IPython.embed( using = False )
