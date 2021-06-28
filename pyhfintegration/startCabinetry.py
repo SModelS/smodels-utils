@@ -1,61 +1,68 @@
 #!/usr/bin/env python3
 
 import cabinetry
-import copy
-import json
-#import subprocess
+import pyhf
+import numpy as np
 
-#from pyhf.contrib.utils import download
+pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
-#download("https://www.hepdata.net/record/resource/1771533?view=true" ) # , "bottom-squarks")
-# pyhf patchset apply SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_360_200_Staus.json --name stau_360_200 --output-file atlas_susy_2018_04.json --> did not work
-# jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_360_200_Staus.json > Staus_360_200.json
-# jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_440_80_Staus.json > Staus_440_80.json
-# jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/test.json > BkgOnly.json
+jsonfile = "example.json"
+def download():
+    import os, subprocess
+    if os.path.exists ( jsonfile ):
+        return
+    from pyhf.contrib.utils import download
+    download("https://www.hepdata.net/record/resource/1406212?view=true", "SUSY-2018-04_likelihoods/" )
+    cmd = "jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_440_80_Staus.json"
+    # cmd = "jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/test.json"
+    cmd += f" > {jsonfile}"
+    subprocess.getoutput ( cmd )
+        
+download()
 
-
-# jsonf = "bottom-squarks.json"
-jsonf = "BkgOnly.json"
-# jsonf = "Staus_440_80.json"
-
-# get channel names
-
-with open ( jsonf, "rt" ) as jsonhandle:
-    jsoncontent = json.load ( jsonhandle )
-
-channels = [ x["name"] for x in jsoncontent["channels"] ]
-
-ws = cabinetry.workspace.load( jsonf )
+ws = cabinetry.workspace.load( jsonfile )
 model, data = cabinetry.model_utils.model_and_data(ws)
+channels = model.config.channels
 
-fit_results = cabinetry.fit.fit(model, data)
+muSigIndex = model.config.parameters.index ( "mu_SIG" )
+suggestedBounds = model.config.suggested_bounds()
+suggestedBounds[muSigIndex]=(-10.,10.)
 
-cm = fit_results.corr_mat.tolist()
+result, result_obj = pyhf.infer.mle.fit(
+            data, model, return_uncertainties=True, return_result_obj=True,
+            par_bounds = suggestedBounds )
 
-ed = model.expected_data( fit_results.bestfit )
-# ed = model.expected_data( [0.]*len(fit_results.bestfit) )
+# sample parameters from multivariate Gaussian and evaluate model
+sampled_parameters = np.random.multivariate_normal(
+    result_obj.minuit.values, result_obj.minuit.covariance, size=10000 )
+model_predictions = [
+    model.expected_data(p, include_auxdata=False) for p in sampled_parameters
+]
 
-boundaries = cabinetry.model_utils._get_channel_boundary_indices ( model )
-boundaries = [0] + boundaries + [99999]
-mydata = {}
-for i,c in enumerate(channels):
-    if "CR" in c: # control region
-        continue
-    print ( i, c , "boundaries", boundaries[i], boundaries[i+1] )
-    mydata[c]=ed [ boundaries[i] : boundaries[i+1] ].tolist()
+for i,name in enumerate ( model.config.parameters ):
+    fit = result_obj.minuit.values[i]
+    bound = model.config.suggested_bounds()[i]
+    if abs ( fit - bound[0] ) < 1e-5:
+        print ( f"Fitted value {fit} of {name} hit bound {bound}" )
+    if abs ( fit - bound[1] ) < 1e-5:
+        print ( f"Fitted value {fit} of {name} hit bound {bound}" )
 
-print ( "data", mydata )
-    
-"""
-with open ( "cov_mat.py", "wt" ) as f:
-    f.write ( "cm="+str(cm)+"\n" )
-    f.close()
-"""
+yields = np.mean(model_predictions, axis=0)
+yield_unc = np.std(model_predictions, axis=0)
+print(f"model predictions:\n" )
+for i,channel in enumerate ( channels ):
+    print ( f" -- {channel}: {yields[i]:.2f}+/-{yield_unc[i]:.2f}" )
+
+np.set_printoptions ( precision = 3 )
+ncov = np.cov(model_predictions, rowvar=False)
+print(f"covariance:\n{ncov}")
+print(f"correlation:\n{np.corrcoef(model_predictions, rowvar=False)}")
+
+## indices of signal regions
+indices = np.array ( [ 1,3 ] )
+print ( f"covariance of SRs (1,3):\n{ncov[indices[:,None],indices]}" )
+indices = np.array ( [ 2,3 ] )
+print ( f"covariance of SRs (2,3):\n{ncov[indices[:,None],indices]}" )
 
 import IPython
-IPython.embed()
-# print ( fit_results.corr_mat )
-#print ( cm )
-
-# import IPython
-# IPython.embed()
+IPython.embed( using = False )
