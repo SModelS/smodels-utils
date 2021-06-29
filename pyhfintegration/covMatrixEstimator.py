@@ -19,7 +19,8 @@ class CovMatrixEstimator ( object ):
         self.anaid = anaid
         self.hepdataid = hepdataid
         self.jsonfile = "example.json"
-        self.toStore = [ "yields", "yield_unc", "ncov", "model", "channels", "data" ]
+        self.toStore = [ "yields", "yield_unc", "ncov", "model", "channels", "data",
+                         "corr" ]
         #                 "result", "result_obj" ]
 
     def get_channel_boundary_indices(self):
@@ -82,13 +83,35 @@ class CovMatrixEstimator ( object ):
             f.close()
         for k in self.toStore:
             self.__dict__[k]=Dict[k]
-        
+
     def retrieveSubmatrix ( self, indices ):
         """ retrieve the sub covariance matrix for indices,
             e.g. (1,2,3) """
         indices = np.array ( indices )
         scov = self.ncov[indices[:,None],indices]
         return scov
+
+    def toCanonical ( self, channelname ):
+        """ return canonical form of channelname """
+        Dict = { "SRLMEM_mct2": "SR_LM_Low_MCT",
+                 "SR_LM_High_MCT": "SRLMEM_mct2",
+                 "SR_LM_Low_MCT": "SRLMEM_mct2" }
+        if channelname in Dict:
+            return Dict[channelname]
+        return channelname
+
+
+    def getChannelName ( self, binid, canonical=False ):
+        """ get the name of the channel of bin <binid>
+        :param canonical: if true, return a canonical form of name
+        """
+        indices = self.get_channel_boundary_indices()
+        for i,idx in enumerate(indices):
+            if binid < idx:
+                ret = self.channels[i]
+                if canonical:
+                    ret = self.toCanonical ( ret )
+                return ret
 
     def querySModelS ( self ):
         """ query the SModelS database for the order of the SRs """
@@ -97,9 +120,8 @@ class CovMatrixEstimator ( object ):
             return
         from smodels.experiment.databaseObj import Database
         db = Database ( "../../smodels-database/" )
-        er = db.getExpResults ( analysisIDs = [ self.anaid ], 
+        er = db.getExpResults ( analysisIDs = [ self.anaid ],
                 dataTypes = [ "efficiencyMap" ], useNonValidated = True )
-        print ( "er", er )
         if type(er) != list or len(er)<1:
             return
         datasets = er[0].datasets
@@ -107,17 +129,34 @@ class CovMatrixEstimator ( object ):
         self.pprint ( "datasets", ", ".join ( dsnames ),"..." )
         self.datasetIndices = {}
         self.dataIndexNames = {}
+        oldNames = {}
         for ds in datasets:
             dsName = ds.dataInfo.dataId
             obsN = ds.dataInfo.observedN
+            hadAMatch = False
             for i,d in enumerate(self.data):
+                channelname = self.getChannelName(i,True)
                 if abs ( obsN - d ) <1e-7:
-                    # self.pprint ( f"match! {d} found at {i}" )
-                    self.datasetIndices[dsName] = i
-                    self.dataIndexNames[i] = dsName
+                    namesMatch = False
+                    if hadAMatch:
+                        self.pprint ( f"{d} matches twice for {dsName} {channelname} -- old one was {oldNames[dsName]}" )
+                        if "LM" in dsName and "LM" in channelname:
+                            hadAMatch = False
+                        if "MM" in dsName and "MM" in channelname:
+                            hadAMatch = False
+                    if not hadAMatch:
+                        self.pprint ( f"{channelname} with {obsN} matching to {dsName}" )
+                        self.datasetIndices[dsName] = i
+                        self.dataIndexNames[i] = dsName
+                        oldNames[dsName]=channelname
+                        hadAMatch = True
         return #er[0].datasets
 
-    def createSModelSInfo ( self ):
+    def createSModelSInfo ( self, pprint = False ):
+        """
+        write out lines for smodels info
+        :param pprint: if true, then align the cov matrix
+        """
         self.querySModelS()
         line = "datasetOrder: "
         def addApostrophes ( strng ):
@@ -127,18 +166,30 @@ class CovMatrixEstimator ( object ):
         #line += ", ".join ( [ self.dataIndexNames[k] for k in keys ] )
         line += ", ".join ( map ( addApostrophes, [ self.dataIndexNames[k] for k in keys ] ) )
         print ( line )
+        print ( "retrieveing submatrix for", keys )
         matrix = self.retrieveSubmatrix ( keys )
-        smatrix = "covariance: "
+        smatrix = "covariance: ["
+        appendix = ", "
+        if pprint:
+            appendix = ",\n             "
         for row in matrix:
             smatrix += "["
             for col in row:
-                smatrix += "%.3f, " % col
+                if pprint:
+                    smatrix += "%6.2f, " % col
+                else:
+                    smatrix += "%.3f, " % col
             if len(row)>0:
                 smatrix = smatrix[:-2]
-            smatrix += "], "
+            # smatrix += "],\n             "
+            smatrix += "]" + appendix
         if len(row)>0:
-            smatrix = smatrix[:-2]
-            
+            nlast = -2
+            if pprint:
+                nlast = -14
+            # smatrix = smatrix[:-14] + "]"
+            smatrix = smatrix[:-2] + "]"
+
         print ( smatrix )
 
     def retrieveMatrix( self ):
@@ -186,22 +237,28 @@ class CovMatrixEstimator ( object ):
         np.set_printoptions ( precision = 3 )
         self.ncov = np.cov(model_predictions, rowvar=False)
         ncov = self.ncov
-        print(f"covariance:\n{ncov}")
-        # print(f"correlation:\n{np.corrcoef(model_predictions, rowvar=False)}")
+        self.corr = np.corrcoef(model_predictions, rowvar=False)
+        #print(f"covariance:\n{ncov}")
+        ## print(f"correlation:\n{np.corrcoef(model_predictions, rowvar=False)}")
 
-        scov = self.retrieveSubmatrix ( [2,3] )
-        print ( f"covariance of SRs (2,3):\n{scov}" )
+        #scov = self.retrieveSubmatrix ( [2,3] )
+        #print ( f"covariance of SRs (2,3):\n{scov}" )
 
-        scov = self.retrieveSubmatrix ( [1,3] )
-        ## indices of signal regions
-        print ( f"covariance of SRs (1,3):\n{scov}" )
-        for i in indices.tolist():
-            ncov[i][i]=ncov[i][i]-yields[i]
-        scov = ncov[indices[:,None],indices]
-        print ( f"covariance of SRs w/o Poissonian (1,3):\n{scov}" )
-        return scov.tolist()
+        #scov = self.retrieveSubmatrix ( [1,3] )
+        ### indices of signal regions
+        #print ( f"covariance of SRs (1,3):\n{scov}" )
+        #for i in indices.tolist():
+        #    ncov[i][i]=ncov[i][i]-yields[i]
+        #scov = ncov[indices[:,None],indices]
+        #print ( f"covariance of SRs w/o Poissonian (1,3):\n{scov}" )
+        #return scov.tolist()
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="SModelS-tools command line tool.")
+    parser.add_argument('-w','--write', help='write pickle file', action="store_true" )
+    args = parser.parse_args()
+
     hepdataids = { "ATLAS-SUSY-2018-04": 1406212, "ATLAS-SUSY-2018-06": 1404698,
                    "ATLAS-SUSY-2019-08": 1934827 }
     patchcmd = {}
@@ -210,12 +267,12 @@ if __name__ == "__main__":
     anaid = "ATLAS-SUSY-2019-08"
     estimator = CovMatrixEstimator ( anaid, hepdataids[anaid] )
     # estimator.download ( patchcmd )
-    write = False
-    if write:
+    if args.write:
         matrix = estimator.retrieveMatrix ()
         estimator.store()
     else:
         estimator.load()
+        estimator.createSModelSInfo()
         estimator.interact()
         matrix = estimator.ncov
     # print ( matrix )
