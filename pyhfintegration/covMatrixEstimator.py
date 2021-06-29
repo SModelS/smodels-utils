@@ -257,6 +257,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="SModelS-tools command line tool.")
     parser.add_argument('-w','--write', help='write pickle file', action="store_true" )
+    parser.add_argument('-i','--interactive', help='start interactive mode', action="store_true" )
     args = parser.parse_args()
 
     hepdataids = { "ATLAS-SUSY-2018-04": 1406212, "ATLAS-SUSY-2018-06": 1404698,
@@ -273,6 +274,5 @@ if __name__ == "__main__":
     else:
         estimator.load()
         estimator.createSModelSInfo()
+    if args.interactive:
         estimator.interact()
-        matrix = estimator.ncov
-    # print ( matrix )

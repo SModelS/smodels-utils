@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import matplotlib.pyplot as plt
-import os,glob,imp,copy
+import os,glob,copy
 import numpy as np
 import seaborn as sns
 import pyslha, copy, pickle
@@ -66,84 +66,96 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
     
     return levelPts
 
-Dir = "~/git/smodels-database/13TeV/ATLAS/"
-Dir = os.path.expanduser ( Dir )
-exec(open(Dir+"ATLAS-SUSY-2018-04-eff/validation/TStauStau_2EqMassAx_EqMassBy.py").read())
-data = copy.deepcopy(validationData)
-exec(open(Dir+"ATLAS-SUSY-2018-04-eff/validation/TStauStau_2EqMassAx_EqMassBy_combined.py").read())
-dataComb = copy.deepcopy(validationData)
-exec(open(Dir+"ATLAS-SUSY-2018-04-SL/validation/TStauStau_2EqMassAx_EqMassBy_combined.py").read())
-dataSL = copy.deepcopy(validationData)
+def read ( fname ):
+    with open(fname) as f:
+        txt=f.read()
+        f.close()
+    txt = txt.replace("validationData = ","")
+    if txt.find("meta")>0:
+        txt = txt[:txt.find("meta")]
+    validationData=eval(txt.replace("validationData = ",""))
+    data = copy.deepcopy(validationData)
+    return data
 
-#Get points to compute exclusion curves:
-xpts = []
-ypts = []
-rpts = []
-for pt in data:
-    if 'error' in pt: continue
-    xpts.append(pt['axes']['x'])
-    ypts.append(pt['axes']['y'])
-    rpts.append(pt['signal']/pt['UL'])
-excCurve = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+def plot( Dir, anaid, txname, axes, xaxis, yaxis ):
+    """
+    Dir = "~/git/smodels-database/13TeV/ATLAS/"
+    anaid = "ATLAS-SUSY-2018-04"
+    txname = "TStauStau"
+    axes = "2EqMassAx_EqMassBy"
+    """
+    Dir = os.path.expanduser ( Dir )
+    data  = read ( f"{Dir}{anaid}-eff/validation/{txname}_{axes}.py" )
+    dataComb = read ( f"{Dir}{anaid}-eff/validation/{txname}_{axes}_combined.py" )
+    dataSL = read ( f"{Dir}{anaid}-SL/validation/{txname}_{axes}_combined.py" )
 
-xpts = []
-ypts = []
-rpts = []
-for pt in dataComb:
-    if 'error' in pt: continue
-    xpts.append(pt['axes']['x'])
-    ypts.append(pt['axes']['y'])
-    rpts.append(pt['signal']/pt['UL'])
-excCurveComb = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    #Get points to compute exclusion curves:
+    xpts = []
+    ypts = []
+    rpts = []
+    for pt in data:
+        if 'error' in pt: continue
+        xpts.append(pt['axes']['x'])
+        ypts.append(pt['axes']['y'])
+        rpts.append(pt['signal']/pt['UL'])
+    excCurve = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
 
-xpts = []
-ypts = []
-rpts = []
-for pt in dataSL:
-    if 'error' in pt: continue
-    xpts.append(pt['axes']['x'])
-    ypts.append(pt['axes']['y'])
-    rpts.append(pt['signal']/pt['UL'])
-excCurveSL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    xpts = []
+    ypts = []
+    rpts = []
+    for pt in dataComb:
+        if 'error' in pt: continue
+        xpts.append(pt['axes']['x'])
+        ypts.append(pt['axes']['y'])
+        rpts.append(pt['signal']/pt['UL'])
+    excCurveComb = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
 
-#Official curve
-#excATLAS = np.genfromtxt(Dir+'ATLAS-SUSY-2018-04-SL/orig/HEPData-ins1765529-v1-Exclusion_contour_1_(Obs.).csv',delimiter=',',skip_header=9,
-#                       names=True)
-smsfile = Dir+'ATLAS-SUSY-2018-04-eff/'
-print ( "smsfile", smsfile )
-offCurve = uprootTools.getExclusionLine ( smsfile, 'TStauStau' )
-print ( "offCurve", offCurve )
+    xpts = []
+    ypts = []
+    rpts = []
+    for pt in dataSL:
+        if 'error' in pt: continue
+        xpts.append(pt['axes']['x'])
+        ypts.append(pt['axes']['y'])
+        rpts.append(pt['signal']/pt['UL'])
+    excCurveSL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
 
-# print(excATLAS.dtype)
+    #Official curve
+    #excATLAS = np.genfromtxt(Dir+'ATLAS-SUSY-2018-04-SL/orig/HEPData-ins1765529-v1-Exclusion_contour_1_(Obs.).csv',delimiter=',',skip_header=9,
+    #                       names=True)
+    smsfile = f'{Dir}{anaid}-eff/'
+    print ( "smsfile", smsfile )
+    offCurve = uprootTools.getExclusionLine ( smsfile, txname )
+    # print ( "offCurve", offCurve )
 
-fig = plt.figure(figsize=(9,6))
-plt.plot(excCurve[1.0][0][:,0],excCurve[1.0][0][:,1],
-         label='SModelS (best SR)',
-         linewidth=3,linestyle='--',color='red')
+    # print(excATLAS.dtype)
 
-plt.plot(excCurveComb[1.0][0][:,0],excCurveComb[1.0][0][:,1],
-         label='SModelS (pyhf)',
-         linewidth=3,linestyle='--',color='green')
+    fig = plt.figure(figsize=(9,6))
+    plt.plot( offCurve["x"], offCurve["y"],label='ATLAS',
+             linewidth=3,linestyle='-',color='black')
 
-plt.plot(excCurveSL[1.0][0][:,0],excCurveSL[1.0][0][:,1],
-         label='SModelS (SL)',
-         linewidth=3,linestyle='--',color='blue')
+    plt.plot(excCurveComb[1.0][0][:,0],excCurveComb[1.0][0][:,1],
+             label='SModelS (pyhf)',
+             linewidth=3,linestyle='--',color='green')
 
-plt.plot( offCurve["x"], offCurve["y"],label='ATLAS',
-         linewidth=3,linestyle='-',color='black')
+    plt.plot(excCurveSL[1.0][0][:,0],excCurveSL[1.0][0][:,1],
+             label='SModelS (SL)',
+             linewidth=3,linestyle='--',color='blue')
 
-plt.ylabel(r'$m_{\tilde{\chi}_1^0}$ (GeV)',fontsize=24)
-plt.xlabel(r'$m_{\tilde{\tau}}$ (GeV)',fontsize=24)
-plt.title(r'ATLAS-SUSY-2018-04, TStauStau', fontsize=18)
-plt.tight_layout()
-plt.legend()
-plt.savefig('pyhfExample.pdf')
-plt.savefig('comparison.png')
-plt.show()
-
-
-# In[ ]:
-
-
+    plt.plot(excCurve[1.0][0][:,0],excCurve[1.0][0][:,1],
+             label='SModelS (best SR)',
+             linewidth=3,linestyle='--',color='red')
 
 
+    plt.ylabel( yaxis, fontsize=24)
+    plt.xlabel( xaxis, fontsize=24)
+    plt.title(rf'{anaid}, {txname}', fontsize=18)
+    plt.tight_layout()
+    plt.legend()
+    plt.savefig('comparison.png')
+
+if __name__ == "__main__":
+    #plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2018-04", "TStauStau",
+    #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\tau}}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
+    plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2019-08", "TChiWH",
+           "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
