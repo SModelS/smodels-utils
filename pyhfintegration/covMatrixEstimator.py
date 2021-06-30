@@ -12,6 +12,8 @@ import cabinetry
 import pyhf
 import pickle, os, subprocess
 import numpy as np
+import scipy.stats
+import colorama
 
 class CovMatrixEstimator ( object ):
     def __init__ ( self, anaid ):
@@ -20,7 +22,7 @@ class CovMatrixEstimator ( object ):
         self.jsonfile = "example.json"
         self.nsamples = 200000
         self.toStore = [ "yields", "yield_unc", "ncov", "model", "channels", "data",
-                         "corr", "nsamples" ]
+                         "corr", "nsamples", "skew" ]
         #                 "result", "result_obj" ]
 
     def get_channel_boundary_indices(self):
@@ -186,23 +188,28 @@ class CovMatrixEstimator ( object ):
                         hadAMatch = True
         return #er[0].datasets
 
+    def getSkewness ( self ):
+        """ retrieve skewness, using self.indices """
+        return self.skew[self.indices]
+
     def createSModelSInfo ( self, pprint = False ):
         """
         write out lines for smodels info
         :param pprint: if true, then align the cov matrix
         """
         self.querySModelS()
-        line = "datasetOrder: "
         def addApostrophes ( strng ):
             return f'"{strng}"'
         keys = list ( self.dataIndexNames.keys() )
         keys.sort()
         #line += ", ".join ( [ self.dataIndexNames[k] for k in keys ] )
-        line += ", ".join ( map ( addApostrophes, [ self.dataIndexNames[k] for k in keys ] ) )
-        print ( line )
-        print ( "retrieving submatrix for", keys )
+        line = ", ".join ( map ( addApostrophes, [ self.dataIndexNames[k] for k in keys ] ) )
+        self.datasetOrder = line
+        print ( f"{colorama.Fore.GREEN}datasetOrder: {line}" )
+        # print ( "retrieving submatrix for", keys )
+        self.indices = keys
         matrix = self.retrieveSubmatrix ( keys )
-        smatrix = "covariance: ["
+        smatrix = "["
         appendix = ", "
         if pprint:
             appendix = ",\n             "
@@ -211,7 +218,7 @@ class CovMatrixEstimator ( object ):
             smatrix += "["
             for col in row:
                 if pprint:
-                    smatrix += "%6.2f, " % col
+                    smatrix += "%y6.2f, " % col
                 else:
                     smatrix += "%.3f, " % col
             if len(row)>0:
@@ -225,7 +232,15 @@ class CovMatrixEstimator ( object ):
             # smatrix = smatrix[:-14] + "]"
             smatrix = smatrix[:-2] + "]"
 
-        print ( smatrix )
+        self.covariance = smatrix
+        print ( "covariance:", smatrix )
+        skewness = ""
+        if len ( self.getSkewness() ) > 1 :
+            skewness = "["
+            for i in self.getSkewness():
+                skewness += "%5.2f, " % i
+            skewness = skewness[:-2]+"]"
+        print ( "skewness:", skewness, colorama.Fore.RESET )
 
     def retrieveMatrix( self ):
         self.patch()
@@ -274,6 +289,7 @@ class CovMatrixEstimator ( object ):
         self.ncov = np.cov(model_predictions, rowvar=False)
         ncov = self.ncov
         self.corr = np.corrcoef(model_predictions, rowvar=False)
+        self.skew = scipy.stats.skew ( model_predictions )
         #print(f"covariance:\n{ncov}")
         ## print(f"correlation:\n{np.corrcoef(model_predictions, rowvar=False)}")
 
