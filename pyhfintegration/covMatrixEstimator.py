@@ -14,10 +14,9 @@ import pickle, os, subprocess
 import numpy as np
 
 class CovMatrixEstimator ( object ):
-    def __init__ ( self, anaid, hepdataid ):
+    def __init__ ( self, anaid ):
         pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
         self.anaid = anaid
-        self.hepdataid = hepdataid
         self.jsonfile = "example.json"
         self.toStore = [ "yields", "yield_unc", "ncov", "model", "channels", "data",
                          "corr" ]
@@ -43,7 +42,10 @@ class CovMatrixEstimator ( object ):
         """ logging """
         print ( "[covMatrixEstimator] %s" % (" ".join(map(str,args))) )
 
-    def download( self, patchcmd ):
+    def download( self ):
+        hepdataids = { "ATLAS-SUSY-2018-04": 1406212, "ATLAS-SUSY-2018-06": 1404698,
+                       "ATLAS-SUSY-2019-08": 1934827 }
+        hepdataid = hepdataids[self.anaid]
         import os, subprocess
         if os.path.exists ( self.jsonfile ) and not force:
             return
@@ -54,8 +56,19 @@ class CovMatrixEstimator ( object ):
         utils.download( url, Dir )
         # cmd = "jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_440_80_Staus.json"
         # cmd = f"jsonpatch {Dir}/Region-combined/BkgOnly.json {Dir}/Region-combined/test.json"
-        cmd = patchcmd
-        cmd += f" > {self.jsonfile}"
+        return
+
+    def patch ( self ):
+        patchcmds = {}
+        patchcmds["ATLAS-SUSY-2018-04"] = "jsonpatch @@Dir@@/Region-combined/BkgOnly.json @@Dir@@/Region-combined/test.json"
+        patchcmds["ATLAS-SUSY-2019-08"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "C1N2_Wh_hbb_700_400")'
+        patchcmd = patchcmds[self.anaid]
+        shortanaid = self.anaid.replace("ATLAS-","")
+        Dir = shortanaid+"_likelihoods/"
+        patchcmd = patchcmd.replace ( "@@Dir@@", Dir )
+
+        self.pprint ( f"patching! {patchcmd}" )
+        cmd = f"{patchcmd} > {self.jsonfile}"
         subprocess.getoutput ( cmd )
         return
 
@@ -78,7 +91,13 @@ class CovMatrixEstimator ( object ):
 
     def load ( self ):
         """ load results from pickle """
-        with open ( f"{self.anaid}.pcl","rb" ) as f:
+        fname = f"{self.anaid}.pcl"
+        if not os.path.exists ( fname ):
+            self.pprint ( f"{fname} does not exist, will try and create" )
+            self.retrieveMatrix()
+            return self.store()
+
+        with open ( fname,"rb" ) as f:
             Dict = pickle.load ( f )
             f.close()
         for k in self.toStore:
@@ -257,17 +276,20 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="SModelS-tools command line tool.")
     parser.add_argument('-w','--write', help='write pickle file', action="store_true" )
+    parser.add_argument('-p','--patch', help='patch json file', action="store_true" )
+    parser.add_argument('-d','--download', help='download json files', action="store_true" )
     parser.add_argument('-i','--interactive', help='start interactive mode', action="store_true" )
+    parser.add_argument('-a','--analysisid', help='specify analysis id [ATLAS-SUSY-2019-08]', 
+            type=str, default="ATLAS-SUSY-2019-08" )
     args = parser.parse_args()
 
-    hepdataids = { "ATLAS-SUSY-2018-04": 1406212, "ATLAS-SUSY-2018-06": 1404698,
-                   "ATLAS-SUSY-2019-08": 1934827 }
-    patchcmd = {}
-    patchcmd["ATLAS-SUSY-2018-04"] = "jsonpatch {Dir}/Region-combined/BkgOnly.json {Dir}/Region-combined/test.json"
-    patchcmd["ATLAS-SUSY-2019-08"] = 'jsonpatch {Dir}/BkgOnly.json <(pyhf patchset extract {Dir}/patchset.json --name "C1N2_Wh_hbb_700_400") > example.json'
-    anaid = "ATLAS-SUSY-2019-08"
-    estimator = CovMatrixEstimator ( anaid, hepdataids[anaid] )
-    # estimator.download ( patchcmd )
+    # anaid = "ATLAS-SUSY-2019-08"
+    anaid = args.analysisid
+    estimator = CovMatrixEstimator ( anaid )
+    if args.download:
+        estimator.download ( )
+    if args.patch:
+        estimator.patch ( )
     if args.write:
         matrix = estimator.retrieveMatrix ()
         estimator.store()

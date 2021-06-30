@@ -28,28 +28,28 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
 
     :return: A dictionary with a list of contours for each level
     """
-    
+
     fig = plt.figure()
     x = copy.deepcopy(xpts)
     y = copy.deepcopy(ypts)
     z = copy.deepcopy(zpts)
-    
+
     #Use log scale:
     if ylog:
         y = np.log10(y)
     if xlog:
         x = np.log10(x)
-    
-    CS = plt.tricontour(x,y,z,levels=levels)    
+
+    CS = plt.tricontour(x,y,z,levels=levels)
     levelPts = {}
     for il,level in enumerate(CS.levels):
         levelPts[level] = []
-        c = CS.collections[il]        
+        c = CS.collections[il]
         paths = c.get_paths()
         for path in paths:
             levelPts[level].append(path.vertices)
     plt.close(fig)
-    
+
     #scale back:
     if ylog or xlog:
         for key,ptsList in levelPts.items():
@@ -63,8 +63,8 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
                     ypts = 10**ypts
                 newList.append(np.column_stack((xpts,ypts)))
             levelPts[key] = newList
-        
-    
+
+
     return levelPts
 
 def plot( dbpath, anaid, txname, axes, xaxis, yaxis ):
@@ -148,16 +148,37 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis ):
 def plotRatio ( Dir, anaid, txname, axes, xlabel, ylabel ):
     cmd = f"../covariances/plotRatio.py -d {Dir} -a1 {anaid}-eff -a2 {anaid}-SL"
     cmd += f" -v1 {txname}_{axes}_combined.py -v2 {txname}_{axes}_combined.py"
-    cmd += f" -xl '{xlabel}' -yl '{ylabel}'"
+    cmd += f" -xl '{xlabel}' -yl '{ylabel}' -l1 pyhf -l2 SL"
     print ( cmd )
     o = subprocess.getoutput ( cmd )
     print ( o )
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="The comparison plotter")
+    parser.add_argument('-a','--analysisid', help='specify analysis id [ATLAS-SUSY-2019-08]',
+            type=str, default="ATLAS-SUSY-2019-08" )
+    parser.add_argument('-t','--txname', help='specify topolofy [TChiWH]',
+            type=str, default="TChiWH" )
+    parser.add_argument('-d','--database', help='path to database [~/git/smodels-database]',
+            type=str, default="~/git/smodels-database" )
+    parser.add_argument('-A','--axes', help='specify axes [2EqMassAx_EqMassBy]',
+            type=str, default="2EqMassAx_EqMassBy" )
+    parser.add_argument('-x','--xlabel', help='specify label of x axis [$m_{\\tilde{\chi}_1^\pm}$ (GeV)]',
+            type=str, default="$m_{\\tilde{\chi}_1^\pm}$ (GeV)" )
+    parser.add_argument('-y','--ylabel', help='specify label of y axis [$m_{\\tilde{\chi}_1^0}$ (GeV)]',
+            type=str, default="$m_{\\tilde{\chi}_1^0}$ (GeV)" )
+
+    args = parser.parse_args()
+    if args.xlabel == "stau":
+        args.xlabel = "$m_{\\tilde{\tau}}$ (GeV)"
+    plot ( args.database, args.analysisid, args.txname, args.axes, args.xlabel, args.ylabel )
+    plotRatio ( args.database, args.analysisid, args.txname, args.axes, args.xlabel,
+                args.ylabel )
     #plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2018-04", "TStauStau",
     #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\tau}}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
-    plot ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
-           "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
-    plotRatio ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
-           "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
+    #plot ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
+    #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
+    #plotRatio ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
+    #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
