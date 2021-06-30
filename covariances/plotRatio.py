@@ -15,7 +15,7 @@ import itertools
 import importlib
 import setPath
 from smodels_utils.helper import prettyDescriptions
-from smodels_utils.helper.various import getPathName
+from smodels_utils.helper.various import getValidationModule
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -361,23 +361,6 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
     plt.clf()
 
-def getModuleFromPath ( ipath, analysis ):
-    try:
-        spec = importlib.util.spec_from_file_location( "validationData", ipath )
-        imp = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(imp)
-        imp.ana = analysis
-    except Exception as e:
-        print ( "Could not import validation file 1: %s" % e )
-    return imp
-
-def getModule ( dbpath, analysis, validationfile ):
-    """ get the python module from the path to database, analysis name,
-        name of validation file (with globs) """
-    ipath = getPathName ( dbpath, analysis, validationfile )
-    imp = getModuleFromPath ( ipath, analysis )
-    return imp
-
 def writeMDPage( copy ):
     """ write the markdown page that lists all plots """ 
     with open("ratioplots.md","wt") as f:
@@ -461,8 +444,8 @@ def main():
         valfile2 = args.validationfile2
         if valfile2 in [ "", "none", "None", None ]:
             valfile2 = valfile1
-        imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
-        imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
+        imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
+        imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
 
         draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output,
                args.zmin, args.zmax, args.xlabel, args.ylabel )

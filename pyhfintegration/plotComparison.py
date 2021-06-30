@@ -2,12 +2,13 @@
 # coding: utf-8
 
 import matplotlib.pyplot as plt
-import os,glob,copy
+import os,glob,copy,subprocess
 import numpy as np
 import seaborn as sns
 import pyslha, copy, pickle
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
+from smodels_utils.helper.various import getValidationModule, getPathName
 sns.set() #Set style
 sns.set_style('ticks',{'font.family':'serif', 'font.serif':'Times New Roman'})
 sns.set_context('paper', font_scale=1.8)
@@ -66,28 +67,17 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
     
     return levelPts
 
-def read ( fname ):
-    with open(fname) as f:
-        txt=f.read()
-        f.close()
-    txt = txt.replace("validationData = ","")
-    if txt.find("meta")>0:
-        txt = txt[:txt.find("meta")]
-    validationData=eval(txt.replace("validationData = ",""))
-    data = copy.deepcopy(validationData)
-    return data
-
-def plot( Dir, anaid, txname, axes, xaxis, yaxis ):
+def plot( dbpath, anaid, txname, axes, xaxis, yaxis ):
+    """ plot comparison exclusion lines
+    :param dbpath: path to database, e.g. ~/git/smodels-database/
+    :param anaid: e.g. ATLAS-SUSY-2018-04
+    :param txname: e.g. TStauStau
+    :param axes: e.g. 2EqMassAx_EqMassBy
     """
-    Dir = "~/git/smodels-database/13TeV/ATLAS/"
-    anaid = "ATLAS-SUSY-2018-04"
-    txname = "TStauStau"
-    axes = "2EqMassAx_EqMassBy"
-    """
-    Dir = os.path.expanduser ( Dir )
-    data  = read ( f"{Dir}{anaid}-eff/validation/{txname}_{axes}.py" )
-    dataComb = read ( f"{Dir}{anaid}-eff/validation/{txname}_{axes}_combined.py" )
-    dataSL = read ( f"{Dir}{anaid}-SL/validation/{txname}_{axes}_combined.py" )
+    data  = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}.py" ).validationData
+    dataComb = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}_combined.py" ).validationData
+    dataSL = getValidationModule ( dbpath, anaid+"-SL", f"{txname}_{axes}_combined.py" ).validationData
+    Dir = getPathName ( dbpath, anaid, None )
 
     #Get points to compute exclusion curves:
     xpts = []
@@ -123,7 +113,8 @@ def plot( Dir, anaid, txname, axes, xaxis, yaxis ):
     #Official curve
     #excATLAS = np.genfromtxt(Dir+'ATLAS-SUSY-2018-04-SL/orig/HEPData-ins1765529-v1-Exclusion_contour_1_(Obs.).csv',delimiter=',',skip_header=9,
     #                       names=True)
-    smsfile = f'{Dir}{anaid}-eff/'
+    #smsfile = f'{Dir}{anaid}-eff/'
+    smsfile = f'{Dir}-eff/'
     print ( "smsfile", smsfile )
     offCurve = uprootTools.getExclusionLine ( smsfile, txname )
     # print ( "offCurve", offCurve )
@@ -154,8 +145,19 @@ def plot( Dir, anaid, txname, axes, xaxis, yaxis ):
     plt.legend()
     plt.savefig('comparison.png')
 
+def plotRatio ( Dir, anaid, txname, axes, xlabel, ylabel ):
+    cmd = f"../covariances/plotRatio.py -d {Dir} -a1 {anaid}-eff -a2 {anaid}-SL"
+    cmd += f" -v1 {txname}_{axes}_combined.py -v2 {txname}_{axes}_combined.py"
+    cmd += f" -xl '{xlabel}' -yl '{ylabel}'"
+    print ( cmd )
+    o = subprocess.getoutput ( cmd )
+    print ( o )
+
+
 if __name__ == "__main__":
     #plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2018-04", "TStauStau",
     #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\tau}}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
-    plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2019-08", "TChiWH",
+    plot ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
+           "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
+    plotRatio ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
            "2EqMassAx_EqMassBy", '$m_{\\tilde{\chi}_1^\pm}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
