@@ -18,8 +18,9 @@ class CovMatrixEstimator ( object ):
         pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
         self.anaid = anaid
         self.jsonfile = "example.json"
+        self.nsamples = 200000
         self.toStore = [ "yields", "yield_unc", "ncov", "model", "channels", "data",
-                         "corr" ]
+                         "corr", "nsamples" ]
         #                 "result", "result_obj" ]
 
     def get_channel_boundary_indices(self):
@@ -42,9 +43,9 @@ class CovMatrixEstimator ( object ):
         """ logging """
         print ( "[covMatrixEstimator] %s" % (" ".join(map(str,args))) )
 
-    def download( self ):
+    def download( self, force=False ):
         hepdataids = { "ATLAS-SUSY-2018-04": 1406212, "ATLAS-SUSY-2018-06": 1404698,
-                       "ATLAS-SUSY-2019-08": 1934827 }
+                       "ATLAS-SUSY-2019-08": 1934827, "ATLAS-SUSY-2018-31": 1935437 }
         hepdataid = hepdataids[self.anaid]
         import os, subprocess
         if os.path.exists ( self.jsonfile ) and not force:
@@ -53,23 +54,33 @@ class CovMatrixEstimator ( object ):
         url = f"https://www.hepdata.net/record/resource/{hepdataid}?view=true"
         shortanaid = self.anaid.replace("ATLAS-","")
         Dir = shortanaid+"_likelihoods/"
+        self.pprint ( f"downloading {hepdataid} to {Dir}" )
         utils.download( url, Dir )
-        # cmd = "jsonpatch SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json SUSY-2018-04_likelihoods/Region-combined/patch.DS_440_80_Staus.json"
-        # cmd = f"jsonpatch {Dir}/Region-combined/BkgOnly.json {Dir}/Region-combined/test.json"
         return
 
     def patch ( self ):
         patchcmds = {}
         patchcmds["ATLAS-SUSY-2018-04"] = "jsonpatch @@Dir@@/Region-combined/BkgOnly.json @@Dir@@/Region-combined/test.json"
+        patchcmds["ATLAS-SUSY-2018-06"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "ERJR_500p0_300p0")'
+        patchcmds["ATLAS-SUSY-2018-31"] = 'jsonpatch @@Dir@@/RegionC/BkgOnly.json <(pyhf patchset extract @@Dir@@/RegionC/patchset.json --name "sbottom_1300_1050_60")'
         patchcmds["ATLAS-SUSY-2019-08"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "C1N2_Wh_hbb_700_400")'
         patchcmd = patchcmds[self.anaid]
         shortanaid = self.anaid.replace("ATLAS-","")
         Dir = shortanaid+"_likelihoods/"
         patchcmd = patchcmd.replace ( "@@Dir@@", Dir )
 
-        self.pprint ( f"patching! {patchcmd}" )
         cmd = f"{patchcmd} > {self.jsonfile}"
-        subprocess.getoutput ( cmd )
+        self.pprint ( f"patching to {self.jsonfile}" )
+        self.pprint ( cmd )
+        tmpf = "./tmp.sh"
+        with open ( tmpf, "wt" ) as f:
+            f.write ( "#!/bin/bash\n\n" )
+            f.write ( cmd+"\n" )
+            f.close()
+        os.chmod ( tmpf, 0o755 )
+        o = subprocess.getoutput ( tmpf )
+        if len(o)>1:
+            self.pprint ( o ) 
         return
 
     def interact ( self ):
@@ -101,11 +112,15 @@ class CovMatrixEstimator ( object ):
             Dict = pickle.load ( f )
             f.close()
         for k in self.toStore:
+            if not k in Dict:
+                continue
             self.__dict__[k]=Dict[k]
 
     def retrieveSubmatrix ( self, indices ):
         """ retrieve the sub covariance matrix for indices,
             e.g. (1,2,3) """
+        if len(indices)==0:
+            return []
         indices = np.array ( indices )
         scov = self.ncov[indices[:,None],indices]
         return scov
@@ -145,7 +160,7 @@ class CovMatrixEstimator ( object ):
             return
         datasets = er[0].datasets
         dsnames = [ x.dataInfo.dataId for x in datasets[:3] ]
-        self.pprint ( "datasets", ", ".join ( dsnames ),"..." )
+        self.pprint ( "datasets:", ", ".join ( dsnames ),"..." )
         self.datasetIndices = {}
         self.dataIndexNames = {}
         oldNames = {}
@@ -185,12 +200,13 @@ class CovMatrixEstimator ( object ):
         #line += ", ".join ( [ self.dataIndexNames[k] for k in keys ] )
         line += ", ".join ( map ( addApostrophes, [ self.dataIndexNames[k] for k in keys ] ) )
         print ( line )
-        print ( "retrieveing submatrix for", keys )
+        print ( "retrieving submatrix for", keys )
         matrix = self.retrieveSubmatrix ( keys )
         smatrix = "covariance: ["
         appendix = ", "
         if pprint:
             appendix = ",\n             "
+        row=[]
         for row in matrix:
             smatrix += "["
             for col in row:
@@ -229,7 +245,7 @@ class CovMatrixEstimator ( object ):
 
         # sample parameters from multivariate Gaussian and evaluate model
         sampled_parameters = np.random.multivariate_normal(
-            result_obj.minuit.values, result_obj.minuit.covariance, size=200000 )
+            result_obj.minuit.values, result_obj.minuit.covariance, size=self.nsamples )
         model_predictions = [
             model.expected_data(p, include_auxdata=False) for p in sampled_parameters
         ]
@@ -287,7 +303,7 @@ if __name__ == "__main__":
     anaid = args.analysisid
     estimator = CovMatrixEstimator ( anaid )
     if args.download:
-        estimator.download ( )
+        estimator.download ( True )
     if args.patch:
         estimator.patch ( )
     if args.write:
