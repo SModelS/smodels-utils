@@ -4,6 +4,7 @@
 import matplotlib.pyplot as plt
 import os,glob,copy,subprocess
 import numpy as np
+import time
 import seaborn as sns
 import pyslha, copy, pickle
 from scipy.signal import savgol_filter
@@ -141,9 +142,17 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis ):
     plt.ylabel( yaxis, fontsize=24)
     plt.xlabel( xaxis, fontsize=24)
     plt.title(rf'{anaid}, {txname}', fontsize=18)
+    dx = plt.xlim()[1] - plt.xlim()[0]
+    dy = plt.ylim()[1] - plt.ylim()[0]
+    xv = plt.xlim()[1] - .27*dx
+    yv = plt.ylim()[0] - .12*dy
+    if True:
+        plt.text ( xv, yv, time.asctime(), c="grey", fontsize=13 )
+    import IPython
+    # IPython.embed()
     plt.tight_layout()
     plt.legend()
-    plt.savefig('comparison.png')
+    plt.savefig(f'comparison_{anaid}_{txname}.png')
 
 def plotRatio ( Dir, anaid, txname, axes, xlabel, ylabel ):
     cmd = f"../covariances/plotRatio.py -d {Dir} -a1 {anaid}-eff -a2 {anaid}-SL"
