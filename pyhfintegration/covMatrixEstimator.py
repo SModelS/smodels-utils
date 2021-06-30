@@ -80,7 +80,7 @@ class CovMatrixEstimator ( object ):
         os.chmod ( tmpf, 0o755 )
         o = subprocess.getoutput ( tmpf )
         if len(o)>1:
-            self.pprint ( o ) 
+            self.pprint ( o )
         return
 
     def interact ( self ):
@@ -228,6 +228,7 @@ class CovMatrixEstimator ( object ):
         print ( smatrix )
 
     def retrieveMatrix( self ):
+        self.patch()
         ws = cabinetry.workspace.load( self.jsonfile )
         model, data = cabinetry.model_utils.model_and_data(ws)
         channels = model.config.channels
@@ -295,13 +296,16 @@ if __name__ == "__main__":
     parser.add_argument('-p','--patch', help='patch json file', action="store_true" )
     parser.add_argument('-d','--download', help='download json files', action="store_true" )
     parser.add_argument('-i','--interactive', help='start interactive mode', action="store_true" )
-    parser.add_argument('-a','--analysisid', help='specify analysis id [ATLAS-SUSY-2019-08]', 
+    parser.add_argument('-a','--analysisid', help='specify analysis id [ATLAS-SUSY-2019-08]',
             type=str, default="ATLAS-SUSY-2019-08" )
+    parser.add_argument('-n','--nsamples', help='number of MC toys [200000]',
+            type=int, default=200000 )
     args = parser.parse_args()
 
     # anaid = "ATLAS-SUSY-2019-08"
     anaid = args.analysisid
     estimator = CovMatrixEstimator ( anaid )
+    estimator.nsamples = args.nsamples
     if args.download:
         estimator.download ( True )
     if args.patch:
