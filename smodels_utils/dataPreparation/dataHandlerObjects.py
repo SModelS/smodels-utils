@@ -403,30 +403,6 @@ class DataHandler(object):
                 sys.exit()
             self._massUnit = unitString
 
-    #@property
-    #def lifetimeUnit(self):
-
-    #    """
-    #    :return: unit as string
-    #    """
-    #    return self._lifetimeUnit
-
-    #@lifetimeUnit.setter
-    #def lifetimeUnit(self, unitString):
-
-    #    """
-    #    Set unit for upper limits, default: 'ns'.
-    #    If unitString is null, it will not set the property
-    #    :param unitString: 'ns','s' or '', None
-    #    """
-
-    #    if unitString:
-    #        units = ['ns','s']
-    #        if not unitString in units:
-    #            logger.error('Lifetime units must be in %s' %str(units))
-    #            sys.exit()
-    #        self._lifetimeUnit = unitString
-
     def _positiveValues(self, values, strictlyPositive = False ):
 
         """checks if values greater then zero
@@ -460,6 +436,7 @@ class DataHandler(object):
         txtFile = open(self.path,'r')
         content = txtFile.readlines()
         txtFile.close
+        lines = []
         for line in content:
             #print(line)
             if line.find("#")>-1:
@@ -480,8 +457,11 @@ class DataHandler(object):
                 logger.error("Error evaluating values %s in file %s" %(values,self.path))
                 sys.exit()
 
-
-            yield values
+            lines.append ( values )
+        xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
+        lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
+        for line in lines:
+            yield line
 
     def pdf(self):
         """
