@@ -65,7 +65,7 @@ class CovMatrixEstimator ( object ):
         patchcmds["ATLAS-SUSY-2018-04"] = "jsonpatch @@Dir@@/Region-combined/BkgOnly.json @@Dir@@/Region-combined/test.json"
         patchcmds["ATLAS-SUSY-2018-06"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "ERJR_500p0_300p0")'
         patchcmds["ATLAS-SUSY-2018-31"] = 'jsonpatch @@Dir@@/RegionC/BkgOnly.json <(pyhf patchset extract @@Dir@@/RegionC/patchset.json --name "sbottom_1300_1050_60")'
-        patchcmds["ATLAS-SUSY-2019-08"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "C1N2_Wh_hbb_700_400")'
+        patchcmds["ATLAS-SUSY-2019-08"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "C1N2_Wh_hbb_1000_400")'
         patchcmd = patchcmds[self.anaid]
         shortanaid = self.anaid.replace("ATLAS-","")
         Dir = shortanaid+"_likelihoods/"
@@ -165,10 +165,15 @@ class CovMatrixEstimator ( object ):
         self.pprint ( "datasets:", ", ".join ( dsnames ),"..." )
         self.datasetIndices = {}
         self.dataIndexNames = {}
+        self.obsN = {}
+        self.expectedBG = {}
+        self.bgError = {}
         oldNames = {}
         for ds in datasets:
             dsName = ds.dataInfo.dataId
             obsN = ds.dataInfo.observedN
+            expectedBG = ds.dataInfo.expectedBG
+            bgError = ds.dataInfo.bgError
             hadAMatch = False
             for i,d in enumerate(self.data):
                 channelname = self.getChannelName(i,True)
@@ -184,8 +189,16 @@ class CovMatrixEstimator ( object ):
                         self.pprint ( f"{channelname} with {obsN} matching to {dsName}" )
                         self.datasetIndices[dsName] = i
                         self.dataIndexNames[i] = dsName
+                        self.obsN[i] = obsN
+                        self.expectedBG[i] = expectedBG
+                        self.bgError[i] = bgError
                         oldNames[dsName]=channelname
                         hadAMatch = True
+        # sort
+        self.expectedBG = { k:v for k,v in sorted(self.expectedBG.items()) }
+        self.bgError = { k:v for k,v in sorted(self.bgError.items()) }
+        self.obsN = { k:v for k,v in sorted(self.obsN.items()) }
+        
         return #er[0].datasets
 
     def getSkewness ( self ):
@@ -218,7 +231,7 @@ class CovMatrixEstimator ( object ):
             smatrix += "["
             for col in row:
                 if pprint:
-                    smatrix += "%y6.2f, " % col
+                    smatrix += "%6.2f, " % col
                 else:
                     smatrix += "%.3f, " % col
             if len(row)>0:
@@ -250,7 +263,8 @@ class CovMatrixEstimator ( object ):
 
         muSigIndex = model.config.parameters.index ( "mu_SIG" )
         suggestedBounds = model.config.suggested_bounds()
-        suggestedBounds[muSigIndex]=(-10.,10.)
+        msigmax = suggestedBounds[muSigIndex][1]
+        suggestedBounds[muSigIndex]=(-musigmax,musigmax)
 
         result, result_obj = pyhf.infer.mle.fit(
                     data, model, return_uncertainties=True, return_result_obj=True,

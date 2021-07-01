@@ -61,11 +61,15 @@ class Lister:
         if self.add_version:
             dotlessv = version.replace(".","")
         titleplus = ""
-        referToOther = "Link to list of results [including superseded results](ListOfAnalyses%sWithSuperseded)" % dotlessv
+        referToOther = "Link to list of results [including superseded and fastlim results](ListOfAnalyses%sWithSuperseded)" % dotlessv
         if self.includeSuperseded:
             referToOther = "Link to list of results [without superseded results](ListOfAnalyses%s)" % dotlessv
             add=", including superseded results."
             titleplus = "(including superseded results)"
+            if self.includeFastlim:
+                add=", including superseded and fastlim results"
+                titleplus = "(including superseded and fastlim results)"
+                referToOther = "Link to list of results [without superseded and fastlim results](ListOfAnalyses%s)" % dotlessv
         n_maps = 0
         n_results = 0
         n_topos = set()
@@ -267,7 +271,7 @@ class Lister:
             homegrownd = {}
             for i in ana.getTxNames():
                 if not self.ignore and i.validated not in [ True, "n/a", "N/A" ]:
-                    print ( "Error: validated is %s in %s. Don't know how to handle." % ( i.validated, ana.globalInfo.id ) )
+                    print ( "Error: validated is %s in %s. Don't know how to handle. Use '-i' if you want me to skip this issue." % ( i.validated, ana.globalInfo.id ) )
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
