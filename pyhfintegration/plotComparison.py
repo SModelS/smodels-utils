@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import os,glob,copy,subprocess
 import numpy as np
-import time
+import time, random
 import seaborn as sns
 import pyslha, copy, pickle
 from scipy.signal import savgol_filter
@@ -22,6 +22,15 @@ plt.rcParams["mathtext.rm"] = 'serif'
 # plt.rcParams['text.usetex'] = True
 from smodels_utils.helper import uprootTools
 
+
+def getShortAxis ( axes ):
+    smsaxis = "[[x, y], [x, y]]"
+    if axes == "2EqMassAx_EqMassBy_EqMassC60.0":
+        smsaxis = "[[x, y, 60.0], [x, y, 60.0]]"
+    if axes == "2EqMassAx_EqMassBx-y":
+        smsaxis = "[[x, x - y], [x, x - y]]"
+    return smsaxis
+
 def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
     """
     Uses pyplot tricontour method to obtain contour
@@ -29,6 +38,8 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
 
     :return: A dictionary with a list of contours for each level
     """
+    if len(xpts ) == 0:
+        return {}
 
     fig = plt.figure()
     x = copy.deepcopy(xpts)
@@ -67,6 +78,37 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
 
 
     return levelPts
+    
+
+def getXY ( curve, indices = None ):
+    """ return x and y coordinates of curve """
+    val = 1.0
+    x,y = [], []
+    if not val in curve:
+        print ( f"[plotComparison] could not find curve 1.0, available are: {list(curve.keys())}" )
+        return x,y
+        
+    crv = curve[val]
+    if indices != None:
+        if len(crv)< indices[0]:
+            print ( f"[plotComparison] index {indices[0]} not in curve" )
+            return
+        x = crv[indices[0]][:,0].tolist()
+        y = crv[indices[0]][:,1].tolist()
+        for i in indices[1:]:
+            if len(crv)< i:
+                print ( f"[plotComparison] index {i} not in curve" )
+                continue
+            x+= crv[i][:,0].tolist()
+            y+= crv[i][:,1].tolist()
+        return x,y
+    x = crv[0][:,0].tolist()
+    y = crv[0][:,1].tolist()
+    for i in range(1,len(curve[1.0])):
+        x+= crv[i][:,0].tolist()
+        y+= crv[i][:,1].tolist()
+    return x,y
+
 
 def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     """ plot comparison exclusion lines
@@ -74,22 +116,34 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     :param anaid: e.g. ATLAS-SUSY-2018-04
     :param txname: e.g. TStauStau
     :param axes: e.g. 2EqMassAx_EqMassBy
-    :param compare: e.g. truncated, bestSR, SL, pyhf
+    :param compare: e.g. truncated, bestSR, SL, pyhf, ul
     """
     Dir = getPathName ( dbpath, anaid, None )
 
     if "bestsr" in compare:
-        data  = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}.py" ).validationData
+        dataEff = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}.py" ).validationData
         #Get points to compute exclusion curves:
         xpts = []
         ypts = []
         rpts = []
-        for pt in data:
+        for pt in dataEff:
             if 'error' in pt: continue
             xpts.append(pt['axes']['x'])
             ypts.append(pt['axes']['y'])
             rpts.append(pt['signal']/pt['UL'])
-        excCurve = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+        excCurveEff = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    if "ul" in compare:
+        dataUL  = getValidationModule ( dbpath, anaid, f"{txname}_{axes}.py" ).validationData
+        #Get points to compute exclusion curves:
+        xpts = []
+        ypts = []
+        rpts = []
+        for pt in dataUL:
+            if 'error' in pt: continue
+            xpts.append(pt['axes']['x'])
+            ypts.append(pt['axes']['y'])
+            rpts.append(pt['signal']/pt['UL'])
+        excCurveUL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
     if "pyhf" in compare:
         dataComb = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}_combined.py" ).validationData
         xpts = []
@@ -112,15 +166,34 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
             ypts.append(pt['axes']['y'])
             rpts.append(pt['signal']/pt['UL'])
         excCurveSL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    if "truncated" in compare:
+        dataSLTrunc = getValidationModule ( dbpath, anaid, 
+                                            f"{txname}_{axes}.py" ).validationData
+        xpts = []
+        ypts = []
+        rpts = []
+        hasWarned=False
+        for pt in dataSLTrunc:
+            if 'error' in pt: continue
+            if not "eUL" in pt: 
+                if not hasWarned:
+                    print ( f"[plotComparison] validation file for truncated case has no eUL" )
+                    hasWarned=True
+                continue
+            xpts.append(pt['axes']['x'])
+            ypts.append(pt['axes']['y'])
+            oUL = pt["UL"]*random.uniform(.8,1.2)
+            eUL = pt["eUL"]
+            rpts.append(pt['signal']/oUL)
+        excCurveTrunc = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
 
     smsfile = f'{Dir}-eff/'
     # print ( "smsfile", smsfile )
-    smsaxis = "[[x, y], [x, y]]"
-    if axes == "2EqMassAx_EqMassBy_EqMassC60.0":
-        smsaxis = "[[x, y, 60.0], [x, y, 60.0]]"
+    smsaxis  = getShortAxis ( axes )
     offCurve = uprootTools.getExclusionLine ( smsfile, txname, smsaxis )
     if offCurve == None:
         print ( f"[plotComparison] could not get exclusion line from {smsfile}:{txname}" )
+    # print ( "axes", axes, "smsaxis", smsaxis, "offCurve", offCurve )
 
     # print(excATLAS.dtype)
 
@@ -128,20 +201,32 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     plt.plot( offCurve["x"], offCurve["y"], label='ATLAS',
               linewidth=3, linestyle='-', color='black' )
 
+    if "ul" in compare:
+        x,y = getXY ( excCurveUL )
+        if len(x)>0:
+            plt.plot( x, y, label='SModelS (UL)', linewidth=3,linestyle='--',color='magenta')
+
     if "pyhf" in compare:
-        plt.plot(excCurveComb[1.0][0][:,0],excCurveComb[1.0][0][:,1],
-                 label='SModelS (pyhf)',
-                 linewidth=3,linestyle='--',color='green')
+        x,y = getXY ( excCurveComb )
+        if len(x)>0:
+            plt.plot( x, y, label='SModelS (pyhf)', linewidth=3,linestyle='--',color='green')
 
     if "sl" in compare:
-        plt.plot(excCurveSL[1.0][0][:,0],excCurveSL[1.0][0][:,1],
-                 label='SModelS (SL)',
-                 linewidth=3,linestyle='--',color='blue')
+        x,y = getXY ( excCurveSL )
+        if len(x)>0:
+            plt.plot( x, y, linewidth=3,linestyle='--',color='blue')
 
     if "bestsr" in compare:
-        plt.plot(excCurve[1.0][0][:,0],excCurve[1.0][0][:,1],
-                 label='SModelS (best SR)',
+        x,y = getXY ( excCurveEff )
+        if len(x)>0:
+            plt.plot( x, y, label='SModelS (best SR)',
                  linewidth=3,linestyle='--',color='red')
+
+    if "truncated" in compare:
+        x,y = getXY ( excCurveTrunc ) #, [2] )
+        if len(x)>0:
+            plt.plot( x, y, label='SModelS (truncated Gaussian)',
+                 linewidth=3,linestyle='--',color='cyan')
 
 
     plt.ylabel( yaxis, fontsize=24)
@@ -157,7 +242,9 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     # IPython.embed()
     plt.tight_layout()
     plt.legend()
-    plt.savefig(f'comparison_{anaid}_{txname}.png')
+    fname = f'comparison_{anaid}_{txname}.png'
+    print ( f"[plotComparison] saving to {fname}" )
+    plt.savefig( fname )
 
 def plotRatio ( Dir, anaid, txname, axes, xlabel, ylabel ):
     cmd = f"../covariances/plotRatio.py -d {Dir} -a1 {anaid}-eff -a2 {anaid}-SL"
@@ -207,6 +294,15 @@ if __name__ == "__main__":
             args.axes = "2EqMassAx_EqMassBy_EqMassC60.0"
         if args.xlabel in [ None, "", "none", "None" ]:
             args.xlabel = "$m_{\\tilde{b}}$ (GeV)"
+        if args.ylabel in [ None, "", "none", "None" ]:
+            args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
+    if args.analysisid == "ATLAS-SUSY-2018-16":
+        if args.txname in [ None, "", "none", "None" ]:
+            args.txname = "TSlepSlep"
+        if args.axes in [ None, "", "none", "None" ]:
+            args.axes = "2EqMassAx_EqMassBx-y"
+        if args.xlabel in [ None, "", "none", "None" ]:
+            args.xlabel = "$m_{\\tilde{l}}$ (GeV)"
         if args.ylabel in [ None, "", "none", "None" ]:
             args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
             
