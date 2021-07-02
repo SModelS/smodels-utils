@@ -8,16 +8,21 @@
 
 """
 
-def getExclusionLine ( dirname, topo ):
+def getExclusionLine ( dirname, topo, axes = "[[x, y], [x, y]]" ):
+    """ retrieve exclusion line, as dictionary of coordinates 
+    :param dirname: directory to search sms.root for
+    :param axes: e.g. [[x, y], [x, y]]
+    """
     import uproot, os
-    """ retrieve exclusion line, as dictionary of coordinates """
     dirname = os.path.expanduser ( dirname )
-    smsfile = dirname + "sms.root"
+    smsfile = dirname
+    if not smsfile.endswith ( "sms.root" ):
+        smsfile = dirname + "sms.root"
     if not os.path.exists ( smsfile ):
         print ( "[uprootTools] cannot find exclusion line. skip it." )
         return None
     F = uproot.open(smsfile)
-    K = f"{topo}/obsExclusion_[[x, y], [x, y]];1" ## for now we hardcode this
+    K = f"{topo}/obsExclusion_{axes};1" ## for now we hardcode this
     if not K in F:
         print ( f"[uprootTools] cannot find {K} in file. skip it." )
         return None

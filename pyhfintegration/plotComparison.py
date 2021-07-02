@@ -68,75 +68,80 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
 
     return levelPts
 
-def plot( dbpath, anaid, txname, axes, xaxis, yaxis ):
+def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     """ plot comparison exclusion lines
     :param dbpath: path to database, e.g. ~/git/smodels-database/
     :param anaid: e.g. ATLAS-SUSY-2018-04
     :param txname: e.g. TStauStau
     :param axes: e.g. 2EqMassAx_EqMassBy
+    :param compare: e.g. truncated, bestSR, SL, pyhf
     """
-    data  = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}.py" ).validationData
-    dataComb = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}_combined.py" ).validationData
-    dataSL = getValidationModule ( dbpath, anaid+"-SL", f"{txname}_{axes}_combined.py" ).validationData
     Dir = getPathName ( dbpath, anaid, None )
 
-    #Get points to compute exclusion curves:
-    xpts = []
-    ypts = []
-    rpts = []
-    for pt in data:
-        if 'error' in pt: continue
-        xpts.append(pt['axes']['x'])
-        ypts.append(pt['axes']['y'])
-        rpts.append(pt['signal']/pt['UL'])
-    excCurve = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    if "bestsr" in compare:
+        data  = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}.py" ).validationData
+        #Get points to compute exclusion curves:
+        xpts = []
+        ypts = []
+        rpts = []
+        for pt in data:
+            if 'error' in pt: continue
+            xpts.append(pt['axes']['x'])
+            ypts.append(pt['axes']['y'])
+            rpts.append(pt['signal']/pt['UL'])
+        excCurve = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    if "pyhf" in compare:
+        dataComb = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}_combined.py" ).validationData
+        xpts = []
+        ypts = []
+        rpts = []
+        for pt in dataComb:
+            if 'error' in pt: continue
+            xpts.append(pt['axes']['x'])
+            ypts.append(pt['axes']['y'])
+            rpts.append(pt['signal']/pt['UL'])
+        excCurveComb = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
+    if "sl" in compare:
+        dataSL = getValidationModule ( dbpath, anaid+"-SL", f"{txname}_{axes}_combined.py" ).validationData
+        xpts = []
+        ypts = []
+        rpts = []
+        for pt in dataSL:
+            if 'error' in pt: continue
+            xpts.append(pt['axes']['x'])
+            ypts.append(pt['axes']['y'])
+            rpts.append(pt['signal']/pt['UL'])
+        excCurveSL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
 
-    xpts = []
-    ypts = []
-    rpts = []
-    for pt in dataComb:
-        if 'error' in pt: continue
-        xpts.append(pt['axes']['x'])
-        ypts.append(pt['axes']['y'])
-        rpts.append(pt['signal']/pt['UL'])
-    excCurveComb = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
-
-    xpts = []
-    ypts = []
-    rpts = []
-    for pt in dataSL:
-        if 'error' in pt: continue
-        xpts.append(pt['axes']['x'])
-        ypts.append(pt['axes']['y'])
-        rpts.append(pt['signal']/pt['UL'])
-    excCurveSL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
-
-    #Official curve
-    #excATLAS = np.genfromtxt(Dir+'ATLAS-SUSY-2018-04-SL/orig/HEPData-ins1765529-v1-Exclusion_contour_1_(Obs.).csv',delimiter=',',skip_header=9,
-    #                       names=True)
-    #smsfile = f'{Dir}{anaid}-eff/'
     smsfile = f'{Dir}-eff/'
-    print ( "smsfile", smsfile )
-    offCurve = uprootTools.getExclusionLine ( smsfile, txname )
-    # print ( "offCurve", offCurve )
+    # print ( "smsfile", smsfile )
+    smsaxis = "[[x, y], [x, y]]"
+    if axes == "2EqMassAx_EqMassBy_EqMassC60.0":
+        smsaxis = "[[x, y, 60.0], [x, y, 60.0]]"
+    offCurve = uprootTools.getExclusionLine ( smsfile, txname, smsaxis )
+    if offCurve == None:
+        print ( f"[plotComparison] could not get exclusion line from {smsfile}:{txname}" )
 
     # print(excATLAS.dtype)
 
     fig = plt.figure(figsize=(9,6))
-    plt.plot( offCurve["x"], offCurve["y"],label='ATLAS',
-             linewidth=3,linestyle='-',color='black')
+    plt.plot( offCurve["x"], offCurve["y"], label='ATLAS',
+              linewidth=3, linestyle='-', color='black' )
 
-    plt.plot(excCurveComb[1.0][0][:,0],excCurveComb[1.0][0][:,1],
-             label='SModelS (pyhf)',
-             linewidth=3,linestyle='--',color='green')
+    if "pyhf" in compare:
+        plt.plot(excCurveComb[1.0][0][:,0],excCurveComb[1.0][0][:,1],
+                 label='SModelS (pyhf)',
+                 linewidth=3,linestyle='--',color='green')
 
-    plt.plot(excCurveSL[1.0][0][:,0],excCurveSL[1.0][0][:,1],
-             label='SModelS (SL)',
-             linewidth=3,linestyle='--',color='blue')
+    if "sl" in compare:
+        plt.plot(excCurveSL[1.0][0][:,0],excCurveSL[1.0][0][:,1],
+                 label='SModelS (SL)',
+                 linewidth=3,linestyle='--',color='blue')
 
-    plt.plot(excCurve[1.0][0][:,0],excCurve[1.0][0][:,1],
-             label='SModelS (best SR)',
-             linewidth=3,linestyle='--',color='red')
+    if "bestsr" in compare:
+        plt.plot(excCurve[1.0][0][:,0],excCurve[1.0][0][:,1],
+                 label='SModelS (best SR)',
+                 linewidth=3,linestyle='--',color='red')
 
 
     plt.ylabel( yaxis, fontsize=24)
@@ -168,23 +173,51 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="The comparison plotter")
     parser.add_argument('-a','--analysisid', help='specify analysis id [ATLAS-SUSY-2019-08]',
             type=str, default="ATLAS-SUSY-2019-08" )
-    parser.add_argument('-t','--txname', help='specify topolofy [TChiWH]',
-            type=str, default="TChiWH" )
+    parser.add_argument('-t','--txname', help='specify topolofy, none for the analysis default [TChiWH]',
+            type=str, default=None )
     parser.add_argument('-d','--database', help='path to database [~/git/smodels-database]',
             type=str, default="~/git/smodels-database" )
-    parser.add_argument('-A','--axes', help='specify axes [2EqMassAx_EqMassBy]',
-            type=str, default="2EqMassAx_EqMassBy" )
-    parser.add_argument('-x','--xlabel', help='specify label of x axis [$m_{\\tilde{\chi}_1^\pm}$ (GeV)]',
-            type=str, default="$m_{\\tilde{\chi}_1^\pm}$ (GeV)" )
-    parser.add_argument('-y','--ylabel', help='specify label of y axis [$m_{\\tilde{\chi}_1^0}$ (GeV)]',
-            type=str, default="$m_{\\tilde{\chi}_1^0}$ (GeV)" )
+    parser.add_argument('-A','--axes', help='specify axes, none for analysis default [2EqMassAx_EqMassBy]',
+            type=str, default=None )
+    parser.add_argument('-c','--compare', help='specify which versions to compare [bestSR,SL,pyhf]',
+            type=str, default="bestSR,SL,pyhf" )
+    parser.add_argument('-x','--xlabel', help='specify label of x axis, none for analysis default [$m_{\\tilde{\chi}_1^\pm}$ (GeV)]',
+            type=str, default=None )
+    parser.add_argument('-y','--ylabel', help='specify label of y axis, none for analysis default [$m_{\\tilde{\chi}_1^0}$ (GeV)]',
+            type=str, default=None )
+    parser.add_argument('-r','--ratio', help='ratio plot, not comparison plot', 
+                        action="store_true" )
 
     args = parser.parse_args()
+    compare = [ x.lower().strip() for x in args.compare.split ( "," ) ]
+
+    if args.analysisid == "ATLAS-SUSY-2019-08":
+        if args.txname in [ None, "", "none", "None" ]:
+            args.txname = "TChiWH"
+        if args.axes in [ None, "", "none", "None" ]:
+            args.axes = "2EqMassAx_EqMassBy"
+        if args.xlabel in [ None, "", "none", "None" ]:
+            args.xlabel = "$m_{\\tilde{\chi}_1^\pm}$ (GeV)"
+        if args.ylabel in [ None, "", "none", "None" ]:
+            args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
+    if args.analysisid == "ATLAS-SUSY-2018-31":
+        if args.txname in [ None, "", "none", "None" ]:
+            args.txname = "T6bbHH"
+        if args.axes in [ None, "", "none", "None" ]:
+            args.axes = "2EqMassAx_EqMassBy_EqMassC60.0"
+        if args.xlabel in [ None, "", "none", "None" ]:
+            args.xlabel = "$m_{\\tilde{b}}$ (GeV)"
+        if args.ylabel in [ None, "", "none", "None" ]:
+            args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
+            
     if args.xlabel == "stau":
         args.xlabel = "$m_{\\tilde{\tau}}$ (GeV)"
-    plot ( args.database, args.analysisid, args.txname, args.axes, args.xlabel, args.ylabel )
-    plotRatio ( args.database, args.analysisid, args.txname, args.axes, args.xlabel,
-                args.ylabel )
+    if args.ratio:
+        plotRatio ( args.database, args.analysisid, args.txname, args.axes, args.xlabel,
+                    args.ylabel )
+    else:
+        plot ( args.database, args.analysisid, args.txname, args.axes, 
+               args.xlabel, args.ylabel, compare )
     #plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2018-04", "TStauStau",
     #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\tau}}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
     #plot ( "~/git/smodels-database/", "ATLAS-SUSY-2019-08", "TChiWH",
