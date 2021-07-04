@@ -23,6 +23,28 @@ plt.rcParams["mathtext.rm"] = 'serif'
 from smodels_utils.helper import uprootTools
 
 
+def limitFromLimits ( upperLimit, expectedUpperLimit, expected=False ):
+    """ kind of a closure test, from limits compute likelihoods,
+        from which you compute a limit again """
+    return upperLimit * random.uniform ( .9, 1.1 )
+    from smodels.tools.statistics import likelihoodFromLimits
+    llhd, mumax = likelihoodFromLimits ( upperLimit, expectedUpperLimit,
+                                         None, return_mumax = True )
+    totllhd = 0.
+    llhds = []
+    for i in np.arange ( -1.*(mumax+1), (mumax+1.)*4., (mumax+1.) / 10. ):
+        # print ( "compute llhd for", upperLimit, expectedUpperLimit )
+        llhd = likelihoodFromLimits ( upperLimit, expectedUpperLimit, i )
+        if llhd != None:
+            llhds.append ( (i, llhd ) )
+            totllhd += llhd
+    llhds = [ (x[0], x[1] / totllhd ) for x in llhds ]
+    totllhd = 0.
+    for i,llhd in llhds:
+        totllhd += llhd
+        if totllhd > .95:
+            return i
+
 def getShortAxis ( axes ):
     smsaxis = "[[x, y], [x, y]]"
     if axes == "2EqMassAx_EqMassBy_EqMassC60.0":
@@ -78,7 +100,7 @@ def getContour(xpts,ypts,zpts,levels,ylog=False,xlog=False):
 
 
     return levelPts
-    
+
 
 def getXY ( curve, indices = None ):
     """ return x and y coordinates of curve """
@@ -87,7 +109,7 @@ def getXY ( curve, indices = None ):
     if not val in curve:
         print ( f"[plotComparison] could not find curve 1.0, available are: {list(curve.keys())}" )
         return x,y
-        
+
     crv = curve[val]
     if indices != None:
         if len(crv)< indices[0]:
@@ -167,7 +189,7 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
             rpts.append(pt['signal']/pt['UL'])
         excCurveSL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
     if "truncated" in compare:
-        dataSLTrunc = getValidationModule ( dbpath, anaid, 
+        dataSLTrunc = getValidationModule ( dbpath, anaid,
                                             f"{txname}_{axes}.py" ).validationData
         xpts = []
         ypts = []
@@ -175,16 +197,19 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
         hasWarned=False
         for pt in dataSLTrunc:
             if 'error' in pt: continue
-            if not "eUL" in pt: 
+            if not "eUL" in pt:
                 if not hasWarned:
                     print ( f"[plotComparison] validation file for truncated case has no eUL" )
                     hasWarned=True
                 continue
             xpts.append(pt['axes']['x'])
             ypts.append(pt['axes']['y'])
-            oUL = pt["UL"]*random.uniform(.8,1.2)
+            oUL = pt["UL"] # *random.uniform(.8,1.2)
             eUL = pt["eUL"]
-            rpts.append(pt['signal']/oUL)
+            newoUL = limitFromLimits ( oUL, eUL, False )
+            # print ( f"limitFromLimits {oUL} -> {newoUL}" )
+            # neweUL = limitFromLimits ( oUL, eUL, True )
+            rpts.append(pt['signal']/newoUL)
         excCurveTrunc = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
 
     smsfile = f'{Dir}-eff/'
@@ -272,7 +297,7 @@ if __name__ == "__main__":
             type=str, default=None )
     parser.add_argument('-y','--ylabel', help='specify label of y axis, none for analysis default [$m_{\\tilde{\chi}_1^0}$ (GeV)]',
             type=str, default=None )
-    parser.add_argument('-r','--ratio', help='ratio plot, not comparison plot', 
+    parser.add_argument('-r','--ratio', help='ratio plot, not comparison plot',
                         action="store_true" )
 
     args = parser.parse_args()
@@ -305,14 +330,14 @@ if __name__ == "__main__":
             args.xlabel = "$m_{\\tilde{l}}$ (GeV)"
         if args.ylabel in [ None, "", "none", "None" ]:
             args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
-            
+
     if args.xlabel == "stau":
         args.xlabel = "$m_{\\tilde{\tau}}$ (GeV)"
     if args.ratio:
         plotRatio ( args.database, args.analysisid, args.txname, args.axes, args.xlabel,
                     args.ylabel )
     else:
-        plot ( args.database, args.analysisid, args.txname, args.axes, 
+        plot ( args.database, args.analysisid, args.txname, args.axes,
                args.xlabel, args.ylabel, compare )
     #plot ( "~/git/smodels-database/13TeV/ATLAS/", "ATLAS-SUSY-2018-04", "TStauStau",
     #       "2EqMassAx_EqMassBy", '$m_{\\tilde{\tau}}$ (GeV)', '$m_{\\tilde{\chi}_1^0}$ (GeV)' )
