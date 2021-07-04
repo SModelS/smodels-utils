@@ -82,9 +82,8 @@ def main():
     sqrts = [ args.sqrts ]
     if sqrts == [ 0 ]:
         sqrts = [ 8, 13 ]
-    computer = XSecComputer ( reference_xsecs = "only" )
-    computer.computeForBunch ( sqrts, files, unlink=True, lOfromSLHA=True,
-                               tofile=True )
+    computer = XSecComputer ( reference_xsecs = "only", force_overwrite = True )
+    computer.computeForBunch ( sqrts, files, unlink=True, lOfromSLHA=True, tofile=True )
     if args.zip:
         zipThem ( files )
 
