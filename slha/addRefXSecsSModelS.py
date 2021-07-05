@@ -46,15 +46,13 @@ def main():
     argparser.add_argument('-f', '--files', 
                            help = 'file pattern to glob, if tarball given, then unpack [T*.slha]',
                            type=str,default = "T*.slha" )
-    argparser.add_argument('-s', '--sqrts', help="sqrts, in TeV. If 0, then both 8 and 13. [13]",
-                           type=int, default = 13 )
+    argparser.add_argument('-s', '--sqrts', help="sqrts, in TeV. If 0, then both 8 and 13. [0]",
+                           type=int, default = 0 )
     argparser.add_argument('-e', '--ewk', help="specify the ewkino process, hino or wino [wino]",
                            type=str, default = "wino" )
     argparser.add_argument('-d', '--dry_run', help="just pretend",
                             action = "store_true" )
     argparser.add_argument('-r', '--remove', help="remove cruft T*slha files before starting",
-                            action = "store_true" )
-    argparser.add_argument('-z', '--zip', help="zip them up at the end",
                             action = "store_true" )
     args = argparser.parse_args()
     if args.ewk not in [ "hino", "wino" ]:
@@ -84,8 +82,8 @@ def main():
         sqrts = [ 8, 13 ]
     computer = XSecComputer ( reference_xsecs = "only", force_overwrite = True )
     computer.computeForBunch ( sqrts, files, unlink=True, lOfromSLHA=True, tofile=True )
-    if args.zip:
-        zipThem ( files )
+    ## turn them back into a tarball
+    zipThem ( files )
 
 if __name__ == "__main__":
     main()
