@@ -200,14 +200,12 @@ class RefXSecComputer:
             f.write ( line )
         f.close()
 
-    def computeForBunch ( self, sqrtses, inputFiles, unlink,
-                          lOfromSLHA, tofile, pythiacard=None,
-                          ssmultipliers=None   ):
+    def computeForBunch ( self, sqrtses, inputFiles, tofile, ssmultipliers=None ):
         """ compute xsecs for a bunch of slha files """
         for inputFile in inputFiles:
             logger.debug ( "computing xsec for %s" % inputFile )
-            self.computeForOneFile ( sqrtses, inputFile, unlink, lOfromSLHA,
-                      tofile, pythiacard=pythiacard, ssmultipliers = ssmultipliers )
+            self.computeForOneFile ( sqrtses, inputFile, tofile, 
+                                     ssmultipliers = ssmultipliers )
 
     def addCommentToFile ( self, comment, slhaFile ):
         """ add the optional comment to file """
