@@ -24,6 +24,9 @@ from pyfeyn.user import color
 from smodels.tools import runtime
 from smodels.experiment.defaultFinalStates import SMfinalStates as SMList
 from smodels.experiment.defaultFinalStates import BSMfinalStates as BSMList
+from smodels.experiment import defaultFinalStates
+BSMList += [ defaultFinalStates.RHadronD, defaultFinalStates.RHadronU ]
+
 from smodels.theory.model import Model
 
 def cleanConstraint ( inp ):
