@@ -30,25 +30,8 @@ class RefXSecComputer:
     version = "1.0" ## make sure we can trace changes in the tables
 
     def __init__(self ):
-        self._sqrtses = [ 8, 13 ]
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
                                        "morexsecs", "tables" )
-
-    @property
-    def sqrtses(self):
-        """ sqrtses, constructed to take all kinds of inputs """
-        return self._sqrtses 
-
-    @sqrtses.setter
-    def sqrtses(self,value):
-        if type(value) == unum.Unum:
-            self._sqrtses = [ value.asNumber(TeV) ]
-        if type(value) == list:
-            self._sqrtses = []
-            for i in value:
-                if type(i) == unum.Unum:
-                    i = i.asNumber(TeV)
-                self._sqrtses.append ( i )
 
     def checkFileExists(self, inputFile):
         """
@@ -168,8 +151,8 @@ class RefXSecComputer:
             complain = True ## dont complain about already existing xsecs,
             # if we were the ones writing them
             for s in sqrtses:
-                ss = s*TeV
-                self.compute( ss, inputFile, ssmultipliers = ssmultipliers )
+                # ss = s*TeV
+                self.compute( s, inputFile, ssmultipliers = ssmultipliers )
                 if tofile == "all" and hasattr ( self, "loXSecs" ):
                     nXSecs += self.addXSecToFile(self.loXsecs, inputFile, complain )
                     complain = False
@@ -461,14 +444,21 @@ class RefXSecComputer:
         return xsecs,order,comment
 
 if __name__ == "__main__":
+    import argparse
+    argparser = argparse.ArgumentParser( description = "compute xsecs by looking up reference cross sections" )
+    argparser.add_argument ( "-f", "--inputfile",
+            help="slha file [./simplyGluino.slha]",
+            type=str, default="./simplyGluino.slha" )
+    args = argparser.parse_args()
     setLogLevel ( "debug" )
     tool = RefXSecComputer()
     # slhafile = "inputFiles/slha/simplyGluino.slha"
     # slhapath = os.path.join ( smodelsinstallation.installDirectory(), slhafile )
-    slhapath = "./simplyGluino.slha"
-    logger.info ( "slhafile: " + slhapath )
+    # slhapath = "./simplyGluino.slha"
+    slhapath = args.inputfile
+    # logger.info ( "slhafile: " + slhapath )
     # slhafile = "./test.slha"
     # output = tool.compute(slhapath )
-    tool.computeForOneFile ( sqrtses=[13], inputFile = slhapath, tofile=True,
+    tool.computeForOneFile ( sqrtses=[8, 13], inputFile = slhapath, tofile=True,
                              ssmultipliers = { (1000021,1000021):2. } )
     # logger.info ( "done: %s" % output )
