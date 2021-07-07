@@ -275,7 +275,7 @@ class RefXSecComputer:
     def compute( self, sqrts, slhafile, ssmultipliers = None ):
         """
         Retrieve cross sections
-
+        :param sqrts: center of mass energies
         :param slhafile: SLHA file
         :param ssmultipliers: optionally supply signal strengh multipliers,
                 given as dictionary of the tuple of the mothers' pids as keys and
@@ -286,28 +286,28 @@ class RefXSecComputer:
         xsecs = crossSection.XSectionList()
         for channel in channels:
             # obtain xsecs for all masses, but for the given channel
-            for sqrts in self.sqrtses: # FIXME
-                pids = channel["pids"]
-                xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "" )
-                ## interpolate for the mass that we are looking for
-                if xsecall == None:
-                    continue
-                xsec = self.interpolate ( channel["masses"][0], xsecall )
-                if xsec == None:
-                    continue
-                if ssmultipliers != None and ( pids[1], pids[0] ) in ssmultipliers:
-                    pids = ( pids[1], pids[0] )
-                if ssmultipliers != None and pids in ssmultipliers:
-                    ssm = ssmultipliers[pids]
-                    channel["ssm"] = ssm
-                    xsec = xsec * ssm
-                channel["xsec"] = xsec
-                channel["sqrts"] = sqrts
-                channel["order"] = order
-                channel["comment"] = comment
-                orderStr = crossSection.orderToString(order,False,False)
-                channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
-                xsecs.add ( self.dictToXSection ( channel ) )
+            # for sqrts in self.sqrtses: # FIXME
+            pids = channel["pids"]
+            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "" )
+            ## interpolate for the mass that we are looking for
+            if xsecall == None:
+                continue
+            xsec = self.interpolate ( channel["masses"][0], xsecall )
+            if xsec == None:
+                continue
+            if ssmultipliers != None and ( pids[1], pids[0] ) in ssmultipliers:
+                pids = ( pids[1], pids[0] )
+            if ssmultipliers != None and pids in ssmultipliers:
+                ssm = ssmultipliers[pids]
+                channel["ssm"] = ssm
+                xsec = xsec * ssm
+            channel["xsec"] = xsec
+            channel["sqrts"] = sqrts
+            channel["order"] = order
+            channel["comment"] = comment
+            orderStr = crossSection.orderToString(order,False,False)
+            channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
+            xsecs.add ( self.dictToXSection ( channel ) )
         self.xsecs = xsecs
         return xsecs
 
