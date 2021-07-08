@@ -728,6 +728,9 @@ class ValidationPlot():
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
+            if "l_max" in expRes and "likelihood" in expRes:
+                import math
+                Dict["chi2"] = -2*math.log ( expRes["likelihood"] / expRes["l_max"] )
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
                 if self.drawExpected == "auto":
