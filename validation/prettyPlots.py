@@ -58,7 +58,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     """
 
     # Check if data has been defined:
-    tgr, etgr = TGraph2D(), TGraph2D()
+    tgr, etgr, tgrchi2 = TGraph2D(), TGraph2D(), TGraph2D()
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
     logY = yIsLog ( validationPlot )
@@ -130,6 +130,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             if not "error" in pt.keys():
                 tgr.SetPoint(tgr.GetN(), x, y, r)
                 etgr.SetPoint(etgr.GetN(), x, y, rexp )
+                if "chi2" in pt:
+                    tgrchi2.SetPoint(tgrchi2.GetN(), x, y, pt["chi2"] / 3.84 )
     if drawExpected in [ "auto" ]:
         drawExpected = hasExpected
     if tgr.GetN() < 4:
@@ -266,6 +268,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     ecgraphs = {}
     if drawExpected:
         ecgraphs = getContours(etgr,contVals)
+    chi2graphs = getContours ( tgrchi2, [ 1. ] * 3 )
+    # print ( "chi2graphs", chi2graphs )
 
     #Draw temp plot:
     h = tgr.GetHistogram()
@@ -361,6 +365,13 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             gr.SetLineColor(kGray+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
+    if False:
+        for cval,grlist in chi2graphs.items():
+            for gr in grlist:
+                setOptions(gr, Type='official')
+                gr.SetLineColor(kGreen+2)
+                gr.SetLineStyle(5)
+                gr.Draw("L SAME")
     for gr in official:
         # validationPlot.completeGraph ( gr )
         setOptions(gr, Type='official')
