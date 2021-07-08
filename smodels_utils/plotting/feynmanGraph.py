@@ -302,7 +302,7 @@ class Drawer:
                 if hasattr ( branch, "finalState" ):
                     fState = branch.finalState
                 if hasattr ( element, "getFinalStates" ):
-                    fState = str ( element.getFinalStates()[ct] )
+                    fState = str ( element.getFinalStates()[len(branches)-ct-1] )
                 c = color.rgb.black
                 s = "scalar"
                 colors = { "MET": color.rgb.black, "HSCP": color.rgb.red, "RHadronG": color.rgb.red,
