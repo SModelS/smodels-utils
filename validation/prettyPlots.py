@@ -365,7 +365,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             gr.SetLineColor(kGray+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
-    if False:
+    if False and chi2graphs != None: # False:
         for cval,grlist in chi2graphs.items():
             for gr in grlist:
                 setOptions(gr, Type='official')
@@ -394,7 +394,10 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     ltx.SetTextFont(42)
     ltx2 = ltx.Clone()
     ltx2.SetTextAlign(31)
-    txStr = validationPlot.txName +': '+prettyTxname(validationPlot.txName,outputtype="root")
+    pName = prettyTxname(validationPlot.txName, outputtype="root" )
+    if pName == None:
+        pName = "define {validationPlot.txName} in prettyDescriptions"
+    txStr = validationPlot.txName +': '+pName
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
@@ -510,6 +513,13 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
             hasExclLines = True
             added = True
+    if chi2graphs != None:
+        for cval,grlist in chi2graphs.items():
+            if not grlist:
+                continue
+            if cval == 1.0:
+                leg.AddEntry(grlist[0],"exclusion (chi2)","L")
+                hasExclLines = True
     added = False
     for gr in expectedOfficialCurves:
         if 'xclusion_' in gr.GetTitle():

@@ -650,7 +650,7 @@ def getContours(tgraph,contVals):
     """
 
     if tgraph.GetN() == 0:
-        logger.info("No excluded points found for %s" %tgr.GetName())
+        logger.info("No excluded points found for %s" %tgraph.GetName())
         return None
 
     cVals = sorted(contVals)
