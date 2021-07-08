@@ -196,8 +196,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         br = c.find("<BR")
         constr = c[:br].replace("`","")
         cmd += ' -c "%s"' % constr
-        if txname == "T5Disp":
-            cmd += ' -L "[[0],[0]]"'
+        #if txname == "T5Disp":
+        #    cmd += ' -L "[[0],[0]]"'
         cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
         cmd += " -o %s" % feynfile
         print ( "[smsDictionary]", cmd )
