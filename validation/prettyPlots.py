@@ -41,7 +41,7 @@ gStyle.SetNumberContours(999)
 
 def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                       looseness = 1.2, style = "", legendplacement = "top right",
-                      drawExpected = True ):
+                      drawExpected = True, drawChi2Line = False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
@@ -54,6 +54,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     :param legendplacement: placement of legend. One of:
                       "automatic", "top right", "top left"
     :param drawExpected: if true, then draw also lines for expected limits
+    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     :return: TCanvas object containing the plot
     """
 
@@ -365,7 +366,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             gr.SetLineColor(kGray+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
-    if False and chi2graphs != None: # False:
+    if drawChi2Line and chi2graphs != None: # False:
         for cval,grlist in chi2graphs.items():
             for gr in grlist:
                 setOptions(gr, Type='official')
@@ -513,12 +514,12 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
             hasExclLines = True
             added = True
-    if chi2graphs != None:
+    if drawChi2Line and chi2graphs != None:
         for cval,grlist in chi2graphs.items():
             if not grlist:
                 continue
             if cval == 1.0:
-                leg.AddEntry(grlist[0],"exclusion (chi2)","L")
+                leg.AddEntry(grlist[0],"exclusion (#chi^{2})","L")
                 hasExclLines = True
     added = False
     for gr in expectedOfficialCurves:

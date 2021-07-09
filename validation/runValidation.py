@@ -23,7 +23,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   preliminary=False, combine=False,pngAlso = False,
                   weightedAgreementFactor = True, model = "default",
                   style = "", legendplacement = "top right", drawExpected = True,
-                  namedTarball = None, keep = False ):
+                  namedTarball = None, keep = False, drawChi2Line = False ):
     """
     Creates a validation plot and saves its output.
 
@@ -62,6 +62,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param drawExpected: if True, then draw also expected lines
     :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :param keep: keep temporary directories
+    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     :return: True on success
     """
 
@@ -72,7 +73,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     combine=combine, weightedAgreementFactor = weightedAgreementFactor,
                     model = model, style= style, legendplacement = legendplacement,
                     drawExpected = drawExpected, namedTarball = namedTarball,
-                    keep = keep )
+                    keep = keep, drawChi2Line = drawChi2Line )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -113,7 +114,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
         i.Destructor()
     return True
 
-def run ( expResList, axis, pretty, generateData, keep ):
+def run ( expResList, axis, pretty, generateData, keep, drawChi2Line ):
     """
     Loop over experimental results and validate plots
     :param axis: Plot only for these axes. If none, get axes from sms.root
@@ -121,6 +122,7 @@ def run ( expResList, axis, pretty, generateData, keep ):
     :param generateData: if true, generate dpy dict file, if "ondemand" only generate
                          if needed.
     :param keep: keep temporary directories
+    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     """
     for expRes in expResList:
         expt0 = time.time()
@@ -181,7 +183,7 @@ def run ( expResList, axis, pretty, generateData, keep ):
                                  combine, pngAlso, weightedAgreementFactor, model,
                                  style = style, legendplacement = legendplacement,
                                  drawExpected = drawExpected, namedTarball =namedTarball,
-                                 keep = keep )
+                                 keep = keep, drawChi2Line = drawChi2Line )
                         doGenerate = False
             else:
                 from sympy import var
@@ -203,7 +205,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
         weightedAgreementFactor=True, model = "default", axis=None,
         force_load = None, style = "", legendplacement = "top right",
-        drawExpected = True, keep = False ):
+        drawExpected = True, keep = False, drawChi2Line = False ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -242,6 +244,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param legendplacement: placement of legend: one of:
                             top left, top right, auto [top right]
     :param keep: keep temporary directories
+    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     """
 
     if not os.path.isdir(databasePath):
@@ -279,7 +282,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    run ( expResList, axis, pretty, generateData, keep )
+    run ( expResList, axis, pretty, generateData, keep, drawChi2Line )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
@@ -400,6 +403,7 @@ if __name__ == "__main__":
     weightedAgreementFactor = False ## do we weight the points for the agreement factor?
     model = "default" ## which model to use (default = mssm)
     drawExpected = "auto"
+    drawChi2Line = False
     if parser.has_section("options"):
         if parser.has_option("options","ncpus"):
             ncpus = parser.getint("options","ncpus")
@@ -413,6 +417,8 @@ if __name__ == "__main__":
             pngAlso = parser.getboolean("options", "pngPlots" )
         if parser.has_option("options","axis"):
             axis = parser.get("options","axis" )
+        if parser.has_option("options","drawChi2Line"):
+            drawChi2Line = parser.getboolean("options","drawChi2Line" )
         if parser.has_option("options","prettyPlots"):
             spretty = parser.get("options", "prettyPlots" ).lower()
             if spretty in [ "true", "yes", "1" ]:
@@ -446,4 +452,5 @@ if __name__ == "__main__":
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
          extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
-         force_load, style, legendplacement, drawExpected, args.keep )
+         force_load, style, legendplacement, drawExpected, args.keep,
+         drawChi2Line )

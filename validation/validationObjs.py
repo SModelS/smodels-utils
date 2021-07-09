@@ -55,12 +55,13 @@ class ValidationPlot():
                  kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default",
                  style = "", legendplacement = "top right", drawExpected = True,
-                 namedTarball = None, keep = False ):
+                 namedTarball = None, keep = False, drawChi2Line = False ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
+        :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
         """
 
         self.expRes = copy.deepcopy(ExptRes)
@@ -71,6 +72,7 @@ class ValidationPlot():
         self.axes = Axes.strip()
         self.style = style
         self.drawExpected = drawExpected
+        self.drawChi2Line = drawChi2Line
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
@@ -804,7 +806,8 @@ class ValidationPlot():
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
                    preliminary=self.preliminary, style = self.style,
-                   legendplacement = self.legendplacement, drawExpected = self.drawExpected )
+                   legendplacement = self.legendplacement, drawExpected = self.drawExpected,
+                   drawChi2Line = self.drawChi2Line )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
