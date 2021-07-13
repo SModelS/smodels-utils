@@ -326,6 +326,8 @@ class ValidationPlot():
             if weighted:
                 w = self.computeWeight ( [x,y] )
             if y==0: y=1.5 ## to avoid points sitting on the line
+            if point["UL"]==None:
+                continue
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
             really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
