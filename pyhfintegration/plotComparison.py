@@ -239,7 +239,8 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     if "sl" in compare:
         x,y = getXY ( excCurveSL )
         if len(x)>0:
-            plt.plot( x, y, linewidth=3,linestyle='--',color='blue')
+            plt.plot( x, y, linewidth=3,linestyle='--',
+                      label="SModelS (simplify)", color='blue' )
 
     if "bestsr" in compare:
         x,y = getXY ( excCurveEff )
@@ -302,37 +303,49 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     compare = [ x.lower().strip() for x in args.compare.split ( "," ) ]
+    nones = [ None, "", "none", "None" ]
 
-    if args.analysisid == "ATLAS-SUSY-2019-08":
-        if args.txname in [ None, "", "none", "None" ]:
-            args.txname = "TChiWH"
-        if args.axes in [ None, "", "none", "None" ]:
-            args.axes = "2EqMassAx_EqMassBy"
-        if args.xlabel in [ None, "", "none", "None" ]:
-            args.xlabel = "$m_{\\tilde{\chi}_1^\pm}$ (GeV)"
-        if args.ylabel in [ None, "", "none", "None" ]:
-            args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
-    if args.analysisid == "ATLAS-SUSY-2018-31":
-        if args.txname in [ None, "", "none", "None" ]:
-            args.txname = "T6bbHH"
-        if args.axes in [ None, "", "none", "None" ]:
-            args.axes = "2EqMassAx_EqMassBy_EqMassC60.0"
-        if args.xlabel in [ None, "", "none", "None" ]:
-            args.xlabel = "$m_{\\tilde{b}}$ (GeV)"
-        if args.ylabel in [ None, "", "none", "None" ]:
-            args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
-    if args.analysisid == "ATLAS-SUSY-2018-16":
-        if args.txname in [ None, "", "none", "None" ]:
-            args.txname = "TSlepSlep"
-        if args.axes in [ None, "", "none", "None" ]:
-            args.axes = "2EqMassAx_EqMassBx-y"
-        if args.xlabel in [ None, "", "none", "None" ]:
-            args.xlabel = "$m_{\\tilde{l}}$ (GeV)"
-        if args.ylabel in [ None, "", "none", "None" ]:
-            args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
+    defaultTxnames = { "ATLAS-SUSY-2019-08": "TChiWH",
+                       "ATLAS-SUSY-2018-31": "T6bbHH",
+                       "ATLAS-SUSY-2018-16": "TSlepSlep",
+                       "ATLAS-SUSY-2018-04": "TStauStau",
+                       "ATLAS-SUSY-2018-06": "TChiWZ",
+    }
+
+    defaultAxes = { "ATLAS-SUSY-2019-08": "2EqMassAx_EqMassBy",
+                    "ATLAS-SUSY-2018-31": "2EqMassAx_EqMassBy_EqMassC60.0",
+                    "ATLAS-SUSY-2018-16": "2EqMassAx_EqMassBx-y",
+                    "ATLAS-SUSY-2018-04": "2EqMassAx_EqMassBy",
+                    "ATLAS-SUSY-2018-06": "2EqMassAx_EqMassBy",
+    }
+
+    defaultXLabels = { "ATLAS-SUSY-2019-08": "$m_{\\tilde{\chi}_1^\pm}$ (GeV)",
+                       "ATLAS-SUSY-2018-31": "$m_{\\tilde{b}}$ (GeV)",
+                       "ATLAS-SUSY-2018-16": "$m_{\\tilde{l}}$ (GeV)",
+                       "ATLAS-SUSY-2018-04": "$m_{\\tilde{\\tau}}$ (GeV)",
+                       "ATLAS-SUSY-2018-06": "$m_{\\tilde{\chi}_1^\pm}$ (GeV)",
+    }
+
+    defaultYLabels = { "ATLAS-SUSY-2019-08": "N1",
+                       "ATLAS-SUSY-2018-31": "N1",
+                       "ATLAS-SUSY-2018-16": "N1",
+                       "ATLAS-SUSY-2018-04": "N1",
+                       "ATLAS-SUSY-2018-06": "N1",
+    }
+
+    if args.analysisid in defaultTxnames and args.txname in nones:
+        args.txname = defaultTxnames[args.analysisid]
+    if args.analysisid in defaultAxes and args.axes in nones:
+        args.axes = defaultAxes[args.analysisid]
+    if args.analysisid in defaultXLabels and args.xlabel in nones:
+        args.xlabel = defaultXLabels[args.analysisid]
+    if args.analysisid in defaultYLabels and args.ylabel in nones:
+        args.ylabel = defaultYLabels[args.analysisid]
 
     if args.xlabel == "stau":
         args.xlabel = "$m_{\\tilde{\tau}}$ (GeV)"
+    if args.ylabel == "N1":
+        args.ylabel = "$m_{\\tilde{\chi}_1^0}$ (GeV)"
     if args.ratio:
         plotRatio ( args.database, args.analysisid, args.txname, args.axes, args.xlabel,
                     args.ylabel )
