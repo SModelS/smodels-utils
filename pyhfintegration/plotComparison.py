@@ -173,6 +173,7 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
         rpts = []
         for pt in dataComb:
             if 'error' in pt: continue
+            if pt["UL"]==None: continue
             xpts.append(pt['axes']['x'])
             ypts.append(pt['axes']['y'])
             rpts.append(pt['signal']/pt['UL'])
