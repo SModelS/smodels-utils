@@ -23,9 +23,7 @@ def create( slhafile ):
     print ( "creating pickle, adding", slhafile )
     ## Load the official database
     db = Database( "../../smodels-database/" )
-    tokens = slhafile.replace("TChiWH_","").replace(".slha","")
-    tokens = tokens.split("_")
-    masses = list ( map ( int, tokens ) )[:2]
+    masses = getMasses ( slhafile )
 
     # Select desired result:
     resultID = ["ATLAS-SUSY-2019-08"]
