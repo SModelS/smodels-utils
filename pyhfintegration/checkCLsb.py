@@ -13,10 +13,16 @@ import pickle, random, os, glob, time
 import numpy as np
 from matplotlib import pyplot as plt
 
+def getMasses ( slhafile ):
+    tokens = slhafile.replace("TChiWH_","").replace(".slha","")
+    tokens = tokens.split("_")
+    masses = tuple( map ( int, tokens ) )[:2]
+    return masses
+
 def create( slhafile ):
     print ( "creating pickle, adding", slhafile )
     ## Load the official database
-    db = Database( "../smodels-database/" )
+    db = Database( "../../smodels-database/" )
     tokens = slhafile.replace("TChiWH_","").replace(".slha","")
     tokens = tokens.split("_")
     masses = list ( map ( int, tokens ) )[:2]
@@ -77,8 +83,10 @@ def writeAll():
     """ use glob to write for all TChiWH """
     files = glob.glob ( "TChiWH_*slha" )
     random.shuffle ( files )
-    files = files[:6]
+    files = files[:30]
     for f in files:
+        D=read()
+        masses = getMasses ( f )
         p = os.fork ()
         if p != 0:
             create ( f )
