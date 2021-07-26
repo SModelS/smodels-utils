@@ -412,7 +412,7 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         return
     subprocess.run ( cmd )
 
-def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
+def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang ):
     """ bake with the given recipe
     :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
@@ -420,6 +420,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     :param mass: eg [(50,4500,200),(50,4500,200),(0.)]
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
+    :param cutlang: if true, then use cutlang
     """
     with open ( "%s/smodels-utils/clip/bake_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
@@ -437,6 +438,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
             args += ' --analyses "%s"' % analyses
             args += ' -t %s' % topo
             args += ' -p %d' % nprc
+            if cutlang:
+                args += ' --cutlang'
             f.write ( line.replace("@@ARGS@@", args ) )
         f.close()
     with open ( "run_bakery_template.sh", "rt" ) as f:
@@ -581,6 +584,8 @@ def main():
                         type=str, default="" )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking ["cms_sus_16_033,atlas_susy_2016_07"]',
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
+    argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
+                             action='store_true' )
     argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
@@ -615,6 +620,7 @@ def main():
         logCall ()
 
     totjobs = 0
+    print ( "[slurm.py] rundirs", rundirs )
 
     for rd,rundir in enumerate(rundirs):
         seed = args.seed
@@ -654,7 +660,7 @@ def main():
                 args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
             for i in range(args.nbakes):
                 bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-                       args.nprocesses, rundir )
+                       args.nprocesses, rundir, args.cutlang )
                 totjobs += 1
         if args.clean:
             clean_dirs( rundir, clean_all = False )
