@@ -56,6 +56,8 @@ def getStatsEMBaked ( ):
     f=open( statsfile )
     g=eval(f.read())
     f.close()
+    from smodels_utils.dataPreparation import databaseCreation
+    databaseCreation.DatabaseCreator.tempInputFiles.append ( statsfile )
     return g
 
 class Locker(object):

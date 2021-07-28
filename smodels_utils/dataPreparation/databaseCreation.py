@@ -10,6 +10,7 @@
 
 """
 
+import copy
 import sys
 import os
 import shutil
@@ -35,6 +36,7 @@ except Exception as e:
     pass
 
 class DatabaseCreator(list):
+    tempInputFiles = []
 
     """
     list-object
@@ -64,6 +66,7 @@ class DatabaseCreator(list):
         self.metaInfo = None
         self.base = os.getcwd() + '/'
         self.allInputFiles = []
+        self.copyTempCruftFiles()
         self.origPath = './orig/'
         self.validationPath = './validation/'
         self.smsrootFile = "./sms.root"
@@ -246,8 +249,14 @@ class DatabaseCreator(list):
         self._checkType()
         self._reportCruftFiles()
 
+    def copyTempCruftFiles ( self ):
+        for i in DatabaseCreator.tempInputFiles:
+            self.allInputFiles.append ( i )
+        DatabaseCreator.tempInputFiles = []
+
     def getUsedFiles ( self ):
         ret = []
+        self.copyTempCruftFiles()
         for x in self.allInputFiles:
             if type(x) in [ str ]:
                 ret.append ( x.replace("orig/","") )
