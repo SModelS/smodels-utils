@@ -21,6 +21,11 @@ def remove( fname, keep):
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 
+def mkdir ( Dir ):
+    if not os.path.exists ( Dir ):
+        cmd = f"mkdir {Dir}"
+        subprocess.getoutput ( cmd )
+
 def startServer ( rundir, dry_run, time ):
     """ start the database server in <rundir> """
     with open ( "%s/smodels-utils/clip/server_template.sh" % codedir, "rt" ) as f:
@@ -600,6 +605,7 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     if args.pythia8:
         a = subprocess.getoutput ( "ls /users/wolfgan.waltenberger/git/smodels/smodels/lib/pythia8/pythia8226/share/Pythia8/xmldoc" )
         print ( a )
@@ -626,6 +632,7 @@ def main():
     print ( "[slurm.py] rundirs", rundirs )
 
     for rd,rundir in enumerate(rundirs):
+        mkdir ( rundir )
         seed = args.seed
         if seed != None and seed > 0 and rd>0:
             seed += (len(nprocesses)+1)*rd
