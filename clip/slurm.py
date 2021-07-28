@@ -21,6 +21,11 @@ def remove( fname, keep):
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 
+def mkdir ( Dir ):
+    if not os.path.exists ( Dir ):
+        cmd = f"mkdir {Dir}"
+        subprocess.getoutput ( cmd )
+
 def startServer ( rundir, dry_run, time ):
     """ start the database server in <rundir> """
     with open ( "%s/smodels-utils/clip/server_template.sh" % codedir, "rt" ) as f:
@@ -412,7 +417,8 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         return
     subprocess.run ( cmd )
 
-def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang ):
+def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
+           time ):
     """ bake with the given recipe
     :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
@@ -421,6 +427,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang ):
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     :param cutlang: if true, then use cutlang
+    :param time: time in hours
     """
     with open ( "%s/smodels-utils/clip/bake_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
@@ -438,6 +445,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang ):
             args += ' --analyses "%s"' % analyses
             args += ' -t %s' % topo
             args += ' -p %d' % nprc
+            args += ' -b'
             if cutlang:
                 args += ' --cutlang'
             f.write ( line.replace("@@ARGS@@", args ) )
@@ -456,9 +464,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang ):
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
     # cmd += [ "--ntasks-per-node", str(nproc) ]
-    cmd += [ tmpfile ]
     if True:
-        time = 48
+        # time = 48
         qos = "c_short"
         if time > 48:
             qos = "c_long"
@@ -468,6 +475,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang ):
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     ram = 2
     cmd += [ "--mem", "%dG" % ram ]
+    cmd += [ tmpfile ]
     # cmd += [ "./run_bakery.sh" ]
     print ("[slurm.py] baking %s" % " ".join ( cmd ) )
     if not dry_run:
@@ -597,6 +605,7 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     if args.pythia8:
         a = subprocess.getoutput ( "ls /users/wolfgan.waltenberger/git/smodels/smodels/lib/pythia8/pythia8226/share/Pythia8/xmldoc" )
         print ( a )
@@ -623,6 +632,7 @@ def main():
     print ( "[slurm.py] rundirs", rundirs )
 
     for rd,rundir in enumerate(rundirs):
+        mkdir ( rundir )
         seed = args.seed
         if seed != None and seed > 0 and rd>0:
             seed += (len(nprocesses)+1)*rd
@@ -660,7 +670,7 @@ def main():
                 args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
             for i in range(args.nbakes):
                 bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-                       args.nprocesses, rundir, args.cutlang )
+                       args.nprocesses, rundir, args.cutlang, args.time )
                 totjobs += 1
         if args.clean:
             clean_dirs( rundir, clean_all = False )

@@ -23,7 +23,10 @@ def create( slhafile ):
     print ( "creating pickle, adding", slhafile )
     ## Load the official database
     db = Database( "../../smodels-database/" )
+    D = read()
     masses = getMasses ( slhafile )
+    if masses in D:
+        return
 
     # Select desired result:
     resultID = ["ATLAS-SUSY-2019-08"]
@@ -39,23 +42,30 @@ def create( slhafile ):
     #xvalues += list ( np.arange( 1.04, 3., .1 ) )
     xvalues = list ( np.arange(.0 , 2.5, .01 ) )
     for ctr,i in enumerate(xvalues):
-        print ( f"computing {i}: {ctr}/{len(xvalues)}" )
+        print ( f"computing {i}: {ctr+1}/{len(xvalues)}" )
         llhds[i] = tpreds[1].getLikelihood(i)
     print ( "llhds", llhds )
     print ( "tpreds", tpreds )
     D = read()
     D[ masses ] = { "preds": tpreds, "llhds": llhds }
+    print ( "writing out", masses )
     with open ( "cache.pcl", "wb" ) as f:
         pickle.dump ( D, f )
-    f.close()
+        f.close()
 
 def read():
     if not os.path.exists ( "cache.pcl" ):
         return {}
-    with open ( "cache.pcl", "rb" ) as f:
-        D = pickle.load ( f )
-    f.close()
-    return D
+    for i in range(10):
+        try:
+            with open ( "cache.pcl", "rb" ) as f:
+                D = pickle.load ( f )
+                f.close()
+            return D
+        except Exception as e:
+            time.sleep(5.)
+    raise Exception ( "stop this" )
+
 
 def get95CLsb ( llhds ):
     """ from the dictionary of llhds find the 95% CLsb values """
@@ -81,15 +91,15 @@ def writeAll():
     """ use glob to write for all TChiWH """
     files = glob.glob ( "TChiWH_*slha" )
     random.shuffle ( files )
-    files = files[:30]
+    files = files[:10]
     for f in files:
         D=read()
         masses = getMasses ( f )
         p = os.fork ()
-        if p != 0:
+        if p == 0:
             create ( f )
         else:
-            time.sleep ( 150. )
+            time.sleep ( 5. )
  
 if __name__ == "__main__":
     writeAll()
