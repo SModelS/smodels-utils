@@ -473,8 +473,9 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
             qos = "c_medium"
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    ram = 2
+    ram = 3 * nproc
     cmd += [ "--mem", "%dG" % ram ]
+    cmd += [ "-c", "%d" % (int(nproc)*3) ]
     cmd += [ tmpfile ]
     # cmd += [ "./run_bakery.sh" ]
     print ("[slurm.py] baking %s" % " ".join ( cmd ) )
