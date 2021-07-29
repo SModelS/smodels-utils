@@ -5,7 +5,7 @@
 from smodels.experiment.databaseObj import Database
 
 def combineResults( database, anas_and_SRs : dict, debug=False ):
-    """ combine the <anas_and_SRs> results in <database> 
+    """ combine the <anas_and_SRs> results in <database>
         to a single result with a diagonal covariance matrix
     :param anas_and_SRs: dictionary with analysis Ids as keys and lists of signal regions
         as values, e.g.: { "ATLAS-SUSY-2016-07": ['2j_Meff_1200', '2j_Meff_1600'] }
@@ -58,7 +58,7 @@ def combineResults( database, anas_and_SRs : dict, debug=False ):
     return er
 
 def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
-    """ remove fastlim results from database db 
+    """ remove fastlim results from database db
     :param db: database object
     :param invert: if True, then invert the selection, keep *only* fastlim
     :param picklefile: picklefile to store fastlim-free database
@@ -67,7 +67,7 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
             "results" )
     filtered = filterFastLimFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
-    dbverold = dbverold.replace(".","")
+    # dbverold = dbverold.replace(".","")
     db.subs[0].expResultList = filtered
     if invert:
         db.subs[0].txt_meta.databaseVersion = "fastlim" + dbverold
@@ -136,27 +136,32 @@ def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
         ret.append ( ana )
     return ret
 
-def removeSupersededFromDB ( db ):
-    """ remove superseded results from database db """
+def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
+    """ remove superseded results from database db
+    :param invert: if true, then create superseded-only db
+    :returns: database but stores it also in temp.pcl
+    """
     print ( "[databaseManipulations] before removal of superseded",len(db.expResultList),\
             "results" )
     filteredList = []
     ctr = 0
-    superseded, supers, newers = [], [], []
+    supers, newers = [], []
     olders = db.expResultList
-    supers = filterSupersededFromList ( olders )
+    supers = filterSupersededFromList ( olders, invert )
     db.subs[0].expResultList = supers
     db.subs = [ db.subs[0] ]
     print ( "[databaseManipulations] after removal of superseded",len(db.expResultList),
             "results" )
-    db.createBinaryFile( "temp.pcl" )
+    if invert:
+        db.subs[0].databaseVersion = "superseded" + db.databaseVersion
+    db.createBinaryFile( outfile )
     return db
 
 def filterSupersededFromList ( expRes, invert=False ):
     """ filter out superseded results,
     :returns: list of non-superseded results if invert is False, else return
               list of superseded results
-    """ 
+    """
     ret, ss = [], []
     for er in expRes:
         if hasattr ( er.globalInfo, "supersededBy" ):

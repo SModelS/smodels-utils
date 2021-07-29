@@ -76,6 +76,9 @@ def main():
         d = Database ( dbname, discard_zeroes=discard_zeroes )
         dbver = d.databaseVersion
         if args.remove_superseded:
+            e = copy.deepcopy( d )
+            e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
+            print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
             d = removeSupersededFromDB ( d )
         if args.remove_fastlim:
             e = copy.deepcopy( d )
@@ -85,6 +88,7 @@ def main():
             d.pcl_meta.hasFastLim = False
             d.txt_meta.hasFastLim = False
             d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+            e.subs[0].databaseVersion="fastlim"+dbver
         if not args.skipValidation:
             validated, which = checkNonValidated(d)
             has_nonValidated = validated
