@@ -10,6 +10,8 @@ from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.databaseManipulations import \
     removeFastLimFromDB, removeSupersededFromDB
 import smodels
+import hashlib
+import pathlib
 import colorama
 if sys.version[0]=="2":
     import commands as CMD
@@ -22,6 +24,8 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+def _getSHA1 ( filename ):                                                                         return hashlib.sha1( pathlib.Path(filename).read_bytes() ).hexdigest()
 
 eosdir = "/eos/project/s/smodels/www/database/"
 
@@ -141,11 +145,7 @@ def main():
     print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(pclfilename).st_size ) )
     f=open ( infofile, "w" )
     mtime = time.asctime(time.localtime(meta.mtime))
-    import hashlib
-    def file_as_bytes(file):
-        with file:
-            return file.read()
-    sha = hashlib.sha1 ( file_as_bytes(open(pclfilename, 'rb'))).hexdigest()
+    sha = _getSHA1 ( pclfilename )
     Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(pclfilename).st_size,
              "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename,
              "sha1": sha }
