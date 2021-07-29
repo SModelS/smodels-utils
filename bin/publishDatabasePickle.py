@@ -145,10 +145,10 @@ def main():
     def file_as_bytes(file):
         with file:
             return file.read()
-    sha = hashlib.sha256 ( file_as_bytes(open(pclfilename, 'rb'))).hexdigest()
+    sha = hashlib.sha1 ( file_as_bytes(open(pclfilename, 'rb'))).hexdigest()
     Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(pclfilename).st_size,
              "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename,
-             "sha256": sha }
+             "sha1": sha }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
     if has_nonValidated:
