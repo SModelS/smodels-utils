@@ -622,6 +622,8 @@ def main():
             rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + rundir + "/"
 
     rundirs = glob.glob ( rundir )
+    if rundirs == []:
+        rundirs = [ "./" ]
     rundirs.sort()
     if len(rundirs)>1:
         print ( "[slurm.py] rundirs ", ", ".join ( rundirs ) )
