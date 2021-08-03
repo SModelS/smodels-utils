@@ -3,7 +3,7 @@
 import subprocess, os
 
 def copy():
-    files = [ ".bashrc", ".bash.aliases", ".vimrc", ".tmux.conf" ]
+    files = [ ".bashrc", ".bash.aliases", ".vimrc", ".tmux.conf", ".vim/ftplugin", ".vim/syntax" ]
     for f in files:
         source = "/users/wolfgan.waltenberger/"
         dest = "/scratch-cbe/users/wolfgan.waltenberger/"
