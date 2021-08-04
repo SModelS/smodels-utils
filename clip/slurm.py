@@ -478,7 +478,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
     if not cutlang:
         # ma5 seems to not need much RAM
         ram = 2. * nproc
-        ncpus = int(nproc*2)
+        ncpus = int(nproc*1.5)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
     cmd += [ tmpfile ]
