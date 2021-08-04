@@ -28,7 +28,8 @@ hbar = 6.582119514e-16 # in GeV * ns
 ## so use this feature with great care
 allowMultipleAcceptances = False
 
-errorcounts = { "pathtupleerror": False, "smallerthanzero": False }
+errorcounts = { "pathtupleerror": False, "smallerthanzero": False,
+                "wildcards": False }
 
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
@@ -663,6 +664,18 @@ class DataHandler(object):
         has_waited = False
         if waitFor == None:
             has_waited = True
+
+        if "*" in path or "?" in path:
+            import glob
+            tmp = glob.glob ( path )
+            if len(tmp)==1:
+                if not errorcounts["wildcards"]:
+                    print ( "[dataHandlerObjects] wildcards in filename. they are unique. use them." )
+                    errorcounts["wildcards"]=True
+                path = tmp[0]
+            else:
+                print ( f"[dataHandlerObjects] wildcards in filename. they are not unique, found {len(tmp)} matches for {path}. fix it!" )
+                sys.exit(-1)
 
         with open( path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
