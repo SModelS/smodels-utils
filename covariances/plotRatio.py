@@ -131,7 +131,7 @@ def getExclusionLine ( line ):
       y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax, 
+def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
            xlabel, ylabel ):
     """ plot.
     :param vmin: the minimum z value, e.g. .5
@@ -140,10 +140,10 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     :param ylabel: label on y axis, default: m$_{LSP}$ [GeV]
     """
     if xlabel in [  None, "" ]:
-       xlabel = "m$_{mother}$ [GeV]" 
+       xlabel = "m$_{mother}$ [GeV]"
     if ylabel in [  None, "" ]:
-       ylabel = "m$_{LSP}$ [GeV]" 
-        
+       ylabel = "m$_{LSP}$ [GeV]"
+
     hasDebPkg()
     uls={}
     nsr=""
@@ -239,7 +239,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     #    vmax = 0.5
     if vmax > 5.:
         opts = { "norm": matplotlib.colors.LogNorm()  }
-        
+
     scatter = plt.scatter ( x, y, s=0.35, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
@@ -344,8 +344,8 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     ypos = .2*max(y)
     if logScale:
         ypos = min(y)*30.
-    plt.text ( max(x)+.30*(max(x)-min(x)), ypos, 
-               "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), 
+    plt.text ( max(x)+.40*(max(x)-min(x)), ypos,
+               "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ),
                fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
@@ -362,7 +362,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     plt.clf()
 
 def writeMDPage( copy ):
-    """ write the markdown page that lists all plots """ 
+    """ write the markdown page that lists all plots """
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
         f.write ( "# ratio plots on the upper limits\n" )
@@ -373,6 +373,7 @@ def writeMDPage( copy ):
         files = glob.glob("ratios_*.png" )
         files += glob.glob("atlas_*png" )
         files += glob.glob("cms_*png" )
+        files += glob.glob("bestSR_*png" )
         files.sort()
         ctr = 0
         t0=time.time()-1592000000
@@ -385,7 +386,7 @@ def writeMDPage( copy ):
             f.write ( " | |\n" )
         f.close()
     if copy:
-        cmd = "cp ratioplots.md ../../smodels.github.io/ratioplots/README.md" 
+        cmd = "cp ratioplots.md ../../smodels.github.io/ratioplots/README.md"
         subprocess.getoutput ( cmd )
 
 def main():
@@ -424,14 +425,14 @@ def main():
     argparser.add_argument ( "-Z", "--zmax",
             help="maximum Z value, 0. means auto [1.7]",
             type=float, default=1.7 )
-    argparser.add_argument ( "-d", "--dbpath", 
+    argparser.add_argument ( "-d", "--dbpath",
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
-            help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
-    argparser.add_argument ( "-p", "--push", action="store_true", 
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+    argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
     if not args.validationfile1.endswith ( ".py" ):
