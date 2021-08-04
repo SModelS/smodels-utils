@@ -473,9 +473,14 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
             qos = "c_medium"
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    ram = 3.5 * nproc ## in GB 
+    ram = 3.2 * nproc ## in GB 
+    ncpus = int(nproc*2)
+    if not cutlang:
+        # ma5 seems to not need much RAM
+        ram = 2. * nproc
+        ncpus = int(nproc*2)
     cmd += [ "--mem", "%dG" % ram ]
-    cmd += [ "-c", "%d" % (int(nproc)*2) ] # allow for 200% per process
+    cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
     cmd += [ tmpfile ]
     # cmd += [ "./run_bakery.sh" ]
     print ("[slurm.py] baking %s" % " ".join ( cmd ) )
