@@ -255,6 +255,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         if not validationPlot.txName in ds_txnames:
             continue
         dataId = str(dataset.dataInfo.dataId)
+        if len(dataId)>11:
+            dataId = dataId[:8]+" ... "
         subtitle+=dataId+", "
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
