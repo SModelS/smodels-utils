@@ -473,12 +473,12 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
             qos = "c_medium"
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    ram = 3.2 * nproc ## in GB 
-    ncpus = int(nproc*2)
-    if not cutlang:
-        # ma5 seems to not need much RAM
-        ram = 2. * nproc
-        ncpus = int(nproc*1.5)
+    # ma5 seems to not need much RAM
+    ram = 2.5 * nproc
+    ncpus = int(nproc*1.5)
+    if cutlang:
+        ram = 3.2 * nproc ## in GB
+        ncpus = int(nproc*2)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
     cmd += [ tmpfile ]
