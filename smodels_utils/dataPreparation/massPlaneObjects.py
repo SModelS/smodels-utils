@@ -183,7 +183,7 @@ class MassPlane(object):
             self.addSource(dataLabel,dataFile, dataFormat,
                            objectName, index, unit, coordinate, scale)
 
-    def addSource(self,dataLabel,dataFile,dataFormat, objectName=None,index=None,
+    def addSource(self,dataLabel,dataFile,dataFormat=None, objectName=None,index=None,
                   unit=None,coordinateMap=None,scale=None):
         """
         Defines a single data sources for the plane.
@@ -192,8 +192,9 @@ class MassPlane(object):
                           possible data labels are defined in allowedDataLabels
                           (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
         :param dataFile: Strings with the file path to the data file.
-        :param dataFormat: Strings with the file format for the data file.
-
+        :param dataFormat: Strings with the file format for the data file, e.g.
+                           root, csv, embaked. If none, then file extension is
+                           format.
         :param objectName: String with the object name stored in root-file or cMacro
         :param index: Index for objects in listOfPrimitives of ROOT.TCanvas
         :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...)
@@ -202,6 +203,10 @@ class MassPlane(object):
         :param scale: Float to reescale the data
 
         """
+        if dataFormat == None:
+            p1 = dataFile.rfind ( "." )
+            dataFormat = dataFile[p1+1:]
+            print ( f"[massPlaneObjects] setting format to '{dataFormat}'" )
         self.allInputFiles.append ( dataFile )
 
         dimensions = len(self.xvars)
