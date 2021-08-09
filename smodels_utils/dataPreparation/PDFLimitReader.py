@@ -80,9 +80,14 @@ class PDFLimitReader():
     def get_axis_dict( self ):
         import minecart
         # open pdf file
-        pdffile = open(self.data['name']+'.pdf', 'rb')
+        fname = self.data["name"]+".pdf"
+        pdffile = open(fname, 'rb')
         doc = minecart.Document(pdffile)
         page = doc.get_page(0)
+        if page == None:
+            line = f"cannot retrieve first page of {fname}. Aborting."
+            print ( f"[PDFLimitReader] error: {line}" )
+            raise RuntimeError( line )
 
         #Find colored box shapes that share the maximal x coordinate. That's the color legend (z_axis)
         colored_shapes = []
