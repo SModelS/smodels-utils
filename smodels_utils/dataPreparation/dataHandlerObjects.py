@@ -473,6 +473,9 @@ class DataHandler(object):
         :yield: list with values as float, one float for every column
         """
         from .PDFLimitReader import PDFLimitReader
+        if self.index == None or type(self.index) != str:
+            print ( "[dataHandlerObjects] index is None. For pdf files, use index to specify axis ranges, e.g. index='x[100,260];y[8,50];z[.1,100,true]'" )
+            sys.exit(-1)
         tokens = self.index.split(";")
         ## boundaries in the plot!
         lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
@@ -1161,6 +1164,9 @@ class ExclusionHandler(DataHandler):
         #print ( "[dataHandlerObjects] here!!", self.path  )
         #print ( )
         from .PDFLimitReader import PDFLimitReader
+        if self.index == None or type(self.index) != str:
+            print ( "[dataHandlerObjects] index is None. For pdf files, use index to specify axis ranges, e.g. index='x[100,260];y[8,50];z[.1,100,true]'" )
+            sys.exit(-1)
         tokens = self.index.split(";")
         ## boundaries in the plot!
         lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
