@@ -341,10 +341,11 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
     a1, a2 = label1, label2
-    ypos = .2*max(y)
+    ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
-    plt.text ( max(x)+.40*(max(x)-min(x)), ypos,
+    xpos = max(x)+.40*(max(x)-min(x))
+    plt.text ( xpos, ypos,
                "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ),
                fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
