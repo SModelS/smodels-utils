@@ -67,8 +67,9 @@ class RefXSecComputer:
             logger.error( line )
             raise SModelSError( line )
         if len(xsecs) == 0:
-            logger.warning("No cross sections available.")
+            logger.warning(f"No cross sections available for {slhafile}.")
             return False
+        print ( "I have xsecs!!", xsecs )
         # Check if file already contain cross section blocks
         xSectionList = crossSection.getXsecFromSLHAFile(slhafile)
         if xSectionList and complain:
@@ -303,7 +304,7 @@ class RefXSecComputer:
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015 )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ))
+        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ) )
         ## production modes to add that needs to different particles
         ## to be unfrozen
         associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ) }
@@ -319,11 +320,12 @@ class RefXSecComputer:
             if pid in oppositesignmodes:
                 channels.append ( { "pids": (-pid,pid), "masses": ( mass, mass ) } )
             for jpid, jmass in masses.items():
-                if pid == jpid:
+                if pid >= jpid:
                     continue
-                if (pid,jpid) in associateproductions:
-                    channels.append ( { "pids": (pid,jpid), "masses": (mass, jmass ) } )
-
+                if (pid,jpid) in associateproduction:
+                    channels.append ( { "pids": (jpid,pid), "masses": (jmass, mass ) } )
+        if len(channels)==0:
+            print ( f"[refxsecComputer] found no open channels for {slhafile}" )
         return channels
 
     def interpolate ( self, mass, xsecs ):
@@ -392,7 +394,10 @@ class RefXSecComputer:
             order = NLL
             pb = False
             isEWK=True
-        if pid1 in [ 1000023 ] and pid2 in [ 1000023 ]:
+        if pid1 in [ 1000023 ] and pid2 in [ 1000022 ]:
+            if sqrts == 8:
+                print ( "[refxsecComputer] asking for N2 N1 production for 8 TeV. we only have 13 tev" )
+                return None, None, None
             filename = "xsecN2N1p%d.txt" % sqrts
             order = NLL
             pb = False

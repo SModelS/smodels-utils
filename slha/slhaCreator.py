@@ -105,7 +105,8 @@ class TemplateFile(object):
                         self.tags.append(t)
 
     def createFileFor( self,ptDict,slhaname=None,computeXsecs=False,
-                       massesInFileName = False, nevents = 10000, sqrts=None ):
+                       massesInFileName = False, nevents = 10000, sqrts=None,
+                       reference_xsecs = False ):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values in pt.
@@ -117,6 +118,7 @@ class TemplateFile(object):
         :param massesInFileName: if True, put the masses in the name of the slha file (eg T5WW_2200_1300_60_2200_1300_60.slha)
         :param nevents: how many events to generate
         :param sqrts: sqrtses (list)
+        :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
         if sqrts == None:
@@ -180,7 +182,7 @@ class TemplateFile(object):
         return slhaname
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
-                        nevents = 10000, sqrts = None ):
+                        nevents = 10000, sqrts = None, reference_xsecs=False ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -189,6 +191,7 @@ class TemplateFile(object):
                     (e.g. [{'x' : x1, 'y' : y1}, {'x' : x2, 'y' : y2}, ...])
         :param nevents: number of events to generate
         :param sqrts: sqrtses (list)
+        :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
         :return: list of SLHA file names generated.
         """
                 
@@ -202,29 +205,36 @@ class TemplateFile(object):
                                       sqrts=sqrts )
             if slhafile:
                 slhafiles.append(slhafile)
-        #Compute cross-sections
-        if computeXsecs:
-            if self.pythiaCard:
-                xargs = argparse.Namespace()
-                xargs.pythia6 = False
-                xargs.pythia8 = True
-                if self.pythiaVersion == 6:
-                    xargs.pythia6 = True
-                    xargs.pythia8 = False
-                xargs.sqrts = sqrts
-                xargs.ncpus = self.nprocesses
-                xargs.nevents = nevents
-                xargs.pythiacard = self.pythiaCard
-                xargs.NLL = True
-                xargs.tofile = False
-                xargs.alltofile = True
-                xargs.keep=False
-                xargs.LOfromSLHA = False
-                xargs.query = False
-                xargs.colors = None
-                xargs.verbosity = 30
-                xargs.filename = self.tempdir
-                xsecComputer.main(xargs)
+
+            #Compute cross-sections
+            if computeXsecs:
+                if self.pythiaCard:
+                    xargs = argparse.Namespace()
+                    xargs.pythia6 = False
+                    xargs.pythia8 = True
+                    if self.pythiaVersion == 6:
+                        xargs.pythia6 = True
+                        xargs.pythia8 = False
+                    xargs.sqrts = sqrts
+                    xargs.ncpus = self.nprocesses
+                    xargs.nevents = nevents
+                    xargs.pythiacard = self.pythiaCard
+                    xargs.NLL = True
+                    xargs.tofile = False
+                    xargs.alltofile = True
+                    xargs.keep=False
+                    xargs.LOfromSLHA = False
+                    xargs.query = False
+                    xargs.colors = None
+                    xargs.verbosity = 30
+                    xargs.filename = self.tempdir
+                    xsecComputer.main(xargs)
+            if reference_xsecs:
+                from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
+                computer = RefXSecComputer()
+                print ( "sqrts", sqrts, slhafile )
+                computer.computeForOneFile ( sqrts[0], slhafile, True, \
+                          comment = "produced via slhaCreator" )
 
         return slhafiles
 
@@ -415,6 +425,8 @@ if __name__ == "__main__":
         help="keep temp files")
     argparser.add_argument('-X', '--xsecs', action='store_true',
         help="compute cross sections via pythia")
+    argparser.add_argument('-r', '--reference_xsecs', action='store_true',
+        help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -461,7 +473,7 @@ if __name__ == "__main__":
         sqrts = [ 8, 13 ]
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs, 
                        massesInFileName=True, nevents=args.nevents, 
-                       sqrts = [ sqrts ] )
+                       sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     print ( "Now build new tarball in %s/" % newtemp )
