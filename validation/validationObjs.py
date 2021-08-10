@@ -290,7 +290,7 @@ class ValidationPlot():
         import ROOT
         curve = self.getOfficialCurves( get_all = False, expected = False )
         if curve == []:
-            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
+            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes.globalInfo.id,self.txName,self.axes  ) )
             return 1.0
         curve = curve[0]
         if isinstance(curve,list):
