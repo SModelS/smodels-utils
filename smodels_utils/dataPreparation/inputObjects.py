@@ -426,6 +426,8 @@ class DataSetInput(Locker):
         """
 
         for key,val in attributes.items():
+            if type(val) == type(None):
+                continue
             if key in [ "upperLimit", "expectedUpperLimit" ] and type(val) == type(fb):
                 val = str(val.asNumber(fb))+"*fb"
             setattr(self,key,val)
