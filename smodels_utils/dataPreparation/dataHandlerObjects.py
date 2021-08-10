@@ -643,6 +643,8 @@ class DataHandler(object):
                 for k in key:
                     if type(k) == str and "\\tilde" in k:
                         hasLatexStuff = True
+                    if type(k) == str and "$" in k:
+                        hasLatexStuff = True
                 if hasLatexStuff:
                     continue
                 keys.add ( key )
@@ -683,7 +685,7 @@ class DataHandler(object):
             tmp = glob.glob ( path )
             if len(tmp)==1:
                 if not errorcounts["wildcards"]:
-                    print ( "[dataHandlerObjects] wildcards in filename. they are unique. use them." )
+                    print ( f"[dataHandlerObjects] wildcards in filename: {path}. they are unique. use them." )
                     errorcounts["wildcards"]=True
                 path = tmp[0]
             else:
