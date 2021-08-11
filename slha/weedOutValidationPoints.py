@@ -51,9 +51,16 @@ def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
-            if dcur > d1[idx-1] - mgaps[idx-1]:
+            mgap = mgaps[idx-1]
+            if mgap > 0. and dcur > ( d1[idx-1] - mgap ):
                 if verbose:
-                    print ( "Massgap not fulfilled %s" % d1 )
+                    print ( "Minimum massgap not fulfilled %s" % d1 )
+                keepIt[sd1]=False
+                nWeeded+=1
+                break
+            if mgap < 0. and dcur < ( d1[idx-1] + mgap ):
+                if verbose:
+                    print ( "Maximum massgap not fulfilled %s" % d1 )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
@@ -104,7 +111,7 @@ def main():
             help='minimum tolerated distance (GeV) from other point [24.]',
             default = 24., type = float )
     ap.add_argument ( '-g', '--massgaps', 
-            help='require mass gaps, e.g. (0,80.). Used to make sure that some particle is onshell. E.g. (0,80.) is to acertain that a W in the second cascade is onshell. Auto means, guess from topo name. [auto]',
+            help='require mass gaps, e.g. (0,80.). Used to make sure that some particle is onshell. E.g. (0,80.) is to acertain that a W in the second cascade is onshell. Auto means, guess from topo name. Negative number are maximum gaps, e.g. (0,-80) forces a W in the second cascade to be off-shell [auto]',
             default = "auto", type = str )
     ap.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     ap.add_argument ( '--keep60s', help='keep points with m(LSP)=60 GeV', 
@@ -129,8 +136,10 @@ def main():
     t0=time.time()
     massgaps = args.massgaps
     if massgaps == "auto":
-        if args.topo in [ "T6WW", "T6WZh", "T5WW", "T5ZZ", "T6ZZ", "T5WZh" ]:
+        if args.topo in [ "T6WW", "T6WZh", "T5WW", "T5ZZ", "T6ZZ", "T5WZh", "T6bbWW" ]:
             massgaps = "(0.,80.)"
+        if args.topo in [ "T6bbWWoff" ]:
+            massgaps = "(0.,-80.)"
     if massgaps == "auto": ## still?
         massgaps = ""
     keep60s = args.keep60s # False
