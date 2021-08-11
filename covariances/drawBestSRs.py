@@ -27,9 +27,11 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def draw( validationfile, max_x, max_y ):
+def draw( validationfile, max_x, max_y, outputfile ):
     """ plot.
     :param validationfile: T*.py file
+    :param outputfile: name of outputfile, using @a and @t to stand for analysis and topology,
+                       respectively
     """
     warnings.simplefilter("ignore")
     anaId = "???"
@@ -48,8 +50,10 @@ def draw( validationfile, max_x, max_y ):
         hasAgg = "_agg"
     if p2 < 1:
         p2 = validationfile.find("-agg" )
-    anaId = validationfile[p+1+len(coll):p2]
     p3 = validationfile.find("validation/")
+    if p2 < 1:
+        p2 = p3-1
+    anaId = validationfile[p+1+len(coll):p2]
     p4 = validationfile[p3+10:].find("_")
     topo = validationfile[p3+10+1:p3+p4+10]
     line = uprootTools.getExclusionLine ( validationfile[:p3], topo )
@@ -174,7 +178,8 @@ def draw( validationfile, max_x, max_y ):
     if "andre" in validationfile:
         andre="-andre"
     plt.title ( "Best Signal Region, %s (%s)" % ( anaId+andre, topo ) )
-    fname = "bestSR_%s%s_%s%s.png" % ( anaId, andre, topo, hasAgg )
+    fname = outputfile.replace( "@a", anaId ).replace( "@t", topo )
+    #fname = "bestSR_%s%s_%s%s.png" % ( anaId, andre, topo, hasAgg )
     print ( "[drawBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
@@ -230,6 +235,9 @@ if __name__ == "__main__":
     argparser.add_argument ( "-v", "--validationfile",
             help="validation file [T2tt_2EqMassAx_EqMassBy.py]",
             type=str, default="T2tt_2EqMassAx_EqMassBy.py" )
+    argparser.add_argument ( "-o", "--outputfile",
+            help="output file, replacing @a and @t with analysis and topo name [bestSR_@a_@t.png]",
+            type=str, default="./bestSR_@a_@t.png" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
@@ -244,14 +252,14 @@ if __name__ == "__main__":
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
                 print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
-                fname = draw( ipath, args.max_x, args.max_y )
+                fname = draw( ipath, args.max_x, args.max_y, args.outputfile )
                 if args.copy:
                     cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
                     o = subprocess.getoutput ( cmd )
                     print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
         ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-        fname = draw( ipath, args.max_x, args.max_y )
+        fname = draw( ipath, args.max_x, args.max_y, args.outputfile )
         if args.copy:
             cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
             o = subprocess.getoutput ( cmd )
