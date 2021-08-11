@@ -225,12 +225,19 @@ class PDFLimitReader():
  
 if __name__ == "__main__":
     data =  {
-        'name': 'CMS-SUS-17-001_Figure_011-a', 
-        'x':{'limits': (150, 1200)},
-        'y':{'limits': (0, 600)},
-        'z':{'limits': (10**-3, 10**2), 'log':True},
+        'name': 'CMS-SUS-16-048_Figure_005',
+        'x':{'limits': (100, 260)},
+        'y':{'limits': (7.5, 50)},
+        'z':{'limits': (10**-1, 10**2), 'log':True},
         }
 
     r = PDFLimitReader( data )
+    for i in [ "obsExclusion", "expExclusion", "obsExclusionP1", "obsExclusionM1",
+               "expExclusionP1", "expExclusionM1" ]:
+        f=open ( f"TChiWZoff_{i}.csv", "wt" )
+        pts = r.exclusions[i]
+        for pt in pts:
+            f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
+        f.close()
     # get the limit at the bottom right
-    print (r.get_limit(1199,0))
+    # print (r.get_limit(1199,0))
