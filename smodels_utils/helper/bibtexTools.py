@@ -163,36 +163,74 @@ class BibtexWriter:
         source=source.replace ( "AlphaT", "$\\alpha_{T}$" )
         return source
 
-    def bibtexFromInspire ( self, url, label=None ):
+    def bibtexFromInspireOld ( self, url, label=None ):
         """ get the bibtex entry from an inspire record """
+        #if "record" in url:
+        url = url.replace("record","api/literature" )
         self.log ( " * fetching from Inspire: %s" % url )
         ## hack for now, this solution wont work in the future
-        self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
-        url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
-        fullurl =  url+"/export/hx"
+        # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
+        # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
+        fullurl =  url # +"/export/hx"
         # return fullurl
-        f=urlopen (fullurl)
-        lines = f.readlines()
-        f.close()
-        ret = []
-        hasBegin = False
-        for line in lines:
-            line=line.decode()
-            if "pagebodystripemiddle" in line:
-                hasBegin=True
-                continue
-            if not hasBegin:
-                continue
-            if "</pre>" in line:
-                hasBegin=False
-                continue
-            ret.append ( line )
-            if "@article" in line and label != None:
-                ret.append ( '      label          = "%s",\n' % label )
-            if "@techreport" in line and label != None:
-                ret.append ( '      label          = "%s",\n' % label )
-        r =  str(self.replaceUnicodes ( "".join ( ret )  ))
-        return r
+        try:
+            f=urlopen (fullurl)
+            lines = f.readlines()
+            f.close()
+            ret = []
+            hasBegin = False
+            for line in lines:
+                print ( "line", line )
+                line=line.decode()
+                if "pagebodystripemiddle" in line:
+                    hasBegin=True
+                    continue
+                if not hasBegin:
+                    continue
+                if "</pre>" in line:
+                    hasBegin=False
+                    continue
+                ret.append ( line )
+                if "@article" in line and label != None:
+                    ret.append ( '      label          = "%s",\n' % label )
+                if "@techreport" in line and label != None:
+                    ret.append ( '      label          = "%s",\n' % label )
+            r =  str(self.replaceUnicodes ( "".join ( ret )  ))
+            sys.exit(-1)
+            return r
+        except urllib.error.HTTPError as e:
+            print ( f"[bibtexTools] Caught: {e}" )
+            sys.exit(-1)
+        except Exception as e:
+            print ( f"[bibtexTools] Caught: {e}" )
+            sys.exit(-1)
+
+    def bibtexFromInspire ( self, url, label=None ):
+        """ get the bibtex entry from an inspire record """
+        #if "record" in url:
+        url = url.replace("record","api/literature" )
+        self.log ( " * fetching from Inspire: %s" % url )
+        ## hack for now, this solution wont work in the future
+        # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
+        # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
+        fullurl =  url +"?format=bibtex"
+        # return fullurl
+        try:
+            f=urlopen (fullurl)
+            txt = f.read()
+            f.close()
+            txt = txt.decode("utf-8")
+            if label != None:
+                p1 = txt.rfind("}")
+                txt = txt[:p1-1] + ',\n    label = "%s"\n}\n' % label
+                print ( "txt", txt )
+            return txt
+        except urllib.error.HTTPError as e:
+            print ( f"[bibtexTools] Caught: {e}" )
+            sys.exit(-1)
+        except Exception as e:
+            print ( f"[bibtexTools] Caught: {e}" )
+            sys.exit(-1)
 
     def fetchInspireUrl ( self, l, label ):
         """ from line in html page, extract the inspire url """
@@ -318,7 +356,8 @@ class BibtexWriter:
         """ given analysis id <Id>, determine sqrts """
         year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
         year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
-        year = year.replace("CONF-","")
+        year = year.replace("CONF-","").replace("CERN-EP-","")
+        year = year.replace("CERN-PH-EP-","")
         p1 = year.find("-")
         year = year[:p1]
         if year.startswith("20"):
@@ -411,6 +450,10 @@ class BibtexWriter:
         self.res = self.db.getExpResults ()
         ids = set()
         for expRes in self.res:
+            if hasattr ( expRes.globalInfo, "contact") :
+                contact = expRes.globalInfo.contact
+                if "fastlim" in contact.lower():
+                    continue
             ID = expRes.globalInfo.id.replace("-eff","").replace("-agg","")
             if ID in ids:
                 continue
@@ -499,7 +542,7 @@ class BibtexWriter:
             label = labels [ ID ]
             sqrts = self.getSqrts ( label )
             coll = self.findCollaboration ( label )
-            if label in self.stats[coll]:
+            if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
             ret += "%s, " % ID
         ret = str(ret[:-2]+"}")
@@ -585,6 +628,9 @@ class BibtexWriter:
         for coll,anas in self.stats.items():
             for ana,values in anas.items():
                 f.write ( "D['%s']['%s'] = %s\n" % ( coll, ana, str(values) ) )
+                if not "bibtex" in values:
+                    print ( f"cannot find bibtex in {values} for {ana}" )
+                    continue
                 bibtex = values["bibtex"]
                 ivalues = values
                 ivalues.pop ( "bibtex" )
