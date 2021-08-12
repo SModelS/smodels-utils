@@ -17,6 +17,8 @@ import bibtexparser
 import urllib, colorama, subprocess
 import os, sys
 from smodels.experiment.databaseObj import Database
+from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
+         filterSupersededFromList
 
 if sys.version[0]=="2":
     reload(sys)
@@ -447,13 +449,10 @@ class BibtexWriter:
         home = os.environ["HOME"]
         # self.db = Database ( "%s/git/smodels-database" % home )
         self.db = Database ( self.databasepath )
-        self.res = self.db.getExpResults ()
+        res = self.db.getExpResults ()
+        self.res = filterSupersededFromList ( filterFastLimFromList ( res ) )
         ids = set()
         for expRes in self.res:
-            if hasattr ( expRes.globalInfo, "contact") :
-                contact = expRes.globalInfo.contact
-                if "fastlim" in contact.lower():
-                    continue
             ID = expRes.globalInfo.id.replace("-eff","").replace("-agg","")
             if ID in ids:
                 continue
