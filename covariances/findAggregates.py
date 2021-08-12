@@ -25,8 +25,8 @@ def useNames ( aggs, datasets ):
 
 def main():
     ap = argparse.ArgumentParser( description= "find aggregate regions based on correlations." )
-    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-16-050]",
-                    default = "CMS-SUS-16-050", type=str )
+    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-006]",
+                    default = "CMS-SUS-19-006", type=str )
     ap.add_argument('-c','--corr',help="correlation needed to cluster [.5]",
                     default = .5, type=float )
     ap.add_argument( '-t','--takeout',help="dont cluster these SRs", nargs="*",
