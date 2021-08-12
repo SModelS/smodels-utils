@@ -110,7 +110,9 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
         if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
             ctr+=1
             if ctr < 4:
-                print ( "removing", gI.id )
+                print ( "[databaseManipulations] removing fastlim", gI.id )
+            if ctr == 4:
+                print ( "                        .... (and a few more) ... " )
             fastlimList.append ( e )
         else:
             filteredList.append ( e )
@@ -187,10 +189,15 @@ def createSupersededPickle ( infile, outfile = "./superseded.pcl", filtered = Fa
         if hasattr ( gI, "supersedes" ):
             superseded.append ( gI.supersedes )
 
+    ctsuper = 0
     for er in olders:
         gI = er.globalInfo
         if hasattr ( gI, "supersededBy" ): # or gI.id in superseded:
-            print ( "[databaseManipulations]",gI.id, "is superseded" )
+            ctsuper += 1
+            if ctsuper < 4:
+                print ( "[databaseManipulations]",gI.id, "is superseded" )
+            if ctsuper == 4:
+                print ( "                        .... (and a few more) ... " )
             newers.append ( er )
         elif hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
                 fastlims.append ( er )
