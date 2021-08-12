@@ -76,7 +76,8 @@ class Lister:
         n_anas = set()
         for expR in self.expRes:
             self.stats.add ( expR.id() )
-            n_anas.add ( expR.id() )
+            expId = expR.id().replace("-agg","")
+            n_anas.add ( expId )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )
             for d in expR.getValuesFor ( "dataId" ):
