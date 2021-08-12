@@ -1183,16 +1183,23 @@ class ExclusionHandler(DataHandler):
         ## boundaries in the plot!
         lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
         logz = True ## are the colors in log scale?
-        for token in tokens:
+        yIsDelta = False
+        for cttoken,token in enumerate(tokens):
             axis = token[0]
             lims = token[1:].replace("[","").replace("]","")
             lims = lims.split(",")
+            hasMatched = False
             if len(lims)>2:
+                if "delta" in lims[2].lower() and cttoken == 1:
+                    yIsDelta = True
+                    hasMatched = True
                 if lims[2].lower() in [ "log", "true" ]:
                     logz = True
+                    hasMatched = True
                 elif lims[2].lower() in [ "false", "nolog" ]:
                     logz = False
-                else:
+                    hasMatched = True
+                if not hasMatched:
                     print ( "Error: do not understand %s. I expected log or nolog" % lims[2] )
             lims = tuple ( map ( float, lims[:2] ) )
             lim[axis]=lims
