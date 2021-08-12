@@ -101,7 +101,7 @@ class DatabaseCreator(list):
                     shutil.rmtree ( f )
 
         if len(dirs)>0:
-            logger.warning ( "removed old dataset dirs: %s" % ", ".join(dirs) )
+            self.timeStamp ( "removing old dataset dirs: %s" % ", ".join(dirs) )
 
     def timeStamp(self, txt, c="info"):
         color, reset = '\x1b[32m', '\x1b[39m'
@@ -540,7 +540,7 @@ class DatabaseCreator(list):
             if os.path.isdir(path):
                 shutil.rmtree(path)
 
-        self.timeStamp ( "cleaned up in %s " % self.base )
+        self.timeStamp ( "cleaning up in %s " % self.base )
 
     def _createValidationFolder(self):
         """
@@ -571,7 +571,7 @@ class DatabaseCreator(list):
             smsRoot.cd(dirname)
             fullname = "%s/%s" % (dirname, exclusion.GetName())
             if smsRoot.Get(fullname) == None:
-                self.timeStamp("add %s with %d points to sms.root" % \
+                self.timeStamp("adding %s with %d points to sms.root" % \
                         (fullname, exclusion.GetN()), "info")
                 exclusion.Write()
         smsRoot.Close()
@@ -621,7 +621,7 @@ class DatabaseCreator(list):
                                        self.assignmentOperator, value)
 
         infoFile = open(self.base + path, 'w')
-        self.timeStamp ( "writing %s" % path )
+        self.timeStamp ( "writing info file %s" % path )
         infoFile.write(content)
         infoFile.close()
 
@@ -687,6 +687,7 @@ class DatabaseCreator(list):
                         value = value.replace( "  ", " " )
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
+        onlyZeroes = False
         for attr in obj.infoAttr:
             if not attr in dataLabels:
                 continue
@@ -695,16 +696,23 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
+            if attr == "efficiencyMap":
+                onlyZeroes = True
+                for v in value:
+                    if v[-1] > 0.:
+                        onlyZeroes = False
             value = self._formatData(value,dataType=attr,n=obj.round_to)
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
-
+        if onlyZeroes:
+            self.timeStamp ( f"{name} has only zeroes. drop {path}.", c="error" )
+            return
 
         if len(content)>5000000:
             logger.error ( "%s has more than 5M characters! This will likely " \
                            "create problems!" % path )
         infoFile = open(self.base + path, 'w')
-        self.timeStamp ( "writing %s" % path )
+        self.timeStamp ( "writing tx file %s" % path )
         infoFile.write(content)
         infoFile.close()
 
