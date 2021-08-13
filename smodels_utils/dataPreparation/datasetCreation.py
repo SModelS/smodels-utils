@@ -72,10 +72,10 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         aggregated += ds.dataId + ";"
         originalSRs.append ( ds.dataId )
     newds.observedN = observedN
-    newds.expectedBG = expectedBG
-    oldBgError = math.sqrt ( bgError2 )
+    newds.expectedBG = round ( expectedBG, 5 )
+    oldBgError = round ( math.sqrt ( bgError2 ), 5 )
     bgErr2 = covariance[aggidx][aggidx]
-    newds.bgError = math.sqrt ( bgErr2 )
+    newds.bgError = round ( math.sqrt ( bgErr2 ), 5 )
     if ( oldBgError - newds.bgError ) / newds.bgError > .2:
         logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( aggidx+1, oldBgError, newds.bgError  ) )
         if oldBgError > newds.bgError:
@@ -374,9 +374,9 @@ class DatasetsFromEmbaked:
         ctwarning = 0
         for key,values in self.stats.items():
             if not key.startswith ( self.sr_prefix ):
-                if ctwarning < 3:
-                    print ( f"[datasetCreation] skipping {key} -- region name not begin with '{self.sr_prefix}'" )
-                if ctwarning == 4:
+                if ctwarning < 2:
+                    print ( f"[datasetCreation] skipping {key} -- region name does not begin with '{self.sr_prefix}'" )
+                if ctwarning == 3:
                     print ( f"[datasetCreation] .... (skipping a few more)" )
                 ctwarning+=1
                 continue

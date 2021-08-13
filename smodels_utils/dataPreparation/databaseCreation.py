@@ -602,6 +602,8 @@ class DatabaseCreator(list):
                     sys.exit()
 
         for attr in obj.infoAttr:
+            if attr == "originalSRs": # thats only for aggregation
+                continue
             if not hasattr(obj, attr) and \
             not hasattr(obj.__class__, attr) : continue
             value = getattr(obj,attr)
