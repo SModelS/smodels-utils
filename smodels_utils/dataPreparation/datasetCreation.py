@@ -116,11 +116,11 @@ def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="a
     return datasets
 
 def createAggregationOrder ( aggregate, aggprefix="ar" ):
-    """ create the right string for the datasetOrder field in globalInfo 
+    """ create the right string for the datasetOrder field in globalInfo
     :param aggprefix: prefix used for aggregate regions, e.g. "ar"
     """
     dsorder = [ '"%s%d"' % (aggprefix, x+1) for x in range(len(aggregate)) ]
-    ret = ",".join(dsorder) 
+    ret = ",".join(dsorder)
     return ret
 
 class DatasetsFromLatex:
@@ -319,6 +319,109 @@ class DatasetsFromRoot:
         dataset.setInfo ( dataType="efficiencyMap", dataId = name, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
         return dataset
+
+class DatasetsFromEmbaked:
+    """
+    class that produces the datasets from embaked info
+    """
+    def __init__( self, statsfile="orig/statsEM.py", max_datasets=None, ds_name="SR",
+                  aggregate = None, aggprefix="AR" ):
+        """
+        :param statsfile: file with all stats info
+        :param max_datasets: consider a maximum of n datasets
+        :param ds_name: name of datasets, using #n as placeholders for value of
+                        nth column.
+        :param aggregate: aggregate signal regions, given by indices, e.g.
+         [[0,1],[2]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
+        """
+        self.statsfile = statsfile
+        self.aggprefix = aggprefix
+        self.max_datasets = max_datasets
+        self.ds_name = ds_name
+        self.aggregate = aggregate
+        self.counter = 0 ## counter for regions that are written out
+        self.datasetOrder = []
+        self.blinded_regions = []
+        self.create()
+        databaseCreator.datasetCreator = self
+
+    def create ( self ):
+        f = open ( self.statsfile )
+        self.stats = eval ( f.read() )
+        f.close()
+        self.createAllDatasets()
+
+    def setDataSetOrder ( self, info ):
+        """ set the datasetOrder for the covariance matrix.
+            'info' is the MetaInfoInput object. """
+        info.datasetOrder = self.datasetOrder# ",". join ( self.datasetOrder )
+
+    def __iter__ ( self ):
+        return self
+
+    def next ( self ): ## for python2
+        return self.__next__()
+
+    def createAllDatasets ( self ):
+        """ create all datasets in a single go. makes aggregation easier. """
+        logger.debug ( "now creating all datasets" )
+        count_all = 0
+        counter=0
+        # print ( "now creating all datasets" )
+        self.datasets = []
+        for key,values in self.stats.items():
+            if not key.startswith ( self.ds_name ):
+                print ( f"[datasetCreation] skipping {key}" )
+                continue
+            nobs = values["nobs"]
+            sbg = values["nb"]
+            bg, bgerr = values["nb"], values["deltanb"]
+            name = key
+            p1 = name.find("_")
+            if p1 > 0:
+                name = name[:p1]
+            # name = "SR%d" % (binnr+1)
+            # name = "sr%d" % (binnr)
+            dataId = key # self.ds_name
+            count_all+=1
+            if not count_all in self.blinded_regions:
+                counter+=1
+                dataset = DataSetInput ( name )
+                dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
+                expectedBG=bg, bgError=bgerr )
+                self.datasetOrder.append ( '"%s"' % dataId )
+                self.datasets.append ( dataset )
+        if self.aggregate != None:
+            self.aggregateDSs()
+
+    def aggregateDSs ( self ):
+        """ now that the datasets are created, aggregate them. """
+        self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
+        self.origDataSets = copy.deepcopy ( self.datasets )
+        self.datasetOrder = createAggregationOrder ( self.aggregate, self.aggprefix )
+        self.datasets = aggregateDataSets ( self.aggregate, self.origDataSets, \
+                databaseCreator.metaInfo.covariance, databaseCreator.metaInfo.lumi,
+                self.aggprefix )
+        #self.datasets = [] ## rebuild
+        #for ctr,agg in enumerate(self.aggregate):
+        #    myaggs = aggregateToOne ( self.origDataSets, eval(databaseCreator.metaInfo.covariance), ctr, agg, eval ( databaseCreator.metaInfo.lumi ) )
+        #    self.datasets.append ( myaggs )
+        databaseCreator.clear() ## reset list in databasecreator
+        for i in self.datasets:
+            databaseCreator.addDataset ( i )
+        logger.info ( "Aggregated %d to %d datasets" % ( len(self.origDataSets), len(self.datasets) ) )
+
+    def __next__ ( self ):
+        """ return next dataset. """
+        if self.max_datasets and self.counter >= self.max_datasets:
+            # we are told not to produce more
+            raise StopIteration()
+        if len(self.datasets)==0:
+            raise StopIteration()
+        self.counter+=1
+        nxt = self.datasets.pop(0)
+        return nxt
+
 
 if __name__ == "__main__":
     creator = DatasetsFromRoot ( "CMS-SUS-16-033_Figure_009.root:DataObs", \
