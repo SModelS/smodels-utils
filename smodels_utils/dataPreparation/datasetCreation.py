@@ -371,9 +371,14 @@ class DatasetsFromEmbaked:
         counter=0
         # print ( "now creating all datasets" )
         self.datasets = []
+        ctwarning = 0
         for key,values in self.stats.items():
             if not key.startswith ( self.sr_prefix ):
-                print ( f"[datasetCreation] skipping {key} -- does not start with {self.sr_prefix}" )
+                if ctwarning < 3:
+                    print ( f"[datasetCreation] skipping {key} -- region name not begin with '{self.sr_prefix}'" )
+                if ctwarning == 4:
+                    print ( f"[datasetCreation] .... (skipping a few more)" )
+                ctwarning+=1
                 continue
             nobs = values["nobs"]
             sbg = values["nb"]
