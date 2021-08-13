@@ -738,8 +738,12 @@ class DataHandler(object):
             values = D[pt]
             ret = list(pt)
             eff = 0.
-            if SR in values.keys():
-                eff = values[SR]
+            if type(SR) in [ list, tuple ]:
+                for sr in SR:
+                    if sr in values.keys():
+                        eff += values[sr]
+            elif SR in values.keys():
+                    eff = values[SR]
             ret += [ eff ]
             yield ret
 
