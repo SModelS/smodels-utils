@@ -734,7 +734,11 @@ class ValidationPlot():
                     'dataset': expRes['DataSetID'] }
             if "l_max" in expRes and "likelihood" in expRes:
                 import math
-                ratio =  expRes["likelihood"] / expRes["l_max"]
+                ratio = 1.
+                if expRes["l_max"]>0.:
+                    ratio =  expRes["likelihood"] / expRes["l_max"]
+                elif expRes["likelihood"]>0.:
+                    ratio = float("inf")
                 if ratio <= 0.:
                     ratio=1e-90
                 Dict["chi2"] = -2*math.log ( ratio )
