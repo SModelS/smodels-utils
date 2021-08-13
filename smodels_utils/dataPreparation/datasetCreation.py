@@ -63,12 +63,14 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     newds._name = "%s%d" % ( aggprefix, aggidx+1 )
     aggregated = ""
     observedN, expectedBG, bgError2 = 0, 0., 0.
+    originalSRs = []
     for a in agg:
         ds = origDataSets[ (a-1) ]
         observedN += ds.observedN
         expectedBG += ds.expectedBG
         bgError2 += ds.bgError**2 ## F
         aggregated += ds.dataId + ";"
+        originalSRs.append ( ds.dataId )
     newds.observedN = observedN
     newds.expectedBG = expectedBG
     oldBgError = math.sqrt ( bgError2 )
@@ -96,6 +98,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
     newds.aggregated = aggregated[:-1]
+    newds.originalSRs = originalSRs
     newds.dataId = "%s%d" % (aggprefix, aggidx+1) ## for now the dataset id is the agg region id
     return newds
 
@@ -324,20 +327,19 @@ class DatasetsFromEmbaked:
     """
     class that produces the datasets from embaked info
     """
-    def __init__( self, statsfile="orig/statsEM.py", max_datasets=None, ds_name="SR",
+    def __init__( self, statsfile="orig/statsEM.py", max_datasets=None, sr_prefix="SR",
                   aggregate = None, aggprefix="AR" ):
         """
         :param statsfile: file with all stats info
         :param max_datasets: consider a maximum of n datasets
-        :param ds_name: name of datasets, using #n as placeholders for value of
-                        nth column.
+        :param sr_prefix: prefix of "original" datasets
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1],[2]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         """
         self.statsfile = statsfile
         self.aggprefix = aggprefix
         self.max_datasets = max_datasets
-        self.ds_name = ds_name
+        self.sr_prefix = sr_prefix
         self.aggregate = aggregate
         self.counter = 0 ## counter for regions that are written out
         self.datasetOrder = []
@@ -370,8 +372,8 @@ class DatasetsFromEmbaked:
         # print ( "now creating all datasets" )
         self.datasets = []
         for key,values in self.stats.items():
-            if not key.startswith ( self.ds_name ):
-                print ( f"[datasetCreation] skipping {key}" )
+            if not key.startswith ( self.sr_prefix ):
+                print ( f"[datasetCreation] skipping {key} -- does not start with {self.sr_prefix}" )
                 continue
             nobs = values["nobs"]
             sbg = values["nb"]
@@ -382,11 +384,11 @@ class DatasetsFromEmbaked:
                 name = name[:p1]
             # name = "SR%d" % (binnr+1)
             # name = "sr%d" % (binnr)
-            dataId = key # self.ds_name
+            dataId = key 
             count_all+=1
             if not count_all in self.blinded_regions:
                 counter+=1
-                dataset = DataSetInput ( name )
+                dataset = DataSetInput ( dataId )
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '"%s"' % dataId )
