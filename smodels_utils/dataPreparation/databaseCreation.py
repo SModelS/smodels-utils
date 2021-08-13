@@ -688,6 +688,7 @@ class DatabaseCreator(list):
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         onlyZeroes = False
+        countZeroes = 0
         for attr in obj.infoAttr:
             if not attr in dataLabels:
                 continue
@@ -701,11 +702,13 @@ class DatabaseCreator(list):
                 for v in value:
                     if v[-1] > 0.:
                         onlyZeroes = False
+                    else:
+                        countZeroes += 1
             value = self._formatData(value,dataType=attr,n=obj.round_to)
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         if onlyZeroes:
-            self.timeStamp ( f"{name} has only zeroes. drop {path}.", c="error" )
+            self.timeStamp ( f"{name} has only {countZeroes} zeroes. drop {path}.", c="error" )
             return
 
         if len(content)>5000000:
