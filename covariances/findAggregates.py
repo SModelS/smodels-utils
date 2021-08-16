@@ -23,6 +23,17 @@ def useNames ( aggs, datasets ):
         ret.append ( tmp )
     return ret
 
+def oneIndex ( aggs ):
+    """ move all from 0-indexed to 1-indexed, i.e. add one to all elements """
+    ret = []
+    for a in aggs:
+        tmp = []
+        for i in a:
+            # tmp.append ( "SR%d" % ( i+1 ) )
+            tmp.append ( i+1 )
+        ret.append ( tmp )
+    return ret
+
 def main():
     ap = argparse.ArgumentParser( description= "find aggregate regions based on correlations." )
     ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-006]",
@@ -134,7 +145,8 @@ def main():
     c=set()
     for i in aggs: 
         for j in i: c.add ( j )
-    print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), aggs ) )
+    oaggs = oneIndex ( aggs )
+    print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), oaggs ) )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
 
 main()
