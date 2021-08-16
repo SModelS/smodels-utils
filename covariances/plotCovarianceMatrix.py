@@ -26,12 +26,18 @@ def plot():
     argparser.add_argument ( "-o", "--outputfile",
             help="output file, replacing @a with the analysis name, @t is 'cov' or 'corr', depending on --correlations [@t_@a.png]",
             type=str, default="./@t_@a.png" )
-    argparser.add_argument ( "-n", "--cut",
-            help="cut at nth entry, for debugging [None]",
+    argparser.add_argument ( "-n", "--nmin",
+            help="plot only starting with nmin-th row and column, for debugging [None]",
             type=int, default=None )
+    argparser.add_argument ( "-N", "--nmax",
+            help="plot only ending with nmax-th row and column, for debugging [None]",
+            type=int, default=None )
+    argparser.add_argument ( "-i", "--indices",
+            help="plot only <indices> rows and columns, e.g '1 2 3' for debugging [None]",
+            type=str, default=None )
     argparser.add_argument ( "-C", "--correlations", action="store_true",
             help="plot correlations matrix, not covariance matrix" )
-    argparser.add_argument ( "-i", "--interactive", action="store_true",
+    argparser.add_argument ( "-I", "--interactive", action="store_true",
             help="interactive mode" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
@@ -47,8 +53,11 @@ def plot():
     cov = er.globalInfo.covariance
     if args.correlations:
         cov = cov_helpers.computeCorrelationMatrix ( cov )
-    if args.cut != None:
-        cov = cov_helpers.cutMatrix ( cov, args.cut )
+    if args.nmin == None:
+        args.nmin = 0
+    if args.nmax == None:
+        args.nmax = n
+    cov = cov_helpers.cutMatrix ( cov, args.nmin, args.nmax )
     n = len ( cov )
     print ( f"[plotCovarianceMatrix] we have an {norig}x{norig}->{n}x{n} matrix" )
     # fig, ax = plt.subplots()
@@ -87,7 +96,7 @@ def plot():
     ticks = list(map(int, ax.xaxis.get_majorticklocs()-.5 ))
     ticklabels = []
     for t in ticks:
-        ticklabels.append ( allticklabels [ t ] )
+        ticklabels.append ( allticklabels [ t + args.nmin ] )
     # print ( "ticklabels", ticklabels )
     title = f"covariance matrix, {args.analysis}" 
     if args.correlations:
@@ -102,7 +111,7 @@ def plot():
     fname = args.outputfile.replace("@a",args.analysis )
     repl = "corr" if args.correlations else "cov"
     fname = fname.replace( "@t",repl)
-    print ( f"[plotCovarianceMatrix] saving to {fname}." )
+    print ( f"[plotCovarianceMatrix] saving to {fname}" )
     plt.savefig ( fname )
     if args.interactive:
         import IPython

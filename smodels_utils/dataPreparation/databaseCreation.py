@@ -711,7 +711,7 @@ class DatabaseCreator(list):
                                        self.assignmentOperator, value)
         if onlyZeroes:
             self.timeStamp ( f"{name} has only {countZeroes} zeroes. drop {path}.", c="error" )
-            return
+            # return
 
         if len(content)>5000000:
             logger.error ( "%s has more than 5M characters! This will likely " \

@@ -24,14 +24,16 @@ def computeCorrelationMatrix ( cov : list ) -> list:
 
     return ret
 
-def cutMatrix ( m : list, n : int ) -> list:
-    """ return only first n columns and rows of matrix """
+def cutMatrix ( m : list, nmin : int, nmax : int ) -> list:
+    """ return only nmin - nmax columns and rows of matrix
+    """
+    n = nmax - nmin
     ret = [ [.0]*n for x in range(n) ]
 
-    for i in range(n):
-        for j in range(i,n):
-            ret[i][j] = m[i][j]
-            ret[j][i] = m[i][j]
+    for i in range(nmin,nmax):
+        for j in range(i,nmax):
+            ret[i-nmin][j-nmin] = m[i][j]
+            ret[j-nmin][i-nmin] = m[i][j]
 
     return ret
 
