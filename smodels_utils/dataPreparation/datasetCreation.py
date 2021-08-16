@@ -64,7 +64,13 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     aggregated = ""
     observedN, expectedBG, bgError2 = 0, 0., 0.
     originalSRs = []
-    for a in agg:
+    for ca,a in enumerate(agg):
+        if a == 0:
+            logger.error ( f"found index 0 in aggregation region #{ca+1}. but we are one-indexed. add 1 to all elements?" )
+            sys.exit(-1) 
+        if a > len(origDataSets):
+            logger.error ( f"found index {a} in aggregation region #{ca+1}. but know only of {len(origDataSets)} SRs." )
+            sys.exit(-1)
         ds = origDataSets[ (a-1) ]
         observedN += ds.observedN
         expectedBG += ds.expectedBG
@@ -116,6 +122,7 @@ def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="a
     for ctr,agg in enumerate( aggregates ):
         myaggs = aggregateToOne ( origDataSets, covariance, ctr, agg, lumi, aggprefix )
         datasets.append ( myaggs )
+        print ( "aggregating AR", ctr+1, agg )
     return datasets
 
 def createAggregationOrder ( aggregate, aggprefix="ar" ):
