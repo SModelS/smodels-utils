@@ -350,9 +350,15 @@ if __name__ == "__main__":
     smodelsLogging.setLogLevel( args.verbose )
 
     #Selected plots for validation:
-    analyses = parser.get("database", "analyses").split(",")
+    analyses = parser.get("database", "analyses")
+    if analyses.find(";")>0:
+        analyses = analyses[:analyses.find(";")]
+    analyses = analyses.split(",")
     analyses = [ x.strip() for x in analyses ]
-    txnames = parser.get("database", "txnames").split(",")
+    txnames = parser.get("database", "txnames")
+    if txnames.find(";")>0:
+        txnames = txnames[:txnames.find(";")]
+    txnames = txnames.split(",")
     txnames = [ x.strip() for x in txnames ]
     force_load = None
     if args.force_build:
