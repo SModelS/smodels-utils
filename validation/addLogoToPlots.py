@@ -81,7 +81,11 @@ def addLogo(filename,logo = None ):
         #Merge original image and layer and save
         tmpF = tempfile.mktemp(suffix=".png",dir="./")
         Image.composite(layer, im, layer).save( tmpF )
-        os.rename( tmpF, filename)
+        try:
+            os.rename( tmpF, filename)
+        except OSError as e:
+            print ( f"[addLogoToPlots] could not rename {tmpF} to {filename}: {e}. Will try to copy." )
+            shutil.copy ( tmpF, filename )
         
 if __name__ == '__main__':
     addLogo( "tmp.pdf" )
