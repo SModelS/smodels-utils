@@ -736,6 +736,14 @@ class DataHandler(object):
         keys.sort()
         for pt in keys:
             values = D[pt]
+            vkeys = values.keys()
+            newentries = {}
+            for vkey in vkeys:
+                ## awkward hack to make sure we allow for e.g. "SR1" and "SR1_MET...."
+                if vkey.startswith ( "SR" ) and vkey.find("_")>1:
+                    sr = vkey [ : vkey.find("_") ]
+                    newentries[sr] = values [ vkey ]
+            values.update ( newentries )
             ret = list(pt)
             eff = 0.
             if type(SR) in [ list, tuple ]:
