@@ -443,6 +443,8 @@ def validate ( inifile, dry_run, nproc, time ):
     with open ( tmpfile, "wt" ) as f:
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
+        f.write ( f"\n# this script will perform:\n" )
+        f.write ( f"# runValidation.py -p {inifile}\n" )
         f.close()
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
