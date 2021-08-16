@@ -9,7 +9,7 @@
 """
 
 from __future__ import print_function
-import glob,os
+import glob,os,shutil
 import tempfile
 
 def addLogo(filename,logo = None ):
@@ -52,7 +52,11 @@ def addLogo(filename,logo = None ):
         tempF = tempfile.mktemp(suffix=".pdf", dir="./")
         with open( tempF, "wb") as outputStream:
             output_file.write(outputStream)
-        os.rename( tempF, filename)
+        try:
+            os.rename( tempF, filename)
+        except OSError as e:
+            print ( f"[addLogoToPlots] could not rename {tempF} to {filename}: {e}. Will try to copy." )
+            shutil.copy ( tempF, filename )
         #if os.path.exists ( "watermark.pdf" ):
         #    os.remove("watermark.pdf")
 

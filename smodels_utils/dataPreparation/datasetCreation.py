@@ -122,7 +122,7 @@ def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="a
     for ctr,agg in enumerate( aggregates ):
         myaggs = aggregateToOne ( origDataSets, covariance, ctr, agg, lumi, aggprefix )
         datasets.append ( myaggs )
-        print ( "aggregating AR", ctr+1, agg )
+        # print ( "aggregating AR", ctr+1, agg, ",".join ( map ( str, myaggs.originalSRs ) ) )
     return datasets
 
 def createAggregationOrder ( aggregate, aggprefix="ar" ):
@@ -379,7 +379,19 @@ class DatasetsFromEmbaked:
         # print ( "now creating all datasets" )
         self.datasets = []
         ctwarning = 0
-        for key,values in self.stats.items():
+        keys = list ( self.stats.keys() )
+        def getBinNr ( srname ):
+            if srname.startswith ( "SR" ):
+                srname = srname[2:]
+            try:
+                return int(srname)
+            except ValueError as e:
+                print ( f"[datasetCreation] I wanted to extract the bin number from SR name {srname} but failed. Please fix in code." )
+                sys.exit(-1)
+
+        keys.sort( key = getBinNr )
+        for key in keys:
+            values = self.stats[key]
             if not key.startswith ( self.sr_prefix ):
                 if ctwarning < 2:
                     print ( f"[datasetCreation] skipping {key} -- region name does not begin with '{self.sr_prefix}'" )
