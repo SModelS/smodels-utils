@@ -417,6 +417,63 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         return
     subprocess.run ( cmd )
 
+def validate ( inifile, dry_run, nproc, time ):
+    """ run validation with ini file 
+    :param inifile: ini file, should reside in smodels-utils/validation/
+    :param dry_run: dont do anything, just produce script
+    :param nproc: number of processes, typically 5
+    :param time: time in hours
+    """
+    print ( f"[slurm.py] run validation with {inifile}" )
+    with open ( "%s/smodels-utils/clip/validate_template.sh" % codedir, "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
+    Dir = "%s/smodels-utils/clip/" % codedir
+    print ( "creating script at %s/%s" % ( Dir, filename ) )
+    nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
+    with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
+        for line in lines:
+            f.write ( line.replace("@@INIFILE@@", inifile ) )
+        f.close()
+    with open ( "run_validation_template.sh", "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    tmpfile = tempfile.mktemp(prefix="V", suffix=".sh",dir="./" )
+    with open ( tmpfile, "wt" ) as f:
+        for line in lines:
+            f.write ( line.replace ( "@@SCRIPT@@", filename ) )
+        f.close()
+    os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
+    os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
+    cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out" ]
+    # cmd += [ "--ntasks-per-node", str(nproc) ]
+    if True:
+        # time = 48
+        qos = "c_short"
+        if time > 48:
+            qos = "c_long"
+        if 8 < time <= 48:
+            qos = "c_medium"
+        cmd += [ "--qos", qos ]
+        cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    # ma5 seems to not need much RAM
+    ram = .5 * nproc
+    ncpus = nproc # int(nproc*1.5)
+    cmd += [ "--mem", "%dG" % ram ]
+    cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
+    cmd += [ tmpfile ]
+    # cmd += [ "./run_bakery.sh" ]
+    print ("[slurm.py] validating %s" % " ".join ( cmd ) )
+    if not dry_run:
+        a=subprocess.run ( cmd )
+        print ( "returned: %s" % a )
+    #cmd = "rm %s" % tmpfile
+    #o = subprocess.getoutput ( cmd )
+    #print ( "[slurm.py] %s %s" % ( cmd, o ) )
+
 def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
            time ):
     """ bake with the given recipe
@@ -610,6 +667,8 @@ def main():
                         type=int, default=-1 )
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
+    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resives in smodels-utils/validation',
+                        type=str, default=None )
     args=argparser.parse_args()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     if args.pythia8:
@@ -657,6 +716,10 @@ def main():
             dbpath = rundir + "/default.pcl"
         if "fake" in dbpath and not dbpath.endswith(".pcl"):
             dbpath = dbpath + ".pcl"
+
+        if args.validate != None:
+            validate ( args.validate, args.dry_run, args.nprocesses, args.time )
+            continue
 
         if args.server:
             startServer ( rundir, args.dry_run, args.time )
