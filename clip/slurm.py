@@ -718,7 +718,8 @@ def main():
             dbpath = dbpath + ".pcl"
 
         if args.validate != None:
-            validate ( args.validate, args.dry_run, args.nprocesses, args.time )
+            validate ( args.validate, args.dry_run, 20, 8 )
+            # validate ( args.validate, args.dry_run, args.nprocesses, args.time )
             continue
 
         if args.server:

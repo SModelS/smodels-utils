@@ -260,7 +260,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
 
     try:
-        db = Database(databasePath, force_load, subpickle = True )
+        db = Database( databasePath, force_load, discard_zeroes = False,
+                       subpickle = True )
     except Exception as e:
         logger.error("Error loading database at %s" % ( databasePath ) )
         logger.error("Error: %s" % str(e) )
