@@ -717,7 +717,7 @@ class DatabaseCreator(list):
             logger.error ( "%s has more than 5M characters! This will likely " \
                            "create problems!" % path )
         infoFile = open(self.base + path, 'w')
-        self.timeStamp ( "writing tx file %s" % path )
+        self.timeStamp ( "writing Tx file %s" % path )
         infoFile.write(content)
         infoFile.close()
 
