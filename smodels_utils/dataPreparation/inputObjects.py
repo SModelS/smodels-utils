@@ -291,7 +291,18 @@ class MetaInfoInput(Locker):
                     self.covariance += "%.4g, " % x
                 self.covariance = self.covariance[:-2] + "], "
             self.covariance = self.covariance[:-2]+"]"
+        self.removeSmallCorrelations()
         # sys.exit()
+
+    def removeSmallCorrelations ( self ):
+        """ replace small covariances in the covariance matrix with zero """
+        from covariances.cov_helpers import computeCorrelationMatrix
+        corr = computeCorrelationMatrix ( self.covariance )
+        for irow,row in enumerate ( self.covariance ):
+            for icol,col in enumerate ( row ):
+                c = corr [ irow ][ icol ]
+                if c < .01:
+                    print ( f"we should remove {irow},{icol}" )
 
     def __init__(self, ID):
 
