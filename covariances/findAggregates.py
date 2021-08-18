@@ -12,6 +12,7 @@ import pickle
 import tempfile
 import os
 import argparse
+import cov_helpers
 
 
 def useNames ( aggs, datasets ):
@@ -34,10 +35,32 @@ def oneIndex ( aggs ):
         ret.append ( tmp )
     return ret
 
+def checkIfToAdd ( index : int, agg : list, frac : float, corrmatrix : list ):
+    """ check if to add index to aggregation list agg, 
+    :param index: the index to be added
+    :param agg: list of aggregated indices
+    :param frac: threshold on correlation, aggregate if all correlations are above it
+    :param corrmatrix: correlation matrix to look up the correlations
+    """
+    # a minimum spanning tree is implemented as follows:
+    return True
+
+    # print ( f"shall we add {index} to {agg}?" )
+    # print ( f"covs are: {[ corrmatrix[ index ][x] for x in agg ] }" ) 
+    ## for now we implement a maximum spanning tree, i.e. add index only to agg
+    ## if *all* correlations are above threshold
+    allAbove = True
+    for x in agg:
+        corr = corrmatrix[ index ][x]
+        if corr < frac:
+            allAbove = False
+            break
+    return allAbove
+
 def main():
     ap = argparse.ArgumentParser( description= "find aggregate regions based on correlations." )
-    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-006]",
-                    default = "CMS-SUS-19-006", type=str )
+    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-006-ma5]",
+                    default = "CMS-SUS-19-006-ma5", type=str )
     ap.add_argument('-c','--corr',help="correlation needed to cluster [.5]",
                     default = .5, type=float )
     ap.add_argument( '-t','--takeout',help="dont cluster these SRs", nargs="*",
@@ -69,6 +92,7 @@ def main():
         return datasets
 
     cov = result.globalInfo.covariance 
+    corrmatrix = cov_helpers.computeCorrelationMatrix ( cov )
     n=len(cov)
     # n=2
 
@@ -106,7 +130,7 @@ def main():
             continue
         if not v[0] in done and not v[1] in done:
             if k > frac:
-                ## a virigin pair. add as new aggregate region
+                ## a virgin pair. add as new aggregate region
                 done.append ( v[0] )
                 done.append ( v[1] )
                 aggs.append ( v )
@@ -118,22 +142,21 @@ def main():
         if v[0] in done and not v[1] in done:
             if k > frac and not v[1] in excls and not v[0] in excls:
                 ## v0 is already in a region. lets add v1.
-                for a in aggs:
-                    if v[0] in a:
+                for agg in aggs:
+                    if v[0] in agg and checkIfToAdd ( v[1], agg, frac, corrmatrix ):
                         ## lets assume yes
                         done.append ( v[1] )
-                        a.append ( v[1] )
+                        agg.append ( v[1] )
             else: ## we cant add v1
                 done.append ( v[1] )
                 aggs.append ( [ v[1] ] )
         if v[1] in done and not v[0] in done:
             if k > frac and not v[0] in excls and not v[1] in excls:
                 ## v1 is already in a region. can we add v0?
-                for a in aggs:
-                    if v[1] in a:
-                        ## lets assume yes
+                for agg in aggs:
+                    if v[1] in agg and checkIfToAdd ( v[0], agg, frac, corrmatrix ):
                         done.append ( v[0] )
-                        a.append ( v[0] )
+                        agg.append ( v[0] )
             else:
                 done.append ( v[0] )
                 aggs.append ( [ v[0] ] )
@@ -147,6 +170,7 @@ def main():
         for j in i: c.add ( j )
     oaggs = oneIndex ( aggs )
     print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), oaggs ) )
+    print ( "largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
 
 main()
