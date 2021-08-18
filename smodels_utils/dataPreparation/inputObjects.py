@@ -23,6 +23,8 @@ from smodels.theory.element import Element
 from smodels.theory.auxiliaryFunctions import elementsInStr
 from smodels.installation import version
 import copy
+import math
+import scipy
 
 import logging
 from smodels_utils.helper import prettyDescriptions
@@ -128,6 +130,7 @@ class CovarianceHandler:
             ## aggregate the stuff
             self.aggregateThis ( aggregate )
 
+        self.removeSmallValues()
         self.checkCovarianceMatrix()
 
     def computeAggCov ( self, agg1, agg2 ):
@@ -145,7 +148,8 @@ class CovarianceHandler:
         m=Data( [0.]*n, [0.]*n, self.covariance )
         logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
         try:
-            I=(m.covariance)**(-1)
+            # I=(m.covariance)**(-1)
+            I=scipy.linalg.inv(m.covariance)
         except Exception as e:
             logger.error ( "Inversion failed. %s" % e )
             sys.exit()
@@ -158,6 +162,23 @@ class CovarianceHandler:
             logger.error ( "the diagonal reads: %s " % ( numpy.diag ( m.covariance ) ) )
             sys.exit()
 
+    def removeSmallValues ( self ):
+        """ set small values in covariance matrix to zero """
+        #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
+        #        type(self.covariance[0][0]) )
+        threshold = .01
+        removed = 0
+        for irow,row in enumerate ( self.covariance ):
+            for icol,col in enumerate ( row ):
+                if icol >= irow:
+                    continue
+                corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
+                if corr < threshold:
+                    removed += 1
+                    self.covariance[irow][icol]=0.
+                    self.covariance[icol][irow]=0.
+        if removed > 0:
+            logger.info ( f"removed {removed} correlations below threshold of {threshold} from covariance matrix" )
 
     def aggregateThis ( self, aggregate ):
         newDSOrder=[]
@@ -268,7 +289,6 @@ class MetaInfoInput(Locker):
         else:
             #self.datasetOrder = ", ".join ( [ '"sr%d"' % (x) for x in range ( handler.n-1 ) ] )
             self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n-1 ) ] )
-        # print ( "the handlers cov=",len(handler.covariance) )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
@@ -291,18 +311,6 @@ class MetaInfoInput(Locker):
                     self.covariance += "%.4g, " % x
                 self.covariance = self.covariance[:-2] + "], "
             self.covariance = self.covariance[:-2]+"]"
-        self.removeSmallCorrelations()
-        # sys.exit()
-
-    def removeSmallCorrelations ( self ):
-        """ replace small covariances in the covariance matrix with zero """
-        from covariances.cov_helpers import computeCorrelationMatrix
-        corr = computeCorrelationMatrix ( self.covariance )
-        for irow,row in enumerate ( self.covariance ):
-            for icol,col in enumerate ( row ):
-                c = corr [ irow ][ icol ]
-                if c < .01:
-                    print ( f"we should remove {irow},{icol}" )
 
     def __init__(self, ID):
 
