@@ -164,6 +164,7 @@ class CovarianceHandler:
 
     def removeSmallValues ( self ):
         """ set small values in covariance matrix to zero """
+        return
         #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
         #        type(self.covariance[0][0]) )
         threshold = .05
