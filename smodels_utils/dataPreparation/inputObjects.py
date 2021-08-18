@@ -159,26 +159,28 @@ class CovarianceHandler:
         except Exception as e:
             import numpy
             logger.error ( "computation of logpdf failed: %s" % e )
-            logger.error ( "the diagonal reads: %s " % ( numpy.diag ( m.covariance ) ) )
+            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
             sys.exit()
 
     def removeSmallValues ( self ):
         """ set small values in covariance matrix to zero """
         #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
         #        type(self.covariance[0][0]) )
-        threshold = .01
-        removed = 0
+        threshold = .05
+        removed, ntot = 0, 0
         for irow,row in enumerate ( self.covariance ):
             for icol,col in enumerate ( row ):
                 if icol >= irow:
                     continue
                 corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
+                ntot += 1
                 if corr < threshold:
                     removed += 1
+                    # print ( f"removing {corr:.3f} <= {threshold} at ({irow},{icol}). was: {self.covariance[irow][icol]:.3f}." )
                     self.covariance[irow][icol]=0.
                     self.covariance[icol][irow]=0.
         if removed > 0:
-            logger.info ( f"removed {removed} correlations below threshold of {threshold} from covariance matrix" )
+            logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
 
     def aggregateThis ( self, aggregate ):
         newDSOrder=[]
