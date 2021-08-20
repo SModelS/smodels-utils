@@ -335,7 +335,7 @@ if __name__ == "__main__":
             tarfiles = tarfiles.split(',')
 
     options = { "prettyPlots": False, # ## only pretty plots, only ugly plots, or both
-                "keepListOfSRs": False, ## keep a list of all signal regions, ordered by their sensitivities (good for trimming and aggregating
+                "keepTopNSRs": 0, ## keep an ordered list of <n> most sensitive signal regions, needed for trimming and aggregating
                 "drawChi2Line": False, # draw an exclusion line derived from chi2 values in green (only on pretty plot )
                 "limitPoints": None, ## limit the number of points to run on
                 "axis": None, ## the axes to plot. If not given, take from sms.root
@@ -366,8 +366,8 @@ if __name__ == "__main__":
             options["drawExpected"] = drawExpected
         if parser.has_option("options","pngPlots"):
             options["pngAlso"] = parser.getboolean("options", "pngPlots" )
-        if parser.has_option("options","keepListOfSRs"):
-            options["keepListOfSRs"] = parser.getboolean("options", "keepListOfSRs" )
+        if parser.has_option("options","keepTopNSRs"):
+            options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
         if parser.has_option("options","axis"):
             options["axis"] = parser.get("options","axis" )
         if parser.has_option("options","drawChi2Line"):
