@@ -432,6 +432,8 @@ class ValidationPlot():
             model = "mssm"
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
+            if self.options["keepListOfSRs"]:
+                f.write ( "reportAllSRs = True\n" )
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
             f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
             f.write("[printer]\noutputType = python\n")
@@ -658,6 +660,7 @@ class ValidationPlot():
             res = smodelsOutput['ExptRes']
             expRes = res[0]
             #Double checks (to make sure SModelS ran as expected):
+            leadingDSes = {}
             if len(res) != 1:
                 logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
                 found_combined=False
@@ -666,7 +669,18 @@ class ValidationPlot():
                         logger.debug ( "found a combined result. will use it." )
                         found_combined=True
                         expRes = eR
-                if not found_combined:
+                if self.options["keepListOfSRs"]:
+                    maxR, expRes = -1., None
+                    for eR in res:
+                        if "r_expected" in eR:
+                            r = eR["r_expected"]
+                            while r in leadingDSes: # make sure it's unique
+                                r = r * .9999
+                            leadingDSes[r]=eR["DataSetID"]
+                            if r>maxR:
+                                maxR = eR["r_expected"]
+                                expRes = eR
+                if not found_combined and not self.options["keepListOfSRs"]:
                     logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
                     return False
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
@@ -721,6 +735,11 @@ class ValidationPlot():
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
+            if len(leadingDSes)>1:
+                s = []
+                for k,v in sorted ( leadingDSes.items(), reverse=True )[:10]:
+                    s.append ( (k,v) )
+                Dict["leadingsDSes"]= s
             if "l_max" in expRes and "likelihood" in expRes:
                 import math
                 ratio = 1.
