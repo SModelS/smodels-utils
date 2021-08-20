@@ -51,42 +51,30 @@ class ValidationPlot():
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
-    def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
-                 combine=False, weightedAgreementFactor=True, model="default",
-                 style = "", legendplacement = "top right", drawExpected = True,
-                 namedTarball = None, keep = False, drawChi2Line = False ):
+    def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None, 
+                  options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
+                  combine = False ):
         """
-        :param weightedAgreementFactor: when computing the agreement factor,
-            weight points by the area of their Voronoi cell
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
-        :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
         """
 
         self.expRes = copy.deepcopy(ExptRes)
-        self.model = model
         self.keep = keep
+        self.options = options
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
-        self.style = style
-        self.drawExpected = drawExpected
-        self.drawChi2Line = drawChi2Line
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
-        self.officialCurves = self.getOfficialCurves( get_all = not self.drawExpected,
+        drawExpected = self.options["drawExpected"]
+        self.officialCurves = self.getOfficialCurves( get_all = not drawExpected,
                 expected = False )
         self.expectedOfficialCurves = self.getOfficialCurves( get_all = False,
                 expected = True )
         self.kfactor = kfactor
-        self.limitPoints = limitPoints
-        self.extraInfo = extraInfo
-        self.preliminary = preliminary
-        self.weightedAF = weightedAgreementFactor
         self.combine = combine
-        self.legendplacement = legendplacement
 
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
@@ -229,7 +217,7 @@ class ValidationPlot():
         """ compute the convex hulls from the Voronoi
             partition, so we can later weight points with the areas of the
             Voronoi cell """
-        if not self.weightedAF:
+        if not self.options["weightedAgreementFactor"]: #  self.weightedAF:
             return
         # we could weight the point with the area of its voronoi partition
         points = []
@@ -383,8 +371,9 @@ class ValidationPlot():
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 members=tar.getmembers()
                 random.shuffle ( members )
-                if self.limitPoints != None and self.limitPoints > 0:
-                    members=members[:self.limitPoints]
+                limitPoints = self.options["limitPoints"]
+                if limitPoints != None and limitPoints > 0:
+                    members=members[:limitPoints]
                 tar.extractall(path=tempdir,members=members)
                 tar.close()
                 logger.debug("SLHA files extracted to %s" %tempdir)
@@ -437,7 +426,7 @@ class ValidationPlot():
         combine = "False"
         if self.combine:
             combine = "True"
-        model = self.model
+        model = self.options["model"]
         if model == "default":
             ## FIXME here we could define different defaults for eg T5Gamma
             model = "mssm"
@@ -744,8 +733,10 @@ class ValidationPlot():
                 Dict["chi2"] = -2*math.log ( ratio )
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
-                if self.drawExpected == "auto":
-                    self.drawExpected = True
+                drawExpected = self.options["drawExpected"]
+                if drawExpected == "auto":
+                    drawExpected = True
+                self.options["drawExpected"]=drawExpected
             if "efficiency" in expRes.keys():
                 Dict["efficiency"] = expRes['efficiency']
             if expRes['dataType'] == 'efficiencyMap':
@@ -802,9 +793,8 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createUglyPlot(self,silentMode=silentMode,
-                extraInfo=self.extraInfo,preliminary=self.preliminary,
-                weightedAgreementFactor=self.weightedAF )
+        self.plot,self.base = createUglyPlot( self,silentMode=silentMode,
+                                              options = self.options )
 
     def getPrettyPlot(self,silentMode=True):
         """
@@ -814,9 +804,7 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
-                   preliminary=self.preliminary, style = self.style,
-                   legendplacement = self.legendplacement, drawExpected = self.drawExpected,
-                   drawChi2Line = self.drawChi2Line )
+                   looseness = 1.2, options = self.options )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """

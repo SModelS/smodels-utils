@@ -18,12 +18,8 @@ except ImportError as e:
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
-def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
-                  pretty=False,generateData=True,limitPoints=None,extraInfo=False,
-                  preliminary=False, combine=False,pngAlso = False,
-                  weightedAgreementFactor = True, model = "default",
-                  style = "", legendplacement = "top right", drawExpected = True,
-                  namedTarball = None, keep = False, drawChi2Line = False ):
+def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pretty=False,
+                  combine=False, namedTarball = None, keep = False ):
     """
     Creates a validation plot and saves its output.
 
@@ -35,69 +31,41 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     or the .tar.gz file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale
                     all theory prediction values
-    :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
-
     :param pretty: If True it will generate "pretty" plots, if "both", will
-                   generate pretty *and* non-pretty
-
-    :param generateData: If True, run SModelS on the slha files.
-                         If False, use the already existing *.py files in the
-                         validation folder.  If None, run SModelS only if
-                         needed.
-    :param limitPoints: Limit the total number of points to <n> (integer).
-                        Points are chosen randomly.
-                        If None or negative, take all points.
-    :param extraInfo: add additional info to plot: agreement factor, time spent,
-                      time stamp, hostname
-    :param preliminary: if True, write a big "preliminary" label over the plot.
     :param combine: combine signal regions, or use best signal region
-    :param pngAlso: save also pngs
-    :param weightedAgreementFactor: when computing the agreement factor,
-                                    weight points by the area of their Voronoi cell
-    :param model: the model to use (e.g. mssm, nmssm, idm)
-    :param style: currently only "" and "sabine" are known
-                  style "sabine": SR label "pyhf combining 2 SRs" gets moved to
-                  top left corner of temperature p lot in pretty print
-    :param legendplacement: placement of legend. One of: top right, top left, auto
-    :param drawExpected: if True, then draw also expected lines
     :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :param keep: keep temporary directories
-    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     :return: True on success
     """
 
     logger.info("Generating validation plot for " + expRes.globalInfo.id
                 +", "+txnameStr+", "+axes)
-    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
-                    limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
-                    combine=combine, weightedAgreementFactor = weightedAgreementFactor,
-                    model = model, style= style, legendplacement = legendplacement,
-                    drawExpected = drawExpected, namedTarball = namedTarball,
-                    keep = keep, drawChi2Line = drawChi2Line )
+    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,slhadir = None,
+                        options = options,kfactor=kfactor,
+                        namedTarball = namedTarball, keep = keep, combine = combine )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
-    if generateData != False:
+    if options["generateData"] != False:
         valPlot.setSLHAdir(slhadir)
-    valPlot.ncpus = ncpus
     generatedData=False
-    if generateData:
+    if options["generateData"]:
         valPlot.getDataFromPlanes()
-        generatedData=True
+        options["generatedData"]=True
     else:
         valPlot.loadData()
     if not valPlot.data:
-        if generateData is None:
+        if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
-            generatedData=True
+            options["generatedData"]=True
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
         valPlot.pretty = True
         valPlot.savePlot()
-        if generatedData:
+        if options["generatedData"]:
             valPlot.saveData()
-            if pngAlso:
+            if options["pngAlso"]:
                 valPlot.savePlot(fformat="png")
     import ROOT
     for i in ROOT.gROOT.GetListOfCanvases():
@@ -114,15 +82,11 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
         i.Destructor()
     return True
 
-def run ( expResList, axis, pretty, generateData, keep, drawChi2Line ):
+def run ( expResList, options : dict, keep ):
     """
     Loop over experimental results and validate plots
-    :param axis: Plot only for these axes. If none, get axes from sms.root
-    :param pretty: if true, then make pretty plot, else make ugly plot
-    :param generateData: if true, generate dpy dict file, if "ondemand" only generate
-                         if needed.
+    :param options: all flags in the "options" part of the ini file
     :param keep: keep temporary directories
-    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     """
     for expRes in expResList:
         expt0 = time.time()
@@ -141,6 +105,7 @@ def run ( expResList, axis, pretty, generateData, keep, drawChi2Line ):
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
+        pretty = options["prettyPlots"]
         prettyorugly = [ pretty ]
         if pretty=="both":
             prettyorugly = [ True, False ]
@@ -174,38 +139,28 @@ def run ( expResList, axis, pretty, generateData, keep, drawChi2Line ):
                 axes = [txname.axes]
             else:
                 axes = txname.axes
+            axis = options["axis"]
             if axis is None:
                 for ax in axes:
-                    doGenerate = generateData # local flag
                     for p in prettyorugly:
-                        validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                 doGenerate,limitPoints,extraInfo,preliminary,
-                                 combine, pngAlso, weightedAgreementFactor, model,
-                                 style = style, legendplacement = legendplacement,
-                                 drawExpected = drawExpected, namedTarball =namedTarball,
-                                 keep = keep, drawChi2Line = drawChi2Line )
-                        doGenerate = False
+                        validatePlot(expRes,txnameStr,ax,tarfile, options, kfactor, p,
+                                 combine, namedTarball =namedTarball, keep = keep )
+                        options["generateData"]=False
             else:
                 from sympy import var
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
                 for p in prettyorugly:
-                    validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                 generateData,limitPoints,extraInfo, preliminary,
-                                 combine, pngAlso, weightedAgreementFactor, model,
-                                 style = style, legendplacement = legendplacement,
-                                 drawExpected = drawExpected )
+                    validatePlot(expRes,txnameStr,ax,tarfile, options, kfactor, p,
+                                 combine )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-        tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
-        limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
-        weightedAgreementFactor=True, model = "default", axis=None,
-        force_load = None, style = "", legendplacement = "top right",
-        drawExpected = True, keep = False, drawChi2Line = False ):
+         options : dict, tarfiles=None,verbosity='error', combine=False, force_load = None, 
+         keep = False ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -219,32 +174,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param tarfiles: Allows to define a specific list of tarballs to be used.
                      The list should match the txnames list.
                      If set to None, it will use the default file (txname.tar.gz).
-    :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
-
-    :param pretty: If True it will generate "pretty" plots
-
-    :param generateData: If True, run SModelS on the slha files.
-              If False, use the already existing *.py files in the validation folder.
-              None: generate them if needed.
-    :param limitPoints: Limit the number of tested model points to <n> randomly
-              chosen points. If None or negative, test all points.
-    :param extraInfo: add additional info to plot: agreement factor, time spent,
-              time stamp, hostname
-    :param preliminary: if True, write a big "preliminary" label over the plot.
     :param combine: combine signal regions, or use best signal region
-    :param pngAlso: save also pngs
-    :param model: the model to use (mssm, nmssm, idm, ... )
-    :param axis: specify the axes, if None get them from sms.root
     :param force_load: force loading the text database ("txt"), or the
            binary database ("pcl"), dont force anything if None
-    :param style: currently only "" and "sabine" are known
-                  style "sabine": SR label "pyhf combining 2 SRs" gets moved to
-                  top left corner of temperature p lot in pretty print
-    :param legendplacement: placement of legend: one of:
-                            top left, top right, auto [top right]
     :param keep: keep temporary directories
-    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
     """
 
     if not os.path.isdir(databasePath):
@@ -272,18 +206,18 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
-                  dataTypes, useNonValidated=True)
+                  dataTypes, useNonValidated=True )
 
     if not expResList:
         logger.error("No experimental results found.")
 
-    if ncpus < 0:
+    if options["ncpus"] < 0:
         from smodels.tools import runtime
-        ncpus = runtime.nCPUs() + ncpus + 1
+        options["ncpus"] = runtime.nCPUs() + options["ncpus"] + 1
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    run ( expResList, axis, pretty, generateData, keep, drawChi2Line )
+    run ( expResList, options, keep )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
@@ -400,64 +334,74 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
 
-    ncpus = -1 ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
-    pngAlso = False ## only pdf plots?
-    axis = None ## the axes to plot. If not given, take from sms.root
-    pretty = False ## only pretty plots, only ugly plots, or both
-    limitPoints=None ## limit the number of points to run on
-    extraInfo = False ## add extra info to the plot?
-    preliminary = False ## add preliminary to plot?
-    weightedAgreementFactor = False ## do we weight the points for the agreement factor?
-    model = "default" ## which model to use (default = mssm)
-    drawExpected = "auto"
-    drawChi2Line = False
+    options = { "prettyPlots": False, # ## only pretty plots, only ugly plots, or both
+                "keepListOfSRs": False, ## keep a list of all signal regions, ordered by their sensitivities (good for trimming and aggregating
+                "drawChi2Line": False, # draw an exclusion line derived from chi2 values in green (only on pretty plot )
+                "limitPoints": None, ## limit the number of points to run on
+                "axis": None, ## the axes to plot. If not given, take from sms.root
+                "style": "", # specify a plotting style, currently only 
+                # "" and "sabine" are known
+                # style "sabine": SR label "pyhf combining 2 SRs" gets moved to
+                # top left corner of temperature p lot in pretty print
+                "legendplacement": "automatic", # specify how the legend is placed
+                # one of: top left, top right, auto [top right]
+                "weightedAgreementFactor": False, 
+                ## do we weight the points for the agreement factor?
+                "extraInfo": False, ## add extra info to the plot?
+                "pngAlso": False, ## only pdf plots?
+                "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto) 
+                "preliminary": False, ## add label 'preliminary' to plot?
+                "model": "default", ## which model to use (default = mssm)
+                "ncpus": -1, ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
+    }
     if parser.has_section("options"):
         if parser.has_option("options","ncpus"):
-            ncpus = parser.getint("options","ncpus")
+            options["ncpus"] = parser.getint("options","ncpus")
         if parser.has_option("options","drawExpected"):
             drawExpected = parser.get("options","drawExpected")
             if drawExpected in [ "1", "true", "True", True, 1, "yes" ]:
                 drawExpected = True
             if drawExpected in [ "0", "false", "False", False, 0, "no" ]:
                 drawExpected = False
+            options["drawExpected"] = drawExpected
         if parser.has_option("options","pngPlots"):
-            pngAlso = parser.getboolean("options", "pngPlots" )
+            options["pngAlso"] = parser.getboolean("options", "pngPlots" )
+        if parser.has_option("options","keepListOfSRs"):
+            options["keepListOfSRs"] = parser.getboolean("options", "keepListOfSRs" )
         if parser.has_option("options","axis"):
-            axis = parser.get("options","axis" )
+            options["axis"] = parser.get("options","axis" )
         if parser.has_option("options","drawChi2Line"):
-            drawChi2Line = parser.getboolean("options","drawChi2Line" )
+            options["drawChi2Line"] = parser.getboolean("options","drawChi2Line" )
         if parser.has_option("options","prettyPlots"):
             spretty = parser.get("options", "prettyPlots" ).lower()
             if spretty in [ "true", "yes", "1" ]:
-                pretty = True
+                options["prettyPlots"] = True
             if spretty in [ "*", "all", "both" ]:
-                pretty = "both"
-            if pretty == False and spretty in [ "none", "neither", "dontplot" ]:
-                pretty = None
-            if pretty == False and spretty not in [ "false", "0", "no" ]:
+                options["prettyPlots"] = "both"
+            if options["prettyPlots"] == False and spretty in [ "none", "neither", "dontplot" ]:
+                options["prettyPlots"] = None
+            if options["prettyPlots"] == False and spretty not in [ "false", "0", "no" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
         if parser.has_option("options","limitPoints"):
-            limitPoints = parser.getint("options","limitPoints")
+            options["limitPoints"] = parser.getint("options","limitPoints")
         if parser.has_option("options","extraInfo"):
-            extraInfo = parser.getboolean("options", "extraInfo")
+            options["extraInfo"] = parser.getboolean("options", "extraInfo")
         if parser.has_option("options","preliminary"):
-            preliminary = parser.getboolean("options", "preliminary")
-        style = ""
+            options["preliminary"] = parser.getboolean("options", "preliminary")
         if parser.has_option("options","style"):
-            style = parser.get("options", "style")
-        legendplacement = "automatic"
+            options["style"] = parser.get("options", "style")
         if parser.has_option("options","legendplacement"):
-            legendplacement = parser.get("options", "legendplacement")
+            options["legendplacement"] = parser.get("options", "legendplacement")
         if parser.has_option("options","weightedAgreementFactor"):
-            weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
+            options["weightedAgreementFactor"] = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
-            model = parser.get("options","model")
-    generateData = _doGenerate ( parser )
+            options["model"] = parser.get("options","model")
+    ## Set to True to run SModelS on the slha files. If False, use the already
+    ## existing *.py files in the validation folder. If None or
+    ## 'ondemand', produce data only if none are found
+    options["generateData"] = _doGenerate ( parser )
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-         tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
-         force_load, style, legendplacement, drawExpected, args.keep,
-         drawChi2Line )
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options, 
+         tarfiles,args.verbose.lower(), combine, force_load, args.keep )

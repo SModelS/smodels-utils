@@ -27,19 +27,13 @@ try:
 except:
     pass
 
-def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
-                    preliminary=False, weightedAgreementFactor=False ):
+def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : dict = {} ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "ugly" exclusion plot
 
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
-    :param extraInfo: add additional info to plot: agreement factor, time spent,
-                      time stamp, hostname
-    :param preliminary: if true, write "preliminary" over the plot
-    :param weightedAgreementFactor: weight points for the agreement factor with
-                                    the area of their Voronoi cell
     :return: TCanvas object containing the plot
     """
     #title = validationPlot.expRes.globalInfo.id + "_" \
@@ -301,7 +295,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     base.l0=l0
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
     agreement = 0.
-    weighted = weightedAgreementFactor # compute weighted agreement factor?
+    weighted = options["weightedAgreementFactor"] # compute weighted agreement factor?
     af = validationPlot.computeAgreementFactor( signal_factor = signal_factor, 
                                                 weighted = weighted )
     agreement = 0.
@@ -309,7 +303,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         agreement = round(100.*af)
     logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % \
                   ( agreement,"%",len(validationPlot.data) ) )
-    if extraInfo:
+    if options["extraInfo"]:
         lex=TLatex()
         lex.SetNDC()
         lex.SetTextColor( kBlue+2 ) # kCyan-5 kMagenta-5 kBlue-5
@@ -348,7 +342,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                   (nErrors, len(validationPlot.data) ) )
     base.l3=l3
 
-    if extraInfo: ## a timestamp, on the right border
+    if options["extraInfo"]: ## a timestamp, on the right border
         import time
         l9=TLatex()
         l9.SetNDC()
@@ -358,7 +352,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         l9.DrawLatex ( .93, .65, time.strftime("%b %d, %Y, %H:%M") )
         base.l9 = l9
 
-    if preliminary:
+    if options["preliminary"]:
         ## preliminary label, ugly plot
         tprel = TLatex()
         tprel.SetNDC()

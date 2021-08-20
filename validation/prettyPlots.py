@@ -39,22 +39,16 @@ b = array('d', blue)
 TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
-def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
-                      looseness = 1.2, style = "", legendplacement = "top right",
-                      drawExpected = True, drawChi2Line = False ):
+def createPrettyPlot( validationPlot,silentMode : bool , options : dict, 
+                      looseness : float ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
 
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
-    :param preliminary: if true, write "preliminary" over the plot
     :param looseness: ?
-    :param style: allow for styles, currently "", and "sabine"
-    :param legendplacement: placement of legend. One of:
-                      "automatic", "top right", "top left"
-    :param drawExpected: if true, then draw also lines for expected limits
-    :param drawChi2Line: if true, then draw CLsb limit from chi2 value (if exists)
+    :param options: the options
     :return: TCanvas object containing the plot
     """
 
@@ -134,8 +128,8 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
                 etgr.SetPoint(etgr.GetN(), x, y, rexp )
                 if "chi2" in pt:
                     tgrchi2.SetPoint(tgrchi2.GetN(), x, y, pt["chi2"] / 3.84 )
-    if drawExpected in [ "auto" ]:
-        drawExpected = hasExpected
+    if options["drawExpected"] in [ "auto" ]:
+        options["drawExpected"] = hasExpected
     if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
         return (None,None)
@@ -264,11 +258,11 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
-    if drawExpected:
+    if options["drawExpected"]:
         contVals = [1.,1.,1.]
     cgraphs = getContours(tgr,contVals)
     ecgraphs = {}
-    if drawExpected:
+    if options["drawExpected"]:
         ecgraphs = getContours(etgr,contVals)
     chi2graphs = getContours ( tgrchi2, [ 1. ] * 3 )
     # print ( "chi2graphs", chi2graphs )
@@ -360,14 +354,14 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             ls = 1
         else:
             ls = 2
-        if len(ecgraphs)>0 and drawExpected:
+        if len(ecgraphs)>0 and options["drawExpected"]:
             ls = 2 ## when expected are drawn also, make this dashed
         for gr in grlist:
             setOptions(gr, Type='official')
             gr.SetLineColor(kGray+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
-    if drawChi2Line and chi2graphs != None: # False:
+    if options["drawChi2Line"] and chi2graphs != None: # False:
         for cval,grlist in chi2graphs.items():
             for gr in grlist:
                 setOptions(gr, Type='official')
@@ -382,7 +376,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             gr.SetLineWidth(1)
             # gr.SetLineStyle(0)
         gr.Draw("L SAME")
-    if drawExpected:
+    if options["drawExpected"]:
         for gr in expectedOfficialCurves:
             # validationPlot.completeGraph ( gr )
             setOptions(gr, Type='official')
@@ -447,7 +441,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
-    if style == "sabine":
+    if options["style"] == "sabine":
         lsub.SetTextSize(.037)
         if legendplacement == "top left": # then we move to top right with this
             lsub.DrawLatex(.57,.79,subtitle)
@@ -474,6 +468,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     hasExclLines = False
     # placement = "top left" ## "automatic", "top right", "top left"
     possibleplacements = [ "automatic", "auto", "top left", "top right" ]
+    legendplacement = options["legendplacement"]
     legendplacement = legendplacement.replace("'","")
     legendplacement = legendplacement.replace('"',"")
     legendplacement = legendplacement.lower()
@@ -494,7 +489,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
     added = False
-    if drawExpected:
+    if options["drawExpected"]:
         for cval,grlist in ecgraphs.items():
             if not grlist:
                 continue
@@ -515,7 +510,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
             hasExclLines = True
             added = True
-    if drawChi2Line and chi2graphs != None:
+    if options["drawChi2Line"] and chi2graphs != None:
         for cval,grlist in chi2graphs.items():
             if not grlist:
                 continue
@@ -525,7 +520,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     added = False
     for gr in expectedOfficialCurves:
         if 'xclusion_' in gr.GetTitle():
-            if drawExpected:
+            if options["drawExpected"]:
                 leg.AddEntry(gr,"exp. excl. (official)","L")
             hasExclLines = True
         elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
@@ -544,7 +539,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
     if hasExclLines:
         leg.Draw()
     tgr.leg = leg
-    if preliminary:
+    if options["preliminary"]:
         ## preliminary label, pretty plot
         tprel = TLatex()
         tprel.SetTextColor ( kBlue+3 )
