@@ -12,6 +12,14 @@ def copy():
         cmd = f"cp -rf {source}{f} {dest}{f}"
         subprocess.getoutput ( cmd )
 
+def gitClone():
+    Dir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
+    for i in [ "smodels", "smodels-utils", "smodels-database", "em-creator", "smodels.github.io", "protomodels" ]:
+        if not os.path.exists ( f"{Dir}/{i}" ):
+            cmd = f"cd {Dir}; git clone git+ssh://git@github.com/SModelS/{i}.git"
+            print ( cmd )
+            subprocess.getoutput ( cmd )
+
 def copySSH():
     files = glob.glob ( ".ssh/*" )
     for f in files:
@@ -44,3 +52,4 @@ if __name__ == "__main__":
     copy()
     copySSH()
     copyContainers()
+    gitClone()
