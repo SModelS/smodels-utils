@@ -3,7 +3,7 @@
 import subprocess, os, glob
 
 def copy():
-    files = [ ".bashrc", ".bash.aliases", ".vimrc", ".tmux.conf", ".vim/ftplugin", ".vim/syntax" ]
+    files = [ ".bashrc", ".bash.aliases", ".vimrc", ".tmux.conf", ".vim/ftplugin", ".vim/syntax", ".gitconfig" ]
     for f in files:
         source = "/users/wolfgan.waltenberger/"
         dest = "/scratch-cbe/users/wolfgan.waltenberger/"
@@ -15,15 +15,12 @@ def copy():
 def copySSH():
     files = glob.glob ( ".ssh/*" )
     for f in files:
-        print ( f )
-        """
         source = "/users/wolfgan.waltenberger/"
         dest = "/scratch-cbe/users/wolfgan.waltenberger/"
         if os.path.exists ( f"{dest}{f}" ):
             continue
         cmd = f"cp -rf {source}{f} {dest}{f}"
         subprocess.getoutput ( cmd )
-        """
 
 def copyContainers():
     destdir = "/scratch-cbe/users/wolfgan.waltenberger/container/"
