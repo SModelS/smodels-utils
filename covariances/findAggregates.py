@@ -65,7 +65,9 @@ def main():
                     default = .5, type=float )
     ap.add_argument( '-t','--takeout',help="dont cluster these SRs", nargs="*",
                      type=int )
-    ap.add_argument('-d','--database',help="path to database [../../smodels-database]",
+    ap.add_argument( '-d','--drop',help="drop these SRs", nargs="*",
+                     type=int )
+    ap.add_argument('-D','--database',help="path to database [../../smodels-database]",
                     default = "../../smodels-database", type=str )
     args = ap.parse_args()
     # dbname="http://smodels.hephy.at/database/official113"
@@ -115,6 +117,10 @@ def main():
     excls = []
         
     frac=args.corr
+
+    if args.drop != None:
+        for i in args.drop:
+            done.append ( i-1 )
 
     if args.takeout != None:
         for i in args.takeout:
