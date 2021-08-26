@@ -39,6 +39,7 @@ def _Hash ( lst ): ## simple hash function for our masses
     return ret
 
 allowTrimming=True ## allow big grids to be trimmed down
+trimmingFactor = 2 ## the factor by which to trim
 
 class DataHandler(object):
 
@@ -972,7 +973,7 @@ class DataHandler(object):
                             errorcounts["trimzaxis"]=True
                             logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
                         n_bins = n_bins / len(zRange)
-                        zRange = range(1,zAxis.GetNbins() + 1,2)
+                        zRange = range(1,zAxis.GetNbins() + 1,trimmingFactor )
                         n_bins = n_bins * len(zRange)
                     else:
                         if not errorcounts["trimzaxis"]:
@@ -981,7 +982,7 @@ class DataHandler(object):
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
-                    yRange = range(1,yAxis.GetNbins() + 1,2 )
+                    yRange = range(1,yAxis.GetNbins() + 1, trimmingFactor )
                     if not errorcounts["trimyaxis"]:
                         logger.warning ( "Too large map (nbins=%d > %s). Will trim y-axis from %d to %d (turn this off via dataHandlerObjects.allowTrimming)." % \
                                         ( n_bins, max_nbins, yAxis.GetNbins(), len(yRange) ))
@@ -994,7 +995,7 @@ class DataHandler(object):
                         logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
         if n_bins > max_nbins:
             if allowTrimming:
-                xRange = range(1,xAxis.GetNbins() + 1, 2)
+                xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
                     logger.warning ( "Too large map (nbins=%d > %d). Will trim x-axis from %d to %d (turn this off via dataHandlerObjects.allowTrimming)" % \
