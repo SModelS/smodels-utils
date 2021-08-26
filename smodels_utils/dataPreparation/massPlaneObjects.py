@@ -97,8 +97,7 @@ class MassPlane(object):
                       defining the mass array in terms of the x,y,.. variables
                       (e.g. [[x,y],[x,y]])
         """
-
-        if string == "":
+        if string in [ "", None, "None" ]:
             if not hasWarned["emptystring"]:
                 logger.error ( "cannot build mass plane from empty string!" )
                 hasWarned["emptystring"]=True
