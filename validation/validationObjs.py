@@ -452,7 +452,10 @@ class ValidationPlot():
         validationDir = os.path.join(self.expRes.path,'validation')
         datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
-            logger.error("Validation datafile %s not found" %datafile)
+            if self.options["generateData"] == False:
+                logger.error("Validation datafile %s not found" %datafile)
+            else:
+                logger.info("Validation datafile %s not found" %datafile)
             self.data = None
             return
 
