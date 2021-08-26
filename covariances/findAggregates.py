@@ -71,7 +71,9 @@ def main():
     # dbname="http://smodels.hephy.at/database/official113"
     # dbname="/home/walten/git/smodels-database"
     # d=Database( dbname, subpickle=True )
+    print ( "[findAggregates.py] instantiating database ", end="...", flush=True )
     d=Database( args.database )
+    print ( "done." )
 
     if "52" in args.analysis:
         args.analysis = "CMS-PAS-SUS-16-052"
