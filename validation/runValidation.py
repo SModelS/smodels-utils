@@ -50,13 +50,13 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         valPlot.setSLHAdir(slhadir)
     if options["generateData"]:
         valPlot.getDataFromPlanes()
-        options["generateData"]=True
     else:
         valPlot.loadData()
     if not valPlot.data:
         if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
+            # we did generate data
             options["generateData"]=True
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
@@ -149,10 +149,12 @@ def run ( expResList, options : dict, keep ):
                 from sympy import var
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
+                ## we need "local" options, since we switch one flag
+                localoptions = copy.deepcopy ( options )
                 for p in prettyorugly:
-                    validatePlot(expRes,txnameStr,ax,tarfile, options, kfactor, p,
+                    validatePlot(expRes,txnameStr,ax,tarfile, localoptions, kfactor, p,
                                  combine )
-                    options["generateData"] = False
+                    localoptions["generateData"] = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 

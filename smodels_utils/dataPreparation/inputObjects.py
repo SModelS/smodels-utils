@@ -1032,7 +1032,6 @@ class TxNameInput(Locker):
         :param massArray: array with masses to be checked. It must be consistend with the
                           topology of the txname constraint.
         """
-
         if hasattr(self,'massConstraint'):
             if not self.massConstraint:
                 return True
@@ -1043,11 +1042,20 @@ class TxNameInput(Locker):
         #If massConstraints was pre-defined as None or empty list, return always True
         if not self.massConstraints:
             return True
+        if len(massArray)==0:
+            logger.error ( f"empty mass array {massArray} for constraint {self.massConstraints}??" )
+            return False
 
         for elMass in self.massConstraints:
             goodMasses = True
             for ib,br in enumerate(elMass):
+                if len(massArray)<=ib:
+                    logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
+                    return False
                 for iv,vertex in enumerate(br):
+                    if len(massArray[ib])<=iv:
+                        logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
+                        return False
                     m1 = massArray[ib][iv]
                     if type(m1) == tuple:
                         m1 = m1[0]
