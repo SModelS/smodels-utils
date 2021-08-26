@@ -362,6 +362,8 @@ class DatabaseCreator(list):
             #Loop over txnames
             for txname in dataset._txnameList:
                 for plane in txname._goodPlanes:
+                    if plane == None:
+                        continue
                     for exclusion in plane._exclusionCurves:
                         if not exclusion:
                             continue  #Exclusion source has not been defined
@@ -382,7 +384,9 @@ class DatabaseCreator(list):
                             try:
                                 if plane.branches == None:
                                     from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-                                    plane = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
+                                    plane2 = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
+                                if plane2 == None:
+                                    continue
                                 #    plane.branches = self.planebackups[str(txname)+str(plane)]
                                 masses = plane.getParticleMasses ( **point )
                                 meetsConstraints = txname.checkMassConstraints ( masses )
@@ -681,8 +685,15 @@ class DatabaseCreator(list):
                         logger.error ( "Attempt at removal was not successful. Please fix in convert.py." )
                         sys.exit()
                 if ";" in value: ## order canonically
-                    tokens = value.split(";")
-                    tokens = [ x.strip() for x in tokens ]
+                    tmp = value.split(";")
+                    tokens = []
+                    for t in tmp:
+                        t = t.strip()
+                        if t == "":
+                            continue
+                        tokens.append ( t )
+                    # tokens = [ x.strip() for x in tokens ]
+
                     tokens.sort()
                     value = "; ".join( tokens )
                     while value.find("  ")>-1:

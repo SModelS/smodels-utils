@@ -48,22 +48,21 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         return False
     if options["generateData"] != False:
         valPlot.setSLHAdir(slhadir)
-    generatedData=False
     if options["generateData"]:
         valPlot.getDataFromPlanes()
-        options["generatedData"]=True
+        options["generateData"]=True
     else:
         valPlot.loadData()
     if not valPlot.data:
         if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
-            options["generatedData"]=True
+            options["generateData"]=True
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
         valPlot.pretty = True
         valPlot.savePlot()
-        if options["generatedData"]:
+        if options["generateData"]:
             valPlot.saveData()
             if options["pngAlso"]:
                 valPlot.savePlot(fformat="png")
@@ -74,7 +73,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         valPlot.getUglyPlot()
         valPlot.pretty = False
         valPlot.savePlot()
-        if generatedData:
+        if options["generateData"]:
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
@@ -124,7 +123,7 @@ def run ( expResList, options : dict, keep ):
                 logger.info("Database entry specifies a validation tarball: %s. Will use it." % tarfile )
             tarfile = os.path.join(slhadir,tarfile)
 
-            if not os.path.isfile(tarfile) and generateData != False:
+            if not os.path.isfile(tarfile) and options["generateData"] != False:
                 logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
                 continue
 
@@ -153,7 +152,7 @@ def run ( expResList, options : dict, keep ):
                 for p in prettyorugly:
                     validatePlot(expRes,txnameStr,ax,tarfile, options, kfactor, p,
                                  combine )
-                    generateData = False
+                    options["generateData"] = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 
