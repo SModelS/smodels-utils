@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 #This order can be changed using the coordinates keyword in setSources or addSource.
 allvars = x,y,z,w = var('x y z w')
 
+hasWarned = { "emptystring": False }
+
 def _lambdify ( a, b, c, dummify ):
     f = lambdify ( a, b, c, dummify=dummify )
     f.expr = "%s: %s" % ( a, b )
@@ -97,7 +99,9 @@ class MassPlane(object):
         """
 
         if string == "":
-            logger.error ( "cannot build mass plane from empty string!" )
+            if not hasWarned["emptystring"]:
+                logger.error ( "cannot build mass plane from empty string!" )
+                hasWarned["emptystring"]=True
             return None
         massArray = eval(string)
         massPlane = MassPlane(txname,massArray)
