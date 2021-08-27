@@ -64,9 +64,9 @@ def main():
     ap.add_argument('-c','--corr',help="correlation needed to cluster [.5]",
                     default = .5, type=float )
     ap.add_argument( '-t','--takeout',help="dont cluster these SRs", nargs="*",
-                     type=int )
+                     type=int, action="append" )
     ap.add_argument( '-d','--drop',help="drop these SRs", nargs="*",
-                     type=int )
+                     type=int, action="append" )
     ap.add_argument('-D','--database',help="path to database [../../smodels-database]",
                     default = "../../smodels-database", type=str )
     args = ap.parse_args()
@@ -120,13 +120,13 @@ def main():
 
     if args.drop != None:
         for i in args.drop:
-            done.append ( i-1 )
+            done.append ( i[0]-1 )
 
     if args.takeout != None:
         for i in args.takeout:
-            done.append ( i )
-            excls.append ( i )
-            aggs.append ( [ i ] )
+            done.append ( i[0]-1 )
+            excls.append ( i[0]-1 )
+            aggs.append ( [ i[0]-1 ] )
 
     for k in corrs:
         #if k < .1:
