@@ -30,7 +30,7 @@ allowMultipleAcceptances = False
 
 errorcounts = { "pathtupleerror": False, "smallerthanzero": False,
                 "wildcards": False, "trimyaxis": False, "trimxaxis": False,
-                "trimzaxis": False }
+                "trimzaxis": False, "zerovalue": False }
 
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
@@ -422,7 +422,9 @@ class DataHandler(object):
                 logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
                 return False
             if value == 0.0 and strictlyPositive:
-                logger.warning("Zero value %s in %s will be ignored"%(value,self.path))
+                if not errorcounts["zerovalue"]:
+                    logger.warning("Zero value %s in %s will be ignored"%(value,self.path))
+                    errorcounts["zerovalue"]=True
                 return False
         return True
 

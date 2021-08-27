@@ -37,6 +37,8 @@ logger.setLevel(level=logging.WARNING)
 quenchNegativeMasses = False ## set to true, if you wish to
 # quench the warning about negative masses
 
+errormsgs = {}
+
 def getSignalRegionsEMBaked ( filename ):
     """ from an emBaked file, retrieve the names of the signal regions """
     ret = set()
@@ -1043,19 +1045,23 @@ class TxNameInput(Locker):
         if not self.massConstraints:
             return True
         if len(massArray)==0:
-            logger.error ( f"empty mass array {massArray} for constraint {self.massConstraints}??" )
-            return False
+            line = f"empty mass array {massArray} for constraint {self.massConstraints}??"
+            if not line in errormsgs:
+                logger.error ( line )
+                errormsgs[line]=0
+            errormsgs[line]+=1
+            return True
 
         for elMass in self.massConstraints:
             goodMasses = True
             for ib,br in enumerate(elMass):
                 if len(massArray)<=ib:
                     logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
-                    return False
+                    return True
                 for iv,vertex in enumerate(br):
                     if len(massArray[ib])<=iv:
                         logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
-                        return False
+                        return True
                     m1 = massArray[ib][iv]
                     if type(m1) == tuple:
                         m1 = m1[0]
