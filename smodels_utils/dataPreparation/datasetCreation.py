@@ -23,6 +23,7 @@ from smodels.tools.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 
+errorcounts = { "errorsvary": 0, "moreconservative": 0 }
 
 def createAggregationList ( aggregationborders ):
     """
@@ -83,10 +84,14 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     bgErr2 = covariance[aggidx][aggidx]
     newds.bgError = round ( math.sqrt ( bgErr2 ), 5 )
     if ( oldBgError - newds.bgError ) / newds.bgError > .2:
-        logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( aggidx+1, oldBgError, newds.bgError  ) )
+        if errorcounts["errorsvary"]==0:
+            logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( aggidx+1, oldBgError, newds.bgError  ) )
         if oldBgError > newds.bgError:
-            logger.error ( "since direct computation is more conservative, I will use that one." )
+            if errorcounts["moreconservative"] == 0:
+                logger.error ( "since direct computation is more conservative, I will use that one." )
+            errorcounts["moreconservative"]+=1
             newds.bgError = oldBgError
+        errorcounts["errorsvary"]+=1
     ntoys, alpha = 200000, .05
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
