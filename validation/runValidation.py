@@ -141,10 +141,11 @@ def run ( expResList, options : dict, keep ):
             axis = options["axis"]
             if axis is None:
                 for ax in axes:
+                    localopts = copy.deepcopy ( options )
                     for p in prettyorugly:
-                        validatePlot(expRes,txnameStr,ax,tarfile, options, kfactor, p,
+                        validatePlot(expRes,txnameStr,ax,tarfile, localopts, kfactor, p,
                                  combine, namedTarball =namedTarball, keep = keep )
-                        options["generateData"]=False
+                        localopts["generateData"]=False
             else:
                 from sympy import var
                 x,y,z = var("x y z")
