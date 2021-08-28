@@ -36,7 +36,7 @@ def oneIndex ( aggs ):
     return ret
 
 def checkIfToAdd ( index : int, agg : list, frac : float, corrmatrix : list ):
-    """ check if to add index to aggregation list agg, 
+    """ check if to add index to aggregation list agg,
     :param index: the index to be added
     :param agg: list of aggregated indices
     :param frac: threshold on correlation, aggregate if all correlations are above it
@@ -46,7 +46,7 @@ def checkIfToAdd ( index : int, agg : list, frac : float, corrmatrix : list ):
     return True
 
     # print ( f"shall we add {index} to {agg}?" )
-    # print ( f"covs are: {[ corrmatrix[ index ][x] for x in agg ] }" ) 
+    # print ( f"covs are: {[ corrmatrix[ index ][x] for x in agg ] }" )
     ## for now we implement a maximum spanning tree, i.e. add index only to agg
     ## if *all* correlations are above threshold
     allAbove = True
@@ -56,6 +56,123 @@ def checkIfToAdd ( index : int, agg : list, frac : float, corrmatrix : list ):
             allAbove = False
             break
     return allAbove
+
+def run ( database, analysis, drop, takeout, corr ):
+    """ run the aggregation finder
+    :param database: path to database
+    :param analysis: ana id, e.g. CMS-SUS-19-006
+    :param drop: list of indices to drop from aggregation entirely
+    :param takeout: list of indices to not aggregate, but keep as individual
+                    SRs
+    :param corr: cut on correlation
+    """
+    print ( "[findAggregates.py] instantiating database ", end="...", flush=True )
+    d=Database( database )
+    print ( "done." )
+
+    if "52" in analysis:
+        analysis = "CMS-PAS-SUS-16-052"
+    if "50" in analysis:
+        analysis = "CMS-SUS-16-050"
+    ids = [ analysis ]
+    results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
+                             useNonValidated=True )
+    result=results[0]
+
+    def getDatasets():
+        datasets={}
+        for _,ds in enumerate ( result.datasets ):
+            i=_ # +1
+    #        print ( i, ds.dataInfo.dataId )
+            datasets[i]=ds.dataInfo.dataId
+            datasets[ ds.dataInfo.dataId ] = i
+        return datasets
+
+    cov = result.globalInfo.covariance
+    corrmatrix = cov_helpers.computeCorrelationMatrix ( cov )
+    n=len(cov)
+    # n=2
+
+    pairs = {}
+
+    for i in range(n):
+        for j in range(i+1,n):
+            cor = cov[i][j]/sqrt(cov[i][i]*cov[j][j] )
+            # print ( "cov[%d,%d]=%f" % ( i+1,j+1, cor) )
+            pairs[cor] = [i,j]
+            # pairs[cor] = [i+1,j+1]
+
+    corrs = list(pairs.keys())
+    corrs.sort(reverse=True)
+
+    done = []
+    aggs = []
+    excls = []
+
+    frac=corr
+
+    if drop != None:
+        for i in drop:
+            done.append ( i[0]-1 )
+
+    if takeout != None:
+        for i in takeout:
+            done.append ( i[0]-1 )
+            excls.append ( i[0]-1 )
+            aggs.append ( [ i[0]-1 ] )
+
+    for k in corrs:
+        #if k < .1:
+        #    break
+        v = pairs[k]
+        # print ( "%.2f: %s" % ( k, v ) )
+        if v[0] in done and v[1] in done:
+            ## all taken care of
+            continue
+        if not v[0] in done and not v[1] in done:
+            if k > frac:
+                ## a virgin pair. add as new aggregate region
+                done.append ( v[0] )
+                done.append ( v[1] )
+                aggs.append ( v )
+            else:
+                done.append ( v[0] )
+                done.append ( v[1] )
+                aggs.append ( [ v[0] ] )
+                aggs.append ( [ v[1] ] )
+        if v[0] in done and not v[1] in done:
+            if k > frac and not v[1] in excls and not v[0] in excls:
+                ## v0 is already in a region. lets add v1.
+                for agg in aggs:
+                    if v[0] in agg and checkIfToAdd ( v[1], agg, frac, corrmatrix ):
+                        ## lets assume yes
+                        done.append ( v[1] )
+                        agg.append ( v[1] )
+            else: ## we cant add v1
+                done.append ( v[1] )
+                aggs.append ( [ v[1] ] )
+        if v[1] in done and not v[0] in done:
+            if k > frac and not v[0] in excls and not v[1] in excls:
+                ## v1 is already in a region. can we add v0?
+                for agg in aggs:
+                    if v[1] in agg and checkIfToAdd ( v[0], agg, frac, corrmatrix ):
+                        done.append ( v[0] )
+                        agg.append ( v[0] )
+            else:
+                done.append ( v[0] )
+                aggs.append ( [ v[0] ] )
+
+    for a in aggs:
+        a.sort()
+    aggs.sort()
+
+    c=set()
+    for i in aggs:
+        for j in i: c.add ( j )
+    oaggs = oneIndex ( aggs )
+    print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), oaggs ) )
+    print ( "largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
+    # print ( "with names", useNames ( aggs, getDatasets() ) )
 
 def main():
     ap = argparse.ArgumentParser( description= "find aggregate regions based on correlations." )
@@ -70,6 +187,8 @@ def main():
     ap.add_argument('-D','--database',help="path to database [../../smodels-database]",
                     default = "../../smodels-database", type=str )
     args = ap.parse_args()
+    run ( args.database, args.analysis, args.drop, args.takeout, args.corr )
+    """
     # dbname="http://smodels.hephy.at/database/official113"
     # dbname="/home/walten/git/smodels-database"
     # d=Database( dbname, subpickle=True )
@@ -95,7 +214,7 @@ def main():
             datasets[ ds.dataInfo.dataId ] = i
         return datasets
 
-    cov = result.globalInfo.covariance 
+    cov = result.globalInfo.covariance
     corrmatrix = cov_helpers.computeCorrelationMatrix ( cov )
     n=len(cov)
     # n=2
@@ -106,8 +225,8 @@ def main():
         for j in range(i+1,n):
             cor = cov[i][j]/sqrt(cov[i][i]*cov[j][j] )
             # print ( "cov[%d,%d]=%f" % ( i+1,j+1, cor) )
-            pairs[cor] = [i,j] 
-            # pairs[cor] = [i+1,j+1] 
+            pairs[cor] = [i,j]
+            # pairs[cor] = [i+1,j+1]
 
     corrs = list(pairs.keys())
     corrs.sort(reverse=True)
@@ -115,7 +234,7 @@ def main():
     done = []
     aggs = []
     excls = []
-        
+
     frac=args.corr
 
     if args.drop != None:
@@ -172,13 +291,15 @@ def main():
     for a in aggs:
         a.sort()
     aggs.sort()
-            
+
     c=set()
-    for i in aggs: 
+    for i in aggs:
         for j in i: c.add ( j )
     oaggs = oneIndex ( aggs )
     print ( "%d regions -> %d agg regions: %s" % ( len(c), len(aggs), oaggs ) )
     print ( "largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
+    """
 
-main()
+if __name__ == "__main__":
+    main()
