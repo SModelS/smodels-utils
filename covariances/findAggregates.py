@@ -113,13 +113,19 @@ def run ( database, analysis, drop, takeout, corr ):
 
     if drop != None:
         for i in drop:
-            done.append ( i[0]-1 )
+            if type(i) in [ list, tuple ]:
+                done.append ( i[0]-1 )
+            if type(i) in [ int ]:
+                done.append ( i-1 )
 
     if takeout != None:
         for i in takeout:
-            done.append ( i[0]-1 )
-            excls.append ( i[0]-1 )
-            aggs.append ( [ i[0]-1 ] )
+            i0 = i
+            if type(i) in [ list, tuple] :
+                i0 = i[0]
+            done.append ( i0-1 )
+            excls.append ( i0-1 )
+            aggs.append ( [ i0-1 ] )
 
     for k in corrs:
         #if k < .1:
