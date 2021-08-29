@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" Identify a good example for how to combine results. """
+""" methods revolving around aggregations """
 
 
 import sys, numpy

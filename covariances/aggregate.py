@@ -89,9 +89,9 @@ def run():
             C[k]+=v*factor
     print ( "done!" )
     drops, greater = pprint ( C, args.drop, args.takeout, args.corr )
-    import findAggregates
+    import aggregators 
     print ( "drops", drops )
-    findAggregates.aggregateByCorrs ( args.database, args.analysis, drops, greater, args.corr )
+    aggregators.aggregateByCorrs ( args.database, args.analysis, drops, greater, args.corr )
 
 if __name__ == "__main__":
     run()
