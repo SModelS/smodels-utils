@@ -65,6 +65,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     aggregated = ""
     observedN, expectedBG, bgError2 = 0, 0., 0.
     originalSRs = []
+    comments = []
     for ca,a in enumerate(agg):
         if a == 0:
             logger.error ( f"found index 0 in aggregation region #{ca+1}. but we are one-indexed. add 1 to all elements?" )
@@ -78,6 +79,10 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         bgError2 += ds.bgError**2 ## F
         aggregated += ds.dataId + ";"
         originalSRs.append ( ds.dataId )
+        if hasattr ( ds, "comment" ):
+            comments.append ( ds.comment )
+    if len(comments)>0:
+        newds.comment = ";".join ( comments )
     newds.observedN = observedN
     newds.expectedBG = round ( expectedBG, 5 )
     oldBgError = round ( math.sqrt ( bgError2 ), 5 )
