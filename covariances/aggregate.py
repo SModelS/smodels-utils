@@ -6,6 +6,8 @@ import glob
 import argparse
 
 def retrieve ( fname ):
+    """ get a dictionary of scores of signal regions, for one validation file
+    """
     f=open(fname,"rt" )
     globalsParameter = {}
     exec ( f.read(), globalsParameter )
@@ -91,7 +93,8 @@ def run():
     drops, greater = pprint ( C, args.drop, args.takeout, args.corr )
     import aggregators 
     print ( "drops", drops )
-    aggregators.aggregateByCorrs ( args.database, args.analysis, drops, greater, args.corr )
+    # aggregators.aggregateByCorrs ( args.database, args.analysis, drops, greater, args.corr )
+    aggregators.aggregateByNames ( args.database, args.analysis )
 
 if __name__ == "__main__":
     run()

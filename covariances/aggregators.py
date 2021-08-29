@@ -7,6 +7,7 @@ import sys, numpy
 import colorama
 from math import sqrt
 from smodels.experiment.databaseObj import Database
+from smodels_utils.helper import various
 import IPython
 import pickle
 import tempfile
@@ -14,8 +15,9 @@ import os
 import argparse
 import cov_helpers
 
-
 def useNames ( aggs, datasets ):
+    """ given lists of lists of indices, return lists of lists of
+        dataset names """
     ret = []
     for agg in aggs:
         tmp = []
@@ -57,8 +59,50 @@ def checkIfToAdd ( index : int, agg : list, frac : float, corrmatrix : list ):
             break
     return allAbove
 
+def retrieveEMStats ( database, analysis ):
+    """ see if we can retrieve data from a statsEM.py file.
+        helpful for aggregation by name
+    :param database: path to database
+    :param analysis: ana id, e.g. CMS-SUS-19-006
+    """
+    path = various.getPathName ( database, analysis )
+    path = os.path.join ( path, "orig", "statsEM.py" )
+    if not os.path.exists ( path ):
+        return {}
+    f = open ( path, "rt" )
+    txt = f.read()
+    f.close()
+    D = eval ( txt )
+    return D
+
+def aggregateByNames ( database, analysis ):
+    """ run the aggregator based on SR names
+    :param database: path to database
+    :param analysis: ana id, e.g. CMS-SUS-19-006
+    """
+    print ( "[findAggregates.py] instantiating database ", end="...", flush=True )
+    d=Database( database )
+    ids = [ analysis ]
+    print ( "done." )
+    results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
+                             useNonValidated=True )
+    result=results[0]
+
+    def getDatasets():
+        datasets,comments={},{}
+        for _,ds in enumerate ( result.datasets ):
+            i=_ # +1
+    #        print ( i, ds.dataInfo.dataId )
+            datasets[i]=ds.dataInfo.dataId
+            comments[i+1]=ds.dataInfo.comment
+            datasets[ ds.dataInfo.dataId ] = i
+        return datasets, comments
+
+    datasets, comments = getDatasets()
+    return []
+
 def aggregateByCorrs ( database, analysis, drop, takeout, corr ):
-    """ run the aggregation finder
+    """ run the aggregator based on correlations
     :param database: path to database
     :param analysis: ana id, e.g. CMS-SUS-19-006
     :param drop: list of indices to drop from aggregation entirely
