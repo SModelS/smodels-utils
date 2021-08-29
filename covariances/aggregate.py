@@ -69,6 +69,10 @@ def run():
     ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-006-ma5]",
                     default = "CMS-SUS-19-006-ma5", type=str )
     args = ap.parse_args()
+    if "52" in args.analysis:
+        args.analysis = "CMS-PAS-SUS-16-052"
+    if "50" in args.analysis:
+        args.analysis = "CMS-SUS-16-050"
     from smodels_utils.helper import various
     path = various.getPathName ( args.database, args.analysis )
     files = glob.glob ( f"{path}/validation/T*_2EqMassAx_EqMassBy.py" )

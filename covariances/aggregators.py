@@ -114,10 +114,6 @@ def aggregateByCorrs ( database, analysis, drop, takeout, corr ):
     d=Database( database )
     print ( "done." )
 
-    if "52" in analysis:
-        analysis = "CMS-PAS-SUS-16-052"
-    if "50" in analysis:
-        analysis = "CMS-SUS-16-050"
     ids = [ analysis ]
     results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
                              useNonValidated=True )
