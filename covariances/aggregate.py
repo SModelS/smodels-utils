@@ -70,9 +70,9 @@ def run():
     from smodels_utils.helper import various
     path = various.getPathName ( args.database, args.analysis )
     files = glob.glob ( f"{path}/validation/T*_2EqMassAx_EqMassBy.py" )
-    print ( f"[dsStats.py] getting stats for {path}." )
+    print ( f"[aggregate.py] getting stats for {path}." )
     C = {}
-    print ( f"[dsStats.py]", end=" " )
+    print ( f"[aggregate.py]", end=" " )
     for f in files:
         p1 = f.rfind("/")
         topo = f[p1+1:]
@@ -91,7 +91,7 @@ def run():
     drops, greater = pprint ( C, args.drop, args.takeout, args.corr )
     import findAggregates
     print ( "drops", drops )
-    findAggregates.run ( args.database, args.analysis, drops, greater, args.corr )
+    findAggregates.aggregateByCorrs ( args.database, args.analysis, drops, greater, args.corr )
 
 if __name__ == "__main__":
     run()
