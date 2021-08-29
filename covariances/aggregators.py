@@ -91,10 +91,10 @@ def aggregateByNames ( database, analysis ):
     def getDatasets():
         datasets,comments={},{}
         for _,ds in enumerate ( result.datasets ):
-            i=_ # +1
+            i=_ + 1
     #        print ( i, ds.dataInfo.dataId )
             datasets[i]=ds.dataInfo.dataId
-            comments[i+1]=ds.dataInfo.comment
+            comments[i]=ds.dataInfo.comment
             datasets[ ds.dataInfo.dataId ] = i
         return datasets, comments
 
