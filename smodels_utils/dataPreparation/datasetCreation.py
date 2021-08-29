@@ -423,6 +423,8 @@ class DatasetsFromEmbaked:
             if not count_all in self.blinded_regions:
                 counter+=1
                 dataset = DataSetInput ( dataId )
+                if "comment" in values:
+                    dataset.comment = values["comment"]
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '"%s"' % dataId )
