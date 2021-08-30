@@ -281,9 +281,9 @@ def describe ( aggs, dropped, n=None ):
     for i in aggs:
         if len(i)==1:
             nexclusives+=1
+    print ( f"# {' '.join(sys.argv)}" )
     print ( "# %d regions -> %d agg regions with %d dropped and %d exclusives:" % \
             ( n, len(aggs), len(dropped), nexclusives ) )
-    print ( f"# {' '.join(sys.argv)}" )
     print ( "aggregate = %s" % ( aggs ) )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
 
