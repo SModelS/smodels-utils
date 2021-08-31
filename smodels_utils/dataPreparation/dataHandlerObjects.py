@@ -18,6 +18,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
+import numpy as np
 from sympy import var
 x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
@@ -417,7 +418,11 @@ class DataHandler(object):
         if self.allowNegativeValues:
             return True
         for value in values:
-
+            if type(value) not in [ float, np.float64, int, np.int ]:
+                print ( f"[dataHandlerObjects] value {value} cannot be cast to float." )
+                if type(value) == str and "{" in value:
+                    print ( "[dataHandlerObjects] did you try to parse an embaked file as a csv file maybe?" )
+                    sys.exit(-1)
             if value < 0.0:
                 logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
                 return False
