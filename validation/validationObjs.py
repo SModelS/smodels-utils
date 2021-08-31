@@ -743,7 +743,7 @@ class ValidationPlot():
                 n = self.options["keepTopNSRs"]
                 for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
                     s.append ( (k,v) )
-                Dict["leadingsDSes"]= s
+                Dict["leadingDSes"]= s
             if "l_max" in expRes and "likelihood" in expRes:
                 import math
                 ratio = 1.

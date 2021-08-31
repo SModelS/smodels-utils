@@ -39,8 +39,13 @@ def retrieve ( fname ):
     ret = {}
     n = len ( globalsParameter["validationData"] )
     for pt in globalsParameter["validationData"]:
-        if 'leadingsDSes' in pt:
+        if 'leadingsDSes' in pt: # typo in py file
             for idx,(k,v) in enumerate(pt["leadingsDSes"]):
+                if not v in ret:
+                    ret[v]=0
+                ret[v]+=1000./(n*(idx+1)**2)
+        if 'leadingDSes' in pt:
+            for idx,(k,v) in enumerate(pt["leadingDSes"]):
                 if not v in ret:
                     ret[v]=0
                 ret[v]+=1000./(n*(idx+1)**2)
