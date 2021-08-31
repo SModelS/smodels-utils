@@ -888,9 +888,8 @@ class TxNameInput(Locker):
         dataList = []
         for ptDict in dataHandler:
 
-
             if len(ptDict) != nvars+1:
-                logger.error("Number of free parameters in data and in axes do not match")
+                logger.error( f"Number of free parameters in data ({ptDict}) and in axes ({plane.xvars}) do not match")
                 sys.exit()
 
             #ptDic is of the form: {x : float, y : float, value-key : float}
