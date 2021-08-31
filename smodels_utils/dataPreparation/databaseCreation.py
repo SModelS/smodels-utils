@@ -871,23 +871,29 @@ def removeRepeated(datalist,dataType=None):
     uniqueEntries = []
     repeatedEntries = []
     inconsistentEntries = []
+    inconsistencies = {}
     for i,pt in enumerate(sortedValue):
         originalIndex = sortedIndices[i]
         m = pt[0]
         #Check if new mass is different from previous one:
         if m != sortedValue[i-1][0]:
+        #if m != sortedValue[i][0]:
             uniqueEntries.append(originalIndex)
         else:
             #Check if the values differ:
-            if pt[1] == sortedValue[i-1][1]:
+            if pt[1] == sortedValue[i][1]:
+            # if pt[1] == sortedValue[i-1][1]:
                 repeatedEntries.append(originalIndex) #Entries are identical, but repeated
             else:
                 inconsistentEntries.append(originalIndex) #Masses are identical, but with inconsistent values
+                inconsistencies[originalIndex]= ( pt[1], sortedValue[i][1] )
+                # inconsistencies[originalIndex]= ( pt[1], sortedValue[i-1][1] )
 
     if inconsistentEntries:
         for j in inconsistentEntries:
-            logger.warning("Mass entry %s appears in data with distinct values"
-                             %(str(datalist[j][0]).replace(" ","")))
+            logger.warning("Mass entry %s appears in data with distinct values: %s != %s"
+                             %(str(datalist[j][0]).replace(" ",""),
+                                inconsistencies[j][0],inconsistencies[j][1]))
 
     if repeatedEntries:
         for j in repeatedEntries:
