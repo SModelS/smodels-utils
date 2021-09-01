@@ -739,8 +739,12 @@ class DataHandler(object):
         :yield: list with values as float, one float for every column
         """
         SR = self.objectName
-        with open(self.path) as f:
-            D=eval(f.read())
+        try:
+            with open(self.path) as f:
+                D=eval(f.read())
+        except Exception as e:
+            logger.error ( f"could not read {self.path}: {e}" ) 
+            sys.exit(-1)
         keys = list(D.keys() )
         keys.sort()
         for pt in keys:
