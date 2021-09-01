@@ -31,6 +31,8 @@ def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
     mgaps = [0.] * (int(len(dists[0])/2.)-1)
     if massgaps != "":
         mgaps = eval(massgaps)
+        if type(mgaps) in [ float, int ]:
+            mgaps = ( mgaps, )
     print ( "[weed] massgap considered", mgaps )
     for x,d1 in enumerate(dists):
         if x % 200 == 0:
