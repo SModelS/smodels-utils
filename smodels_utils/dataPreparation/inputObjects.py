@@ -42,9 +42,13 @@ errormsgs = {}
 def getSignalRegionsEMBaked ( filename ):
     """ from an emBaked file, retrieve the names of the signal regions """
     ret = set()
-    f=open( filename,"r")
-    values=list(eval(f.read()).values())
-    f.close()
+    try:
+        f=open( filename,"r")
+        values=list(eval(f.read()).values())
+        f.close()
+    except Exception as e:
+        logger.error ( f"cannot read {filename}: {e}" )
+        sys.exit(-1)
     for v in values:
         for k in v:
             if not k.startswith("__"):
