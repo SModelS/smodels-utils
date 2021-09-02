@@ -941,6 +941,13 @@ class TxNameInput(Locker):
                     except ValueError as e:
                         logger.error ( f"unit starting with / is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
                     value = value / factor
+                elif type(unit) == str and unit.startswith ( "*" ):
+                    factor = unit[1:]
+                    try:
+                        factor = float ( factor )
+                    except ValueError as e:
+                        logger.error ( f"unit starting with / is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
+                    value = value * factor
                 else:
                     value = value*eval(unit, {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:

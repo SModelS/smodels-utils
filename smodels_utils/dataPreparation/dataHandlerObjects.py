@@ -130,6 +130,9 @@ class DataHandler(object):
             if type(unitString) == str and unitString.startswith("/"):
                 self._unit = unitString
                 return
+            if type(unitString) == str and unitString.startswith("*"):
+                self._unit = unitString
+                return
             if not unitString in units:
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
