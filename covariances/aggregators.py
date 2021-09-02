@@ -132,7 +132,7 @@ def aggregateByNames ( database, analysis, drops, exclusives ):
     :param exclusives: list of indices to not aggregate, but keep as individual
                        SRs
     """
-    print ( "[findAggregates.py] instantiating database ", end="...", flush=True )
+    print ( "[aggregators.py] instantiating database ", end="...", flush=True )
     d=Database( database )
     ids = [ analysis ]
     print ( "done." )
@@ -175,7 +175,7 @@ def aggregateByCorrs ( database, analysis, drop, exclusives, corr ):
                     SRs
     :param corr: cut on correlation
     """
-    print ( "[findAggregates.py] instantiating database ", end="...", flush=True )
+    print ( "[aggregators.py] instantiating database ", end="...", flush=True )
     d=Database( database )
     print ( "done." )
 

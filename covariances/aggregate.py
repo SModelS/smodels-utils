@@ -14,13 +14,20 @@ def pprint ( C, droprate = 2., takeoutrate = 150.,
     :param takeoutrate: minimum score with which we takeout
     :param cut: cut on correlation for findAggregates
     """
-    # print ( C )
+    print ( C )
     ones = 0
     aggs, overflow, exclusives = [], [], []
     drops, zeroes = [], []
     pmax = takeoutrate
     pmin = droprate
-    for i in range(1,174):
+    nmax = -1
+    for k,v in C.items():
+        sr = k.replace("SR","")
+        sr = int(sr)
+        if sr > nmax:
+            nmax = sr
+
+    for i in range(1,nmax):
         sr = f"SR{i}"
         if not sr in C:
             zeroes.append ( i )
