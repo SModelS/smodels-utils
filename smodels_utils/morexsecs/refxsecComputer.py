@@ -421,6 +421,7 @@ class RefXSecComputer:
             if sqrts == 8:
                 print ( "[refxsecComputer] asking for N2 N1 production for 8 TeV. we only have 13 tev" )
                 return None, None, None
+            logger.warning ( f"asked to compute N2 N2 production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
             order = NLL
             pb = False
