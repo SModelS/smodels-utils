@@ -255,7 +255,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
             validationPlot.combine == True:
-        subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
+        subtitle = "%d signal regions" % len(validationPlot.expRes.datasets)
     if len(subtitle) > 100:
         subtitle = subtitle[:100] + " ..."
     if len(validationPlot.expRes.datasets) == 1 and \

@@ -54,6 +54,10 @@ def main():
                             action = "store_true" )
     argparser.add_argument('-r', '--remove', help="remove cruft T*slha files before starting",
                             action = "store_true" )
+    argparser.add_argument('-z', '--zip', help="zip the files after youre done",
+                            action = "store_true" )
+    argparser.add_argument('-v', '--verbose', help="increase verbosity",
+                            action = "store_true" )
     args = argparser.parse_args()
     if args.ewk not in [ "hino", "wino" ]:
         print ( "[addRefXSecs] error ewk %s not recognised" % args.ewk )
@@ -80,10 +84,11 @@ def main():
     sqrts = [ args.sqrts ]
     if sqrts == [ 0 ]:
         sqrts = [ 8, 13 ]
-    computer = RefXSecComputer ( )
+    computer = RefXSecComputer ( verbose=args.verbose )
     computer.computeForBunch ( sqrts, files, tofile=True )
     ## turn them back into a tarball
-    zipThem ( files )
+    if args.zip:
+        zipThem ( files )
 
 if __name__ == "__main__":
     main()

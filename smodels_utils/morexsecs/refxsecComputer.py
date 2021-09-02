@@ -29,7 +29,13 @@ class RefXSecComputer:
     """
     version = "1.0" ## make sure we can trace changes in the tables
 
-    def __init__(self ):
+    def __init__( self, verbose = False ):
+        """
+        :param verbose: turn on verbose mode, for debugging 
+        """
+        self.verbose = verbose
+        if verbose:
+            setLogLevel ( "info" )
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
                                        "morexsecs", "tables" )
 
