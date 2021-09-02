@@ -162,4 +162,4 @@ DECAY   1000023     1.00000000E+00   # neutralino2 decays
       6.66000000E-02    3     1000022       -14        14   # BR(~chi_20 -> ~chi_10 nu_mub  nu_mu)
       6.66000000E-02    3     1000022       -16        16   # BR(~chi_20 -> ~chi_10 nu_taub nu_tau)
  
-      
+DECAY   1000022     0.00000000E+00   # neutralino1 decays

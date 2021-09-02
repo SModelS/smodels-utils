@@ -186,3 +186,4 @@ DECAY   1000024     0.10000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    24    1000022
 
+DECAY   1000022     0.00000000E+00   # neutralino1 decays
