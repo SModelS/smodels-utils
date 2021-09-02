@@ -16,8 +16,8 @@ import argparse
 import cov_helpers
 
 def getDatasets( result, addReverse = True ):
-    """ given an experimental result, return datasets and possibly 
-        dictionary of comments 
+    """ given an experimental result, return datasets and possibly
+        dictionary of comments
     :param addReverse: if True, then also add reverse lookup
     """
     datasets,comments={},{}
@@ -124,6 +124,22 @@ def obtainDictFromComment ( comment, analysis ):
         # D["MHT"] = tokens[4].replace("MHT","")
     return D
 
+def getExpResult ( database, analysis ):
+    print ( "[aggregators.py] instantiating database ", end="...", flush=True )
+    d=Database( database )
+    print ( "done." )
+    if analysis.endswith ( "-eff" ):
+        analysis = analysis.replace("-eff","")
+    ids = [ analysis ]
+    print ( "done." )
+    aggs = []
+    results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
+                             useNonValidated=True )
+    if len(results)==0:
+        print ( f"[aggregators.py] could not find result '{analysis}' in database '{database}'." )
+        sys.exit()
+    return results[0]
+
 def aggregateByNames ( database, analysis, drops, exclusives ):
     """ run the aggregator based on SR names
     :param database: path to database
@@ -132,13 +148,7 @@ def aggregateByNames ( database, analysis, drops, exclusives ):
     :param exclusives: list of indices to not aggregate, but keep as individual
                        SRs
     """
-    print ( "[aggregators.py] instantiating database ", end="...", flush=True )
-    d=Database( database )
-    ids = [ analysis ]
-    print ( "done." )
-    aggs = []
-    results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
-                             useNonValidated=True )
+    result  = getExpResult ( database, analysis )
     datasets, comments = getDatasets( results[0], addReverse=False )
     filtered = {}
     dropped = []
@@ -160,7 +170,7 @@ def aggregateByNames ( database, analysis, drops, exclusives ):
                 if comment == aggcomment and not hasAdded:
                     newaggs[aggctr].append ( srnr )
                     hasAdded = True
-                    
+
         if not hasAdded:
             newaggs.append ( [ srnr ] )
     aggs += newaggs
@@ -175,14 +185,7 @@ def aggregateByCorrs ( database, analysis, drop, exclusives, corr ):
                     SRs
     :param corr: cut on correlation
     """
-    print ( "[aggregators.py] instantiating database ", end="...", flush=True )
-    d=Database( database )
-    print ( "done." )
-
-    ids = [ analysis ]
-    results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
-                             useNonValidated=True )
-    result=results[0]
+    result = getExpResult ( database, analysis )
 
     cov = result.globalInfo.covariance
     corrmatrix = cov_helpers.computeCorrelationMatrix ( cov )
