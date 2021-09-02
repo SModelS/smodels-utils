@@ -122,6 +122,22 @@ def obtainDictFromComment ( comment, analysis ):
         D["b"] = int ( tokens[2].replace("Nb","") )
         # D["HT"] = tokens[3].replace("HT","")
         # D["MHT"] = tokens[4].replace("MHT","")
+    if "CMS-SUS-16-039" in analysis:
+        tokens = comment.split("_")
+        print ( tokens )
+        #D["jets"]= int ( tokens[1].replace("Njet","") )
+        mll = tokens[1].replace("Mll","")
+        p1 = mll.find("to")
+        D["mll"] = int ( mll[:p1] )
+        mt = tokens[2].replace("MT","")
+        p1 = mt.find("to")
+        # D["MT"] = int ( mt[:p1] )
+        met = tokens[3].replace("MET","")
+        p1 = met.find("to")
+        # D["MET"] = int ( met[:p1] )
+    if len(D)==0:
+        print ( f"[aggregators.py] ERROR: empty dictionary, implement for {analysis}!" )
+        sys.exit()
     return D
 
 def getExpResult ( database, analysis ):
@@ -149,9 +165,9 @@ def aggregateByNames ( database, analysis, drops, exclusives ):
                        SRs
     """
     result  = getExpResult ( database, analysis )
-    datasets, comments = getDatasets( results[0], addReverse=False )
+    datasets, comments = getDatasets( result, addReverse=False )
     filtered = {}
-    dropped = []
+    dropped, aggs = [], []
     for srnr, srname in datasets.items():
         if srnr in drops:
             dropped.append ( srnr )

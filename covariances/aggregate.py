@@ -14,7 +14,7 @@ def pprint ( C, droprate = 2., takeoutrate = 150.,
     :param takeoutrate: minimum score with which we takeout
     :param cut: cut on correlation for findAggregates
     """
-    print ( C )
+    # print ( C )
     ones = 0
     aggs, overflow, exclusives = [], [], []
     drops, zeroes = [], []
