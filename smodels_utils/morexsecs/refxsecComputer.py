@@ -73,9 +73,9 @@ class RefXSecComputer:
             logger.error( line )
             raise SModelSError( line )
         if len(xsecs) == 0:
-            logger.warning(f"No cross sections available for {slhafile}.")
+            logger.debug(f"No cross sections available for {slhafile}.")
             return False
-        print ( "I have xsecs!!", xsecs )
+        logger.info ( f"I have xsecs: {', '.join(map(str,xsecs))}" )
         # Check if file already contain cross section blocks
         xSectionList = crossSection.getXsecFromSLHAFile(slhafile)
         if xSectionList and complain:
@@ -276,7 +276,8 @@ class RefXSecComputer:
             # obtain xsecs for all masses, but for the given channel
             # for sqrts in self.sqrtses: # FIXME
             pids = channel["pids"]
-            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "" )
+            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "",
+                                                       channel["masses"] )
             ## interpolate for the mass that we are looking for
             if xsecall == None:
                 continue
@@ -305,7 +306,7 @@ class RefXSecComputer:
         # print ( "findOpenChannels" )
         channels = []
         # productions of same-sign-pid pairs when the particle is within reach
-        samesignmodes = ( 1000021, )
+        samesignmodes = ( 1000021, 1000023 )
         # production of opposite-sign-pid pairs when the particle is within reach
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015 )
 
@@ -375,10 +376,11 @@ class RefXSecComputer:
             ret[ mass ] = xsec
         return ret
 
-    def getXSecsFor ( self, pid1, pid2, sqrts, ewk ):
+    def getXSecsFor ( self, pid1, pid2, sqrts, ewk, masses ):
         """ get the xsec dictionary for pid1/pid2, sqrts
         :param ewk: specify the ewkino process (hino, or wino)
         """
+        logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
         filename=None
         order = 0
         pb = True
@@ -401,6 +403,21 @@ class RefXSecComputer:
             pb = False
             isEWK=True
         if pid1 in [ 1000023 ] and pid2 in [ 1000022 ]:
+            if sqrts == 8:
+                logger.info ( "asking for N2 N1 production for 8 TeV. we only have 13 TeV" )
+                return None, None, None
+            if masses[1]+masses[0] == 0.:
+                return None, None, None
+            dm = abs ( masses[1] - masses[0] ) / ( masses[1] + masses[0] )
+            if dm > .01:
+                logger.info ( f"asking for N2 N1 production but masses differ ({masses[0],masses[1]}) we only have for mass-degenerate case." )
+                return None, None, None
+                
+            filename = "xsecN2N1p%d.txt" % sqrts
+            order = NLL
+            pb = False
+            isEWK=True
+        if pid1 in [ 1000023 ] and pid2 in [ 1000023 ]:
             if sqrts == 8:
                 print ( "[refxsecComputer] asking for N2 N1 production for 8 TeV. we only have 13 tev" )
                 return None, None, None
@@ -437,8 +454,8 @@ class RefXSecComputer:
             filename = "xsecslepRslepR%d.txt" % sqrts
             order = NLL # 3
         if filename == None:
-            logger.info ( "could not identify filename for xsecs" )
-            logger.info ( "seems like we dont have ref xsecs for the pids %d/%d?" % ( pid1, pid2 ) )
+            logger.info ( f"could not identify filename for xsecs for {pid1,pid2}" )
+            # logger.info ( "seems like we dont have ref xsecs for the pids %d/%d?" % ( pid1, pid2 ) )
             return None, None, None
             # sys.exit()
         if ewk == "hino":
