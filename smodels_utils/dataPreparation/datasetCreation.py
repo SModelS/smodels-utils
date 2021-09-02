@@ -381,6 +381,19 @@ class DatasetsFromEmbaked:
     def next ( self ): ## for python2
         return self.__next__()
 
+    def getBinNr ( self, srname ):
+        if srname.startswith ( self.sr_prefix ):
+            srname = srname[len(self.sr_prefix):]
+            p1 = srname.find("_")
+            if p1 > 1:
+                srname = srname[:p1]
+            try:
+                return int(srname)
+            except ValueError as e:
+                print ( f"[datasetCreation] I wanted to extract the bin number from SR name {srname} but failed: {e}. Please fix in code." )
+                sys.exit(-1)
+        return -1 ## we filter out all others
+
     def createAllDatasets ( self ):
         """ create all datasets in a single go. makes aggregation easier. """
         logger.debug ( "now creating all datasets" )
@@ -390,17 +403,11 @@ class DatasetsFromEmbaked:
         self.datasets = []
         ctwarning = 0
         keys = list ( self.stats.keys() )
-        def getBinNr ( srname ):
-            if srname.startswith ( "SR" ):
-                srname = srname[2:]
-            try:
-                return int(srname)
-            except ValueError as e:
-                print ( f"[datasetCreation] I wanted to extract the bin number from SR name {srname} but failed. Please fix in code." )
-                sys.exit(-1)
 
-        keys.sort( key = getBinNr )
+        keys.sort( key = self.getBinNr )
         for key in keys:
+            if key == -1:
+                continue
             values = self.stats[key]
             if not key.startswith ( self.sr_prefix ):
                 if ctwarning < 2:
