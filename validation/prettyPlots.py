@@ -442,7 +442,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
-    if options["style"] == "sabine":
+    if "sabine" in options["style"]:
         lsub.SetTextSize(.037)
         if legendplacement == "top left": # then we move to top right with this
             lsub.DrawLatex(.57,.79,subtitle)
