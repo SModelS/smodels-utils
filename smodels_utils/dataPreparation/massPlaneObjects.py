@@ -200,10 +200,12 @@ class MassPlane(object):
                            format.
         :param objectName: String with the object name stored in root-file or cMacro
         :param index: Index for objects in listOfPrimitives of ROOT.TCanvas
-        :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...)
+        :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...),
+                     similar to "scale", can also be used to re-scale the data, either
+                     via a '*' or a '/' symbol
         :param coordinateMap: Dictionaries with the mapping of txt file columns
                             to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})
-        :param scale: Float to reescale the data
+        :param scale: Float to re-scale the data
 
         """
         if dataFormat == None:
