@@ -633,6 +633,9 @@ class ValidationPlot():
         slhafiles= os.listdir(slhaDir)
         ct_nooutput=0
         slhafiles.sort() ## make sure we also go in the same order
+        myglobals = globals()
+        myglobals["inf"]=float("inf")
+        myglobals["nan"]=float("nan")
         for slhafile in slhafiles:
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
@@ -649,8 +652,9 @@ class ValidationPlot():
                 continue
             # print ( "reading %s" % fout )
             ff = open(fout,'r')
-            cmd = ff.read().replace('\n','').replace("inf","float('inf')")
-            exec( cmd, globals() )
+            txt = ff.read()
+            cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
+            exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
