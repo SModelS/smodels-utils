@@ -20,7 +20,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions
+from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions, setAxes
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -283,6 +283,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     h.GetZaxis().SetTitle(zlabel)
     h.SetContour(200)
     h.Draw("COLZ")
+    setAxes ( h, options["style"] )
     ya = h.GetYaxis()
     if logY:
         ya.SetLabelSize(.06)

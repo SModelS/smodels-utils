@@ -42,6 +42,20 @@ b = array('d', blue)
 TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
+def setAxes ( h, style ):
+    """ set the axes ranges if anything is specified in 'style' """
+    try:
+        styles = style.split(";")
+        for s in styles:
+            s = s.strip()
+            if s.startswith("xaxis"):
+                tmp = s.replace("xaxis","")
+                ar = eval(tmp)
+                h.GetXaxis().SetRangeUser ( ar[0], ar[1] )
+    except Exception as e:
+        logger.error ( f"when trying to redefine axes: {e}" )
+
+
 def clean ( obj ):
     """ check for some issues with the exclusion line
     :param obj: the ROOT.TGraph

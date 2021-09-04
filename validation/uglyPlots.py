@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-.. module:: plottingFuncs
-   :synopsis: Main methods for dealing with the plotting of a validation plot
+.. module:: uglyPlots
+   :synopsis: Main method for creating ugly plots
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
@@ -20,7 +20,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl
+from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, setAxes
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -145,7 +145,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             else:
                 allowed.SetPoint(allowed.GetN(), x, y)
 
-    print ( "< done!" )
+    print ( "done!" )
 
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
     for ctr,coords in enumerate(origdata):
@@ -266,6 +266,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     base.SetTitle(title)
     base.Draw("APsame")
+    setAxes ( base, options["style"] )
     if logY: # y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
         # print ( "set log", ycontainer )
