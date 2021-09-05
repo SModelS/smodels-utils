@@ -194,7 +194,7 @@ def clearGlobalInfo(filename):
     lines=f.readlines()
     f.close()
     g=open("/tmp/tmp.txt","w")
-    skip = [ "publishedData", "comment", "private", "checked", \
+    skip = [ "publishedData", "comment", "private", "checked", "xrange", \
              "prettyName", "susyProcess", "dataUrl", "validationTarball" ]
     #skip.append( "validated" )
     #skip.append( "axes" )
