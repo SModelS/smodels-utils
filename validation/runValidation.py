@@ -81,6 +81,29 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         i.Destructor()
     return True
 
+def addXRange ( opts, xrange ):
+    """ add an xrange condition to options, overwrite one if already there """
+    if "style" in opts:
+        if "xaxis" in opts["style"]:
+            styles = opts["style"].split(";")
+            newstyles=[ f"xaxis{xrange}" ]
+            for style in styles:
+                style = style.strip()
+                if not "axis" in style and style !="":
+                    newstyles.append ( style )
+            opts["style"]=";".join(newstyles)
+        else:
+            styles = opts["style"].split(";")
+            newstyles=[ f"xaxis{xrange}" ]
+            for style in styles:
+                style = style.strip()
+                if not "axis" in style and style !="":
+                    newstyles.append ( style )
+            opts["style"]=",".join(newstyles)
+    else:
+        opts["style"]=f"xaxis{xrange}"
+    return opts
+
 def run ( expResList, options : dict, keep ):
     """
     Loop over experimental results and validate plots
@@ -120,7 +143,8 @@ def run ( expResList, options : dict, keep ):
             if hasattr ( txname, "validationTarball" ):
                 tarfile = txname.validationTarball
                 namedTarball = tarfile
-                logger.info("Database entry specifies a validation tarball: %s. Will use it." % tarfile )
+                l=f"Database entry specifies a validation tarball: {tarfile}. Will use it."
+                logger.info( l )
             tarfile = os.path.join(slhadir,tarfile)
 
             if not os.path.isfile(tarfile) and options["generateData"] != False:
@@ -142,6 +166,8 @@ def run ( expResList, options : dict, keep ):
             if axis is None:
                 for ax in axes:
                     localopts = copy.deepcopy ( options )
+                    if hasattr ( txname, "xrange" ):
+                        localopts = addXRange ( localopts, txname.xrange )
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile, localopts, kfactor, p,
                                  combine, namedTarball =namedTarball, keep = keep )
@@ -156,8 +182,10 @@ def run ( expResList, options : dict, keep ):
                     validatePlot(expRes,txnameStr,ax,tarfile, localoptions, kfactor, p,
                                  combine )
                     localoptions["generateData"] = False
-            logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
-        logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
+            logger.info( "------ \033[31m %s validated in  %.1f min \033[0m" % \
+                         (txnameStr,(time.time()-txt0)/60.) )
+        logger.info( "--- \033[32m %s validated in %.1f min \033[0m" % \
+                     (expRes.globalInfo.id,(time.time()-expt0)/60.) )
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,

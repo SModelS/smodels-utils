@@ -48,7 +48,7 @@ def setAxes ( h, style ):
     if style.startswith ('"') or style.startswith ("'"):
         logger.error ( "'style' field begins with quotation mark, but strings are without quotation marks in ini files" )
     try:
-        styles = style.split(",")
+        styles = style.split(";")
         for s in styles:
             s = s.strip()
             if s.startswith("xaxis"):
