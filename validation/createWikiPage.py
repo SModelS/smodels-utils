@@ -37,7 +37,7 @@ class WikiPageCreator:
         :param ugly: ugly mode, produces the ValidationUgly pages with more info
         :param include_fastlim: include fastlim results
         :param ignore_superseded: if True, then filter out superseded results
-        :param ignore: if true, then add also validated results 
+        :param ignore: if true, then add also validated results
                (i.e. ignore the validation field)
         """
         self.ugly = ugly ## ugly mode
@@ -320,21 +320,24 @@ CMS are for on- and off-shell at once.
             vDir = valDir.replace ( self.databasePath,"")
             altpath = self.databasePath.replace ( "/home", "/nfsdata" )
             vDir = vDir.replace ( altpath, "" )
-            #vDir = vDir.replace("/media/linux/walten/git/smodels-database","/validation/%s" % self.dotlessv )
-            # vDir = vDir.replace("/media/linux/walten/git/smodels-database","" )
             if "smodels-database" in vDir:
                 vDir = vDir [ vDir.find("smodels-database")+17: ]
             if vDir[0]=="/":
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
+            addOld = False # True
+            if addOld:
+                files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
             if self.ugly or self.isOneDimensional ( txname ):
                 tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
+                if addOld:
+                    tmp += glob.glob(valDir+"/old/"+txname.txName+"_*.png")
                 files = []
                 for i in tmp:
                     if not "pretty" in i:
                         files.append ( i )
-            files.sort()
+            files.sort( key = lambda x: str(x.replace("old/","") ) )
             t0=time.time()-159000000
             valDir = valDir.replace("/media/linux/walten/git/smodels-database","" )
             for fig in files:
