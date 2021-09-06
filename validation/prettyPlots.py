@@ -419,7 +419,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
     if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
         ## pyhf combination
-        subtitle = "pyhf combining %d SRs" % len(validationPlot.expRes.datasets)
+        subtitle = "pyhf combination of %d signal regions" % len(validationPlot.expRes.datasets)
+    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
+            validationPlot.combine == True:
+        subtitle = "combination of %d signal regions" % len(validationPlot.expRes.datasets)
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
         nagg = len(validationPlot.expRes.datasets)
