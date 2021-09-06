@@ -105,10 +105,10 @@ def main():
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd + [ "-a", "-s", "-f" ], A.dry_run )
-    exec ( cmd + [ "-a", "-u" ], A.dry_run )
+    exec ( cmd + [ "-a", "--ugly" ], A.dry_run )
     if A.non_versioned:
         exec ( cmd + [ "-s", "-f" ], A.dry_run )
-        exec ( cmd + [ "-u" ], A.dry_run )
+        exec ( cmd + [ "--ugly" ], A.dry_run )
     if A.commit:
         gitPush( A.dry_run )
 
