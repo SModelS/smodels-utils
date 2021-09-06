@@ -420,7 +420,11 @@ if __name__ == "__main__":
         if parser.has_option("options","preliminary"):
             options["preliminary"] = parser.getboolean("options", "preliminary")
         if parser.has_option("options","style"):
-            options["style"] = parser.get("options", "style")
+            o = parser.get("options", "style")
+            options["style"] = o
+            if o.count("; ")>1 or o.count(" ;")>1:
+                logger.warning ( "found more than one semicolon with space in style field ''{o}''. Please check if you didnt add one space too many!" )
+            
         if parser.has_option("options","legendplacement"):
             options["legendplacement"] = parser.get("options", "legendplacement")
         if parser.has_option("options","weightedAgreementFactor"):
