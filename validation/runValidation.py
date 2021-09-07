@@ -81,12 +81,14 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         i.Destructor()
     return True
 
-def addXRange ( opts, xrange ):
-    """ add an xrange condition to options, overwrite one if already there """
+def addRange ( var : str, opts : dict, xrange : str ):
+    """ add a range condition to options, overwrite one if already there
+    :param var: variable, "x" or "y"
+    """
     if "style" in opts:
-        if "xaxis" in opts["style"]:
+        if var+"axis" in opts["style"]:
             styles = opts["style"].split(";")
-            newstyles=[ f"xaxis{xrange}" ]
+            newstyles=[ f"{var}axis{xrange}" ]
             for style in styles:
                 style = style.strip()
                 if not "axis" in style and style !="":
@@ -94,14 +96,14 @@ def addXRange ( opts, xrange ):
             opts["style"]=";".join(newstyles)
         else:
             styles = opts["style"].split(";")
-            newstyles=[ f"xaxis{xrange}" ]
+            newstyles=[ f"{var}axis{xrange}" ]
             for style in styles:
                 style = style.strip()
                 if not "axis" in style and style !="":
                     newstyles.append ( style )
             opts["style"]=",".join(newstyles)
     else:
-        opts["style"]=f"xaxis{xrange}"
+        opts["style"]=f"{var}axis{xrange}"
     return opts
 
 def run ( expResList, options : dict, keep ):
@@ -167,7 +169,9 @@ def run ( expResList, options : dict, keep ):
                 for ax in axes:
                     localopts = copy.deepcopy ( options )
                     if hasattr ( txname, "xrange" ):
-                        localopts = addXRange ( localopts, txname.xrange )
+                        localopts = addRange ( "x", localopts, txname.xrange )
+                    if hasattr ( txname, "yrange" ):
+                        localopts = addRange ( "y", localopts, txname.xrange )
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile, localopts, kfactor, p,
                                  combine, namedTarball =namedTarball, keep = keep )
@@ -189,7 +193,7 @@ def run ( expResList, options : dict, keep ):
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-         options : dict, tarfiles=None,verbosity='error', combine=False, force_load = None, 
+         options : dict, tarfiles=None,verbosity='error', combine=False, force_load = None,
          keep = False ):
     """
     Generates validation plots for all the analyses containing the Txname.
@@ -369,17 +373,17 @@ if __name__ == "__main__":
                 "drawChi2Line": False, # draw an exclusion line derived from chi2 values in green (only on pretty plot )
                 "limitPoints": None, ## limit the number of points to run on
                 "axis": None, ## the axes to plot. If not given, take from sms.root
-                "style": "", # specify a plotting style, currently only 
+                "style": "", # specify a plotting style, currently only
                 # "" and "sabine" are known
                 # style "sabine": SR label "pyhf combining 2 SRs" gets moved to
                 # top left corner of temperature p lot in pretty print
                 "legendplacement": "automatic", # specify how the legend is placed
                 # one of: top left, top right, auto [top right]
-                "weightedAgreementFactor": False, 
+                "weightedAgreementFactor": False,
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
                 "pngAlso": False, ## only pdf plots?
-                "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto) 
+                "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
                 "ncpus": -1, ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
@@ -424,7 +428,7 @@ if __name__ == "__main__":
             options["style"] = o
             if o.count("; ")>1 or o.count(" ;")>1:
                 logger.warning ( "found more than one semicolon with space in style field ''{o}''. Please check if you didnt add one space too many!" )
-            
+
         if parser.has_option("options","legendplacement"):
             options["legendplacement"] = parser.get("options", "legendplacement")
         if parser.has_option("options","weightedAgreementFactor"):
@@ -437,5 +441,5 @@ if __name__ == "__main__":
     options["generateData"] = _doGenerate ( parser )
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options, 
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options,
          tarfiles,args.verbose.lower(), combine, force_load, args.keep )
