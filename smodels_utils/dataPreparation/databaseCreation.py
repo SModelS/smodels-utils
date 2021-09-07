@@ -370,49 +370,50 @@ class DatabaseCreator(list):
                 for plane in txname._goodPlanes:
                     if plane == None:
                         continue
-                    plane2 = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
-                    plane.branches = plane2.branches
-                    for exclusion in plane._exclusionCurves:
-                        if not exclusion:
-                            continue  #Exclusion source has not been defined
-                        name = '%s_%s' %(exclusion.name, plane.axes)
-                        label = [txname.txName,exclusion.name,plane.axes]
-                        if label in curves: #Curve already appears in dict
-                            continue
-                        stGraph = ROOT.TGraph()
-                        stGraph.SetName(name)
-                        stGraph.SetTitle(name)
-                        stGraph.name = exclusion.name
-                        stGraph.txname = txname.txName
-                        i=0
-                        for pointDict in exclusion:
-                            point = dict([[str(xv),v] for xv,v in pointDict.items()])
-                            if not 'y' in point:
-                                point['y'] = 0.0
-                            try:
-                                masses = plane.getParticleMasses ( **point )
+                    for axes in str(plane.axes).split(";"):
+                        if plane.branches == None:
+                            plane2 = MassPlane.fromString ( plane._txDecay, axes )
+                            plane.branches = plane2.branches
+                        for exclusion in plane._exclusionCurves:
+                            if not exclusion:
+                                continue  #Exclusion source has not been defined
+                            name = '%s_%s' %(exclusion.name, axes)
+                            label = [txname.txName,exclusion.name,axes]
+                            if label in curves: #Curve already appears in dict
+                                continue
+                            stGraph = ROOT.TGraph()
+                            stGraph.SetName(name)
+                            stGraph.SetTitle(name)
+                            stGraph.name = exclusion.name
+                            stGraph.txname = txname.txName
+                            i=0
+                            for pointDict in exclusion:
+                                point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                                if not 'y' in point:
+                                    point['y'] = 0.0
+                                try:
+                                    masses = plane.getParticleMasses ( **point )
 
-                                meetsConstraints = txname.checkMassConstraints ( masses )
-                                if not meetsConstraints:
+                                    meetsConstraints = txname.checkMassConstraints ( masses )
+                                    if not meetsConstraints:
+                                        continue
+                                    # print ( "masses", masses, meetsConstraints )
+                                except ValueError:
+                                    logger.info ( "cannot convert to coordinates: %s" % point )
                                     continue
-                                # print ( "masses", masses, meetsConstraints )
-                            except ValueError:
-                                logger.info ( "cannot convert to coordinates: %s" % point )
-                                continue
-                            if type(point["x"])==str or type(point["y"])==str:
-                                logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
-                                continue
-                            stGraph.SetPoint(i,point['x'],point['y'])
-                            i+=1
-                        stGraph.SetLineColor(ROOT.kBlack)
-                        if 'expected' in exclusion.name:
-                            stGraph.SetLineColor(ROOT.kRed)
-                        stGraph.SetLineStyle(1)
-                        if 'P1' in exclusion.name or 'M1' in exclusion.name:
-                            stGraph.SetLineStyle(2)
-                        curves.append(label)  #Store curves (to avoid duplicates)
-                        allCurves.append(stGraph)
-
+                                if type(point["x"])==str or type(point["y"])==str:
+                                    logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
+                                    continue
+                                stGraph.SetPoint(i,point['x'],point['y'])
+                                i+=1
+                            stGraph.SetLineColor(ROOT.kBlack)
+                            if 'expected' in exclusion.name:
+                                stGraph.SetLineColor(ROOT.kRed)
+                            stGraph.SetLineStyle(1)
+                            if 'P1' in exclusion.name or 'M1' in exclusion.name:
+                                stGraph.SetLineStyle(2)
+                            curves.append(label)  #Store curves (to avoid duplicates)
+                            allCurves.append(stGraph)
 
         return allCurves
 
