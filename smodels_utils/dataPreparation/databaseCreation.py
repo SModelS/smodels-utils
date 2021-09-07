@@ -21,6 +21,7 @@ from datetime import date
 from math import floor, log10
 from unum import Unum
 import time
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -281,8 +282,13 @@ class DatabaseCreator(list):
         strFiles = " ".join ( leftFiles )
         strFiles = strFiles.replace("(","\\(").replace(")","\\)")
         if len( leftFiles ) > 0:
-            self.timeStamp ( "unused cruft files 'orig': %s" % strFiles,
+            with open( "unused_files.txt", "wt" ) as f:
+                f.write ( strFiles + "\\n" )
+                f.close()
+            self.timeStamp ( "unused cruft files 'orig': see unused_files.txt",
                              c="green" )
+            #self.timeStamp ( "unused cruft files 'orig': %s" % strFiles,
+            #                 c="green" )
         cmd = f"cd orig; rm {strFiles}"
         if False:
             import subprocess
@@ -364,6 +370,8 @@ class DatabaseCreator(list):
                 for plane in txname._goodPlanes:
                     if plane == None:
                         continue
+                    plane2 = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
+                    plane.branches = plane2.branches
                     for exclusion in plane._exclusionCurves:
                         if not exclusion:
                             continue  #Exclusion source has not been defined
@@ -382,18 +390,10 @@ class DatabaseCreator(list):
                             if not 'y' in point:
                                 point['y'] = 0.0
                             try:
-                                if plane.branches == None:
-                                    from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-                                    plane2 = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
-                                if plane2 == None:
-                                    continue
-                                #    plane.branches = self.planebackups[str(txname)+str(plane)]
                                 masses = plane.getParticleMasses ( **point )
+
                                 meetsConstraints = txname.checkMassConstraints ( masses )
-                                #if hasattr ( self, "planebackups" ):
-                                #plane.branches = None ## needed to pickle lambdify
                                 if not meetsConstraints:
-                                    # print ( "masses", masses, meetsConstraints, "skip" )
                                     continue
                                 # print ( "masses", masses, meetsConstraints )
                             except ValueError:

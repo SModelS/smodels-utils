@@ -671,11 +671,11 @@ class DataHandler(object):
                     break
                 ret = ret * p[k]
             y = list(k)+[ret]
-            if ret <= 0.:
+            if ret < 0.:
                 ret = 0.
                 if errorcounts["smallerthanzero"] == False:
                     errorcounts["smallerthanzero"] = True
-                    logger.warning ( "found value of %s you sure you want that?" % ret )
+                    logger.warning ( f"found value of {ret} in {self.path} -- you sure you want that?" )
             #if ret > 0.:
             yield y
 
