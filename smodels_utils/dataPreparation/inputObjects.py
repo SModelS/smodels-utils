@@ -825,6 +825,7 @@ class TxNameInput(Locker):
                         hasNone = True
                 if hasNone and len(myInfoList)==0:
                     myInfoList = [ "None" ]
+                # myInfoList.sort()
                 infoStr = ";".join(set(myInfoList)) ## old version
                 setattr(self,infoAttr,infoStr)
 
