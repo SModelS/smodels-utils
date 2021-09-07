@@ -32,13 +32,14 @@ class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
                    comparison_database, ignore_superseded, ignore, moveFile,
-                   include_fastlim ):
+                   include_fastlim, add_old ):
         """
         :param ugly: ugly mode, produces the ValidationUgly pages with more info
         :param include_fastlim: include fastlim results
         :param ignore_superseded: if True, then filter out superseded results
         :param ignore: if true, then add also validated results
                (i.e. ignore the validation field)
+        pparam add_old: if plots exist in validation/old/ folder, add them.
         """
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
@@ -48,6 +49,7 @@ class WikiPageCreator:
         self.include_fastlim = include_fastlim
         self.ignore_validated = ignore
         self.moveFile = moveFile
+        self.add_old = add_old
         if ugly: ## in ugly mode we always ignore validated, and superseded
             self.ignore_validated = True
             self.ignore_superseded = False
@@ -326,12 +328,11 @@ CMS are for on- and off-shell at once.
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
-            addOld = False # True
-            if addOld:
+            if self.add_old:
                 files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
             if self.ugly or self.isOneDimensional ( txname ):
                 tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
-                if addOld:
+                if self.add_old:
                     tmp += glob.glob(valDir+"/old/"+txname.txName+"_*.png")
                 files = []
                 for i in tmp:
@@ -598,6 +599,8 @@ if __name__ == "__main__":
                     action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links',
                     action='store_true')
+    ap.add_argument('-o', '--add_old', help='add old plots if they exist',
+                    action='store_true')
     ap.add_argument('-s', '--ignore_superseded', help='ignore superseded results',
                     action='store_true')
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
@@ -621,5 +624,6 @@ if __name__ == "__main__":
     creator = WikiPageCreator( args.ugly, args.database, args.add_version,
                                args.private, args.force_upload,
                                args.comparison_database, args.ignore_superseded,
-                               args.ignore, not args.dontmove, args.include_fastlim )
+                               args.ignore, not args.dontmove, args.include_fastlim, 
+                               args.add_old )
     creator.run()
