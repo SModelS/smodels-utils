@@ -11,7 +11,6 @@
 
 import pygraphviz, sys, math, os
 import logging
-from ptools import sparticleNames
 
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
@@ -38,6 +37,7 @@ class DecayDrawer:
         self.G=pygraphviz.AGraph(directed=True)
         self.verbose=verbose
         self.html=html
+        from ptools import sparticleNames
         self.namer = sparticleNames.SParticleNames ( susy = False )
 
     def draw ( self, out ):
