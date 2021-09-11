@@ -39,8 +39,10 @@ quenchNegativeMasses = False ## set to true, if you wish to
 
 errormsgs = {}
 
-def getSignalRegionsEMBaked ( filename ):
-    """ from an emBaked file, retrieve the names of the signal regions """
+def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
+    """ from an emBaked file, retrieve the names of the signal regions 
+    :param exclude: list of SR regions to exclude
+    """
     ret = set()
     try:
         f=open( filename,"r")
@@ -51,7 +53,7 @@ def getSignalRegionsEMBaked ( filename ):
         sys.exit(-1)
     for v in values:
         for k in v:
-            if not k.startswith("__"):
+            if not k.startswith("__") and not k in exclude:
                 ret.add(k)
     return ret
 
