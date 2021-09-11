@@ -42,11 +42,12 @@ class ValidationCombiner:
         self.exclusions = {}
         from smodels_utils.helper.uprootTools import getExclusionLine
         path = getPathName ( self.databasePath, self.anaId, None )
+        axes = "[[x, y], [x, y]]"
         for pm in [ "", "M1", "P1" ]:
             for expected in [ True, False ]:
                 ret = { "x": [], "y": [] }
                 for txname,v in self.validationFiles.items():
-                    axes = "[[x, y], [x, y]]"
+                    axes = self.meta[txname]["axes"]
                     line = getExclusionLine ( path, txname, axes = axes,
                            expected = expected, pm = pm, verbose=False )
                     if type(line) != dict:
@@ -102,9 +103,9 @@ class ValidationCombiner:
             plt.plot ( self.exclusions["obs"]["x"],self.exclusions["obs"]["y"],
                        c="k", linewidth=2 )
         fname = f"combo_{idNoEff}_{self.txShort()}.png"
-        print ( f"[combineValidation] saving to {fname}" )
         plt.savefig ( fname )
         plt.show()
+        print ( f"[combineValidation] saving to {fname}" )
 
     def greet ( self ):
         print (f"[ValidationCombiner] combining {self.anaId}, {self.databasePath}:")

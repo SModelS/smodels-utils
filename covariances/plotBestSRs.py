@@ -50,10 +50,10 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         p1 = validationfile.find("_")
         topo = validationfile[:p1]
         txnames.append ( topo )
-        ll = uprootTools.getExclusionLine ( smspath, topo )
-        lines.append (  ll )
         content = getValidationFileContent ( ipath )
         contents.append ( content )
+        ll = uprootTools.getExclusionLine ( smspath, topo, content["meta"]["axes"] )
+        lines.append (  ll )
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )
@@ -70,6 +70,8 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
                 if max_x != None and axes[1]>max_x:
                     continue
                 if max_y != None and axes[0]>max_y:
+                    continue
+                if axes == None:
                     continue
                 noResults.append ( ( axes[1], axes[0] ) )
             continue

@@ -55,6 +55,8 @@ def mergeExclusionLines ( lines : list ):
     """
     line = { "x": [], "y": [] }
     for l in lines:
+        if type(l) != dict:
+            continue
         for lx, ly in zip( l["x"], l["y"] ):
             line["x"].append ( lx )
             line["y"].append ( ly )
