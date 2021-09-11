@@ -130,7 +130,7 @@ if __name__ == "__main__":
             default='ATLAS-SUSY-2018-06-eff')
     ap.add_argument('-v', '--validationfiles',
             help='validation files, comma separated [TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py]',
-            type=str, default='TChiWZoff_2EqMassAx_EqMassBy_combined.py, TChiWZ_2EqMassAx_EqMassBy_combined.py')
+            type=str, default='TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py')
 
     args = ap.parse_args()
     plotter = ValidationCombiner ( args.database, args.analysisId, args.validationfiles )
