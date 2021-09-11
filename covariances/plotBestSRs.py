@@ -27,11 +27,12 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def draw( validationfile, max_x, max_y, outputfile ):
+def draw( validationfile, max_x, max_y, outputfile, defcolors ):
     """ plot.
     :param validationfile: T*.py file
-    :param outputfile: name of outputfile, using @a and @t to stand for analysis and topology,
-                       respectively
+    :param outputfile: name of outputfile, using @a and @t to stand for
+     analysis and topology, respectively
+    :param defcolors: user-specified colors
     """
     warnings.simplefilter("ignore")
     anaId = "???"
@@ -85,7 +86,7 @@ def draw( validationfile, max_x, max_y, outputfile ):
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
-        print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( "[plotBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
@@ -120,6 +121,9 @@ def draw( validationfile, max_x, max_y, outputfile ):
     #origcolors += [ "slate" ]
     for i in range(30):
         origcolors.append ( "k" )
+    if defcolors not in [ "", None ]:
+        for i,c in enumerate(defcolors.split(",")[:28]):
+            origcolors[i]=c
     colors = copy.deepcopy ( origcolors )
     for occ in occs:
         if occ == 0:
@@ -173,14 +177,14 @@ def draw( validationfile, max_x, max_y, outputfile ):
         plt.ylabel ( "$\Gamma$ [GeV]" )
         plt.xlabel ( "m [GeV]" )
     #plt.ylabel ( "$\\Delta$m [GeV]" )
-    print ( "[drawBestSRs] plotting %s (%s)" % ( anaId, topo ) )
+    print ( "[plotBestSRs] plotting %s (%s)" % ( anaId, topo ) )
     andre=""
     if "andre" in validationfile:
         andre="-andre"
     plt.title ( "Best Signal Region, %s (%s)" % ( anaId+andre, topo ) )
     fname = outputfile.replace( "@a", anaId ).replace( "@t", topo )
     #fname = "bestSR_%s%s_%s%s.png" % ( anaId, andre, topo, hasAgg )
-    print ( "[drawBestSRs] saving to %s" % fname )
+    print ( "[plotBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
     return fname
@@ -214,7 +218,7 @@ def writeBestSRs( push = False ):
     o = ""
     if push:
         o = subprocess.getoutput ( cmd )
-    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+    print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
 
 if __name__ == "__main__":
     import argparse
@@ -232,6 +236,9 @@ if __name__ == "__main__":
     argparser.add_argument ( "-a", "--analysis",
             help="analysis name, like the directory name [CMS-SUS-16-050-eff]",
             type=str, default="CMS-SUS-16-050-eff" )
+    argparser.add_argument ( "-C", "--colors",
+            help="specify colors, as string with commas ['r,g,b']",
+            type=str, default="r,b,g" )
     argparser.add_argument ( "-v", "--validationfile",
             help="validation file [T2tt_2EqMassAx_EqMassBy.py]",
             type=str, default="T2tt_2EqMassAx_EqMassBy.py" )
@@ -246,23 +253,23 @@ if __name__ == "__main__":
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
     if not args.default and not args.analysis.endswith("-eff"):
-        print ( "[drawBestSRs] warning, analysis name does not end with -eff, might an error" )
+        print ( "[plotBestSRs] warning, analysis name does not end with -eff, might an error" )
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
-                print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
+                print ( "[plotBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = draw( ipath, args.max_x, args.max_y, args.outputfile )
                 if args.copy:
                     cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
                     o = subprocess.getoutput ( cmd )
-                    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+                    print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
         ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-        fname = draw( ipath, args.max_x, args.max_y, args.outputfile )
+        fname = draw( ipath, args.max_x, args.max_y, args.outputfile, args.colors )
         if args.copy:
             cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
             o = subprocess.getoutput ( cmd )
-            print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+            print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     if args.copy:
         writeBestSRs( args.push )
