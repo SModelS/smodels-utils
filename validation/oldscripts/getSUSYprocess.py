@@ -2,8 +2,8 @@
 
 """
 .. module:: getSUSYprocess
-   :synopsis: Tool for fetching official plots which contain the SUSY process definition
-              for the Txnames.
+   :synopsis: Tool for fetching official plots which contain the SUSY process
+              definition for the Txnames.
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 

@@ -31,8 +31,20 @@ def getPathName ( dbpath, analysis, valfile = None ):
         if os.path.exists ( anadir ):
             break
     if sqrts == -1:
-        print ( "[various] could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis )
-        sys.exit()
+        if not analysis.endswith  ( "-eff" ):
+            oldana = analysis
+            analysis += "-eff"
+            for sqrts in [ 8, 13, 14, -1 ]:
+                anadir = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
+                if os.path.exists ( anadir ):
+                    print ( f"[various] added -eff to '{oldana}'." )
+                    break
+            if sqrts == -1:
+                print ( "[various] could not find analysis %s, nor %s-eff."% \
+                        ( oldana, oldana ) )
+                sys.exit()
+        else:
+            print ( "[various] could not find analysis %s." % analysis )
     folder = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
     if valfile == None:
         return folder
