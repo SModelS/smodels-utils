@@ -13,7 +13,8 @@ import time
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName
 from smodels_utils.helper import uprootTools
-from validation.validationHelpers import getValidationFileContent, shortTxName
+from validation.validationHelpers import getValidationFileContent, shortTxName, \
+       mergeExclusionLines, mergeValidationData
         
 warnings.simplefilter("ignore")
 
@@ -30,12 +31,6 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def addLine ( line, moreline ):
-    for lx, ly in zip( moreline["x"], moreline["y"] ):
-        line["x"].append ( lx )
-        line["y"].append ( ly )
-    return line
-
 def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors ):
     """ plot.
     :param dbpath: path to database
@@ -46,8 +41,8 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     :param defcolors: user-specified colors
     """
     vfiles = validationfiles.split(",")
-    line = { "x": [], "y": [] }
-    data = []
+    lines = []
+    contents = []
     txnames = []
     for validationfile in vfiles:
         ipath = getPathName ( dbpath, analysis, validationfile )
@@ -56,12 +51,12 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         topo = validationfile[:p1]
         txnames.append ( topo )
         ll = uprootTools.getExclusionLine ( smspath, topo )
-        line = addLine ( line, ll )
+        lines.append (  ll )
         content = getValidationFileContent ( ipath )
-        vData = content["data"]
-        print ( f"[plotBestSRs] adding {len(vData)} data points from {topo}" )
-        for v in vData:
-            data.append ( v )
+        contents.append ( content )
+    content = mergeValidationData ( contents )
+    data = content["data"]
+    line = mergeExclusionLines ( lines )
     bestSRs = []
     noResults = []
     nbsrs = []

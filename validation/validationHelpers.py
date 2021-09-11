@@ -32,8 +32,10 @@ def getValidationFileContent ( validationfile : str ):
     ret["meta"]=meta
     return ret
 
-def shortTxName( txnames ):
-    """ get a short moniker for the txnames """
+def shortTxName( txnames : list ):
+    """ get a short moniker for the txnames 
+    :param txnames: list of strings of txnames
+    """
     ret = ""
     txnames = list ( set ( txnames ) )
     txnames.sort ( key = lambda x: len(x) )
@@ -46,3 +48,25 @@ def shortTxName( txnames ):
             ret+=txname
     return ret
 
+def mergeExclusionLines ( lines : list ):
+    """ given a list of exclusion lines, merge them, 
+    return the merged line 
+    :param lines: list of lines, one line is a dictionary with x and y as keys.
+    """
+    line = { "x": [], "y": [] }
+    for l in lines:
+        for lx, ly in zip( l["x"], l["y"] ):
+            line["x"].append ( lx )
+            line["y"].append ( ly )
+    return line
+
+def mergeValidationData ( contents : list ):
+    """ given a list of validation contents, return the merged """
+    ret = { "data": [], "meta": [] }
+    for content in contents:
+        vData = content["data"]
+        vMeta = content["meta"]
+        ret["meta"].append ( vMeta )
+        for v in vData:
+            ret["data"].append ( v )
+    return ret
