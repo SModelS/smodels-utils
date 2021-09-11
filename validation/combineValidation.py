@@ -9,9 +9,9 @@ from validationHelpers import getValidationFileContent
 
 class ValidationCombiner:
     def __init__ ( self, databasePath : str, anaId : str, txdicts : list ):
-        """ 
-        param txdicts: list of txnames to combine, e.g. 
-        [ "TChiWZ_2EqMassAx_EqMassBy_combined.py", 
+        """
+        param txdicts: list of txnames to combine, e.g.
+        [ "TChiWZ_2EqMassAx_EqMassBy_combined.py",
           "TChiWZoff_2EqMassAx_EqMassBy_combined.py" ]
         """
         self.databasePath = databasePath
@@ -57,7 +57,7 @@ class ValidationCombiner:
                 ret = { "x": [], "y": [] }
                 for txname,v in self.validationFiles.items():
                     axes = "[[x, y], [x, y]]"
-                    line = getExclusionLine ( path, txname, axes = axes, 
+                    line = getExclusionLine ( path, txname, axes = axes,
                            expected = expected, pm = pm, verbose=False )
                     if type(line) != dict:
                         continue
@@ -129,7 +129,7 @@ if __name__ == "__main__":
             help='analysis id [ATLAS-SUSY-2018-06-eff]', type=str,
             default='ATLAS-SUSY-2018-06-eff')
     ap.add_argument('-v', '--validationfiles',
-            help='validation files, comma separated [TChiWZoff_2EqMassAx_EqMassBy_combined.py, TChiWZ_2EqMassAx_EqMassBy_combined.py]', 
+            help='validation files, comma separated [TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py]',
             type=str, default='TChiWZoff_2EqMassAx_EqMassBy_combined.py, TChiWZ_2EqMassAx_EqMassBy_combined.py')
 
     args = ap.parse_args()
