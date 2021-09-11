@@ -13,6 +13,9 @@ import time
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName
 from smodels_utils.helper import uprootTools
+from validation.validationHelpers import getValidationFileContent, shortTxName
+        
+warnings.simplefilter("ignore")
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
@@ -27,46 +30,43 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def draw( validationfile, max_x, max_y, outputfile, defcolors ):
+def addLine ( line, moreline ):
+    for lx, ly in zip( moreline["x"], moreline["y"] ):
+        line["x"].append ( lx )
+        line["y"].append ( ly )
+    return line
+
+def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors ):
     """ plot.
-    :param validationfile: T*.py file
+    :param dbpath: path to database
+    :param analysis: analysis to consider
+    :param validationfiles: T*.py files
     :param outputfile: name of outputfile, using @a and @t to stand for
      analysis and topology, respectively
     :param defcolors: user-specified colors
     """
-    warnings.simplefilter("ignore")
-    anaId = "???"
-    coll = "CMS"
-    p = validationfile.find ( "ATLAS" )
-    if p > 0:
-        coll = "ATLAS"
-    else:
-        p = validationfile.find ( "CMS" )
-    p2 = validationfile.find("-eff" )
-    p2b = validationfile.find("-andre" )
-    if p2 < 1:
-        p2 = p2b
-    hasAgg = ""
-    if "agg" in validationfile:
-        hasAgg = "_agg"
-    if p2 < 1:
-        p2 = validationfile.find("-agg" )
-    p3 = validationfile.find("validation/")
-    if p2 < 1:
-        p2 = p3-1
-    anaId = validationfile[p+1+len(coll):p2]
-    p4 = validationfile[p3+10:].find("_")
-    topo = validationfile[p3+10+1:p3+p4+10]
-    line = uprootTools.getExclusionLine ( validationfile[:p3], topo )
-    spec = importlib.util.spec_from_file_location( "output", validationfile )
-    output_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(output_module)
-    validationData = output_module.validationData
+    vfiles = validationfiles.split(",")
+    line = { "x": [], "y": [] }
+    data = []
+    txnames = []
+    for validationfile in vfiles:
+        ipath = getPathName ( dbpath, analysis, validationfile )
+        smspath = getPathName ( dbpath, analysis, None )
+        p1 = validationfile.find("_")
+        topo = validationfile[:p1]
+        txnames.append ( topo )
+        ll = uprootTools.getExclusionLine ( smspath, topo )
+        line = addLine ( line, ll )
+        content = getValidationFileContent ( ipath )
+        vData = content["data"]
+        print ( f"[plotBestSRs] adding {len(vData)} data points from {topo}" )
+        for v in vData:
+            data.append ( v )
     bestSRs = []
     noResults = []
     nbsrs = []
     skipped, err = 0, None
-    for point in validationData:
+    for point in data:
         if "error" in point:
             skipped += 1
             err = point["error"]
@@ -86,7 +86,8 @@ def draw( validationfile, max_x, max_y, outputfile, defcolors ):
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
-        print ( "[plotBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( "[plotBestSRs] skipped %d/%d points: %s" % \
+                ( skipped, len(data), err ) )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
@@ -176,14 +177,10 @@ def draw( validationfile, max_x, max_y, outputfile, defcolors ):
         ax.set_ylim ( min(y)*.2, max(y)*5. )
         plt.ylabel ( "$\Gamma$ [GeV]" )
         plt.xlabel ( "m [GeV]" )
-    #plt.ylabel ( "$\\Delta$m [GeV]" )
-    print ( "[plotBestSRs] plotting %s (%s)" % ( anaId, topo ) )
-    andre=""
-    if "andre" in validationfile:
-        andre="-andre"
-    plt.title ( "Best Signal Region, %s (%s)" % ( anaId+andre, topo ) )
-    fname = outputfile.replace( "@a", anaId ).replace( "@t", topo )
-    #fname = "bestSR_%s%s_%s%s.png" % ( anaId, andre, topo, hasAgg )
+    shorttopo = shortTxName ( txnames )
+    plt.title ( "Best Signal Region, %s (%s)" % ( analysis, shorttopo ) )
+    print ( "[plotBestSRs] plotting %s (%s)" % ( analysis, shorttopo ) )
+    fname = outputfile.replace( "@a", analysis ).replace( "@t", shorttopo )
     print ( "[plotBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
@@ -239,8 +236,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-C", "--colors",
             help="specify colors, as string with commas ['r,g,b']",
             type=str, default="r,b,g" )
-    argparser.add_argument ( "-v", "--validationfile",
-            help="validation file [T2tt_2EqMassAx_EqMassBy.py]",
+    argparser.add_argument ( "-v", "--validationfiles",
+            help="validation file(s), comma separated within string [T2tt_2EqMassAx_EqMassBy.py]",
             type=str, default="T2tt_2EqMassAx_EqMassBy.py" )
     argparser.add_argument ( "-o", "--outputfile",
             help="output file, replacing @a and @t with analysis and topo name [bestSR_@a_@t.png]",
@@ -265,8 +262,8 @@ if __name__ == "__main__":
                     o = subprocess.getoutput ( cmd )
                     print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
-        ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-        fname = draw( ipath, args.max_x, args.max_y, args.outputfile, args.colors )
+        fname = draw( args.dbpath, args.analysis, args.validationfiles, 
+                      args.max_x, args.max_y, args.outputfile, args.colors )
         if args.copy:
             cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
             o = subprocess.getoutput ( cmd )

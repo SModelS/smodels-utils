@@ -5,7 +5,7 @@
 
 import os
 from smodels_utils.helper.various import getPathName
-from validationHelpers import getValidationFileContent
+from validationHelpers import getValidationFileContent, shortTxName
 
 class ValidationCombiner:
     def __init__ ( self, databasePath : str, anaId : str, txdicts : list ):
@@ -36,17 +36,7 @@ class ValidationCombiner:
 
     def txShort ( self ):
         """ get a short moniker for the txnames """
-        ret = ""
-        txnames = list ( self.validationFiles.keys() )
-        txnames.sort ( key = lambda x: len(x) )
-        for txname in txnames:
-            nooff = txname.replace("off","")
-            if nooff in ret and not txname in ret:
-                ret+="+off"
-                continue
-            elif not txname in ret:
-                ret+=txname
-        return ret
+        return shortTxName ( self.validationFiles.keys() )
 
     def getExclusions ( self ):
         self.exclusions = {}

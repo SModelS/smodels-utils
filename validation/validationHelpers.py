@@ -31,3 +31,18 @@ def getValidationFileContent ( validationfile : str ):
         meta = eval(lines[-1].replace("meta = ",""))
     ret["meta"]=meta
     return ret
+
+def shortTxName( txnames ):
+    """ get a short moniker for the txnames """
+    ret = ""
+    txnames = list ( set ( txnames ) )
+    txnames.sort ( key = lambda x: len(x) )
+    for txname in txnames:
+        nooff = txname.replace("off","")
+        if nooff in ret and not txname in ret:
+            ret+="+off"
+            continue
+        elif not txname in ret:
+            ret+=txname
+    return ret
+
