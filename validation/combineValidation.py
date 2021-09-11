@@ -79,7 +79,7 @@ class ValidationCombiner:
         from smodels_utils.plotting import mpkitty as plt
         # import matplotlib.pyplot as plt ## for non-kitty version
         idNoEff= self.anaId.replace("-eff","")
-        x, y, r = [], [], []
+        x, y, r, ex, ey, nx, ny = [], [], [], [], [], [], []
         for row in self.data:
             try:
                 xi = row["axes"]["x"]
@@ -88,15 +88,26 @@ class ValidationCombiner:
                 x.append ( xi )
                 y.append ( yi )
                 r.append ( ri )
+                if ri > 1.:
+                    ex.append ( xi )
+                    ey.append ( yi )
+                else:
+                    nx.append ( xi )
+                    ny.append ( yi )
             except KeyError as e:
                 pass
             except TypeError as e:
                 pass
         import matplotlib
-        plt.scatter ( x, y, c=r, norm=matplotlib.colors.LogNorm() )
+        plt.scatter ( ex, ey, c="r", s=90. )
+        plt.scatter ( nx, ny, c="g", s=90. )
+        plt.scatter ( x, y, c=r, s=20., norm=matplotlib.colors.LogNorm(), 
+                      cmap="gray", alpha=1. )
         cbar = plt.colorbar()
         cbar.set_label ( "r" )
         plt.title ( f"{idNoEff}, {self.txShort()}" )
+        plt.xlabel ( "x [GeV]" )
+        plt.ylabel ( "y [GeV]" )
         if "obs" in self.exclusions:
             plt.plot ( self.exclusions["obs"]["x"],self.exclusions["obs"]["y"],
                        c="k", linewidth=2 )
