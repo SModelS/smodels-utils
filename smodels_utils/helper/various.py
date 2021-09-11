@@ -12,9 +12,10 @@ import os, sys
 
 def getPathName ( dbpath, analysis, valfile = None ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name
-        potentially with wildcards 
+        potentially with wildcards
     :param dbpath: database path, e.g ~/git/smodels-database
-    :param valfile: if None, get path to analysis folder, else path to validation file
+    :param valfile: if None, get path to analysis folder,
+                    else path to validation file
     """
     import glob
     dbpath = os.path.expanduser ( dbpath )
@@ -78,7 +79,7 @@ def hasLLHD ( analysis ) :
 
 def getValidationModule ( dbpath, analysis, validationfile ):
     """ get the validation module from the path to database, analysis name,
-        name of validation file (with globs) 
+        name of validation file (with globs)
     :param dbpath: database path, e.g. ~/git/smodels-database
     :param analysis: analysis name, e.g. ATLAS-SUSY-2019-08
     :param validationfile: validationfile, e.g. TChiWH_2EqMassAx_EqMassBy_combined.py

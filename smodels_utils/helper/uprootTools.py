@@ -8,28 +8,41 @@
 
 """
 
-def getExclusionLine ( dirname, topo, axes = "[[x, y], [x, y]]" ):
-    """ retrieve exclusion line, as dictionary of coordinates 
+def getExclusionLine ( dirname, topo, axes = "[[x, y], [x, y]]",
+                       expected = False, pm = "", verbose = True ):
+    """ retrieve exclusion line, as dictionary of coordinates
     :param dirname: directory to search sms.root for
     :param axes: e.g. [[x, y], [x, y]]
+    :param expected: if True, get expected line, else observed
+    :param pm: plus or minus one? empty is central value, "P1" is
+               plus one, "M1" is minus one
     """
     import uproot, os
     dirname = os.path.expanduser ( dirname )
     smsfile = dirname
     if not smsfile.endswith ( "sms.root" ):
-        smsfile = dirname + "sms.root"
+        smsfile = os.path.join ( dirname, "sms.root" )
     if not os.path.exists ( smsfile ):
-        print ( "[uprootTools] cannot find exclusion line. skip it." )
+        if verbose:
+            print ( f"[uprootTools] cannot find {smsfile}. skip it." )
         return None
     F = uproot.open(smsfile)
-    K = f"{topo}/obsExclusion_{axes};1" ## for now we hardcode this
+    if pm in [ "p", "p1", "+" ]:
+        pm = "P1"
+    if pm in [ "m", "m1", "-" ]:
+        pm = "M1"
+    exclname = "obsExclusion"+pm
+    if expected:
+        exclname = "expExclusion"+pm
+    K = f"{topo}/{exclname}_{axes};1" ## for now we hardcode this
     if not K in F:
-        print ( f"[uprootTools] cannot find {K} in file. skip it." )
+        if verbose:
+            print ( f"[uprootTools] cannot find {K} in file. skip it." )
         return None
     graph = F[K]
     x = graph.members["fX"]
     y = graph.members["fY"]
-    return { "x": x,"y": y }
+    return { "x": x.tolist() ,"y": y.tolist() }
 
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
@@ -37,5 +50,3 @@ if __name__ == "__main__":
     dirname = dbpath + "13TeV/ATLAS/ATLAS-SUSY-2018-04/"
     el = getExclusionLine ( dirname, "TStauStau" )
     print ( "Exclusion line", el["x"][:3], el["y"][:3] )
-
-

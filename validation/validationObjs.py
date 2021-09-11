@@ -459,18 +459,10 @@ class ValidationPlot():
             self.data = None
             return
 
-        #Save data to file
-        f = open(datafile,'r')
-        lines = f.readlines()
-        f.close()
-        nlines = len(lines)
-        txt = "\n".join(lines[:-1])
-        if nlines == 1:
-            txt = "\n".join(lines[:])
-        # print ( "txt", txt )
-        self.data = eval(txt.replace("validationData = ",""))
-        if len(lines)>1 and lines[1].startswith ( "meta" ):
-            self.meta = eval(lines[1].replace("meta = ",""))
+        from validationHelpers import getValidationFileContent
+        content = getValidationFileContent ( datafile )
+        self.data = content["data"]
+        self.meta = content["meta"]
 
     def getWidthsFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """
