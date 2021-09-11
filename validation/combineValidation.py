@@ -102,7 +102,10 @@ class ValidationCombiner:
         if "obs" in self.exclusions:
             plt.plot ( self.exclusions["obs"]["x"],self.exclusions["obs"]["y"],
                        c="k", linewidth=2 )
-        fname = f"combo_{idNoEff}_{self.txShort()}.png"
+        axes = ""
+        for txname,meta in self.meta.items():
+            axes = meta["axes"].replace(" ","")
+        fname = f"combo_{idNoEff}_{self.txShort()}_{axes}.png"
         plt.savefig ( fname )
         plt.show()
         print ( f"[combineValidation] saving to {fname}" )
