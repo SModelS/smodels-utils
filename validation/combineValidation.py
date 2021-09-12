@@ -114,7 +114,8 @@ class ValidationCombiner:
         import matplotlib
         plt.scatter ( ex, ey, c="r", s=90. )
         plt.scatter ( nx, ny, c="g", s=90. )
-        cmap = "gray"
+        #cmap = "Blues"
+        #cmap = "gray"
         cmap = "bone"
         plt.scatter ( x, y, c=r, s=20., norm=matplotlib.colors.LogNorm(), 
                       cmap=cmap, alpha=1. )
