@@ -28,7 +28,7 @@ def convertNewAxes ( newa ):
         if "z" in newa:
             axes.append ( newa["z"] )
         return axes[::-1]
-    print ( "cannot convert this axis" )
+    print ( f"[plotBestSRs] cannot convert axis {newa}" )
     return None
 
 def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors ):
@@ -65,7 +65,7 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         if "error" in point:
             skipped += 1
             err = point["error"]
-            if "axes" in point:
+            if "axes" in point and point["axes"] != None:
                 axes = convertNewAxes ( point["axes"] )
                 if max_x != None and axes[1]>max_x:
                     continue

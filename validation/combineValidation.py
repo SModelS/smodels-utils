@@ -106,6 +106,7 @@ class ValidationCombiner:
         for txname,meta in self.meta.items():
             axes = meta["axes"].replace(" ","")
         fname = f"combo_{idNoEff}_{self.txShort()}_{axes}.png"
+        fname = fname.replace("[","").replace("]","").replace("*","").replace(",","")
         plt.savefig ( fname )
         plt.show()
         print ( f"[combineValidation] saving to {fname}" )
