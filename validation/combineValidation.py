@@ -8,13 +8,18 @@ from smodels_utils.helper.various import getPathName
 from validationHelpers import getValidationFileContent, shortTxName
 
 class ValidationCombiner:
-    def __init__ ( self, databasePath : str, anaId : str, txdicts : list ):
+    def __init__ ( self, databasePath : str, anaId : str, txdicts : list,
+                         xrange, yrange ):
         """
         param txdicts: list of txnames to combine, e.g.
         [ "TChiWZ_2EqMassAx_EqMassBy_combined.py",
           "TChiWZoff_2EqMassAx_EqMassBy_combined.py" ]
+        :param xrange: either None, or string, e.g. "[0,200]"
+        :param yrange: either None, or string, e.g. "[0,200]"
         """
         self.databasePath = databasePath
+        self.xrange = eval(str(xrange))
+        self.yrange = eval(str(yrange))
         self.anaId = anaId
         self.txdicts = txdicts
         self.getValNames()
@@ -22,6 +27,22 @@ class ValidationCombiner:
         self.read()
         self.getExclusions()
         self.plot()
+
+    def passesRanges ( self, d ):
+        """ check if data 'd' passes all the ranges """
+        if not "axes" in d:
+            return True
+        if self.xrange != None:
+            if d["axes"]["x"] > self.xrange[1]:
+                return False
+            if d["axes"]["x"] < self.xrange[0]:
+                return False
+        if self.yrange != None:
+            if d["axes"]["y"] > self.yrange[1]:
+                return False
+            if d["axes"]["y"] < self.yrange[0]:
+                return False
+        return True
 
     def read ( self ):
         """ read in the data from the various sources """
@@ -32,7 +53,8 @@ class ValidationCombiner:
             content = getValidationFileContent ( fname )
             self.meta[txname]=content["meta"]
             for d in content["data"]:
-                self.data.append ( d )
+                if self.passesRanges ( d ):
+                    self.data.append ( d )
 
     def txShort ( self ):
         """ get a short moniker for the txnames """
@@ -92,8 +114,10 @@ class ValidationCombiner:
         import matplotlib
         plt.scatter ( ex, ey, c="r", s=90. )
         plt.scatter ( nx, ny, c="g", s=90. )
+        cmap = "gray"
+        cmap = "bone"
         plt.scatter ( x, y, c=r, s=20., norm=matplotlib.colors.LogNorm(), 
-                      cmap="gray", alpha=1. )
+                      cmap=cmap, alpha=1. )
         cbar = plt.colorbar()
         cbar.set_label ( "r" )
         plt.title ( f"{idNoEff}, {self.txShort()}" )
@@ -134,9 +158,16 @@ if __name__ == "__main__":
     ap.add_argument('-a', '--analysisId',
             help='analysis id [ATLAS-SUSY-2018-06-eff]', type=str,
             default='ATLAS-SUSY-2018-06-eff')
+    ap.add_argument('-x', '--xrange',
+            help='user-specified x-range, e.g. "[0,200]" [None]', type=str,
+            default=None )
+    ap.add_argument('-y', '--yrange',
+            help='user-specified y-range, e.g. "[0,200]" [None]', type=str,
+            default=None )
     ap.add_argument('-v', '--validationfiles',
             help='validation files, comma separated [TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py]',
             type=str, default='TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py')
 
     args = ap.parse_args()
-    plotter = ValidationCombiner ( args.database, args.analysisId, args.validationfiles )
+    plotter = ValidationCombiner ( args.database, args.analysisId, 
+            args.validationfiles, args.xrange, args.yrange )
