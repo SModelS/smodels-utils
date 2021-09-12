@@ -2,6 +2,9 @@
     if that fails then fall back to ordinary matplotlib """
 
 def importBackend():
+    import os
+    if "jupyter" in os.environ["_"]:
+        return
     try:
         import matplotlib, os, sys, subprocess
         from smodels_utils import SModelSUtils
@@ -16,7 +19,7 @@ def importBackend():
             cmd = f"cp -r {sourcedir}/{name} {path}"
             o = subprocess.getoutput ( cmd )
 
-    matplotlib.use('module://matplotlib-backend-kitty')
+        matplotlib.use('module://matplotlib-backend-kitty')
 
     except Exception as e:
         pass
