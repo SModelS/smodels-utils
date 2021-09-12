@@ -185,7 +185,7 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
 
 def writeBestSRs( push = False ):
     import glob
-    Dir = "../../smodels.github.io/ratioplots/"
+    Dir = "../../smodels.github.io/plots/"
     files = glob.glob("%sbestSR*png" % Dir )
     files.sort()
     topos = set()
@@ -242,9 +242,9 @@ if __name__ == "__main__":
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
-            help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     argparser.add_argument ( "-p", "--push", action="store_true",
-            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     args = argparser.parse_args()
     if not args.default and not args.analysis.endswith("-eff"):
         print ( "[plotBestSRs] warning, analysis name does not end with -eff, might an error" )
@@ -255,14 +255,14 @@ if __name__ == "__main__":
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = draw( ipath, args.max_x, args.max_y, args.outputfile )
                 if args.copy:
-                    cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+                    cmd = "cp %s ../../smodels.github.io/plots/" % fname
                     o = subprocess.getoutput ( cmd )
                     print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
         fname = draw( args.dbpath, args.analysis, args.validationfiles, 
                       args.max_x, args.max_y, args.outputfile, args.colors )
         if args.copy:
-            cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+            cmd = "cp %s ../../smodels.github.io/plots/" % fname
             o = subprocess.getoutput ( cmd )
             print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     if args.copy:
