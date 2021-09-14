@@ -341,13 +341,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 if isEqual[cval][i]: ## is equal we need to add noise!
                     for j in range(gr.GetN()):
                         gr.GetPoint(j,x1,y1 )
-                        gr.SetPoint(j,x1.value*random.gauss(1.,.001),y1.value*random.gauss(1.,.001))
+                        xn = x1.value*random.gauss(1.,.001)
+                        yn = y1.value*random.gauss(1.,.001)
+                        gr.SetPoint( j, xn, yn ) 
             except KeyError as e:
                 ## may not exist
                 pass
 
             setOptions(gr, Type='official')
             gr.SetLineColor(kRed) # Orange+2)
+            # gr.SetLineColor(kBlack) # Orange+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
     for cval,grlist in cgraphs.items():
@@ -359,15 +362,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             ls = 2 ## when expected are drawn also, make this dashed
         for gr in grlist:
             setOptions(gr, Type='official')
-            gr.SetLineColor(kGray+2)
-            gr.SetLineStyle(ls)
+            gr.SetLineColor(kRed)
+            #gr.SetLineColor(kGray+2)
+            #gr.SetLineStyle(ls)
             gr.Draw("L SAME")
     if options["drawChi2Line"] and chi2graphs != None: # False:
         for cval,grlist in chi2graphs.items():
             for gr in grlist:
                 setOptions(gr, Type='official')
                 gr.SetLineColor(kGreen+2)
-                gr.SetLineStyle(5)
+                # gr.SetLineStyle(5)
                 gr.Draw("L SAME")
     for gr in official:
         # validationPlot.completeGraph ( gr )
@@ -381,7 +385,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         for gr in expectedOfficialCurves:
             # validationPlot.completeGraph ( gr )
             setOptions(gr, Type='official')
-            gr.SetLineColor ( kRed+2 )
+            gr.SetLineColor ( kBlack )
+            gr.SetLineStyle ( 2 )
+            # gr.SetLineColor ( kRed+2 )
             gr.Draw("L SAME")
 
     #Draw additional info
@@ -419,14 +425,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
     if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
         ## pyhf combination
-        subtitle = "pyhf combination of %d signal regions" % len(validationPlot.expRes.datasets)
+        subtitle = "pyhf combination of %d signal regions" % \
+                    len(validationPlot.expRes.datasets)
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
             validationPlot.combine == True:
-        subtitle = "combination of %d signal regions" % len(validationPlot.expRes.datasets)
+        subtitle = "combination of %d signal regions" % \
+                    len(validationPlot.expRes.datasets)
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
         nagg = len(validationPlot.expRes.datasets)
-        if hasattr ( validationPlot, "meta" ) and "naggregates" in validationPlot.meta:
+        if hasattr ( validationPlot, "meta" ) and "naggregates" in \
+                validationPlot.meta:
             nagg = validationPlot.meta["naggregates"]
         subtitle = "%d aggregate datasets" % nagg
         dataId = str(dataset.dataInfo.dataId)
@@ -454,12 +463,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         else:
             # lsub.DrawLatex(.57,.79,subtitle)
             lsub.DrawLatex(.15,.79,subtitle)
+            # lsub.DrawLatex(.15,-.79,subtitle)
     else:
         lsub.SetTextAlign(31)
         # lsub.SetTextSize(.025)
         lsub.SetTextSize(.035)
         # lsub.DrawLatex(.81,.068,subtitle)
-        lsub.DrawLatex(.91,.068,subtitle)
+        # lsub.DrawLatex(.91,.068,subtitle)
+        lsub.DrawLatex(.91, .048,subtitle)
     tgr.lsub=lsub
 
     nleg = 1
@@ -493,6 +504,38 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
     added = False
+    for gr in official:
+        if 'xclusion_' in gr.GetTitle():
+            leg.AddEntry(gr,"exclusion (official)","L")
+            hasExclLines = True
+        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and \
+                (not added):
+            leg.AddEntry(gr,"#pm1#sigma (official)","L")
+            hasExclLines = True
+            added = True
+    added = False
+    for gr in expectedOfficialCurves:
+        if 'xclusion_' in gr.GetTitle():
+            if options["drawExpected"]:
+                leg.AddEntry(gr,"exp. excl. (official)","L")
+            hasExclLines = True
+        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and \
+                (not added):
+            leg.AddEntry(gr,"#pm1#sigma (official)","L")
+            hasExclLines = True
+            added = True
+    added = False
+    for cval,grlist in cgraphs.items():
+        if not grlist:
+            continue
+        if cval == 1.0:
+            leg.AddEntry(grlist[0],"exclusion (SModelS)","L")
+            hasExclLines = True
+        elif (cval == looseness or cval == 1./looseness) and not added:
+            leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
+            hasExclLines = True
+            added = True
+    added = False
     if options["drawExpected"]:
         for cval,grlist in ecgraphs.items():
             if not grlist:
@@ -504,16 +547,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
                 hasExclLines = True
                 added = True
-    for cval,grlist in cgraphs.items():
-        if not grlist:
-            continue
-        if cval == 1.0:
-            leg.AddEntry(grlist[0],"exclusion (SModelS)","L")
-            hasExclLines = True
-        elif (cval == looseness or cval == 1./looseness) and not added:
-            leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
-            hasExclLines = True
-            added = True
     if options["drawChi2Line"] and chi2graphs != None:
         for cval,grlist in chi2graphs.items():
             if not grlist:
@@ -521,24 +554,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if cval == 1.0:
                 leg.AddEntry(grlist[0],"exclusion (#chi^{2})","L")
                 hasExclLines = True
-    added = False
-    for gr in expectedOfficialCurves:
-        if 'xclusion_' in gr.GetTitle():
-            if options["drawExpected"]:
-                leg.AddEntry(gr,"exp. excl. (official)","L")
-            hasExclLines = True
-        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
-            leg.AddEntry(gr,"#pm1#sigma (official)","L")
-            hasExclLines = True
-            added = True
-    for gr in official:
-        if 'xclusion_' in gr.GetTitle():
-            leg.AddEntry(gr,"exclusion (official)","L")
-            hasExclLines = True
-        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
-            leg.AddEntry(gr,"#pm1#sigma (official)","L")
-            hasExclLines = True
-            added = True
 
     if hasExclLines:
         leg.Draw()
