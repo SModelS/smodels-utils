@@ -358,8 +358,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if gr.GetN() > 0:
                 gr.Draw("L SAME")
     for cval,grlist in cgraphs.items():
+        lw = 1
         if cval == 1.0:
             ls = 1
+            lw = 3
         else:
             ls = 2
         if len(ecgraphs)>0 and options["drawExpected"]:
@@ -367,6 +369,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         for gr in grlist:
             setOptions(gr, Type='official')
             gr.SetLineColor(kRed)
+            gr.SetLineWidth ( lw )
             #gr.SetLineColor(kGray+2)
             #gr.SetLineStyle(ls)
             if gr.GetN() > 0:
