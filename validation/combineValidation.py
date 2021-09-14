@@ -69,6 +69,9 @@ class ValidationCombiner:
             for expected in [ True, False ]:
                 ret = { "x": [], "y": [] }
                 for txname,v in self.validationFiles.items():
+                    if self.meta == None:
+                       print ( "[combineValidation.py] no meta info. trying with default axes" )
+                        
                     axes = self.meta[txname]["axes"]
                     line = getExclusionLine ( path, txname, axes = axes,
                            expected = expected, pm = pm, verbose=False )
