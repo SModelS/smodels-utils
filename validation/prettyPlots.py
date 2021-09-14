@@ -88,7 +88,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if xvals == None: ## happens when not on the plane I think
             continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
-            logger.warning( "no UL for %s" % xvals )
+            logger.warning( "no UL for %s: %s" % (xvals, pt ) )
         r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             if pt["UL"]!=None:
@@ -151,7 +151,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         #buff.SetSize(tgrN)
         zpts = numpy.frombuffer(buff,count=tgrN)
         for i in range(tgrN):
-            tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
+            yp = ypts[i]+random.uniform(0.,0.001)
+            tgr.SetPoint(i,xpts[i],yp,zpts[i])
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, not plotting pretty plot.")
         return None, None
@@ -314,6 +315,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             continue
         tmpe = ecgraphs[cval]
         for i,gr in enumerate(grlist):
+            if gr.GetN() == 0:
+                continue
             isEqual[cval][i]=False
             if i+1>len(tmpe):
                 continue
@@ -352,7 +355,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             gr.SetLineColor(kRed) # Orange+2)
             # gr.SetLineColor(kBlack) # Orange+2)
             gr.SetLineStyle(ls)
-            gr.Draw("L SAME")
+            if gr.GetN() > 0:
+                gr.Draw("L SAME")
     for cval,grlist in cgraphs.items():
         if cval == 1.0:
             ls = 1
@@ -365,14 +369,24 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             gr.SetLineColor(kRed)
             #gr.SetLineColor(kGray+2)
             #gr.SetLineStyle(ls)
-            gr.Draw("L SAME")
+            if gr.GetN() > 0:
+                gr.Draw("L SAME")
     if options["drawChi2Line"] and chi2graphs != None: # False:
         for cval,grlist in chi2graphs.items():
             for gr in grlist:
                 setOptions(gr, Type='official')
                 gr.SetLineColor(kGreen+2)
+                grN = gr.GetN()
+                buff = gr.GetX()
+                #buff.SetSize(etgrN)
+                xpts = numpy.frombuffer(buff,count=grN)
+                buff = gr.GetY()
+                ypts = numpy.frombuffer(buff,count=grN)
+                for i in range(int(gr.GetN())):
+                    gr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,2.))
                 # gr.SetLineStyle(5)
-                gr.Draw("L SAME")
+                if gr.GetN() > 0:
+                    gr.Draw("L SAME")
     for gr in official:
         # validationPlot.completeGraph ( gr )
         setOptions(gr, Type='official')
@@ -380,7 +394,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if "P1" in gr.GetTitle() or "M1" in gr.GetTitle():
             gr.SetLineWidth(1)
             # gr.SetLineStyle(0)
-        gr.Draw("L SAME")
+        if gr.GetN() > 0:
+            gr.Draw("L SAME")
     if options["drawExpected"]:
         for gr in expectedOfficialCurves:
             # validationPlot.completeGraph ( gr )
@@ -388,7 +403,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             gr.SetLineColor ( kBlack )
             gr.SetLineStyle ( 2 )
             # gr.SetLineColor ( kRed+2 )
-            gr.Draw("L SAME")
+            if gr.GetN() > 0:
+                gr.Draw("L SAME")
 
     #Draw additional info
     ltx=TLatex()
@@ -517,6 +533,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     for gr in expectedOfficialCurves:
         if 'xclusion_' in gr.GetTitle():
             if options["drawExpected"]:
+                gr.SetLineColor ( kBlack ) # make sure these are right
+                gr.SetLineStyle ( 2 )
                 leg.AddEntry(gr,"exp. excl. (official)","L")
             hasExclLines = True
         elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and \
