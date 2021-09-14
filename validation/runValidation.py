@@ -283,6 +283,7 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--force_build', action="store_true",
             help='force building of database pickle file (you may want to do this for the grid datapoints in the ugly plots)' )
     ap.add_argument('-k', '--keep', action="store_true", help='keep temp dir' )
+    ap.add_argument('-s', '--show', action="store_true", help='show plots after producing them. tries a few viewers like timg, see, display.' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
@@ -386,6 +387,7 @@ if __name__ == "__main__":
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
+                "show": False, ## show image after producing it?
                 "ncpus": -1, ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
     }
     if parser.has_section("options"):
@@ -435,10 +437,15 @@ if __name__ == "__main__":
             options["weightedAgreementFactor"] = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
             options["model"] = parser.get("options","model")
+        if parser.has_option("options","show" ):
+            options["show"] = parser.get("options","show")
     ## Set to True to run SModelS on the slha files. If False, use the already
     ## existing *.py files in the validation folder. If None or
     ## 'ondemand', produce data only if none are found
     options["generateData"] = _doGenerate ( parser )
+
+    if args.show:
+        options["show"]=True
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options,

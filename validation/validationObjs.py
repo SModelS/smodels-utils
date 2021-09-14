@@ -825,6 +825,18 @@ class ValidationPlot():
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
 
+    def show ( self, filename ):
+        """ we were asked to also show <filename> """
+        import subprocess, distutils.spawn
+        for viewer in [ "timg", "see", "display" ]:
+            v = distutils.spawn.find_executable( viewer )
+            if not v:
+                continue
+            cmd = f"{v} {filename}"
+            o = subprocess.getoutput ( cmd )
+            print ( f"{o}" )
+            return
+
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
         Saves the plot in .pdf format in the validationDir folder.
@@ -857,6 +869,8 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'.png')
             try:
                 self.plot.Print(filename)
+                if self.options["show"]:
+                    self.show ( filename )
             except Exception as e:
                 # if fails because of missing dep, then just proceed
                 pass
@@ -867,8 +881,10 @@ class ValidationPlot():
             self.plot.Print(filename)
             addLogo ( filename )
             filename = filename.replace('.'+fformat,'.png')
-            logger.info ( "saving plot in %s (and pdf and root)" % filename )
+            logger.debug ( "saving plot in %s (and pdf and root)" % filename )
             self.plot.Print(filename)
+            if self.options["show"]:
+                self.show ( filename )
             addLogo ( filename )
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)
