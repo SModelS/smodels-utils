@@ -15,7 +15,10 @@ import itertools
 import importlib
 import setPath
 from smodels_utils.helper import prettyDescriptions
-from smodels_utils.helper.various import getValidationModule
+from smodels_utils.helper.various import getPathName
+#from smodels_utils.helper.various import getValidationModule
+from validation.validationHelpers import getValidationFileContent, shortTxName, \
+       mergeExclusionLines, mergeValidationData
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -131,8 +134,8 @@ def getExclusionLine ( line ):
       y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
-           xlabel, ylabel, show ):
+def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, copy, label1, 
+           label2, output, vmin, vmax, xlabel, ylabel, show ):
     """ plot.
     :param vmin: the minimum z value, e.g. .5
     :param vmax: the maximum z value, e.g. 1.7
@@ -140,6 +143,22 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     :param ylabel: label on y axis, default: m$_{LSP}$ [GeV]
     :param show: show plot in terminal
     """
+    contents = []
+    topos = set()
+    for valfile in valfile1.split(","):
+        ipath1 = getPathName ( dbpath, analysis1, valfile )
+        content = getValidationFileContent ( ipath1 )
+        contents.append ( content )
+        p1 = valfile.find("_")
+        topos.add ( valfile[:p1] )
+    content1 = mergeValidationData ( contents )
+    contents = []
+    for valfile in valfile2.split(","):
+        ipath2 = getPathName ( dbpath, analysis2, valfile )
+        content = getValidationFileContent ( ipath2 )
+        contents.append ( content )
+    content2 = mergeValidationData ( contents )
+
     if xlabel in [  None, "" ]:
        xlabel = "m$_{mother}$ [GeV]"
     if ylabel in [  None, "" ]:
@@ -149,7 +168,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     uls={}
     nsr=""
     noaxes = 0
-    for ctr,point in enumerate(imp1.validationData):
+    for ctr,point in enumerate(content1["data"] ):
         if not "axes" in point:
             noaxes+=1
             if noaxes < 5:
@@ -175,7 +194,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
 
     err_msgs = 0
 
-    ipoints = imp2.validationData
+    ipoints = content2["data"]
     points = []
 
     for ctr,point in enumerate(ipoints):
@@ -200,7 +219,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
             #    print ( "cannot find data for point", point["slhafile"] )
 
     if len(points) == 0:
-        print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {imp2.__file__}" )
+        print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {ipath2}" )
         sys.exit()
 
     points.sort()
@@ -226,7 +245,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
             print ( "pt", x[i], y[i], yx[i] )
 
     if err_msgs > 0:
-        print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( imp2.validationData ) ) )
+        print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( content2["data"] ) ) )
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
@@ -257,22 +276,28 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     plt.rcParams.update({'font.size': 14})
     #plt.rcParams['xtick.labelsize'] = 14
     #plt.rcParams['ytick.labelsize'] = 14
-    slhafile=imp2.validationData[0]["slhafile"]
-    Dir=os.path.dirname ( imp1.__file__ )
-    Dir2=os.path.dirname ( imp2.__file__ )
+    slhafile=content2["data"][0]["slhafile"]
+    Dir=os.path.dirname ( ipath1 )
+    Dir2=os.path.dirname ( ipath2 )
     smsrootfile = Dir.replace("validation","sms.root" )
     smsrootfile2 = Dir2.replace("validation","sms.root" )
     analysis=Dir[ Dir.rfind("/")+1: ]
-    topo=slhafile[:slhafile.find("_")]
+    # topo=slhafile[:slhafile.find("_")]
+    topo = shortTxName ( list ( topos ) )
+    print ( "topos", topos, "topo", topo )
     # print ( "smsrootfile", smsrootfile )
-    stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
+    stopos = []
+    for t in topos:
+        stopo = prettyDescriptions.prettyTxname ( t, outputtype="latex" ).replace("*","^{*}" )
+        stopos.append ( stopo )
+    stopo = "+".join ( stopos )
 
     isEff = False
-    if "-eff" in imp1.ana or "-eff" in imp2.ana:
+    if "-eff" in analysis1 or "-eff" in analysis2:
         isEff = True
-    anaId = imp1.ana.replace("-andre","")
+    anaId = analysis1.replace("-andre","")
     anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
-    anaId2 = imp2.ana.replace("-andre","")
+    anaId2 = analysis2.replace("-andre","")
     anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
     title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
     if anaId2 == anaId:
@@ -293,29 +318,35 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     el = []
     hasLegend = False
     axes = None
-    if hasattr ( imp1, "meta" ) and "axes" in imp1.meta:
-        axes = imp1.meta["axes"]
-    if hasattr ( imp2, "meta" ) and "axes" in imp2.meta:
-        axes = imp2.meta["axes"]
-    line = getExclusionsFrom ( smsrootfile, topo, axes )
-    line2 = getExclusionsFrom ( smsrootfile2, topo, axes )
-    if line is not False:
-        el = getExclusionLine ( line )
-    if line2 is not False:
-        el2 = getExclusionLine ( line2 )
-    label = "official exclusion"
-    label = anaId
-    for E in el:
-        hasLegend = True
-        plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
-        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=3, label=label )
-        label = ""
-    for E in el2:
-        label = anaId2
-        hasLegend = True
-        plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
-        plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
-        label = ""
+    for t in topos:
+        if content1["meta"]!=None and "axes" in content1["meta"]:
+            axes = content1["meta"]["axes"]
+        if content2["meta"]!=None and "axes" in content2["meta"]:
+            axes = content2["meta"]["axes"]
+        line = getExclusionsFrom ( smsrootfile, t, axes )
+        line2 = getExclusionsFrom ( smsrootfile2, t, axes )
+        el2 = []
+        if line is not False:
+            el = getExclusionLine ( line )
+        if line2 is not False:
+            el2 = getExclusionLine ( line2 )
+        label = "official exclusion"
+        # label = anaId
+        if hasLegend:
+            label = ""
+        for E in el:
+            hasLegend = True
+            plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+            plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=3, label=label )
+            label = ""
+        """
+        for E in el2:
+            label = anaId2
+            hasLegend = True
+            plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+            plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
+            label = ""
+        """
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
         print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
@@ -453,10 +484,11 @@ def main():
         valfile2 = args.validationfile2
         if valfile2 in [ "", "none", "None", None ]:
             valfile2 = valfile1
-        imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
-        imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
+        # imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
+        # imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, 
+        draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2, 
+               args.copy, args.label1, args.label2, 
                args.output, args.zmin, args.zmax, args.xlabel, args.ylabel, 
                args.show )
 
