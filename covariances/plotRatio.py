@@ -134,14 +134,13 @@ def getExclusionLine ( line ):
       y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, copy, label1, 
-           label2, output, vmin, vmax, xlabel, ylabel, show ):
+def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
-    :param vmin: the minimum z value, e.g. .5
-    :param vmax: the maximum z value, e.g. 1.7
-    :param xlabel: label on x axis, default: m$_{mother}$ [GeV]
-    :param ylabel: label on y axis, default: m$_{LSP}$ [GeV]
-    :param show: show plot in terminal
+    :option zmin: the minimum z value, e.g. .5
+    :option zmax: the maximum z value, e.g. 1.7
+    :option xlabel: label on x axis, default: m$_{mother}$ [GeV]
+    :option ylabel: label on y axis, default: m$_{LSP}$ [GeV]
+    :option show: show plot in terminal
     """
     contents = []
     topos = set()
@@ -159,6 +158,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, copy, label1,
         contents.append ( content )
     content2 = mergeValidationData ( contents )
 
+    xlabel, ylabel = options["xlabel"], options["ylabel"]
     if xlabel in [  None, "" ]:
        xlabel = "m$_{mother}$ [GeV]"
     if ylabel in [  None, "" ]:
@@ -250,6 +250,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, copy, label1,
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
+    vmin, vmax = options["zmin"], options["zmax"]
     if vmax is None or abs(vmax)<1e-5:
         vmax = numpy.nanmax ( col )*1.1
     if vmin is None or abs(vmin)<1e-5:
@@ -371,10 +372,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, copy, label1,
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
+    output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
-    a1, a2 = label1, label2
+    a1, a2 = options["label1"], options["label2"]
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
@@ -386,15 +388,16 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, copy, label1,
     if hasLegend:
         plt.legend()
     plt.savefig ( figname )
-    if show:
+    if options["show"]:
         plt.show()
     if copy:
       cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
       print ( "plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
     rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
-    with open ( "ratios.txt", "at") as f:
-        f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
+    if options["meta"]:
+        with open ( "ratios.txt", "at") as f:
+            f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
     print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
     plt.clf()
 
@@ -471,6 +474,8 @@ def main():
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     argparser.add_argument ( "-s", "--show", action="store_true",
             help="show plot in terminal" )
+    argparser.add_argument ( "-m", "--meta", action="store_true",
+            help="produce the meta files, ratios.txt and ratioplots.md" )
     argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
@@ -487,12 +492,16 @@ def main():
         # imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
         # imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2, 
-               args.copy, args.label1, args.label2, 
-               args.output, args.zmin, args.zmax, args.xlabel, args.ylabel, 
-               args.show )
+        options = { "meta": args.meta, "show": args.show, "xlabel": args.xlabel,
+                    "ylabel": args.ylabel, "zmax": args.zmax, "zmin": args.zmin,
+                    "copy": args.copy, "output": args.output,
+                    "label1": args.label1, "label2": args.label2 }
 
-    writeMDPage( args.copy )
+        draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
+               options )
+
+    if args.meta:
+        writeMDPage( args.copy )
 
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
