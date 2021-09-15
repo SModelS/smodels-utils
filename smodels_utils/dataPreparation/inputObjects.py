@@ -949,7 +949,7 @@ class TxNameInput(Locker):
                     try:
                         factor = float ( factor )
                     except ValueError as e:
-                        logger.error ( f"unit starting with / is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
+                        logger.error ( f"unit starting with * is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
                     value = value * factor
                 else:
                     value = value*eval(unit, {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})

@@ -4,7 +4,7 @@
 own upper limit computed from combining the efficiency maps. """
 
 import math, os, numpy, copy, sys, glob, ctypes
-import matplotlib.pyplot as plt
+from smodels_utils.plotting import mpkitty as plt
 import matplotlib
 import ROOT
 import time
@@ -132,12 +132,13 @@ def getExclusionLine ( line ):
     return [ { "x": x_v, "y": y_v } ]
 
 def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
-           xlabel, ylabel ):
+           xlabel, ylabel, show ):
     """ plot.
     :param vmin: the minimum z value, e.g. .5
     :param vmax: the maximum z value, e.g. 1.7
     :param xlabel: label on x axis, default: m$_{mother}$ [GeV]
     :param ylabel: label on y axis, default: m$_{LSP}$ [GeV]
+    :param show: show plot in terminal
     """
     if xlabel in [  None, "" ]:
        xlabel = "m$_{mother}$ [GeV]"
@@ -170,6 +171,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
         if point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
         uls[ h ] = point["UL" ] / point["signal"]
+        # uls[ h ] = point["signal" ] / point["UL"]
 
     err_msgs = 0
 
@@ -186,6 +188,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
             ul1 = uls[h]
         if ul1 and ul1>0. and "UL" in point:
             ul2 = point["UL"] / point["signal"]
+            # ul2 = point["signal"] / point["UL"]
             ratio = float("nan")
             if ul2 > 0.:
                 ratio = ul1 / ul2
@@ -352,6 +355,8 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output, vmin, vmax,
     if hasLegend:
         plt.legend()
     plt.savefig ( figname )
+    if show:
+        plt.show()
     if copy:
       cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
       print ( "plotRatio] %s" % cmd )
@@ -433,6 +438,8 @@ def main():
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+    argparser.add_argument ( "-s", "--show", action="store_true",
+            help="show plot in terminal" )
     argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
@@ -449,8 +456,9 @@ def main():
         imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
         imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output,
-               args.zmin, args.zmax, args.xlabel, args.ylabel )
+        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, 
+               args.output, args.zmin, args.zmax, args.xlabel, args.ylabel, 
+               args.show )
 
     writeMDPage( args.copy )
 
