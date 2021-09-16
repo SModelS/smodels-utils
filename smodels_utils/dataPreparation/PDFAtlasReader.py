@@ -177,11 +177,25 @@ if __name__ == "__main__":
             help='pdf file to read [figaux_08a.pdf]', default='figaux_08a.pdf')
     ap.add_argument('-i', '--interactive',
             help="interactive shell", action="store_true" )
+    ap.add_argument('-x', '--xrange',
+            help='xrange as [min,max,round]', default='[100,850,50]')
+    ap.add_argument('-y', '--yrange',
+            help='yrange as [min,max,round]', default='[100,850,50]')
+    ap.add_argument('-a', '--axes',
+            help='axes, e.g. [[x,y],[x,y]]', default='[[x,y],[x,y]]')
     args = ap.parse_args()
+    xrange = eval ( args.xrange )
+    yrange = eval ( args.yrange )
+    xround = None
+    yround = None
+    if len(xrange)>2:
+        xround=xrange[2]
+    if len(yrange)>2:
+        yround=yrange[2]
     config =  {
         'name': args.file,
-        'x':{'limits': (100, 850), 'round': 50. },
-        'y':{'limits': (100, 850), 'round': 50. },
+        'x':{'limits': ( xrange[0], xrange[1]), 'round': xround },
+        'y':{'limits': ( yrange[0], yrange[1]), 'round': yround },
 #        'axes': '[[x-y],[x-y]]',
         }
 
