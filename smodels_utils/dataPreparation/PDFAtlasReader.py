@@ -23,12 +23,19 @@ class PDFAtlasReader():
     def pprint ( self, line ):
         print ( f"[PDFAtlasReader] {line}" )
 
-    def pdfToMasses ( self, pdfx, pdfy ):
-        """ convert pdfx and pdfy to masses """
+    def pdfToMasses ( self, pdfx, pdfy, round_x = None, round_y = None ):
+        """ convert pdfx and pdfy to masses 
+        :param round_x: if not None, round to a multiple of this number
+        :param round_y: if not None, round to a multiple of this number
+        """
         rx = ( pdfx - self.pdf_x0 ) / ( self.pdf_xmax - self.pdf_x0 )
         ry = ( pdfy - self.pdf_y0 ) / ( self.pdf_ymax - self.pdf_y0 )
         x = self.config["x"]["limits"][0] + rx * ( self.config["x"]["delta"] )
         y = self.config["y"]["limits"][0] + ry * ( self.config["y"]["delta"] )
+        if round_x != None:
+            x = round ( x / round_x ) * round_x
+        if round_y != None:
+            y = round ( y / round_y ) * round_y
         return x,y
 
     def computeXYLetter ( self, letter ):
@@ -41,7 +48,12 @@ class PDFAtlasReader():
         # pdf_xavg = is the x coordinate in pdf coord system
         pdf_yavg = ( bbox[1] + bbox[1] ) / 2.
         pdf_xavg = ( bbox[0] + bbox[0] ) / 2.
-        return self.pdfToMasses ( pdf_xavg, pdf_yavg )
+        round_x, round_y = None, None
+        if "round" in self.config["x"]:
+            round_x = self.config["x"]["round"]
+        if "round" in self.config["y"]:
+            round_y = self.config["y"]["round"]
+        return self.pdfToMasses ( pdf_xavg, pdf_yavg, round_x, round_y )
 
     def computeXYShape ( self, shape ):
         """ compute X and Y coordinates for shape """
@@ -68,21 +80,46 @@ class PDFAtlasReader():
             line = f"cannot retrieve first page of {fname}. Aborting."
             self.error ( line )
         self.page = page
-        # pdf_x0 and pdf_y0 are the pdf coordinates of our smallest xs and ys
-        self.pdf_x0 = ( self.page.letterings[0].bbox[0] + self.page.letterings[0].bbox[2] ) / 2.
-        self.pdf_y0 = self.page.letterings[0].bbox[1] + 30.
-        # pdf_xmax and pdf_ymax are the pdf coordinates of our largest xs and ys
-        self.pdf_xmax = self.page.width - 20.
-        self.pdf_ymax = self.page.height - 30.
+        self.findOffsets()
         self.ulValues()
         self.exclusionLine()
+
+    def findOffsets ( self ):
+        """ this is about finding the offsets """
+        # pdf_x0 and pdf_y0 are the pdf coordinates of our smallest xs and ys
+        # this was a rough guess
+        #self.pdf_x0 = ( self.page.letterings[0].bbox[0] + self.page.letterings[0].bbox[2] ) / 2.
+        #self.pdf_y0 = self.page.letterings[0].bbox[1] + 25.
+        # pdf_xmax and pdf_ymax are the pdf coordinates of our largest xs and ys
+        #self.pdf_xmax = self.page.width - 60.
+        #self.pdf_ymax = self.page.height - 50.
+
+        for s in self.page.shapes:
+            if s.stroke == None:
+                continue
+            c = s.stroke.color.as_rgb()
+            if c != ( 0,0,0 ):
+                continue
+            dash = s.stroke.dash
+            if dash not in [ None, ([], 0) ]:
+                continue
+            if len(s.path) < 4:
+                continue
+            lw = s.stroke.linewidth
+            ## this is it!
+            self.pdf_x0 = s.path[0][1]
+            self.pdf_y0 = s.path[0][2]
+            self.pdf_xmax = s.path[1][1]
+            self.pdf_ymax = s.path[2][2]
+
+            
 
     def ulValues( self ):
         f = open ( "ul.csv", "wt" )
         for l,lettering in enumerate(self.page.letterings):
             x, y = self.computeXYLetter ( lettering )
-            #if lettering.title() in [ "0.39", "0.079" ]:
-            #    print ( "letter", l, lettering, "xy", self.computeXYLetter ( lettering ) )
+            if False: # lettering.title() in [ "0.39", "0.079", "0.019" ]:
+                print ( "letter #", l, "v=", lettering, "bb=", lettering.bbox[:2], "x,y=", self.computeXYLetter ( lettering ) )
             if "." in lettering.title():
                 line = f"{x},{y},{lettering.title()}\n"
                 if self.yIsDiff():
@@ -143,8 +180,8 @@ if __name__ == "__main__":
     args = ap.parse_args()
     config =  {
         'name': args.file,
-        'x':{'limits': (100, 850)},
-        'y':{'limits': (100, 850)},
+        'x':{'limits': (100, 850), 'round': 50. },
+        'y':{'limits': (100, 850), 'round': 50. },
 #        'axes': '[[x-y],[x-y]]',
         }
 
