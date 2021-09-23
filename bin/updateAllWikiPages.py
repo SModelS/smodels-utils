@@ -97,7 +97,7 @@ def main():
         #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-p", "-s", "-r", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-f", "./fastlim.pcl" ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-F", "-f", "./fastlim.pcl" ], A.dry_run )
 
 
     gprint ( "create Validation wiki" )

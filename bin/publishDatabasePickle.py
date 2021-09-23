@@ -28,7 +28,8 @@ def sizeof_fmt(num, suffix='B'):
 def prepareCommandsFile ( ) :
     """ prepare the commands.sh file """
     f=open( "commands.sh", "wt" )
-    f.write ( "#!/bin/sh\n\n" )
+    f.write ( "#!/bin/sh\n" )
+    f.write ( f"# created {time.asctime()}\n\n" )
     f.close( )
     os.chmod ( "commands.sh", 0o755 )
 
@@ -72,6 +73,7 @@ def main():
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     ap.add_argument ( '-p', '--prepare_commands', help='prepare the commands file', action='store_true' )
+    ap.add_argument ( '-F', '--finalize_commands', help='finalize the commands file', action='store_true' )
     args = ap.parse_args()
     if args.prepare_commands:
         prepareCommandsFile()
@@ -218,7 +220,8 @@ def main():
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         cmd = "ssh lxplus.cern.ch smodels/www/database/create.py"
         print ( cmd )
-        addToCommandsFile ( cmd )
+        if args.finalize_commands:
+            addToCommandsFile ( cmd )
         print ( )
         print ( "now point your browser to: " )
         print ( "https://smodels.web.cern.ch/smodels/database/" )
