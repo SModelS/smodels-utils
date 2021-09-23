@@ -53,12 +53,16 @@ def run( cmd ):
     f.close()
     return str(o)
 
-def removeNonValidated(dirname):
+def removeNonValidated(dirname, reuse ):
     """ remove all non-validated analyses from
         database """
-    comment( "Now remove non-validated results." )
     from smodels.experiment.databaseObj import Database
-    d = Database( "%s/smodels-database" % dirname, force_load = "txt" )
+    comment( "Now build the database pickle file" )
+    load = "txt"
+    if reuse:
+        load = None
+    d = Database( "%s/smodels-database" % dirname, force_load = load )
+    comment( "Now remove non-validated results." )
     ers = d.expResultList
     comment( "Loaded the database with %d results." %( len(ers) ) )
     for er in ers:
@@ -91,9 +95,10 @@ def removeNonValidated(dirname):
                          (er) )
                 cmd = "rm -rf %s" % er.path
                 run( cmd )
-    # comment( "base=%s" % d.base )
-    for tev in os.listdir( d.base ):
-        fullpath = os.path.join( d.base, tev )
+    base = d.subs[0].url
+    # comment( "base=%s" % base )
+    for tev in os.listdir( base ):
+        fullpath = os.path.join( base, tev )
         if not os.path.isdir( fullpath ):
             continue
         tevHasResults=False
@@ -272,7 +277,7 @@ def createTarball(filename,dirname):
     comment( "Create tarball %s.tgz" % filename )
     run("tar czvf %s.tgz %s" %(filename, dirname))
 
-def createDBTarball(filename,dirname):
+def createDBTarball(filename,dirname,):
     """
     Create the tarball of the database alone
     """
@@ -357,25 +362,27 @@ def testDocumentation(dirname):
     cmd="ls %s/docs/manual/build/html/index.html" % dirname
     run(cmd)
 
-def createDBRelease(output,tag):
+def createDBRelease(output,tag,reuse):
     """
     Create a tarball for distribution.
+    :param reuse: reuse checked out database
     """
 
     dirname = output
-    if os.path.isdir(dirname):
+    if os.path.isdir(dirname) and not reuse:
         comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz" %(output,output))
         return False
     
     isDummy()
-    rmlog(dirname) ## first remove the log file
-    comment( "Creating tarball for database distribution, version v%s" %tag )
-    rmdir(dirname)
-    mkdir(dirname) ## .. then create the temp dir
-    fetchDatabase(tag,dirname) ## git clone the database
+    if not reuse:
+        rmlog(dirname) ## first remove the log file
+        comment( "Creating tarball for database distribution, version v%s" %tag )
+        rmdir(dirname)
+        mkdir(dirname) ## .. then create the temp dir
+        fetchDatabase(tag,dirname) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
     splitDatabase(output,dirname) ## split database into official and optional
-    removeNonValidated(dirname) ## remove all non-validated analyses
+    removeNonValidated(dirname,reuse) ## remove all non-validated analyses
     clearTxtFiles(dirname) ## now clear up all txt files
     createDBTarball(output,dirname) ## here we go! create!
     isDummy()
@@ -418,6 +425,8 @@ def main():
                     default="database" )
     ap.add_argument('-c', '--clear', help='remove output from previous run', 
                     action="store_true" )
+    ap.add_argument('-r', '--reuse', help='reuse already checked out database', 
+                    action="store_true" )
     f = open ( "../version", "rt" )
     ver = f.read().strip()
     f.close()
@@ -431,7 +440,7 @@ def main():
         o = subprocess.getoutput ( cmd )
         print ( "[createTarballs] %s: %s" % ( cmd, o ) )
     sys.path.insert(0,os.path.abspath(args.smodelsPath))
-    createDBRelease(args.output,args.tag)
+    createDBRelease( args.output, args.tag, args.reuse )
 
 if __name__ == "__main__":
     main()
