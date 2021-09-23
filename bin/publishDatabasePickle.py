@@ -25,6 +25,18 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
+def prepareCommandsFile ( ) :
+    """ prepare the commands.sh file """
+    f=open( "commands.sh", "wt" )
+    f.write ( "#!/bin/sh\n\n" )
+    f.close( )
+    os.chmod ( "commands.sh", 0o755 )
+
+def addToCommandsFile ( cmd ):
+    f=open( "commands.sh", "at" )
+    f.write ( cmd + "\n" )
+    f.close()
+
 def _getSHA1 ( filename ):                                                                         return hashlib.sha1( pathlib.Path(filename).read_bytes() ).hexdigest()
 
 eosdir = "/eos/project/s/smodels/www/database/"
@@ -59,7 +71,10 @@ def main():
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
+    ap.add_argument ( '-p', '--prepare_commands', help='prepare the commands file', action='store_true' )
     args = ap.parse_args()
+    if args.prepare_commands:
+        prepareCommandsFile()
     dbname = args.filename
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
@@ -195,12 +210,15 @@ def main():
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( cmd2 )
+        addToCommandsFile ( cmd2 )
         CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
         print ( )
         print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         print ( "%s[publishDatabasePickle] then do also manually:%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "ssh lxplus.cern.ch smodels/www/database/create.py" )
+        cmd = "ssh lxplus.cern.ch smodels/www/database/create.py"
+        print ( cmd )
+        addToCommandsFile ( cmd )
         print ( )
         print ( "now point your browser to: " )
         print ( "https://smodels.web.cern.ch/smodels/database/" )
