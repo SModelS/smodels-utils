@@ -173,8 +173,9 @@ def fetchDatabase(tag,dirname):
     """
     dbversion = tag
     comment( "git clone the database(this might take a while)" )
-    # cmd = "cd %s; git clone -b v%s git@smodels.hephy.at:smodels-database"  % 
-    cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
+    ## "v" is not part of semver
+    #cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
+    cmd = "cd %s; git clone -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
            (dirname, dbversion)
             
     if dummyRun:
