@@ -208,8 +208,10 @@ def main():
         a=CMD.getoutput ( cmd )
         print ( a )
         
+    home = os.environ["HOME"]
     if ssh:
-        cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
+        cmd2 = "sshpass -f %s/.ssh/lxplus scp %s lxplus.cern.ch:%s%s" % \
+                ( home, pclfilename, eosdir, pclfilename )
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( cmd2 )
         addToCommandsFile ( cmd2 )
@@ -218,7 +220,7 @@ def main():
         print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         print ( "%s[publishDatabasePickle] then do also manually:%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        cmd = "ssh lxplus.cern.ch smodels/www/database/create.py"
+        cmd = f"sshpass -f {home}/.ssh/lxplus ssh lxplus.cern.ch smodels/www/database/create.py"
         print ( cmd )
         if args.finalize_commands:
             addToCommandsFile ( cmd )
