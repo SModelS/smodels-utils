@@ -219,6 +219,7 @@ def main():
         cmd2 = "sshpass -f %s/.ssh/lxplus scp %s lxplus.cern.ch:%s%s" % \
                 ( home, pclfilename, eosdir, pclfilename )
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        CMD.getoutput ( cmd2 )
         print ( cmd2 )
         addToCommandsFile ( cmd2 )
         CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
@@ -227,6 +228,7 @@ def main():
         print ( "%s[publishDatabasePickle] then do also manually:%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         cmd = f"sshpass -f {home}/.ssh/lxplus ssh lxplus.cern.ch smodels/www/database/create.py"
+        CMD.getoutput ( cmd )
         print ( cmd )
         if args.finalize_commands:
             addToCommandsFile ( cmd )
