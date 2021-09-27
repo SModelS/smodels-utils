@@ -210,7 +210,7 @@ def clearGlobalInfo(filename):
     skip = [ "publishedData", "comment", "private", "checked", "xrange", \
              "prettyName", "susyProcess", "dataUrl", "validationTarball" ]
     #skip.append( "validated" )
-    #skip.append( "axes" )
+    skip.append( "axes" )
     for line in lines:
         to_skip = False
         for s in skip:
@@ -234,15 +234,15 @@ def cleanDatabase(dirname):
         File=record[0]
         # comment( "Now in %s" % File )
         # comment( "Now in %s: %s" %(File, record[1] ) )
-        removals = [ "orig", ".git", "validation" ]
+        removals = [ "orig", ".git", "validation", "README.rst", "__pycache__" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
-                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment" ]
-        # globs = glob.glob ( "*.pcl" )
-        # ¤globs += glob.glob ( ".*.pcl" )
-        globs += glob.glob ( f"{File}/*log" )
+                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment", "README" ]
+        globs = glob.glob ( f"{File}/*log" )
+        globs = glob.glob ( f"{File}/*.py" )
         globs += glob.glob ( f"{File}/old*" )
         for g in globs:
-            os.unlink ( g )
+            if not "convert.py" in g and not "databaseParticles.py" in g:
+                os.unlink ( g )
         for r in removals:
             if r in File:
                 cmd = "rm -rf %s" % File
@@ -289,9 +289,14 @@ def createTarball(filename,dirname):
     Create the tarball of smodels + database
     """
     comment( "Create tarball %s.tgz from %s" % ( filename, dirname ) )
-    #globs = glob.glob ( "%s/smodels-database/*.pcl" )
-    #for g in globs:
-    #    os.unlink ( g )
+    cmd = f"cp -r {dirname} {dirname}.backup"
+    subprocess.getoutput ( cmd )
+    globs = glob.glob ( f"{dirname}/*.pcl" )
+    globs += glob.glob ( f"{dirname}/.*.pcl" )
+    globs += glob.glob ( f"{dirname}/**/*.pcl" )
+    globs += glob.glob ( f"{dirname}/**/.*.pcl" )
+    for g in globs:
+        os.unlink ( g )
     run("tar czvf %s.tgz %s" %(filename, dirname))
 
 def createDBTarball(filename,dirname,):
