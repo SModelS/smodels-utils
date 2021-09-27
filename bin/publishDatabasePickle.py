@@ -67,6 +67,7 @@ def main():
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
     ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
+    ap.add_argument('-t', '--txnamevalues', help='when building, add txname values', action="store_true" )
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
@@ -93,8 +94,13 @@ def main():
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
-        print ( "[publishDatabasePickle] building database with %s" % os.path.dirname ( smodels.__file__ ) )
-        d = Database ( dbname, discard_zeroes=discard_zeroes )
+        if args.txnamevalues:
+            print ( "[publishDatabasePickle] building with txname values!" )
+            import smodels.experiment.txnameObj
+            smodels.experiment.txnameObj.TxNameData._keep_values = True
+        print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
+                (dbname, os.path.dirname ( smodels.__file__ ) ) )
+        d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
         dbver = d.databaseVersion
         if args.remove_superseded:
             e = copy.deepcopy( d )
