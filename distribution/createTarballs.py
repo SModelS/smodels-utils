@@ -13,14 +13,20 @@ import subprocess
 import os
 import time
 import argparse
-
+import glob
+import colorama
 
 dummyRun=False ## True
-RED = "\033[31;11m"
-GREEN = "\033[32;11m"
-YELLOW = "\033[33;11m"
-RESET = "\033[7;0m"
-
+try:
+    RED = colorama.Fore.RED
+    GREEN = colorama.Fore.GREEN
+    YELLOW = colorama.Fore.YELLOW
+    RESET = colorama.Fore.RESET
+except:
+    RED = "\033[31;11m"
+    GREEN = "\033[32;11m"
+    YELLOW = "\033[33;11m"
+    RESET = "\033[7;0m"
 
 def comment( text, urgency="info" ):
     col=YELLOW
@@ -61,7 +67,8 @@ def removeNonValidated(dirname, reuse ):
     load = "txt"
     if reuse:
         load = None
-    d = Database( "%s/smodels-database" % dirname, force_load = load )
+    d = Database( "%s/smodels-database" % dirname, force_load = load,
+                  progressbar=True )
     comment( "Now remove non-validated results." )
     ers = d.expResultList
     comment( "Loaded the database with %d results." %( len(ers) ) )
@@ -221,6 +228,7 @@ def cleanDatabase(dirname):
     """
     comment( "Now cleaning up database in %s/smodels-database" % dirname )
     fullpath = "%s/smodels-database" % dirname
+
     walker = os.walk( fullpath )
     for record in walker:
         File=record[0]
@@ -229,6 +237,12 @@ def cleanDatabase(dirname):
         removals = [ "orig", ".git", "validation" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
                     "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment" ]
+        # globs = glob.glob ( "*.pcl" )
+        # ¤globs += glob.glob ( ".*.pcl" )
+        globs += glob.glob ( f"{File}/*log" )
+        globs += glob.glob ( f"{File}/old*" )
+        for g in globs:
+            os.unlink ( g )
         for r in removals:
             if r in File:
                 cmd = "rm -rf %s" % File
@@ -274,7 +288,10 @@ def createTarball(filename,dirname):
     """
     Create the tarball of smodels + database
     """
-    comment( "Create tarball %s.tgz" % filename )
+    comment( "Create tarball %s.tgz from %s" % ( filename, dirname ) )
+    #globs = glob.glob ( "%s/smodels-database/*.pcl" )
+    #for g in globs:
+    #    os.unlink ( g )
     run("tar czvf %s.tgz %s" %(filename, dirname))
 
 def createDBTarball(filename,dirname,):

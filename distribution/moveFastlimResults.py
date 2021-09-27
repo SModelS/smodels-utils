@@ -16,7 +16,7 @@ def run ( cmd, dryrun=False ):
     if dryrun:
         print ( "Dry-run: skipping %s." % cmd )
     else:
-        print ( "Executing: %s." % cmd )
+        print ( "[moveFastlimResults] Executing: %s." % str(cmd) )
         subprocess.getoutput ( cmd )
 
 def backupScript():
@@ -100,12 +100,15 @@ def moveReadmeFile ( dryrun ):
         cmd = "mv %s %s" % ( fastlim_readme, os.path.join(fastlimdir,'README' ))
         run ( cmd, dryrun )        
 
-if __name__ == "__main__":
+def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument( '-d', '--dryrun',
             help='Dry-run, dont actuall move or create anything',
             action='store_true')
+    #ap.add_argument( '-D', '--database', type=str,
+    #        help='Path to database [database/smodels-database]',
+    #        default='database/smodels-database')
     args = ap.parse_args()
     backupScript()
     rmDirs()
@@ -115,3 +118,5 @@ if __name__ == "__main__":
     moveReadmeFile ( args.dryrun )
     createFastlimTarball()
 
+if __name__ == "__main__":
+    main()
