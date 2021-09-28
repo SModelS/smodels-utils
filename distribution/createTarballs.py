@@ -8,13 +8,7 @@
 
 """
 
-import sys
-import subprocess
-import os
-import time
-import argparse
-import glob
-import colorama
+import sys, subprocess, os, time, argparse, glob, shutil, colorama
 
 dummyRun=False ## True
 try:
