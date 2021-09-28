@@ -298,8 +298,8 @@ def createTarball(filename,dirname):
     subprocess.getoutput ( cmd )
     globs = glob.glob ( f"{dirname}/*.pcl" )
     globs += glob.glob ( f"{dirname}/.*.pcl" )
-    globs += glob.glob ( f"{dirname}/**/*.pcl" )
-    globs += glob.glob ( f"{dirname}/**/.*.pcl" )
+    globs += glob.glob ( f"{dirname}/**/*.pcl", recursive=True )
+    globs += glob.glob ( f"{dirname}/**/.*.pcl", recursive=True )
     for g in globs:
         os.unlink ( g )
     run("tar czvf %s.tgz %s" %(filename, dirname))
