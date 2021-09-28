@@ -29,7 +29,7 @@ def comment( text, urgency="info" ):
         pre="ERROR: "
         col=RED
     print("%s[%s] %s%s %s" %( col, time.asctime(), pre, text, RESET ))
-    f=open("create.log","a")
+    f=open("/tmp/create.log","a")
     f.write(  "[%s] %s\n" %( time.asctime(),text ) )
     f.close()
     if col == RED:
@@ -43,7 +43,7 @@ def isDummy( ):
 def run( cmd ):
     cmd=cmd.strip()
     print( "%scmd: %s%s" %(GREEN,cmd,RESET) )
-    f=open("create.log","a")
+    f=open("/tmp/create.log","a")
     f.write( "cmd: %s\n" %(cmd) )
     # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
@@ -120,7 +120,7 @@ def removeNonValidated(dirname, reuse ):
 
 def rmlog(dirname):
     """ clear the log file """
-    cmd="rm -f create.log"
+    cmd="rm -f /tmp/create.log"
     if os.path.isfile('create.log'):
         os.remove('create.log')
     if os.path.isfile('%s/smodels-database/create.log' %dirname):
@@ -211,8 +211,8 @@ def clearGlobalInfo(filename):
     skip = [ "publishedData", "comment", "private", "checked", "xrange", \
              "prettyName", "susyProcess", "dataUrl", "validationTarball", "yrange" ]
     #skip.append( "validated" )
-    skip.append( "axes" )
-    skip.append( "figureUrl" )
+    # skip.append( "axes" )
+    # skip.append( "figureUrl" )
     for line in lines:
         to_skip = False
         for s in skip:
@@ -240,7 +240,9 @@ def cleanDatabase(dirname):
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
                     "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment", "README", "convert.pyc" ]
         globs = glob.glob ( f"{File}/*log" )
+        globs = glob.glob ( f"{File}/__pycache__" )
         globs = glob.glob ( f"{File}/*.py" )
+        globs = glob.glob ( f"{File}/*.rst" )
         globs = glob.glob ( f"{File}/*.pyc" )
         globs += glob.glob ( f"{File}/old*" )
         for g in globs:
@@ -293,8 +295,14 @@ def clearTxtFiles(dirname):
 def removePickles ( dirname ):
     """ remove the god damn pickle files """
     globs = glob.glob ( f"{dirname}/*.pcl" )
+    globs = glob.glob ( f"{dirname}/*.rst" )
+    globs = glob.glob ( f"{dirname}/*.log" )
     globs += glob.glob ( f"{dirname}/.*.pcl" )
+    globs += glob.glob ( f"{dirname}/__pycache__" )
     globs += glob.glob ( f"{dirname}/**/*.pcl", recursive=True )
+    globs += glob.glob ( f"{dirname}/**/*.rst", recursive=True )
+    globs += glob.glob ( f"{dirname}/**/*.log", recursive=True )
+    globs += glob.glob ( f"{dirname}/**/__pycache__", recursive=True )
     globs += glob.glob ( f"{dirname}/**/.*.pcl", recursive=True )
     print ( f"found {len(globs)} pickle files. removing them." )
     for g in globs:
