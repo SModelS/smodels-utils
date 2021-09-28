@@ -289,6 +289,16 @@ def clearTxtFiles(dirname):
     clearGlobalInfos( "%s/smodels-database/" % dirname )
     clearGlobalInfos( "./smodels-fastlim/" )
 
+def removePickles ( dirname ):
+    """ remove the god damn pickle files """
+    globs = glob.glob ( f"{dirname}/*.pcl" )
+    globs += glob.glob ( f"{dirname}/.*.pcl" )
+    globs += glob.glob ( f"{dirname}/**/*.pcl", recursive=True )
+    globs += glob.glob ( f"{dirname}/**/.*.pcl", recursive=True )
+    print ( f"found {len(globs)} pickle files. removing them." )
+    for g in globs:
+        os.unlink ( g )
+
 def createTarball(filename,dirname):
     """
     Create the tarball of smodels + database
@@ -296,19 +306,15 @@ def createTarball(filename,dirname):
     comment( "Create tarball %s.tgz from %s" % ( filename, dirname ) )
     cmd = f"cp -r {dirname} {dirname}.backup"
     subprocess.getoutput ( cmd )
-    globs = glob.glob ( f"{dirname}/*.pcl" )
-    globs += glob.glob ( f"{dirname}/.*.pcl" )
-    globs += glob.glob ( f"{dirname}/**/*.pcl", recursive=True )
-    globs += glob.glob ( f"{dirname}/**/.*.pcl", recursive=True )
-    for g in globs:
-        os.unlink ( g )
+    removePickles ( dirname )
     run("tar czvf %s.tgz %s" %(filename, dirname))
 
-def createDBTarball(filename,dirname,):
+def createDBTarball(filename,dirname):
     """
     Create the tarball of the database alone
     """
     comment( "Create tarball %s.tgz" %filename )
+    removePickles ( dirname )
     run("cd %s; tar czvf %s.tgz smodels-database" %(dirname, filename ))
 
 def rmExtraFiles(dirname):
