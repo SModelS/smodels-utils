@@ -208,9 +208,10 @@ def clearGlobalInfo(filename):
     f.close()
     g=open("/tmp/tmp.txt","w")
     skip = [ "publishedData", "comment", "private", "checked", "xrange", \
-             "prettyName", "susyProcess", "dataUrl", "validationTarball" ]
+             "prettyName", "susyProcess", "dataUrl", "validationTarball", "yrange" ]
     #skip.append( "validated" )
     skip.append( "axes" )
+    skip.append( "figureUrl" )
     for line in lines:
         to_skip = False
         for s in skip:
