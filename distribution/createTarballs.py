@@ -205,8 +205,8 @@ def cpMakefile ():
     """ copy dmakefile to database folder """
     if os.path.exists ( "database/Makefile" ):
         return
-    cmd = f"cp dmakefile database/Makefile"
-    subprocess.getoutput ( cmd )
+    cmd = "cp dmakefile database/Makefile"
+    o = subprocess.getoutput ( cmd )
 
 def clearGlobalInfo(filename):
     print ( "[createTarballs] checking", filename )
@@ -407,12 +407,12 @@ def createDBRelease(output,tag,reuse):
         return False
     
     isDummy()
-    cpMakefile() ## copy Makefile if doesnt exist, for convenience only
     if not reuse:
         rmlog(dirname) ## first remove the log file
         comment( "Creating tarball for database distribution, version v%s" %tag )
         rmdir(dirname)
         mkdir(dirname) ## .. then create the temp dir
+        cpMakefile() ## copy Makefile if doesnt exist, for convenience only
         fetchDatabase(tag,dirname) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
     splitDatabase(output,dirname) ## split database into official and optional
