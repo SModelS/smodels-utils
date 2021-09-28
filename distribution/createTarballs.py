@@ -238,9 +238,10 @@ def cleanDatabase(dirname):
         # comment( "Now in %s: %s" %(File, record[1] ) )
         removals = [ "orig", ".git", "validation", "README.rst", "__pycache__" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
-                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment", "README" ]
+                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment", "README", "convert.pyc" ]
         globs = glob.glob ( f"{File}/*log" )
         globs = glob.glob ( f"{File}/*.py" )
+        globs = glob.glob ( f"{File}/*.pyc" )
         globs += glob.glob ( f"{File}/old*" )
         for g in globs:
             if not "convert.py" in g and not "databaseParticles.py" in g:
