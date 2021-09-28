@@ -201,6 +201,13 @@ def fetchDatabase(tag,dirname):
     run( rmcmd )
 
 
+def cpMakefile ():
+    """ copy dmakefile to database folder """
+    if os.path.exists ( "database/Makefile" ):
+        return
+    cmd = f"cp dmakefile database/Makefile"
+    subprocess.getoutput ( cmd )
+
 def clearGlobalInfo(filename):
     print ( "[createTarballs] checking", filename )
     f=open(filename)
@@ -243,7 +250,10 @@ def cleanDatabase(dirname):
         globs += glob.glob ( f"{File}/old*" )
         for g in globs:
             if not "convert.py" in g and not "databaseParticles.py" in g:
-                os.unlink ( g )
+                if os.path.isdir ( g ):
+                    shutil.rmtree ( g )
+                else:
+                    os.unlink ( g )
         for r in removals:
             if r in File:
                 cmd = "rm -rf %s" % File
@@ -397,6 +407,7 @@ def createDBRelease(output,tag,reuse):
         return False
     
     isDummy()
+    cpMakefile() ## copy Makefile if doesnt exist, for convenience only
     if not reuse:
         rmlog(dirname) ## first remove the log file
         comment( "Creating tarball for database distribution, version v%s" %tag )

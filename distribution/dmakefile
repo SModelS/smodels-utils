@@ -1,3 +1,5 @@
+# for convenience, a makefile for the database folder (WW)
+
 all: tar
 
 tar:
