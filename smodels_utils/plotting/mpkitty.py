@@ -1,6 +1,8 @@
 """ a bit of code to try to import the matplotlib-kitty backend,
     if that fails then fall back to ordinary matplotlib """
 
+options = { "hasKittyBackend": False }
+
 def importBackend():
     import os
     if "jupyter" in os.environ["_"]:
@@ -20,6 +22,7 @@ def importBackend():
             o = subprocess.getoutput ( cmd )
 
         matplotlib.use('module://matplotlib-backend-kitty')
+        options["hasKittyBackend"] = True
 
     except Exception as e:
         pass
