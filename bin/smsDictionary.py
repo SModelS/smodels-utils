@@ -277,7 +277,10 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     supers = ""
                     if hasattr ( res.globalInfo, "supersededBy" ):
                         supers="WithSuperseded"
-                    l.append ( "[%s](ListOfAnalyses%s%s#%s)" % ( ID, self.ver, supers, ID ) )
+                    # lets got
+                    l.append ( "[%s](%s)" % ( ID, res.globalInfo.url ) )
+                    # before we had a link to the entry at ListOfAnalyses
+                    # l.append ( "[%s](ListOfAnalyses%s%s#%s)" % ( ID, self.ver, supers, ID ) )
                 self.f.write ( "<BR>".join ( l ) )
         self.f.write ( "|\n" )
 
