@@ -231,8 +231,10 @@ class Lister:
         version = self.database.databaseVersion
         dotlessv = ""
         isEffMap = True
+        s_eff = "-eff"
         if Type == "upperLimit":
             isEffMap = False
+            s_eff = ""
         if self.add_version:
             dotlessv = version.replace(".","")
         keys, anadict = [], {}
@@ -308,7 +310,7 @@ class Lister:
                     t=t[:t.find(" ")]
                 # ssuperseded = "[[#%s|%s]]" % ( t, s )
                 ssuperseded = "[%s](#%s)" % ( s, t )
-            self.f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, Id ) )
+            self.f.write ( '| [%s](%s)<a name="%s%s"></a>' % ( Id, url, Id, s_eff ) )
             if not hasattr ( ana.globalInfo, "prettyName" ):
                 print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
                 print ( "Please add a pretty name and repeat." )

@@ -66,7 +66,7 @@ def main():
     ref_db = A.reference_database
     ref_db = os.path.expanduser( ref_db )
     ## list of analyses, with and without superseded
-    gprint ( "\nCreate list of analyses" )
+    gprint ( "\nCreate ListOfAnalyses" )
     cmd = [ "./listOfAnalyses.py", "-a", "-l", "-d", db ]
     if A.ignore:
         cmd += [ "-i" ]
@@ -92,7 +92,7 @@ def main():
         exec ( [ "./smsDictionary.py" ], A.dry_run, "-d", d, "-d", dbb )
 
     if not A.no_pickle:
-        print ( "\nCreate and publish database pickle" )
+        gprint ( "\nCreate and publish database pickle" )
         #exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
         #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-p", "-s", "-r", "-b", "-f", db ], A.dry_run )
@@ -100,7 +100,7 @@ def main():
         exec ( [ "./publishDatabasePickle.py", "-F", "-f", "./fastlim.pcl" ], A.dry_run )
 
 
-    gprint ( "create Validation wiki" )
+    gprint ( "\nCreate Validation" )
     cmd = [ "../validation/createWikiPage.py", "-c", ref_db, "-d", db ]
     if A.ignore:
         cmd += [ "-i" ]
