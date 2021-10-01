@@ -262,7 +262,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 # self.f.write ( "<25%>" ) ## make sure the last column isnt too small
                 pass
             if len(results)>9:
-                self.f.write ( "[many (%d)](ListOfAnalyses%s)" % (len(results),self.ver) )
+                self.f.write ( "[many (%d)](ListOfAnalyses%sWithSuperseded)" % (len(results),self.ver) )
             else:
                 l = []
                 hi = [] ## remove dupes
