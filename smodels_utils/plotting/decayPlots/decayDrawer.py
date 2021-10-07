@@ -9,8 +9,7 @@
 
 """
 
-import pygraphviz, sys, math, os
-import logging
+import sys, math, os, logging
 
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
@@ -34,6 +33,7 @@ class DecayDrawer:
         self.massesdrawn=[]
         self.ps=ps
         self.tex=False
+        import pygraphviz
         self.G=pygraphviz.AGraph(directed=True)
         self.verbose=verbose
         self.html=html
