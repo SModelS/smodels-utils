@@ -4,6 +4,7 @@
 own upper limit computed from combining the efficiency maps. """
 
 import math, os, numpy, copy, sys, glob, ctypes
+import setPath
 from smodels_utils.plotting import mpkitty as plt
 import matplotlib
 import ROOT
@@ -13,7 +14,6 @@ import subprocess
 from scipy.interpolate import griddata
 import itertools
 import importlib
-import setPath
 from smodels_utils.helper import prettyDescriptions
 from smodels_utils.helper.various import getPathName
 #from smodels_utils.helper.various import getValidationModule
