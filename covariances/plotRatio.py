@@ -138,6 +138,13 @@ def getExclusionLine ( line ):
       x_v.append( x.value )
       y_v.append( y.value )
     return [ { "x": x_v, "y": y_v } ]
+        
+def getSModelSExclusionFromContent ( content ):
+    """ this method should construct a contur line from one of the dictionary files,
+    by constructing a contour plot from 'content' """
+    # print ( "content", content )
+    line = []
+    return line
 
 def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
@@ -355,8 +362,10 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         """
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
-        print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
-        smodels_line = []
+        print ( "[plotRatio] warn: %s does not exist. Trying to get it from the content of the dict file" )
+        # print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
+        # smodels_line = []
+        smodels_line = getSModelSExclusionFromContent ( content1 )
     else:
         smodels_line = getSModelSExclusion ( smodels_root )
     el2 = getExclusionLine ( smodels_line )
