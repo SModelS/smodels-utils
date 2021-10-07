@@ -28,6 +28,11 @@ errMsgIssued = { "axis": False }
 
 def hasDebPkg():
     """ do we have the package installed """
+    import distutils.spawn
+    dpkg = distutils.spawn.find_executable("dpkg")
+    if dpkg == None:
+        print ( "we are not on a debian-based distro, skipping check for cm-super-minimal. could be you have to install texlive-type1cm" )
+        return
     a = subprocess.getoutput ( "dpkg -l cm-super-minimal | tail -n 1" )
     if a.startswith("ii"):
         return True
