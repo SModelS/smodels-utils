@@ -9,7 +9,6 @@ import pickle, os, sys, argparse, time, copy
 from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.databaseManipulations import \
     removeFastLimFromDB, removeSupersededFromDB
-import smodels
 import hashlib
 import pathlib
 import colorama
@@ -98,6 +97,7 @@ def main():
             print ( "[publishDatabasePickle] building with txname values!" )
             import smodels.experiment.txnameObj
             smodels.experiment.txnameObj.TxNameData._keep_values = True
+        import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
@@ -218,8 +218,9 @@ def main():
     if ssh:
         cmd2 = "sshpass -f %s/.ssh/lxplus scp %s lxplus.cern.ch:%s%s" % \
                 ( home, pclfilename, eosdir, pclfilename )
-        # print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        o = CMD.getoutput ( cmd2 )
+        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "cmd", cmd2 )
+        # o = CMD.getoutput ( cmd2 )
         print ( "[publishDatabasePickle] done:", cmd2 )
         addToCommandsFile ( cmd2 )
         CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
