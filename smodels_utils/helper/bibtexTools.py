@@ -17,6 +17,7 @@ import bibtexparser
 import urllib, colorama, subprocess
 import os, sys
 from smodels.experiment.databaseObj import Database
+from smodels_utils import SModelSUtils 
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
          filterSupersededFromList
 
@@ -34,7 +35,8 @@ except ImportError:
     from urllib.request import urlopen
 
 class BibtexWriter:
-    cachedir = "../bibtexs/"
+    # cachedir = "../bibtexs/"
+    cachedir = f"{SModelSUtils.installDirectory()}/smodels_utils/bibtexs/"
     unuseddir = f"{cachedir}unused/"
 
     def __init__ ( self, databasepath="./", verbose="info" ):
