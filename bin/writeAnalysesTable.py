@@ -21,6 +21,7 @@ except:
 from smodels.tools.physicsUnits import fb, TeV
 from smodels_utils.helper.various import hasLLHD
 from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
+from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList
 from smodels_utils.helper.bibtexTools import BibtexWriter
 import IPython
 
@@ -103,10 +104,10 @@ class Writer:
         """
         self.listOfAnalyses = []
         ers = self.database.getExpResults( useSuperseded=superseded )
-        for er in ers:
-            if hasattr ( er.globalInfo, "contact" ) and "fastlim" in er.globalInfo.contact:
-                continue
-            self.listOfAnalyses.append ( er )
+        ers = filterFastLimFromList ( ers )
+        if superseded == False:
+            ers = filterSupersededFromList ( ers )
+        self.listOfAnalyses = ers
 
     def sameAnaIds ( self, ana1, ana2 ):
         ana1n = ana1.globalInfo.id
