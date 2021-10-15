@@ -159,12 +159,7 @@ def main():
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
     print ( f"[publishDatabasePickle] writing {pclfilename}" )
-    if not args.dry_run:
-        d.createBinaryFile ( pclfilename )
-    #if not args.dry_run and not args.build:
-    #    print ( "[publishDatabasePickle] %s" % cmd )
-    #    a=CMD.getoutput ( cmd )
-    #    print ( "[publishDatabasePickle] %s" % a )
+    d.createBinaryFile ( pclfilename )
     print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(pclfilename).st_size ) )
     f=open ( infofile, "w" )
     mtime = time.asctime(time.localtime(meta.mtime))
