@@ -13,21 +13,27 @@ import numpy as np
 def run():
     db = Database ( "debug" )
     anaid = "CMS-SUS-14-021"
+    slhafile = "T2bbWW_111_34_111_34.slha"
+    mus = np.arange ( -1.5, 2.01, .1 )
+
+    #anaid = "ATLAS-SUSY-2013-16"
+    #slhafile = "T2tt_748_271_748_271.slha"
+    #mus = np.arange ( -1.5, 2.01, .1 )
+
     er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "upperLimit" ] )
     erUL = er[0]
     er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "efficiencyMap" ] )
     erEff = er[0]
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
-    slhafile = "T2bbWW_111_34_111_34.slha"
     model.updateParticles(inputFile=slhafile)
     toplist = decomposer.decompose(model, doCompress=True, doInvisible=True )
     prUL = theoryPredictionsFor(erUL, toplist, combinedResults=False, marginalize=False)
     prEff = theoryPredictionsFor(erEff, toplist, combinedResults=False, marginalize=False)
     uls, ul0s, effs = [], [], []
-    mus = np.arange ( 0., 5., .1 )
-    mus = np.arange ( -1.5, 2.01, .1 )
     for mu in mus:
         ul = prUL[0].getLikelihood ( mu=mu )
+        if ul == None:
+            print ( "warning ul is none for", mu )
         uls.append ( ul )
         ul0 = prUL[0].likelihoodFromLimits ( mu=mu, corr = 0. )
         ul0s.append ( ul0 )
@@ -42,7 +48,7 @@ def run():
     for i in range(len(effs)):
         effs[i] = effs[i] / seffs
     from smodels_utils.plotting import mpkitty as plt
-    plt.plot ( mus, uls, label = "from limits" )
+    plt.plot ( mus, uls, label = "from limits, corr=0.6" )
     plt.plot ( mus, ul0s, label = "from limits, no corr" )
     plt.plot ( mus, effs, label = "from efficiencies" )
     plt.xlabel ( r"$\mu$" )
