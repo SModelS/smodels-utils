@@ -65,6 +65,7 @@ def getExclusionsFrom ( rootpath, txname, axes ):
     """
     :param axes: only specific axes
     """
+    print ( "get exclusions from", rootpath, txname, axes )
     get_all = False
     rootFile = ROOT.TFile(rootpath)
     txnames = {}
@@ -202,6 +203,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             continue
         if point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
+        if point["UL"] == None:
+            continue
         uls[ h ] = point["UL" ] / point["signal"]
         # uls[ h ] = point["signal" ] / point["UL"]
 
@@ -298,7 +301,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     analysis=Dir[ Dir.rfind("/")+1: ]
     # topo=slhafile[:slhafile.find("_")]
     topo = shortTxName ( list ( topos ) )
-    print ( "topos", topos, "topo", topo )
+    # print ( "topos", topos, "topo", topo )
     # print ( "smsrootfile", smsrootfile )
     stopos = []
     for t in topos:
@@ -333,10 +336,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     hasLegend = False
     axes = None
     for t in topos:
-        if content1["meta"]!=None and "axes" in content1["meta"]:
-            axes = content1["meta"]["axes"]
-        if content2["meta"]!=None and "axes" in content2["meta"]:
-            axes = content2["meta"]["axes"]
+        if content1["meta"]!=None and "axes" in content1["meta"][0]:
+            axes = content1["meta"][0]["axes"]
+        if content2["meta"]!=None and "axes" in content2["meta"][0]:
+            axes = content2["meta"][0]["axes"]
+        print ( "axes are", axes, "c1", content1["meta"][0] )
         line = getExclusionsFrom ( smsrootfile, t, axes )
         line2 = getExclusionsFrom ( smsrootfile2, t, axes )
         el2 = []
@@ -457,8 +461,8 @@ def main():
             help="first analysis name, like the directory name [ATLAS-SUSY-2013-09]",
             type=str, default="ATLAS-SUSY-2013-09" )
     argparser.add_argument ( "-a2", "--analysis2",
-            help="second analysis name, like the directory name [ATLAS-CONF-2013-007]",
-            type=str, default="ATLAS-CONF-2013-007" )
+            help="second analysis name, like the directory name, if not specified then same as analysis1 [None]",
+            type=str, default=None )
     argparser.add_argument ( "-l1", "--label1",
             help="label in the legend for analysis1 [susy]",
             type=str, default="susy" )
@@ -494,6 +498,8 @@ def main():
     argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
+    if args.analysis2 in [ None, "", "None" ]:
+        args.analysis2 = args.analysis1
     if not args.validationfile1.endswith ( ".py" ):
         args.validationfile1 += ".py"
 
