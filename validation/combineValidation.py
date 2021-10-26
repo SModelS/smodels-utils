@@ -4,6 +4,8 @@
     here with creating the .py files, we assume they are already produced """
 
 import os
+import sys
+sys.path.insert(0,"../")
 from smodels_utils.helper.various import getPathName
 from validationHelpers import getValidationFileContent, shortTxName
 
