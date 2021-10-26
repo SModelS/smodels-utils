@@ -138,7 +138,10 @@ class ValidationCombiner:
         fname = f"combo_{idNoEff}_{self.txShort()}_{axes}.png"
         fname = fname.replace("[","").replace("]","").replace("*","").replace(",","")
         plt.savefig ( fname )
-        plt.show()
+        try:
+            plt.show()
+        except Exception as e:
+            pass  # non-kitty version
         print ( f"[combineValidation] saving to {fname}" )
 
     def greet ( self ):
