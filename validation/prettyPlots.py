@@ -473,6 +473,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
+    legendplacement = options["legendplacement"]
+    legendplacement = legendplacement.replace("'","")
+    legendplacement = legendplacement.replace('"',"")
+    legendplacement = legendplacement.lower()
+    legendplacement = legendplacement.strip()
     if "sabine" in options["style"]:
         lsub.SetTextSize(.037)
         if legendplacement == "top left": # then we move to top right with this
@@ -502,11 +507,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     hasExclLines = False
     # placement = "top left" ## "automatic", "top right", "top left"
     possibleplacements = [ "automatic", "auto", "top left", "top right" ]
-    legendplacement = options["legendplacement"]
-    legendplacement = legendplacement.replace("'","")
-    legendplacement = legendplacement.replace('"',"")
-    legendplacement = legendplacement.lower()
-    legendplacement = legendplacement.strip()
     if legendplacement not in possibleplacements:
         print ( "[plottingFuncs] ERROR placement %s not in %s" % \
                 ( legendplacement, ", ".join( possibleplacements ) ) )
