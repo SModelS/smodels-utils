@@ -65,7 +65,7 @@ def getExclusionsFrom ( rootpath, txname, axes ):
     """
     :param axes: only specific axes
     """
-    print ( "get exclusions from", rootpath, txname, axes )
+    # print ( "get exclusions from", rootpath, txname, axes )
     get_all = False
     rootFile = ROOT.TFile(rootpath)
     txnames = {}
@@ -340,7 +340,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             axes = content1["meta"][0]["axes"]
         if content2["meta"]!=None and "axes" in content2["meta"][0]:
             axes = content2["meta"][0]["axes"]
-        print ( "axes are", axes, "c1", content1["meta"][0] )
+        # print ( "axes are", axes, "c1", content1["meta"][0] )
         line = getExclusionsFrom ( smsrootfile, t, axes )
         line2 = getExclusionsFrom ( smsrootfile2, t, axes )
         el2 = []
