@@ -106,7 +106,7 @@ class TemplateFile(object):
 
     def createFileFor( self,ptDict,slhaname=None,computeXsecs=False,
                        massesInFileName = False, nevents = 10000, sqrts=None,
-                       reference_xsecs = False ):
+                       reference_xsecs = False, swapBranches = False ):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values in pt.
@@ -119,6 +119,7 @@ class TemplateFile(object):
         :param nevents: how many events to generate
         :param sqrts: sqrtses (list)
         :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
+        :param swapBranches: if true, swap branches in filenames
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
         if sqrts == None:
@@ -148,7 +149,7 @@ class TemplateFile(object):
         ftemplate = open(self.path,'r')
         fdata = ftemplate.read()
         ftemplate.close()
-        for tag in massDict: 
+        for tag in massDict:
             fdata = fdata.replace(tag+"-5",str(massDict[tag]-5))
             fdata = fdata.replace(tag,str(massDict[tag]))
 
@@ -161,6 +162,8 @@ class TemplateFile(object):
                 slhaname = slhaname[1]
             else:
                 slhaname = "%s" % (templateName)
+                if swapBranches:
+                    masses = [ masses[1], masses[0] ]
                 for br in masses:
                     for m in br:
                         if type(m)==tuple:
@@ -182,7 +185,8 @@ class TemplateFile(object):
         return slhaname
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
-                        nevents = 10000, sqrts = None, reference_xsecs=False ):
+                        nevents = 10000, sqrts = None, reference_xsecs=False,
+                        swapBranches = False ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -192,9 +196,10 @@ class TemplateFile(object):
         :param nevents: number of events to generate
         :param sqrts: sqrtses (list)
         :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
+        :param swapBranches: if true, swap branches in filenames
         :return: list of SLHA file names generated.
         """
-                
+
         if sqrts == None:
            sqrts = [[8,13]]
 
@@ -202,7 +207,7 @@ class TemplateFile(object):
         for pt in pts:
             slhafile = self.createFileFor( pt, computeXsecs=False,
                                       massesInFileName=massesInFileName, nevents=nevents,
-                                      sqrts=sqrts )
+                                      sqrts=sqrts, swapBranches = swapBranches )
             if slhafile:
                 slhafiles.append(slhafile)
 
@@ -429,6 +434,8 @@ if __name__ == "__main__":
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
+    argparser.add_argument('--swapBranches', action='store_true',
+        help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',
         help="use pythia6 for LO cross sections")
     argparser.add_argument('-8', '--pythia8', action='store_true',
@@ -471,9 +478,10 @@ if __name__ == "__main__":
     sqrts = args.sqrts
     if sqrts == None:
         sqrts = [ 8, 13 ]
-    slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs, 
-                       massesInFileName=True, nevents=args.nevents, 
-                       sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs )
+    slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
+                       massesInFileName=True, nevents=args.nevents,
+                       sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
+                       swapBranches = args.swapBranches )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     print ( "Now build new tarball in %s/" % newtemp )
