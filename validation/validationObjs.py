@@ -968,7 +968,8 @@ class ValidationPlot():
             fformat = fformat[1:]
 
         filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
-        filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
+        filename += self.niceAxes.replace(",","").replace("(","").replace(")","").\
+                    replace("/","d")
         if self.combine:
             filename += '_combined'
         filename += '.'+fformat
