@@ -19,6 +19,10 @@ def addLogo(filename,logo = None ):
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
     """
+    if not os.path.exists (filename ):
+        print ( f"[addLogoToPlots] error cannot add watermark to non-existing file {filename}" )
+        return
+
 
     if logo == None:
         if 'pdf' in filename:
