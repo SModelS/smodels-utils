@@ -9,6 +9,7 @@
 import sys,os,copy
 import logging
 import argparse,time
+from sympy import var
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -48,10 +49,13 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         return False
     if options["generateData"] != False:
         valPlot.setSLHAdir(slhadir)
-    if options["generateData"]:
+    if options["generateData"] != False:
         valPlot.getDataFromPlanes()
     else:
         valPlot.loadData()
+    #print ( ">>>>> do we have data?", valPlot.data!=None )
+    #if valPlot.data != None:
+    #    print ( ">>>>>> len: ", len(valPlot.data) )
     if not valPlot.data:
         if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
@@ -75,7 +79,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         valPlot.savePlot()
         if options["generateData"]:
             valPlot.saveData()
-            if pngAlso:
+            if options["pngAlso"]:
                 valPlot.savePlot(fformat="png")
     for i in ROOT.gROOT.GetListOfCanvases():
         i.Destructor()
@@ -147,17 +151,29 @@ def run ( expResList, options : dict, keep ):
                 namedTarball = tarfile
                 l=f"Database entry specifies a validation tarball: {tarfile}. Will use it."
                 logger.info( l )
-            tarfile = os.path.join(slhadir,tarfile)
+            # tarfile = os.path.join(slhadir,tarfile)
 
-            if not os.path.isfile(tarfile) and options["generateData"] != False:
-                logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
-                continue
+            # flag needed to identify the case where axes are given
+            # for named tarballs, but current axis is different
+            hasCorrectAxis=False
+            if options["generateData"] != False:
+                tokens = tarfile.split(";") #
+                for tf in tokens:
+                    #  and not os.path.isfile(tarfile):
+                    fname = tf
+                    if ":" in tf:
+                        axis,fname = fname.split(":")[:2]
+                    else:
+                        hasCorrectAxis = True 
+                    tarfile = os.path.join(slhadir,fname )
+                    if not os.path.isfile ( tarfile ):
+                        logger.info( 'Missing %s file for %s.' % ( tarfile, txnameStr))
+                # continue
 
+            gkfactor = 1.
             #Define k-factors
             if txnameStr.lower() in kfactorDict:
-                kfactor = float(kfactorDict[txnameStr.lower()])
-            else:
-                kfactor = 1.
+                gkfactor = float(kfactorDict[txnameStr.lower()])
 
             #Loop over all axes:
             if not isinstance(txname.axes,list):
@@ -165,26 +181,60 @@ def run ( expResList, options : dict, keep ):
             else:
                 axes = txname.axes
             axis = options["axis"]
+            # logger.info ( "axis", axis )
             if axis is None:
+                fname = tarfile.replace ( slhadir, "" ).replace(".tar.gz","")
+                if fname.startswith ( "/" ):
+                    fname = fname[1:]
+                fname = fname.lower()
+
                 for ax in axes:
+                    hasCorrectAxis_ = hasCorrectAxis
+                    x,y,z = var("x y z")
+                    ax = str(eval(ax)) ## standardize the string
+                    kfactor = gkfactor
+                    if ":" in namedTarball:
+                        myaxis,fname_= namedTarball.split(":")[:2]
+                        myaxis = str ( eval ( myaxis ) )
+                        if myaxis == ax:
+                            hasCorrectAxis_ = True
+                    if fname in kfactorDict:
+                        # print ( "namedTarball", namedTarball, "ax", ax )
+                        if ":" in namedTarball:
+                            myaxis,fname_= namedTarball.split(":")[:2]
+                            myaxis = str ( eval ( myaxis ) )
+                            if myaxis == ax:
+                                kfactor = float(kfactorDict[fname])
+                                logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
+                        else:
+                            kfactor = float(kfactorDict[fname])
+                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
                     localopts = copy.deepcopy ( options )
                     if hasattr ( txname, "xrange" ):
                         localopts = addRange ( "x", localopts, txname.xrange )
                     if hasattr ( txname, "yrange" ):
                         localopts = addRange ( "y", localopts, txname.xrange )
+                    print ( ">>>> calling with", ax, "tarfile", tarfile, "kfactor", kfactor, "hasCorrectAxis", hasCorrectAxis_ )
+                    pnamedTarball = namedTarball
+                    if not hasCorrectAxis_:
+                        pnamedTarball = None
+                        tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+
                     for p in prettyorugly:
-                        validatePlot(expRes,txnameStr,ax,tarfile, localopts, kfactor, p,
-                                 combine, namedTarball =namedTarball, keep = keep )
+                        validatePlot(expRes,txnameStr,ax, tarfile, localopts, 
+                                kfactor, p, combine, namedTarball = pnamedTarball, 
+                                keep = keep )
+                        # if not ":" in namedTarball:
                         localopts["generateData"]=False
+                        oldNamedTarball = pnamedTarball
             else:
-                from sympy import var
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
                 ## we need "local" options, since we switch one flag
                 localoptions = copy.deepcopy ( options )
                 for p in prettyorugly:
-                    validatePlot(expRes,txnameStr,ax,tarfile, localoptions, kfactor, p,
-                                 combine )
+                    validatePlot( expRes,txnameStr,ax,tarfile, localoptions, 
+                                  gkfactor, p, combine )
                     localoptions["generateData"] = False
             logger.info( "------ \033[31m %s validated in  %.1f min \033[0m" % \
                          (txnameStr,(time.time()-txt0)/60.) )

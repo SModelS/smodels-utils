@@ -600,8 +600,9 @@ class ValidationPlot():
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
-        logger.debug("Parameter file: %s" %parameterFile)
-        print ("Parameter file: %s" %parameterFile)
+        logger.info("SLHA dir %s" % self.slhaDir )
+        logger.info("Parameter file: %s" %parameterFile)
+        # print ("Parameter file: %s" %parameterFile)
 
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
