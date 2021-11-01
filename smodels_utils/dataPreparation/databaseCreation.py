@@ -661,6 +661,8 @@ class DatabaseCreator(list):
                 logger.error("Attribute %s must be defined for object type %s: ``%s''" %(attr,type(obj),name))
                 sys.exit()
 
+        obj.addValidationTarballsFromPlanes()
+
         for attr in obj.infoAttr:
             if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
                 continue

@@ -632,6 +632,16 @@ class TxNameInput(Locker):
     infoAttr.append ( 'intermediateState' )
     requiredAttr.append ( 'finalState' )
 
+    def addValidationTarballsFromPlanes ( self ):
+        """ if a mass plane has a validation tarball defined,
+        add it to to this TxnameInput object, together with axis name """
+        for p in self._planes:
+            if hasattr ( p, "validationTarball" ):
+                line = str(p).replace(" ","")+":"+p.validationTarball
+                if not hasattr ( self, "validationTarball" ) or self.validationTarball in [ "", None ]:
+                    self.validationTarball = line
+                else:
+                    self.validationTarball += ";" + line
 
     def __init__(self,txName):
 
