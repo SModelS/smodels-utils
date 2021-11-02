@@ -349,7 +349,8 @@ if __name__ == "__main__":
     args = ap.parse_args()
 
     if not os.path.isfile(args.parfile):
-        logger.error("Parameters file %s not found" %args.parfile)
+        logger.error("Parameters file ''%s'' not found" %args.parfile)
+        sys.exit(-1)
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
 
