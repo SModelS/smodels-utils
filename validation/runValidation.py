@@ -229,6 +229,11 @@ def run ( expResList, options : dict, keep ):
             else:
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
+                if type(namedTarball) == str and ":" in namedTarball:
+                    myaxis,fname_= namedTarball.split(":")[:2]
+                    myaxis = str ( eval ( myaxis ) )
+                    if myaxis == ax:
+                        hasCorrectAxis = True
                 ## we need "local" options, since we switch one flag
                 pnamedTarball = namedTarball
                 if not hasCorrectAxis:
