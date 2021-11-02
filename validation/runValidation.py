@@ -193,7 +193,7 @@ def run ( expResList, options : dict, keep ):
                     x,y,z = var("x y z")
                     ax = str(eval(ax)) ## standardize the string
                     kfactor = gkfactor
-                    if ":" in namedTarball:
+                    if type(namedTarball) == str and ":" in namedTarball:
                         myaxis,fname_= namedTarball.split(":")[:2]
                         myaxis = str ( eval ( myaxis ) )
                         if myaxis == ax:
@@ -214,7 +214,6 @@ def run ( expResList, options : dict, keep ):
                         localopts = addRange ( "x", localopts, txname.xrange )
                     if hasattr ( txname, "yrange" ):
                         localopts = addRange ( "y", localopts, txname.xrange )
-                    print ( ">>>> calling with", ax, "tarfile", tarfile, "kfactor", kfactor, "hasCorrectAxis", hasCorrectAxis_ )
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
@@ -231,10 +230,14 @@ def run ( expResList, options : dict, keep ):
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
                 ## we need "local" options, since we switch one flag
+                pnamedTarball = namedTarball
+                if not hasCorrectAxis:
+                    pnamedTarball = None
+                    tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
                 localoptions = copy.deepcopy ( options )
                 for p in prettyorugly:
                     validatePlot( expRes,txnameStr,ax,tarfile, localoptions, 
-                                  gkfactor, p, combine )
+                                  gkfactor, p, combine, namedTarball = pnamedTarball )
                     localoptions["generateData"] = False
             logger.info( "------ \033[31m %s validated in  %.1f min \033[0m" % \
                          (txnameStr,(time.time()-txt0)/60.) )
