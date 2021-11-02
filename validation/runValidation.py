@@ -193,7 +193,7 @@ def run ( expResList, options : dict, keep ):
                     x,y,z = var("x y z")
                     ax = str(eval(ax)) ## standardize the string
                     kfactor = gkfactor
-                    if ":" in namedTarball:
+                    if type(namedTarball) == str and ":" in namedTarball:
                         myaxis,fname_= namedTarball.split(":")[:2]
                         myaxis = str ( eval ( myaxis ) )
                         if myaxis == ax:
