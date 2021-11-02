@@ -774,7 +774,7 @@ def prettyAxes(txname,axes):
         return ret
     if txname in [ "TChiWZoff" ] and  axes == [[x, x - y], [x - y/2, x - y]]:
         ret = ['m_{#tilde{#chi}_{2}^{0}} = x, m_{#tilde{#chi}_{2}^{0}} - m_{#tilde{#chi}_{1}^{0}} = y',
-               'm_{#tilde{#chi}^{#pm}_{1}} = x - y/2'  ]
+               'm_{#tilde{#chi}^{#pm}_{1}} = .5 m_{#tilde{#chi}_{3}^{0}} + .5 m_{#tilde{#chi}_{1}^{0}}'  ]
         return ret
     if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
