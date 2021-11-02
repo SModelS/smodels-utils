@@ -734,9 +734,8 @@ def prettyAxes(txname,axes):
     :param txname: txname string  (e.g. 'T1')
     :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
 
-    :return: dictionary with the latex labels
-             (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
-             'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
+    :return: list of constraints as latex, e.g.:
+             ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
     """
 
     #Build axes object (depending on symmetric or asymmetric branches:
@@ -772,6 +771,10 @@ def prettyAxes(txname,axes):
     if txname in [ "TGQ12" ] and axes[0][1] == axes[1][1]:
         ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
                'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
+        return ret
+    if txname in [ "TChiWZoff" ] and  axes == [[x, x - y], [x - y/2, x - y]]:
+        ret = ['m_{#tilde{#chi}_{2}^{0]} = x, m_{#tilde{#chi}_{2}^{0]} - m_{#tilde{#chi}_{1}^{0}} = y',
+               '#tilde{#chi}^{#pm}_{0} = x - y/2'  ]
         return ret
     if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
@@ -827,3 +830,8 @@ def prettyAxes(txname,axes):
         niceAxes.append(axStr.replace("'",""))
 
     return niceAxes
+
+if __name__ == "__main__":
+    print ( prettyAxes ( "TGQ", "[[x, y], [z, y]]" ) )
+    print ( prettyAxes ( "TChiWZoff", "[[x, x - y], [x, x - y]]" ) )
+    print ( prettyAxes ( "TChiWZoff", "[[x, x - y], [x - y/2, x - y]]" ) )
