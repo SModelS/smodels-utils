@@ -51,7 +51,7 @@ prettySUSYParticle = {
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
     'pion' : '#pi',            #Chargino
-    'chargino^pm_1' : '#tilde{#chi}^{#pm}_{0}',            #Chargino
+    'chargino^pm_1' : '#tilde{#chi}^{#pm}_{1}',            #Chargino
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
     'higgsino' : '#tilde{H}',       #higgsino
@@ -773,8 +773,8 @@ def prettyAxes(txname,axes):
                'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
         return ret
     if txname in [ "TChiWZoff" ] and  axes == [[x, x - y], [x - y/2, x - y]]:
-        ret = ['m_{#tilde{#chi}_{2}^{0]} = x, m_{#tilde{#chi}_{2}^{0]} - m_{#tilde{#chi}_{1}^{0}} = y',
-               '#tilde{#chi}^{#pm}_{0} = x - y/2'  ]
+        ret = ['m_{#tilde{#chi}_{2}^{0}} = x, m_{#tilde{#chi}_{2}^{0}} - m_{#tilde{#chi}_{1}^{0}} = y',
+               'm_{#tilde{#chi}^{#pm}_{1}} = x - y/2'  ]
         return ret
     if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
