@@ -214,7 +214,6 @@ def run ( expResList, options : dict, keep ):
                         localopts = addRange ( "x", localopts, txname.xrange )
                     if hasattr ( txname, "yrange" ):
                         localopts = addRange ( "y", localopts, txname.xrange )
-                    print ( ">>>> calling with", ax, "tarfile", tarfile, "kfactor", kfactor, "hasCorrectAxis", hasCorrectAxis_ )
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
