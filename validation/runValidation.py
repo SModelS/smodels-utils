@@ -208,7 +208,7 @@ def run ( expResList, options : dict, keep ):
                                 logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
                         else:
                             kfactor = float(kfactorDict[fname])
-                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
+                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname}" )
                     localopts = copy.deepcopy ( options )
                     if hasattr ( txname, "xrange" ):
                         localopts = addRange ( "x", localopts, txname.xrange )
