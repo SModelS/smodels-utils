@@ -32,7 +32,7 @@ N.B. : Here I mean `channel` in the sense of `JSON` channels.
 SR    | full json |     dataInfo      | simplified json
 ------|-----------|-------------------|-----------
 SRlow | 6.06      | 6.0 &plusmn; 1.7  | 7.3 &plusmn; 2.8
-SRhig | 10.34     | 10.2 &plusmn; 3.3 | 8.7 &plusmn; 2
+SRhig | 10.34     | 10.2 &plusmn; 3.3 | 8.7 &plusmn; 2.0
 
 ## ATLAS-SUSY-2019-08
 
