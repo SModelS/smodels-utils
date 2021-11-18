@@ -167,7 +167,7 @@ class PDFAtlasReader():
 
     def interact ( self ):
         import IPython
-        IPython.embed ( using = False )
+        IPython.embed ( colors = "neutral" )
 
  
 if __name__ == "__main__":

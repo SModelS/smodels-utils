@@ -115,7 +115,7 @@ def plot():
     plt.savefig ( fname )
     if args.interactive:
         import IPython
-        IPython.embed ( using=False )
+        IPython.embed ( colors = "neutral" )
 
 if __name__ == "__main__":
     plot()

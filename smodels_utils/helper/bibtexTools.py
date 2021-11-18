@@ -600,7 +600,7 @@ class BibtexWriter:
     def interactive ( self ):
         """ start an interactive session """
         import IPython
-        IPython.embed( using = False )
+        IPython.embed( colors="neutral" )
 
     def addSummaries ( self ):
         f=open("refs.bib")

@@ -87,7 +87,7 @@ class CovMatrixEstimator ( object ):
 
     def interact ( self ):
         import IPython
-        IPython.embed( using = False )
+        IPython.embed( colors = "neutral" )
 
     def store ( self ):
         """ save result to pickle """

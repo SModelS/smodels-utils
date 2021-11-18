@@ -149,7 +149,7 @@ class Regressor:
         print ( str(regressor.est_gp) )
 
     def interact ( self ):
-        IPython.embed ( using=False )
+        IPython.embed ( colors="neutral" )
         #ret = self.est_gp.predict(np.array([x,y]).reshape(1,-1))
         #return ret[0],time.time()-t0
 

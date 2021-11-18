@@ -110,5 +110,5 @@ if __name__ == "__main__":
     ul = tpreds[1].upperLimit
     print ( "ul", ul )
     import IPython
-    IPython.embed( using=False )
+    IPython.embed( colors = "neutral" )
     """
