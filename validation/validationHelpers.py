@@ -8,6 +8,11 @@
 
 """
 
+def point_in_hull(point, hull, tolerance=1e-12):
+    import numpy
+    """ return if a given point is within a given hull """
+    return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
+
 def getValidationFileContent ( validationfile : str ):
     """ get the content of the validation file, as a dictionary of 
         'data' and 'meta'

@@ -367,6 +367,7 @@ if __name__ == "__main__":
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
     from validation import plottingFuncs, validationObjs
+    # from validation import useTheoPredCombiner as validationObjs
     from smodels.experiment.databaseObj import Database
 
     #Control output level:

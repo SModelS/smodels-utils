@@ -20,6 +20,7 @@ except:
 
 from plottingFuncs import getExclusionCurvesFor
 from prettyPlots import createPrettyPlot
+from validationHelpers import point_in_hull
 from uglyPlots import createUglyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -29,9 +30,6 @@ import pyslha
 import string
 
 logger.setLevel(level=logging.ERROR)
-
-def point_in_hull(point, hull, tolerance=1e-12):
-    return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
 
 class ValidationPlot():
     """
