@@ -463,6 +463,8 @@ if __name__ == "__main__":
             options["pngAlso"] = parser.getboolean("options", "pngPlots" )
         if parser.has_option("options","keepTopNSRs"):
             options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
+            if dataselector == "combined" and options["keepTopNSRs"]>0:
+               logger.warning ( f"you selected dataselection ''combined'' but also chose to keepTopNSRs={options['keepTopNSRs']}. The feature ''keepTopNSRs'' will only work with dataselection ''efficiencymap'', not with ''combined''. You have been warned." )
         if parser.has_option("options","axis"):
             options["axis"] = parser.get("options","axis" )
         if parser.has_option("options","drawChi2Line"):
