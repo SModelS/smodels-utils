@@ -131,7 +131,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             x,y = pt['axes']
         ycontainer.append ( y )
 
-        if pt['condition'] and pt['condition'] > 0.05:
+        if 'condition' in pt and pt['condition'] and pt['condition'] > 0.05:
             logger.warning("Condition violated at %f for file %s" % ( pt['condition'], pt['slhafile']) )
             cond_violated.SetPoint(cond_violated.GetN(), x, y)
         elif r > 1.:
