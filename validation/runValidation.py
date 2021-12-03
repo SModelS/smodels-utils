@@ -316,7 +316,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     tval0 = time.time()
     run ( expResList, options, keep )
-    dt = (time.time()-tval0)/60.)
+    dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
 def _doGenerate ( parser ):
