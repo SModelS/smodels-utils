@@ -7,6 +7,11 @@
 """
 
 import sys,os,copy
+try:
+    import colorama as __c
+    GREEN, RED, RESET = __c.Fore.GREEN, __c.Fore.RED, __c.Fore.RESET
+except:
+    GREEN, RED, RESET = "","",""
 import logging
 import argparse,time
 from sympy import var
@@ -118,7 +123,7 @@ def run ( expResList, options : dict, keep ):
     """
     for expRes in expResList:
         expt0 = time.time()
-        logger.info("--- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
+        logger.info( f"--- {GREEN} validating {expRes.globalInfo.id} {RESET}" )
         #Loop over pre-selected txnames:
         txnamesStr = []
         txnames = []
@@ -140,7 +145,7 @@ def run ( expResList, options : dict, keep ):
         for itx,txname in enumerate(txnames):
             txnameStr = txname.txName
             txt0 = time.time()
-            logger.info("------ \033[31m validating  %s \033[0m" %txnameStr)
+            logger.info( f"------ {GREEN} validating {txnameStr} {RESET}" )
             namedTarball = None
             if not tarfiles:
                 tarfile = txnameStr+".tar.gz"
@@ -244,10 +249,10 @@ def run ( expResList, options : dict, keep ):
                     validatePlot( expRes,txnameStr,ax,tarfile, localoptions, 
                                   gkfactor, p, combine, namedTarball = pnamedTarball )
                     localoptions["generateData"] = False
-            logger.info( "------ \033[31m %s validated in  %.1f min \033[0m" % \
-                         (txnameStr,(time.time()-txt0)/60.) )
-        logger.info( "--- \033[32m %s validated in %.1f min \033[0m" % \
-                     (expRes.globalInfo.id,(time.time()-expt0)/60.) )
+            logger.info( "------ %s %s validated in  %.1f min %s" % \
+                         (RED, txnameStr,(time.time()-txt0)/60., RESET) )
+        logger.info( "--- %s %s validated in %.1f min %s" % \
+                     (RED, expRes.globalInfo.id,(time.time()-expt0)/60., RESET) )
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,

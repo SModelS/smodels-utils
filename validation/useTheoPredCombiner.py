@@ -21,15 +21,46 @@ model.logger.setLevel ( logging.WARNING )
 from smodels.tools.physicsUnits import GeV, fb
 from smodels.theory import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
+import multiprocessing
 
-def getTheoryPredsCombiner_ ( slhafile, expRes ):
+def getTheoryPredsCombiner_ ( slhafile, inDir, expRes, return_dict ):
+    """ the theory combiner, written for parallelization.
+    :param slhafile: slha file name, basename only
+    :param inDir: directory where slha file resides
+    :param expRes: list of experiment results
+    :param return_dict: a dictionary for the return values
+    """
+    t0 = time.time()
+    fullpath = os.path.join ( inDir, slhafile )
     model = Model(BSMparticles=BSMList, SMparticles=SMList )
-    model.updateParticles(inputFile=slhafile )
+    model.updateParticles(inputFile=fullpath )
     smstopos = decompose ( model )
     tpreds = theoryPredictionsFor ( expRes, smstopos,
            combinedResults=False, useBestDataset=False, marginalize=False )
-    combiner = TheoryPredictionsCombiner ( tpreds )
-    return combiner
+    if tpreds == None:
+        return_dict["success"]=False
+        return_dict["message"]="no tpreds"
+        return return_dict
+    combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
+    return_dict["success"]=True
+    r = combiner.getRValue ( expected=False )
+    rexp = combiner.getRValue ( expected=True )
+    maxcond = combiner.getmaxCondition()
+    xsec =float(combiner.totalXsection().asNumber(fb))
+    ul, eul = 1e15, 1e15
+    if r > 0.:
+        ul = xsec / r
+    if rexp > 0.:
+        eul = xsec / rexp
+    return_dict["r"]=r
+    return_dict["UL"]=ul
+    return_dict["eUL"]=eul
+    return_dict["rexp"]=rexp
+    return_dict["xsec"]=xsec
+    return_dict["maxcond"]=maxcond
+    dt = time.time() - t0
+    return_dict["dt"]=dt
+    return return_dict
 
 class ValidationPlot( validationObjs.ValidationPlot ):
 
@@ -73,31 +104,27 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             fileList = modelTester.getAllInputFiles(slhaDir)
             inDir = slhaDir
 
+        ncpus = self.options["ncpus"]
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        rdicts = {}
+        for f in fileList:
+            return_dict = {}
+            getTheoryPredsCombiner_ ( f, inDir, self.expRes, return_dict )
+            rdicts[f] = return_dict
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
         for f in fileList:
             axes = self.getXYFromSLHAFileName ( f, asDict=True )
-            fullpath = os.path.join ( inDir, f )
-            t0 = time.time()
-            combiner = getTheoryPredsCombiner_ ( fullpath, self.expRes )
-            if combiner.theoryPredictions == None:
-                self.addError ( f, axes, "no theorypreds" )
+            return_dict = rdicts[f]
+            if return_dict["success"]==False:
+                self.addError ( f, axes, return_dict["message"] )
                 continue
-            dt = time.time() - t0
-            xsec =float(combiner.totalXsection().asNumber(fb))
-            ul, eul = 1e15, 1e15
-            r = combiner.getRValue ( expected=False )
-            rexp = combiner.getRValue ( expected=True )
-            if r > 0.:
-                ul = xsec / r
-            if rexp > 0.:
-                eul = xsec / rexp
-            cond = combiner.getmaxCondition()
-            Dict = {'slhafile' : f, 'UL': ul, 'axes' : axes, 't': dt,
-                    'kfactor': self.kfactor, 'condition': cond, 'eUL': eul }
-            Dict["signal"]=xsec
-#            'signal': expRes['theory prediction (fb)'],
-#            'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
-#            'dataset': expRes['DataSetID'] }
+            Dict = {'slhafile' : f, 'axes' : axes, 'kfactor': self.kfactor }
+            Dict["UL"]=return_dict["UL"]
+            Dict["eUL"]=return_dict["eUL"]
+            Dict["condition"]=return_dict["maxcond"]
+            Dict["signal"]=return_dict["xsec"]
+            Dict["t"]=return_dict["dt"]
             self.data.append ( Dict )
