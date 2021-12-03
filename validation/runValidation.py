@@ -308,14 +308,16 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     if not expResList:
         logger.error("No experimental results found.")
 
-    if options["ncpus"] < 0:
+    if options["ncpus"] <= 0:
         from smodels.tools import runtime
-        options["ncpus"] = runtime.nCPUs() + options["ncpus"] + 1
-    # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
+        options["ncpus"] = runtime.nCPUs() + options["ncpus"]
+        if options["ncpus"] < 1: # cannot be less than 1
+            options["ncpus"] = 1
 
     tval0 = time.time()
     run ( expResList, options, keep )
-    logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
+    dt = (time.time()-tval0)/60.)
+    logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
 def _doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),
@@ -457,7 +459,7 @@ if __name__ == "__main__":
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
                 "show": False, ## show image after producing it?
-                "ncpus": -1, ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
+                "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
     }
     if parser.has_section("options"):
         if parser.has_option("options","ncpus"):

@@ -23,7 +23,7 @@ from smodels.theory import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
 import multiprocessing
 
-def getTheoryPredsCombiner_ ( slhafile, inDir, expRes, return_dict ):
+def getCombinedTheoryPreds_ ( slhafile, inDir, expRes, return_dict ):
     """ the theory combiner, written for parallelization.
     :param slhafile: slha file name, basename only
     :param inDir: directory where slha file resides
@@ -62,6 +62,17 @@ def getTheoryPredsCombiner_ ( slhafile, inDir, expRes, return_dict ):
     dt = time.time() - t0
     return_dict[slhafile]["t"]=dt
     return return_dict
+
+def getCombinedTheoryPredsForBatch_ ( slhafiles, inDir, expRes, return_dict ):
+    """ the theory combiner, written for parallelization, for a batch of
+        slhafiles
+    :param slhafiles: slha file names, basenames only
+    :param inDir: directory where slha file resides
+    :param expRes: list of experiment results
+    :param return_dict: a dictionary for the return values
+    """
+    for slhafile in slhafiles:
+        getCombinedTheoryPreds_ ( slhafile, inDir, expRes, return_dict )
 
 class ValidationPlot( validationObjs.ValidationPlot ):
 
@@ -109,13 +120,24 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         manager = multiprocessing.Manager()
         return_dict = manager.dict()
         rdicts = {}
-        for f in fileList:
-            getTheoryPredsCombiner_ ( f, inDir, self.expRes, rdicts )
+        if ncpus == 1:
+            for f in fileList:
+                getCombinedTheoryPreds_ ( f, inDir, self.expRes, rdicts )
+        else:
+            logger.info ( f"starting computations on {ncpus} CPUs" )
+            chunks = [ fileList[i::ncpus] for i in range(ncpus) ]
+            jobs = []
+            for c in chunks:
+                p = multiprocessing.Process(target=getCombinedTheoryPredsForBatch_, 
+                        args=(c, inDir, self.expRes, return_dict))
+                jobs.append ( p )
+                p.start()
+            for j in jobs:
+                j.join()
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
         for f in fileList:
-            print ( "self axes", self.axes )
             axes = self.getXYFromSLHAFileName ( f, asDict=True )
             thisd = rdicts[f]
             if thisd["success"]==False:
