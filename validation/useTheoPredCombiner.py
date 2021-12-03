@@ -37,12 +37,13 @@ def getTheoryPredsCombiner_ ( slhafile, inDir, expRes, return_dict ):
     smstopos = decompose ( model )
     tpreds = theoryPredictionsFor ( expRes, smstopos,
            combinedResults=False, useBestDataset=False, marginalize=False )
+    return_dict[slhafile]={}
     if tpreds == None:
-        return_dict["success"]=False
-        return_dict["message"]="no tpreds"
+        return_dict[slhafile]["success"]=False
+        return_dict[slhafile]["message"]="no tpreds"
         return return_dict
     combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
-    return_dict["success"]=True
+    return_dict[slhafile]["success"]=True
     r = combiner.getRValue ( expected=False )
     rexp = combiner.getRValue ( expected=True )
     maxcond = combiner.getmaxCondition()
@@ -52,14 +53,14 @@ def getTheoryPredsCombiner_ ( slhafile, inDir, expRes, return_dict ):
         ul = xsec / r
     if rexp > 0.:
         eul = xsec / rexp
-    return_dict["r"]=r
-    return_dict["UL"]=ul
-    return_dict["eUL"]=eul
-    return_dict["rexp"]=rexp
-    return_dict["xsec"]=xsec
-    return_dict["maxcond"]=maxcond
+    return_dict[slhafile]["r"]=r
+    return_dict[slhafile]["UL"]=ul
+    return_dict[slhafile]["eUL"]=eul
+    return_dict[slhafile]["rexp"]=rexp
+    return_dict[slhafile]["signal"]=xsec
+    return_dict[slhafile]["condition"]=maxcond
     dt = time.time() - t0
-    return_dict["dt"]=dt
+    return_dict[slhafile]["t"]=dt
     return return_dict
 
 class ValidationPlot( validationObjs.ValidationPlot ):
@@ -109,22 +110,21 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         return_dict = manager.dict()
         rdicts = {}
         for f in fileList:
-            return_dict = {}
-            getTheoryPredsCombiner_ ( f, inDir, self.expRes, return_dict )
-            rdicts[f] = return_dict
+            getTheoryPredsCombiner_ ( f, inDir, self.expRes, rdicts )
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
         for f in fileList:
+            print ( "self axes", self.axes )
             axes = self.getXYFromSLHAFileName ( f, asDict=True )
-            return_dict = rdicts[f]
-            if return_dict["success"]==False:
-                self.addError ( f, axes, return_dict["message"] )
+            thisd = rdicts[f]
+            if thisd["success"]==False:
+                self.addError ( f, axes, thisd["message"] )
                 continue
             Dict = {'slhafile' : f, 'axes' : axes, 'kfactor': self.kfactor }
-            Dict["UL"]=return_dict["UL"]
-            Dict["eUL"]=return_dict["eUL"]
-            Dict["condition"]=return_dict["maxcond"]
-            Dict["signal"]=return_dict["xsec"]
-            Dict["t"]=return_dict["dt"]
+            Dict["UL"]=thisd["UL"]
+            Dict["eUL"]=thisd["eUL"]
+            Dict["condition"]=thisd["condition"]
+            Dict["signal"]=thisd["signal"]
+            Dict["t"]=thisd["t"]
             self.data.append ( Dict )

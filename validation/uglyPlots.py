@@ -110,6 +110,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             sys.exit()
 
         xvals = pt['axes']
+        if xvals == None:
+            # happens when not on the plane?
+            continue
         if "t" in pt:
             tavg += pt["t"]
         if pt["UL"] == None:
@@ -117,6 +120,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             continue
         r = pt['signal']/pt ['UL']
         # print ( "x,y,r",r )
+        if xvals == None:
+            # dont have any coordinates? skip.
+            logger.warning ( f'do I need to skip {pt}?' )
+            continue
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
@@ -145,7 +152,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             else:
                 allowed.SetPoint(allowed.GetN(), x, y)
 
-    print ( "done!" )
+    logger.info ( "done!" )
 
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
     for ctr,coords in enumerate(origdata):
@@ -211,7 +218,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     if noresult.GetN()>0:
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
-    if len(xvals) == 1:
+    if xvals != None and len(xvals) == 1:
         for i in official:
             print ( "1d official plot!" )
             if i.GetN() == 1:
@@ -282,7 +289,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         base.GetYaxis().SetTitle(ylabel)
     except:
         pass
-    if len(xvals) == 1:
+    if xvals != None and len(xvals) == 1:
         base.GetYaxis().SetRangeUser(0.0,2.0)
 
     l=TLatex()
