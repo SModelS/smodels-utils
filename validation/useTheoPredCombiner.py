@@ -23,12 +23,12 @@ from smodels.theory import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
 import multiprocessing
 
-def getCombinedTheoryPreds_ ( slhafile, inDir, expRes, return_dict ):
+def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts ):
     """ the theory combiner, written for parallelization.
     :param slhafile: slha file name, basename only
     :param inDir: directory where slha file resides
     :param expRes: list of experiment results
-    :param return_dict: a dictionary for the return values
+    :param rdicts: a dictionary for the return values
     """
     t0 = time.time()
     fullpath = os.path.join ( inDir, slhafile )
@@ -37,13 +37,12 @@ def getCombinedTheoryPreds_ ( slhafile, inDir, expRes, return_dict ):
     smstopos = decompose ( model )
     tpreds = theoryPredictionsFor ( expRes, smstopos,
            combinedResults=False, useBestDataset=False, marginalize=False )
-    return_dict[slhafile]={}
+    rdicts[slhafile]["success"] = False
     if tpreds == None:
-        return_dict[slhafile]["success"]=False
-        return_dict[slhafile]["message"]="no tpreds"
-        return return_dict
+        rdicts[slhafile]["message"]="no tpreds"
+        return
     combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
-    return_dict[slhafile]["success"]=True
+    rdicts[slhafile]["success"]=True
     r = combiner.getRValue ( expected=False )
     rexp = combiner.getRValue ( expected=True )
     maxcond = combiner.getmaxCondition()
@@ -53,26 +52,27 @@ def getCombinedTheoryPreds_ ( slhafile, inDir, expRes, return_dict ):
         ul = xsec / r
     if rexp > 0.:
         eul = xsec / rexp
-    return_dict[slhafile]["r"]=r
-    return_dict[slhafile]["UL"]=ul
-    return_dict[slhafile]["eUL"]=eul
-    return_dict[slhafile]["rexp"]=rexp
-    return_dict[slhafile]["signal"]=xsec
-    return_dict[slhafile]["condition"]=maxcond
+    rdicts[slhafile]["r"]=r
+    rdicts[slhafile]["UL"]=ul
+    rdicts[slhafile]["eUL"]=eul
+    rdicts[slhafile]["rexp"]=rexp
+    rdicts[slhafile]["signal"]=xsec
+    rdicts[slhafile]["condition"]=maxcond
     dt = time.time() - t0
-    return_dict[slhafile]["t"]=dt
-    return return_dict
+    rdicts[slhafile]["t"]=dt
+    return rdicts
 
-def getCombinedTheoryPredsForBatch_ ( slhafiles, inDir, expRes, return_dict ):
+def getCombinedTheoryPredsForBatch_ ( slhafiles : str, inDir : str, 
+                                      expRes : list, rdicts ):
     """ the theory combiner, written for parallelization, for a batch of
         slhafiles
     :param slhafiles: slha file names, basenames only
     :param inDir: directory where slha file resides
     :param expRes: list of experiment results
-    :param return_dict: a dictionary for the return values
+    :param rdicts: a dictionary for the return values
     """
     for slhafile in slhafiles:
-        getCombinedTheoryPreds_ ( slhafile, inDir, expRes, return_dict )
+        getCombinedTheoryPreds_ ( slhafile, inDir, expRes, rdicts )
 
 class ValidationPlot( validationObjs.ValidationPlot ):
 
@@ -118,28 +118,26 @@ class ValidationPlot( validationObjs.ValidationPlot ):
 
         ncpus = self.options["ncpus"]
         manager = multiprocessing.Manager()
-        return_dict = manager.dict()
-        rdicts = {}
+        rdicts = manager.dict()
+        for f in fileList:
+            rdicts[f] = manager.dict()
         if ncpus == 1:
-            for f in fileList:
-                getCombinedTheoryPreds_ ( f, inDir, self.expRes, rdicts )
+            getCombinedTheoryPredsForBatch_ ( fileList, inDir, self.expRes, rdicts )
         else:
             logger.info ( f"starting computations on {ncpus} CPUs" )
             chunks = [ fileList[i::ncpus] for i in range(ncpus) ]
             jobs = []
             for c in chunks:
                 p = multiprocessing.Process(target=getCombinedTheoryPredsForBatch_, 
-                        args=(c, inDir, self.expRes, return_dict))
+                        args=(c, inDir, self.expRes, rdicts ))
                 jobs.append ( p )
                 p.start()
             for j in jobs:
                 j.join()
 
-        #Set temporary outputdir:
-        outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
         for f in fileList:
-            axes = self.getXYFromSLHAFileName ( f, asDict=True )
             thisd = rdicts[f]
+            axes = self.getXYFromSLHAFileName ( f, asDict=True )
             if thisd["success"]==False:
                 self.addError ( f, axes, thisd["message"] )
                 continue
