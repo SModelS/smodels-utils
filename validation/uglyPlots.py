@@ -246,7 +246,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             + validationPlot.txName\
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
-    subtitle = "%d datasets: " % len(validationPlot.expRes.datasets)
+    subtitle = f"{len(validationPlot.expRes.datasets)} datasets: "
+    if validationPlot.validationType == "tpredcomb":
+        subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
+
     if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and \
             validationPlot.combine == True:
         ## pyhf combination
