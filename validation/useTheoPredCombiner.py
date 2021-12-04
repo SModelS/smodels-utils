@@ -30,6 +30,9 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
     :param expRes: list of experiment results
     :param rdicts: a dictionary for the return values
     """
+    with open ( "useTheoPredCombiner.stats", "at" ) as f:
+        f.write ( f"{time.asctime()}: started {slhafile}.\n" )
+        f.close()
     t0 = time.time()
     fullpath = os.path.join ( inDir, slhafile )
     model = Model(BSMparticles=BSMList, SMparticles=SMList )
@@ -38,11 +41,11 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
     tpreds = theoryPredictionsFor ( expRes, smstopos,
            combinedResults=False, useBestDataset=False, marginalize=False )
     rdicts[slhafile]["success"] = False
+    rdicts[slhafile]["reason"] = "unknown"
     if tpreds == None:
-        rdicts[slhafile]["message"]="no tpreds"
+        rdicts[slhafile]["reason"]="no tpreds"
         return
     combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
-    rdicts[slhafile]["success"]=True
     r = combiner.getRValue ( expected=False )
     rexp = combiner.getRValue ( expected=True )
     maxcond = combiner.getmaxCondition()
@@ -60,6 +63,11 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
     rdicts[slhafile]["condition"]=maxcond
     dt = time.time() - t0
     rdicts[slhafile]["t"]=dt
+    # lastly, we toggle the success flag
+    rdicts[slhafile]["success"]=True
+    with open ( "useTheoPredCombiner.stats", "at" ) as f:
+        f.write ( f"{time.asctime()}: finished {slhafile} in {dt:.1f}s: UL={ul:.2f}.\n" )
+        f.close()
     return rdicts
 
 def getCombinedTheoryPredsForBatch_ ( slhafiles : str, inDir : str, 
@@ -82,6 +90,11 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         Dict = {'slhafile' : slhafile, 'error': msg, 'axes' : axes }
         self.data.append ( Dict )
 
+    def resetStatusFile ( self ):
+        with open ( "useTheoPredCombiner.stats", "wt" ) as f:
+            f.write ( f"Started new run at {time.asctime()}.\n" )
+            f.close()
+
     def hello ( self ):
         blue, reset = "", ""
         try:
@@ -90,8 +103,9 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             reset = colorama.Fore.RESET
         except Exception as e:
             pass
-        logger.info ( f"--- {blue}using theoryPredictionsCombiner{reset}" )
-        
+        logger.info ( f"--- {blue}using theoPredsCombiner on {self.options['ncpus']} CPUs {reset}" )
+        self.resetStatusFile()
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -124,7 +138,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         if ncpus == 1:
             getCombinedTheoryPredsForBatch_ ( fileList, inDir, self.expRes, rdicts )
         else:
-            logger.info ( f"starting computations on {ncpus} CPUs" )
+            logger.debug ( f"starting computations on {ncpus} CPUs" )
             chunks = [ fileList[i::ncpus] for i in range(ncpus) ]
             jobs = []
             for c in chunks:
@@ -139,9 +153,11 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             thisd = rdicts[f]
             axes = self.getXYFromSLHAFileName ( f, asDict=True )
             if thisd["success"]==False:
-                self.addError ( f, axes, thisd["message"] )
+                self.addError ( f, axes, thisd["reason"] )
                 continue
             Dict = {'slhafile' : f, 'axes' : axes, 'kfactor': self.kfactor }
+            if not "UL" in thisd:
+                print ( f"what is wrong with thisd: {thisd}" )
             Dict["UL"]=thisd["UL"]
             Dict["eUL"]=thisd["eUL"]
             Dict["condition"]=thisd["condition"]

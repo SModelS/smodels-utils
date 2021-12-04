@@ -24,6 +24,9 @@ except ImportError as e:
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
+def starting( expRes, txnameStr, axes ):
+    logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
+
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pretty=False,
                   combine=False, namedTarball = None, keep = False ):
     """
@@ -44,8 +47,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
     :return: True on success
     """
 
-    logger.info("Generating validation plot for " + expRes.globalInfo.id
-                +", "+txnameStr+", "+axes)
+    starting( expRes, txnameStr, axes )
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,slhadir = None,
                         options = options,kfactor=kfactor,
                         namedTarball = namedTarball, keep = keep, combine = combine )
