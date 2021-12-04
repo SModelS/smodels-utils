@@ -66,6 +66,7 @@ class ValidationPlot():
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
+        self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
         self.officialCurves = self.getOfficialCurves( get_all = not drawExpected,
                 expected = False )
@@ -98,6 +99,11 @@ class ValidationPlot():
 
         import plottingFuncs ## propagate logging level!
         plottingFuncs.logger.setLevel ( logger.level )
+        self.specialInits()
+
+    def specialInits ( self ):
+        """ inits for the subclass """
+        self.validationType = "unknown"
 
     def __str__(self):
 
@@ -424,6 +430,7 @@ class ValidationPlot():
         combine = "False"
         if self.combine:
             combine = "True"
+            self.validationType="combine"
         model = self.options["model"]
         if model == "default":
             ## FIXME here we could define different defaults for eg T5Gamma
@@ -826,6 +833,9 @@ class ValidationPlot():
 
     def show ( self, filename ):
         """ we were asked to also show <filename> """
+        term = os.environ["TERM"]
+        if not self.options["show"] and not term == "xterm-kitty":
+            return
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
             v = distutils.spawn.find_executable( viewer )
@@ -838,7 +848,7 @@ class ValidationPlot():
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
-        Saves the plot in .pdf format in the validationDir folder.
+        Saves the plot in the format specified in the validationDir folder.
         If the folder does not exist, it will be created.
         If the folder is not defined the plot will be created in the
         analysis/validation/ folder
@@ -868,8 +878,7 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'.png')
             try:
                 self.plot.Print(filename)
-                if self.options["show"]:
-                    self.show ( filename )
+                self.show ( filename )
             except Exception as e:
                 # if fails because of missing dep, then just proceed
                 pass
@@ -882,8 +891,7 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'.png')
             logger.debug ( "saving plot in %s (and pdf and root)" % filename )
             self.plot.Print(filename)
-            if self.options["show"]:
-                self.show ( filename )
+            self.show ( filename )
             addLogo ( filename )
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)

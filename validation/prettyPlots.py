@@ -471,6 +471,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             logger.warning ( "asked for an efficiencyMap-type plot, but the cached validationData is for a combined plot. Will label it as 'combined'." )
         else:
             subtitle = "best SR"
+    if validationPlot.validationType == "tpredcomb":
+            subtitle = "combination of tpreds"
     lsub=TLatex()
     lsub.SetNDC()
     legendplacement = options["legendplacement"]

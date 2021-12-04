@@ -84,7 +84,6 @@ def getCombinedTheoryPredsForBatch_ ( slhafiles : str, inDir : str,
 
 class ValidationPlot( validationObjs.ValidationPlot ):
 
-            
     def addError ( self, slhafile, axes, msg ):
         """ add an error entry """
         Dict = {'slhafile' : slhafile, 'error': msg, 'axes' : axes }
@@ -94,6 +93,10 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         with open ( "useTheoPredCombiner.stats", "wt" ) as f:
             f.write ( f"Started new run at {time.asctime()}.\n" )
             f.close()
+
+    def specialInits ( self ):
+        """ inits for the subclass """
+        self.validationType = "tpredcomb"
 
     def hello ( self ):
         blue, reset = "", ""
