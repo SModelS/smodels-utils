@@ -164,3 +164,27 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             Dict["signal"]=thisd["signal"]
             Dict["t"]=thisd["t"]
             self.data.append ( Dict )
+
+    def getPlotFile(self,validationDir,fformat='pdf'):
+        """
+        Defines the name of the plot file and returns it. Override 
+        for "_tpredcomb" postfix to name
+
+        :param validationDir: Folder where the root file will be saved
+
+        :return: name of the plot file
+        """
+
+        if fformat.startswith("."):
+            fformat = fformat[1:]
+
+        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
+        filename += self.niceAxes.replace(",","").replace("(","").replace(")","").\
+                    replace("/","d")
+        filename += '_tpredcomb.'+fformat
+
+        filename = filename.replace(self.expRes.globalInfo.id+"_","")
+        filename = os.path.join(validationDir,filename)
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+
+        return filename
