@@ -110,7 +110,7 @@ class ValidationPlot():
         vstr = "Validation plot for\n"
         vstr += 'id: %s\n' % self.expRes.globalInfo.id
         vstr += 'TxName: '+self.txName+'\n'
-        vstr += 'Axes: '+self.niceAxes
+        vstr += 'Axes: '+self.axes
         return vstr
 
     def completeGraph ( self, curve ):
@@ -936,7 +936,6 @@ class ValidationPlot():
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
-        # "axesStr": self.niceAxes,
         meta = { "smodelsver": installation.version(), "axes": self.axes,
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if self.namedTarball != None:
