@@ -9,8 +9,6 @@
 
 """
 
-from __future__ import print_function
-
 import logging,os,sys,shutil
 sys.path.append('../../smodels/')
 sys.path.append('../../smodels-utils/')
@@ -21,7 +19,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha
-import math, numpy, subprocess
+import math, numpy, subprocess, time, sys
 try: ## smodels <= 122
     from smodels.theory import slhaDecomposer as decomposer
 except ImportError: ## smodels >= 200
@@ -48,6 +46,7 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         """
 
+        self.version = "1.0" ## slhaCreator version
         self.path = template
         self.slhaObj = None
         self.nprocesses = -1
@@ -243,6 +242,12 @@ class TemplateFile(object):
 
         return slhafiles
 
+    def addToRecipe ( self, command ):
+        """ add our current command to the recipe file """
+        with open ( "recipe", "at" ) as f:
+            f.write ( f"[{time.asctime()}] ran {command} with slhaCreator v{self.version}\n" )
+            f.close()
+
     def checkFor(self,txnameObj,x,y,z=None):
         """
         Run SModels in the template file with the x,y values and check if it returns
@@ -390,8 +395,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
     argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for [T1]',
         type=str, default='T1' )
-    argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y, 60.]]',
-        type=str, default='2*[[x, y, 60.]]' )
+    argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
+        type=str, default='2*[[x, y]]' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x [100]',
         type=float, default=100. )
     argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x [300]',
@@ -483,12 +488,13 @@ if __name__ == "__main__":
                        sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
                        swapBranches = args.swapBranches )
     print ( "Produced %s slha files" % len(slhafiles ) )
+    tempf.addToRecipe ( " ".join ( sys.argv ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     print ( "Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s.tar.gz" % \
                            ( newtemp, args.topology ) )
     subprocess.getoutput ( "cp %s/%s*.slha %s" % ( tempf.tempdir, args.topology, newtemp ) )
-    subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha" % ( newtemp, args.topology, args.topology ) )
+    subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha recipe" % ( newtemp, args.topology, args.topology ) )
     print ( "New tarball %s.tar.gz" % args.topology )
     if not args.keep:
         subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
