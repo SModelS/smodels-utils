@@ -138,7 +138,10 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
             # txnames[tx].append(obj.ReadObj())
             nplots += 1
     if not nplots:
-        logger.warning("No exclusion curve found.")
+        if expected: # for expected it's only an info
+            logger.info( f"No expected exclusion curve found for {expResult.globalInfo.id}:{txname}:{axes}.")
+        else: # for observed it's a warning
+            logger.warning( f"No observed exclusion curve found for {expResult.globalInfo.id}:{txname}:{axes}.")
         return False
 
     return txnames
