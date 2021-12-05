@@ -104,8 +104,8 @@ class TemplateFile(object):
                         self.tags.append(t)
 
     def createFileFor( self,ptDict,slhaname=None,computeXsecs=False,
-                       massesInFileName = False, nevents = 10000, sqrts=None,
-                       reference_xsecs = False, swapBranches = False ):
+               massesInFileName = False, nevents = 10000, sqrts=None,
+               reference_xsecs = False, swapBranches = False, ignore_pids = None ):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values in pt.
@@ -119,6 +119,7 @@ class TemplateFile(object):
         :param sqrts: sqrtses (list)
         :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
         :param swapBranches: if true, swap branches in filenames
+        :param ignore_pids: if not None, pids to ignore when computing xsecs (works currently only with ref xsecs)
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
         if sqrts == None:
@@ -185,7 +186,7 @@ class TemplateFile(object):
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
                         nevents = 10000, sqrts = None, reference_xsecs=False,
-                        swapBranches = False ):
+                        swapBranches = False, ignore_pids = None ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -196,6 +197,7 @@ class TemplateFile(object):
         :param sqrts: sqrtses (list)
         :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
         :param swapBranches: if true, swap branches in filenames
+        :param ignore_pids: if not None, pids to ignore when computing xsecs (Works currently only with ref xsecs)
         :return: list of SLHA file names generated.
         """
 
@@ -205,8 +207,8 @@ class TemplateFile(object):
         slhafiles = []
         for pt in pts:
             slhafile = self.createFileFor( pt, computeXsecs=False,
-                                      massesInFileName=massesInFileName, nevents=nevents,
-                                      sqrts=sqrts, swapBranches = swapBranches )
+                     massesInFileName=massesInFileName, nevents=nevents, sqrts=sqrts,
+                     swapBranches = swapBranches, ignore_pids = ignore_pids )
             if slhafile:
                 slhafiles.append(slhafile)
 
@@ -236,16 +238,16 @@ class TemplateFile(object):
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
                 computer = RefXSecComputer()
-                print ( "sqrts", sqrts, slhafile )
                 computer.computeForOneFile ( sqrts[0], slhafile, True, \
-                          comment = "produced via slhaCreator" )
+                          comment = f"produced via slhaCreator v{self.version}",
+                          ignore_pids = ignore_pids )
 
         return slhafiles
 
-    def addToRecipe ( self, command ):
+    def addToRecipe ( self, directory, command ):
         """ add our current command to the recipe file """
-        with open ( "recipe", "at" ) as f:
-            f.write ( f"[{time.asctime()}] ran {command} with slhaCreator v{self.version}\n" )
+        with open ( f"{directory}/recipe", "at" ) as f:
+            f.write ( f"[slhaCreator v{self.version}::{time.asctime()}] {command}\n" )
             f.close()
 
     def checkFor(self,txnameObj,x,y,z=None):
@@ -439,6 +441,8 @@ if __name__ == "__main__":
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
+    argparser.add_argument('-i', '--ignore_pids', type=int, nargs="*", default=None,
+        help="specify pids you wish to ignore when computing xsecs (currently works only with reference_xsecs)")
     argparser.add_argument('--swapBranches', action='store_true',
         help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -484,12 +488,15 @@ if __name__ == "__main__":
     if sqrts == None:
         sqrts = [ 8, 13 ]
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
-                       massesInFileName=True, nevents=args.nevents,
-                       sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
-                       swapBranches = args.swapBranches )
+                   massesInFileName=True, nevents=args.nevents,
+                   sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
+                   swapBranches = args.swapBranches, ignore_pids = args.ignore_pids )
     print ( "Produced %s slha files" % len(slhafiles ) )
-    tempf.addToRecipe ( " ".join ( sys.argv ) )
     newtemp = tempfile.mkdtemp(dir="./" )
+    tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
+    oldtarball = f"{args.topology}.tar.gz"
+    if os.path.exists ( oldtarball ):
+        subprocess.getoutput ( f"cp {oldtarball} prev.{oldtarball}" )
     print ( "Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s.tar.gz" % \
                            ( newtemp, args.topology ) )

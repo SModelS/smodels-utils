@@ -58,6 +58,18 @@ class RefXSecComputer:
         xsec.info = crossSection.XSectionInfo ( D["sqrts"]*TeV, D["order"], D["label"] )
         return xsec
 
+    def lastLineShouldBeEmpty ( self, slhafile ):
+        """ the last line in the slhafile should be an empty line.
+            append one, if need be. """
+        with open ( slhafile, "rt" ) as f:
+            lines=f.readlines()
+            f.close()
+        lastline = lines[-1].strip()
+        if len(lastline)>1:
+            with open ( slhafile, "at" ) as f:
+                f.write ( "\n" )
+                f.close()
+
     def addXSecToFile( self, xsecs, slhafile, complain=True):
         """
         Write cross sections to an SLHA file, analogous to xsecComputer
@@ -84,6 +96,8 @@ class RefXSecComputer:
 
         # Write cross sections to file, if they do not overlap any cross section in
         # the file
+        self.lastLineShouldBeEmpty ( slhafile )
+
         outfile = open(slhafile, 'a')
         nxsecs = 0
         for xsec in xsecs:
@@ -135,7 +149,7 @@ class RefXSecComputer:
         return "\n" + header + "\n" + entry
 
     def computeForOneFile ( self, sqrtses, inputFile,
-                            tofile, ssmultipliers = None, comment = None ):
+                 tofile, ssmultipliers = None, comment = None, ignore_pids = None ):
         """
         Compute the cross sections for one file.
 
@@ -147,6 +161,7 @@ class RefXSecComputer:
                           given as dictionary of the tuple of the mothers' pids as keys and
                           multipliers as values, e.g { (1000001,1000021):1.1 }.
         :param comment: an optional comment that gets added to the slha file.
+        :param ignore_pids: if not None, pids to ignore when computing xsecs
 
         :returns: number of xsections that have been computed
         """
@@ -159,7 +174,8 @@ class RefXSecComputer:
             # if we were the ones writing them
             for s in sqrtses:
                 # ss = s*TeV
-                self.compute( s, inputFile, ssmultipliers = ssmultipliers )
+                self.compute( s, inputFile, ssmultipliers = ssmultipliers,
+                              ignore_pids = ignore_pids )
                 if tofile == "all" and hasattr ( self, "loXSecs" ):
                     nXSecs += self.addXSecToFile(self.loXsecs, inputFile, complain )
                     complain = False
@@ -222,7 +238,7 @@ class RefXSecComputer:
             logger.error("SLHA file %s not found." % slhaFile )
             raise SModelSError()
         outfile = open(slhaFile, 'a')
-        outfile.write ( "# %s\n" % comment )
+        outfile.write ( "\n# %s\n" % comment )
         outfile.close()
 
     def addMultipliersToFile ( self, ssmultipliers, slhaFile ):
@@ -260,7 +276,23 @@ class RefXSecComputer:
         outfile.write ( "\n" )
         outfile.close()
 
-    def compute( self, sqrts, slhafile, ssmultipliers = None ):
+    def selectChannels ( self, channels, ignore ):
+        """ from channels, filter out all with pids that are in ignore """
+        if ignore in [ None, [] ]:
+            return channels
+        ret = []
+        for c in channels:
+            tobeignored = False
+            for pid in c["pids"]:
+                if abs(pid) in ignore:
+                    tobeignored = True
+                    break
+            if not tobeignored:
+                ret.append ( c )
+        return ret
+
+    def compute( self, sqrts, slhafile, ssmultipliers = None,
+                 ignore_pids = None ):
         """
         Retrieve cross sections
         :param sqrts: center of mass energies
@@ -268,9 +300,12 @@ class RefXSecComputer:
         :param ssmultipliers: optionally supply signal strengh multipliers,
                 given as dictionary of the tuple of the mothers' pids as keys and
                 multipliers as values, e.g { (1000001,1000021):1.1 }.
+        :param ignore_pids: ignore pids for production
         :returns: List of cross sections to be added
         """
         channels = self.findOpenChannels ( slhafile )
+        channels = self.selectChannels ( channels, ignore_pids )
+
         xsecs = crossSection.XSectionList()
         for channel in channels:
             # obtain xsecs for all masses, but for the given channel
