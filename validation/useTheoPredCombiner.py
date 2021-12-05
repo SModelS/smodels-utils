@@ -111,7 +111,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
 
     def getDataFromPlanes(self):
         """
-        Runs SModelS on the SLHA files from self.slhaDir and store
+        Runs SModelS on the SLHA files fr m self.slhaDir and store
         the relevant data in self.data.
         Uses runSModelS.main.
         """
@@ -137,6 +137,8 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         manager = multiprocessing.Manager()
         rdicts = manager.dict()
         for f in fileList:
+            if "recipe" in f:
+                continue
             rdicts[f] = manager.dict()
         if ncpus == 1:
             getCombinedTheoryPredsForBatch_ ( fileList, inDir, self.expRes, rdicts )
@@ -153,6 +155,8 @@ class ValidationPlot( validationObjs.ValidationPlot ):
                 j.join()
 
         for f in fileList:
+            if "recipe" in f:
+                continue
             thisd = rdicts[f]
             axes = self.getXYFromSLHAFileName ( f, asDict=True )
             if thisd["success"]==False:
