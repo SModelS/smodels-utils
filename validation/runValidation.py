@@ -72,22 +72,22 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
         valPlot.pretty = True
-        valPlot.savePlot()
         if options["generateData"]:
             valPlot.saveData()
-            if options["pngAlso"]:
-                valPlot.savePlot(fformat="png")
+        valPlot.savePlot()
+        if options["pngAlso"]:
+            valPlot.savePlot(fformat="png")
     import ROOT
     for i in ROOT.gROOT.GetListOfCanvases():
         i.Destructor()
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         valPlot.pretty = False
-        valPlot.savePlot()
         if options["generateData"]:
             valPlot.saveData()
-            if options["pngAlso"]:
-                valPlot.savePlot(fformat="png")
+        valPlot.savePlot()
+        if options["pngAlso"]:
+            valPlot.savePlot(fformat="png")
     for i in ROOT.gROOT.GetListOfCanvases():
         i.Destructor()
     return True
@@ -477,8 +477,8 @@ if __name__ == "__main__":
             options["pngAlso"] = parser.getboolean("options", "pngPlots" )
         if parser.has_option("options","keepTopNSRs"):
             options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
-            if dataselector == "combined" and options["keepTopNSRs"]>0:
-               logger.warning ( f"you selected dataselection ''combined'' but also chose to keepTopNSRs={options['keepTopNSRs']}. The feature ''keepTopNSRs'' will only work with dataselection ''efficiencymap'', not with ''combined''. You have been warned." )
+            if dataselector in [ "combined", "upperLimit" ] and options["keepTopNSRs"]>0:
+               logger.warning ( f"you selected dataselection ''combined'' but also chose to keepTopNSRs={options['keepTopNSRs']}. The feature ''keepTopNSRs'' will only work with dataselection ''efficiencymap'', not with ''{dataselector}'. You have been warned." )
         if parser.has_option("options","axis"):
             options["axis"] = parser.get("options","axis" )
         if parser.has_option("options","drawChi2Line"):
