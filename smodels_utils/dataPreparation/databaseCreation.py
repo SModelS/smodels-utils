@@ -373,7 +373,8 @@ class DatabaseCreator(list):
                     for axes in str(plane.axes).split(";"):
                         if plane.branches == None:
                             plane2 = MassPlane.fromString ( plane._txDecay, axes )
-                            plane.branches = plane2.branches
+                            if plane2 != None:
+                                plane.branches = plane2.branches
                         for exclusion in plane._exclusionCurves:
                             if not exclusion:
                                 continue  #Exclusion source has not been defined
