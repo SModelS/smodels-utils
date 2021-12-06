@@ -88,7 +88,10 @@ class DataHandler(object):
         for k,v in coordinateMap.items():
             if v != None:
                 newCoordinateMap[k]=v
-        coordinateMap = newCoordinateMap
+        if len(coordinateMap) != self.dimensions+1 and \
+            len(newCoordinateMap) == self.dimensions+1:
+                coordinateMap = newCoordinateMap
+                
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error("Coordinate map %s is not consistent with number of dimensions (%i) in %s"
