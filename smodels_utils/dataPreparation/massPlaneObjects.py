@@ -216,7 +216,7 @@ class MassPlane(object):
 
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
-            logger.error("Data label %s is not allowed." %dataLabel)
+            logger.error( f"Data label {dataLabel} is not allowed. Try one of: {', '.join(self.allowedDataLabels)}.")
             sys.exit()
         if not 'exclusion' in dataLabel.lower():
             #Define the default coordinate mapping:

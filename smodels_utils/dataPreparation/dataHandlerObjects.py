@@ -84,6 +84,11 @@ class DataHandler(object):
         if self.name == 'upperLimits' or self.name == 'expectedUpperLimits':
             self._unit = 'pb'
 
+        newCoordinateMap = {} # take out entries with none
+        for k,v in coordinateMap.items():
+            if v != None:
+                newCoordinateMap[k]=v
+        coordinateMap = newCoordinateMap
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error("Coordinate map %s is not consistent with number of dimensions (%i) in %s"
