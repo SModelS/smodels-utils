@@ -269,11 +269,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     contVals = [1./looseness,1.,looseness]
     if options["drawExpected"]:
         contVals = [1.,1.,1.]
-    cgraphs = getContours(tgr,contVals)
+    cgraphs = getContours(tgr,contVals, "prettyPlots:cgraphs" )
     ecgraphs = {}
     if options["drawExpected"]:
-        ecgraphs = getContours(etgr,contVals)
-    chi2graphs = getContours ( tgrchi2, [ 1. ] * 3 )
+        ecgraphs = getContours(etgr,contVals, "prettyPlots:ecgraphs" )
+    chi2graphs = getContours ( tgrchi2, [ 1. ] * 3, "prettyPlots:chi2graphs" )
     # print ( "chi2graphs", chi2graphs )
 
     #Draw temp plot:

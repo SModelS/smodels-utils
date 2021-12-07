@@ -657,17 +657,20 @@ def setOptions(obj,Type=None):
         obj.GetZaxis().SetTitleSize(0.051)
 
 
-def getContours(tgraph,contVals):
+def getContours(tgraph,contVals, name ):
     """
     Returns a list of TGraphs containing the curves corresponding to the
     contour values contVals from the input TGraph2D object
     :param tgraph: ROOT TGraph2D object containing the x,y,r points
     :param contVals: r-values for the contour graphs
+    :param name: the name of the contour, for debugging
 
     :return: a dictionary, where the keys are the contour values
              and the values are a list of TGraph objects containing the curves
              for the respective contour value (e.g. {1. : [TGraph1,TGraph2],...})
     """
+    #if name == "prettyPlots:ecgraphs":
+    #    return {}
 
     if tgraph.GetN() == 0:
         logger.info("No excluded points found for %s" %tgraph.GetName())
