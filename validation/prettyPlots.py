@@ -76,10 +76,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if "axes" in pt and "y" in pt["axes"]:
             hasYValues = True
             break
-    if not hasYValues:
-        logger.error ( "it seems like we do not have y-values, so we break off." )
-        return (None,None)
-
     for pt in validationPlot.data:
         #if "error" in pt.keys():
         #    continue
@@ -607,5 +603,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
     if not silentMode:
         ans = raw_input("Hit any key to close\n")
+
+    if not hasYValues:
+        logger.error ( "it seems like we do not have y-values, so we break off." )
+        plane.dontplot = True
 
     return plane,tgr

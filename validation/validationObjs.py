@@ -575,7 +575,13 @@ class ValidationPlot():
         if "THSCPM6" in filename:
             ret = [ masses[0][0], masses[0][2] ]
         if asDict and ret !=None:
-            return { "x": ret[0], "y": ret[1] }
+            ret = { "x": ret[0], "y": ret[1] }
+        # now remove y values
+        if not "y" in self.axes:
+            if type(ret) == dict:
+                ret.pop("y")
+            if type(ret) == list:
+                ret = [ ret[0] ]
         return ret
 
     def getDataFromPlanes(self):
@@ -661,7 +667,7 @@ class ValidationPlot():
                 ## still get the masses from the slhafile name
                 axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
                 ## log also the errors in the py file
-                Dict = { 'slhafile': slhafile, 'error': 'no results', 'axes': axes }
+                Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
                 self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']
@@ -859,9 +865,12 @@ class ValidationPlot():
         :param fformat: File fformat (accepted by ROOT), i.e. pdf, png, jpg...
         """
 
-
         if not hasattr(self,'plot') or not self.plot:
             logger.warning("No plot found. Nothing will be saved")
+            return False
+
+        if hasattr ( self.plot, "dontplot" ):
+            logger.warning("Plotting got inhibited." )
             return False
 
         if not validationDir:
