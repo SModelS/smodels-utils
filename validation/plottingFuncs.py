@@ -135,9 +135,17 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                     continue
                 tgraph = TGraph()
                 tgraph.SetTitle ( cname )
-                for i,(x,y) in enumerate ( zip ( points["x"], points["y"] ) ):
-                    tgraph.SetPointX( i, x )
-                    tgraph.SetPointY( i, y )
+                if not "y" in points:
+                    ctr = 0
+                    for x in points["x"]:
+                        for y in [ 0., 1., 2. ]:
+                            tgraph.SetPointX( ctr, x )
+                            tgraph.SetPointY( ctr, y )
+                            ctr+=1
+                else:
+                    for i,(x,y) in enumerate ( zip ( points["x"], points["y"] ) ):
+                        tgraph.SetPointX( i, x )
+                        tgraph.SetPointY( i, y )
                 if not txn in ret:
                     ret[txn]=[]
                 ret[txn].append( tgraph )

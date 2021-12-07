@@ -229,6 +229,8 @@ class MassPlane(object):
             #Define the default 1D coordinate mapping for exclusion curves
             if not coordinateMap:
                 coordinateMap = {x : 0, y : 1, 'value' : None}
+                if not y in self.xvars: # 1d data
+                    coordinateMap = {x : 0, 'value' : None}
             dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars)
             self._exclusionCurves.append(dataObject)
 

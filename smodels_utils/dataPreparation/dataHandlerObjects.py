@@ -333,7 +333,7 @@ class DataHandler(object):
                  (e.g. {x : x-float, y : y-float, 'ul' : ul-float})
         """
 
-        if len(point) < self.dimensions+1:
+        if len(point) < self.dimensions: # +1:
             logger.error("%s should have at least %i dimensions (%i dimensions found)"
                          %(self.name, self.dimensions+1,len(point)))
             sys.exit()
@@ -581,7 +581,7 @@ class DataHandler(object):
             for r in reader:
                 if "@@EOF@@" in r:
                     break
-                if len(r)<2:
+                if len(r)<1:
                     continue
                 hasLatexStuff=False
                 for _ in r:
@@ -618,7 +618,8 @@ class DataHandler(object):
                 xs,ys=[],[]
                 for yr in yields:
                     xs.append ( yr[0] )
-                    ys.append ( yr[1] )
+                    if len(yr)>1:
+                        ys.append ( yr[1] )
             else:
                 try:
                     yields.sort()

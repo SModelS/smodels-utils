@@ -77,7 +77,7 @@ class DatabaseCreator(list):
         self.copyTempCruftFiles()
         self.origPath = './orig/'
         self.validationPath = './validation/'
-        self.smsrootFile = "./sms.root"
+        # self.smsrootFile = "./sms.root"
         self.exclusionsJsonFile = "exclusions.json"
         self.infoFileExtension = '.txt'
         self.metaInfoFileDirectory = './'
@@ -254,7 +254,7 @@ class DatabaseCreator(list):
             self.updateDataset(dataset)
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
-        self._createSmsRoot(createAdditional)
+        # self._createSmsRoot(createAdditional)
         self._createExclusionsJsons(createAdditional)
         self._checkType()
         self._reportCruftFiles()
@@ -543,7 +543,8 @@ class DatabaseCreator(list):
 
         #Remove files
         predefinedPaths = [
-            self.base + self.smsrootFile,
+            # self.base + self.smsrootFile,
+            self.base + self.exclusionsJsonFile,
             self.base + self.infoFilePath(self.metaInfoFileName,
                                           self.metaInfoFileDirectory)
             ]
@@ -624,7 +625,10 @@ class DatabaseCreator(list):
                 # xandy.append ( ( x, y ) )
             if not name in content[dirname]:
                 # content[dirname][name]=xandy
-                content[dirname][name]={ "x": xv, "y": yv }
+                if not "y" in name:
+                    content[dirname][name]={ "x": xv }
+                else:
+                   content[dirname][name]={ "x": xv, "y": yv }
         with open ( fname, "wt" ) as handle:
             json.dump ( content, handle, indent = 1 )
             handle.close()
