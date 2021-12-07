@@ -68,6 +68,18 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # Get excluded and allowed points:
     condV = 0
     hasExpected = False
+    ## find out if we have y values
+    hasYValues = False
+    for pt in validationPlot.data:
+        if "error" in pt:
+            continue
+        if "axes" in pt and "y" in pt["axes"]:
+            hasYValues = True
+            break
+    if not hasYValues:
+        logger.error ( "it seems like we do not have y-values, so we break off." )
+        return (None,None)
+
     for pt in validationPlot.data:
         #if "error" in pt.keys():
         #    continue
