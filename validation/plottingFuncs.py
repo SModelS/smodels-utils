@@ -85,6 +85,67 @@ def clean ( obj ):
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                           expected=False ):
     """
+    Reads exclusions.json and returns the TGraph objects for the exclusion
+    curves. If txname is defined, returns only the curves corresponding
+    to the respective txname. If axes is defined, only returns the curves
+    for that axis
+
+    :param expResult: an ExpResult object
+    :param txname: the TxName in string format (i.e. T1tttt)
+    :param axes: the axes definition in string format (e.g. [x, y, 60.0], [x, y, 60.0]])
+    :param get_all: Get also the +-1 sigma curves?
+    :param expected: if true, get expected, not observed
+
+    :return: a dictionary, where the keys are the TxName strings
+            and the values are the respective list of TGraph objects.
+    """
+
+    import json
+    if type(expResult)==list:
+        expResult=expResult[0]
+    jsonfile = os.path.join(expResult.path,'exclusions.json')
+    if not os.path.isfile(jsonfile):
+        logger.error("json file %s not found" %jsonfile )
+        return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes, get_all,
+                expected )
+
+    with open ( jsonfile, "rt" ) as handle:
+        content = json.load ( handle )
+        handle.close()
+
+    ret = {}
+    maxes = axes
+    if maxes != None:
+        maxes = axes.replace(" ","").strip()
+    print ( "txname", txname, "axes", maxes, "get_all", get_all, "e", expected )
+    exp = "obs"
+    if expected:
+        exp = "exp"
+    cnames = [ f"{exp}Exclusion_{maxes}" ]
+    if get_all:
+        cnames = [ f"{exp}Exclusion_{maxes}", f"{exp}ExclusionP1_{maxes}",
+                   f"{exp}ExclusionM1_{maxes}" ]
+
+    for cname in cnames:
+        for txn,content in content.items():
+            if txname != None and txn != txname:
+                continue
+            for axis,points in content.items():
+                if maxes != None and cname != axis:
+                    continue
+                tgraph = TGraph()
+                tgraph.SetTitle ( cname )
+                for i,(x,y) in enumerate ( zip ( points["x"], points["y"] ) ):
+                    tgraph.SetPointX( i, x )
+                    tgraph.SetPointY( i, y )
+                if not txn in ret:
+                    ret[txn]=[]
+                ret[txn].append( tgraph )
+        return ret
+
+def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=False,
+                          expected=False ):
+    """
     Reads sms.root and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
     to the respective txname. If axes is defined, only returns the curves
@@ -144,6 +205,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
             logger.warning( f"No observed exclusion curve found for {expResult.globalInfo.id}:{txname}:{axes}.")
         return False
 
+    print ( "txnames", txnames )
     return txnames
 
 def getFigureUrl(validationPlot ):
