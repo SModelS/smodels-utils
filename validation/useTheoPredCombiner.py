@@ -46,10 +46,12 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
         rdicts[slhafile]["reason"]="no tpreds"
         return
     combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
+    combiner.computeStatistics()
     r = combiner.getRValue ( expected=False )
     rexp = combiner.getRValue ( expected=True )
     maxcond = combiner.getmaxCondition()
     xsec =float(combiner.totalXsection().asNumber(fb))
+    chi2 = combiner.chi2()
     ul, eul = 1e15, 1e15
     if r > 0.:
         ul = xsec / r
@@ -61,6 +63,7 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
     rdicts[slhafile]["rexp"]=rexp
     rdicts[slhafile]["signal"]=xsec
     rdicts[slhafile]["condition"]=maxcond
+    rdicts[slhafile]["chi2"]=chi2
     dt = time.time() - t0
     rdicts[slhafile]["t"]=dt
     # lastly, we toggle the success flag
@@ -169,6 +172,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             Dict["eUL"]=thisd["eUL"]
             Dict["condition"]=thisd["condition"]
             Dict["signal"]=thisd["signal"]
+            Dict["chi2"]=thisd["chi2"]
             Dict["t"]=thisd["t"]
             self.data.append ( Dict )
 

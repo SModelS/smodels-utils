@@ -31,7 +31,7 @@ class RefXSecComputer:
 
     def __init__( self, verbose = False ):
         """
-        :param verbose: turn on verbose mode, for debugging 
+        :param verbose: turn on verbose mode, for debugging
         """
         self.verbose = verbose
         if verbose:
@@ -227,7 +227,7 @@ class RefXSecComputer:
         """ compute xsecs for a bunch of slha files """
         for inputFile in inputFiles:
             logger.debug ( "computing xsec for %s" % inputFile )
-            self.computeForOneFile ( sqrtses, inputFile, tofile, 
+            self.computeForOneFile ( sqrtses, inputFile, tofile,
                                      ssmultipliers = ssmultipliers )
 
     def addCommentToFile ( self, comment, slhaFile ):
@@ -343,7 +343,7 @@ class RefXSecComputer:
         # productions of same-sign-pid pairs when the particle is within reach
         samesignmodes = ( 1000021, 1000023 )
         # production of opposite-sign-pid pairs when the particle is within reach
-        oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015 )
+        oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
         # associate production
         associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ) )
@@ -447,7 +447,7 @@ class RefXSecComputer:
             if dm > .01:
                 logger.info ( f"asking for N2 N1 production but masses differ ({masses[0],masses[1]}) we only have for mass-degenerate case." )
                 return None, None, None
-                
+
             filename = "xsecN2N1p%d.txt" % sqrts
             order = NLL
             pb = False
@@ -511,7 +511,13 @@ if __name__ == "__main__":
     argparser.add_argument ( "-f", "--inputfile",
             help="slha file [./simplyGluino.slha]",
             type=str, default="./simplyGluino.slha" )
+    argparser.add_argument ( '-s', '--sqrts',
+            help='center-of-mass energies [8 13]',
+            type=int, nargs="*", default=None )
     args = argparser.parse_args()
+    sqrts = args.sqrts
+    if sqrts == None:
+        sqrts = [ 8, 13 ]
     setLogLevel ( "debug" )
     tool = RefXSecComputer()
     # slhafile = "inputFiles/slha/simplyGluino.slha"
@@ -521,6 +527,8 @@ if __name__ == "__main__":
     # logger.info ( "slhafile: " + slhapath )
     # slhafile = "./test.slha"
     # output = tool.compute(slhapath )
-    tool.computeForOneFile ( sqrtses=[8, 13], inputFile = slhapath, tofile=True,
-                             ssmultipliers = { (1000021,1000021):2. } )
+    ssmultipliers = { (1000021,1000021):2. }
+    ssmultipliers = None
+    tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
+                             ssmultipliers = ssmultipliers )
     # logger.info ( "done: %s" % output )
