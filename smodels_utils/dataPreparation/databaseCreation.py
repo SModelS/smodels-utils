@@ -36,6 +36,13 @@ try:
 except Exception as e:
     pass
 
+from math import floor, log10
+
+def round_to_n(x,n):
+    if x == 0.:
+        return 0.
+    return round(x, -int(floor(log10(x))) + (n - 1))
+
 class DatabaseCreator(list):
     tempInputFiles = []
 
@@ -71,6 +78,7 @@ class DatabaseCreator(list):
         self.origPath = './orig/'
         self.validationPath = './validation/'
         self.smsrootFile = "./sms.root"
+        self.exclusionsJsonFile = "exclusions.json"
         self.infoFileExtension = '.txt'
         self.metaInfoFileDirectory = './'
         self.metaInfoFileName = 'globalInfo'
@@ -247,6 +255,7 @@ class DatabaseCreator(list):
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
+        self._createExclusionsJsons(createAdditional)
         self._checkType()
         self._reportCruftFiles()
 
@@ -581,6 +590,44 @@ class DatabaseCreator(list):
                         (fullname, exclusion.GetN()), "info")
                 exclusion.Write()
         smsRoot.Close()
+
+    def _createExclusionsJsons(self,update=False):
+
+        """
+        creates the exclusions.json file, should eventually replace sms.root
+        """
+        mode="recreate"
+        if update:
+            mode="update"
+        import json, uproot
+        fname = os.path.join ( self.base, self.exclusionsJsonFile )
+        content = {}
+        if update and os.path.exists ( fname ):
+            with open ( fname, "rt" ) as f:
+                content = json.load ( f )
+                f.close()
+        for exclusion in self.exclusions:
+            dirname = exclusion.txname
+            if not dirname in content:
+                content[dirname] = {}
+            name = exclusion.GetName()
+            name = name.strip()
+            name = name.replace(" ","")
+            xv,yv=[],[]
+            xandy = []
+            for i in range(exclusion.GetN() ):
+                x = round_to_n ( exclusion.GetPointX(i), 4 )
+                y = round_to_n ( exclusion.GetPointY(i), 4 )
+                xv.append ( x )
+                yv.append ( y )
+                xandy.append ( { "x": x, "y": y } )
+                # xandy.append ( ( x, y ) )
+            if not name in content[dirname]:
+                # content[dirname][name]=xandy
+                content[dirname][name]={ "x": xv, "y": yv }
+        with open ( fname, "wt" ) as handle:
+            json.dump ( content, handle, indent = 1 )
+            handle.close()
 
     def _createInfoFile(self, name, obj, folder):
 
