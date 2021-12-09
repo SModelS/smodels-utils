@@ -133,7 +133,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         else:
             if not "error" in pt.keys():
                 tgr.SetPoint(tgr.GetN(), x, y, r)
-                etgr.SetPoint(etgr.GetN(), x, y, rexp )
+                if numpy.isfinite ( rexp ):
+                    etgr.SetPoint(etgr.GetN(), x, y, rexp )
                 if "chi2" in pt:
                     tgrchi2.SetPoint(tgrchi2.GetN(), x, y, pt["chi2"] / 3.84 )
     if options["drawExpected"] in [ "auto" ]:
