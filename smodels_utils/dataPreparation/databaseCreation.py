@@ -41,7 +41,7 @@ from math import floor, log10
 def round_to_n(x,n):
     if x == 0.:
         return 0.
-    return round(x, -int(floor(log10(x))) + (n - 1))
+    return round(x, -int(floor(log10(abs(x)))) + (n - 1))
 
 class DatabaseCreator(list):
     tempInputFiles = []
