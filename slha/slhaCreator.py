@@ -446,8 +446,8 @@ if __name__ == "__main__":
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
-    argparser.add_argument('-i', '--ignore_pids', type=int, nargs="*", default=None,
-        help="specify pids you wish to ignore when computing xsecs (currently works only with reference_xsecs)")
+    argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
+        help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'. Currently works only with reference_xsecs.")
     argparser.add_argument('--swapBranches', action='store_true',
         help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',
