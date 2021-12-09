@@ -85,7 +85,7 @@ def clean ( obj ):
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                           expected=False ):
     """
-    Reads exclusions.json and returns the TGraph objects for the exclusion
+    Reads exclusion_lines.json and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
     to the respective txname. If axes is defined, only returns the curves
     for that axis
@@ -103,7 +103,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     import json
     if type(expResult)==list:
         expResult=expResult[0]
-    jsonfile = os.path.join(expResult.path,'exclusions.json')
+    jsonfile = os.path.join(expResult.path,'exclusion_lines.json')
     if not os.path.isfile(jsonfile):
         logger.error("json file %s not found" %jsonfile )
         return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes, get_all,
