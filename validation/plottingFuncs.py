@@ -117,7 +117,6 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     maxes = axes
     if maxes != None:
         maxes = axes.replace(" ","").strip()
-    print ( "txname", txname, "axes", maxes, "get_all", get_all, "e", expected )
     exp = "obs"
     if expected:
         exp = "exp"
@@ -213,7 +212,6 @@ def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=Fa
             logger.warning( f"No observed exclusion curve found for {expResult.globalInfo.id}:{txname}:{axes}.")
         return False
 
-    print ( "txnames", txnames )
     return txnames
 
 def getFigureUrl(validationPlot ):
