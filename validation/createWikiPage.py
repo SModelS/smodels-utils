@@ -127,7 +127,7 @@ class WikiPageCreator:
         if self.ignore_superseded:
             whatIsIncluded = "Fastlim results are listed; superseded results have been skipped"
             if not self.include_fastlim:
-                whatIsIncluded = "Neither superseded nor fastlim results are not listed in this table"
+                whatIsIncluded = "Neither superseded nor fastlim results are listed in this table"
         self.file.write( """
 # Validation plots for SModelS-v%s
 
