@@ -46,7 +46,7 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         """
 
-        self.version = "1.0" ## slhaCreator version
+        self.version = "1.1" ## slhaCreator version
         self.path = template
         self.slhaObj = None
         self.nprocesses = -1
@@ -186,7 +186,7 @@ class TemplateFile(object):
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
                         nevents = 10000, sqrts = None, reference_xsecs=False,
-                        swapBranches = False, ignore_pids = None ):
+                        swapBranches = False, ignore_pids = None, comment=None ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -198,6 +198,7 @@ class TemplateFile(object):
         :param reference_xsecs: if true, then use ref xsec computer to compute xsecs
         :param swapBranches: if true, swap branches in filenames
         :param ignore_pids: if not None, pids to ignore when computing xsecs (Works currently only with ref xsecs)
+        :param comment: comment to be added to all files
         :return: list of SLHA file names generated.
         """
 
@@ -238,9 +239,11 @@ class TemplateFile(object):
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
                 computer = RefXSecComputer()
+                c = f"produced via slhaCreator v{self.version}"
+                if comment != None:
+                    c+= f": {comment}"
                 computer.computeForOneFile ( sqrts[0], slhafile, True, \
-                          comment = f"produced via slhaCreator v{self.version}",
-                          ignore_pids = ignore_pids )
+                          comment = c, ignore_pids = ignore_pids )
 
         return slhafiles
 
@@ -397,6 +400,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
     argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for [T1]',
         type=str, default='T1' )
+    argparser.add_argument ( '-C', '--comment', nargs='?', help='add a comment to all files [None]',
+        type=str, default=None )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
         type=str, default='2*[[x, y]]' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x [100]',
@@ -490,7 +495,8 @@ if __name__ == "__main__":
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
                    massesInFileName=True, nevents=args.nevents,
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
-                   swapBranches = args.swapBranches, ignore_pids = args.ignore_pids )
+                   swapBranches = args.swapBranches, ignore_pids = args.ignore_pids,
+                   comment = args.comment )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
