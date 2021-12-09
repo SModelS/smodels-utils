@@ -345,7 +345,9 @@ class RefXSecComputer:
         :returns: List of cross sections to be added
         """
         channels = self.findOpenChannels ( slhafile )
+        #print ( "open", [ c["pids"] for c in channels ] )
         channels = self.selectChannels ( channels, ignore_pids )
+        #print ( "selected ", channels )
 
         xsecs = crossSection.XSectionList()
         for channel in channels:
@@ -356,7 +358,7 @@ class RefXSecComputer:
                 pids = [ pids[1], pids[0] ]
             xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "",
                                                        channel["masses"] )
-            logger.debug ( f"for channel {channel}: {xsecall}" )
+            # print ( f"for channel {pids}: {str(xsecall)[:10]}" )
             ## interpolate for the mass that we are looking for
             if xsecall == None:
                 continue
@@ -390,10 +392,10 @@ class RefXSecComputer:
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000023, 1000024 ) )
+        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000023, 1000024 ), ( -1000024, 1000023 ) )
         ## production modes to add that needs two different particles
         ## to be unfrozen
-        associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ) }
+        # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
 
         for pid,mass in masses.items():
             if pid < 999999:
@@ -412,6 +414,10 @@ class RefXSecComputer:
                     channels.append ( { "pids": (jpid,pid), "masses": (jmass, mass ) } )
                 if (jpid,pid) in associateproduction:
                     channels.append ( { "pids": (pid,jpid), "masses": (mass, jmass ) } )
+                if (-pid,jpid) in associateproduction:
+                    channels.append ( { "pids": (jpid,-pid), "masses": (jmass, mass ) } )
+                if (-jpid,pid) in associateproduction:
+                    channels.append ( { "pids": (pid,-jpid), "masses": (mass, jmass ) } )
         if len(channels)==0:
             print ( f"[refxsecComputer] found no open channels for {slhafile}" )
         return channels
