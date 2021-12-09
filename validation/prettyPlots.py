@@ -181,7 +181,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
-    if etgr.GetYmax() == etgr.GetYmin():
+    if etgr.GetN() > 0 and ( etgr.GetYmax() == etgr.GetYmin() ):
         logger.info("1d data detected, smearing Y values")
         etgrN = etgr.GetN()
         buff = etgr.GetX()
@@ -195,7 +195,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         zpts = numpy.frombuffer(buff,count=etgrN)
         for i in range(etgrN):
             etgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
-    if etgr.GetXmax() == etgr.GetXmin():
+    if etgr.GetN() > 0. and ( etgr.GetXmax() == etgr.GetXmin() ):
         logger.info("1d data detected, smearing X values")
         buff = etgr.GetX()
         buff.reshape((etgr.GetN(),))
