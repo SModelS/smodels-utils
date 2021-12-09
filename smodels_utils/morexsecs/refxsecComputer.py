@@ -325,10 +325,10 @@ class RefXSecComputer:
         for c in channels:
             tobeignored = False
             isin = self.isIn ( c["pids"], myignores )
-            print ( f"{c['pids']} in {myignores}? {isin}" )
             if isin:
                 tobeignored = True
             if not tobeignored:
+                logger.info ( f"selecting {c}" )
                 ret.append ( c )
         return ret
 
@@ -352,8 +352,11 @@ class RefXSecComputer:
             # obtain xsecs for all masses, but for the given channel
             # for sqrts in self.sqrtses: # FIXME
             pids = channel["pids"]
+            if pids[1] < pids[0]:
+                pids = [ pids[1], pids[0] ]
             xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "",
                                                        channel["masses"] )
+            logger.debug ( f"for channel {channel}: {xsecall}" )
             ## interpolate for the mass that we are looking for
             if xsecall == None:
                 continue
