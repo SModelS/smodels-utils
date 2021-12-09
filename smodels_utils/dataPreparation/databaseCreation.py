@@ -290,7 +290,7 @@ class DatabaseCreator(list):
                 leftFiles.append ( a )
         strFiles = " ".join ( leftFiles )
         strFiles = strFiles.replace("(","\\(").replace(")","\\)")
-        if len( leftFiles ) > 0:
+        if len( leftFiles ) > 0 and False: # turn on if needed
             with open( "unused_files.txt", "wt" ) as f:
                 f.write ( strFiles + "\\n" )
                 f.close()
