@@ -276,17 +276,58 @@ class RefXSecComputer:
         outfile.write ( "\n" )
         outfile.close()
 
+    def isIn ( self, pids, ignores ):
+        """ are pids in the ignores? """
+        anyTuples = False
+        if type(ignores)==tuple:
+            for i in ignores:
+                if type(i)==tuple:
+                    anyTuples = True
+                    break
+        if anyTuples:
+            # we have a list of ignores, needs to be in any one
+            for i in ignores:
+                if self.isIn ( pids, i ):
+                    return True
+            return False
+        if type(pids) == list:
+            pids = tuple(pids)
+        if type(ignores ) == list:
+            ignores = tuple(ignores)
+        if type(ignores) == int:
+            ignores = ( ignores, )
+        if len(ignores)==1:
+            if ignores[0] in pids or -ignores[0] in pids:
+                return True
+            return False
+        if pids == ignores:
+            return True
+        ## reverse?
+        if ( pids[1], pids[0]) == ignores:
+            return True
+        ## sign flip
+        if ( -pids[0], pids[1]) == ignores:
+            return True
+        if ( pids[0], -pids[1]) == ignores:
+            return True
+        return False
+
     def selectChannels ( self, channels, ignore ):
         """ from channels, filter out all with pids that are in ignore """
-        if ignore in [ None, [] ]:
+        if ignore in [ None, [], "" ]:
             return channels
         ret = []
+        try:
+            myignores = eval(ignore)
+        except Exception as e:
+            logger.error ( f"dont understand the ignore arg {ignore}: {e}" )
+            sys.exit()
         for c in channels:
             tobeignored = False
-            for pid in c["pids"]:
-                if abs(pid) in ignore:
-                    tobeignored = True
-                    break
+            isin = self.isIn ( c["pids"], myignores )
+            print ( f"{c['pids']} in {myignores}? {isin}" )
+            if isin:
+                tobeignored = True
             if not tobeignored:
                 ret.append ( c )
         return ret
@@ -346,10 +387,10 @@ class RefXSecComputer:
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ) )
-        ## production modes to add that needs to different particles
+        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000023, 1000024 ) )
+        ## production modes to add that needs two different particles
         ## to be unfrozen
-        associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ) }
+        associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ) }
 
         for pid,mass in masses.items():
             if pid < 999999:
@@ -366,6 +407,8 @@ class RefXSecComputer:
                     continue
                 if (pid,jpid) in associateproduction:
                     channels.append ( { "pids": (jpid,pid), "masses": (jmass, mass ) } )
+                if (jpid,pid) in associateproduction:
+                    channels.append ( { "pids": (pid,jpid), "masses": (mass, jmass ) } )
         if len(channels)==0:
             print ( f"[refxsecComputer] found no open channels for {slhafile}" )
         return channels
