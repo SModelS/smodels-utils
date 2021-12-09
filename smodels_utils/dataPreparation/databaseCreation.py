@@ -78,7 +78,7 @@ class DatabaseCreator(list):
         self.origPath = './orig/'
         self.validationPath = './validation/'
         # self.smsrootFile = "./sms.root"
-        self.exclusionsJsonFile = "exclusions.json"
+        self.exclusionsJsonFile = "exclusion_lines.json"
         self.infoFileExtension = '.txt'
         self.metaInfoFileDirectory = './'
         self.metaInfoFileName = 'globalInfo'
@@ -595,7 +595,7 @@ class DatabaseCreator(list):
     def _createExclusionsJsons(self,update=False):
 
         """
-        creates the exclusions.json file, should eventually replace sms.root
+        creates the exclusion_lines.json file, should eventually replace sms.root
         """
         mode="recreate"
         if update:
