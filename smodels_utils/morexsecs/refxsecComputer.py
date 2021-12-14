@@ -392,7 +392,7 @@ class RefXSecComputer:
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000023, 1000024 ), ( -1000024, 1000023 ) )
+        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ) )
         ## production modes to add that needs two different particles
         ## to be unfrozen
         # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
@@ -566,6 +566,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--sqrts',
             help='center-of-mass energies [8 13]',
             type=int, nargs="*", default=None )
+    argparser.add_argument ( "-i", "--ignore_pids",
+            help="ignore pids", type=str, default=None )
     args = argparser.parse_args()
     sqrts = args.sqrts
     if sqrts == None:
@@ -575,6 +577,8 @@ if __name__ == "__main__":
     slhapaths = args.inputfile
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None
+    # ignores= eval ( args.ignore_pids )
+    ignores= args.ignore_pids
     for slhapath in slhapaths:
         tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
-                             ssmultipliers = ssmultipliers )
+                      ssmultipliers = ssmultipliers, ignore_pids = ignores )
