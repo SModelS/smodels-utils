@@ -362,7 +362,7 @@ class RefXSecComputer:
             ## interpolate for the mass that we are looking for
             if xsecall == None:
                 continue
-            xsec = self.interpolate ( channel["masses"][0], xsecall )
+            xsec = self.interpolate ( channel["masses"], xsecall )
             if xsec == None:
                 continue
             if ssmultipliers != None and ( pids[1], pids[0] ) in ssmultipliers:
@@ -422,18 +422,65 @@ class RefXSecComputer:
             print ( f"[refxsecComputer] found no open channels for {slhafile}" )
         return channels
 
+    def cast ( self, xseckeys ):
+        xsecs = []
+        for k in xseckeys:
+            if type(k) == float:
+                xsecs.append ( k )
+            if type(k) == str:
+                xsecs.append ( float(k) )
+            if type(k) == tuple:
+                t = []
+                for v in k:
+                    if type(v)==float:
+                        t.append ( v )
+                    if type(v)==str:
+                        t.append ( float(v) )
+                xsecs.append ( tuple(t) )
+        return xsecs
+
+    def outOfBounds ( self, mass, xsecs ):
+        """ check if masses are out of bounds """
+        if type(mass) in [ int, float ]:
+            if mass > max(xsecs):
+                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mass, max(xsecs ) ) )
+                return True
+            if mass < min(xsecs):
+                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mass, min(xsecs ) ) )
+                return True
+            return False
+        ## masses are tuple
+        for i,mi in enumerate(mass):
+            xi = [ x[i] for x in xsecs ]
+            if mi < min(xi):
+                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mi, min(xi) ) )
+            if mi > max(xi):
+                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mi, max(xi) ) )
+                return True
+        return False
+
+    def collapse ( self, mass ):
+        if type(mass) in [ int, float ]:
+            return mass
+        for i in range(len(mass)-1):
+            if abs (mass[i]-mass[i+1]) / (mass[i]+mass[i+1]) > 1e-3:
+                return mass
+        return mass[0]
+
     def interpolate ( self, mass, xsecs ):
         """ interpolate between masses """
+        mass =self.collapse(mass )
         if mass in xsecs:
             return xsecs[mass]
-        if mass < min(xsecs.keys()):
-            logger.info ( "mass %d<%d too low to interpolate, leave it as is."  % ( mass, min(xsecs.keys() ) ) )
+        xsecks = self.cast ( xsecs.keys() )
+        if self.outOfBounds ( mass, xsecks ):
             return None
-        if mass > max(xsecs.keys()):
-            logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mass, max(xsecs.keys() ) ) )
-            return None
-        from scipy.interpolate import interp1d
-        return interp1d ( list(xsecs.keys()), list(xsecs.values()) )( mass )
+        if type(mass)==float:
+            from scipy.interpolate import interp1d
+            return interp1d ( xsecks, list(xsecs.values()) )( mass )
+        from scipy.interpolate import griddata
+        ret = griddata ( xsecks, list(xsecs.values()), mass )
+        return ret
 
     def getXSecsFrom ( self, path, pb = True, columns={"mass":0,"xsec":1 } ):
         """ retrieve xsecs from filename
@@ -448,6 +495,7 @@ class RefXSecComputer:
         f = open ( path, "rt" )
         lines=f.readlines()
         f.close()
+        print ( "get", columns )
         for line in lines:
             if line.find("#")>-1:
                 line = line[:line.find("#")]
@@ -456,7 +504,13 @@ class RefXSecComputer:
             tokens = line.split ()
             if len(tokens)<2:
                 continue
-            mass = float(tokens[ columns["mass"] ])
+            m = columns["mass"]
+            if type(m) in [ int ]:
+                mass = float ( tokens[ m ] )
+            if type(m) in [ list, tuple ]:
+                mass = tuple( tokens[x] for x in m )
+                if len(mass) == 1:
+                    mass = float(mass)
             xsec = float(tokens[ columns["xsec"] ].replace("GeV","") )
             if not pb:
                 xsec = xsec / 1000.
@@ -484,11 +538,21 @@ class RefXSecComputer:
             order = NLL
             isEWK=True
             pb = False
+            if type(masses) == tuple and abs(masses[1]-masses[0])/(masses[1]+masses[0]) > 1e-3:
+                filename = "xsecN2C1mnondegenp%d.txt" % sqrts
+                columns["mass"]=(0,1)
+                columns["xsec"]=3
+                pb = True
         if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
             filename = "xsecN2C1p%d.txt" % sqrts
             order = NLL
             pb = False
             isEWK=True
+            if type(masses) == tuple and abs(masses[1]-masses[0])/(masses[1]+masses[0]) > 1e-3:
+                filename = "xsecN2C1pnondegenp%d.txt" % sqrts
+                columns["mass"]=(0,1)
+                columns["xsec"]=3
+                pb = True
         if pid1 in [ 1000023 ] and pid2 in [ 1000022 ]:
             if sqrts == 8:
                 logger.info ( "asking for N2 N1 production for 8 TeV. we only have 13 TeV" )
