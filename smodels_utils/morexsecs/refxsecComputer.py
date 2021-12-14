@@ -561,7 +561,7 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser( description = "compute xsecs by looking up reference cross sections" )
     argparser.add_argument ( "-f", "--inputfile",
-            help="slha file [./simplyGluino.slha]",
+            help="slha file(s) [./simplyGluino.slha]", nargs="*",
             type=str, default="./simplyGluino.slha" )
     argparser.add_argument ( '-s', '--sqrts',
             help='center-of-mass energies [8 13]',
@@ -572,15 +572,9 @@ if __name__ == "__main__":
         sqrts = [ 8, 13 ]
     setLogLevel ( "debug" )
     tool = RefXSecComputer()
-    # slhafile = "inputFiles/slha/simplyGluino.slha"
-    # slhapath = os.path.join ( smodelsinstallation.installDirectory(), slhafile )
-    # slhapath = "./simplyGluino.slha"
-    slhapath = args.inputfile
-    # logger.info ( "slhafile: " + slhapath )
-    # slhafile = "./test.slha"
-    # output = tool.compute(slhapath )
+    slhapaths = args.inputfile
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None
-    tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
+    for slhapath in slhapaths:
+        tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
                              ssmultipliers = ssmultipliers )
-    # logger.info ( "done: %s" % output )
