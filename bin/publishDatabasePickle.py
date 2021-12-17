@@ -103,12 +103,14 @@ def main():
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
         dbver = d.databaseVersion
         if args.remove_superseded:
-            e = copy.deepcopy( d )
+            # e = copy.deepcopy( d )
+            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
             e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
             print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
             d = removeSupersededFromDB ( d )
         if args.remove_fastlim:
-            e = copy.deepcopy( d )
+            # e = copy.deepcopy( d )
+            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
             ## create fastlim only
             e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
             d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
