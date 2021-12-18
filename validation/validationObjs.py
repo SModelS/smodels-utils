@@ -444,7 +444,7 @@ class ValidationPlot():
             f.write("[printer]\noutputType = python\n")
             f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
                      model )
-            f.write("[python-printer]\naddElementList = False\n")
+            f.write("[python-printer]\naddElementList = False\ntypeOfExpectedValues='posteriori'\n")
             f.close()
         os.close(pf)
         return parFile
