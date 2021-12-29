@@ -10,6 +10,21 @@
 
 import os, sys
 
+def getSqrts ( Id ):
+    """ given analysis id <Id>, determine sqrts """
+    year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
+    year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
+    year = year.replace("CONF-","").replace("CERN-EP-","")
+    year = year.replace("CERN-PH-EP-","")
+    p1 = year.find("-")
+    year = year[:p1]
+    if year.startswith("20"):
+        year = year[2:]
+    year = int ( year )
+    if year < 15:
+        return 8
+    return 13
+
 def getPathName ( dbpath, analysis, valfile = None ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name
         potentially with wildcards

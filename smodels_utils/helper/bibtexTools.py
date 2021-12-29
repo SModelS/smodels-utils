@@ -20,6 +20,7 @@ from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
          filterSupersededFromList
+from smodels_utils.helper.various import getSqrts
 
 if sys.version[0]=="2":
     reload(sys)
@@ -343,7 +344,7 @@ class BibtexWriter:
         f=open( fname, "r" )
         txt=f.read()
         f.close()
-        sqrts = self.getSqrts ( Id )
+        sqrts = getSqrts ( Id )
         coll = self.findCollaboration ( Id )
         self.stats[coll][Id] = { "cached": 1 }
         return txt
@@ -356,25 +357,10 @@ class BibtexWriter:
         cachef.write ( "\n" )
         cachef.close()
 
-    def getSqrts ( self, Id ):
-        """ given analysis id <Id>, determine sqrts """
-        year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
-        year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
-        year = year.replace("CONF-","").replace("CERN-EP-","")
-        year = year.replace("CERN-PH-EP-","")
-        p1 = year.find("-")
-        year = year[:p1]
-        if year.startswith("20"):
-            year = year[2:]
-        year = int ( year )
-        if year < 15:
-            return 8
-        return 13
-
     def writeBibEntry ( self, bib, Id ):
         self.success += 1
         self.log ( "Success!" )
-        sqrts = self.getSqrts ( Id )
+        sqrts = getSqrts ( Id )
         coll = self.findCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
         self.f.write ( bib )
@@ -408,7 +394,7 @@ class BibtexWriter:
                 self.log ( "Special treatment failed." )
 
         contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
-        sqrts = self.getSqrts ( Id )
+        sqrts = getSqrts ( Id )
         coll = self.findCollaboration ( Id )
         if contact and "fastlim" in contact:
             # self.stats[coll][Id]={ "fastlim": 1 }
@@ -541,7 +527,7 @@ class BibtexWriter:
         for entry in filtered:
             ID = entry["ID"]
             label = labels [ ID ]
-            sqrts = self.getSqrts ( label )
+            sqrts = getSqrts ( label )
             coll = self.findCollaboration ( label )
             if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
