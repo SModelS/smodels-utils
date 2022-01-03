@@ -571,7 +571,7 @@ def getDaughters(txname):
     return list(daughters)
 
 
-def prettyProduction(txname,latex=True):
+def prettyProduction(txname,latex=True,protons=True):
     """
     FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY production process
@@ -579,6 +579,7 @@ def prettyProduction(txname,latex=True):
     :param: txname (string) (e.g. 'T1')
     :param latex: If True it will return the latex version, otherwise
                  it will return a more human readable string
+    :param protons: start with "pp -->"
 
     :return: string or latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
     """
@@ -596,7 +597,8 @@ def prettyProduction(txname,latex=True):
         logging.error("More than two mothers given: %s" %motherDict[txname])
         return None
 
-    prodString = "pp --> "+prodString
+    if protons:
+        prodString = "pp --> "+prodString
     if latex:
         prodString = latexfy(prodString)
     return prodString.lstrip().rstrip()
@@ -623,7 +625,7 @@ def prettyDecay(txname,latex=True):
     return decayString.lstrip().rstrip()
 
 
-def prettyTxname(txname,outputtype="root"):
+def prettyTxname(txname,outputtype="root",protons=True):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
@@ -631,6 +633,7 @@ def prettyTxname(txname,outputtype="root"):
     :param outputtype: root: return a ROOT string
                        latex: return a latex string
                        text: return a human readable string
+    :param protons: start with "pp -->"
 
     :return: string or latex string
              (e.g. pp #rightarrow #tilde{g} #tilde{g},
@@ -645,7 +648,7 @@ def prettyTxname(txname,outputtype="root"):
     if outputtype in [ "root", "latex" ]:
         latex=True
 
-    prodString = prettyProduction(txname,latex)
+    prodString = prettyProduction(txname,latex,protons)
     decayString = prettyDecay(txname,latex)
     if outputtype == "latex":
         prodString = "$" + prodString.replace("#","\\" ) + "$"
