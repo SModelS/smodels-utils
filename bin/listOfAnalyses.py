@@ -85,7 +85,7 @@ class Lister:
                 n_results += 1
                 n_maps += len ( ds.txnameList )
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
-        self.f.write ( "List of analyses and topologies in the SMS results database," )
+        self.f.write ( "List of analyses and topologies in the SMS results database, " )
         self.f.write ( f"comprising {n_maps} individual maps from {n_results} distinct signal regions, ")
         self
         self.f.write ( f"{len(n_topos)} different SMS topologies, from a total of {len(n_anas)} analyses.\n" )
