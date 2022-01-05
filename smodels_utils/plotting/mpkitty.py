@@ -29,4 +29,8 @@ def importBackend():
 
 importBackend()
 import matplotlib.pyplot as plt
+def kittyPlot():
+    import os
+    if options["hasKittyBackend"] == True and "kitty" in os.environ["TERM"]:
+        plt.show()
 from matplotlib.pyplot import *

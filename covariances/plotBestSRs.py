@@ -3,7 +3,8 @@
 """ simple plot of best signal region, should be turned into
 a full blown script """
 
-import matplotlib.pyplot as plt
+from smodels_utils.plotting import mpkitty as plt
+#import matplotlib.pyplot as plt
 import copy, os
 import numpy
 import importlib
@@ -180,6 +181,7 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     fname = outputfile.replace( "@a", analysis ).replace( "@t", shorttopo )
     print ( "[plotBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
+    plt.kittyPlot()
     plt.clf()
     return fname
 
