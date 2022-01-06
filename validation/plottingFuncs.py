@@ -13,11 +13,7 @@ sys.path.append('../')
 from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)
-from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
-                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue,kOrange )
 from smodels.tools.physicsUnits import fb, GeV, pb
-#from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 try:
@@ -29,18 +25,21 @@ try:
 except:
     from backwardCompatibility import removeUnits
 
+def setROOTColorPalette():
+    #Set nice ROOT color palette for temperature plots:
+    stops = [0.00, 0.34, 0.61, 0.84, 1.00]
+    red   = [0.00, 0.00, 0.87, 1.00, 0.51]
+    green = [0.00, 0.81, 1.00, 0.20, 0.00]
+    blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
+    s = array('d', stops)
+    r = array('d', red)
+    g = array('d', green)
+    b = array('d', blue)
+    import ROOT
+    ROOT.TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
+    ROOT.gStyle.SetNumberContours(999)
 
-#Set nice ROOT color palette for temperature plots:
-stops = [0.00, 0.34, 0.61, 0.84, 1.00]
-red   = [0.00, 0.00, 0.87, 1.00, 0.51]
-green = [0.00, 0.81, 1.00, 0.20, 0.00]
-blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
-s = array('d', stops)
-r = array('d', red)
-g = array('d', green)
-b = array('d', blue)
-TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
-gStyle.SetNumberContours(999)
+setROOTColorPalette()
 
 def setAxes ( h, style ):
     """ set the axes ranges if anything is specified in 'style' """
@@ -125,6 +124,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
         cnames = [ f"{exp}Exclusion_{maxes}", f"{exp}ExclusionP1_{maxes}",
                    f"{exp}ExclusionM1_{maxes}" ]
 
+    import ROOT
     for cname in cnames:
         for txn,content in content.items():
             if txname != None and txn != txname:
@@ -132,7 +132,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
             for axis,points in content.items():
                 if maxes != None and cname != axis:
                     continue
-                tgraph = TGraph()
+                tgraph = ROOT.TGraph()
                 tgraph.SetTitle ( cname )
                 if not "y" in points:
                     ctr = 0
@@ -166,6 +166,7 @@ def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=Fa
     :return: a dictionary, where the keys are the TxName strings
             and the values are the respective list of TGraph objects.
     """
+    import ROOT
 
     if type(expResult)==list:
         expResult=expResult[0]
@@ -174,7 +175,7 @@ def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=Fa
         logger.error("Root file %s not found" %rootpath)
         return False
 
-    rootFile = TFile(rootpath)
+    rootFile = ROOT.TFile(rootpath)
     txnames = {}
     #Get list of TxNames (directories in root file)
     for obj in rootFile.GetListOfKeys():
@@ -496,8 +497,9 @@ def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
     """
     kfactor=None
 
-    grTemp = TGraph2D()
-    excluded = TGraph()
+    import ROOT
+    grTemp = ROOT.TGraph2D()
+    excluded = ROOT.TGraph()
     if not validationPlot.data:
         logger.warning("Data for validation plot is not defined.")
         return None
@@ -606,9 +608,10 @@ def setOptions(obj,Type=None):
     :param obj: a plotting object (TGraph, TMultiGraph, TCanvas,...)
     :param type: a string defining the object (allowed, excluded, official,...)
     """
+    import ROOT
 
     #Defaul settings:
-    if isinstance(obj,TCanvas):
+    if isinstance(obj,ROOT.TCanvas):
         obj.SetLeftMargin(0.1097891)
         obj.SetRightMargin(0.02700422)
         obj.SetTopMargin(0.02796053)
@@ -616,7 +619,7 @@ def setOptions(obj,Type=None):
         obj.SetFillColor(0)
         obj.SetBorderSize(0)
         obj.SetFrameBorderMode(0)
-    elif isinstance(obj,TGraph):
+    elif isinstance(obj,ROOT.TGraph):
         obj.GetYaxis().SetTitleFont(132)
         obj.GetYaxis().SetTitleSize(0.075)
         obj.GetYaxis().CenterTitle(True)
@@ -629,17 +632,17 @@ def setOptions(obj,Type=None):
         obj.GetXaxis().SetLabelFont(132)
         obj.GetYaxis().SetLabelSize(0.055)
         obj.GetXaxis().SetLabelSize(0.06)
-    elif isinstance(obj,TLegend):
+    elif isinstance(obj,ROOT.TLegend):
         obj.SetBorderSize(1)
         obj.SetMargin(0.35)
         obj.SetTextFont(132)
         obj.SetTextSize(0.05)
-        obj.SetLineColor(kBlack)
+        obj.SetLineColor(ROOT.kBlack)
         obj.SetLineStyle(1)
         obj.SetLineWidth(1)
-        obj.SetFillColorAlpha(kWhite,.7)
+        obj.SetFillColorAlpha(ROOT.kWhite,.7)
         obj.SetFillStyle(1001)
-    elif isinstance(obj,TGraph2D) or isinstance(obj,TH2D):
+    elif isinstance(obj,ROOT.TGraph2D) or isinstance(obj,ROOT.TH2D):
         obj.GetZaxis().SetTitleFont(132)
         obj.GetZaxis().SetTitleSize(0.06)
         obj.GetZaxis().CenterTitle(True)
@@ -663,7 +666,7 @@ def setOptions(obj,Type=None):
     if not Type: return True
     elif Type == 'allowed':
         obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kGreen)
+        obj.SetMarkerColor(ROOT.kGreen)
     elif Type == 'gridpoints':
         obj.SetMarkerStyle(28)
         markersize=.1 ## super small for > 155555
@@ -679,33 +682,33 @@ def setOptions(obj,Type=None):
         if ngpoints < 50:
             markersize = .9
         obj.SetMarkerSize(markersize)
-        obj.SetMarkerColorAlpha(kBlue,.5)
+        obj.SetMarkerColorAlpha(ROOT.kBlue,.5)
     elif Type == 'noresult':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(.5)
-        obj.SetMarkerColor(kGray)
+        obj.SetMarkerColor(ROOT.kGray)
     elif Type == 'cond_violated':
         obj.SetMarkerStyle(23)
-        obj.SetMarkerColor(kGreen)
+        obj.SetMarkerColor(ROOT.kGreen)
     elif Type == 'excluded':
         obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kRed)
+        obj.SetMarkerColor(ROOT.kRed)
 #        obj.SetFillColorAlpha(kRed,0.15)
-        obj.SetLineColor(kRed)
+        obj.SetLineColor(ROOT.kRed)
         obj.SetLineWidth(4)
         obj.SetLineStyle(2)
     elif Type == 'allowed_border':
         obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kGreen+3)
+        obj.SetMarkerColor(ROOT.kGreen+3)
     elif Type == 'excluded_border':
         obj.SetMarkerStyle(20)
-        obj.SetMarkerColor(kOrange+1)
+        obj.SetMarkerColor(ROOT.kOrange+1)
     elif Type == 'official':
         obj.SetLineWidth(3)
-        obj.SetLineColor(kBlack)
+        obj.SetLineColor(ROOT.kBlack)
     elif Type == 'smodels':
         obj.SetLineWidth(4)
-        obj.SetLineColor(kRed)
+        obj.SetLineColor(ROOT.kRed)
     elif Type == 'temperature':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(1.5)
@@ -739,6 +742,7 @@ def getContours(tgraph,contVals, name ):
     """
     #if name == "prettyPlots:ecgraphs":
     #    return {}
+    import ROOT
 
     if tgraph.GetN() == 0:
         logger.info("No excluded points found for %s" %tgraph.GetName())
@@ -750,11 +754,11 @@ def getContours(tgraph,contVals, name ):
         return None
     h = tgraph.GetHistogram()
     #Get contour graphs:
-    c1 = TCanvas()
+    c1 = ROOT.TCanvas()
     h.SetContour(3,array('d',cVals))
     h.Draw("CONT Z LIST")
     c1.Update()
-    clist = gROOT.GetListOfSpecials().FindObject("contours")
+    clist = ROOT.gROOT.GetListOfSpecials().FindObject("contours")
     cgraphs = {}
     for i in range(clist.GetSize()):
         contLevel = clist.At(i)

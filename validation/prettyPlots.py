@@ -320,7 +320,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     y1,y2 = ctypes.c_double(), ctypes.c_double()
     for cval,grlist in cgraphs.items():
         isEqual[cval]={}
-        if not cval in ecgraphs:
+        if ecgraphs is None or not cval in ecgraphs:
             continue
         tmpe = ecgraphs[cval]
         for i,gr in enumerate(grlist):
@@ -343,29 +343,30 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if not hasDiscrepancy:
                 isEqual[cval][i]=True
 
-    for cval,grlist in ecgraphs.items():
-        if cval == 1.0:
-            ls = 2
-        else:
-            continue
-        for i,gr in enumerate(grlist):
-            try:
-                if isEqual[cval][i]: ## is equal we need to add noise!
-                    for j in range(gr.GetN()):
-                        gr.GetPoint(j,x1,y1 )
-                        xn = x1.value*random.gauss(1.,.001)
-                        yn = y1.value*random.gauss(1.,.001)
-                        gr.SetPoint( j, xn, yn ) 
-            except KeyError as e:
-                ## may not exist
-                pass
+    if ecgraphs is not None:
+        for cval,grlist in ecgraphs.items():
+            if cval == 1.0:
+                ls = 2
+            else:
+                continue
+            for i,gr in enumerate(grlist):
+                try:
+                    if isEqual[cval][i]: ## is equal we need to add noise!
+                        for j in range(gr.GetN()):
+                            gr.GetPoint(j,x1,y1 )
+                            xn = x1.value*random.gauss(1.,.001)
+                            yn = y1.value*random.gauss(1.,.001)
+                            gr.SetPoint( j, xn, yn ) 
+                except KeyError as e:
+                    ## may not exist
+                    pass
 
-            setOptions(gr, Type='official')
-            gr.SetLineColor(kRed) # Orange+2)
-            # gr.SetLineColor(kBlack) # Orange+2)
-            gr.SetLineStyle(ls)
-            if gr.GetN() > 0:
-                gr.Draw("L SAME")
+                setOptions(gr, Type='official')
+                gr.SetLineColor(kRed) # Orange+2)
+                # gr.SetLineColor(kBlack) # Orange+2)
+                gr.SetLineStyle(ls)
+                if gr.GetN() > 0:
+                    gr.Draw("L SAME")
     for cval,grlist in cgraphs.items():
         lw = 1
         if cval == 1.0:
@@ -373,7 +374,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             lw = 3
         else:
             ls = 2
-        if len(ecgraphs)>0 and options["drawExpected"]:
+        if ecgraphs is not None and len(ecgraphs)>0 and options["drawExpected"]:
             ls = 2 ## when expected are drawn also, make this dashed
         for gr in grlist:
             setOptions(gr, Type='official')
@@ -568,7 +569,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             hasExclLines = True
             added = True
     added = False
-    if options["drawExpected"]:
+    if options["drawExpected"] and ecgraphs is not None:
         for cval,grlist in ecgraphs.items():
             if not grlist:
                 continue
