@@ -495,7 +495,7 @@ class RefXSecComputer:
         f = open ( path, "rt" )
         lines=f.readlines()
         f.close()
-        print ( "get", columns )
+        # print ( "get", columns )
         for line in lines:
             if line.find("#")>-1:
                 line = line[:line.find("#")]
