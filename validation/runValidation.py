@@ -77,9 +77,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         valPlot.savePlot()
         if options["pngAlso"]:
             valPlot.savePlot(fformat="png")
-    import ROOT
-    for i in ROOT.gROOT.GetListOfCanvases():
-        i.Destructor()
+    #import ROOT
+    #for i in ROOT.gROOT.GetListOfCanvases():
+    #    i.Destructor()
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         valPlot.pretty = False
@@ -88,8 +88,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
         valPlot.savePlot()
         if options["pngAlso"]:
             valPlot.savePlot(fformat="png")
-    for i in ROOT.gROOT.GetListOfCanvases():
-        i.Destructor()
+    #for i in ROOT.gROOT.GetListOfCanvases():
+    #    i.Destructor()
     return True
 
 def addRange ( var : str, opts : dict, xrange : str ):
