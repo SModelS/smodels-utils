@@ -119,7 +119,7 @@ class ValidationPlot():
             print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
         if curve.GetN() <= 3:
             return
-        import ROOT
+        #import ROOT
         #x1,y1=ROOT.Double(),ROOT.Double()
         #x2,y2=ROOT.Double(),ROOT.Double()
         #xl,yl=ROOT.Double(),ROOT.Double()
@@ -185,7 +185,7 @@ class ValidationPlot():
 
     def addPointInFront ( self, curve, x, y ):
         """ add a point at position 0 in tgraph """
-        import ROOT
+        #import ROOT
         n=curve.GetN()+1
         #xt,yt=ROOT.Double(),ROOT.Double()
         #xtn,ytn=ROOT.Double(),ROOT.Double()
@@ -201,7 +201,7 @@ class ValidationPlot():
             # xtn,ytn=copy.deepcopy(xt),copy.deepcopy(yt)
 
     def printCurve ( self, curve ):
-        import ROOT
+        #import ROOT
         n=curve.GetN()
         # xt,yt=ROOT.Double(),ROOT.Double()
         xt,yt=ctypes.c_double(),ctypes.c_double()
@@ -279,7 +279,7 @@ class ValidationPlot():
             :param weighted: weight the points with the areas of their Voronoi cells
 
         """
-        import ROOT
+        #import ROOT
         curve = self.getOfficialCurves( get_all = False, expected = False )
         if curve == []:
             logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes.globalInfo.id,self.txName,self.axes  ) )
