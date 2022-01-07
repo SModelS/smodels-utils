@@ -986,8 +986,8 @@ class DataHandler(object):
             yRange = range(1,yAxis.GetNbins() + 1)
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
-            if total_points > 10000.:
-                trimmingFactor = int ( math.sqrt ( total_points / 10000. ) )
+            if total_points > 6000.:
+                trimmingFactor = int ( math.sqrt ( total_points / 6000. ) )
                 logger.warning ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor}" )
         if self.dimensions > 2:
             zAxis = hist.GetZaxis()
