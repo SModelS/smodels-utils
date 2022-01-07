@@ -14,6 +14,7 @@ import ctypes
 import sys
 import os
 import logging
+import math
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -984,7 +985,10 @@ class DataHandler(object):
             yAxis = hist.GetYaxis()
             yRange = range(1,yAxis.GetNbins() + 1)
             n_bins=n_bins * len(yRange )
-            # print ( "n_bins=%d, n_dims=%d, xRange=%d, yRange=%d" % ( n_bins, self.dimensions, len(xRange), len(yRange) ) )
+            total_points = len(yRange)*len(xRange)
+            if total_points > 10000.:
+                trimmingFactor = int ( math.sqrt ( total_points / 10000. ) )
+                logger.warning ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor}" )
         if self.dimensions > 2:
             zAxis = hist.GetZaxis()
             zRange = range(1,zAxis.GetNbins() + 1)
@@ -994,9 +998,9 @@ class DataHandler(object):
                     if allowTrimming:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
+                            logger.warning ( "Too large map (nbins=%d). Will trim z-axis." % n_bins )
                         n_bins = n_bins / len(zRange)
-                        zRange = range(1,zAxis.GetNbins() + 1,trimmingFactor )
+                        zRange = range(1,zAxis.GetNbins() + 1, trimmingFactor )
                         n_bins = n_bins * len(zRange)
                     else:
                         if not errorcounts["trimzaxis"]:
