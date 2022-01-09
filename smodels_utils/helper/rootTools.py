@@ -39,7 +39,10 @@ def boundingBoxIsFinite ( bb ):
     return True
 
 def getBoundingBox ( graph ):
-    """ from graph or container of graphs, return 2d bounding box """
+    """ from graph or container of graphs, return 2d bounding box
+    :param graph: a TGraph, or a container of them
+    :returns: a dict, { "x": [ xmin, xmax ], "y": [ ymin, ymax ] }
+    """
     inf = float("inf")
     if type(graph) in [ list, tuple ]:
         ret = { "x": [ inf, -inf ], "y": [ inf, -inf ] }
@@ -89,7 +92,7 @@ def tupelizeVersion ( S ):
     T,C=S.split("/")
     A,B=T.split(".")
     return (int(A),int(B),int(C))
-        
+
 def getRootPath ( ):
     """ get the ROOT path, first try via root-config, then query ROOTSYS
         :returns: ROOT path
@@ -111,7 +114,7 @@ def getRootPath ( ):
     except Exception as e:
         log.error ( e )
         return None
-            
+
 def getRootLibraryPath ( ):
     """ get the ROOT library path, first try via root-config, then systematically
             try candidate paths.
@@ -153,9 +156,9 @@ def getRootPythonPath ( ):
     for SubDir in [ V, "root"+V ,""]:
         Dir=libpath+"/"+SubDir
         if os.path.exists ( Dir+"/ROOT.py" ):
-            return Dir 
+            return Dir
     return None
-        
+
 def getTGraphFromContour(exclhisto):
     """ returns the contour of an exclusion histogram as TGraph"""
     import ROOT
@@ -240,7 +243,7 @@ def useNiceColorPalette( palette="temperature", f=0., ngradientcolors=20 ):
         ROOT.gStyle.SetPalette(52) ## black-and-white
     if palette=="darkbody":
         foundpalette=True
-        ROOT.gStyle.SetPalette(53) 
+        ROOT.gStyle.SetPalette(53)
     if palette=="blueyellow":
         foundpalette=True
         ROOT.gStyle.SetPalette(54)
@@ -249,11 +252,11 @@ def useNiceColorPalette( palette="temperature", f=0., ngradientcolors=20 ):
         ROOT.gStyle.SetPalette(55)
     if palette=="inverteddarkbody":
         foundpalette=True
-        ROOT.gStyle.SetPalette(56) 
+        ROOT.gStyle.SetPalette(56)
     if not foundpalette:
         print ( "[rootTools.py] error: did not find palette %s. Existing palettes are: temperature, blackwhite, darkbody, deepsea, blueyellow, rainbow, inverteddarkbody" )
 
-        
+
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
     print ( "We're using ROOT version",getRootVersion() )
