@@ -29,6 +29,34 @@ def getRootVersion ( astuple=False, useimport=False ):
         logger.error ( e )
         return None
 
+def getBoundingBox ( graph ):
+    """ from graph or container of graphs, return 2d bounding box """
+    if type(graph) in [ list, tuple ]:
+        ret = { "x": [ float("inf"), -1. ], "y": [ float("inf"), -1. ] }
+        for g in graph:
+            bb = getBoundingBox ( g )
+            for var in [ "x", "y" ]:
+                if bb[var][0] < ret[var][0]:
+                    ret[var][0] = bb[var][0]
+                if bb[var][1] > ret[var][1]:
+                    ret[var][1] = bb[var][1]
+        return ret
+    ret = { "x": [ float("inf"), -1. ], "y": [ float("inf"), -1. ] }
+    n = int ( graph.GetN() )
+    import ctypes
+    x, y = ctypes.c_double(), ctypes.c_double()
+    for i in range(n):
+        graph.GetEntry ( i, x, y )
+        if x.value < ret["x"][0]:
+            ret["x"][0] = x.value
+        if x.value > ret["x"][1]:
+            ret["x"][1] = x.value
+        if y.value < ret["y"][0]:
+            ret["y"][0] = y.value
+        if y.value > ret["y"][1]:
+            ret["y"][1] = y.value
+    return ret
+
 def getRootVersionFromImport_ ( astuple=False ):
     """ get the ROOT version from python import.
 
