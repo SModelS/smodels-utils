@@ -776,7 +776,8 @@ class DatabaseCreator(list):
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         if onlyZeroes:
-            self.timeStamp ( f"{name} has only {countZeroes} zeroes. we could drop {path} (but dont).", c="error" )
+            self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes) -- we could drop {path} (but dont).", c="error" )
+            # return here, and the map is dropped
             # return
 
         if len(content)>5000000:
