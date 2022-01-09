@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: rootTools
@@ -18,14 +18,14 @@ def getRootVersion ( astuple=False, useimport=False ):
     import setPath
     import logging as logger
     try:
-        import commands
-        S=commands.getoutput("root-config --version")
+        import subprocess
+        S=subprocess.getoutput("root-config --version")
         if S.find("not found")>-1:
             logger.error ( S )
             return None
         if not astuple: return S
         return tupelizeVersion ( S )
-    except Exception,e:
+    except Exception as e:
         logger.error ( e )
         return None
 
@@ -42,7 +42,7 @@ def getRootVersionFromImport_ ( astuple=False ):
         S=ROOT.gROOT.GetVersion()
         if not astuple: return S
         return tupelizeVersion ( S )
-    except Exception,e:
+    except Exception as e:
         log.error ( e )
         return None
 
@@ -59,8 +59,8 @@ def getRootPath ( ):
     import logging
     log = logging.getLogger(__name__)
     try:
-        import commands
-        out=commands.getoutput("root-config --prefix")
+        import subprocess
+        out=subprocess.getoutput("root-config --prefix")
         if out.find("not found")>-1:
             log.info ( out )
             import os
@@ -70,7 +70,7 @@ def getRootPath ( ):
             return None
         else:
             return out
-    except Exception,e:
+    except Exception as e:
         log.error ( e )
         return None
             
@@ -83,8 +83,8 @@ def getRootLibraryPath ( ):
     import logging
     log = logging.getLogger(__name__)
     try:
-        import commands
-        out=commands.getoutput("root-config --libdir")
+        import subprocess
+        out=subprocess.getoutput("root-config --libdir")
         if out.find("not found")>-1:
             log.info ( out )
             import os
@@ -97,7 +97,7 @@ def getRootLibraryPath ( ):
             return None
         else:
             return out
-    except Exception,e:
+    except Exception as e:
         log.error ( e )
         return None
 
@@ -213,14 +213,12 @@ def useNiceColorPalette( palette="temperature", f=0., ngradientcolors=20 ):
         foundpalette=True
         ROOT.gStyle.SetPalette(56) 
     if not foundpalette:
-        print "[ROOTTools.py] error: did not find palette %s. Existing palettes are: temperature, blackwhite, darkbody, deepsea, blueyellow, rainbow, inverteddarkbody "
+        print ( "[rootTools.py] error: did not find palette %s. Existing palettes are: temperature, blackwhite, darkbody, deepsea, blueyellow, rainbow, inverteddarkbody" )
 
         
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
-    print "We're using ROOT version",getRootVersion()
-    print "ROOT path",getRootPath()
-    print "ROOT library path",getRootLibraryPath()
-    print "ROOT python path",getRootPythonPath()
-       
-
+    print ( "We're using ROOT version",getRootVersion() )
+    print ( "ROOT path",getRootPath() )
+    print ( "ROOT library path",getRootLibraryPath() )
+    print ( "ROOT python path",getRootPythonPath() )
