@@ -284,6 +284,12 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         ymin = min ( ycontainer ) * 0.5
         ymax = max ( ycontainer ) * 2.
         base.GetYaxis().SetRangeUser( ymin, ymax )
+    else:
+        from smodels_utils.helper.rootTools import getBoundingBox, bbIsFinite
+        bb = getBoundingBox ( official )
+        if bbIsFinite ( bb ):
+            base.GetYaxis().SetRangeUser( .8*bb["y"][0], 1.25*bb["y"][1] )
+            base.GetXaxis().SetRangeUser( .8*bb["x"][0], 1.25*bb["x"][1] )
     leg.Draw()
     #base.Draw("Psame")
     base.leg = leg

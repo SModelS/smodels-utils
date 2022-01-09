@@ -29,10 +29,20 @@ def getRootVersion ( astuple=False, useimport=False ):
         logger.error ( e )
         return None
 
+def boundingBoxIsFinite ( bb ):
+    """ check if bounding box produced via getBoundingBox is legit """
+    import math
+    for var in [ "x", "y" ]:
+        for i in [ 0, 1 ]:
+            if not math.isfinite ( bb[var][i] ):
+                return False
+    return True
+
 def getBoundingBox ( graph ):
     """ from graph or container of graphs, return 2d bounding box """
+    inf = float("inf")
     if type(graph) in [ list, tuple ]:
-        ret = { "x": [ float("inf"), -1. ], "y": [ float("inf"), -1. ] }
+        ret = { "x": [ inf, -inf ], "y": [ inf, -inf ] }
         for g in graph:
             bb = getBoundingBox ( g )
             for var in [ "x", "y" ]:
@@ -41,12 +51,12 @@ def getBoundingBox ( graph ):
                 if bb[var][1] > ret[var][1]:
                     ret[var][1] = bb[var][1]
         return ret
-    ret = { "x": [ float("inf"), -1. ], "y": [ float("inf"), -1. ] }
+    ret = { "x": [ inf, -inf ], "y": [ inf, -inf ] }
     n = int ( graph.GetN() )
     import ctypes
     x, y = ctypes.c_double(), ctypes.c_double()
     for i in range(n):
-        graph.GetEntry ( i, x, y )
+        graph.GetPoint ( i, x, y )
         if x.value < ret["x"][0]:
             ret["x"][0] = x.value
         if x.value > ret["x"][1]:
