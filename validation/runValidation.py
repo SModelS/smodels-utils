@@ -71,7 +71,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
             options["generateData"]=True
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
-        valPlot.pretty = True
         if options["generateData"]:
             valPlot.saveData()
         valPlot.savePlot()
@@ -81,7 +80,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
     destroyRoot()
     if pretty in [ False ]:
         valPlot.getUglyPlot()
-        valPlot.pretty = False
         if options["generateData"]:
             valPlot.saveData()
         valPlot.savePlot()

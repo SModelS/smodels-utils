@@ -828,6 +828,7 @@ class ValidationPlot():
 
         self.plot,self.base = createUglyPlot( self,silentMode=silentMode,
                                               options = self.options )
+        self.pretty = False
 
     def getPrettyPlot(self,silentMode=True):
         """
@@ -838,6 +839,7 @@ class ValidationPlot():
 
         self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
+        self.pretty = True
 
     def show ( self, filename ):
         """ we were asked to also show <filename> """
