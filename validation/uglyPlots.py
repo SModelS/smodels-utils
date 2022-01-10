@@ -75,14 +75,14 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         nmax = 20
     dn = 50
     print ( " "*int(45+nmax/dn), end="<\r" )
-    print ( "[plottingFuncs] checking validation points >", end="" )
+    print ( "[uglyPlots] checking validation points >", end="" )
     hasIssued1dErrorMsg = False ## error msg to appear only once
     ycontainer=[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
         if ctPoints == nmax:
-            print ( "[plottingFuncs] emergency break" )
+            print ( "[uglyPlots] emergency break" )
             break
         if "error" in pt.keys():
             vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
