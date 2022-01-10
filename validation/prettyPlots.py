@@ -13,31 +13,18 @@ sys.path.append('../')
 from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)
-from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
-                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue )
 from smodels.tools.physicsUnits import fb, GeV, pb
-#from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions, setAxes
+from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions, \
+         setAxes, setROOTColorPalette
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
 except:
     pass
 
-#Set nice ROOT color palette for temperature plots:
-stops = [0.00, 0.34, 0.61, 0.84, 1.00]
-red   = [0.00, 0.00, 0.87, 1.00, 0.51]
-green = [0.00, 0.81, 1.00, 0.20, 0.00]
-blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
-s = array('d', stops)
-r = array('d', red)
-g = array('d', green)
-b = array('d', blue)
-TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
-gStyle.SetNumberContours(999)
+setROOTColorPalette()
 
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict, 
                       looseness : float ):
@@ -51,9 +38,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     :param options: the options
     :return: TCanvas object containing the plot
     """
+    import ROOT
 
     # Check if data has been defined:
-    tgr, etgr, tgrchi2 = TGraph2D(), TGraph2D(), TGraph2D()
+    tgr, etgr, tgrchi2 = ROOT.TGraph2D(), ROOT.TGraph2D(), ROOT.TGraph2D()
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
     logY = yIsLog ( validationPlot )
@@ -243,7 +231,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 # print ( "y",y,rescaleWidth(y) )
                 contour.SetPoint(i,x.value,rescaleWidth(y.value) )
 
-    if silentMode: gROOT.SetBatch()
+    if silentMode: ROOT.gROOT.SetBatch()
     setOptions(tgr, Type='allowed')
     setOptions(etgr, Type='allowed')
     title = validationPlot.expRes.globalInfo.id
@@ -258,13 +246,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     resultType = "%s" %str(types)
     title = title + "  #scale[0.8]{("+resultType+")}"
     tgr.SetTitle(title)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
     plane.SetTopMargin(0.16)
     plane.SetBottomMargin(0.16)
     plane.SetLeftMargin(0.12)
-    gStyle.SetTitleSize(0.045,"t")
-    gStyle.SetTitleY(1.005)
+    ROOT.gStyle.SetTitleSize(0.045,"t")
+    ROOT.gStyle.SetTitleY(1.005)
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
@@ -362,8 +350,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                     pass
 
                 setOptions(gr, Type='official')
-                gr.SetLineColor(kRed) # Orange+2)
-                # gr.SetLineColor(kBlack) # Orange+2)
+                gr.SetLineColor(ROOT.kRed) # ROOT.Orange+2)
+                # gr.SetLineColor(ROOT.kBlack) # ROOT.Orange+2)
                 gr.SetLineStyle(ls)
                 if gr.GetN() > 0:
                     gr.Draw("L SAME")
@@ -378,9 +366,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             ls = 2 ## when expected are drawn also, make this dashed
         for gr in grlist:
             setOptions(gr, Type='official')
-            gr.SetLineColor(kRed)
+            gr.SetLineColor(ROOT.kRed)
             gr.SetLineWidth ( lw )
-            #gr.SetLineColor(kGray+2)
+            #gr.SetLineColor(ROOT.kGray+2)
             #gr.SetLineStyle(ls)
             if gr.GetN() > 0:
                 gr.Draw("L SAME")
@@ -388,7 +376,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         for cval,grlist in chi2graphs.items():
             for gr in grlist:
                 setOptions(gr, Type='official')
-                gr.SetLineColor(kGreen+2)
+                gr.SetLineColor(ROOT.kGreen+2)
                 grN = gr.GetN()
                 buff = gr.GetX()
                 #buff.SetSize(etgrN)
@@ -403,7 +391,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     for gr in official:
         # validationPlot.completeGraph ( gr )
         setOptions(gr, Type='official')
-        gr.SetLineColor ( kBlack )
+        gr.SetLineColor ( ROOT.kBlack )
         if "P1" in gr.GetTitle() or "M1" in gr.GetTitle():
             gr.SetLineWidth(1)
             # gr.SetLineStyle(0)
@@ -413,14 +401,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         for gr in expectedOfficialCurves:
             # validationPlot.completeGraph ( gr )
             setOptions(gr, Type='official')
-            gr.SetLineColor ( kBlack )
+            gr.SetLineColor ( ROOT.kBlack )
             gr.SetLineStyle ( 2 )
-            # gr.SetLineColor ( kRed+2 )
+            # gr.SetLineColor ( ROOT.kRed+2 )
             if gr.GetN() > 0:
                 gr.Draw("L SAME")
 
     #Draw additional info
-    ltx=TLatex()
+    ltx=ROOT.TLatex()
     ltx.SetNDC()
     ltx.SetTextSize(.035)
     ltx.SetTextFont(42)
@@ -438,13 +426,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     tgr.ltx = ltx
     figureUrl = getFigureUrl(validationPlot)
     if figureUrl:
-        l1=TLatex()
+        l1=ROOT.TLatex()
         l1.SetNDC()
         l1.SetTextSize(.025)
         """l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)"""
         tgr.l1=l1
     if kfactor is not None and abs ( kfactor - 1.) > .01:
-        l2=TLatex()
+        l2=ROOT.TLatex()
         l2.SetNDC()
         l2.SetTextFont(132)
         l2.SetTextSize(.04)
@@ -483,7 +471,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     if validationPlot.validationType == "tpredcomb":
             subtitle = "combination of tpreds"
-    lsub=TLatex()
+    lsub=ROOT.TLatex()
     lsub.SetNDC()
     legendplacement = options["legendplacement"]
     legendplacement = legendplacement.replace("'","")
@@ -523,13 +511,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         print ( "[plottingFuncs] ERROR placement %s not in %s" % \
                 ( legendplacement, ", ".join( possibleplacements ) ) )
         sys.exit(-1)
-    leg = TLegend() ## automatic placement
+    leg = ROOT.TLegend() ## automatic placement
     if legendplacement == "top right":
-        leg = TLegend(0.23+dx,0.75-0.040*nleg,0.495+dx,0.83)
+        leg = ROOT.TLegend(0.23+dx,0.75-0.040*nleg,0.495+dx,0.83)
     elif legendplacement == "top left":
-        leg = TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
+        leg = ROOT.TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
     else:
-        leg = TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
+        leg = ROOT.TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
     setOptions(leg)
     leg.SetMargin(.13)
     # leg.SetFillStyle(0)
@@ -548,7 +536,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     for gr in expectedOfficialCurves:
         if 'xclusion_' in gr.GetTitle():
             if options["drawExpected"]:
-                gr.SetLineColor ( kBlack ) # make sure these are right
+                gr.SetLineColor ( ROOT.kBlack ) # make sure these are right
                 gr.SetLineStyle ( 2 )
                 leg.AddEntry(gr,"exp. excl. (official)","L")
             hasExclLines = True
@@ -593,8 +581,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     tgr.leg = leg
     if options["preliminary"]:
         ## preliminary label, pretty plot
-        tprel = TLatex()
-        tprel.SetTextColor ( kBlue+3 )
+        tprel = ROOT.TLatex()
+        tprel.SetTextColor ( ROOT.kBlue+3 )
         tprel.SetNDC()
         tprel.SetTextAngle(25.)
         tprel.SetTextSize(0.055)
