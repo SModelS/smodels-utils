@@ -38,6 +38,12 @@ def boundingBoxIsFinite ( bb ):
                 return False
     return True
 
+def destroyRoot():
+    """ its one of the ROOT wtf's """
+    import ROOT
+    for i in ROOT.gROOT.GetListOfCanvases():
+        i.Destructor()
+
 def getBoundingBox ( graph ):
     """ from graph or container of graphs, return 2d bounding box
     :param graph: a TGraph, or a container of them
