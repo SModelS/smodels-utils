@@ -102,7 +102,7 @@ def addRange ( var : str, opts : dict, xrange : str ):
             newstyles=[ f"{var}axis{xrange}" ]
             for style in styles:
                 style = style.strip()
-                if not "axis" in style and style !="":
+                if not f"{var}axis" in style and style !="":
                     newstyles.append ( style )
             opts["style"]=";".join(newstyles)
         else:
@@ -110,9 +110,9 @@ def addRange ( var : str, opts : dict, xrange : str ):
             newstyles=[ f"{var}axis{xrange}" ]
             for style in styles:
                 style = style.strip()
-                if not "axis" in style and style !="":
+                if not f"{var}axis" in style and style !="":
                     newstyles.append ( style )
-            opts["style"]=",".join(newstyles)
+            opts["style"]=";".join(newstyles)
     else:
         opts["style"]=f"{var}axis{xrange}"
     return opts
@@ -220,7 +220,7 @@ def run ( expResList, options : dict, keep ):
                     if hasattr ( txname, "xrange" ):
                         localopts = addRange ( "x", localopts, txname.xrange )
                     if hasattr ( txname, "yrange" ):
-                        localopts = addRange ( "y", localopts, txname.xrange )
+                        localopts = addRange ( "y", localopts, txname.yrange )
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
