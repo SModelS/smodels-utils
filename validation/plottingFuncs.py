@@ -54,6 +54,10 @@ def setAxes ( h, style ):
                 tmp = s.replace("xaxis","")
                 ar = eval(tmp)
                 h.GetXaxis().SetRangeUser ( ar[0], ar[1] )
+            if s.startswith("yaxis"):
+                tmp = s.replace("yaxis","")
+                ar = eval(tmp)
+                h.GetYaxis().SetRangeUser ( ar[0], ar[1] )
     except Exception as e:
         logger.error ( f"when trying to redefine axes: {e}" )
 
@@ -116,6 +120,9 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     maxes = axes
     if maxes != None:
         maxes = axes.replace(" ","").strip()
+    from sympy import var
+    x,y,z,w = var('x y z w')
+    caxes = eval ( maxes )
     exp = "obs"
     if expected:
         exp = "exp"
@@ -130,28 +137,31 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
             if txname != None and txn != txname:
                 continue
             for axis,points in content.items():
-                if maxes != None and cname != axis:
+                p1 = axis.find("_")
+                constr = axis[p1+1:]
+                caxis = eval(constr)
+                if maxes != None and caxis != caxes: # cname != axis:
                     continue
                 tgraph = ROOT.TGraph()
                 tgraph.SetTitle ( cname )
                 if not "y" in points:
                     ctr = 0
-                    for x in points["x"]:
-                        for y in [ 0., 1., 2. ]:
-                            tgraph.SetPointX( ctr, x )
-                            tgraph.SetPointY( ctr, y )
+                    for x_ in points["x"]:
+                        for y_ in [ 0., 1., 2. ]:
+                            tgraph.SetPointX( ctr, x_ )
+                            tgraph.SetPointY( ctr, y_ )
                             ctr+=1
                 else:
-                    for i,(x,y) in enumerate ( zip ( points["x"], points["y"] ) ):
-                        tgraph.SetPointX( i, x )
-                        tgraph.SetPointY( i, y )
+                    for i,(x_,y_) in enumerate ( zip ( points["x"], points["y"] ) ):
+                        tgraph.SetPointX( i, x_ )
+                        tgraph.SetPointY( i, y_ )
                 if not txn in ret:
                     ret[txn]=[]
                 ret[txn].append( tgraph )
         return ret
 
-def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=False,
-                          expected=False ):
+def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
+        get_all=False, expected=False ):
     """
     Reads sms.root and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
@@ -159,7 +169,8 @@ def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=Fa
 
     :param expResult: an ExpResult object
     :param txname: the TxName in string format (i.e. T1tttt)
-    :param axes: the axes definition in string format (e.g. [x, y, 60.0], [x, y, 60.0]])
+    :param axes: the axes definition in string format
+                 (e.g. [x, y, 60.0], [x, y, 60.0]])
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
 
@@ -195,10 +206,10 @@ def getExclusionCurvesForFromSmsRoot(expResult,txname=None,axes=None, get_all=Fa
             if not 'exclusion' in objName.lower(): continue
             if (not get_all) and (not 'exclusion_' in objName.lower()): continue
             if expected:
-                if not 'expexclusion' in objName.lower(): 
+                if not 'expexclusion' in objName.lower():
                     continue
             else:
-                if 'expexclusion' in objName.lower(): 
+                if 'expexclusion' in objName.lower():
                     continue
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue

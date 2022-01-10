@@ -401,7 +401,7 @@ class ValidationPlot():
         :return: a container of root TGraph objects
         """
         tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
-                                  axes=self.axes, get_all = get_all, expected=expected )
+                       axes=self.axes, get_all = get_all, expected=expected )
         if not tgraphDict:
             return []
         tgraph = tgraphDict[self.txName]
