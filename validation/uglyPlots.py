@@ -13,11 +13,7 @@ sys.path.append('../')
 from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)
-from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
-                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue,kOrange )
 from smodels.tools.physicsUnits import fb, GeV, pb
-#from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, setAxes
@@ -36,6 +32,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
     """
+    import ROOT
     #title = validationPlot.expRes.globalInfo.id + "_" \
     #        + validationPlot.txName\
     #        + "_" + validationPlot.axes
@@ -46,16 +43,16 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
 
     # Check if data has been defined:
     xlabel, ylabel = 'x','y'
-    excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
-    gridpoints = TGraph()
-    noresult = TGraph() ## queried but got no result
+    excluded, allowed, excluded_border, allowed_border = ROOT.TGraph(), ROOT.TGraph(), ROOT.TGraph(), ROOT.TGraph()
+    gridpoints = ROOT.TGraph()
+    noresult = ROOT.TGraph() ## queried but got no result
     excluded.SetName("excluded")
     allowed.SetName("allowed")
     noresult.SetName("noresult")
     excluded_border.SetName("excluded_border")
     allowed_border.SetName("allowed_border")
     gridpoints.SetName ( "gridpoints" )
-    cond_violated=TGraph()
+    cond_violated=ROOT.TGraph()
     kfactor=None
     logY = yIsLog ( validationPlot )
     tavg = 0.
@@ -96,7 +93,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
                     y_ = copy.deepcopy ( vD["w"] )
                 if y_ is None:
                     if not hasIssued1dErrorMsg:
-                        logger.error ( "the data is 1d." ) # can handle now?
+                        logger.info ( "the data is 1d." ) # can handle now?
                         hasIssued1dErrorMsg = True
                     y_ = 0.
                 noresult.SetPoint(noresult.GetN(), x_, y_ )
@@ -167,22 +164,29 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     tavg = tavg / len (validationPlot.data )
 
     official = validationPlot.officialCurves
+    eofficial = validationPlot.expectedOfficialCurves
     # Check if official exclusion curve has been defined:
     if official == []:
         logger.warning("Official curve for validation plot is not defined.")
     else:
         logger.debug("Official curves have length %d" % len (official) )
+    if eofficial == []:
+        logger.debug("Expected official curve for validation plot is not defined.")
+    else:
+        logger.debug("expected official curves have length %d" % len (eofficial) )
 
-    if silentMode: gROOT.SetBatch()
+    if silentMode: ROOT.gROOT.SetBatch()
     setOptions(allowed, Type='allowed')
     setOptions(cond_violated, Type='cond_violated')
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
     setOptions(noresult, Type='noresult')
-    base = TMultiGraph()
+    base = ROOT.TMultiGraph()
     for i in official:
         setOptions( i, Type='official')
+    for i in eofficial:
+        setOptions( i, Type='eofficial')
     setOptions(gridpoints, Type='gridpoints')
     dx = .12 ## top, left
     nleg = 5
@@ -197,7 +201,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     if logY: # move it to top right
         x1_, x2_ = 0.37+dx, 0.775+dx
         y1_, y2_ = 0.78-0.040*nleg,0.84
-    leg = TLegend( x1_,y1_,x2_,y2_ )
+    leg = ROOT.TLegend( x1_,y1_,x2_,y2_ )
     setOptions(leg)
     leg.SetTextSize(0.04)
     if allowed.GetN()>0:
@@ -220,7 +224,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         leg.AddEntry( noresult, "no result", "P" )
     if xvals != None and len(xvals) == 1:
         for i in official:
-            print ( "1d official plot!" )
             if i.GetN() == 1:
                 xtmp,ytmp=ctypes.c_double(),ctypes.c_double()
                 i.GetPoint(0,xtmp,ytmp)
@@ -230,15 +233,28 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
                 i.SetPoint(1, xtmp, yn )
     for i in official:
         base.Add( i, "L")
+    for i in eofficial:
+        base.Add( i, "L")
     for ctr,i in enumerate(official):
         completed = copy.deepcopy ( i )
         validationPlot.completeGraph ( completed )
-        completed.SetLineColor( kGray )
+        completed.SetLineColor( ROOT.kGray )
         completed.SetLineStyle( 3 ) # show also how plot is completed
         completed.Draw("LP SAME" )
         #i.Draw("LP SAME" )
         if ctr == 0:
             leg.AddEntry ( i, "official exclusion", "L" )
+    """
+    for ctr,i in enumerate(eofficial):
+        print ( "Drawing", i, i.Print() )
+        c2 = copy.deepcopy ( i )
+        c2.SetLineColor( ROOT.kMagenta )
+        validationPlot.completeGraph ( c2 )
+        c2.SetLineStyle( 3 ) # show also how plot is completed
+        c2.Draw("LP SAME" )
+        if ctr == 0:
+            leg.AddEntry ( i, "expected official exclusion", "L" )
+    """
     if gridpoints.GetN()>0:
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
@@ -273,7 +289,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         subtitle = "dataset: upper limit"
 
     figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
     base.SetTitle(title)
     base.Draw("APsame")
     setAxes ( base, options["style"] )
@@ -302,11 +318,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     if xvals != None and len(xvals) == 1:
         base.GetYaxis().SetRangeUser(0.0,2.0)
 
-    l=TLatex()
+    l=ROOT.TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
     base.l=l
-    l0=TLatex()
+    l0=ROOT.TLatex()
     l0.SetNDC()
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
@@ -322,9 +338,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % \
                   ( agreement,"%",len(validationPlot.data) ) )
     if options["extraInfo"]:
-        lex=TLatex()
+        lex=ROOT.TLatex()
         lex.SetNDC()
-        lex.SetTextColor( kBlue+2 ) # kCyan-5 kMagenta-5 kBlue-5
+        lex.SetTextColor( ROOT.kBlue+2 ) # kCyan-5 kMagenta-5 kBlue-5
         lex.SetTextSize(.026 )
         import socket
         hn=socket.gethostname()
@@ -335,24 +351,24 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         base.lex=lex
 
     if figureUrl:
-        l1=TLatex()
+        l1=ROOT.TLatex()
         l1.SetNDC()
         l1.SetTextSize(.02)
         l1.DrawLatex(.06,.02,"%s" % figureUrl)
         base.l1=l1
-    l2=TLatex()
+    l2=ROOT.TLatex()
     l2.SetNDC()
     l2.SetTextSize(.025)
     l2.SetTextAngle(90.)
-    l2.SetTextColor( kGray )
+    l2.SetTextColor( ROOT.kGray )
     if True: # abs ( kfactor - 1. ) > 1e-5:
         l2.DrawLatex(.93,.18,"k-factor %.2f" % kfactor)
     base.l2=l2
 
-    l3=TLatex()
+    l3=ROOT.TLatex()
     l3.SetNDC()
     l3.SetTextSize(.025)
-    l3.SetTextColor( kGray )
+    l3.SetTextColor( ROOT.kGray )
     dxpnr=.68 ## top, right
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
@@ -362,21 +378,21 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
 
     if options["extraInfo"]: ## a timestamp, on the right border
         import time
-        l9=TLatex()
+        l9=ROOT.TLatex()
         l9.SetNDC()
         l9.SetTextSize(.025)
         l9.SetTextAngle(90.)
-        l9.SetTextColor( kGray )
+        l9.SetTextColor( ROOT.kGray )
         l9.DrawLatex ( .93, .65, time.strftime("%b %d, %Y, %H:%M") )
         base.l9 = l9
 
     if options["preliminary"]:
         ## preliminary label, ugly plot
-        tprel = TLatex()
+        tprel = ROOT.TLatex()
         tprel.SetNDC()
         tprel.SetTextSize(0.055)
         tprel.SetTextFont(42)
-        tprel.SetTextColor ( kBlue+3 )
+        tprel.SetTextColor ( ROOT.kBlue+3 )
         tprel.SetTextAngle(-25.)
         tprel.DrawLatex(.6,.85,"SModelS preliminary")
         #tprel.SetTextAngle(25.)
