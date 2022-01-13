@@ -149,7 +149,8 @@ class RefXSecComputer:
         return "\n" + header + "\n" + entry
 
     def computeForOneFile ( self, sqrtses, inputFile,
-                 tofile, ssmultipliers = None, comment = None, ignore_pids = None ):
+                 tofile, ssmultipliers = None, comment = None,
+                 ignore_pids = None, ewk = "wino" ):
         """
         Compute the cross sections for one file.
 
@@ -162,6 +163,7 @@ class RefXSecComputer:
                           multipliers as values, e.g { (1000001,1000021):1.1 }.
         :param comment: an optional comment that gets added to the slha file.
         :param ignore_pids: if not None, pids to ignore when computing xsecs
+        :param ewk: if hino and C1C1 is asked, use hino xsecs
 
         :returns: number of xsections that have been computed
         """
