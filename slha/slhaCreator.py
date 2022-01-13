@@ -400,6 +400,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
     argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for [T1]',
         type=str, default='T1' )
+    argparser.add_argument ( '--tarball', help='name of tarball [@@topo@@.tar.gz]',
+        type=str, default='@@topo@@.tar.gz' )
     argparser.add_argument ( '-C', '--comment', nargs='?', help='add a comment to all files [None]',
         type=str, default=None )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
@@ -461,6 +463,7 @@ if __name__ == "__main__":
     pythiaVersion = 8
     if args.pythia6:
         pythiaVersion = 6
+    tarball = args.tarball.replace ( "@@topo@@", args.topology )
 
     templatefile="../slha/templates/%s.template" % args.topology
     if not os.path.exists ( templatefile ):
@@ -500,15 +503,16 @@ if __name__ == "__main__":
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
-    oldtarball = f"{args.topology}.tar.gz"
+    #oldtarball = f"{args.topology}.tar.gz"
+    oldtarball = tarball
     if os.path.exists ( oldtarball ):
         subprocess.getoutput ( f"cp {oldtarball} prev.{oldtarball}" )
     print ( "Now build new tarball in %s/" % newtemp )
-    subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s.tar.gz" % \
-                           ( newtemp, args.topology ) )
+    subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
+                           ( newtemp, tarball ) )
     subprocess.getoutput ( "cp %s/%s*.slha %s" % ( tempf.tempdir, args.topology, newtemp ) )
-    subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha recipe" % ( newtemp, args.topology, args.topology ) )
-    print ( "New tarball %s.tar.gz" % args.topology )
+    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % ( newtemp, tarball, args.topology ) )
+    print ( f"New tarball {tarball}" )
     if not args.keep:
         subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
         subprocess.getoutput ( "rm -rf %s" % newtemp )
