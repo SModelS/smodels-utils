@@ -25,19 +25,7 @@ try:
 except:
     from backwardCompatibility import removeUnits
 
-def setROOTColorPalette():
-    #Set nice ROOT color palette for temperature plots:
-    stops = [0.00, 0.34, 0.61, 0.84, 1.00]
-    red   = [0.00, 0.00, 0.87, 1.00, 0.51]
-    green = [0.00, 0.81, 1.00, 0.20, 0.00]
-    blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
-    s = array('d', stops)
-    r = array('d', red)
-    g = array('d', green)
-    b = array('d', blue)
-    import ROOT
-    ROOT.TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
-    ROOT.gStyle.SetNumberContours(999)
+from smodels_utils.helper.rootTools import setROOTColorPalette
 
 setROOTColorPalette()
 

@@ -262,9 +262,24 @@ def useNiceColorPalette( palette="temperature", f=0., ngradientcolors=20 ):
     if not foundpalette:
         print ( "[rootTools.py] error: did not find palette %s. Existing palettes are: temperature, blackwhite, darkbody, deepsea, blueyellow, rainbow, inverteddarkbody" )
 
+def setROOTColorPalette():
+    #Set nice ROOT color palette for temperature plots:
+    stops = [0.00, 0.34, 0.61, 0.84, 1.00]
+    red   = [0.00, 0.00, 0.87, 1.00, 0.51]
+    green = [0.00, 0.81, 1.00, 0.20, 0.00]
+    blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
+    from array import array
+    s = array('d', stops)
+    r = array('d', red)
+    g = array('d', green)
+    b = array('d', blue)
+    import ROOT
+    ROOT.TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
+    ROOT.gStyle.SetNumberContours(999)
+
 def exclusionCurveToTGraph ( points, name ):
-    """ create a ROOT TGraph object from line, which is 
-        a dictionary of lists (I think) 
+    """ create a ROOT TGraph object from line, which is
+        a dictionary of lists (I think)
     :param name: the name
     :returns: ROOT.TGraph object
     """
