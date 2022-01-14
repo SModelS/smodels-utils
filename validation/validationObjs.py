@@ -14,14 +14,13 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
 try:
-    from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
+    from smodels.theory.auxiliaryFunctions import unscaleWidth, \
+         rescaleWidth, addUnit
 except:
-    from backwardCompatibility import addUnit,rescaleWidth
+    from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from prettyPlots import createPrettyPlot
 from validationHelpers import point_in_hull
-from uglyPlots import createUglyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -819,6 +818,19 @@ class ValidationPlot():
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor
 
+    def isOneDimensional ( self ):
+        """ are the data 1d? """
+        # is1D = False
+        if self.data == None:
+            return None
+        for ctPoints,pt in enumerate(self.data):
+            if "axes" in pt and "x" in pt["axes"]:
+                if not "y" in pt["axes"]:
+                    #is1D = True
+                    return True
+        return False
+        # return is1D
+
     def getUglyPlot(self,silentMode=True):
         """
         Uses the data in self.data and the official exclusion curve
@@ -826,7 +838,11 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createUglyPlot( self,silentMode=silentMode,
+        if self.isOneDimensional():
+            from oneDPlots import create1DPlot as createUglyPlot
+        else:
+            from uglyPlots import createUglyPlot
+        self.plot, self.base = createUglyPlot( self,silentMode=silentMode,
                                               options = self.options )
         self.pretty = False
 
@@ -836,8 +852,9 @@ class ValidationPlot():
         in self.officialCurves to generate a pretty exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
+        from prettyPlots import createPrettyPlot
 
-        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
+        self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
         self.pretty = True
 
@@ -883,7 +900,7 @@ class ValidationPlot():
             logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.getPlotFile(vDir,fformat)
+        filename = self.getPlotFileName(vDir,fformat)
 
         if not self.pretty:
             logger.info ( "saving plot in %s" % filename )
@@ -968,13 +985,13 @@ class ValidationPlot():
         """
         if fformat.startswith("."):
             fformat = fformat[1:]
-        datafile = self.getPlotFile(validationDir,fformat)
+        datafile = self.getPlotFileName(validationDir,fformat)
         datafile = datafile.rstrip(fformat)
         if not datafile.endswith ( "." ):
             datafile += "."
         return datafile+'py'
 
-    def getPlotFile(self,validationDir,fformat='pdf'):
+    def getPlotFileName(self,validationDir,fformat='pdf'):
         """
         Defines the name of the plot file and returns it
 
