@@ -832,7 +832,7 @@ class ValidationPlot():
         else:
             from uglyPlots import createUglyPlot
         self.plot, self.base = createUglyPlot( self,silentMode=silentMode,
-                                              options = self.options )
+                                          options = self.options )
         self.pretty = False
 
     def getPrettyPlot(self,silentMode=True):
@@ -861,6 +861,13 @@ class ValidationPlot():
             o = subprocess.getoutput ( cmd )
             print ( f"{o}" )
             return
+
+    def savefig ( self, filename ):
+        """ save the figure, never mind if root or matplotlib """
+        if hasattr ( self.plot, "Print" ):
+            self.plot.Print(filename)
+        if hasattr ( self.plot, "savefig" ):
+            self.plot.savefig(filename)
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """
@@ -893,10 +900,10 @@ class ValidationPlot():
 
         if not self.pretty:
             logger.info ( "saving plot in %s" % filename )
-            self.plot.Print(filename)
+            self.savefig(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
-                self.plot.Print(filename)
+                self.savefig(filename)
                 self.show ( filename )
             except Exception as e:
                 # if fails because of missing dep, then just proceed

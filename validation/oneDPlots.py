@@ -23,8 +23,8 @@ try:
 except:
     pass
 
-def create1DPlot( validationPlot,silentMode=True, looseness = 1.2, 
-                  options : dict = {} ):
+def create1DPlot( validationPlot, silentMode=True, 
+        looseness = 1.2, options : dict = {} ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "1d" exclusion plot
@@ -46,7 +46,6 @@ def create1DPlot( validationPlot,silentMode=True, looseness = 1.2,
     from smodels_utils.plotting import mpkitty as plt
 
     xvs, yvs = [], []
-    axvs, ayvs = [], []
     values = { "excluded": { "x": [], "y": [] } }
     values["allowed"]= { "x": [], "y": [] }
     values["error"]= { "x": [], "y": [] }
@@ -66,6 +65,9 @@ def create1DPlot( validationPlot,silentMode=True, looseness = 1.2,
             label = "error"
             values[label]["x"].append(x)
             values[label]["y"].append(y)
+            if math.isfinite ( y ):
+                yvs.append ( y )
+                xvs.append ( x )
             if y < float("inf"):
                 label = "excluded"
                 values[label]["x"].append(x)
@@ -83,15 +85,25 @@ def create1DPlot( validationPlot,silentMode=True, looseness = 1.2,
                 values[label]["x"].append(x)
                 values[label]["y"].append(y)
     plt.ylabel ( r"r = $\sigma_\mathrm{signal}$ / $\sigma_\mathrm{UL}$" )
-    plt.xlabel ( r"m(mother) [GeV]" )
+    plt.xlabel ( r"m(mother) [GeV]", labelpad=-1., loc="right" )
     colors = { "excluded": "r",
                "excluded_border": "orange", 
                "allowed_border": "g",
                "allowed": "lightgreen",
     }
     for label in [ "excluded", "excluded_border", "allowed_border", "allowed" ]:
-       c = colors[label]
-       plt.plot ( values[label]["x"], values[label]["y"], c=c )
+        c = colors[label]
+        lbl = None
+        if label == "excluded":
+            lbl = "SModelS excluded"
+        if label == "excluded_border":
+            lbl = "SModelS excluded"
+        if label == "allowed":
+            lbl = "SModelS allowed"
+        if label == "allowed_border":
+            lbl = "SModelS allowed"
+        plt.plot ( values[label]["x"], values[label]["y"], c=c, marker="o", label=lbl )
+        # plt.plot ( values[label]["x"], values[label]["y"], c=c )
     fname = "me.png"
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     pAxis = "; ".join ( prettyAxes(validationPlot.txName, validationPlot.axes, outputtype="latex" ))
@@ -99,10 +111,29 @@ def create1DPlot( validationPlot,silentMode=True, looseness = 1.2,
 #       ( validationPlot.expRes.globalInfo.id, validationPlot.txName, 
 #         validationPlot.axes ) )
     plt.title ( title )
-    plt.savefig ( fname )
-    plt.kittyPlot()
     official = validationPlot.officialCurves
     eofficial = validationPlot.expectedOfficialCurves
-    print ( "official", official )
+    # print ( "official", official )
+    for o in official:
+        if o["name"].startswith ( "obsExclusion" ):
+            rmin, rmax = min ( yvs ), max ( yvs )
+            plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
+                       label="official observed exclusion" )
+    plt.legend( framealpha=.5 )
 
-    return ( None, None )
+    if options["extraInfo"]: ## a timestamp, on the right border
+        import time
+        t = time.strftime("%b %d, %Y, %H:%M")
+        rs = rmin + ( rmax - rmin ) * .6
+        dx = max(xvs)+( max(xvs)-min(xvs))*.07
+        plt.text ( dx, rs, t, c="grey", rotation="vertical" )
+    figureUrl = getFigureUrl(validationPlot)
+    if figureUrl:
+        rs = rmin - ( rmax - rmin ) * .2
+        dx = min(xvs)-( max(xvs)-min(xvs))*.22
+        plt.text ( dx, rs, figureUrl, fontsize=7, c="b" )
+
+    # plt.savefig ( fname )
+    # plt.kittyPlot()
+
+    return ( plt.gcf(), plt )
