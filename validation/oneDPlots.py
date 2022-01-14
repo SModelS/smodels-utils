@@ -158,6 +158,6 @@ def create1DPlot( validationPlot, silentMode=True,
     subtitle = getDatasetDescription ( validationPlot )
     plt.text ( -.08, 1.03, subtitle, transform = ax.transAxes, c="grey" )
     if figureUrl:
-        plt.text ( -.15, -.12, figureUrl, fontsize=7, c="b", 
+        plt.text ( -.15, -.122, figureUrl, fontsize=7, c="b", 
                    transform = ax.transAxes )
     return ( plt.gcf(), plt )
