@@ -624,6 +624,17 @@ def prettyDecay(txname,latex=True):
         decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
+def rootToLatex ( string, outputtype = "latex" ):
+    """ translate root string to latex """
+    if outputtype == "root":
+        return string
+    if type ( string ) in [ list, tuple ]:
+        ret = []
+        for x in string:
+            ret.append ( rootToLatex ( x, outputtype ) )
+        return ret
+    string = "$" + string.replace("#","\\") + "$"
+    return string
 
 def prettyTxname(txname,outputtype="root",protons=True):
     """
@@ -732,7 +743,7 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
-def prettyAxes(txname,axes):
+def prettyAxes( txname, axes, outputtype="root" ):
     """
     Converts the axes string to the axes labels (plus additional constraints)
     in latex form (using ROOT conventions)
@@ -746,41 +757,41 @@ def prettyAxes(txname,axes):
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'THSCPM2b':
-        return ['m_{#tilde{#tau}} = (x,y)', ]
+        return rootToLatex ( ['m_{#tilde{#tau}} = (x,y)', ], outputtype )
     if txname == 'THSCPM4':
-        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)', ]
+        return rootToLatex ( ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)', ], outputtype )
     if txname == 'THSCPM5':
-        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
-                'm_{#tilde{#tau}} = (y,1e-22)' ]
+        return rootToLatex ( ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#tau}} = (y,1e-22)' ], outputtype )
     if txname == 'THSCPM7':
-        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
-                'm_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)' ]
+        return rootToLatex ( ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)' ], outputtype )
     if txname == 'THSCPM6':
-        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
-                'm_{#tilde{#tau}} = (y,1e-22)' ]
+        return rootToLatex ( ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#tau}} = (y,1e-22)' ], outputtype )
     if txname == 'TGQ':
-        return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
-                    'm_{#tilde{#chi}_{1}^{0}} = y']
+        return rootToLatex ( ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
+                    'm_{#tilde{#chi}_{1}^{0}} = y'], outputtype )
     if txname == 'T3GQ':
         ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
                'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
-        return ret
+        return rootToLatex ( ret, outputtype )
     if txname == 'T5GQ':
         ret = ['m_{#tilde{q}} = x, m_{#tilde{g}} = y',
                'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[1][1]) ]
-        return ret
+        return rootToLatex ( ret, outputtype )
     if txname == 'TChiChiSlepSlep':
-        return ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
+        return rootToLatex ( ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
                     'm_{#tilde{#l}} = x-y+80.0',
-                    'm_{#tilde{#chi}_{1}^{0}} = x']
+                    'm_{#tilde{#chi}_{1}^{0}} = x'], outputtype )
     if txname in [ "TGQ12" ] and axes[0][1] == axes[1][1]:
         ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
                'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
-        return ret
+        return rootToLatex ( ret, outputtype )
     if txname in [ "TChiWZoff" ] and  axes == [[x, x - y], [x - y/2, x - y]]:
         ret = ['m_{#tilde{#chi}_{2}^{0}} = x, m_{#tilde{#chi}_{2}^{0}} - m_{#tilde{#chi}_{1}^{0}} = y',
                'm_{#tilde{#chi}^{#pm}_{1}} = .5 m_{#tilde{#chi}_{2}^{0}} + .5 m_{#tilde{#chi}_{1}^{0}}'  ]
-        return ret
+        return rootToLatex ( ret, outputtype )
     if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
         return "N/A"
@@ -834,7 +845,7 @@ def prettyAxes(txname,axes):
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
-    return niceAxes
+    return rootToLatex ( niceAxes, outputtype )
 
 if __name__ == "__main__":
     print ( prettyAxes ( "TGQ", "[[x, y], [z, y]]" ) )
