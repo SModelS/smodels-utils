@@ -33,13 +33,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     :return: TCanvas object containing the plot
     """
     import ROOT
-    #title = validationPlot.expRes.globalInfo.id + "_" \
-    #        + validationPlot.txName\
-    #        + "_" + validationPlot.axes
     logger.info ( "now create ugly plot for %s, %s: %s" % \
-       ( validationPlot.expRes.globalInfo.id, validationPlot.txName, validationPlot.axes ) )
+       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
+         validationPlot.axes ) )
     origdata = getGridPoints ( validationPlot )
-    # validationPlot.axes="[[(x,y)], [(x,y)]]"
 
     # Check if data has been defined:
     xlabel, ylabel = 'x','y'
@@ -60,7 +57,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     countPts = 0 ## count good points
 
     if not validationPlot.data:
-        logger.error("Data for validation plot is not defined.")
+        logger.debug("Data for validation plot is not defined.")
         # x,y = get
         return (None,None)
         ## sys.exit()
@@ -73,7 +70,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     dn = 50
     print ( " "*int(45+nmax/dn), end="<\r" )
     print ( "[uglyPlots] checking validation points >", end="" )
-    hasIssued1dErrorMsg = False ## error msg to appear only once
     ycontainer=[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
@@ -92,10 +88,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
                 elif "w" in vD.keys():
                     y_ = copy.deepcopy ( vD["w"] )
                 if y_ is None:
-                    if not hasIssued1dErrorMsg:
-                        logger.info ( "the data is 1d." ) # can handle now?
-                        hasIssued1dErrorMsg = True
-                    y_ = 0.
+                    logger.error ( "the data is 1d." ) # is separate module now
+                    sys.exit()
                 noresult.SetPoint(noresult.GetN(), x_, y_ )
             nErrors += 1
             continue
@@ -330,7 +324,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
     agreement = 0.
     weighted = options["weightedAgreementFactor"] # compute weighted agreement factor?
-    af = validationPlot.computeAgreementFactor( signal_factor = signal_factor, 
+    af = validationPlot.computeAgreementFactor( signal_factor = signal_factor,
                                                 weighted = weighted )
     agreement = 0.
     if math.isfinite(af):
