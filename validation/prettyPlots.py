@@ -201,14 +201,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         for i in range(etgr.GetN()):
             etgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
 
-    official = validationPlot.officialCurves
+    from smodels_utils.helper.rootTools import exclusionCurveToTGraph
+    official = exclusionCurveToTGraph ( validationPlot.officialCurves )
+    validationPlot.rootcurves = { "official": official }
     # Check if official exclusion curve has been defined:
     if official == []:
         logger.warning("Official curve for validation plot is not defined.")
     else:
         logger.debug("Official curves have length %d" % len (official) )
 
-    expectedOfficialCurves = validationPlot.expectedOfficialCurves
+    expectedOfficialCurves = exclusionCurveToTGraph ( validationPlot.expectedOfficialCurves )
+    validationPlot.rootcurves["expectedofficial"] = expectedOfficialCurves
     # Check if official exclusion curve has been defined:
     if expectedOfficialCurves == []:
         logger.info("No expected official curves found.")

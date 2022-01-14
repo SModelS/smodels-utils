@@ -277,12 +277,19 @@ def setROOTColorPalette():
     ROOT.TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
     ROOT.gStyle.SetNumberContours(999)
 
-def exclusionCurveToTGraph ( points, name ):
-    """ create a ROOT TGraph object from line, which is
-        a dictionary of lists (I think)
-    :param name: the name
+def exclusionCurveToTGraph ( args ):
+    """ create ROOT TGraph objects from args.
+    :param args: can be a list of dictionaries, or a single dictionary.
+                 dictionary should contain "points" and "name".
     :returns: ROOT.TGraph object
     """
+    if type(args) in [ list, tuple ]:
+        ret = []
+        for x in args:
+            ret.append ( exclusionCurveToTGraph ( x ) )
+        return ret
+    name = args["name"]
+    points = args["points"]
     import ROOT
     tgraph = ROOT.TGraph()
     tgraph.SetTitle ( name )

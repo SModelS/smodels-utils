@@ -114,14 +114,13 @@ class ValidationPlot():
 
     def completeGraph ( self, curve ):
         """ complete the given graph at the ends to cross the axes """
+        if type(curve) == dict:
+            from smodels_utils.helper.rootTools import exclusionCurveToTGraph
+            curve = exclusionCurveToTGraph ( curve )
         if not ( curve.GetN() > 3 ):
             print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
         if curve.GetN() <= 3:
             return
-        #import ROOT
-        #x1,y1=ROOT.Double(),ROOT.Double()
-        #x2,y2=ROOT.Double(),ROOT.Double()
-        #xl,yl=ROOT.Double(),ROOT.Double()
         x1,y1=ctypes.c_double(),ctypes.c_double()
         x2,y2=ctypes.c_double(),ctypes.c_double()
         xl,yl=ctypes.c_double(),ctypes.c_double()
@@ -133,9 +132,6 @@ class ValidationPlot():
             ## need not completion
             return
         logY=False
-        #ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        #ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)
-        #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
         ax1, ay1 = x1.value, y1.value
         ax2, ay2 = x2.value, y2.value
         tx1, ty1 = x1.value, y1.value
@@ -186,25 +182,16 @@ class ValidationPlot():
         """ add a point at position 0 in tgraph """
         #import ROOT
         n=curve.GetN()+1
-        #xt,yt=ROOT.Double(),ROOT.Double()
-        #xtn,ytn=ROOT.Double(),ROOT.Double()
         xt,yt=ctypes.c_double(),ctypes.c_double()
-        # xtn,ytn=ctypes.c_double(),ctypes.c_double()
-        # xtn,ytn=x.value,y.value
         xtn,ytn=x,y
-        #xtn,ytn=copy.deepcopy(x),copy.deepcopy(y)
         for i in range(n):
             curve.GetPoint(i,xt,yt)
             curve.SetPoint(i,xtn,ytn)
             xtn,ytn=xt.value,yt.value
-            # xtn,ytn=copy.deepcopy(xt),copy.deepcopy(yt)
 
     def printCurve ( self, curve ):
-        #import ROOT
         n=curve.GetN()
-        # xt,yt=ROOT.Double(),ROOT.Double()
         xt,yt=ctypes.c_double(),ctypes.c_double()
-        #indices = list(range(n))
         indices = list(range(3))+list(range(n-3,n))
         for i in indices:
             curve.GetPoint(i,xt,yt)
@@ -322,7 +309,9 @@ class ValidationPlot():
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
             really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
-            inside = curve.IsInside ( x, y )
+            from smodels_utils.helper.rootTools import exclusionCurveToTGraph
+            rcurve = exclusionCurveToTGraph ( curve )
+            inside = rcurve.IsInside ( x, y )
             pts["total"]+=w
             s=""
             if excluded:

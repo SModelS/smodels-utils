@@ -157,8 +157,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
         return ( None, None )
     tavg = tavg / len (validationPlot.data )
 
-    official = validationPlot.officialCurves
-    eofficial = validationPlot.expectedOfficialCurves
+    from smodels_utils.helper.rootTools import exclusionCurveToTGraph
+    official = exclusionCurveToTGraph ( validationPlot.officialCurves )
+    eofficial = exclusionCurveToTGraph ( validationPlot.expectedOfficialCurves )
     # Check if official exclusion curve has been defined:
     if official == []:
         logger.warning("Official curve for validation plot is not defined.")
