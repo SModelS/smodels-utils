@@ -17,7 +17,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions, \
-         setAxes, setROOTColorPalette
+         setAxes, setROOTColorPalette, getDatasetDescription
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -442,27 +442,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         l2.DrawLatex(0.16,0.2,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
 
-    subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
-    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
-        ## pyhf combination
-        subtitle = "pyhf combination of %d signal regions" % \
-                    len(validationPlot.expRes.datasets)
-    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
-            validationPlot.combine == True:
-        subtitle = "combination of %d signal regions" % \
-                    len(validationPlot.expRes.datasets)
-    dId = validationPlot.expRes.datasets[0].dataInfo.dataId
-    if type(dId) == str and dId.startswith("ar"):
-        nagg = len(validationPlot.expRes.datasets)
-        if hasattr ( validationPlot, "meta" ) and "naggregates" in \
-                validationPlot.meta:
-            nagg = validationPlot.meta["naggregates"]
-        subtitle = "%d aggregate datasets" % nagg
-        dataId = str(dataset.dataInfo.dataId)
-    if len(validationPlot.expRes.datasets) == 1 and \
-            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
-        subtitle = "" ## no extra info, so leave it blank
-        # subtitle = "upper limit"
+    subtitle = getDatasetDescription ( validationPlot )
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
         for ctr,x in enumerate(validationPlot.data):
             if "error" in x.keys():

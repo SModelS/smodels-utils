@@ -233,7 +233,7 @@ def getDatasetDescription ( validationPlot ):
         subtitle = subtitle[:100] + " ..."
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
-        subtitle = "dataset: upper limit"
+        subtitle = "dataset: UL"
     return subtitle
 
 def getFigureUrl( validationPlot ):
