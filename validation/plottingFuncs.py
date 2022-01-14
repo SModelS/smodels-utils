@@ -131,7 +131,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
         cnames = [ f"{exp}Exclusion_{maxes}", f"{exp}ExclusionP1_{maxes}",
                    f"{exp}ExclusionM1_{maxes}" ]
 
-    import ROOT
+    from smodels_utils.helper.rootTools import exclusionCurveToTGraph
     for cname in cnames:
         for txn,content in content.items():
             if txname != None and txn != txname:
@@ -142,19 +142,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                 caxis = eval(constr)
                 if maxes != None and caxis != caxes: # cname != axis:
                     continue
-                tgraph = ROOT.TGraph()
-                tgraph.SetTitle ( cname )
-                if not "y" in points:
-                    ctr = 0
-                    for x_ in points["x"]:
-                        for y_ in [ 0., 1., 2. ]:
-                            tgraph.SetPointX( ctr, x_ )
-                            tgraph.SetPointY( ctr, y_ )
-                            ctr+=1
-                else:
-                    for i,(x_,y_) in enumerate ( zip ( points["x"], points["y"] ) ):
-                        tgraph.SetPointX( i, x_ )
-                        tgraph.SetPointY( i, y_ )
+                tgraph = exclusionCurveToTGraph ( points, cname )
                 if not txn in ret:
                     ret[txn]=[]
                 ret[txn].append( tgraph )

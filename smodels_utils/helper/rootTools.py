@@ -262,6 +262,27 @@ def useNiceColorPalette( palette="temperature", f=0., ngradientcolors=20 ):
     if not foundpalette:
         print ( "[rootTools.py] error: did not find palette %s. Existing palettes are: temperature, blackwhite, darkbody, deepsea, blueyellow, rainbow, inverteddarkbody" )
 
+def exclusionCurveToTGraph ( points, name ):
+    """ create a ROOT TGraph object from line, which is 
+        a dictionary of lists (I think) 
+    :param name: the name
+    :returns: ROOT.TGraph object
+    """
+    import ROOT
+    tgraph = ROOT.TGraph()
+    tgraph.SetTitle ( name )
+    if not "y" in points:
+        ctr = 0
+        for x_ in points["x"]:
+            for y_ in [ 0., 1., 2. ]:
+                tgraph.SetPointX( ctr, x_ )
+                tgraph.SetPointY( ctr, y_ )
+                ctr+=1
+    else:
+        for i,(x_,y_) in enumerate ( zip ( points["x"], points["y"] ) ):
+            tgraph.SetPointX( i, x_ )
+            tgraph.SetPointY( i, y_ )
+    return tgraph
 
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
