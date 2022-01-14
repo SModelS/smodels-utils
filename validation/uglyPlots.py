@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, setAxes
+from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, \
+         setAxes, getDatasetDescription
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -257,32 +258,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
             + validationPlot.txName\
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
-    subtitle = f"{len(validationPlot.expRes.datasets)} datasets: "
-    if validationPlot.validationType == "tpredcomb":
-        subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
-
-    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and \
-            validationPlot.combine == True:
-        ## pyhf combination
-        subtitle = "pyhf combining %d SRs: " % len(validationPlot.expRes.datasets)
-    for dataset in validationPlot.expRes.datasets:
-        ds_txnames = map ( str, dataset.txnameList )
-        if not validationPlot.txName in ds_txnames:
-            continue
-        dataId = str(dataset.dataInfo.dataId)
-        if len(dataId)>11:
-            dataId = dataId[:8]+" ... "
-        subtitle+=dataId+", "
-    subtitle = subtitle[:-2]
-    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
-            validationPlot.combine == True:
-        subtitle = "combination of %d signal regions" % len(validationPlot.expRes.datasets)
-    if len(subtitle) > 100:
-        subtitle = subtitle[:100] + " ..."
-    if len(validationPlot.expRes.datasets) == 1 and \
-            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
-        subtitle = "dataset: upper limit"
-
+    subtitle = getDatasetDescription ( validationPlot )
     figureUrl = getFigureUrl(validationPlot)
     plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
     base.SetTitle(title)

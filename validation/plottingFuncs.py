@@ -133,7 +133,10 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                 # tgraph = exclusionCurveToTGraph ( points, cname )
                 if not txn in ret:
                     ret[txn]=[]
-                ret[txn].append( { "points": points, "name": cname } )
+                if "obs" in axis and "obs" in cname:
+                    ret[txn].append( { "points": points, "name": cname } )
+                if "exp" in axis and "exp" in cname:
+                    ret[txn].append( { "points": points, "name": cname } )
                 # ret[txn].append( tgraph )
         return ret
 
@@ -203,8 +206,38 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
 
     return txnames
 
-def getFigureUrl(validationPlot ):
+def getDatasetDescription ( validationPlot ):
+    """ get the description of the dataset that appears as a subtitle 
+        in e.g. the ugly plots """
+    subtitle = f"{len(validationPlot.expRes.datasets)} datasets: "
+    if validationPlot.validationType == "tpredcomb":
+        subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
 
+    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and \
+            validationPlot.combine == True:
+        ## pyhf combination
+        subtitle = "pyhf combining %d SRs: " % len(validationPlot.expRes.datasets)
+    for dataset in validationPlot.expRes.datasets:
+        ds_txnames = map ( str, dataset.txnameList )
+        if not validationPlot.txName in ds_txnames:
+            continue
+        dataId = str(dataset.dataInfo.dataId)
+        if len(dataId)>11:
+            dataId = dataId[:8]+" ... "
+        subtitle+=dataId+", "
+    subtitle = subtitle[:-2]
+    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
+            validationPlot.combine == True:
+        subtitle = "combination of %d signal regions" % len(validationPlot.expRes.datasets)
+    if len(subtitle) > 100:
+        subtitle = subtitle[:100] + " ..."
+    if len(validationPlot.expRes.datasets) == 1 and \
+            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+        subtitle = "dataset: upper limit"
+    return subtitle
+
+def getFigureUrl( validationPlot ):
+    """ get the URL of the figure, as a string """
     txname = validationPlot.expRes.datasets[0].txnameList[0]
     txurl = txname.getInfo("figureUrl")
     txaxes = txname.getInfo("axes")

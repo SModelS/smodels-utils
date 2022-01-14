@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, setAxes
+from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, \
+         setAxes, getDatasetDescription
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -97,11 +98,11 @@ def create1DPlot( validationPlot, silentMode=True,
         if label == "excluded":
             lbl = "SModelS excluded"
         if label == "excluded_border":
-            lbl = "SModelS excluded"
+            lbl = "SModelS excluded (but close)"
         if label == "allowed":
             lbl = "SModelS allowed"
         if label == "allowed_border":
-            lbl = "SModelS allowed"
+            lbl = "SModelS allowed (but close)"
         plt.plot ( values[label]["x"], values[label]["y"], c=c, marker="o", label=lbl )
         # plt.plot ( values[label]["x"], values[label]["y"], c=c )
     fname = "me.png"
@@ -119,6 +120,13 @@ def create1DPlot( validationPlot, silentMode=True,
             rmin, rmax = min ( yvs ), max ( yvs )
             plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
                        label="official observed exclusion" )
+    for o in eofficial:
+        print ( "eo", o )
+        if o["name"].startswith ( "expExclusion" ):
+            rmin, rmax = min ( yvs ), max ( yvs )
+            plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
+                       linestyle = ":",
+                       label="official expected exclusion" )
     plt.legend( framealpha=.5 )
 
     if options["extraInfo"]: ## a timestamp, on the right border
@@ -128,6 +136,7 @@ def create1DPlot( validationPlot, silentMode=True,
         dx = max(xvs)+( max(xvs)-min(xvs))*.07
         plt.text ( dx, rs, t, c="grey", rotation="vertical" )
     figureUrl = getFigureUrl(validationPlot)
+    subtitle = getDatasetDescription ( validationPlot )
     if figureUrl:
         rs = rmin - ( rmax - rmin ) * .2
         dx = min(xvs)-( max(xvs)-min(xvs))*.22
