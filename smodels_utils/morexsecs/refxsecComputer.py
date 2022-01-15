@@ -177,7 +177,7 @@ class RefXSecComputer:
             for s in sqrtses:
                 # ss = s*TeV
                 self.compute( s, inputFile, ssmultipliers = ssmultipliers,
-                              ignore_pids = ignore_pids )
+                              ignore_pids = ignore_pids, ewk = ewk )
                 if tofile == "all" and hasattr ( self, "loXSecs" ):
                     nXSecs += self.addXSecToFile(self.loXsecs, inputFile, complain )
                     complain = False
@@ -335,7 +335,7 @@ class RefXSecComputer:
         return ret
 
     def compute( self, sqrts, slhafile, ssmultipliers = None,
-                 ignore_pids = None ):
+                 ignore_pids = None, ewk = "wino" ):
         """
         Retrieve cross sections
         :param sqrts: center of mass energies
@@ -358,8 +358,8 @@ class RefXSecComputer:
             pids = channel["pids"]
             if pids[1] < pids[0]:
                 pids = [ pids[1], pids[0] ]
-            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], sqrts, "",
-                                                       channel["masses"] )
+            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], 
+                    sqrts, ewk, channel["masses"] )
             # print ( f"for channel {pids}: {str(xsecall)[:10]}" )
             ## interpolate for the mass that we are looking for
             if xsecall == None:
