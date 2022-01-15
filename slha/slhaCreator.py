@@ -49,6 +49,7 @@ class TemplateFile(object):
         self.version = "1.1" ## slhaCreator version
         self.path = template
         self.slhaObj = None
+        self.ewk = "wino"
         self.nprocesses = -1
         self.tags = []
         self.axes = axes
@@ -81,7 +82,6 @@ class TemplateFile(object):
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
-
 
     def findWidthTags ( self, filename ):
         """ in a template file <template>, search for "width tags",
@@ -242,8 +242,11 @@ class TemplateFile(object):
                 c = f"produced via slhaCreator v{self.version}"
                 if comment != None:
                     c+= f": {comment}"
+                if self.ewk != "wino":
+                    c+= f" [{self.ewk}]"
                 computer.computeForOneFile ( sqrts[0], slhafile, True, \
-                          comment = c, ignore_pids = ignore_pids )
+                          comment = c, ignore_pids = ignore_pids,
+                          ewk = self.ewk )
 
         return slhafiles
 
@@ -404,6 +407,8 @@ if __name__ == "__main__":
         type=str, default='@@topo@@.tar.gz' )
     argparser.add_argument ( '-C', '--comment', nargs='?', help='add a comment to all files [None]',
         type=str, default=None )
+    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino or hino [wino]',
+        type=str, default="wino" )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
         type=str, default='2*[[x, y]]' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x [100]',
@@ -472,6 +477,7 @@ if __name__ == "__main__":
         sys.exit()
     tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion)
     tempf.nprocesses = args.nprocesses
+    tempf.ewk = args.ewk
     if args.nprocesses < 0:
         tempf.nprocesses = runtime.nCPUs() + args.nprocesses + 1
     if args.xmax < args.xmin:
@@ -498,8 +504,8 @@ if __name__ == "__main__":
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
                    massesInFileName=True, nevents=args.nevents,
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
-                   swapBranches = args.swapBranches, ignore_pids = args.ignore_pids,
-                   comment = args.comment )
+                   swapBranches = args.swapBranches, 
+                   ignore_pids = args.ignore_pids, comment = args.comment )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
