@@ -813,7 +813,9 @@ class ValidationPlot():
         if self.data == None:
             return None
         for ctPoints,pt in enumerate(self.data):
-            if "axes" in pt and "x" in pt["axes"]:
+            if pt == None:
+                continue
+            if "axes" in pt and pt["axes"] != None and "x" in pt["axes"]:
                 if not "y" in pt["axes"]:
                     #is1D = True
                     return True
