@@ -55,6 +55,7 @@ prettySUSYParticle = {
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
     'higgsino' : '#tilde{H}',       #higgsino
+    'H^2' : 'H^{2}',       #higgsino
     'squark': '#tilde{q}',  #squark
     'sup': '#tilde{u}',  #sup
     'sdown': '#tilde{d}',  #sdown
