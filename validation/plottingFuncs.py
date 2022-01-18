@@ -99,7 +99,11 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
         logger.error("json file %s not found" %jsonfile )
         return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes, get_all,
                 expected )
+    from smodels_utils.helper import various
+    return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
+            expected )
 
+    """
     with open ( jsonfile, "rt" ) as handle:
         content = json.load ( handle )
         handle.close()
@@ -139,6 +143,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                     ret[txn].append( { "points": points, "name": cname } )
                 # ret[txn].append( tgraph )
         return ret
+    """
 
 def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
         get_all=False, expected=False ):
