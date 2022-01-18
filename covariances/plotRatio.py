@@ -296,13 +296,12 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     slhafile=content2["data"][0]["slhafile"]
     Dir=os.path.dirname ( ipath1 )
     Dir2=os.path.dirname ( ipath2 )
-    smsrootfile = Dir.replace("validation","sms.root" )
-    smsrootfile2 = Dir2.replace("validation","sms.root" )
+    # smsrootfile = Dir.replace("validation","sms.root" )
+    # smsrootfile2 = Dir2.replace("validation","sms.root" )
+    exclusionlines1 = Dir.replace("validation","exclusion_lines.json" )
+    exclusionlines2 = Dir2.replace("validation","exclusion_lines.json" )
     analysis=Dir[ Dir.rfind("/")+1: ]
-    # topo=slhafile[:slhafile.find("_")]
     topo = shortTxName ( list ( topos ) )
-    # print ( "topos", topos, "topo", topo )
-    # print ( "smsrootfile", smsrootfile )
     stopos = []
     for t in topos:
         stopo = prettyDescriptions.prettyTxname ( t, outputtype="latex" ).replace("*","^{*}" )
@@ -340,7 +339,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             axes = content1["meta"][0]["axes"]
         if content2["meta"]!=None and "axes" in content2["meta"][0]:
             axes = content2["meta"][0]["axes"]
-        # print ( "axes are", axes, "c1", content1["meta"][0] )
+        """
         line = getExclusionsFrom ( smsrootfile, t, axes )
         line2 = getExclusionsFrom ( smsrootfile2, t, axes )
         el2 = []
@@ -348,14 +347,20 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             el = getExclusionLine ( line )
         if line2 is not False:
             el2 = getExclusionLine ( line2 )
+        """
+        from smodels_utils.helper import various
+        el = various.getExclusionCurvesFor ( exclusionlines1, t, axes )
+        el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes )
         label = "official exclusion"
         # label = anaId
         if hasLegend:
             label = ""
-        for E in el:
+        for E in el[t]:
+            name = E["name"]
+            print ( "name", name )
             hasLegend = True
-            plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
-            plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=3, label=label )
+            plt.plot ( E["points"]["x"], E["points"]["y"], color='white', linestyle='-', linewidth=4, label="" )
+            plt.plot ( E["points"]["x"], E["points"]["y"], color='k', linestyle='-', linewidth=3, label=label )
             label = ""
         """
         for E in el2:
