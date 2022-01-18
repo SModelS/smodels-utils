@@ -355,21 +355,21 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         # label = anaId
         if hasLegend:
             label = ""
-        for E in el[t]:
-            name = E["name"]
-            print ( "name", name )
-            hasLegend = True
-            plt.plot ( E["points"]["x"], E["points"]["y"], color='white', linestyle='-', linewidth=4, label="" )
-            plt.plot ( E["points"]["x"], E["points"]["y"], color='k', linestyle='-', linewidth=3, label=label )
-            label = ""
-        """
-        for E in el2:
-            label = anaId2
-            hasLegend = True
-            plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
-            plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
-            label = ""
-        """
+        if t in el:
+            for E in el[t]:
+                name = E["name"]
+                print ( "name", name )
+                hasLegend = True
+                plt.plot ( E["points"]["x"], E["points"]["y"], color='white', linestyle='-', linewidth=4, label="" )
+                plt.plot ( E["points"]["x"], E["points"]["y"], color='k', linestyle='-', linewidth=3, label=label )
+                label = ""
+        if t in el2:
+            for E in el2[t]:
+                label = anaId2
+                hasLegend = True
+                plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
+                plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
+                label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
         print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
