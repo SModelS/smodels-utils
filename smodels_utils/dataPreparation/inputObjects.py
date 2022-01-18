@@ -40,7 +40,7 @@ quenchNegativeMasses = False ## set to true, if you wish to
 errormsgs = {}
 
 def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
-    """ from an emBaked file, retrieve the names of the signal regions 
+    """ from an emBaked file, retrieve the names of the signal regions
     :param exclude: list of SR regions to exclude
     """
     ret = set()
@@ -257,7 +257,7 @@ class MetaInfoInput(Locker):
     infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type']
+    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type', 'includeCRs']
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
