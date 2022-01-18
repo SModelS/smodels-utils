@@ -415,7 +415,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if options["show"]:
         plt.show()
     if copy:
-      cmd="cp %s ../../smodels.github.io/plots/" % ( figname )
+      cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
       print ( "plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
     rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
@@ -450,7 +450,7 @@ def writeMDPage( copy ):
             f.write ( " | |\n" )
         f.close()
     if copy:
-        cmd = "cp ratioplots.md ../../smodels.github.io/plots/README.md"
+        cmd = "cp ratioplots.md ~/git/smodels.github.io/plots/README.md"
         subprocess.getoutput ( cmd )
 
 def main():
@@ -529,7 +529,7 @@ def main():
     if args.meta:
         writeMDPage( args.copy )
 
-    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit'; git push"
+    cmd = "cd ~/git/smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
         print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
