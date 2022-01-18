@@ -77,7 +77,6 @@ class TemplateFile(object):
         ## the tags for the widths are harder to get
         self.findWidthTags( template )
 
-
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
         #Define original plot
@@ -462,6 +461,8 @@ if __name__ == "__main__":
     argparser.add_argument('-8', '--pythia8', action='store_true',
         help="use pythia8 for LO cross sections [default]")
     args=argparser.parse_args()
+    if args.sqrts == None:
+        args.sqrts = [ 8, 13 ]
     if args.clear:
         subprocess.getoutput ( "rm -rf tmp* pythia*card" )
         sys.exit()
