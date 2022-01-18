@@ -81,7 +81,8 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                 # tgraph = exclusionCurveToTGraph ( points, cname )
                 if not txn in ret:
                     ret[txn]=[]
-                if axis == cname:
+                p2 = cname.find("_")
+                if axis[:p1] == cname[:p2]:
                     ret[txn].append( { "points": points, "name": cname } )
                 #if "obs" in axis and "obs" in cname:
                 #    ret[txn].append( { "points": points, "name": cname } )

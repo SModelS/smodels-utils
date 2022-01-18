@@ -393,6 +393,8 @@ class ValidationPlot():
         if not tgraphDict:
             return []
         tgraph = tgraphDict[self.txName]
+        if len(tgraph)==0:
+            return tgraph
         if get_all:
             return tgraph
         else:
