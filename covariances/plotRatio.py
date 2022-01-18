@@ -410,7 +410,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if options["show"]:
         plt.show()
     if copy:
-      cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
+      cmd="cp %s ../../smodels.github.io/plots/" % ( figname )
       print ( "plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
     rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
@@ -437,7 +437,7 @@ def writeMDPage( copy ):
         ctr = 0
         t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
-            src = "https://smodels.github.io/ratioplots/%s" % i
+            src = "https://smodels.github.io/plots/%s" % i
             f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
@@ -445,7 +445,7 @@ def writeMDPage( copy ):
             f.write ( " | |\n" )
         f.close()
     if copy:
-        cmd = "cp ratioplots.md ../../smodels.github.io/ratioplots/README.md"
+        cmd = "cp ratioplots.md ../../smodels.github.io/plots/README.md"
         subprocess.getoutput ( cmd )
 
 def main():
@@ -490,13 +490,13 @@ def main():
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
-            help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     argparser.add_argument ( "-s", "--show", action="store_true",
             help="show plot in terminal" )
     argparser.add_argument ( "-m", "--meta", action="store_true",
             help="produce the meta files, ratios.txt and ratioplots.md" )
     argparser.add_argument ( "-p", "--push", action="store_true",
-            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     args = argparser.parse_args()
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
