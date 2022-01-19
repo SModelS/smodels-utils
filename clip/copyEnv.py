@@ -30,10 +30,16 @@ def copySSH():
         cmd = f"cp -rf {source}{f} {dest}{f}"
         subprocess.getoutput ( cmd )
 
+def mkTempDir():
+    destdir = "/scratch-cbe/users/wolfgan.waltenberger/tmp/"
+    if not os.path.exists ( destdir ):
+        cmd = f"mkdir {destdir}"
+        subprocess.getoutput ( cmd )
+
 def copyContainers():
     destdir = "/scratch-cbe/users/wolfgan.waltenberger/container/"
-    sourcedir = "/mnt/hephy/pheno/"
-    simg = "ubuntu2104sing38a.simg"
+    sourcedir = "/groups/hephy/pheno/"
+    simg = "ubuntu2110sing38a.simg"
     if not os.path.exists ( destdir ):
         cmd = f"mkdir {destdir}" 
         subprocess.getoutput ( cmd )
@@ -53,3 +59,4 @@ if __name__ == "__main__":
     copySSH()
     copyContainers()
     gitClone()
+    mkTempDir()
