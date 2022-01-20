@@ -7,6 +7,6 @@
 
 # cd /users/wolfgan.waltenberger/git/projects/singularity/
 
-singularity shell -c -B /tmp,/run,/scratch -s @@RUNDIR@@/scanner@@PID@@xxPID2xx.sh -H /mnt/hephy/pheno/ww/ /scratch-cbe/users/wolfgan.waltenberger/container/current.simg
+singularity shell -c -B /tmp,/run,/scratch -s @@RUNDIR@@/scanner@@PID@@xxPID2xx.sh -H /groups/hephy/pheno/ww/ /scratch-cbe/users/wolfgan.waltenberger/container/current.simg
 
 ###SBATCH --ntasks-per-node=20.
