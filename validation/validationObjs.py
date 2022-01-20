@@ -413,7 +413,9 @@ class ValidationPlot():
 
         #Get number of cpus:
         if not hasattr(self, 'ncpus') or not self.ncpus:
-            self.ncpus  = -1
+            self.ncpus  = 1
+            if "ncpus" in self.options:
+                self.ncpus = self.options["ncpus"]
 
         if tempdir is None: tempdir = os.getcwd()
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
