@@ -615,7 +615,7 @@ def main():
                     help='maximum number of steps in a walker, max number of iterations in the updater [None=1000]',
                     type=int, default=None )
     argparser.add_argument ( '-b', '--bake', nargs="?",
-                    help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
+                    help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a @K"]',
                     type=str, default="" )
     argparser.add_argument ( '--select', nargs="?",
                     help='filter analysis results, ("all", "em", "ul", "txnames:T1,T2", ... ["all"]',
@@ -738,7 +738,7 @@ def main():
             continue
         if args.bake != "":
             if args.bake == "default":
-                args.bake = '@n 10000 @a'
+                args.bake = '@n 10000 @a @K'
             if args.mass == "default":
                 # args.mass = "[(300,1099,25),'half',(200,999,25)]"
                 args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
@@ -822,7 +822,8 @@ def main():
                 totjobs+=len(jobs)
                 if len(jobs) in [ 48, 49, 51 ]:
                     colo = colorama.Fore.RED
-                print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
+                if len(jobs)>0:
+                    print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
             break
         res = colorama.Fore.RESET
         col = colorama.Fore.GREEN
