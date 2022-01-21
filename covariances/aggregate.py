@@ -50,7 +50,7 @@ def pprint ( C, droprate = 2., isolationscore = 150.,
 
 def run():
     ap = argparse.ArgumentParser( description= "computes a not too crazy aggregation list" )
-    ap.add_argument( '-d','--drop', help="maximum score with which we drop [2.]",
+    ap.add_argument( '-d','--drop', help="maximum score (a measure of sensitivity) with which we drop [2.]",
                      default = 2., type=float )
     ap.add_argument( '-i','--isolate', help="minimum score (a measure of sensitivity) with which we isolate a signal region. [150.]",
                      default = 150., type=float )
