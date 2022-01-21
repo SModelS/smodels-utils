@@ -251,6 +251,7 @@ class TemplateFile(object):
 
     def addToRecipe ( self, directory, command ):
         """ add our current command to the recipe file """
+        # print ( f"adding to recipe {directory}" )
         with open ( f"{directory}/recipe", "at" ) as f:
             f.write ( f"[slhaCreator v{self.version}::{time.asctime()}] {command}\n" )
             f.close()
@@ -509,7 +510,6 @@ if __name__ == "__main__":
                    ignore_pids = args.ignore_pids, comment = args.comment )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
-    tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
     #oldtarball = f"{args.topology}.tar.gz"
     oldtarball = tarball
     if os.path.exists ( oldtarball ):
@@ -517,9 +517,14 @@ if __name__ == "__main__":
     print ( "Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
                            ( newtemp, tarball ) )
-    subprocess.getoutput ( "cp %s/%s*.slha %s" % ( tempf.tempdir, args.topology, newtemp ) )
-    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % ( newtemp, tarball, args.topology ) )
-    print ( f"New tarball {tarball}" )
+    cmd = "cp %s/%s*.slha %s/recipe %s" % \
+            ( tempf.tempdir, args.topology, tempf.tempdir, newtemp )
+    # print ( "cmd", cmd )
+    subprocess.getoutput ( cmd )
+    tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
+    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % \
+            ( newtemp, tarball, args.topology ) )
+    print ( f"[slhaCreator] New tarball {tarball}" )
     if not args.keep:
         subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
         subprocess.getoutput ( "rm -rf %s" % newtemp )
