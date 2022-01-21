@@ -508,13 +508,13 @@ if __name__ == "__main__":
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
                    swapBranches = args.swapBranches, 
                    ignore_pids = args.ignore_pids, comment = args.comment )
-    print ( "Produced %s slha files" % len(slhafiles ) )
+    print ( "[slhaCreator] Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     #oldtarball = f"{args.topology}.tar.gz"
     oldtarball = tarball
     if os.path.exists ( oldtarball ):
         subprocess.getoutput ( f"cp {oldtarball} prev.{oldtarball}" )
-    print ( "Now build new tarball in %s/" % newtemp )
+    print ( "[slhaCreator] Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
                            ( newtemp, tarball ) )
     cmd = "cp %s/%s*.slha %s/recipe %s" % \
