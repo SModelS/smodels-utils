@@ -38,7 +38,7 @@ def mkTempDir():
 
 def copyContainers():
     destdir = "/scratch-cbe/users/wolfgan.waltenberger/container/"
-    sourcedir = "/groups/hephy/pheno/"
+    sourcedir = "/groups/hephy/pheno/ww/containers/"
     simg = "ubuntu2110sing38a.simg"
     if not os.path.exists ( destdir ):
         cmd = f"mkdir {destdir}" 
@@ -47,6 +47,10 @@ def copyContainers():
         cmd = f"cp {sourcedir}{simg} {destdir}"
         # print ( cmd )
         subprocess.getoutput ( cmd )
+        if os.path.exists ( f"{destdir}current.simg" ):
+            ## symlink needs resetting
+            cmd = f"rm {destdir}current.simg"
+            subprocess.getoutput ( cmd )
     else:
         # print ( f"found container at {destdir}{simg}" )
         pass
