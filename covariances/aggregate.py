@@ -7,18 +7,18 @@ import argparse
 import aggregators 
 from smodels_utils.helper import various
 
-def pprint ( C, droprate = 2., takeoutrate = 150., 
+def pprint ( C, droprate = 2., isolationscore = 150., 
              cut = .5 ):
     """ 
     :param droprate: maximum score with which we drop SR
-    :param takeoutrate: minimum score with which we takeout
+    :param isolationscore: minimum score with which we isolate an SR
     :param cut: cut on correlation for findAggregates
     """
     # print ( C )
     ones = 0
     aggs, overflow, exclusives = [], [], []
     drops, zeroes = [], []
-    pmax = takeoutrate
+    pmax = isolationscore
     pmin = droprate
     nmax = -1
     for k,v in C.items():
@@ -49,10 +49,10 @@ def pprint ( C, droprate = 2., takeoutrate = 150.,
     return drops, exclusives
 
 def run():
-    ap = argparse.ArgumentParser( description= "determine some stats about the SRs" )
-    ap.add_argument( '-d','--drop',help="maximum score with which we drop [2.]",
+    ap = argparse.ArgumentParser( description= "computes a not too crazy aggregation list" )
+    ap.add_argument( '-d','--drop', help="maximum score with which we drop [2.]",
                      default = 2., type=float )
-    ap.add_argument( '-t','--takeout',help="minimum score with which we takeout [150.]",
+    ap.add_argument( '-i','--isolate', help="minimum score (a measure of sensitivity) with which we isolate a signal region. [150.]",
                      default = 150., type=float )
     ap.add_argument( '-c','--corr',help="cut on correlations for findAggregates, zero means aggregate by names [None]",
                      default = None, type=float )
@@ -81,7 +81,7 @@ def run():
                 C[k]=0
             C[k]+=v*factor
     print ( "done!" )
-    drops, exclusives = pprint ( C, args.drop, args.takeout, args.corr )
+    drops, exclusives = pprint ( C, args.drop, args.isolate, args.corr )
     if args.corr in [ 0., None ]:
         aggs, dropped = aggregators.aggregateByNames ( args.database, args.analysis, drops, exclusives )
     else:
