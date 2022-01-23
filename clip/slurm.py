@@ -504,7 +504,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
             args += ' --analyses "%s"' % analyses
             args += ' -t %s' % topo
             args += ' -p %d' % nprc
-            args += ' -b'
+            # args += ' -b'
             if cutlang:
                 args += ' --cutlang'
             f.write ( line.replace("@@ARGS@@", args ) )
