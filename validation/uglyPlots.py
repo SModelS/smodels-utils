@@ -227,30 +227,30 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
                 if ytmp.value > .5:
                     yn = 0.
                 i.SetPoint(1, xtmp, yn )
-    for i in official:
-        base.Add( i, "L")
     for i in eofficial:
+        i.SetLineStyle ( 3 )
         base.Add( i, "L")
     for ctr,i in enumerate(official):
+        base.Add( i, "L")
         completed = copy.deepcopy ( i )
         validationPlot.completeGraph ( completed )
-        completed.SetLineColor( ROOT.kGray )
+        completed.SetLineColor( ROOT.kMagenta )
         completed.SetLineStyle( 3 ) # show also how plot is completed
         completed.Draw("LP SAME" )
-        #i.Draw("LP SAME" )
+        base.Add ( completed )
         if ctr == 0:
             leg.AddEntry ( i, "official exclusion", "L" )
-    """
+        #else:
+        #    leg.AddEntry ( i, f"what is this {i.GetName()}", "L" )
     for ctr,i in enumerate(eofficial):
-        print ( "Drawing", i, i.Print() )
         c2 = copy.deepcopy ( i )
         c2.SetLineColor( ROOT.kMagenta )
         validationPlot.completeGraph ( c2 )
-        c2.SetLineStyle( 3 ) # show also how plot is completed
+        c2.SetLineStyle( 2 ) # show also how plot is completed
         c2.Draw("LP SAME" )
         if ctr == 0:
-            leg.AddEntry ( i, "expected official exclusion", "L" )
-    """
+            leg.AddEntry ( i, "expected off. excl.", "L" )
+    #"""
     if gridpoints.GetN()>0:
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
