@@ -863,6 +863,8 @@ class ValidationPlot():
             v = distutils.spawn.find_executable( viewer )
             if not v:
                 continue
+            if viewer == "timg" and term == "xterm-kitty":
+                v += " -pk"
             cmd = f"{v} {filename}"
             o = subprocess.getoutput ( cmd )
             print ( f"{o}" )
