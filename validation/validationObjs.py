@@ -58,6 +58,7 @@ class ValidationPlot():
 
         self.expRes = copy.deepcopy(ExptRes)
         self.keep = keep
+        self.t0 = time.time()
         self.options = options
         self.txName = TxNameStr
         self.namedTarball = namedTarball
@@ -618,6 +619,7 @@ class ValidationPlot():
         modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
                  listOfExpRes, 5000, False, parameterFile)
         dt=(time.time()-t0) / len(fileList) ## for now we just write out avg time
+        dt = round ( dt, 3 )
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
@@ -755,7 +757,7 @@ class ValidationPlot():
                     ratio = float("inf")
                 if ratio <= 0.:
                     ratio=1e-90
-                Dict["chi2"] = -2*math.log ( ratio )
+                Dict["chi2"] = round ( -2*math.log ( ratio ), 5 )
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
                 drawExpected = self.options["drawExpected"]
@@ -763,7 +765,7 @@ class ValidationPlot():
                     drawExpected = True
                 self.options["drawExpected"]=drawExpected
             if "efficiency" in expRes.keys():
-                Dict["efficiency"] = expRes['efficiency']
+                Dict["efficiency"] = round ( expRes['efficiency'], 8 )
             if expRes['dataType'] == 'efficiencyMap':
                 #Select the correct dataset (best SR):
                 dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
@@ -785,7 +787,7 @@ class ValidationPlot():
                 massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():
                     try:
-                        Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
+                        Dict['efficiency'] = round ( txname.txnameData.getValueFor(massGeV), 8 )
                     except SModelSError as e:
                         logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
                         Dict=None
@@ -970,7 +972,13 @@ class ValidationPlot():
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
+        nerr = 0
+        for i in self.data:
+            if "error" in i:
+                nerr += 1
+        dt = round ( ( time.time() - self.t0 ) / 60. / 60., 3 ) ## in hours
         meta = { "smodelsver": installation.version(), "axes": self.axes,
+                 "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if self.namedTarball != None:
             meta["tarball"]=self.namedTarball
