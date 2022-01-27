@@ -24,7 +24,9 @@ def getDatasets( result, addReverse = True ):
     for _,ds in enumerate ( result.datasets ):
         i=_ + 1
         datasets[i]=ds.dataInfo.dataId
-        comments[i]=ds.dataInfo.comment
+        comments[i]=ds.dataInfo.dataId
+        if hasattr ( ds.dataInfo, "comment" ):
+            comments[i]=ds.dataInfo.comment
         if addReverse:
             datasets[ ds.dataInfo.dataId ] = i
     return datasets, comments
@@ -120,8 +122,25 @@ def obtainDictFromComment ( comment, analysis ):
         tokens = comment.split("_")
         D["jets"]= int ( tokens[1].replace("Njet","") )
         D["b"] = int ( tokens[2].replace("Nb","") )
-        # D["HT"] = tokens[3].replace("HT","")
-        # D["MHT"] = tokens[4].replace("MHT","")
+    if "CMS-SUS-16-048" in analysis:
+        tokens = comment.split("_")
+        D["ewkino"]=-1
+        if tokens[0]=="stop":
+            D["ewkino"]=0
+        if tokens[0]=="Ewkino":
+            D["ewkino"]=1
+        D["met"]=-1
+        if tokens[1]=="lowMET":
+            D["met"]=0
+        if tokens[1]=="medMET":
+            D["met"]=1
+        if tokens[1]=="highMET":
+            D["met"]=2
+        pt = tokens[3]
+        p = pt.find("to")
+        pt = int ( pt[:p] )
+        D["pt"]=pt
+        # print ( "tokens", tokens, "D", D )
     if "CMS-SUS-16-039" in analysis:
         tokens = comment.split("_")
         print ( tokens )

@@ -23,9 +23,12 @@ def pprint ( C, droprate = 2., isolationscore = 150.,
     nmax = -1
     for k,v in C.items():
         sr = k.replace("SR","")
-        sr = int(sr)
-        if sr > nmax:
-            nmax = sr
+        try:
+            sr = int(sr)
+            if sr > nmax:
+                nmax = sr
+        except Exception as e:
+            pass
 
     for i in range(1,nmax):
         sr = f"SR{i}"
