@@ -288,9 +288,11 @@ def exclusionCurveToTGraph ( args ):
         for x in args:
             ret.append ( exclusionCurveToTGraph ( x ) )
         return ret
+    import ROOT
+    if type(args)== ROOT.TGraph:
+        return args
     name = args["name"]
     points = args["points"]
-    import ROOT
     tgraph = ROOT.TGraph()
     tgraph.SetTitle ( name )
     if not "y" in points:
