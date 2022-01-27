@@ -476,6 +476,20 @@ def validate ( inifile, dry_run, nproc, time ):
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
+def getNEvents ( recipe ):
+    """ given a recipe, get the number of events pledged.
+        used for estimating resources """
+    ret = 10000
+    try:
+        tokens = recipe.split(" ")
+        if "@n" in tokens:
+            idx = tokens.index ( "@n" )
+            if len(tokens)>idx+2:
+                ret = int ( tokens[idx+1] )
+    except Exception as e:
+        pass
+    return ret
+
 def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
            time ):
     """ bake with the given recipe
