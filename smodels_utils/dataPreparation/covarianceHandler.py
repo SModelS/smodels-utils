@@ -9,6 +9,7 @@
 """
 
 import sys
+import copy
 import logging
 from smodels_utils.helper import prettyDescriptions
 
@@ -16,6 +17,45 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
+
+def computeAggCov ( covariance, agg1, agg2 ):
+    """ compute the covariance between agg1 and agg2
+    :param covariance: the covariance matrix
+    :param agg1: list of indices to aggregate
+    :param agg2: list of indices to aggregate
+    """
+    C=0.
+    for i in agg1:
+        for j in agg2:
+            C+=covariance[i-1][j-1]
+    return C
+
+def aggregateMe ( covariance, aggregate ):
+    """ aggregate the covariance matrix according to aggregate
+    :param covariance: the matrix.
+    :param aggregate: list of lists of indices
+    :returns a small covariance matrix, and a dataset order
+    """
+    newDSOrder=[]
+    nNew = len(aggregate)
+    row = [0.]*nNew
+    newCov = []
+    oldcov = copy.deepcopy ( covariance )
+    for i in range(nNew):
+        newCov.append ( copy.deepcopy(row) )
+    #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+    for ctr,agg in enumerate ( aggregate ):
+        newDSOrder.append ( "ar%d" % ctr )
+        V=0.
+        for i in agg:
+            for j in agg:
+                V+=covariance[i-1][j-1]
+        newCov[ctr][ctr]=V
+        for ctr2,agg2 in enumerate ( aggregate ):
+            if ctr == ctr2: continue
+            cov = computeAggCov ( covariance, agg, agg2 )
+            newCov[ctr][ctr2]=cov
+    return newCov, newDSOrder
 
 class CovarianceHandler:
     def __init__ ( self, filename, histoname, max_datasets=None,
@@ -56,14 +96,6 @@ class CovarianceHandler:
 
         self.removeSmallValues()
         self.checkCovarianceMatrix()
-
-    def computeAggCov ( self, agg1, agg2 ):
-        """ compute the covariance between agg1 and agg2 """
-        C=0.
-        for i in agg1:
-            for j in agg2:
-                C+=self.covariance[i-1][j-1]
-        return C
 
     def checkCovarianceMatrix( self ):
         """ a quick check if the covariance matrix is invertible. """
@@ -109,32 +141,10 @@ class CovarianceHandler:
             logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
 
     def aggregateThis ( self, aggregate ):
-        """ FIXME turn this into standalone method """
-        newDSOrder=[]
-        nNew = len(aggregate)
-        row = [0.]*nNew
-        newCov = []
-        oldcov = copy.deepcopy ( self.covariance )
-        for i in range(nNew):
-            newCov.append ( copy.deepcopy(row) )
-        #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
-        for ctr,agg in enumerate ( aggregate ):
-            newDSOrder.append ( "ar%d" % ctr )
-            V=0.
-            for i in agg:
-                for j in agg:
-                    V+=self.covariance[i-1][j-1]
-            newCov[ctr][ctr]=V
-            for ctr2,agg2 in enumerate ( aggregate ):
-                if ctr == ctr2: continue
-                cov = self.computeAggCov ( agg, agg2 )
-                newCov[ctr][ctr2]=cov
-
-            #for i,a in enumerate(agg):
-            #    newCov[ctr][ctr]+=self.covariance[a][a]
-        self.covariance=newCov
+        """ yo. aggregate. """
+        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate )
+        self.covariance = newCov
         self.datasetOrder=newDSOrder
-        #logger.error("datasetOrder %s" % self.datasetOrder )
 
     def getHistogram ( self, f, histoname ):
         """ simple method to retrieve histogram
