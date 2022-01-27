@@ -479,16 +479,16 @@ def validate ( inifile, dry_run, nproc, time ):
 def getNEvents ( recipe ):
     """ given a recipe, get the number of events pledged.
         used for estimating resources """
-    ret = 10000
     try:
         tokens = recipe.split(" ")
         if "@n" in tokens:
             idx = tokens.index ( "@n" )
-            if len(tokens)>idx+2:
+            if len(tokens)>idx+1:
                 ret = int ( tokens[idx+1] )
+                return ret
     except Exception as e:
-        pass
-    return ret
+        print ( f"[slurm] {e}" )
+    return 10000
 
 def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
            time ):
@@ -849,4 +849,5 @@ def main():
         if seed != None: ## count up
             seed += (1+len(rundirs))*(1+nprocesses)
 
-main()
+if __name__ == "__main__":
+    main()
