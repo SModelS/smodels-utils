@@ -548,6 +548,9 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     # ma5 seems to not need much RAM
     ram = 2.5 * nproc
+    nevents = getNEvents ( recipe )
+    if nevents > 50000:
+        ram = 3. * nproc
     ncpus = int(nproc*1.5)
     if cutlang:
         ram = 3.2 * nproc ## in GB
