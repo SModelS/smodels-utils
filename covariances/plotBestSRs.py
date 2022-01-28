@@ -12,8 +12,8 @@ import warnings
 import subprocess
 import time
 from matplotlib import colors as C
-from smodels_utils.helper.various import getPathName
-from smodels_utils.helper import uprootTools
+from smodels_utils.helper.various import getPathName, getExclusionCurvesFor
+#from smodels_utils.helper import uprootTools
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
         
@@ -53,8 +53,11 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         txnames.append ( topo )
         content = getValidationFileContent ( ipath )
         contents.append ( content )
-        ll = uprootTools.getExclusionLine ( smspath, topo, content["meta"]["axes"] )
-        lines.append (  ll )
+        eljson = os.path.join ( smspath, "exclusion_lines.json" )
+        if os.path.exists ( eljson ):
+            ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
+            # print ( "ll", ll[topo] )
+            lines.append (  ll[topo] )
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )

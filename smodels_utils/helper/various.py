@@ -9,6 +9,7 @@
 """
 
 import os, sys
+import logging as logger
 
 def getSqrts ( Id ):
     """ given analysis id <Id>, determine sqrts """
@@ -28,19 +29,22 @@ def getSqrts ( Id ):
 def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                           expected=False ):
     """
-    Reads exclusion_lines.json and returns the TGraph objects for the exclusion
-    curves. If txname is defined, returns only the curves corresponding
-    to the respective txname. If axes is defined, only returns the curves
-    for that axis
+    Reads exclusion_lines.json and returns the dictionary objects for the
+    exclusion curves. If txname is defined, returns only the curves
+    corresponding to the respective txname. If axes is defined, only
+    returns the curves for that axis.
+    If root objects are needed, convert via
+    smodels_utils.helper.rootTools.exclusionCurveToTGraph
 
     :param jsonfile: path to exclusion_lines.json file
     :param txname: the TxName in string format (i.e. T1tttt)
-    :param axes: the axes definition in string format (e.g. [x, y, 60.0], [x, y, 60.0]])
+    :param axes: the axes definition in string format,
+                 e.g. [x, y, 60.0], [x, y, 60.0]]
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
 
     :return: a dictionary, where the keys are the TxName strings
-            and the values are the respective list of TGraph objects.
+            and the values are the respective dictionaries of coordinates.
     """
 
     import json
