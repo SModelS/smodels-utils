@@ -13,7 +13,6 @@ import subprocess
 import time
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName, getExclusionCurvesFor
-#from smodels_utils.helper import uprootTools
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
         

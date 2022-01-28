@@ -15,7 +15,7 @@ import os
 import argparse
 import cov_helpers
 
-def getDatasets( result, addReverse = True ):
+def getDatasets( result, addReverse = True, verbose = False ):
     """ given an experimental result, return datasets and possibly
         dictionary of comments
     :param addReverse: if True, then also add reverse lookup
@@ -27,6 +27,8 @@ def getDatasets( result, addReverse = True ):
         comments[i]=ds.dataInfo.dataId
         if hasattr ( ds.dataInfo, "comment" ):
             comments[i]=ds.dataInfo.comment
+        if verbose:
+            print ( f"[{i}]: {comments[i]}" )
         if addReverse:
             datasets[ ds.dataInfo.dataId ] = i
     return datasets, comments
@@ -174,7 +176,7 @@ def getExpResult ( database, analysis ):
         sys.exit()
     return results[0]
 
-def aggregateByNames ( database, analysis, drops, exclusives ):
+def aggregateByNames ( database, analysis, drops, exclusives, verbose ):
     """ run the aggregator based on SR names
     :param database: path to database
     :param analysis: ana id, e.g. CMS-SUS-19-006
@@ -183,7 +185,7 @@ def aggregateByNames ( database, analysis, drops, exclusives ):
                        SRs
     """
     result  = getExpResult ( database, analysis )
-    datasets, comments = getDatasets( result, addReverse=False )
+    datasets, comments = getDatasets( result, addReverse=False, verbose = verbose )
     filtered = {}
     dropped, aggs = [], []
     for srnr, srname in datasets.items():
