@@ -45,10 +45,10 @@ def pprint ( C, droprate = 2., isolationscore = 150.,
             aggs.append ( [ i ] )
         # print ( f"{sr}: {C[sr]:.3f}" )
     aggs.append ( overflow )
-    print ( f"{len(zeroes)} zeroes, {ones} < {pmax}, {len(exclusives)} > pmax" )
+    print ( f"[aggregate.py] {len(zeroes)} zeroes, {ones} < {pmax}, {len(exclusives)} > pmax" )
     # print ( f"agg: {aggs}" )
-    print ( f'{len(exclusives)} exclusives: -t {" -t ".join ( map(str, exclusives ) ) }' )
-    print ( f'{len(drops)} drops: -d {" -d ".join ( map(str, drops ) ) }' )
+    print ( f'[aggregate.py] {len(exclusives)} SRs are exclusives: {" -t ".join ( map(str, exclusives ) ) }' )
+    print ( f'[aggregate.py] {len(drops)} SRs are dropped: {" -d ".join ( map(str, drops ) ) }' )
     return drops, exclusives
 
 def run():

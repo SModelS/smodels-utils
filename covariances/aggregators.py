@@ -139,7 +139,7 @@ def obtainDictFromComment ( comment, analysis ):
         pt = tokens[3]
         p = pt.find("to")
         pt = int ( pt[:p] )
-        D["pt"]=pt
+        # D["pt"]=pt
         # print ( "tokens", tokens, "D", D )
     if "CMS-SUS-16-039" in analysis:
         tokens = comment.split("_")
@@ -162,7 +162,6 @@ def obtainDictFromComment ( comment, analysis ):
 def getExpResult ( database, analysis ):
     print ( "[aggregators.py] instantiating database ", end="...", flush=True )
     d=Database( database )
-    print ( "done." )
     if analysis.endswith ( "-eff" ):
         analysis = analysis.replace("-eff","")
     ids = [ analysis ]
@@ -317,7 +316,7 @@ def describe ( aggs, dropped, n=None ):
     for i in aggs:
         for j in i: c.add ( j )
     # oaggs = oneIndex ( aggs )
-    print ( "largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
+    print ( "[aggregators.py] largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
     nregions, nexclusives = len(c), 0
     if n != None:
         nregions = n
