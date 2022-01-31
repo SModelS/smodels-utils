@@ -471,6 +471,9 @@ if __name__ == "__main__":
             options["drawExpected"] = drawExpected
         if parser.has_option("options","pngPlots"):
             options["pngAlso"] = parser.getboolean("options", "pngPlots" )
+        options["expectationType"] = "posteriori"
+        if parser.has_option("options","expectationType"):
+            options["expectationType"] = parser.get ( "options", "expectationType" )
         if parser.has_option("options","keepTopNSRs"):
             options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
             if dataselector in [ "combined", "upperLimit" ] and options["keepTopNSRs"]>0:
