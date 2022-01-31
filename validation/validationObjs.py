@@ -982,6 +982,7 @@ class ValidationPlot():
         dt = round ( ( time.time() - self.t0 ) / 60. / 60., 3 ) ## in hours
         meta = { "smodelsver": installation.version(), "axes": self.axes,
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
+                 "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if self.namedTarball != None:
             meta["tarball"]=self.namedTarball
