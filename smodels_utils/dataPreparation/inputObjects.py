@@ -139,7 +139,8 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
-                          max_datasets=None, aggregate = None, datasets = None ):
+                          max_datasets=None, aggregate = None, datasets = None,
+                          histoIsCorrelations=False ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -150,6 +151,9 @@ class MetaInfoInput(Locker):
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
          matrix with the errors given per signal region
+        :param histoIsCorrelations: if true, then assume that we histoname
+        refers to a correlation matrix, not a covariance matrix, so multiply with
+        the SR erros, accordingly
         """
 
         handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate )
@@ -164,12 +168,20 @@ class MetaInfoInput(Locker):
             for rowctr,row in enumerate(handler.covariance):
                 self.covariance += "["
                 for colctr,x in enumerate(row):
+                    if histoIsCorrelations:
+                        if datasets == None:
+                            logger.error ( "you supplied correlations, now i need datasets" )
+                            sys.exit()
+                        oldx=x
+                        x = x * datasets[colctr].bgError * datasets[rowctr].bgError
+                        if colctr < 2 and rowctr < 2:
+                            logger.error ( f">>> ctrs={colctr}, {rowctr}, bgerr={datasets[colctr].bgError}, x={oldx}, {x}" )
                     if rowctr==colctr:
                         logger.debug ( "variance(%d,%d)=%f" % ( rowctr+1, colctr+1, x ) )
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x:
+                            if dsVar > 1.2 * x and not histoIsCorrelations:
                                 logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) var #(%d,%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1, colctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
