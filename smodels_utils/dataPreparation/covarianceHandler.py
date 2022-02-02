@@ -18,6 +18,10 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 
+## if errors in individual datasets are larger than the variances in the cov matrix,
+## overwrite with conservative estimate
+overrideWithConservativeErrors = True
+
 def computeAggCov ( covariance, agg1, agg2 ):
     """ compute the covariance between agg1 and agg2
     :param covariance: the covariance matrix
@@ -30,7 +34,7 @@ def computeAggCov ( covariance, agg1, agg2 ):
             C+=covariance[i-1][j-1]
     return C
 
-def aggregateMe ( covariance, aggregate ):
+def aggregateMe ( covariance, aggregate, agg_prefix ):
     """ aggregate the covariance matrix according to aggregate
     :param covariance: the matrix.
     :param aggregate: list of lists of indices
@@ -45,7 +49,10 @@ def aggregateMe ( covariance, aggregate ):
         newCov.append ( copy.deepcopy(row) )
     #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
     for ctr,agg in enumerate ( aggregate ):
-        newDSOrder.append ( "ar%d" % ctr )
+        if agg_prefix == "SR":
+            newDSOrder.append ( f"{agg_prefix}{agg[0]}" )
+        else:
+            newDSOrder.append ( f"{agg_prefix}{ctr}" )
         V=0.
         for i in agg:
             for j in agg:
@@ -59,11 +66,12 @@ def aggregateMe ( covariance, aggregate ):
 
 class CovarianceHandler:
     def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None ):
+                   aggregate = None, agg_prefix = "ar" ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
                          from.
         """
+        self.agg_prefix = agg_prefix
         import ROOT
         f=ROOT.TFile ( filename )
         h=self.getHistogram ( f, histoname )
@@ -142,7 +150,8 @@ class CovarianceHandler:
 
     def aggregateThis ( self, aggregate ):
         """ yo. aggregate. """
-        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate )
+        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate, 
+                                           self.agg_prefix )
         self.covariance = newCov
         self.datasetOrder=newDSOrder
 

@@ -18,6 +18,7 @@ from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
 from smodels_utils.dataPreparation.covarianceHandler import CovarianceHandler
+from smodels_utils.dataPreparation import covarianceHandler
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.theory.element import Element
@@ -140,7 +141,7 @@ class MetaInfoInput(Locker):
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
                           max_datasets=None, aggregate = None, datasets = None,
-                          histoIsCorrelations=False ):
+                          histoIsCorrelations=False, aggprefix="ar" ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -154,13 +155,13 @@ class MetaInfoInput(Locker):
         :param histoIsCorrelations: if true, then assume that we histoname
         refers to a correlation matrix, not a covariance matrix, so multiply with
         the SR erros, accordingly
+        :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         """
-
-        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate )
+        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate,
+                                      aggprefix )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
-            #self.datasetOrder = ", ".join ( [ '"sr%d"' % (x) for x in range ( handler.n-1 ) ] )
             self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n-1 ) ] )
         self.covariance = handler.covariance
         if True: ## pretty print
@@ -174,15 +175,15 @@ class MetaInfoInput(Locker):
                             sys.exit()
                         oldx=x
                         x = x * datasets[colctr].bgError * datasets[rowctr].bgError
-                        if colctr < 2 and rowctr < 2:
-                            logger.error ( f">>> ctrs={colctr}, {rowctr}, bgerr={datasets[colctr].bgError}, x={oldx}, {x}" )
+                        #if colctr < 2 and rowctr < 2:
+                        #    logger.error ( f">>> ctrs={colctr}, {rowctr}, bgerr={datasets[colctr].bgError}, x={oldx}, {x}" )
                     if rowctr==colctr:
                         logger.debug ( "variance(%d,%d)=%f" % ( rowctr+1, colctr+1, x ) )
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x and not histoIsCorrelations:
-                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) var #(%d,%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1, colctr+1 ) )
+                            if dsVar > 1.2 * x and not histoIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
+                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) at (%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
                             off = max ( dsVar,x ) / min ( dsVar,x)
@@ -978,10 +979,11 @@ class TxNameInput(Locker):
                     massDiff = m1-m2
                     if massDiff < 0.:
                         self._smallerThanError += 1
-                        if self._smallerThanError < 4:
-                            logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
-                        if self._smallerThanError == 4:
-                            logger.error("(I quenched a few more error msgs as the one above)" )
+                        if not quenchNegativeMasses:
+                            if self._smallerThanError < 4:
+                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
+                            if self._smallerThanError == 4:
+                                logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
                     check = eval(vertex,{'dm' : massDiff})
