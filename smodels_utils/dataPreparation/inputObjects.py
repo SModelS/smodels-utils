@@ -17,6 +17,8 @@ from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
+from smodels_utils.dataPreparation.covarianceHandler import CovarianceHandler
+from smodels_utils.dataPreparation import covarianceHandler
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.theory.element import Element
@@ -105,149 +107,6 @@ class Locker(object):
 
         return self.infoAttr + self.internalAttr + self.requiredAttr
 
-class CovarianceHandler:
-    def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None ):
-        import ROOT
-        f=ROOT.TFile ( filename )
-        h=self.getHistogram ( f, histoname )
-        xaxis = h.GetXaxis()
-        self.n=h.GetNbinsX()+1
-        if max_datasets:
-            self.n=min(max_datasets+1,self.n)
-        self.datasetOrder = []
-        self.covariance = []
-        self.blinded_regions = []
-        for i in range ( 1, self.n ):
-            if i in self.blinded_regions:
-                continue
-            self.datasetOrder.append ( xaxis.GetBinLabel(i) )
-            row = []
-            for j in range ( 1, self.n ):
-                if j in self.blinded_regions:
-                    continue
-                el = h.GetBinContent ( i, j )
-                if i==j and el < 1e-4:
-                   logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
-                   logger.error ( "will set it to 1e-4" )
-                   el = 1e-4
-                row.append ( el )
-            self.covariance.append ( row )
-
-        if aggregate != None:
-            ## aggregate the stuff
-            self.aggregateThis ( aggregate )
-
-        self.removeSmallValues()
-        self.checkCovarianceMatrix()
-
-    def computeAggCov ( self, agg1, agg2 ):
-        """ compute the covariance between agg1 and agg2 """
-        C=0.
-        for i in agg1:
-            for j in agg2:
-                C+=self.covariance[i-1][j-1]
-        return C
-
-    def checkCovarianceMatrix( self ):
-        """ a quick check if the covariance matrix is invertible. """
-        from smodels.tools.simplifiedLikelihoods import Data
-        n=len(self.covariance)
-        m=Data( [0.]*n, [0.]*n, self.covariance )
-        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
-        try:
-            # I=(m.covariance)**(-1)
-            I=scipy.linalg.inv(m.covariance)
-        except Exception as e:
-            logger.error ( "Inversion failed. %s" % e )
-            sys.exit()
-        try:
-            from scipy import stats
-            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
-        except Exception as e:
-            import numpy
-            logger.error ( "computation of logpdf failed: %s" % e )
-            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
-            sys.exit()
-
-    def removeSmallValues ( self ):
-        """ set small values in covariance matrix to zero """
-        return
-        #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
-        #        type(self.covariance[0][0]) )
-        threshold = .05
-        removed, ntot = 0, 0
-        for irow,row in enumerate ( self.covariance ):
-            for icol,col in enumerate ( row ):
-                if icol >= irow:
-                    continue
-                corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
-                ntot += 1
-                if corr < threshold:
-                    removed += 1
-                    # print ( f"removing {corr:.3f} <= {threshold} at ({irow},{icol}). was: {self.covariance[irow][icol]:.3f}." )
-                    self.covariance[irow][icol]=0.
-                    self.covariance[icol][irow]=0.
-        if removed > 0:
-            logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
-
-    def aggregateThis ( self, aggregate ):
-        newDSOrder=[]
-        nNew = len(aggregate)
-        row = [0.]*nNew
-        newCov = []
-        oldcov = copy.deepcopy ( self.covariance )
-        for i in range(nNew):
-            newCov.append ( copy.deepcopy(row) )
-        #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
-        for ctr,agg in enumerate ( aggregate ):
-            newDSOrder.append ( "ar%d" % ctr )
-            V=0.
-            for i in agg:
-                for j in agg:
-                    V+=self.covariance[i-1][j-1]
-            newCov[ctr][ctr]=V
-            for ctr2,agg2 in enumerate ( aggregate ):
-                if ctr == ctr2: continue
-                cov = self.computeAggCov ( agg, agg2 )
-                newCov[ctr][ctr2]=cov
-
-            #for i,a in enumerate(agg):
-            #    newCov[ctr][ctr]+=self.covariance[a][a]
-        self.covariance=newCov
-        self.datasetOrder=newDSOrder
-        #logger.error("datasetOrder %s" % self.datasetOrder )
-
-    def getHistogram ( self, f, histoname ):
-        """ simple method to retrieve histogram
-        :param f: filehandle
-        """
-        h=f.Get ( histoname )
-        if h: return h
-        if not "/" in histoname:
-            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
-            sys.exit()
-        tokens = histoname.split("/")
-        if not len(tokens)==2:
-            logger.error ( "cannot interpret histoname %s in %s" % \
-                            ( histoname, f.name ) )
-            sys.exit()
-        c= f.Get ( tokens[0] )
-        if not c:
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
-            sys.exit()
-        if c.ClassName() == "TCanvas":
-            h=c.GetPrimitive ( tokens[1] )
-            if h: return h
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
-            sys.exit()
-        logger.error ( "cannot interpret %s in %s" % \
-                        ( histoname, f.name ) )
-        sys.exit()
-
-
 
 class MetaInfoInput(Locker):
     """Holds all informations related to the publication
@@ -281,7 +140,8 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
-                          max_datasets=None, aggregate = None, datasets = None ):
+                          max_datasets=None, aggregate = None, datasets = None,
+                          histoIsCorrelations=False, aggprefix="ar" ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -292,13 +152,16 @@ class MetaInfoInput(Locker):
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
          matrix with the errors given per signal region
+        :param histoIsCorrelations: if true, then assume that we histoname
+        refers to a correlation matrix, not a covariance matrix, so multiply with
+        the SR erros, accordingly
+        :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         """
-
-        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate )
+        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate,
+                                      aggprefix )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
-            #self.datasetOrder = ", ".join ( [ '"sr%d"' % (x) for x in range ( handler.n-1 ) ] )
             self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n-1 ) ] )
         self.covariance = handler.covariance
         if True: ## pretty print
@@ -306,13 +169,21 @@ class MetaInfoInput(Locker):
             for rowctr,row in enumerate(handler.covariance):
                 self.covariance += "["
                 for colctr,x in enumerate(row):
+                    if histoIsCorrelations:
+                        if datasets == None:
+                            logger.error ( "you supplied correlations, now i need datasets" )
+                            sys.exit()
+                        oldx=x
+                        x = x * datasets[colctr].bgError * datasets[rowctr].bgError
+                        #if colctr < 2 and rowctr < 2:
+                        #    logger.error ( f">>> ctrs={colctr}, {rowctr}, bgerr={datasets[colctr].bgError}, x={oldx}, {x}" )
                     if rowctr==colctr:
                         logger.debug ( "variance(%d,%d)=%f" % ( rowctr+1, colctr+1, x ) )
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x:
-                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) var #(%d,%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1, colctr+1 ) )
+                            if dsVar > 1.2 * x and not histoIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
+                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) at (%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
                             off = max ( dsVar,x ) / min ( dsVar,x)
@@ -1108,10 +979,11 @@ class TxNameInput(Locker):
                     massDiff = m1-m2
                     if massDiff < 0.:
                         self._smallerThanError += 1
-                        if self._smallerThanError < 4:
-                            logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
-                        if self._smallerThanError == 4:
-                            logger.error("(I quenched a few more error msgs as the one above)" )
+                        if not quenchNegativeMasses:
+                            if self._smallerThanError < 4:
+                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
+                            if self._smallerThanError == 4:
+                                logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
                     check = eval(vertex,{'dm' : massDiff})

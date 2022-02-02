@@ -181,10 +181,13 @@ class DatabaseCreator(list):
         :param datasetObject: DataSetInput object
         :raise Error: if there is already a dataset instance with same name
         """
+        if datasetObject is None:
+            return
 
         if not datasetObject in self:
             logger.error("Dataset %s can not be updated." %datasetObject._name)
-            sys.exit()
+            return
+            # sys.exit()
 
         #Find index of dataset with the same name
         i = self.index(datasetObject)
@@ -330,12 +333,13 @@ class DatabaseCreator(list):
                 self.timeStamp("computing upper limits for %s" %str(dataset))
                 dataset.computeStatistics()
         #Write down dataInfo.txt
-        self._createInfoFile('dataInfo', dataset, datasetFolder)
 
         #Consistency checks:
         if not dataset.checkConsistency():
             logger.error("Dataset %s failed the consistency checks" %dataset)
-            sys.exit()
+            return
+            # sys.exit()
+        self._createInfoFile('dataInfo', dataset, datasetFolder)
 
         #Loop over txnames in datasets:
         for txName in dataset._txnameList:

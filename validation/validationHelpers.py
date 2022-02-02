@@ -59,8 +59,15 @@ def mergeExclusionLines ( lines : list ):
     :param lines: list of lines, one line is a dictionary with x and y as keys.
     """
     line = { "x": [], "y": [] }
-    for l in lines:
+    for lt in lines:
+        l = lt
+        if type(l)==list:
+            l = mergeExclusionLines ( lt )
         if type(l) != dict:
+            continue
+        if "points" in l:
+            l = l["points"]
+        if not "x" in l or not "y" in l:
             continue
         for lx, ly in zip( l["x"], l["y"] ):
             line["x"].append ( lx )

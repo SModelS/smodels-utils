@@ -437,7 +437,10 @@ class ValidationPlot():
             f.write("[printer]\noutputType = python\n")
             f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
                      model )
-            f.write("[python-printer]\naddElementList = False\ntypeOfExpectedValues='posteriori'\n")
+            #expected = "posteriori"
+            #expected = "priori"
+            expected = self.options["expectationType"]
+            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\n")
             f.close()
         os.close(pf)
         return parFile
@@ -981,6 +984,7 @@ class ValidationPlot():
         dt = round ( ( time.time() - self.t0 ) / 60. / 60., 3 ) ## in hours
         meta = { "smodelsver": installation.version(), "axes": self.axes,
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
+                 "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if self.namedTarball != None:
             meta["tarball"]=self.namedTarball

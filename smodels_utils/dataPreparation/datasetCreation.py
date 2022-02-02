@@ -69,7 +69,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     for ca,a in enumerate(agg):
         if a == 0:
             logger.error ( f"found index 0 in aggregation region #{ca+1}. but we are one-indexed. add 1 to all elements?" )
-            sys.exit(-1) 
+            sys.exit(-1)
         if a > len(origDataSets):
             logger.error ( f"found index {a} in aggregation region #{ca+1}. but know only of {len(origDataSets)} SRs." )
             sys.exit(-1)
@@ -382,6 +382,13 @@ class DatasetsFromEmbaked:
         return self.__next__()
 
     def getBinNr ( self, srname ):
+        if self.sr_prefix == None:
+            if not hasattr ( self, "countbinnr" ):
+                self.countbinnr = {}
+            if not srname in self.countbinnr:
+                self.countbinnr[srname] = len(self.countbinnr)
+            return self.countbinnr[srname]
+
         if srname.startswith ( self.sr_prefix ):
             srname = srname[len(self.sr_prefix):]
             p1 = srname.find("_")
@@ -409,7 +416,13 @@ class DatasetsFromEmbaked:
             if key == -1:
                 continue
             values = self.stats[key]
-            if not key.startswith ( self.sr_prefix ):
+            if self.sr_prefix == None and not key in self.countbinnr:
+                if ctwarning < 2:
+                    print ( f"[datasetCreation] skipping {key} -- region name not in aggregation" )
+                ctwarning+=1
+                continue
+
+            if type(self.sr_prefix)==str and not key.startswith ( self.sr_prefix ):
                 if ctwarning < 2:
                     print ( f"[datasetCreation] skipping {key} -- region name does not begin with '{self.sr_prefix}'" )
                 if ctwarning == 3:
@@ -425,7 +438,7 @@ class DatasetsFromEmbaked:
                 name = name[:p1]
             # name = "SR%d" % (binnr+1)
             # name = "sr%d" % (binnr)
-            dataId = key 
+            dataId = key
             count_all+=1
             if not count_all in self.blinded_regions:
                 counter+=1

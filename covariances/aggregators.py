@@ -15,7 +15,7 @@ import os
 import argparse
 import cov_helpers
 
-def getDatasets( result, addReverse = True ):
+def getDatasets( result, addReverse = True, verbose = False ):
     """ given an experimental result, return datasets and possibly
         dictionary of comments
     :param addReverse: if True, then also add reverse lookup
@@ -24,7 +24,11 @@ def getDatasets( result, addReverse = True ):
     for _,ds in enumerate ( result.datasets ):
         i=_ + 1
         datasets[i]=ds.dataInfo.dataId
-        comments[i]=ds.dataInfo.comment
+        comments[i]=ds.dataInfo.dataId
+        if hasattr ( ds.dataInfo, "comment" ):
+            comments[i]=ds.dataInfo.comment
+        if verbose:
+            print ( f"[{i}]: {comments[i]}" )
         if addReverse:
             datasets[ ds.dataInfo.dataId ] = i
     return datasets, comments
@@ -120,8 +124,25 @@ def obtainDictFromComment ( comment, analysis ):
         tokens = comment.split("_")
         D["jets"]= int ( tokens[1].replace("Njet","") )
         D["b"] = int ( tokens[2].replace("Nb","") )
-        # D["HT"] = tokens[3].replace("HT","")
-        # D["MHT"] = tokens[4].replace("MHT","")
+    if "CMS-SUS-16-048" in analysis:
+        tokens = comment.split("_")
+        D["ewkino"]=-1
+        if tokens[0]=="stop":
+            D["ewkino"]=0
+        if tokens[0]=="Ewkino":
+            D["ewkino"]=1
+        D["met"]=-1
+        if tokens[1]=="lowMET":
+            D["met"]=0
+        if tokens[1]=="medMET":
+            D["met"]=1
+        if tokens[1]=="highMET":
+            D["met"]=2
+        pt = tokens[3]
+        p = pt.find("to")
+        pt = int ( pt[:p] )
+        # D["pt"]=pt
+        # print ( "tokens", tokens, "D", D )
     if "CMS-SUS-16-039" in analysis:
         tokens = comment.split("_")
         print ( tokens )
@@ -143,7 +164,6 @@ def obtainDictFromComment ( comment, analysis ):
 def getExpResult ( database, analysis ):
     print ( "[aggregators.py] instantiating database ", end="...", flush=True )
     d=Database( database )
-    print ( "done." )
     if analysis.endswith ( "-eff" ):
         analysis = analysis.replace("-eff","")
     ids = [ analysis ]
@@ -156,7 +176,7 @@ def getExpResult ( database, analysis ):
         sys.exit()
     return results[0]
 
-def aggregateByNames ( database, analysis, drops, exclusives ):
+def aggregateByNames ( database, analysis, drops, exclusives, verbose ):
     """ run the aggregator based on SR names
     :param database: path to database
     :param analysis: ana id, e.g. CMS-SUS-19-006
@@ -165,7 +185,7 @@ def aggregateByNames ( database, analysis, drops, exclusives ):
                        SRs
     """
     result  = getExpResult ( database, analysis )
-    datasets, comments = getDatasets( result, addReverse=False )
+    datasets, comments = getDatasets( result, addReverse=False, verbose = verbose )
     filtered = {}
     dropped, aggs = [], []
     for srnr, srname in datasets.items():
@@ -298,7 +318,7 @@ def describe ( aggs, dropped, n=None ):
     for i in aggs:
         for j in i: c.add ( j )
     # oaggs = oneIndex ( aggs )
-    print ( "largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
+    print ( "[aggregators.py] largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
     nregions, nexclusives = len(c), 0
     if n != None:
         nregions = n
