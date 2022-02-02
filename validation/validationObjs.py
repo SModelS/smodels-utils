@@ -787,7 +787,9 @@ class ValidationPlot():
                 massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():
                     try:
-                        Dict['efficiency'] = round ( txname.txnameData.getValueFor(massGeV), 8 )
+                        eff = txname.txnameData.getValueFor(massGeV)
+                        if eff != None:
+                            Dict['efficiency'] = round ( eff, 8 )
                     except SModelSError as e:
                         logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
                         Dict=None
