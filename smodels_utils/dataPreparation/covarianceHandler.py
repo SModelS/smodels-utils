@@ -34,7 +34,7 @@ def computeAggCov ( covariance, agg1, agg2 ):
             C+=covariance[i-1][j-1]
     return C
 
-def aggregateMe ( covariance, aggregate, agg_prefix ):
+def aggregateMe ( covariance, aggregate, aggprefix="AR" ):
     """ aggregate the covariance matrix according to aggregate
     :param covariance: the matrix.
     :param aggregate: list of lists of indices
@@ -49,10 +49,10 @@ def aggregateMe ( covariance, aggregate, agg_prefix ):
         newCov.append ( copy.deepcopy(row) )
     #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
     for ctr,agg in enumerate ( aggregate ):
-        if agg_prefix == "SR":
-            newDSOrder.append ( f"{agg_prefix}{agg[0]}" )
+        if aggprefix == "SR":
+            newDSOrder.append ( f"{aggprefix}{agg[0]}" )
         else:
-            newDSOrder.append ( f"{agg_prefix}{ctr}" )
+            newDSOrder.append ( f"{aggprefix}{ctr}" )
         V=0.
         for i in agg:
             for j in agg:
@@ -66,12 +66,12 @@ def aggregateMe ( covariance, aggregate, agg_prefix ):
 
 class CovarianceHandler:
     def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None, agg_prefix = "ar" ):
+                   aggregate = None, aggprefix = "ar" ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
                          from.
         """
-        self.agg_prefix = agg_prefix
+        self.aggprefix = aggprefix
         import ROOT
         f=ROOT.TFile ( filename )
         h=self.getHistogram ( f, histoname )
@@ -151,7 +151,7 @@ class CovarianceHandler:
     def aggregateThis ( self, aggregate ):
         """ yo. aggregate. """
         newCov, newDSOrder = aggregateMe ( self.covariance, aggregate, 
-                                           self.agg_prefix )
+                                           self.aggprefix )
         self.covariance = newCov
         self.datasetOrder=newDSOrder
 
