@@ -31,7 +31,8 @@ def convertNewAxes ( newa ):
     print ( f"[plotBestSRs] cannot convert axis {newa}" )
     return None
 
-def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors ):
+def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors,
+          rank : int, nmax : int ):
     """ plot.
     :param dbpath: path to database
     :param analysis: analysis to consider
@@ -39,6 +40,8 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     :param outputfile: name of outputfile, using @a and @t to stand for
      analysis and topology, respectively
     :param defcolors: user-specified colors
+    :param rank: draw best (rank=1), or second best or ....
+    :param nmax: maximum SRs to draw (6 by default)
     """
     vfiles = validationfiles.split(",")
     lines = []
@@ -83,7 +86,10 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
             continue
         if max_y != None and axes[0]>max_y:
             continue
-        bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
+        ds = point["dataset"]
+        if rank > 1:
+            ds = point["leadingDSes"][rank][1]
+        bestSRs.append ( ( axes[1], axes[0], ds ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
         print ( "[plotBestSRs] skipped %d/%d points: %s" % \
@@ -117,11 +123,13 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     occs = list ( cCounts.keys() )
     occs.sort( reverse=True )
     ctr = 0
-    origcolors = [ "r", "g", "b", "c", "m", "y", "k" ] # "#ffa500", '#115f6a', "#A52A2A", "k" ]
-    #origcolors += [ "navy", "teal", "maroon", "coral", "lime", "aqua", "indigo", "wheat" ]
+    origcolors = [ "r", "g", "b", "c", "m", "y" ] # "#ffa500", '#115f6a', "#A52A2A", "k" ]
+    origcolors += [ "navy", "teal", "maroon", "coral", "lime", "aqua", "indigo", "wheat" ]
     #origcolors += [ "slate" ]
     for i in range(30):
         origcolors.append ( "k" )
+    for i in range(nmax,len(origcolors)):
+        origcolors[i]="k"
     if defcolors not in [ "", None ]:
         for i,c in enumerate(defcolors.split(",")[:28]):
             origcolors[i]=c
@@ -178,9 +186,25 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         plt.ylabel ( "$\Gamma$ [GeV]" )
         plt.xlabel ( "m [GeV]" )
     shorttopo = shortTxName ( txnames )
-    plt.title ( "Best Signal Region, %s (%s)" % ( analysis, shorttopo ) )
+    ttl = "Best Signal Region"
+    if rank > 1:
+        sr = f"{rank}nth"
+        if rank == 2:
+            sr = "second"
+        if rank == 3:
+            sr = "third"
+        ttl = f"{sr} best SR"
+    plt.title ( "%s, %s (%s)" % ( ttl, analysis, shorttopo ) )
     print ( "[plotBestSRs] plotting %s (%s)" % ( analysis, shorttopo ) )
     fname = outputfile.replace( "@a", analysis ).replace( "@t", shorttopo )
+    srank = "best"
+    if rank == 2:
+        srank = "second"
+    if rank == 3:
+        srank = "third"
+    if rank > 3:
+        srank = f"{rank}nth"
+    fname = fname.replace ( "@r", srank )
     print ( "[plotBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
     plt.kittyPlot()
@@ -231,6 +255,12 @@ if __name__ == "__main__":
     argparser.add_argument ( "-y", "--max_y",
             help="upper bound on y axis [None]",
             type=float, default=None )
+    argparser.add_argument ( "-r", "--rank",
+            help="which rank to draw [1]",
+            type=int, default=1 )
+    argparser.add_argument ( "-n", "--nmax",
+            help="maximum numbers of SRs [6]",
+            type=int, default=6 )
     argparser.add_argument ( "-a", "--analysis",
             help="analysis name, like the directory name [CMS-SUS-16-050-eff]",
             type=str, default="CMS-SUS-16-050-eff" )
@@ -242,7 +272,7 @@ if __name__ == "__main__":
             type=str, default="T2tt_2EqMassAx_EqMassBy.py" )
     argparser.add_argument ( "-o", "--outputfile",
             help="output file, replacing @a and @t with analysis and topo name [bestSR_@a_@t.png]",
-            type=str, default="./bestSR_@a_@t.png" )
+            type=str, default="./@rSR_@a_@t.png" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
@@ -257,14 +287,16 @@ if __name__ == "__main__":
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
                 print ( "[plotBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
-                fname = draw( ipath, args.max_x, args.max_y, args.outputfile )
+                fname = draw( ipath, args.max_x, args.max_y, args.outputfile,
+                              rank = args.rank, nmax = args.nmax )
                 if args.copy:
                     cmd = "cp %s ../../smodels.github.io/plots/" % fname
                     o = subprocess.getoutput ( cmd )
                     print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
         fname = draw( args.dbpath, args.analysis, args.validationfiles, 
-                      args.max_x, args.max_y, args.outputfile, args.colors )
+                      args.max_x, args.max_y, args.outputfile, args.colors,
+                      rank = args.rank, nmax = args.nmax )
         if args.copy:
             cmd = "cp %s ../../smodels.github.io/plots/" % fname
             o = subprocess.getoutput ( cmd )
