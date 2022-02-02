@@ -88,6 +88,9 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
             continue
         ds = point["dataset"]
         if rank > 1:
+            if not "leadingDSes" in point:
+                print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Maybe rerun validation?")
+                return
             ds = point["leadingDSes"][rank][1]
         bestSRs.append ( ( axes[1], axes[0], ds ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
