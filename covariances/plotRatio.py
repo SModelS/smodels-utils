@@ -179,7 +179,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
        ylabel = "m$_{LSP}$ [GeV]"
 
     hasDebPkg()
-    uls={}
+    uls,effs={},{}
     nsr=""
     noaxes = 0
     for ctr,point in enumerate(content1["data"] ):
@@ -199,19 +199,21 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             #sys.exit()
         axes = convertNewAxes ( axes_ )
         h = axisHash ( axes )
-        if not "UL" in point:
+        if not "UL" and not "efficiency" in point:
             continue
         if point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
-        if point["UL"] == None:
-            continue
-        uls[ h ] = point["UL" ] / point["signal"]
+        if "UL" in point and point["UL"] != None:
+            uls[ h ] = point["UL" ] / point["signal"]
+        if "efficiency" in point and point["efficiency"] != None:
+            effs[ h ] = point["efficiency"]
         # uls[ h ] = point["signal" ] / point["UL"]
 
     err_msgs = 0
 
     ipoints = content2["data"]
     points = []
+    plotEfficiencies = options["ploteffs"]
 
     for ctr,point in enumerate(ipoints):
         axes = convertNewAxes ( point["axes"] )
@@ -219,15 +221,24 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             continue
         h = axisHash ( axes )
         ul1 = None
+        eff1 = None
         if h in uls.keys():
             ul1 = uls[h]
-        if ul1 and ul1>0. and "UL" in point:
+        if h in effs.keys():
+            eff1 = effs[h]
+        if not plotEfficiencies and ul1 and ul1>0. and "UL" in point:
             ul2 = point["UL"] / point["signal"]
             # ul2 = point["signal"] / point["UL"]
             ratio = float("nan")
             if ul2 > 0.:
                 ratio = ul1 / ul2
             # print ( "ratio",axes[0],axes[1],ratio )
+            points.append ( (axes[0],axes[1],ratio ) )
+        elif plotEfficiencies and eff1 and eff1>0. and "efficiency" in point:
+            eff2 = point["efficiency"]
+            ratio = float ("nan" )
+            if eff2 > 0.:
+                ratio = eff1 / eff2
             points.append ( (axes[0],axes[1],ratio ) )
         else:
             err_msgs += 1
@@ -256,9 +267,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     x = yx[::,1]
     y = yx[::,0]
     col = griddata ( points[::,0:2], points[::,2], yx, rescale=True )
-    for i in range(len(x)):
-        if abs(x[i]-200.) < 10. and abs(y[i]-400.)< 20.:
-            print ( "pt", x[i], y[i], yx[i] )
+    #for i in range(len(x)):
+    #    if abs(x[i]-200.) < 10. and abs(y[i]-400.)< 20.:
+    #        print ( "pt", x[i], y[i], yx[i] )
 
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( content2["data"] ) ) )
@@ -404,10 +415,12 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
-    xpos = max(x)+.40*(max(x)-min(x))
-    plt.text ( xpos, ypos,
-               "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ),
-               fontsize=13, rotation = 90)
+    #xpos = max(x)+.40*(max(x)-min(x))
+    xpos = max(x)+.3*(max(x)-min(x))
+    line = "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 )
+    if options["ploteffs"]:
+        line = f"$f$ = eff({a1}) / eff({a2})"
+    plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
@@ -494,6 +507,8 @@ def main():
             default="../../smodels-database/" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
+    argparser.add_argument ( "-e", "--efficiencies", action="store_true",
+            help="plot ratios of efficencies of best SRs, not ULs" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     argparser.add_argument ( "-s", "--show", action="store_true",
@@ -521,7 +536,8 @@ def main():
         options = { "meta": args.meta, "show": args.show, "xlabel": args.xlabel,
                     "ylabel": args.ylabel, "zmax": args.zmax, "zmin": args.zmin,
                     "copy": args.copy, "output": args.output,
-                    "label1": args.label1, "label2": args.label2 }
+                    "label1": args.label1, "label2": args.label2,
+                    "ploteffs": args.efficiencies }
 
         draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
                options )
