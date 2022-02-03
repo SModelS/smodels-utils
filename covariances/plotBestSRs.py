@@ -102,7 +102,7 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     srDict, nrDict = {}, {}
     srNum = 0
     predefined = {}
-    predefined = { "c000": 3, "c100": 2, "c200": 0, "c300": 1 }
+    # predefined = { "c000": 3, "c100": 2, "c200": 0, "c300": 1 }
     for k,v in predefined.items():
         srDict[k]=v
         nrDict[v]=k
@@ -137,12 +137,16 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         for i,c in enumerate(defcolors.split(",")[:28]):
             origcolors[i]=c
     colors = copy.deepcopy ( origcolors )
-    for occ in occs:
-        if occ == 0:
-            break
-        for nr in cCounts[occ]:
-            colors[nr]=origcolors[ctr]
-            ctr+=1
+    sortByOccurences = True # False
+    if defcolors not in [ "", None ]:
+        sortByOccurences = False
+    if sortByOccurences:
+        for occ in occs:
+            if occ == 0:
+                break
+            for nr in cCounts[occ]:
+                colors[nr]=origcolors[ctr]
+                ctr+=1
     ctr = 0
     while len(nrDict.keys()) > len(colors):
         print ( "ERROR: not enough colors defined (%d needed, %d defined)!!" % \
@@ -154,7 +158,10 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         noRx.append ( i[0] )
         noRy.append ( i[1] )
     ax = plt.gca()
-    for n in nrDict.keys():
+    keys = list ( nrDict.items() )
+    keys.sort( key = lambda x: x[1] )
+    print ( "colors", colors )
+    for i,(n,v) in enumerate(keys):
         x,y=[],[]
         for x_,y_,z_ in nbsrs:
             if n == int(z_):
@@ -162,7 +169,8 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
                 y.append ( y_ )
         if len(x)==0:
             continue
-        col = colors[n]
+        #col = colors[n]
+        col = colors[i]
         label = nrDict[n]
         if col == "k":
             label = "others"
@@ -283,8 +291,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     args = argparser.parse_args()
-    if not args.default and not args.analysis.endswith("-eff"):
-        print ( "[plotBestSRs] warning, analysis name does not end with -eff, might an error" )
+    if not args.default and not args.analysis.endswith("-eff") and not args.analysis.endswith("-ma5") and not args.analysis.endswith("-agg") and not args.analysis.endswith("-adl"):
+        print ( "[plotBestSRs] warning, analysis name does not end with -eff or some such, might be an error" )
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:

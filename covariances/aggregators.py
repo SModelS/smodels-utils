@@ -124,6 +124,7 @@ def obtainDictFromComment ( comment, analysis ):
         tokens = comment.split("_")
         D["jets"]= int ( tokens[1].replace("Njet","") )
         D["b"] = int ( tokens[2].replace("Nb","") )
+        # D["HT"]= int ( tokens[3].replace("HT","") )
     if "CMS-SUS-16-048" in analysis:
         tokens = comment.split("_")
         D["ewkino"]=-1
