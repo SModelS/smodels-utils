@@ -160,7 +160,7 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     ax = plt.gca()
     keys = list ( nrDict.items() )
     keys.sort( key = lambda x: x[1] )
-    print ( "colors", colors )
+    # print ( "colors", colors )
     for i,(n,v) in enumerate(keys):
         x,y=[],[]
         for x_,y_,z_ in nbsrs:

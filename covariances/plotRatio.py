@@ -417,7 +417,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         ypos = min(y)*30.
     #xpos = max(x)+.40*(max(x)-min(x))
     xpos = max(x)+.3*(max(x)-min(x))
-    line = "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 )
+    # line = "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 )
+    line = "$f$ = $r$(%s) / $r$(%s)" % ( a1, a2 )
     if options["ploteffs"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
     plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
