@@ -440,7 +440,7 @@ class ValidationPlot():
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
-            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\n")
+            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
             f.close()
         os.close(pf)
         return parFile
@@ -618,10 +618,12 @@ class ValidationPlot():
         listOfExpRes = [self.expRes]
 
         t0=time.time()
+        print ( "xxx t0", t0 )
         """ Test all input points """
         modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
                  listOfExpRes, 5000, False, parameterFile)
         dt=(time.time()-t0) / len(fileList) ## for now we just write out avg time
+        print ( "xxx dt", dt )
         dt = round ( dt, 3 )
 
         #Define original plot
