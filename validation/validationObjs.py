@@ -988,10 +988,16 @@ class ValidationPlot():
             if "error" in i:
                 nerr += 1
         dt = round ( ( time.time() - self.t0 ) / 60. / 60., 3 ) ## in hours
+        #hostname = "unknown"
+        import socket
+        hostname = socket.gethostname()
         meta = { "smodelsver": installation.version(), "axes": self.axes,
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        meta["host"]=hostname
+        if hasattr ( self, "ncpus" ):
+            meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
             meta["tarball"]=self.namedTarball
         f.write("meta = %s\n" % str(meta) )
