@@ -617,14 +617,9 @@ class ValidationPlot():
         #Select the desired experimental result
         listOfExpRes = [self.expRes]
 
-        t0=time.time()
-        print ( "xxx t0", t0 )
         """ Test all input points """
         modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
                  listOfExpRes, 5000, False, parameterFile)
-        dt=(time.time()-t0) / len(fileList) ## for now we just write out avg time
-        print ( "xxx dt", dt )
-        dt = round ( dt, 3 )
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
@@ -669,6 +664,9 @@ class ValidationPlot():
                 Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
                 self.data.append ( Dict )
                 continue
+            dt = None
+            if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
+                dt = smodelsOutput["OutputStatus"]["time spent"]
             res = smodelsOutput['ExptRes']
             expRes = res[0]
             #Double checks (to make sure SModelS ran as expected):
@@ -743,10 +741,16 @@ class ValidationPlot():
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
                 continue
-            Dict = {'slhafile' : slhafile, 'axes' : varsDict, 't': dt,
+            if type(dt) == str:
+                if dt.endswith("s"):
+                    dt=dt[:-1]
+                dt=float(dt)
+            Dict = {'slhafile' : slhafile, 'axes' : varsDict,
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
+            if type(dt)==float:
+                Dict["t"]=dt ## in seconds
             if len(leadingDSes)>1:
                 s = []
                 n = self.options["keepTopNSRs"]
