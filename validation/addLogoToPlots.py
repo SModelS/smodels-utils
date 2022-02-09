@@ -88,8 +88,8 @@ def addLogo(filename,logo = None ):
         try:
             os.rename( tmpF, filename)
         except OSError as e:
-            print ( f"[addLogoToPlots] could not rename {tmpF} to {filename}: {e}. Will try to copy." )
-            shutil.copy ( tmpF, filename )
+            print ( f"[addLogoToPlots] could not rename {tmpF} to {filename}: {e}. Will try to move." )
+            shutil.move ( tmpF, filename )
         
 if __name__ == '__main__':
     addLogo( "tmp.pdf" )
