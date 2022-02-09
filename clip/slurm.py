@@ -441,7 +441,10 @@ def validate ( inifile, dry_run, nproc, time ):
     with open ( "run_validation_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
-    tmpfile = tempfile.mktemp(prefix="V", suffix=".sh",dir="./" )
+    tdir = "./temp"
+    if not os.path.exists ( tdir ):
+        os.mkdir ( tdir )
+    tmpfile = tempfile.mktemp(prefix="V", suffix=".sh",dir=tdir )
     with open ( tmpfile, "wt" ) as f:
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
