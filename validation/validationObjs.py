@@ -750,7 +750,7 @@ class ValidationPlot():
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
             if type(dt)==float:
-                Dict["t"]=dt ## in seconds
+                Dict["t"]=round(dt,3) ## in seconds
             if len(leadingDSes)>1:
                 s = []
                 n = self.options["keepTopNSRs"]
