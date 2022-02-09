@@ -429,7 +429,9 @@ def validate ( inifile, dry_run, nproc, time ):
         lines = f.readlines()
         f.close()
     filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
-    Dir = "%s/smodels-utils/clip/" % codedir
+    Dir = "%s/smodels-utils/clip/temp/" % codedir
+    if not os.path.exists ( Dir ):
+        os.mkdir ( Dir )
     print ( "creating script at %s/%s" % ( Dir, filename ) )
     nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
