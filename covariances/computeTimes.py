@@ -10,7 +10,7 @@ def computeTimes ( validationfile ):
     f.close()
     exec(txt,globals())
     ts, ts0 = [], []
-    for d in validationData[:3]:
+    for d in validationData[:]:
         if "t" in d:
             t = d["t"]
             ts.append ( t )
@@ -26,4 +26,5 @@ if __name__ == "__main__":
                     default = "~/git/smodels-database/13TeV/CMS/CMS-SUS-16-048-agg/validation/TChiWZoff_2EqMassAx_EqMassBy.py", type=str )
     args = ap.parse_args()
     filename = os.path.expanduser ( args.validationfile )
+    print ( f"[computeTimes] computing for {filename}" )
     computeTimes ( filename )
