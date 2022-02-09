@@ -686,7 +686,7 @@ def main():
                         type=int, default=-1 )
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
-    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation',
+    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/',
                         type=str, default=None )
     args=argparser.parse_args()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
