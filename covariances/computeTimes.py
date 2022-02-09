@@ -3,8 +3,10 @@
 """ get the average runtimes out of validation files """
 
 import numpy, os
+from smodels_utils.helper.various import getPathName
 
 def computeTimes ( validationfile ):
+    print ( f"[computeTimes] computing for {validationfile}" )
     f=open(validationfile,"rt")
     txt=f.read()
     f.close()
@@ -21,10 +23,19 @@ def computeTimes ( validationfile ):
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser( description= "very simple facility to compute average runtimes from validation files" )
-    ap.add_argument('-f','--validationfile',help="path to validation file [~/git/smodels-database/13TeV/CMS/CMS-SUS-16-048-agg/validation/TChiWZoff_2EqMassAx_EqMassBy.py]",
-                    default = "~/git/smodels-database/13TeV/CMS/CMS-SUS-16-048-agg/validation/TChiWZoff_2EqMassAx_EqMassBy.py", type=str )
+    ap = argparse.ArgumentParser( description= "very simple facility to compute average runtimes from validation files. supply either fullpath, or validationfile, dbpath, and analysis id" )
+    ap.add_argument('-f','--fullpath',help="full path to validation file. takes precedence. [None]",
+                    default = None, type=str )
+    ap.add_argument('-v','--validationfile',help="validation file [TChiWZoff_2EqMassAx_EqMassBy.py]",
+                    default = "TChiWZoff_2EqMassAx_EqMassBy.py", type=str )
+    ap.add_argument('-a','--analysisid',help="analysis id [CMS-SUS-16-039-agg]",
+                    default = "CMS-SUS-16-039-agg", type=str )
+    ap.add_argument('-d','--dbpath',help="database path [~/git/smodels-database]",
+                    default = "~/git/smodels-database", type=str )
     args = ap.parse_args()
-    filename = os.path.expanduser ( args.validationfile )
-    print ( f"[computeTimes] computing for {filename}" )
+    if args.fullpath != None:
+        filename = os.path.expanduser ( args.validationfile )
+        computeTimes ( filename )
+        sys.exit()
+    filename = getPathName ( args.dbpath, args.analysisid, args.validationfile )
     computeTimes ( filename )
