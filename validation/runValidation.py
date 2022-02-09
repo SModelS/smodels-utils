@@ -69,12 +69,13 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pret
             valPlot.getDataFromPlanes()
             # we did generate data
             options["generateData"]=True
-    if pretty in [ True ]:
+    if pretty in [ True, "dictonly" ]:
         valPlot.getPrettyPlot()
         if options["generateData"]:
             valPlot.saveData()
-        valPlot.savePlot()
-        if options["pngAlso"]:
+        if pretty not in [ "dictonly" ]:
+            valPlot.savePlot()
+        if options["pngAlso"] and pretty not in [ "dictonly" ]:
             valPlot.savePlot(fformat="png")
     from smodels_utils.helper.rootTools import destroyRoot
     destroyRoot()
@@ -493,7 +494,9 @@ if __name__ == "__main__":
                 options["prettyPlots"] = "both"
             if options["prettyPlots"] == False and spretty in [ "none", "neither", "dontplot" ]:
                 options["prettyPlots"] = None
-            if options["prettyPlots"] == False and spretty not in [ "false", "0", "no" ]:
+            if spretty in [ "dictonly" ]:
+                options["prettyPlots"] = "dictonly"
+            if options["prettyPlots"] == False and spretty not in [ "false", "0", "no", "dictonly" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
         if parser.has_option("options","limitPoints"):
