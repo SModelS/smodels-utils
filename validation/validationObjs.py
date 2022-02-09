@@ -996,6 +996,7 @@ class ValidationPlot():
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         meta["host"]=hostname
+        meta["nSRs"]=len ( self.expRes.datasets )
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
