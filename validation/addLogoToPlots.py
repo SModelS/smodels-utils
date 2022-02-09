@@ -59,8 +59,8 @@ def addLogo(filename,logo = None ):
         try:
             os.rename( tempF, filename)
         except OSError as e:
-            print ( f"[addLogoToPlots] could not rename {tempF} to {filename}: {e}. Will try to copy." )
-            shutil.copy ( tempF, filename )
+            print ( f"[addLogoToPlots] could not rename {tempF} to {filename}: {e}. Will try to move." )
+            shutil.move ( tempF, filename )
         #if os.path.exists ( "watermark.pdf" ):
         #    os.remove("watermark.pdf")
 
