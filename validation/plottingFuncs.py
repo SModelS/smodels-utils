@@ -103,48 +103,6 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )
 
-    """
-    with open ( jsonfile, "rt" ) as handle:
-        content = json.load ( handle )
-        handle.close()
-
-    ret = {}
-    maxes = axes
-    if maxes != None:
-        maxes = axes.replace(" ","").strip()
-    from sympy import var
-    x,y,z,w = var('x y z w')
-    caxes = eval ( maxes )
-    exp = "obs"
-    if expected:
-        exp = "exp"
-    cnames = [ f"{exp}Exclusion_{maxes}" ]
-    if get_all:
-        cnames = [ f"{exp}Exclusion_{maxes}", f"{exp}ExclusionP1_{maxes}",
-                   f"{exp}ExclusionM1_{maxes}" ]
-
-    # from smodels_utils.helper.rootTools import exclusionCurveToTGraph
-    for cname in cnames:
-        for txn,content in content.items():
-            if txname != None and txn != txname:
-                continue
-            for axis,points in content.items():
-                p1 = axis.find("_")
-                constr = axis[p1+1:]
-                caxis = eval(constr)
-                if maxes != None and caxis != caxes: # cname != axis:
-                    continue
-                # tgraph = exclusionCurveToTGraph ( points, cname )
-                if not txn in ret:
-                    ret[txn]=[]
-                if "obs" in axis and "obs" in cname:
-                    ret[txn].append( { "points": points, "name": cname } )
-                if "exp" in axis and "exp" in cname:
-                    ret[txn].append( { "points": points, "name": cname } )
-                # ret[txn].append( tgraph )
-        return ret
-    """
-
 def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
         get_all=False, expected=False ):
     """

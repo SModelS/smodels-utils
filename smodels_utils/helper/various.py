@@ -27,7 +27,7 @@ def getSqrts ( Id ):
     return 13
 
 def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
-                          expected=False ):
+                          expected=False, dicts=False ):
     """
     Reads exclusion_lines.json and returns the dictionary objects for the
     exclusion curves. If txname is defined, returns only the curves
@@ -42,6 +42,8 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                  e.g. [x, y, 60.0], [x, y, 60.0]]
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
+    :param dicts: if true, then do not return lists of lines,
+                  but dictionaries instead
 
     :return: a dictionary, where the keys are the TxName strings
             and the values are the respective dictionaries of coordinates.
@@ -85,15 +87,29 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                 # tgraph = exclusionCurveToTGraph ( points, cname )
                 if not txn in ret:
                     ret[txn]=[]
+                    if dicts:
+                        ret[txn]={}
                 p2 = cname.find("_")
                 if axis[:p1] == cname[:p2]:
-                    ret[txn].append( { "points": points, "name": cname } )
-                #if "obs" in axis and "obs" in cname:
-                #    ret[txn].append( { "points": points, "name": cname } )
-                #if "exp" in axis and "exp" in cname:
-                #    ret[txn].append( { "points": points, "name": cname } )
-                # ret[txn].append( tgraph )
+                    if dicts:
+                        ret[txn][cname]= points
+                    else:
+                        ret[txn].append( { "points": points, "name": cname } )
         return ret
+
+def mergeExclusionLines ( lines : list ):
+    """ given a list of lines, merge them correctly 
+    """
+    ret = {}
+    for bulk in lines:
+        for txname, line in bulk.items():
+            for name,points in line.items():
+                if not name in ret:
+                    ret[name]=points
+                else:
+                    ret[name]["x"]+= points["x"]
+                    ret[name]["y"]+= points["y"] 
+    return ret
 
 def getPathName ( dbpath, analysis, valfile = None ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name

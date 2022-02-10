@@ -63,6 +63,23 @@ class ValidationCombiner:
         return shortTxName ( self.validationFiles.keys() )
 
     def getExclusions ( self ):
+        from smodels_utils.helper.various import getExclusionCurvesFor, \
+            mergeExclusionLines
+        path = getPathName ( self.databasePath, self.anaId, None )
+        txnames = list ( self.validationFiles.keys() )
+        jsonfile = os.path.join ( path, "exclusion_lines.json" )
+        exclusions = []
+        for txname in txnames:
+            axes = self.meta[txname]["axes"]
+            get_all = False
+            for expected in [ False, True ]:
+                e = getExclusionCurvesFor ( jsonfile, txname, axes, get_all, 
+                        expected, dicts = True )
+                exclusions.append ( e )
+        self.exclusions = mergeExclusionLines ( exclusions )
+
+    """ for sms.root files, so phase it out!
+    def getExclusionsOld ( self ):
         self.exclusions = {}
         from smodels_utils.helper.uprootTools import getExclusionLine
         path = getPathName ( self.databasePath, self.anaId, None )
@@ -92,6 +109,7 @@ class ValidationCombiner:
                 if expected:
                     sname = "exp"+pm
                 self.exclusions[sname] = ret
+        """
 
     def plot ( self ):
         from smodels_utils.plotting import mpkitty as plt
@@ -117,21 +135,28 @@ class ValidationCombiner:
             except TypeError as e:
                 pass
         import matplotlib
-        plt.scatter ( ex, ey, c="r", s=90. )
-        plt.scatter ( nx, ny, c="g", s=90. )
         #cmap = "Blues"
         #cmap = "gray"
         cmap = "bone"
-        plt.scatter ( x, y, c=r, s=20., norm=matplotlib.colors.LogNorm(), 
+        scale = 1.
+        plt.scatter ( nx, ny, c="g", s=90.*scale )
+        plt.scatter ( ex, ey, c="r", s=90.*scale )
+        plt.scatter ( x, y, c=r, s=20.*scale, norm=matplotlib.colors.LogNorm(), 
                       cmap=cmap, alpha=1. )
         cbar = plt.colorbar()
         cbar.set_label ( "r" )
         plt.title ( f"{idNoEff}, {self.txShort()}" )
         plt.xlabel ( "x [GeV]" )
         plt.ylabel ( "y [GeV]" )
-        if "obs" in self.exclusions:
-            plt.plot ( self.exclusions["obs"]["x"],self.exclusions["obs"]["y"],
-                       c="k", linewidth=2 )
+        # print ( "exclusions", self.exclusions )
+        #points = self.exclusions[0]["points"]
+        #plt.plot ( points["x"], points["y"],
+        #           c="k", linewidth=2 )
+        for k,v in self.exclusions.items():
+            if "obs" in k:
+                plt.plot ( v["x"], v["y"], c="k", linewidth=2 )
+            if "exp" in k:
+                plt.plot ( v["x"], v["y"], c="grey", linewidth=1, linestyle="-." )
         axes = ""
         for txname,meta in self.meta.items():
             axes = meta["axes"].replace(" ","")
