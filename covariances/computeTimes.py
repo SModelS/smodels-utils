@@ -2,7 +2,7 @@
 
 """ get the average runtimes out of validation files """
 
-import numpy, os
+import numpy, os, sys
 from smodels_utils.helper.various import getPathName
 
 def computeTimes ( validationfile ):
@@ -34,7 +34,7 @@ if __name__ == "__main__":
                     default = "~/git/smodels-database", type=str )
     args = ap.parse_args()
     if args.fullpath != None:
-        filename = os.path.expanduser ( args.validationfile )
+        filename = os.path.expanduser ( args.fullpath )
         computeTimes ( filename )
         sys.exit()
     filename = getPathName ( args.dbpath, args.analysisid, args.validationfile )
