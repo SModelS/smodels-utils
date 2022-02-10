@@ -213,7 +213,7 @@ def aggregateByNames ( database, analysis, drops, exclusives, verbose ):
     aggs += newaggs
     return aggs, dropped
 
-def aggregateByCorrs ( database, analysis, drop, exclusives, corr ):
+def aggregateByCorrs ( database, analysis, drop, exclusives, corr, verbose ):
     """ run the aggregator based on correlations
     :param database: path to database
     :param analysis: ana id, e.g. CMS-SUS-19-006
