@@ -144,7 +144,10 @@ def run ( expResList, options : dict, keep ):
         for itx,txname in enumerate(txnames):
             txnameStr = txname.txName
             txt0 = time.time()
-            logger.info( f"------ {GREEN} validating {txnameStr} {RESET}" )
+            stype=""
+            if combine:
+                stype=" (combine) "
+            logger.info( f"------ {GREEN} validating {txnameStr}{stype} {RESET}" )
             namedTarball = None
             if not tarfiles:
                 tarfile = txnameStr+".tar.gz"
@@ -404,28 +407,32 @@ if __name__ == "__main__":
     except NoOptionError as e:
         logger.warning ( "setting 'dataselector' in section 'database' to 'upperLimit'" )
     combine=False
-    if dataselector == "efficiencyMap":
-        dataTypes = ['efficiencyMap']
-        datasetIDs = ['all']
-    elif dataselector == "upperLimit":
-        dataTypes = ['upperLimit']
-        datasetIDs = ['all']
-    elif dataselector == "combined":
-        dataTypes = ['efficiencyMap']
-        datasetIDs = ['all']
-        combine=True
-    elif dataselector == "all":
-        dataTypes = ['all']
-        datasetIDs = ['all']
-    elif dataselector == "tpredcomb":
-        from validation import useTheoPredCombiner as validationObjs
-        validationObjs.logger.setLevel(level=numeric_level)
-        dataTypes = ['efficiencyMap']
-        datasetIDs = ['all']
-    else:
-        #dataTypes = ['all']
-        dataTypes = ['efficiencyMap']
-        datasetIDs = dataselector.split(",")
+    dataTypes = []
+    datasetIDs = []
+    selectors = dataselector.split(",")
+    for s in selectors:
+        s = s.strip()
+        if s == "efficiencyMap":
+            dataTypes += ['efficiencyMap']
+            datasetIDs = ['all']
+        elif s == "upperLimit":
+            dataTypes += ['upperLimit']
+            datasetIDs = ['all']
+        elif s == "combined":
+            dataTypes += ['efficiencyMap']
+            datasetIDs = ['all']
+            combine=True
+        elif s == "all":
+            dataTypes += ['all']
+            datasetIDs = ['all']
+        elif s == "tpredcomb":
+            from validation import useTheoPredCombiner as validationObjs
+            validationObjs.logger.setLevel(level=numeric_level)
+            dataTypes += ['efficiencyMap']
+            datasetIDs = ['all']
+        else:
+            dataTypes += ['efficiencyMap']
+            datasetIDs += s.split(",")
 
     kfactorDict = dict(parser.items("kfactors"))
     slhadir = parser.get("path", "slhaPath")
