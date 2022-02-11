@@ -531,7 +531,10 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
     with open ( "run_bakery_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
-    tmpfile = tempfile.mktemp(prefix="B", suffix=".sh",dir="./" )
+    tdir = "./temp"
+    if not os.path.exists ( tdir ):
+        os.mkdir ( tdir )
+    tmpfile = tempfile.mktemp(prefix="B", suffix=".sh",dir=tdir )
     with open ( tmpfile, "wt" ) as f:
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
