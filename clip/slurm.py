@@ -426,6 +426,10 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     :param analyses: string that replaces @@ANALYSES@@ in inifile
     :param topo: string that replaces @@TOPOS@@ in inifile
     """
+    if topo in [ None, "all" ]:
+        topo = "*"
+    if analyses == None:
+        analyses = "all"
     print ( f"[slurm.py] run validation with {inifile}" )
     Dir = "%s/smodels-utils/clip/temp/" % codedir
     if not os.path.exists ( Dir ):
@@ -696,15 +700,15 @@ def main():
             type=int, default=0 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="" )
-    argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking ["cms_sus_16_033,atlas_susy_2016_07"]',
-                        type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
+    argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
+                        type=str, default=None )
     argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
                              action='store_true' )
     argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
-    argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
-                        type=str, default="T3GQ" )
+    argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
+                        type=str, default=None )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
