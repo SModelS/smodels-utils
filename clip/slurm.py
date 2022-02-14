@@ -513,7 +513,9 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
-    Dir = "%s/smodels-utils/clip/" % codedir
+    Dir = "%s/smodels-utils/clip/temp/" % codedir
+    if not os.path.exists ( Dir ):
+        os.mkdir ( Dir )
     print ( "[slurm.py] creating script at %s/%s" % ( Dir, filename ) )
     nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
