@@ -417,26 +417,40 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         return
     subprocess.run ( cmd )
 
-def validate ( inifile, dry_run, nproc, time ):
+def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     :param time: time in hours
+    :param analyses: string that replaces @@ANALYSES@@ in inifile
+    :param topo: string that replaces @@TOPOS@@ in inifile
     """
     print ( f"[slurm.py] run validation with {inifile}" )
+    Dir = "%s/smodels-utils/clip/temp/" % codedir
+    if not os.path.exists ( Dir ):
+        os.mkdir ( Dir )
+    with open ( "%s/smodels-utils/validation/inifiles/%s" % ( codedir, inifile ), 
+                "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
+    with open ( newini, "wt" ) as f:
+        for line in lines:
+            newline = line.replace("@@ANALYSES@@", analyses )
+            newline = newline.replace("@@TOPO@@", topo )
+            f.write ( newline )
+        f.close()
+
     with open ( "%s/smodels-utils/clip/validate_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
     filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
-    Dir = "%s/smodels-utils/clip/temp/" % codedir
-    if not os.path.exists ( Dir ):
-        os.mkdir ( Dir )
     print ( "creating script at %s/%s" % ( Dir, filename ) )
     nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@INIFILE@@", inifile ) )
+            f.write ( line.replace("@@INIFILE@@", newini ) )
         f.close()
     with open ( "run_validation_template.sh", "rt" ) as f:
         lines = f.readlines()
@@ -747,7 +761,7 @@ def main():
             dbpath = dbpath + ".pcl"
 
         if args.validate != None:
-            validate ( args.validate, args.dry_run, 20, 8 )
+            validate ( args.validate, args.dry_run, 20, 8, args.analyses, args.topo )
             # validate ( args.validate, args.dry_run, args.nprocesses, args.time )
             continue
 
