@@ -18,8 +18,10 @@ def computeTimes ( validationfile ):
             ts.append ( t )
             if t > 0.:
                 ts0.append ( t )
+    ret = round(numpy.mean(ts),4), round(numpy.std(ts),4)
     print ( f"I have {len(ts)} entries. t={numpy.mean(ts):.2f}+-{numpy.std(ts):.2f} seconds" )
     print ( f"{len(ts)-len(ts0)} entries are zero. without them we have: t={numpy.mean(ts0):.2f}+-{numpy.std(ts0):.2f} seconds" )
+    return ret
 
 if __name__ == "__main__":
     import argparse
