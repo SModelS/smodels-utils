@@ -76,7 +76,31 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
             "results" )
     if not invert:
         db.txt_meta.hasFastLim = False
-        db.txt_meta.databaseVersion = "fastlim" + dbverold
+        db.txt_meta.databaseVersion = "fastlim" + dbverold # FIXME why?
+        db.subs[0].pcl_meta.hasFastLim = False
+    if picklefile not in [ None, "" ]:
+        db.createBinaryFile( picklefile )
+    return db
+
+def removeNonAggregateFromDB ( db, invert = False, picklefile = "temp.pcl" ):
+    """ remove results from database db for which we have an aggregated result
+    :param db: database object
+    :param invert: if True, then invert the selection, keep *only* nonaggregated
+    :param picklefile: picklefile to store trimmed database
+    """
+    print ( "[databaseManipulations] before removal of nonaggregated",\
+            len(db.expResultList), "results" )
+    filtered = filterNonAggregatedFromList ( db.expResultList, invert )
+    dbverold = db.databaseVersion
+    db.subs[0].expResultList = filtered
+    if invert:
+        db.subs[0].txt_meta.databaseVersion = "nonaggregated" + dbverold
+    db.subs = [ db.subs[0] ]
+    print ( "[databaseManipulations] after removal of nonaggregated",\
+            len(db.expResultList), "results" )
+    if not invert:
+        db.txt_meta.hasFastLim = False
+        db.txt_meta.databaseVersion = dbverold
         db.subs[0].pcl_meta.hasFastLim = False
     if picklefile not in [ None, "" ]:
         db.createBinaryFile( picklefile )
