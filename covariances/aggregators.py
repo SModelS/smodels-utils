@@ -146,7 +146,7 @@ def obtainDictFromComment ( comment, analysis ):
         # print ( "tokens", tokens, "D", D )
     if "CMS-SUS-16-039" in analysis:
         tokens = comment.split("_")
-        print ( tokens )
+        # print ( tokens )
         #D["jets"]= int ( tokens[1].replace("Njet","") )
         mll = tokens[1].replace("Mll","")
         p1 = mll.find("to")

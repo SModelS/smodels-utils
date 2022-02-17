@@ -8,11 +8,12 @@ import aggregators
 from smodels_utils.helper import various
 
 def pprint ( C, droprate = 2., isolationscore = 150., 
-             cut = .5 ):
+             cut = .5, listAll = False ):
     """ 
     :param droprate: maximum score with which we drop SR
     :param isolationscore: minimum score with which we isolate an SR
     :param cut: cut on correlation for findAggregates
+    :param listAll: list all signal regions with scores
     """
     # print ( C )
     ones = 0
@@ -30,6 +31,7 @@ def pprint ( C, droprate = 2., isolationscore = 150.,
         except Exception as e:
             pass
 
+    scores = {}
     for i in range(1,nmax):
         sr = f"SR{i}"
         if not sr in C:
@@ -43,11 +45,16 @@ def pprint ( C, droprate = 2., isolationscore = 150.,
         else:
             exclusives.append ( i )
             aggs.append ( [ i ] )
-        # print ( f"{sr}: {C[sr]:.3f}" )
+        scores[ C[sr] ] = sr
+    keys = list ( scores.keys() )
+    keys.sort()
+    if listAll:
+        for k in keys:
+                print ( f"{k:6.2f}: {scores[k]}" )
     aggs.append ( overflow )
     print ( f"[aggregate.py] {len(zeroes)} zeroes, {ones} < {pmax}, {len(exclusives)} > pmax" )
     # print ( f"agg: {aggs}" )
-    print ( f'[aggregate.py] {len(exclusives)} SRs are exclusives: {" -t ".join ( map(str, exclusives ) ) }' )
+    print ( f'[aggregate.py] {len(exclusives)} SRs are exclusives: -t {" -t ".join ( map(str, exclusives ) ) }' )
     print ( f'[aggregate.py] {len(drops)} SRs are dropped: {" -d ".join ( map(str, drops ) ) }' )
     return drops, exclusives
 
@@ -56,6 +63,7 @@ def run():
     ap.add_argument( '-d','--drop', help="maximum score (a measure of sensitivity) with which we drop [2.]",
                      default = 2., type=float )
     ap.add_argument( '-v','--verbose', help="be verbose", action="store_true" )
+    ap.add_argument( '-l','--list', help="list all", action="store_true" )
     ap.add_argument( '-i','--isolate', help="minimum score (a measure of sensitivity) with which we isolate a signal region. [150.]",
                      default = 150., type=float )
     ap.add_argument( '-c','--corr',help="cut on correlations for findAggregates, zero means aggregate by names [None]",
@@ -75,7 +83,7 @@ def run():
         topo = f[p1+1:]
         p2 = topo.find("_")
         topo = topo[:p2]
-        print ( topo, end=" ", flush=True )
+        print ( f"found {topo}", end=" ", flush=True )
         factor = 1.0
         if "off" in f: # the offshell regions receive lower weight
             factor = .5
@@ -85,7 +93,7 @@ def run():
                 C[k]=0
             C[k]+=v*factor
     print ( "done!" )
-    drops, exclusives = pprint ( C, args.drop, args.isolate, args.corr )
+    drops, exclusives = pprint ( C, args.drop, args.isolate, args.corr, args.list )
     if args.corr in [ 0., None ]:
         aggs, dropped = aggregators.aggregateByNames ( args.database, args.analysis, drops, exclusives, args.verbose )
     else:
