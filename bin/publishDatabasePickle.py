@@ -8,7 +8,7 @@ from __future__ import print_function
 import pickle, os, sys, argparse, time, copy
 from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.databaseManipulations import \
-    removeFastLimFromDB, removeSupersededFromDB
+    removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
 import hashlib
 import pathlib
 import colorama
@@ -69,6 +69,7 @@ def main():
     ap.add_argument('-t', '--txnamevalues', help='when building, add txname values', action="store_true" )
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
+    ap.add_argument('-a', '--remove_nonaggregated', help='build pickle file, remove nonaggregated results', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
@@ -118,6 +119,16 @@ def main():
             d.txt_meta.hasFastLim = False
             d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
             e.subs[0].databaseVersion="fastlim"+dbver
+        if args.remove_nonaggregated:
+            # e = copy.deepcopy( d )
+            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
+            ## create fastlim only
+            e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
+            d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
+            d.pcl_meta.hasFastLim = False
+            d.txt_meta.hasFastLim = False
+            d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+            e.subs[0].databaseVersion="nonaggregated"+dbver
         if not args.skipValidation:
             validated, which = checkNonValidated(d)
             has_nonValidated = validated

@@ -82,7 +82,7 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
-def removeNonAggregateFromDB ( db, invert = False, picklefile = "temp.pcl" ):
+def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     """ remove results from database db for which we have an aggregated result
     :param db: database object
     :param invert: if True, then invert the selection, keep *only* nonaggregated
