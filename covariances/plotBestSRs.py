@@ -48,6 +48,8 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     contents = []
     txnames = []
     for validationfile in vfiles:
+        if not "_" in validationfile:
+            validationfile = validationfile+"_2EqMassAx_EqMassBy.py"
         ipath = getPathName ( dbpath, analysis, validationfile )
         smspath = getPathName ( dbpath, analysis, None )
         p1 = validationfile.find("_")
@@ -186,8 +188,8 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
             i +=1
     plt.legend(handles, labels, loc="upper left" )
     if line != None:
-        plt.plot ( line["x"], line["y"], linewidth=4, color="white" )
-        plt.plot ( line["x"], line["y"], linewidth=2, color="black" )
+        plt.plot ( line["x"], line["y"], linewidth=3, color="white" )
+        plt.plot ( line["x"], line["y"], linewidth=1, color="black" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
     if min(y)>1e-30 and max(y)<1e-1:
