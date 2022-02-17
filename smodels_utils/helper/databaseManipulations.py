@@ -82,6 +82,43 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
+def filterNonAggregatedFromList ( expResList, invert = False, really = True ):
+    """ remove results from list of experimental list for which we have 
+        an aggregated result
+    :param expResList: list of experiment results
+    :param invert: if True, then invert the selection, return *only* fastlim
+    :param really: if False, then do not actually filter
+    """
+    if not really:
+        return expResList
+    ret = []
+    aggs = set()
+    maggs = []
+    for er in expResList:
+        Id =  er.globalInfo.id 
+        if "-agg" in Id:
+            aggs.add ( Id.replace("-agg","") )
+            maggs.append ( er )
+    print ( "aggs", aggs )
+    endings = [ "-ma5", "-eff", "-adl", "-cm" ]
+    for er in expResList:
+        Id =  er.globalInfo.id 
+        hasEnding = False
+        for end in endings:
+            if Id.endswith ( end ):
+                hasEnding = True
+                aId = Id [ :-len(end) ]
+                if aId in aggs and invert:
+                    ret.append ( er )
+                if not aId in aggs and not invert:
+                    ret.append ( er )
+        if not hasEnding and not invert:
+            ret.append ( er )
+    if not invert: ## add the aggs
+        for a in maggs:
+            ret.append ( a )
+    return ret
+
 def filterFastLimFromList ( expResList, invert = False, really = True, update = None ):
     """ remove fastlim results from list of experimental list
     :param expResList: list of experiment results
@@ -219,3 +256,18 @@ def createSupersededPickle ( infile, outfile = "./superseded.pcl", filtered = Fa
         db.createBinaryFile ( outfile )
 
     return db.expResultList
+
+if __name__ == "__main__":
+    import os
+    def pprint ( l ):
+        for i, d in enumerate(l):
+            print ( f"{i} {d.globalInfo.id}" )
+    db = Database ( os.path.expanduser ( "~/git/smodels-database" )  )
+    ers = db.expResultList
+    pprint ( ers )
+    newers = filterNonAggregatedFromList ( ers )
+    print ( f"old {len(ers)} new {len(newers)}" )
+    pprint ( newers )
+    nonagg = filterNonAggregatedFromList ( ers, invert = True )
+    print ( f"old {len(ers)} new {len(nonagg)}" )
+    pprint ( nonagg )
