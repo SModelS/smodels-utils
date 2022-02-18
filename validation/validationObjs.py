@@ -757,16 +757,21 @@ class ValidationPlot():
                 for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
                     s.append ( (k,v) )
                 Dict["leadingDSes"]= s
+            def round_to_n ( x, n ):
+                if x in [ None, 0. ]:
+                    return x
+                return round(x, -int(math.floor(math.log10(x))) + (n - 1))
             if "l_max" in expRes and "likelihood" in expRes:
-                import math
-                ratio = 1.
-                if expRes["l_max"]>1e-90:
-                    ratio =  expRes["l_max"] / expRes["likelihood"]
-                elif expRes["likelihood"]>1e-90:
-                    ratio = 1e-90
-                if ratio <= 0.:
-                    ratio=1.
-                Dict["chi2"] = round ( 2*math.log ( ratio ), 5 )
+                Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
+                Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+                if not "chi2" in expRes:
+                    try:
+                        from smodels.tools.statistics import chi2FromLmax
+                        Dict["chi2"] = round_to_n ( chi2FromLmax ( expRes["likelihood"], expRes["l_max"] ), 2 )
+                    except Exception as e:
+                        pass # not strictly necessary
+            if "chi2" in expRes and expRes["chi2"] != None:
+                Dict["chi2"] = round_to_n ( expRes["chi2"], 2 )
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
                 drawExpected = self.options["drawExpected"]
