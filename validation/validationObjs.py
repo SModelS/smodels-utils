@@ -764,11 +764,11 @@ class ValidationPlot():
                 if not "chi2" in expRes:
                     try:
                         from smodels.tools.statistics import chi2FromLmax
-                        Dict["chi2"] = round_to_n ( chi2FromLmax ( expRes["likelihood"], expRes["l_max"] ), 2 )
+                        Dict["chi2"] = round_to_n ( chi2FromLmax ( expRes["likelihood"], expRes["l_max"] ), 3 )
                     except Exception as e:
                         pass # not strictly necessary
             if "chi2" in expRes and expRes["chi2"] != None:
-                Dict["chi2"] = round_to_n ( expRes["chi2"], 2 )
+                Dict["chi2"] = round_to_n ( expRes["chi2"], 3 )
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
                 drawExpected = self.options["drawExpected"]
