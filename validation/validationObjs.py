@@ -760,13 +760,13 @@ class ValidationPlot():
             if "l_max" in expRes and "likelihood" in expRes:
                 import math
                 ratio = 1.
-                if expRes["l_max"]>0.:
-                    ratio =  expRes["likelihood"] / expRes["l_max"]
-                elif expRes["likelihood"]>0.:
-                    ratio = float("inf")
+                if expRes["l_max"]>1e-90:
+                    ratio =  expRes["l_max"] / expRes["likelihood"]
+                elif expRes["likelihood"]>1e-90:
+                    ratio = 1e-90
                 if ratio <= 0.:
-                    ratio=1e-90
-                Dict["chi2"] = round ( -2*math.log ( ratio ), 5 )
+                    ratio=1.
+                Dict["chi2"] = round ( 2*math.log ( ratio ), 5 )
             if 'expected upper limit (fb)' in expRes:
                 Dict['eUL']=expRes["expected upper limit (fb)"]
                 drawExpected = self.options["drawExpected"]
