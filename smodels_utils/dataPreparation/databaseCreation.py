@@ -36,12 +36,7 @@ try:
 except Exception as e:
     pass
 
-from math import floor, log10
-
-def round_to_n(x,n):
-    if x == 0.:
-        return 0.
-    return round(x, -int(floor(log10(abs(x)))) + (n - 1))
+from smodels_utils.helper.various import round_to_n
 
 class DatabaseCreator(list):
     tempInputFiles = []

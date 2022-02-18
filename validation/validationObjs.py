@@ -13,6 +13,7 @@ import logging,os,sys,time,math,numpy,copy,ctypes,random
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
+from smodels_utils.helper.various import round_to_n
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
          rescaleWidth, addUnit
@@ -757,10 +758,6 @@ class ValidationPlot():
                 for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
                     s.append ( (k,v) )
                 Dict["leadingDSes"]= s
-            def round_to_n ( x, n ):
-                if x in [ None, 0. ]:
-                    return x
-                return round(x, -int(math.floor(math.log10(x))) + (n - 1))
             if "l_max" in expRes and "likelihood" in expRes:
                 Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
                 Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )

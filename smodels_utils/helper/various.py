@@ -11,6 +11,13 @@
 import os, sys
 import logging as logger
 
+def round_to_n ( x, n ):
+    """ round x to n significant digits """
+    if x in [ None, 0. ]:
+        return x
+    import math
+    return round(x, -int(math.floor(math.log10(x))) + (n - 1))
+
 def getSqrts ( Id ):
     """ given analysis id <Id>, determine sqrts """
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
