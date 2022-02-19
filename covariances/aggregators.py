@@ -125,6 +125,17 @@ def obtainDictFromComment ( comment, analysis ):
         D["jets"]= int ( tokens[1].replace("Njet","") )
         D["b"] = int ( tokens[2].replace("Nb","") )
         # D["HT"]= int ( tokens[3].replace("HT","") )
+    if "CMS-SUS-16-050" in analysis:
+        tokens = comment.split("_")
+        nt = tokens[0].replace("Ntops=","")
+        if nt == "Ntops>=3":
+            nt="3"
+        D["ntops"]= int ( nt )
+        nb = tokens[1].replace("Nbjets=","")
+        if nb == "Nbjets>=3":
+            nb=3
+        D["b"] = int ( nb )
+        # D["HT"]= int ( tokens[3].replace("HT","") )
     if "CMS-SUS-16-048" in analysis:
         tokens = comment.split("_")
         D["ewkino"]=-1
@@ -165,8 +176,8 @@ def obtainDictFromComment ( comment, analysis ):
 def getExpResult ( database, analysis ):
     print ( "[aggregators.py] instantiating database ", end="...", flush=True )
     d=Database( database )
-    if analysis.endswith ( "-eff" ):
-        analysis = analysis.replace("-eff","")
+    #if analysis.endswith ( "-eff" ):
+    #¤    analysis = analysis.replace("-eff","")
     ids = [ analysis ]
     print ( "done." )
     aggs = []
