@@ -78,12 +78,18 @@ def run():
     print ( f"[aggregate.py] getting stats for {path}." )
     C = {}
     print ( f"[aggregate.py]", end=" " )
+    first = True
     for f in files:
         p1 = f.rfind("/")
         topo = f[p1+1:]
         p2 = topo.find("_")
         topo = topo[:p2]
-        print ( f"found {topo}", end=" ", flush=True )
+        if first:
+            print ( f"found", end= " " )
+            first = False
+        else:
+            print ( ",", end = " " )
+        print ( f"{topo}", end="", flush=True )
         factor = 1.0
         if "off" in f: # the offshell regions receive lower weight
             factor = .5
@@ -92,7 +98,7 @@ def run():
             if not k in C:
                 C[k]=0
             C[k]+=v*factor
-    print ( "done!" )
+    print ( " done!" )
     drops, exclusives = pprint ( C, args.drop, args.isolate, args.corr, args.list )
     if args.corr in [ 0., None ]:
         aggs, dropped = aggregators.aggregateByNames ( args.database, args.analysis, drops, exclusives, args.verbose )

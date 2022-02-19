@@ -135,7 +135,10 @@ def obtainDictFromComment ( comment, analysis ):
         if nb == "Nbjets>=3":
             nb=3
         D["b"] = int ( nb )
-        # D["HT"]= int ( tokens[3].replace("HT","") )
+        mt2 = tokens[2].replace("MT2=","").replace("MT2>=","")
+        mt2 = mt2.replace("HT","10000").replace("=","").replace(">","")
+        p = mt2.find("-")
+        # D["MT"]=int ( mt2[:p] )
     if "CMS-SUS-16-048" in analysis:
         tokens = comment.split("_")
         D["ewkino"]=-1
