@@ -116,9 +116,11 @@ def retrieveEMStats ( database, analysis ):
     D = eval ( txt )
     return D
 
-def obtainDictFromComment ( comment, analysis ):
+def obtainDictFromComment ( comment, analysis, level=1 ):
     """ given the comment, obtain a dict with relevant analysis specific info,
-        for clustering """
+        for clustering 
+    :param level: level of detail. 1 is course, higher is more aggregated regions
+    """
     D = {}
     if "CMS-SUS-19-006" in analysis:
         tokens = comment.split("_")
@@ -138,7 +140,8 @@ def obtainDictFromComment ( comment, analysis ):
         mt2 = tokens[2].replace("MT2=","").replace("MT2>=","")
         mt2 = mt2.replace("HT","10000").replace("=","").replace(">","")
         p = mt2.find("-")
-        # D["MT"]=int ( mt2[:p] )
+        if level>1:
+            D["MT"]=int ( mt2[:p] )
     if "CMS-SUS-16-048" in analysis:
         tokens = comment.split("_")
         D["ewkino"]=-1
@@ -191,13 +194,14 @@ def getExpResult ( database, analysis ):
         sys.exit()
     return results[0]
 
-def aggregateByNames ( database, analysis, drops, exclusives, verbose ):
+def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
     """ run the aggregator based on SR names
     :param database: path to database
     :param analysis: ana id, e.g. CMS-SUS-19-006
     :param drop: list of indices to drop from aggregation entirely
     :param exclusives: list of indices to not aggregate, but keep as individual
                        SRs
+    :param level: level of detail. 1 is course, higher is more aggregated regions
     """
     result  = getExpResult ( database, analysis )
     datasets, comments = getDatasets( result, addReverse=False, verbose = verbose )
@@ -213,11 +217,11 @@ def aggregateByNames ( database, analysis, drops, exclusives, verbose ):
         filtered[srnr] = srname
     newaggs = []
     for srnr,srname in filtered.items():
-        comment = obtainDictFromComment ( comments[srnr], analysis )
+        comment = obtainDictFromComment ( comments[srnr], analysis, level )
         hasAdded=False
         for aggctr, agg in enumerate ( newaggs ):
             for aggnr in agg:
-                aggcomment = obtainDictFromComment ( comments[aggnr], analysis )
+                aggcomment = obtainDictFromComment ( comments[aggnr], analysis, level )
                 if comment == aggcomment and not hasAdded:
                     newaggs[aggctr].append ( srnr )
                     hasAdded = True

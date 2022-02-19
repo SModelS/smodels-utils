@@ -62,6 +62,8 @@ def run():
     ap = argparse.ArgumentParser( description= "computes a not too crazy aggregation list" )
     ap.add_argument( '-d','--drop', help="maximum score (a measure of sensitivity) with which we drop [2.]",
                      default = 2., type=float )
+    ap.add_argument( '-L','--level', help="aggregation level [1]",
+                     default = 1, type=int )
     ap.add_argument( '-v','--verbose', help="be verbose", action="store_true" )
     ap.add_argument( '-l','--list', help="list all", action="store_true" )
     ap.add_argument( '-i','--isolate', help="minimum score (a measure of sensitivity) with which we isolate a signal region. [150.]",
@@ -101,7 +103,7 @@ def run():
     print ( " done!" )
     drops, exclusives = pprint ( C, args.drop, args.isolate, args.corr, args.list )
     if args.corr in [ 0., None ]:
-        aggs, dropped = aggregators.aggregateByNames ( args.database, args.analysis, drops, exclusives, args.verbose )
+        aggs, dropped = aggregators.aggregateByNames ( args.database, args.analysis, drops, exclusives, args.level, args.verbose )
     else:
         aggs, dropped = aggregators.aggregateByCorrs ( args.database, args.analysis, drops, exclusives, args.corr, args.verbose )
     aggregators.describe ( aggs, dropped, len(C) )
