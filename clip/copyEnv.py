@@ -39,7 +39,7 @@ def mkTempDir():
 def copyContainers():
     destdir = "/scratch-cbe/users/wolfgan.waltenberger/container/"
     sourcedir = "/groups/hephy/pheno/ww/containers/"
-    simg = "ubuntu2110sing38a.simg"
+    simg = "ubuntu2110sing38b.simg"
     if not os.path.exists ( destdir ):
         cmd = f"mkdir {destdir}" 
         subprocess.getoutput ( cmd )
