@@ -485,7 +485,7 @@ if __name__ == "__main__":
         if parser.has_option("options","keepTopNSRs"):
             options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
             if dataselector in [ "combined", "upperLimit" ] and options["keepTopNSRs"]>0:
-               logger.warning ( f"you selected dataselection ''combined'' but also chose to keepTopNSRs={options['keepTopNSRs']}. The feature ''keepTopNSRs'' will only work with dataselection ''efficiencymap'', not with ''{dataselector}'. You have been warned." )
+               logger.warning ( f"you selected dataselection ''{dataselector}'' but also chose to keepTopNSRs={options['keepTopNSRs']}. The feature ''keepTopNSRs'' will only work with dataselection ''efficiencymap'', not with ''{dataselector}'. You have been warned." )
         else:
             if dataselector in [ "efficiencyMap" ]:
                 options["keepTopNSRs"] = 10 ## for effiency maps we want that per default
