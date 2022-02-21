@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-.. module:: tpc
-   :synopsis: Testbed for llhd combinations
+.. module:: testAnalysisCombinations
+   :synopsis: Testbed for llhd combinations, plots likelihods
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -21,33 +21,22 @@ import unittest
 import numpy as np
 import os
 from smodels_utils.plotting import mpkitty as plt
-
-def llhdHisto ( tpred, normalize ):
-    """ create a 'histogram' of likelihood values, as a function of mu """
-    ret = {}
-    rng = np.arange ( -8.0, 15., .03 )
-    S=0.
-    for mu in rng:
-        l = tpred.likelihood ( mu )
-        S+=l
-        ret[mu]=l
-    for k,v in ret.items():
-        ret[k]=v/S
-    # print ( "hist", ret )
-    return ret
+from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
 
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    database = Database("official+../smodels-database/" )
+    database = Database("official+../../smodels-database/+../../branches/smodels-database/" )
+    # database = Database("official+../smodels-database/" )
     dTypes = ["efficiencyMap"]
     anaids = ["CMS-SUS-16-033", "CMS-SUS-13-012", "ATLAS-CONF-2013-037", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff", "ATLAS-SUSY-2019-09" ]
-    anaids = [ "CMS-SUS-16-033", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff", "ATLAS-SUSY-2019-09" ]
+    anaids = [ "CMS-SUS-16-048", "CMS-SUS-16-050-agg", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff", "ATLAS-SUSY-2019-09" ]
     # anaids = ["ATLAS-SUSY-2018-22" ]
     dsids = [ "SR1_Njet2_Nb0_HT500_MHT500", "SR2_Njet3_Nb0_HT1500_MHT750", "3NJet6_1250HT1500_300MHT450", "SRtN2", "SR3_Njet5_Nb0_HT500_MHT_500" ]
     dsids = [ "all" ]
     # slhafile = "test/testFiles/slha/T1tttt.slha"
     slhafile = "T2_1233_1007_1233_1007.slha"
+    slhafile = "T2tt_880_300_880_300.slha"
     # slhafile = "TChiWZ_820_680_820_680.slha"
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
@@ -70,26 +59,29 @@ def testConstruction():
         # ts += tsc
         ts = tsc
         for t in ts:
-            t.computeStatistics()
-            dId = "combined"
-            if hasattr ( t.dataset, "dataInfo" ):
-                dId = t.dataset.dataInfo.dataId
-            #if dId.find("_")>-1:
-            #    dId = dId[:dId.find("_")]
-            Id = f"{er.globalInfo.id}:{dId}"
-            lsm = t.lsm()
-            #thetahat_sm = t.dataset.theta_hat
-            # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-            l = llhdHisto ( t, True )
-            llmin = min ( list( l.values() ) + [ llmin ] )
-            llmax = max ( list ( l.values() ) + [ llmax ] )
-            llhds[Id]=l
-            for k,v in l.items():
-                if not k in totllhd:
-                    totllhd[k]=1.
-                totllhd[k]=totllhd[k]*v
-            plt.plot ( l.keys(), l.values(), label=Id )
             tpreds.append(t)
+    xmin, xmax = getSensibleMuRange ( tpreds )
+            
+    for t in tpreds:
+        t.computeStatistics()
+        dId = "combined"
+        if hasattr ( t.dataset, "dataInfo" ):
+            dId = t.dataset.dataInfo.dataId
+        #if dId.find("_")>-1:
+        #    dId = dId[:dId.find("_")]
+        Id = f"{t.dataset.globalInfo.id}:{dId}"
+        lsm = t.lsm()
+        #thetahat_sm = t.dataset.theta_hat
+        # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100 )
+        llmin = min ( list( l.values() ) + [ llmin ] )
+        llmax = max ( list ( l.values() ) + [ llmax ] )
+        llhds[Id]=l
+        for k,v in l.items():
+            if not k in totllhd:
+                totllhd[k]=1.
+            totllhd[k]=totllhd[k]*v
+        plt.plot ( l.keys(), l.values(), label=Id )
     totS = sum(totllhd.values())
     for k,v in totllhd.items():
         totllhd[k]=totllhd[k]/totS
@@ -112,9 +104,9 @@ def testConstruction():
 
     slha = slhafile 
     p = slha.find("_")
-    if p > 0:
+    if False: # p > 0:
         slha = slha[:p]
-    plt.title ( f"likelihoods {slha}" )
+    plt.title ( f"likelihoods for {slha}" )
     plt.legend()
     plt.xlabel ( r"$\mu$" )
     plt.savefig ( "combo.png" )
