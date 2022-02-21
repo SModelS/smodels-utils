@@ -73,7 +73,7 @@ def testConstruction():
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100 )
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False )
         llmin = min ( list( l.values() ) + [ llmin ] )
         llmax = max ( list ( l.values() ) + [ llmax ] )
         llhds[Id]=l
