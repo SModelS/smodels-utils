@@ -26,11 +26,14 @@ from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
 def getExpResults():
     """ collect the experimental results """
     database = Database("official+../../smodels-database/+../../branches/smodels-database/" )
+    # we assume the ~/git/smodels-database to point to the "adl" branch
+    # we assume the ~/git/branches/smodels-database to point to the "pyhf" branch
     # database = Database("official+../smodels-database/" )
     dTypes = ["efficiencyMap"]
     # anaids = ["CMS-SUS-16-033", "CMS-SUS-13-012", "ATLAS-CONF-2013-037", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff", "ATLAS-SUSY-2019-09" ]
     # anaids = [ "CMS-SUS-16-048", "CMS-SUS-16-050-agg", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff" ]
     anaids = ["ATLAS-SUSY-2019-09", "CMS-SUS-16-039-agg", "ATLAS-SUSY-2018-06" ]
+    anaids = [ "ATLAS-SUSY-2018-06-eff" ]
     # dsids = [ "SR1_Njet2_Nb0_HT500_MHT500", "SR2_Njet3_Nb0_HT1500_MHT750", "3NJet6_1250HT1500_300MHT450", "SRtN2", "SR3_Njet5_Nb0_HT500_MHT_500" ]
     dsids = [ "all" ]
     exp_results = database.getExpResults(analysisIDs=anaids,
@@ -63,7 +66,9 @@ def testConstruction():
         tsc = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
         print ( f"   --- {er.globalInfo.id}: {len(ts)} SR results, {len(tsc)} comb results" )
-        # ts += tsc
+        for t in tsc:
+            print ( f"   combined result {t.dataset.globalInfo.id}" )
+        ts += tsc
         # ts = tsc
         for t in ts:
             tpreds.append(t)
@@ -88,7 +93,12 @@ def testConstruction():
             if not k in totllhd:
                 totllhd[k]=1.
             totllhd[k]=totllhd[k]*v
-        plt.plot ( l.keys(), l.values(), label=Id )
+        yv = list ( l.values() )
+        if False:
+            import random
+            for i,y in enumerate(yv):
+                yv[i]=y*random.uniform(.9,1.1)
+        plt.plot ( l.keys(), yv, label=Id )
     totS = sum(totllhd.values())
     for k,v in totllhd.items():
         totllhd[k]=totllhd[k]/totS
