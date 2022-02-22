@@ -63,11 +63,12 @@ def getSensibleMuRange ( tpred ):
                 maxxtot = xmax
         return minxtot, maxxtot
             
-    xmin, xmax = -1., 5. ## first guess
+    xmin, xmax = -2., 10. ## first guess
     hasConverged = False
     ctIt = 0
     while not hasConverged:
-        if ctIt > 10:
+        if ctIt > 30:
+            print ( f"[cov_helpers] after {ctIt} iterations no convergence" )
             break
         hasConverged = True
         ctIt += 1
@@ -76,11 +77,17 @@ def getSensibleMuRange ( tpred ):
         v = list ( llhds.values() )
         if False:
             print ( f"[cov_helpers] iteration {ctIt}: xmin={xmin}, xmax={xmax} llhds={v[0],v[-1]}" )
-        if v[0] > .01 and xmin < 0.:
+        if v[0] > .05 and xmin < 0.:
+            xmin = xmin * 2 * factor
+            hasConverged = False
+        if v[0] > .02 and xmin < 0.:
             xmin = xmin * factor
             hasConverged = False
         if v[0] > .01 and xmin > 0.:
             xmin = xmin - factor
+            hasConverged = False
+        if v[-1] > .03:
+            xmax = xmax * 2 * factor
             hasConverged = False
         if v[-1] > .01:
             xmax = xmax * factor
