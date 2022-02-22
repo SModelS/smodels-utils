@@ -37,14 +37,14 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         rng.sort()
         #print ( "rng", len(rng), [ round(x,3) for x in rng ] )
         
-        
     ret = {}
     for mu in rng:
         l = tpred.likelihood ( mu )
         S+=l 
         ret[mu]=l
-    for k,v in ret.items():
-        ret[k]=ret[k]/S
+    if S > 0.:
+        for k,v in ret.items():
+            ret[k]=ret[k]/S
     return ret, S
 
 def getSensibleMuRange ( tpred ):
