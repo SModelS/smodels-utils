@@ -41,6 +41,16 @@ def _getSHA1 ( filename ):                                                      
 
 eosdir = "/eos/project/s/smodels/www/database/"
 
+def createInfoFile ( infofile, pclfilename, lastchanged ):
+    f=open ( infofile, "w" )
+    mtime = time.asctime(time.localtime(lastchanged))
+    sha = _getSHA1 ( pclfilename )
+    Dict = { "lastchanged": lastchanged, "mtime": mtime, "size": os.stat(pclfilename).st_size,
+             "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename,
+             "sha1": sha }
+    f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
+    f.close()
+
 def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
     """
@@ -177,14 +187,7 @@ def main():
     print ( f"[publishDatabasePickle] writing {pclfilename}" )
     d.createBinaryFile ( pclfilename )
     print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(pclfilename).st_size ) )
-    f=open ( infofile, "w" )
-    mtime = time.asctime(time.localtime(meta.mtime))
-    sha = _getSHA1 ( pclfilename )
-    Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(pclfilename).st_size,
-             "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename,
-             "sha1": sha }
-    f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
-    f.close()
+    createInfoFile ( infofile, pclfilename, meta.mtime )
     if has_nonValidated:
         nvlist = ",".join(which)
         if args.ignore:
