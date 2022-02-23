@@ -150,6 +150,9 @@ def main():
 
     infofile = "official%s%s" % ( ver, sfastlim )
     pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
+    if "nonaggregated" in ver:
+        infofile = "nonaggregated%s%s" % ( ver.replace("nonaggregated",""), sfastlim )
+        pclfilename = "nonaggregated%s%s.pcl" % ( ver.replace("nonaggregated",""), sfastlim )
     if "superseded" in ver:
         infofile = "superseded%s%s" % ( ver.replace("superseded",""), sfastlim )
         pclfilename = "superseded%s%s.pcl" % ( ver.replace("superseded",""), sfastlim )
