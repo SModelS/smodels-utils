@@ -521,7 +521,11 @@ if __name__ == "__main__":
             ( tempf.tempdir, args.topology, tempf.tempdir, newtemp )
     # print ( "cmd", cmd )
     subprocess.getoutput ( cmd )
-    tempf.addToRecipe ( newtemp, " ".join ( sys.argv ) )
+    argvs = sys.argv
+    for i,a in enumerate(argvs):
+        if "(" in a or "[" in a:
+            argvs[i]=f'"{a}"'
+    tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
     subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % \
             ( newtemp, tarball, args.topology ) )
     print ( f"[slhaCreator] New tarball {tarball}" )
