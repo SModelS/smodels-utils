@@ -16,6 +16,8 @@ def round_to_n ( x, n ):
     if x in [ None, 0. ]:
         return x
     import math
+    if x < 0.:
+        return -round(-x, -int(math.floor(math.log10(-x))) + (n - 1))
     return round(x, -int(math.floor(math.log10(x))) + (n - 1))
 
 def getSqrts ( Id ):
