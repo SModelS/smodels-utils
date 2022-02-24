@@ -9,6 +9,7 @@
 """
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
+from pathlib import Path
 
 dummyRun=False ## True
 try:
@@ -53,14 +54,43 @@ def run( cmd ):
     f.close()
     return str(o)
 
+def removeNonAggregated( db, dirname, reuse ):
+    """ remove all non-aggregated analyses from
+        database """
+    comment( f"starting removeNonAggregated" )
+    if not os.path.exists ( "smodels-nonaggregated" ):
+        os.mkdir ( "smodels-nonaggregated" )
+    from smodels_utils.helper.databaseManipulations import filterNonAggregatedFromList
+    # print ( f"now i need to remove all non-aggregated from {str(db)} dirname is {dirname} reuse is {reuse}" )
+    ers = db.expResultList
+    nonaggregated = filterNonAggregatedFromList ( ers, invert=True )
+    for na in nonaggregated:
+        path = na.globalInfo.path
+        sqrts = float ( na.globalInfo.sqrts.asNumber() )
+        if sqrts < 13.1:
+            sqrts = int ( sqrts )
+        from smodels_utils.helper.various import findCollaboration
+        collaboration = findCollaboration ( na.globalInfo.id )
+        path = path.replace ( "/globalInfo.txt", "" )
+        newpath = f"smodels-nonaggregated/{sqrts}TeV/{collaboration}/"
+        pathmaker = Path ( newpath )
+        pathmaker.mkdir ( parents=True, exist_ok=True )
+        cmd = f"mv {path} {newpath}"
+        #print ( f"na", na.globalInfo.id, path, "sqrts", sqrts )
+        o = subprocess.getoutput ( cmd )
+        #print ( f"o {o}" )
+    tarmaker = "tar czvf smodels-nonaggregated.tar.gz smodels-nonaggregated/*"
+    o = subprocess.getoutput ( tarmaker )
+
 def removeNonValidated(dirname, reuse ):
     """ remove all non-validated analyses from
         database """
+    comment( f"starting removeNonValidated" )
     from smodels.experiment.databaseObj import Database
-    comment( "Now build the database pickle file" )
     load = "txt"
     if reuse:
         load = None
+    comment( f"Now build the database pickle file: {load}" )
     d = Database( "%s/smodels-database" % dirname, force_load = load,
                   progressbar=True )
     comment( "Now remove non-validated results." )
@@ -117,6 +147,7 @@ def removeNonValidated(dirname, reuse ):
             comment( "%s is empty. Delete it!" %( tev ) )
             cmd = "rm -rf %s" % fullpath
             run( cmd )
+    return d
 
 def rmlog(dirname):
     """ clear the log file """
@@ -150,7 +181,7 @@ def clone(dirname):
     distribution, and test.
     """
     comment( "Git-cloning smodels into %s(this might take a while)" % dirname )
-    cmd = "git clone -b v%s https://github.com/SModelS/smodels.git %s" %(version, dirname)
+    cmd = "git clone -b %s https://github.com/SModelS/smodels.git %s" %(version, dirname)
 #     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
     if dummyRun:
         cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
@@ -181,9 +212,11 @@ def fetchDatabase(tag,dirname):
     comment( "git clone the database(this might take a while)" )
     ## "v" is not part of semver
     #cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
+    if False:
+        dbversion = "develop"
     cmd = "cd %s; git clone -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
            (dirname, dbversion)
-            
+
     if dummyRun:
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
              ( dirname, dbversion )
@@ -266,7 +299,7 @@ def clearGlobalInfos(path):
         File=record[0]
         # print( "record=",record )
         for i in record[2]:
-            if i[0]=="T" and i[-4:]==".txt":        
+            if i[0]=="T" and i[-4:]==".txt":
                 fullpath = os.path.join( File, i )
                 clearGlobalInfo( fullpath )
         gIpath = os.path.join( File, "globalInfo.txt" )
@@ -331,7 +364,7 @@ def rmExtraFiles(dirname):
     Remove additional files.
     """
     comment( "Remove a few unneeded files" )
-    extras = [ "inputFiles/slha/nobdecay.slha", "inputFiles/slha/broken.slha", 
+    extras = [ "inputFiles/slha/nobdecay.slha", "inputFiles/slha/broken.slha",
                "docs/documentation/smodels.log", "inputFiles/slha/complicated.slha" ]
     for i in extras:
         cmd = "rm -rf %s/%s" %( dirname, i )
@@ -414,7 +447,7 @@ def createDBRelease(output,tag,reuse):
     if os.path.isdir(dirname) and not reuse:
         comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz" %(output,output))
         return False
-    
+
     isDummy()
     if not reuse:
         rmlog(dirname) ## first remove the log file
@@ -425,7 +458,8 @@ def createDBRelease(output,tag,reuse):
         fetchDatabase(tag,dirname) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
     splitDatabase(output,dirname) ## split database into official and optional
-    removeNonValidated(dirname,reuse) ## remove all non-validated analyses
+    db=removeNonValidated(dirname,reuse) ## remove all non-validated analyses
+    removeNonAggregated(db,dirname,reuse) ## remove all non-validated analyses
     clearTxtFiles(dirname) ## now clear up all txt files
     createDBTarball(output,dirname) ## here we go! create!
     isDummy()
@@ -434,7 +468,7 @@ def create(output,tag):
     """
     Create a tarball for distribution.
     """
-    
+
     dirname = output
     if os.path.isdir(dirname):
         comment('Folder %s already exists. Remove it before creating the tarball %s.tgz' %(output,output))
@@ -457,24 +491,24 @@ def create(output,tag):
     rmpyc(dirname) ## ...  remove the pyc files created by makeDocumentation ...
     rmlog(dirname)  ##Make sure to remove log files
     createTarball(output,dirname) ## here we go! create!
-    test(output,dirname)    
+    test(output,dirname)
     # rmdir(dirname)
     testDocumentation(dirname)
     isDummy()
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database tarball for public release" )
-    ap.add_argument('-o', '--output', help='name of tarball filename [database]', 
+    ap.add_argument('-o', '--output', help='name of tarball filename [database]',
                     default="database" )
-    ap.add_argument('-c', '--clear', help='remove output from previous run', 
+    ap.add_argument('-c', '--clear', help='remove output from previous run',
                     action="store_true" )
-    ap.add_argument('-r', '--reuse', help='reuse already checked out database', 
+    ap.add_argument('-r', '--reuse', help='reuse already checked out database',
                     action="store_true" )
     f = open ( "../version", "rt" )
     ver = f.read().strip()
     f.close()
     ap.add_argument('-t', '--tag', help=f'database version [{ver}]', default=ver )
-    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', 
+    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]',
                     default='../../smodels')
 
     args = ap.parse_args()

@@ -123,7 +123,7 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True ):
         if "-agg" in Id:
             aggs.add ( Id.replace("-agg","") )
             maggs.append ( er )
-    print ( "aggs", aggs )
+    # print ( "aggs", aggs )
     endings = [ "-ma5", "-eff", "-adl", "-cm" ]
     for er in expResList:
         Id =  er.globalInfo.id 

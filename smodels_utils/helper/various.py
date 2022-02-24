@@ -20,6 +20,33 @@ def round_to_n ( x, n ):
         return -round(-x, -int(math.floor(math.log10(-x))) + (n - 1))
     return round(x, -int(math.floor(math.log10(x))) + (n - 1))
 
+def findCollaboration ( anaid ):
+    """ from <anaid> retrieve the collaboration name
+    :param anaid: analysis id, like CMS-SUS-17-001, or a dictionary with an "ID"
+                  entry
+    :returns: CMS or ATLAS
+    """
+    if type(anaid) == str:
+        if "ATLAS" in anaid:
+            return "ATLAS"
+        if "CMS" in anaid:
+            return "CMS"
+        return "???"
+    collaboration=""
+    ID = anaid["ID"]
+    if "collaboration" in anaid.keys():
+        t = anaid["collaboration"]
+        if "ATLAS" in t:
+            collaboration = "ATLAS"
+        if "CMS" in t:
+            collaboration = "CMS"
+    else:
+        if "ATLAS" in ID:
+            collaboration = "ATLAS"
+        if "CMS" in ID:
+            collaboration = "CMS"
+    return collaboration
+
 def getSqrts ( Id ):
     """ given analysis id <Id>, determine sqrts """
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
@@ -107,7 +134,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
         return ret
 
 def mergeExclusionLines ( lines : list ):
-    """ given a list of lines, merge them correctly 
+    """ given a list of lines, merge them correctly
     """
     ret = {}
     for bulk in lines:
@@ -117,7 +144,7 @@ def mergeExclusionLines ( lines : list ):
                     ret[name]=points
                 else:
                     ret[name]["x"]+= points["x"]
-                    ret[name]["y"]+= points["y"] 
+                    ret[name]["y"]+= points["y"]
     return ret
 
 def getPathName ( dbpath, analysis, valfile = None ):
