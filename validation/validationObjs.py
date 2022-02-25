@@ -50,8 +50,8 @@ class ValidationPlot():
     """
 
     def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None, 
-                  options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
-                  combine = False ):
+               options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
+               combine = False ):
         """
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories

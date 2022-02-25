@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 def starting( expRes, txnameStr, axes ):
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
 
-def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1., pretty=False,
-                  combine=False, namedTarball = None, keep = False ):
+def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
+        pretty=False, combine=False, namedTarball = None, keep = False ):
     """
     Creates a validation plot and saves its output.
 
@@ -171,7 +171,7 @@ def run ( expResList, options : dict, keep ):
                     if ":" in tf:
                         axis,fname = fname.split(":")[:2]
                     else:
-                        hasCorrectAxis = True 
+                        hasCorrectAxis = True
                     tarfile = os.path.join(slhadir,fname )
                     if not os.path.isfile ( tarfile ):
                         logger.info( 'Missing %s file for %s.' % ( tarfile, txnameStr))
@@ -227,8 +227,8 @@ def run ( expResList, options : dict, keep ):
                         tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
 
                     for p in prettyorugly:
-                        validatePlot(expRes,txnameStr,ax, tarfile, localopts, 
-                                kfactor, p, combine, namedTarball = pnamedTarball, 
+                        validatePlot(expRes,txnameStr,ax, tarfile, localopts,
+                                kfactor, p, combine, namedTarball = pnamedTarball,
                                 keep = keep )
                         # if not ":" in namedTarball:
                         localopts["generateData"]=False
@@ -248,7 +248,7 @@ def run ( expResList, options : dict, keep ):
                     tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
                 localoptions = copy.deepcopy ( options )
                 for p in prettyorugly:
-                    validatePlot( expRes,txnameStr,ax,tarfile, localoptions, 
+                    validatePlot( expRes,txnameStr,ax,tarfile, localoptions,
                                   gkfactor, p, combine, namedTarball = pnamedTarball )
                     localoptions["generateData"] = False
             logger.info( "------ %s %s validated in  %.1f min %s" % \
