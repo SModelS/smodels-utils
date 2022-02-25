@@ -106,7 +106,8 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
-def filterNonAggregatedFromList ( expResList, invert = False, really = True ):
+def filterNonAggregatedFromList ( expResList, invert = False, really = True,
+                                  verbose = False ):
     """ remove results from list of experimental list for which we have 
         an aggregated result
     :param expResList: list of experiment results
@@ -124,23 +125,34 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True ):
             aggs.add ( Id.replace("-agg","") )
             maggs.append ( er )
     # print ( "aggs", aggs )
-    endings = [ "-ma5", "-eff", "-adl", "-cm" ]
+    endings = [ "-ma5", "-eff", "-adl", "-cm", "-agg" ]
     for er in expResList:
+        if False:
+            print ( "before filter", er.globalInfo.id )
         Id =  er.globalInfo.id 
         hasEnding = False
+        doAdd = False
         for end in endings:
             if Id.endswith ( end ):
                 hasEnding = True
                 aId = Id [ :-len(end) ]
                 if aId in aggs and invert:
                     ret.append ( er )
+                    doAdd = True
                 if not aId in aggs and not invert:
                     ret.append ( er )
+                    doAdd = True
         if not hasEnding and not invert:
+            doAdd = True
             ret.append ( er )
+        if not doAdd and verbose and not Id.endswith ( "-agg" ):
+                print ( f"[databaseManipulations] removing non-aggregated {Id}" )
     if not invert: ## add the aggs
         for a in maggs:
             ret.append ( a )
+    if False:
+        for i in ret:
+            print ( "after filter", i.globalInfo.id )
     return ret
 
 def filterFastLimFromList ( expResList, invert = False, really = True, update = None ):
