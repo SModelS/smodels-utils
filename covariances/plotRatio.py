@@ -427,6 +427,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
+    plt.kittyPlot()
     plt.savefig ( figname )
     if options["show"]:
         plt.show()
