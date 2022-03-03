@@ -17,6 +17,11 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
+from importlib.metadata import version
+if version("scipy")[:3] == "1.8":
+	print ( "[publishDatabasePickle] you sure you want to pickle with scipy 1.8.x?" )
+	sys.exit()
+
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
         if abs(num) < 1024.:
