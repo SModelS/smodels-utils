@@ -378,6 +378,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             for E in el2[t]:
                 label = anaId2
                 hasLegend = True
+                if "points" in E:
+                    E = E["points"]
                 plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
                 plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
                 label = ""
@@ -521,6 +523,8 @@ def main():
     args = argparser.parse_args()
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
+    if not "_" in args.validationfile1:
+        args.validationfile1 = args.validationfile1 + "_2EqMassAx_EqMassBy.py"
     if not args.validationfile1.endswith ( ".py" ):
         args.validationfile1 += ".py"
 
@@ -531,6 +535,8 @@ def main():
         valfile2 = args.validationfile2
         if valfile2 in [ "", "none", "None", None ]:
             valfile2 = valfile1
+        if not "_" in valfile2:
+            valfile2 = valfile2 + "_2EqMassAx_EqMassBy.py"
         # imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
         # imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
 
