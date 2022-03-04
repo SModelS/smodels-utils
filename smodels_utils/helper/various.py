@@ -63,12 +63,23 @@ def getSqrts ( Id ):
     return 13
 
 def cutPoints ( points, ranges ):
-    """ cut the points at ranges """
+    """ cut the points at ranges 
+    :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
+    :returns: filtered points
+    """
     if ranges == None:
         return points
-    #print ( "points", points )
-    #print ( "various.cutPoints not implemented" )
-    return points
+    if not "y" in ranges:
+        ranges["y"]=[ float("-inf"), float("inf") ]
+    if not "x" in ranges:
+        ranges["x"]=[ float("-inf"), float("inf") ]
+    ret = { "x": [], "y": [] }
+    for kx, ky in zip ( points["x"], points["y"] ):
+        if ranges["x"][0] < kx < ranges["x"][1] and \
+           ranges["y"][0] < ky < ranges["y"][1]:
+                ret["x"].append ( kx )
+                ret["y"].append ( ky )
+    return ret
 
 def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                           expected=False, dicts=False, ranges=None ):

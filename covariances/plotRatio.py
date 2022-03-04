@@ -264,6 +264,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         maxy = options["ymax"]
     if options["ymin"]!=None:
         miny = options["ymin"]
+    ranges = { "x": [ minx, maxx ], "y": [ miny, maxy ] }
     nx, ny = 250, 250
     x_ = numpy.arange ( minx, maxx, ( maxx-minx) / nx )
     y_ = numpy.arange ( miny, maxy, ( maxy-miny) / ny )
@@ -275,12 +276,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     x = yx[::,1]
     y = yx[::,0]
     col = griddata ( points[::,0:2], points[::,2], yx, rescale=True )
-    #for i in range(len(x)):
-    #    if abs(x[i]-200.) < 10. and abs(y[i]-400.)< 20.:
-    #        print ( "pt", x[i], y[i], yx[i] )
-
     if err_msgs > 0:
-        print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( content2["data"] ) ) )
+        print ( "[plotRatio] couldnt find data for %d/%d points" % \
+                (err_msgs, len( content2["data"] ) ) )
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
@@ -359,12 +357,15 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         if content2["meta"]!=None and "axes" in content2["meta"][0]:
             axes = content2["meta"][0]["axes"]
         from smodels_utils.helper import various
-        el = various.getExclusionCurvesFor ( exclusionlines1, t, axes )
-        el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes )
+        el = various.getExclusionCurvesFor ( exclusionlines1, t, axes, ranges=ranges )
+        el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes, ranges=ranges )
         label = "official exclusion"
         # label = anaId
         if hasLegend:
             label = ""
+        if el2 == el: # if its exactly identical, then drop
+            el2 = []
+            label += f"(+{anaId2})"
         if t in el:
             for E in el[t]:
                 name = E["name"]
