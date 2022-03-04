@@ -17,10 +17,11 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
-from importlib.metadata import version
-#if version("scipy")[:3] == "1.8":
-#    print ( "[publishDatabasePickle] you sure you want to pickle with scipy 1.8.x?" )
-#    sys.exit()
+# print ( f"[publishDatabasePickle] using scipy version {version('scipy')}" )
+# from importlib.metadata import version
+# if version("scipy")[:3] == "1.8":
+#     print ( "[publishDatabasePickle] you sure you want to pickle with scipy 1.8.x?" )
+#     sys.exit()
 
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
@@ -240,9 +241,9 @@ def main():
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "cmd", cmd2 )
         # o = CMD.getoutput ( cmd2 )
-        print ( "[publishDatabasePickle] done:", cmd2 )
         addToCommandsFile ( cmd2 )
-        CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
+        o = CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
+        print ( "[publishDatabasePickle] NOT done:", cmd2 )
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         #print ( "%s[publishDatabasePickle] then do also manually:%s" % \
