@@ -516,7 +516,7 @@ def getNEvents ( recipe ):
     return 10000
 
 def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
-           time ):
+           time, doLog = True ):
     """ bake with the given recipe
     :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
@@ -526,6 +526,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
     :param nproc: number of processes, typically 5
     :param cutlang: if true, then use cutlang
     :param time: time in hours
+    :param doLog: do write out bake-*.out log files
     """
     with open ( "%s/smodels-utils/clip/bake_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
@@ -569,9 +570,12 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
+    if doLog:
+        cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
-    # cmd += [ "--ntasks-per-node", str(nproc) ]
+    else:
+        cmd += [ "--error",  "/dev/null",
+                 "--output", "/dev/null" ]
     if True:
         # time = 48
         qos = "c_short"
@@ -643,6 +647,9 @@ def main():
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run (use -M to query repeatedly)',
+            action="store_true" )
+    argparser.add_argument ( '--dontlog',
+            help='dont produce bakery log files',
             action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
@@ -789,6 +796,7 @@ def main():
             queryStats ( args.maxsteps )
             continue
         if args.bake != "":
+            doLog = not args.dontlog
             if args.bake == "default":
                 args.bake = '@n 10000 @a @K'
             if args.mass == "default":
@@ -796,7 +804,7 @@ def main():
                 args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
             for i in range(args.nbakes):
                 bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-                       args.nprocesses, rundir, args.cutlang, args.time )
+                       args.nprocesses, rundir, args.cutlang, args.time, doLog )
                 totjobs += 1
         if args.clean:
             clean_dirs( rundir, clean_all = False )
