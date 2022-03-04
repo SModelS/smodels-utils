@@ -256,6 +256,14 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     # coll = points[::,2].tolist()
     minx, maxx = min(x), max(x)
     miny, maxy = min(y), max(y)
+    if options["xmax"]!=None:
+        maxx = options["xmax"]
+    if options["xmin"]!=None:
+        minx = options["xmin"]
+    if options["ymax"]!=None:
+        maxy = options["ymax"]
+    if options["ymin"]!=None:
+        miny = options["ymin"]
     nx, ny = 250, 250
     x_ = numpy.arange ( minx, maxx, ( maxx-minx) / nx )
     y_ = numpy.arange ( miny, maxy, ( maxy-miny) / ny )
@@ -350,15 +358,6 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             axes = content1["meta"][0]["axes"]
         if content2["meta"]!=None and "axes" in content2["meta"][0]:
             axes = content2["meta"][0]["axes"]
-        """
-        line = getExclusionsFrom ( smsrootfile, t, axes )
-        line2 = getExclusionsFrom ( smsrootfile2, t, axes )
-        el2 = []
-        if line is not False:
-            el = getExclusionLine ( line )
-        if line2 is not False:
-            el2 = getExclusionLine ( line2 )
-        """
         from smodels_utils.helper import various
         el = various.getExclusionCurvesFor ( exclusionlines1, t, axes )
         el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes )
@@ -369,7 +368,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         if t in el:
             for E in el[t]:
                 name = E["name"]
-                print ( "name", name )
+                # print ( "name", name )
                 hasLegend = True
                 plt.plot ( E["points"]["x"], E["points"]["y"], color='white', linestyle='-', linewidth=4, label="" )
                 plt.plot ( E["points"]["x"], E["points"]["y"], color='k', linestyle='-', linewidth=3, label=label )
@@ -433,7 +432,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         plt.show()
     if copy:
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
-      print ( "plotRatio] %s" % cmd )
+      print ( "[plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
     rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
     if options["meta"]:
@@ -501,11 +500,23 @@ def main():
             help="label on the x-axis",
             type=str, default=None )
     argparser.add_argument ( "-z", "--zmin",
-            help="minimum z value, 0. means auto [.5]",
+            help="minimum z value, None means auto [.5]",
             type=float, default=.5 )
     argparser.add_argument ( "-Z", "--zmax",
-            help="maximum Z value, 0. means auto [1.7]",
+            help="maximum Z value, None means auto [1.7]",
             type=float, default=1.7 )
+    argparser.add_argument ( "-x", "--xmin",
+            help="minimum x value, None means auto [None]",
+            type=float, default=None )
+    argparser.add_argument ( "-X", "--xmax",
+            help="maximum x value, None means auto [None]",
+            type=float, default=None )
+    argparser.add_argument ( "-y", "--ymin",
+            help="minimum y value, None means auto [None]",
+            type=float, default=None )
+    argparser.add_argument ( "-Y", "--ymax",
+            help="maximum y value, None means auto [None]",
+            type=float, default=None )
     argparser.add_argument ( "-d", "--dbpath",
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
@@ -545,7 +556,8 @@ def main():
                     "ylabel": args.ylabel, "zmax": args.zmax, "zmin": args.zmin,
                     "copy": args.copy, "output": args.output,
                     "label1": args.label1, "label2": args.label2,
-                    "ploteffs": args.efficiencies }
+                    "ploteffs": args.efficiencies, "xmin": args.xmin,
+                    "xmax": args.xmax, "ymin": args.ymin, "ymax": args.ymax }
 
         draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
                options )

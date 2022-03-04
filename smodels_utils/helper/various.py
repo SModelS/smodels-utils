@@ -62,8 +62,16 @@ def getSqrts ( Id ):
         return 8
     return 13
 
+def cutPoints ( points, ranges ):
+    """ cut the points at ranges """
+    if ranges == None:
+        return points
+    #print ( "points", points )
+    #print ( "various.cutPoints not implemented" )
+    return points
+
 def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
-                          expected=False, dicts=False ):
+                          expected=False, dicts=False, ranges=None ):
     """
     Reads exclusion_lines.json and returns the dictionary objects for the
     exclusion curves. If txname is defined, returns only the curves
@@ -78,6 +86,8 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                  e.g. [x, y, 60.0], [x, y, 60.0]]
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
+    :param ranges: if dict, then cut exclusion lines, e.g. 
+                   { "x": [ 100, 200 ] }
     :param dicts: if true, then do not return lists of lines,
                   but dictionaries instead
 
@@ -115,6 +125,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
             if txname != None and txn != txname:
                 continue
             for axis,points in content.items():
+                points = cutPoints ( points, ranges )
                 p1 = axis.find("_")
                 constr = axis[p1+1:]
                 caxis = eval(constr)
