@@ -7,7 +7,6 @@ import math, os, numpy, copy, sys, glob, ctypes
 import setPath
 from smodels_utils.plotting import mpkitty as plt
 import matplotlib
-import ROOT
 import time
 import logging
 import subprocess
@@ -61,85 +60,6 @@ def axisHash ( axes_ ):
         ret += 10**(4*ctr)*int(a)
     return ret
 
-def getExclusionsFrom ( rootpath, txname, axes ):
-    """
-    :param axes: only specific axes
-    """
-    # print ( "get exclusions from", rootpath, txname, axes )
-    get_all = False
-    rootFile = ROOT.TFile(rootpath)
-    txnames = {}
-    #Get list of TxNames (directories in root file)
-    for obj in rootFile.GetListOfKeys():
-        objName = obj.ReadObj().GetName()
-        if txname and txname != objName: continue
-        txnames[objName] = obj.ReadObj()
-    if not txnames:
-        logger.warning("[plotRatio] Exclusion curve for %s not found in %s" %(txname,rootpath))
-        return False
-
-    #For each Txname/Directory get list of exclusion curves
-    nplots = 0
-    for tx,txDir in txnames.items():
-        txnames[tx] = []
-        for obj in txDir.GetListOfKeys():
-            objName = obj.ReadObj().GetName()
-            if not 'exclusion' in objName.lower(): continue
-            if (not get_all) and (not 'exclusion_' in objName.lower()): continue
-            if 'expexclusion' in objName.lower(): continue
-            # print "[plottingFuncs.py] name=",objName
-            if axes and not axes in objName: continue
-            txnames[tx].append(obj.ReadObj())
-            # print ( "and we add more", objName, "tx", tx, "txname", txname, "axes", axes )
-            nplots += 1
-    if not nplots:
-        logger.warning("No exclusion curve found.")
-        return False
-    return txnames[txname][0] ## here we only need the central
-
-
-def getSModelSExclusion ( rootpath ):
-    """ obtain the smodels exclusion line  from validation plot. """
-    rootFile = ROOT.TFile(rootpath)
-    if not rootFile.IsOpen():
-        return []
-    vp = rootFile.Get("Validation Plot")
-    ret = []
-    try:
-        for i in range(1,99):
-            line = vp.GetListOfPrimitives().At(i)
-            col = line.GetLineColor()
-            sty = line.GetLineStyle()
-            wdh = line.GetLineWidth()
-            if sty == 1 and col == 922:
-                ret.append ( line )
-    except Exception as e:
-        pass
-    return ret
-
-
-def getExclusionLine ( line ):
-    """ get the values of exclusion line from tgraphs.
-    :params line: either a tgraph, or a list of tgraphs
-    """
-    # line = getExclusionsFrom ( rootpath, txname, axes )
-    if type(line)==list:
-        x = []
-        for l in line:
-            xs = getExclusionLine ( l )[0]
-            x.append ( xs )
-        return x
-    # x,y=ROOT.Double(),ROOT.Double()
-    x,y= ctypes.c_double(),ctypes.c_double()
-    x_v,y_v=[],[]
-    for i in range(line.GetN()):
-      line.GetPoint(i,x,y)
-      #x_v.append(copy.deepcopy(x.value))
-      #y_v.append(copy.deepcopy(y.value))
-      x_v.append( x.value )
-      y_v.append( y.value )
-    return [ { "x": x_v, "y": y_v } ]
-        
 def getSModelSExclusionFromContent ( content ):
     """ this method should construct a contur line from one of the dictionary files,
     by constructing a contour plot from 'content' """
