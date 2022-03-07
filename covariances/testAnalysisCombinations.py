@@ -25,7 +25,10 @@ from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
 
 def getExpResults():
     """ collect the experimental results """
-    database = Database("official+../../smodels-database/+../../branches/smodels-database/" )
+    # dbpath = "official+../../smodels-database/+../../branches/smodels-database/" 
+    # dbpath = "../../smodels-database/"
+    dbpath = "../../smodels/test/database/"
+    database = Database( dbpath )
     # we assume the ~/git/smodels-database to point to the "adl" branch
     # we assume the ~/git/branches/smodels-database to point to the "pyhf" branch
     # database = Database("official+../smodels-database/" )
@@ -34,9 +37,9 @@ def getExpResults():
     # anaids = [ "CMS-SUS-16-048", "CMS-SUS-16-050-agg", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff" ]
     anaids = ["ATLAS-SUSY-2019-09", "CMS-SUS-16-039-agg", "ATLAS-SUSY-2018-06" ]
     anaids = [ "ATLAS-SUSY-2018-06-eff" ]
-    anaids = [ "CMS-SUS-13-012", "ATLAS-CONF-2013-037" ]
+    anaids = [ "ATLAS-CONF-2013-037", "CMS-SUS-16-050-agg", ]
     # dsids = [ "SR1_Njet2_Nb0_HT500_MHT500", "SR2_Njet3_Nb0_HT1500_MHT750", "3NJet6_1250HT1500_300MHT450", "SRtN2", "SR3_Njet5_Nb0_HT500_MHT_500" ]
-    dsids = [ "3NJet6_1250HT1500_300MHT450", "SRtN2" ]
+    dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
     return exp_results
@@ -48,8 +51,8 @@ def testConstruction():
     # slhafile = "T2_1233_1007_1233_1007.slha"
     # slhafile = "T2tt_1130_650_1130_650.slha"
     # slhafile = "test/testFiles/slha/T1tttt.slha"
-    slhafile = "TChiWZ_820_680_820_680.slha"
-    slhafile = "TChiWZ_460_230_460_230.slha"
+    #slhafile = "TChiWZ_820_680_820_680.slha"
+    # slhafile = "TChiWZ_460_230_460_230.slha"
     slhafile = "T1tttt.slha"
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
@@ -75,7 +78,7 @@ def testConstruction():
         for t in ts:
             tpreds.append(t)
     xmin, xmax = getSensibleMuRange ( tpreds )
-    xmin, xmax = -.5, .5
+    xmin, xmax = -.5, 2.
             
     for t in tpreds:
         t.computeStatistics()
