@@ -68,7 +68,7 @@ def getSensibleMuRange ( tpred ):
     ctIt = 0
     while not hasConverged:
         if ctIt > 30:
-            print ( f"[cov_helpers] after {ctIt} iterations no convergence" )
+            print ( f"[cov_helpers:getSensibleMuRange] after {ctIt} iterations no convergence" )
             break
         hasConverged = True
         ctIt += 1
