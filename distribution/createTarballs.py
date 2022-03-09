@@ -271,7 +271,7 @@ def cleanDatabase(dirname):
         # comment( "Now in %s: %s" %(File, record[1] ) )
         removals = [ "orig", ".git", "validation", "README.rst", "__pycache__" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
-                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment", "README", "convert.pyc" ]
+                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "exclusion_lines.json", "general.comment", "README", "convert.pyc" ]
         globs = glob.glob ( f"{File}/*log" )
         globs = glob.glob ( f"{File}/__pycache__" )
         globs = glob.glob ( f"{File}/*.py" )
