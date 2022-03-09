@@ -23,7 +23,26 @@ import os
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
 
-def getExpResults():
+def getSetup():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2018-04' ]
+    dsids = [ 'SRhigh', 'SRlow' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    anaids = [ 'ATLAS-SUSY-2018-04' ]
+
+    # dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
+    # dsids = [ 'SRWZ_6', 'SRWZ_7', 'SRWZ_8', 'SRWZ_9' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    return exp_results, comb_results, "TStauStau_220_151_220_151.slha"
+
+def getSetupTChiWZ():
     """ collect the experimental results """
     dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
     # dbpath = "../../smodels-database/"
@@ -51,19 +70,14 @@ def getExpResults():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    return exp_results, comb_results
+    return exp_results, comb_results, "TChiWZ_460_230_460_230.slha"
+
 
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    exp_results, comb_results = getExpResults()
-    # exp_results = []
-    # slhafile = "T2_1233_1007_1233_1007.slha"
-    # slhafile = "T2tt_1130_650_1130_650.slha"
-    # slhafile = "test/testFiles/slha/T1tttt.slha"
-    #slhafile = "TChiWZ_820_680_820_680.slha"
-    slhafile = "TChiWZ_460_230_460_230.slha"
-    # slhafile = "T1tttt.slha"
+    # exp_results, comb_results, slhafile = getSetup()
+    exp_results, comb_results, slhafile = getSetupTChiWZ()
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)
@@ -93,12 +107,11 @@ def testConstruction():
         for t in ts:
             tpreds.append(t)
     #xmin, xmax = getSensibleMuRange ( tpreds )
-    xmin, xmax = -1.5, 2.5
+    xmin, xmax = -4., 10.
             
     g = open ( "llhds.dict", "wt" )
     g.write ( "{\n" )
     for t in tpreds:
-        print ( f"[testAnalysisCombinations] looking at {t}" )
         t.computeStatistics()
         dId = "combined"
         if hasattr ( t.dataset, "dataInfo" ):
@@ -106,6 +119,7 @@ def testConstruction():
         #if dId.find("_")>-1:
         #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"
+        print ( f"[testAnalysisCombinations] looking at {Id}" )
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
@@ -144,18 +158,21 @@ def testConstruction():
     print ( f"[testAnalysisCombinations] now combining {len(tpreds)} tpreds" )
     combiner = TheoryPredictionsCombiner(tpreds)
     combiner.computeStatistics()
-    print ( "a")
+    #print ( "a")
     r = combiner.getRValue()
-    print ( "r", r )
+    #print ( "r", r )
     r = combiner.getRValue( expected=True )
-    print ( "r", r )
+    #print ( "r", r )
     mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
                                                 extended_output=True)
+    # mu_hat = 1.
     plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$" )
    # plt.plot ( [ mu_hat-sigma_mu, mu_hat-sigma_mu ], [ llmin, .7*llmax ], linestyle=":", c="k" )
     #plt.plot ( [ mu_hat+sigma_mu, mu_hat+sigma_mu ], [ llmin, .7*llmax ], linestyle=":", c="k" )
     # plt.yscale ( "log" )
     ulmu = combiner.getUpperLimitOnMu()
+    #ulmu = 1.
+    # lmax = 1.
     print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
     plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$" )
 

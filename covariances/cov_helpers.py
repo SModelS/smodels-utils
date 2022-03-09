@@ -4,7 +4,7 @@
 
 import math
 
-def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10, 
+def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
        equidistant = True ):
     """ compute the likelhoods for theory prediction
     :param tpred: a theory prediction
@@ -18,7 +18,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
     import numpy as np
     dx = ( xmax - xmin ) / nbins
     S = 0.
-    rng = np.arange ( xmin, xmax, dx) 
+    rng = np.arange ( xmin, xmax, dx)
     center = ( xmin + xmax ) / 2.
     fourth = ( xmax - xmin ) / 4.
     oned = 1+ 1e-6
@@ -27,7 +27,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         rng = list ( np.arange ( xmin, xmax*oned, dx) )
         #print ( "rng1", xmin, xmax, dx, len(rng) )
         rng2 = list ( np.arange ( (xmin+fourth+dx/2.)/2., (xmax-fourth)*oned/2., dx/2.) )
-        
+
         rng3 = list ( np.arange ( center - fourth/2. + dx/4., (center + fourth/2.)*oned, dx/2. ) )
         #print ( "rng2", (xmin+fourth+dx/.2)/2., (xmax-fourth)*oned/2., dx/2., len(rng2) )
         #print ( "rng3", len(rng3) )
@@ -36,12 +36,18 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         rng = list ( set ( rng ) )
         rng.sort()
         #print ( "rng", len(rng), [ round(x,3) for x in rng ] )
-        
+
     ret = {}
     for mu in rng:
-        l = tpred.likelihood ( mu )
-        S+=l 
-        ret[mu]=l
+        #print ( ".", mu )
+        l = tpred.likelihood ( mu, useCached=False )
+        if l == None:
+            l = float("nan")
+        if tpred.dataset.getType() == "combined":
+            print ( f"[cov_helpers] {tpred.dataset.globalInfo.id} mu={mu:.3f} l={l}" )
+        if l not in [ None ] and math.isfinite( l ):
+            S+=l
+            ret[mu]=l
     if S > 0.:
         for k,v in ret.items():
             ret[k]=ret[k]/S
@@ -49,7 +55,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
 
 def getSensibleMuRange ( tpred ):
     """ given a theory prediction, get a sensible range for mu.
-        sensible meaning, smallest interval that covers 99% of the llhd 
+        sensible meaning, smallest interval that covers 99% of the llhd
     :param tpred: the theory prediction or list of theory predictions
     """
     if type ( tpred ) in [ tuple, list ]:
@@ -62,7 +68,7 @@ def getSensibleMuRange ( tpred ):
             if xmax > maxxtot:
                 maxxtot = xmax
         return minxtot, maxxtot
-            
+
     xmin, xmax = -2., 10. ## first guess
     hasConverged = False
     ctIt = 0
