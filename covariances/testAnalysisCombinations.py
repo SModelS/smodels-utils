@@ -76,8 +76,8 @@ def getSetupTChiWZ():
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    # exp_results, comb_results, slhafile = getSetup()
-    exp_results, comb_results, slhafile = getSetupTChiWZ()
+    exp_results, comb_results, slhafile = getSetup()
+    # exp_results, comb_results, slhafile = getSetupTChiWZ()
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)
@@ -107,7 +107,7 @@ def testConstruction():
         for t in ts:
             tpreds.append(t)
     #xmin, xmax = getSensibleMuRange ( tpreds )
-    xmin, xmax = -4., 10.
+    xmin, xmax = -6., 10.
             
     g = open ( "llhds.dict", "wt" )
     g.write ( "{\n" )
@@ -130,7 +130,8 @@ def testConstruction():
         for k,v in l.items():
             if not k in totllhd:
                 totllhd[k]=1.
-            totllhd[k]=totllhd[k]*v
+            if not "combine" in Id:
+                totllhd[k]=totllhd[k]*v
         yv = list ( l.values() )
         if False:
             import random
@@ -151,7 +152,7 @@ def testConstruction():
     llmin = min ( list( totllhd.values() ) + [ llmin ] )
     llmax = max ( list ( totllhd.values() ) + [ llmax ] )
 
-    plt.plot ( totllhd.keys(), totllhd.values(), label="total" )
+    plt.plot ( totllhd.keys(), totllhd.values(), label=r"$\Pi_i l_i$" )
     if len(tpreds)==0:
         print ( f"[testAnalysisCombinations] no tpreds found to combine" )
         sys.exit()
