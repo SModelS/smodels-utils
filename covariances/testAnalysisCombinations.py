@@ -84,6 +84,7 @@ def testConstruction():
     tpreds = []
     llhds = {}
     totllhd = {}
+    combine = []
     llmin,llmax = float("inf"), 0.
     ernames = set ( [ x.globalInfo.id for x in exp_results ] )
     print ( f"[testAnalysisCombinations] {len(exp_results)} results:", ", ".join(ernames)  )
@@ -95,6 +96,7 @@ def testConstruction():
             continue
         for t in ts:
             tpreds.append(t)
+            combine.append(t)
     for er in comb_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
@@ -107,7 +109,8 @@ def testConstruction():
         for t in ts:
             tpreds.append(t)
     #xmin, xmax = getSensibleMuRange ( tpreds )
-    xmin, xmax = -6., 10.
+    # xmin, xmax = -6., 10.
+    xmin, xmax = -.5, 3.5
             
     g = open ( "llhds.dict", "wt" )
     g.write ( "{\n" )
@@ -156,8 +159,8 @@ def testConstruction():
     if len(tpreds)==0:
         print ( f"[testAnalysisCombinations] no tpreds found to combine" )
         sys.exit()
-    print ( f"[testAnalysisCombinations] now combining {len(tpreds)} tpreds" )
-    combiner = TheoryPredictionsCombiner(tpreds)
+    print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
+    combiner = TheoryPredictionsCombiner(combine)
     combiner.computeStatistics()
     #print ( "a")
     r = combiner.getRValue()

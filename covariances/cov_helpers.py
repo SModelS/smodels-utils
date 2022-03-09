@@ -5,7 +5,7 @@
 import math
 
 def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
-       equidistant = True ):
+       equidistant = True, verbose = False ):
     """ compute the likelhoods for theory prediction
     :param tpred: a theory prediction
     :param xmin: minimum mu
@@ -44,7 +44,8 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         if l == None:
             l = float("nan")
         if tpred.dataset.getType() == "combined":
-            print ( f"[cov_helpers] {tpred.dataset.globalInfo.id} mu={mu:.3f} l={l}" )
+            if verbose:
+                print ( f"[cov_helpers] {tpred.dataset.globalInfo.id} mu={mu:.3f} l={l:.3g}" )
         if l not in [ None ] and math.isfinite( l ):
             S+=l
             ret[mu]=l
