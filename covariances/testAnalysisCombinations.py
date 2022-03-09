@@ -25,35 +25,45 @@ from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
 
 def getExpResults():
     """ collect the experimental results """
-    # dbpath = "official+../../smodels-database/+../../branches/smodels-database/" 
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
     # dbpath = "../../smodels-database/"
-    dbpath = "../../smodels/test/database/"
+    # dbpath = "../../smodels/test/database/"
     database = Database( dbpath )
     # we assume the ~/git/smodels-database to point to the "adl" branch
     # we assume the ~/git/branches/smodels-database to point to the "pyhf" branch
     # database = Database("official+../smodels-database/" )
     dTypes = ["efficiencyMap"]
-    # anaids = ["CMS-SUS-16-033", "CMS-SUS-13-012", "ATLAS-CONF-2013-037", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff", "ATLAS-SUSY-2019-09" ]
-    # anaids = [ "CMS-SUS-16-048", "CMS-SUS-16-050-agg", "CMS-PAS-SUS-16-052-agg", "ATLAS-SUSY-2018-22", "CMS-SUS-19-006-agg", "ATLAS-SUSY-2019-09-eff" ]
-    anaids = ["ATLAS-SUSY-2019-09", "CMS-SUS-16-039-agg", "ATLAS-SUSY-2018-06" ]
-    anaids = [ "ATLAS-SUSY-2018-06-eff" ]
-    anaids = [ "ATLAS-CONF-2013-037", "CMS-SUS-16-050-agg", ]
-    # dsids = [ "SR1_Njet2_Nb0_HT500_MHT500", "SR2_Njet3_Nb0_HT1500_MHT750", "3NJet6_1250HT1500_300MHT450", "SRtN2", "SR3_Njet5_Nb0_HT500_MHT_500" ]
-    dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
+    # anaids = [ "ATLAS-CONF-2013-037", "CMS-SUS-16-050-agg", ]
+    anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2018-06'  ]
+
+    # dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
+    # dsids = [ 'SRWZ_6', 'SRWZ_7', 'SRWZ_8', 'SRWZ_9' ]
+    dsids = [ 'SR2l_Int', 'SR_ISR', 'SR_low' ]
+    dsids = [ 'SR_ISR', 'SR_low' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    return exp_results
+
+    # anaids = [ 'ATLAS-SUSY-2019-09' ]
+    anaids = [ 'ATLAS-SUSY-2018-06' ]
+
+    # dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
+    # dsids = [ 'SRWZ_6', 'SRWZ_7', 'SRWZ_8', 'SRWZ_9' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    return exp_results, comb_results
 
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    exp_results = getExpResults()
+    exp_results, comb_results = getExpResults()
+    # exp_results = []
     # slhafile = "T2_1233_1007_1233_1007.slha"
     # slhafile = "T2tt_1130_650_1130_650.slha"
     # slhafile = "test/testFiles/slha/T1tttt.slha"
     #slhafile = "TChiWZ_820_680_820_680.slha"
-    # slhafile = "TChiWZ_460_230_460_230.slha"
-    slhafile = "T1tttt.slha"
+    slhafile = "TChiWZ_460_230_460_230.slha"
+    # slhafile = "T1tttt.slha"
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)
@@ -66,21 +76,29 @@ def testConstruction():
     for er in exp_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=False, useBestDataset=False, marginalize=False)
+        print ( f"{ts} preds" )
         if ts == None:
             continue
-        tsc = theoryPredictionsFor(er, smstopos,
-            combinedResults=True, useBestDataset=False, marginalize=False)
-        print ( f"   --- {er.globalInfo.id}: {len(ts)} SR results, {len(tsc)} comb results" )
-        for t in tsc:
-            print ( f"   combined result {t.dataset.globalInfo.id}" )
-        # ts += tsc
-        # ts = tsc
         for t in ts:
             tpreds.append(t)
-    xmin, xmax = getSensibleMuRange ( tpreds )
-    xmin, xmax = -.5, 2.
+    for er in comb_results:
+        ts = theoryPredictionsFor(er, smstopos,
+            combinedResults=True, useBestDataset=False, marginalize=False)
+        print ( f"   --- {er.globalInfo.id}: {len(ts)} SR results, {len(ts)} comb results" )
+        for t in ts:
+            print ( f"   combined result {t.dataset.globalInfo.id}" )
+        # ts = tsc
+        if ts == None:
+            continue
+        for t in ts:
+            tpreds.append(t)
+    #xmin, xmax = getSensibleMuRange ( tpreds )
+    xmin, xmax = -1.5, 2.5
             
+    g = open ( "llhds.dict", "wt" )
+    g.write ( "{\n" )
     for t in tpreds:
+        print ( f"[testAnalysisCombinations] looking at {t}" )
         t.computeStatistics()
         dId = "combined"
         if hasattr ( t.dataset, "dataInfo" ):
@@ -105,6 +123,14 @@ def testConstruction():
             for i,y in enumerate(yv):
                 yv[i]=y*random.uniform(.9,1.1)
         plt.plot ( l.keys(), yv, label=Id )
+        sl="{"
+        for k,v in l.items():
+            sl+=f"{k:.3f}: {v:.3g}, "
+        if len(sl)>3:
+            sl=sl[:-2]+"}"
+        g.write ( f"'{Id}': {sl},\n" )
+    g.write("}\n" )
+    g.close()
     totS = sum(totllhd.values())
     for k,v in totllhd.items():
         totllhd[k]=totllhd[k]/totS
@@ -112,8 +138,17 @@ def testConstruction():
     llmax = max ( list ( totllhd.values() ) + [ llmax ] )
 
     plt.plot ( totllhd.keys(), totllhd.values(), label="total" )
+    if len(tpreds)==0:
+        print ( f"[testAnalysisCombinations] no tpreds found to combine" )
+        sys.exit()
+    print ( f"[testAnalysisCombinations] now combining {len(tpreds)} tpreds" )
     combiner = TheoryPredictionsCombiner(tpreds)
     combiner.computeStatistics()
+    print ( "a")
+    r = combiner.getRValue()
+    print ( "r", r )
+    r = combiner.getRValue( expected=True )
+    print ( "r", r )
     mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
                                                 extended_output=True)
     plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$" )
