@@ -40,7 +40,12 @@ def getSetup():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    return exp_results, comb_results, "TStauStau_220_151_220_151.slha"
+    ret = { "slhafile": "TStauStau_220_151_220_151.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-6., 10. ),
+    }
+    return ret
 
 def getSetupTChiWZ():
     """ collect the experimental results """
@@ -59,7 +64,12 @@ def getSetupTChiWZ():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    return exp_results, comb_results, "TChiWZ_460_230_460_230.slha"
+    ret = { "slhafile": "TChiWZ_460_230_460_230.slha", 
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -4., 12. ),
+    }
+    return ret
 
 def getSetupTChiWZ09():
     """ collect the experimental results """
@@ -79,14 +89,22 @@ def getSetupTChiWZ09():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    return exp_results, comb_results, "TChiWZ_460_230_460_230.slha"
+    ret = { "slhafile": "TChiWZ_460_230_460_230.slha", 
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-4,5),
+    }
+    return ret
 
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    # exp_results, comb_results, slhafile = getSetup()
-    # exp_results, comb_results, slhafile = getSetupTChiWZ()
-    exp_results, comb_results, slhafile = getSetupTChiWZ09()
+    D = getSetup()
+    # D = getSetupTChiWZ()
+    # D = getSetupTChiWZ09()
+    exp_results = D["SR"]
+    comb_results = D["comb"]
+    slhafile = D["slhafile"]
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)
@@ -120,6 +138,8 @@ def testConstruction():
     #xmin, xmax = getSensibleMuRange ( tpreds )
     # xmin, xmax = -6., 10.
     xmin, xmax = -2.5, 4.5
+    if "murange" in D:
+        xmin, xmax = D["murange"]
             
     g = open ( "llhds.dict", "wt" )
     g.write ( "{\n" )
