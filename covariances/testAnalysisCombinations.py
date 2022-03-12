@@ -48,36 +48,45 @@ def getSetupTChiWZ():
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
     database = Database( dbpath )
-    # we assume the ~/git/smodels-database to point to the "adl" branch
-    # we assume the ~/git/branches/smodels-database to point to the "pyhf" branch
-    # database = Database("official+../smodels-database/" )
     dTypes = ["efficiencyMap"]
-    # anaids = [ "ATLAS-CONF-2013-037", "CMS-SUS-16-050-agg", ]
     anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2018-06'  ]
-
-    # dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
-    # dsids = [ 'SRWZ_6', 'SRWZ_7', 'SRWZ_8', 'SRWZ_9' ]
     dsids = [ 'SR2l_Int', 'SR_ISR', 'SR_low' ]
     dsids = [ 'SR_ISR', 'SR_low' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
 
-    # anaids = [ 'ATLAS-SUSY-2019-09' ]
     anaids = [ 'ATLAS-SUSY-2018-06' ]
-
-    # dsids = [ "SRtN2", "6NJet8_1000HT1250_200MHT300", "3NJet6_1250HT1500_300MHT450", "ar8" ]
-    # dsids = [ 'SRWZ_6', 'SRWZ_7', 'SRWZ_8', 'SRWZ_9' ]
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
     return exp_results, comb_results, "TChiWZ_460_230_460_230.slha"
 
+def getSetupTChiWZ09():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    # dbpath = "../../smodels-database/"
+    # dbpath = "../../smodels/test/database/"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2019-09'  ]
+    #anaids = [ 'ATLAS-SUSY-2019-09'  ]
+    dsids = [ 'SR2l_Int', 'SRWZ_10', 'SRWZ_20' ]
+    #dsids = [ 'all' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    anaids = [ 'ATLAS-SUSY-2019-09' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    return exp_results, comb_results, "TChiWZ_460_230_460_230.slha"
 
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    exp_results, comb_results, slhafile = getSetup()
+    # exp_results, comb_results, slhafile = getSetup()
     # exp_results, comb_results, slhafile = getSetupTChiWZ()
+    exp_results, comb_results, slhafile = getSetupTChiWZ09()
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)
@@ -110,10 +119,12 @@ def testConstruction():
             tpreds.append(t)
     #xmin, xmax = getSensibleMuRange ( tpreds )
     # xmin, xmax = -6., 10.
-    xmin, xmax = -.5, 3.5
+    xmin, xmax = -2.5, 4.5
             
     g = open ( "llhds.dict", "wt" )
     g.write ( "{\n" )
+    nplots = 0
+    args = { "ls": "-" }
     for t in tpreds:
         t.computeStatistics()
         dId = "combined"
@@ -122,7 +133,7 @@ def testConstruction():
         #if dId.find("_")>-1:
         #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"
-        print ( f"[testAnalysisCombinations] looking at {Id}" )
+        print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
@@ -140,7 +151,7 @@ def testConstruction():
             import random
             for i,y in enumerate(yv):
                 yv[i]=y*random.uniform(.9,1.1)
-        plt.plot ( l.keys(), yv, label=Id )
+        plt.plot ( l.keys(), yv, label=Id, **args )
         sl="{"
         for k,v in l.items():
             sl+=f"{k:.3f}: {v:.3g}, "

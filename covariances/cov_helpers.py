@@ -38,7 +38,9 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         #print ( "rng", len(rng), [ round(x,3) for x in rng ] )
 
     ret = {}
-    for mu in rng:
+    for _,mu in enumerate(rng):
+        if _ % 10 == 0:
+            print ( ".", flush=True, end="" )
         #print ( ".", mu )
         l = tpred.likelihood ( mu, useCached=False )
         if l == None:
@@ -49,6 +51,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         if l not in [ None ] and math.isfinite( l ):
             S+=l
             ret[mu]=l
+    print ( "" )
     if S > 0.:
         for k,v in ret.items():
             ret[k]=ret[k]/S
