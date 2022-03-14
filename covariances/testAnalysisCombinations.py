@@ -96,11 +96,34 @@ def getSetupTChiWZ09():
     }
     return ret
 
+def getSetupTChiWH():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    # dbpath = "../../smodels-database/"
+    # dbpath = "../../smodels/test/database/"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2017-01', 'ATLAS-SUSY-2019-08'  ]
+    dsids = [ 'SRHad-Low', 'SR_MM_Low_MCT', 'SR_HM_Med_MCT' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                      datasetIDs=dsids, dataTypes=dTypes, useNonValidated=True )
+
+    anaids = [ 'ATLAS-SUSY-2019-08' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "TChiWH_525_80_525_80.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -3., 3. ),
+    }
+    return ret
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    D = getSetup()
+    # D = getSetup()
     # D = getSetupTChiWZ()
+    D = getSetupTChiWH()
     # D = getSetupTChiWZ09()
     exp_results = D["SR"]
     comb_results = D["comb"]
