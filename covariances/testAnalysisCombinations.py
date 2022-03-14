@@ -44,6 +44,7 @@ def getSetup():
             "SR": exp_results,
             "comb": comb_results,
             "murange": (-6., 10. ),
+            "output": "combo_1804.png"
     }
     return ret
 
@@ -121,9 +122,9 @@ def getSetupTChiWH():
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    # D = getSetup()
+    D = getSetup()
     # D = getSetupTChiWZ()
-    D = getSetupTChiWH()
+    # D = getSetupTChiWH()
     # D = getSetupTChiWZ09()
     exp_results = D["SR"]
     comb_results = D["comb"]
@@ -242,7 +243,10 @@ def testConstruction():
     plt.legend()
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
-    plt.savefig ( "combo.png" )
+    output = "combo.png"
+    if "output" in D:
+        output = D["output"]
+    plt.savefig ( output )
     plt.kittyPlot()
 
 if __name__ == "__main__":
