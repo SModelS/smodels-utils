@@ -8,6 +8,30 @@
 
 """
 
+def retrieveValidationFile ( filename, tarballname = None ):
+    """ retrieve a certain validation file from the right tarball 
+    :param filename: name of slha file to extract
+    :param tarballname: optionally supply name of tarball also
+    """
+    import os, sys
+    if os.path.exists ( filename ):
+        return True
+    from smodels_utils.SModelSUtils import installDirectory
+    tokens = filename.split("_")
+    if tarballname == None:
+            tarballname = f"{tokens[0]}.tar.gz"
+    tarball = f"{installDirectory()}/slha/{tarballname}"
+    tarball = tarball.replace("//","/")
+    print ( "filename", filename, os.path.exists ( tarball ), tarball, os.getcwd() )
+    if os.path.exists ( tarball ):
+        import tarfile
+        f= tarfile.open ( tarball )
+        f.extract ( filename )
+        f.close()
+        if os.path.exists ( filename ):
+            return True
+    return False
+
 def point_in_hull(point, hull, tolerance=1e-12):
     import numpy
     """ return if a given point is within a given hull """
