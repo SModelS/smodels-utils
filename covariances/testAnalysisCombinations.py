@@ -115,7 +115,7 @@ def getSetupTChiWH():
     ret = { "slhafile": "TChiWH_525_80_525_80.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": ( -3., 3. ),
+            "murange": ( -2.5, 2.5 ),
     }
     return ret
 def testConstruction():
