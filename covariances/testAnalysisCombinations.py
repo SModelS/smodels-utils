@@ -40,12 +40,16 @@ def getSetupTStauStau():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
+    jsonf = list ( comb_results[0].globalInfo.jsonFiles.keys() )
     ret = { "slhafile": "TStauStau_220_151_220_151.slha",
             "SR": exp_results,
             "comb": comb_results,
             "murange": (-6., 10. ),
             "output": "combo_1804.png"
     }
+    if jsonf[0] == "simplified.json":
+        ret["output"]="combo_1804simplified.png"
+        ret["label"]="simplified"
     return ret
 
 def getSetupTChiWZ():
@@ -88,12 +92,16 @@ def getSetupT6bbHH():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
+    jsonf = list ( comb_results[0].globalInfo.jsonFiles.keys() )
     ret = { "slhafile": "T6bbHH_504_241_111_504_241_111.slha", 
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -1.5, 2. ),
             "output": "combo_1831.png",
     }
+    if "simplif" in jsonf[0]:
+        ret["output"] = "combo_1831simplified.png"
+        ret["label"]="simplified"
     return ret
 
 def getSetupTChiWZ09():
@@ -149,6 +157,7 @@ def getSetup():
     # D = getSetupTChiWZ()
     # D = getSetupTChiWH()
     # D = getSetupTChiWZ09()
+    # D = getSetupTStauStau()
     return D
 
 def testConstruction():
@@ -270,7 +279,10 @@ def testConstruction():
     p = slha.find("_")
     if False: # p > 0:
         slha = slha[:p]
-    plt.title ( f"likelihoods for {slha}" )
+    label = ""
+    if "label" in D:
+        label = D["label"]+" "
+    plt.title ( f"{label}likelihoods for {slha}" )
     plt.legend()
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
