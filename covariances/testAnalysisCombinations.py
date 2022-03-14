@@ -23,7 +23,7 @@ import os
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
 
-def getSetup():
+def getSetupTStauStau():
     """ collect the experimental results """
     dbpath = "../../smodels-database/"
     database = Database( dbpath )
@@ -69,6 +69,30 @@ def getSetupTChiWZ():
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -4., 12. ),
+    }
+    return ret
+
+def getSetupT6bbHH():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    # dbpath = "../../smodels-database/"
+    # dbpath = "../../smodels/test/database/"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2018-31', 'ATLAS-SUSY-2018-xx'  ]
+    dsids = [ 'SRB', 'SRA_M' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    anaids = [ 'ATLAS-SUSY-2018-31' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "T6bbHH_504_241_111_504_241_111.slha", 
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -1.5, 2. ),
+            "output": "combo_1831.png",
     }
     return ret
 
@@ -119,16 +143,23 @@ def getSetupTChiWH():
             "murange": ( -2.5, 2.5 ),
     }
     return ret
+
+def getSetup():
+    D = getSetupT6bbHH()
+    # D = getSetupTChiWZ()
+    # D = getSetupTChiWH()
+    # D = getSetupTChiWZ09()
+    return D
+
 def testConstruction():
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
     D = getSetup()
-    # D = getSetupTChiWZ()
-    # D = getSetupTChiWH()
-    # D = getSetupTChiWZ09()
     exp_results = D["SR"]
     comb_results = D["comb"]
     slhafile = D["slhafile"]
+    from validation.validationHelpers import retrieveValidationFile
+    retrieveValidationFile ( slhafile )
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)

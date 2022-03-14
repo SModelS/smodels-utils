@@ -4,6 +4,15 @@
 
 import math
 
+def printIndicator ( i ):
+    if i == 0:
+        return
+    if i % 50 == 0:
+        print ( ":", flush=True, end="" )
+        return
+    if i % 10 == 0:
+        print ( ".", flush=True, end="" )
+
 def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
        equidistant = True, verbose = False ):
     """ compute the likelhoods for theory prediction
@@ -38,10 +47,8 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         #print ( "rng", len(rng), [ round(x,3) for x in rng ] )
 
     ret = {}
-    for _,mu in enumerate(rng):
-        if _ % 10 == 0:
-            print ( ".", flush=True, end="" )
-        #print ( ".", mu )
+    for i,mu in enumerate(rng):
+        printIndicator ( i )
         l = tpred.likelihood ( mu, useCached=False )
         if l == None:
             l = float("nan")
