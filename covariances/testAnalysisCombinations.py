@@ -161,8 +161,10 @@ def getSetupTChiWH():
     }
     return ret
 
-def writeDictFile ( dictname, llhds, times ):
-    """ write out the likelihoods.dict file """
+def writeDictFile ( dictname, llhds, times, fits ):
+    """ write out the likelihoods.dict file 
+    :param dictname: name of file, e.g. likelihoods.dict
+    """
     g = open ( dictname, "wt" )
     g.write ( "llhds={\n" )
     for Id,l in llhds.items():
@@ -177,17 +179,130 @@ def writeDictFile ( dictname, llhds, times ):
     for i,(k,v) in enumerate(times.items() ):
         if i > 0:
             g.write ( ", " )
-        g.write ( f"{k}: {v:.3f}" )
-    g.write(str(times))
+        g.write ( f"'{k}': {v:.3f}" )
     g.write("}\n")
+    g.write("fits="+str(fits)+"\n" )
     g.close()
 
-def testAnalysisCombo( D ):
+def plotLlhds ( llhds, fits, setup ):
+    """ plot the likelihoods in llhds,
+        additional stuff in fits, setup is the setup dictionary 
+    :param fits: dictionary that contains ulmu, mu_hat
+    :param setup: dictionary that contains slhafile, and more
+    """
+    llmin,llmax = float("inf"), 0.
+    totllhd={}
+    for Id,l in llhds.items():
+        args = { "ls": "-" }
+        if "combine" in Id:
+            args["linewidth"]=2
+            args["c"]="r"
+        llmin = min ( list( l.values() ) + [ llmin ] )
+        llmax = max ( list ( l.values() ) + [ llmax ] )
+        for k,v in l.items():
+            if not k in totllhd:
+                totllhd[k]=1.
+            if not "combine" in Id:
+                totllhd[k]=totllhd[k]*v
+        yv = list ( l.values() )
+        if False:
+            import random
+            for i,y in enumerate(yv):
+                yv[i]=y*random.uniform(.9,1.1)
+        plt.plot ( l.keys(), yv, label=Id, **args )
+    totS = sum(totllhd.values())
+    for k,v in totllhd.items():
+        totllhd[k]=totllhd[k]/totS
+    llmin = min ( list( totllhd.values() ) + [ llmin ] )
+    llmax = max ( list ( totllhd.values() ) + [ llmax ] )
+
+    plt.plot ( totllhd.keys(), totllhd.values(), label=r"$\Pi_i l_i$" )
+
+    mu_hat = fits["mu_hat"]
+    ulmu = fits["ulmu"]
+    lmax = fits["lmax"]
+    # mu_hat = 1.
+    plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$" )
+    print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
+    plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$" )
+
+    slha = setup["slhafile"]
+    p = slha.find("_")
+    if False: # p > 0:
+        slha = slha[:p]
+    label = ""
+    if "label" in setup:
+        label = setup["label"]+" "
+    plt.title ( f"pyhf {label}likelihoods for {slha}" )
+    plt.legend()
+    # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
+    plt.xlabel ( r"$\mu$" )
+    output = "combo.png"
+    if "output" in setup:
+        output = setup["output"]
+    plt.savefig ( output )
+    plt.kittyPlot()
+    print ( f"[testAnalysisCombinations] saved to {output}" )
+
+def createLlhds ( tpreds, setup ):
+    """ given the setup and tpreds, create llhds dicts 
+    """
+    #xmin, xmax = getSensibleMuRange ( tpreds )
+    # xmin, xmax = -6., 10.
+    xmin, xmax = -2.5, 4.5
+    if "murange" in setup:
+        xmin, xmax = setup["murange"]
+            
+    times, llhds = {}, {}
+    for t in tpreds:
+        dId = "combined"
+        if hasattr ( t.dataset, "dataInfo" ):
+            dId = t.dataset.dataInfo.dataId
+        #if dId.find("_")>-1:
+        #    dId = dId[:dId.find("_")]
+        Id = f"{t.dataset.globalInfo.id}:{dId}"
+        print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
+        t0 = time.time()
+        t.computeStatistics()
+        lsm = t.lsm()
+        #thetahat_sm = t.dataset.theta_hat
+        # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False )
+        llhds[Id]=l
+        t1 = time.time()
+        times[Id]=(t1-t0)
+    return llhds, times
+
+def readDictFile ( dictname ):
+    """ read the dict file, as a cache """
+    f = open ( dictname, "rt" )
+    txt = f.read()
+    f.close()
+    try:
+        exec(txt,globals())
+    except Exception as e:
+        print ( f"[testAnalysisCombinations] could not read dict file {dictname}, deleting" )
+        os.unlink ( dictname )
+        return [ None ]*3
+    return llhds, times, fits
+
+def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
-        covariance matrix are constructed appropriately """
-    exp_results = D["SR"]
-    comb_results = D["comb"]
-    slhafile = D["slhafile"]
+        covariance matrix are constructed appropriately 
+    :param setup: dictionary, describing setup
+    """
+    dictname = "llhds.dict"
+    if "dictname" in setup:
+        dictname = setup["dictname"]
+        if os.path.exists ( dictname ):
+            llhds, times, fits = readDictFile ( dictname )
+            if llhds != None:
+                plotLlhds ( llhds, fits, setup )
+                return
+
+    exp_results = setup["SR"]
+    comb_results = setup["comb"]
+    slhafile = setup["slhafile"]
     from validation.validationHelpers import retrieveValidationFile
     retrieveValidationFile ( slhafile )
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
@@ -219,34 +334,8 @@ def testAnalysisCombo( D ):
             continue
         for t in ts:
             tpreds.insert(0,t) ## put them in front so they always have same color
-    #xmin, xmax = getSensibleMuRange ( tpreds )
-    # xmin, xmax = -6., 10.
-    xmin, xmax = -2.5, 4.5
-    if "murange" in D:
-        xmin, xmax = D["murange"]
-            
     nplots = 0
-    times = {}
-    for t in tpreds:
-        args = { "ls": "-" }
-        dId = "combined"
-        if hasattr ( t.dataset, "dataInfo" ):
-            dId = t.dataset.dataInfo.dataId
-        else:
-            args["linewidth"]=2
-        #if dId.find("_")>-1:
-        #    dId = dId[:dId.find("_")]
-        Id = f"{t.dataset.globalInfo.id}:{dId}"
-        print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
-        t0 = time.time()
-        t.computeStatistics()
-        lsm = t.lsm()
-        #thetahat_sm = t.dataset.theta_hat
-        # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False )
-        llhds[Id]=l
-        t1 = time.time()
-        times[Id]=(t1-t0)
+    llhds, times = createLlhds ( tpreds, setup )
 
     print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
     combiner = TheoryPredictionsCombiner(combine)
@@ -256,59 +345,13 @@ def testAnalysisCombo( D ):
     mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
                                                 extended_output=True)
     ulmu = combiner.getUpperLimitOnMu()
+    fits = { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax }
 
-    llmin,llmax = float("inf"), 0.
-    for Id,l in llhds.items():
-        llmin = min ( list( l.values() ) + [ llmin ] )
-        llmax = max ( list ( l.values() ) + [ llmax ] )
-        for k,v in l.items():
-            if not k in totllhd:
-                totllhd[k]=1.
-            if not "combine" in Id:
-                totllhd[k]=totllhd[k]*v
-        yv = list ( l.values() )
-        if False:
-            import random
-            for i,y in enumerate(yv):
-                yv[i]=y*random.uniform(.9,1.1)
-        plt.plot ( l.keys(), yv, label=Id, **args )
-    totS = sum(totllhd.values())
-    for k,v in totllhd.items():
-        totllhd[k]=totllhd[k]/totS
-    llmin = min ( list( totllhd.values() ) + [ llmin ] )
-    llmax = max ( list ( totllhd.values() ) + [ llmax ] )
-
-    plt.plot ( totllhd.keys(), totllhd.values(), label=r"$\Pi_i l_i$" )
+    plotLlhds ( llhds, fits, setup )
     if len(tpreds)==0:
         print ( f"[testAnalysisCombinations] no tpreds found to combine" )
         sys.exit()
-    dictname = "llhds.dict"
-    if "dictname" in D:
-        dictname = D["dictname"]
-    writeDictFile ( dictname, llhds, times )
-
-    # mu_hat = 1.
-    plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$" )
-    print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
-    plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$" )
-
-    slha = slhafile 
-    p = slha.find("_")
-    if False: # p > 0:
-        slha = slha[:p]
-    label = ""
-    if "label" in D:
-        label = D["label"]+" "
-    plt.title ( f"pyhf {label}likelihoods for {slha}" )
-    plt.legend()
-    # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
-    plt.xlabel ( r"$\mu$" )
-    output = "combo.png"
-    if "output" in D:
-        output = D["output"]
-    plt.savefig ( output )
-    plt.kittyPlot()
-    print ( f"[testAnalysisCombinations] saved to {output}" )
+    writeDictFile ( dictname, llhds, times, fits )
 
 def runSlew():
     """ run them all """
@@ -321,20 +364,20 @@ def runSlew():
             setups.append ( f )
     for f in setups:
         print ( f"[testAnalysisCombinations] running {f}" )
-        D = eval( f"{f}()" )
-        testAnalysisCombo( D )
+        setup = eval( f"{f}()" )
+        testAnalysisCombo( setup )
     sys.exit()
 
 def getSetup():
-    D = getSetupT6bbHH()
-    # D = getSetupTChiWZ()
-    # D = getSetupTChiWH()
-    # D = getSetupTChiWZ09()
-    # D = getSetupTStauStau()
-    return D
+    # setup = getSetupT6bbHH()
+    setup = getSetupTChiWZ()
+    # setup = getSetupTChiWH()
+    # setup = getSetupTChiWZ09()
+    # setup = getSetupTStauStau()
+    return setup
 
 
 if __name__ == "__main__":
-    # runSlew()
-    D = getSetup()
-    testAnalysisCombo( D )
+    runSlew()
+    setup = getSetup()
+    testAnalysisCombo( setup )
