@@ -161,14 +161,6 @@ def getSetupTChiWH():
     }
     return ret
 
-def getSetup():
-    D = getSetupT6bbHH()
-    # D = getSetupTChiWZ()
-    # D = getSetupTChiWH()
-    # D = getSetupTChiWZ09()
-    # D = getSetupTStauStau()
-    return D
-
 def testAnalysisCombo( D ):
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
@@ -206,7 +198,7 @@ def testAnalysisCombo( D ):
         if ts == None:
             continue
         for t in ts:
-            tpreds.append(t)
+            tpreds.insert(0,t) ## put them in front so they always have same color
     #xmin, xmax = getSensibleMuRange ( tpreds )
     # xmin, xmax = -6., 10.
     xmin, xmax = -2.5, 4.5
@@ -219,12 +211,14 @@ def testAnalysisCombo( D ):
     g = open ( dictname, "wt" )
     g.write ( "llhds={\n" )
     nplots = 0
-    args = { "ls": "-" }
     times = {}
     for t in tpreds:
+        args = { "ls": "-" }
         dId = "combined"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
+        else:
+            args["linewidth"]=2
         #if dId.find("_")>-1:
         #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"
@@ -328,8 +322,18 @@ def runSlew():
         print ( f"[testAnalysisCombinations] running {f}" )
         D = eval( f"{f}()" )
         testAnalysisCombo( D )
+    sys.exit()
+
+def getSetup():
+    # D = getSetupT6bbHH()
+    # D = getSetupTChiWZ()
+    D = getSetupTChiWH()
+    # D = getSetupTChiWZ09()
+    # D = getSetupTStauStau()
+    return D
+
 
 if __name__ == "__main__":
-    runSlew()
+    # runSlew()
     D = getSetup()
     testAnalysisCombo( D )
