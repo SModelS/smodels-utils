@@ -222,9 +222,9 @@ def plotLlhds ( llhds, fits, setup ):
     ulmu = fits["ulmu"]
     lmax = fits["lmax"]
     # mu_hat = 1.
-    plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$" )
+    plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
     print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
-    plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$" )
+    plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$ (product)" )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -284,6 +284,7 @@ def readDictFile ( dictname ):
         print ( f"[testAnalysisCombinations] could not read dict file {dictname}, deleting" )
         os.unlink ( dictname )
         return [ None ]*3
+    print ( f"[testAnalysisCombinations] recycling llhds from {dictname}, delete if you dont want that" )
     return llhds, times, fits
 
 def testAnalysisCombo( setup ):
