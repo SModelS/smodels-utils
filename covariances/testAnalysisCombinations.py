@@ -218,13 +218,23 @@ def plotLlhds ( llhds, fits, setup ):
 
     plt.plot ( totllhd.keys(), totllhd.values(), label=r"$\Pi_i l_i$" )
 
-    mu_hat = fits["mu_hat"]
-    ulmu = fits["ulmu"]
-    lmax = fits["lmax"]
-    # mu_hat = 1.
-    plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
-    print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
-    plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$ (product)" )
+    if True:
+        mu_hat = fits["mu_hat"]
+        ulmu = fits["ulmu"]
+        lmax = fits["lmax"]
+        print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
+        # mu_hat = 1.
+        plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
+        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$ (product)" )
+
+    if True:
+        #mu_hat = fits["mu_hat"]
+        ulmu = fits["ul_combo"]
+        # lmax = fits["lmax"]
+        print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
+        # mu_hat = 1.
+        # plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
+        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="magenta", label=r"ul$_\mu$ (pyhf combo)" )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -293,9 +303,11 @@ def testAnalysisCombo( setup ):
     :param setup: dictionary, describing setup
     """
     dictname = "llhds.dict"
+    if not "rewrite" in setup:
+        setup["rewrite"]=False
     if "dictname" in setup:
         dictname = setup["dictname"]
-        if os.path.exists ( dictname ):
+        if os.path.exists ( dictname ) and setup["rewrite"] == False:
             llhds, times, fits = readDictFile ( dictname )
             if llhds != None:
                 plotLlhds ( llhds, fits, setup )
@@ -315,6 +327,7 @@ def testAnalysisCombo( setup ):
     combine = []
     ernames = set ( [ x.globalInfo.id for x in exp_results ] )
     print ( f"[testAnalysisCombinations] {len(exp_results)} results:", ", ".join(ernames)  )
+    fits = {}
     for er in exp_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=False, useBestDataset=False, marginalize=False)
@@ -335,6 +348,10 @@ def testAnalysisCombo( setup ):
             continue
         for t in ts:
             tpreds.insert(0,t) ## put them in front so they always have same color
+        ul = float ( ts[0].getUpperLimit() / ts[0].xsection.value )
+        muhat = 1. # ts[0].muhat
+        fits["ul_combo"] = ul
+        fits["muhat_combo"] = muhat
     nplots = 0
     llhds, times = createLlhds ( tpreds, setup )
 
@@ -346,7 +363,7 @@ def testAnalysisCombo( setup ):
     mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
                                                 extended_output=True)
     ulmu = combiner.getUpperLimitOnMu()
-    fits = { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax }
+    fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax } )
 
     plotLlhds ( llhds, fits, setup )
     if len(tpreds)==0:
@@ -379,6 +396,7 @@ def getSetup():
 
 
 if __name__ == "__main__":
-    runSlew()
+    # runSlew()
     setup = getSetup()
+    setup["rewrite"]=False
     testAnalysisCombo( setup )
