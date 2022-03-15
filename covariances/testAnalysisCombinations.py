@@ -205,11 +205,6 @@ def testAnalysisCombo( D ):
     if "murange" in D:
         xmin, xmax = D["murange"]
             
-    dictname = "llhds.dict"
-    if "dictname" in D:
-        dictname = D["dictname"]
-    g = open ( dictname, "wt" )
-    g.write ( "llhds={\n" )
     nplots = 0
     times = {}
     for t in tpreds:
@@ -229,9 +224,19 @@ def testAnalysisCombo( D ):
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
         l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False )
+        llhds[Id]=l
+        t1 = time.time()
+        times[Id]=(t1-t0)
+
+    dictname = "llhds.dict"
+    if "dictname" in D:
+        dictname = D["dictname"]
+    g = open ( dictname, "wt" )
+    g.write ( "llhds={\n" )
+
+    for Id,l in llhds.items():
         llmin = min ( list( l.values() ) + [ llmin ] )
         llmax = max ( list ( l.values() ) + [ llmax ] )
-        llhds[Id]=l
         for k,v in l.items():
             if not k in totllhd:
                 totllhd[k]=1.
@@ -249,8 +254,6 @@ def testAnalysisCombo( D ):
         if len(sl)>3:
             sl=sl[:-2]+"}"
         g.write ( f"'{Id}': {sl},\n" )
-        t = time.time()
-        times[Id]=(t-t0)
     g.write("}\n" )
     g.write("times={" )
     for i,(k,v) in enumerate(times.items() ):
