@@ -161,6 +161,27 @@ def getSetupTChiWH():
     }
     return ret
 
+def writeDictFile ( dictname, llhds, times ):
+    """ write out the likelihoods.dict file """
+    g = open ( dictname, "wt" )
+    g.write ( "llhds={\n" )
+    for Id,l in llhds.items():
+        sl="{"
+        for k,v in l.items():
+            sl+=f"{k:.3f}: {v:.3g}, "
+        if len(sl)>3:
+            sl=sl[:-2]+"}"
+        g.write ( f"'{Id}': {sl},\n" )
+    g.write("}\n" )
+    g.write("times={" )
+    for i,(k,v) in enumerate(times.items() ):
+        if i > 0:
+            g.write ( ", " )
+        g.write ( f"{k}: {v:.3f}" )
+    g.write(str(times))
+    g.write("}\n")
+    g.close()
+
 def testAnalysisCombo( D ):
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
@@ -176,7 +197,6 @@ def testAnalysisCombo( D ):
     llhds = {}
     totllhd = {}
     combine = []
-    llmin,llmax = float("inf"), 0.
     ernames = set ( [ x.globalInfo.id for x in exp_results ] )
     print ( f"[testAnalysisCombinations] {len(exp_results)} results:", ", ".join(ernames)  )
     for er in exp_results:
@@ -228,12 +248,16 @@ def testAnalysisCombo( D ):
         t1 = time.time()
         times[Id]=(t1-t0)
 
-    dictname = "llhds.dict"
-    if "dictname" in D:
-        dictname = D["dictname"]
-    g = open ( dictname, "wt" )
-    g.write ( "llhds={\n" )
+    print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
+    combiner = TheoryPredictionsCombiner(combine)
+    combiner.computeStatistics()
+    r = combiner.getRValue()
+    r = combiner.getRValue( expected=True )
+    mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
+                                                extended_output=True)
+    ulmu = combiner.getUpperLimitOnMu()
 
+    llmin,llmax = float("inf"), 0.
     for Id,l in llhds.items():
         llmin = min ( list( l.values() ) + [ llmin ] )
         llmax = max ( list ( l.values() ) + [ llmax ] )
@@ -248,21 +272,6 @@ def testAnalysisCombo( D ):
             for i,y in enumerate(yv):
                 yv[i]=y*random.uniform(.9,1.1)
         plt.plot ( l.keys(), yv, label=Id, **args )
-        sl="{"
-        for k,v in l.items():
-            sl+=f"{k:.3f}: {v:.3g}, "
-        if len(sl)>3:
-            sl=sl[:-2]+"}"
-        g.write ( f"'{Id}': {sl},\n" )
-    g.write("}\n" )
-    g.write("times={" )
-    for i,(k,v) in enumerate(times.items() ):
-        if i > 0:
-            g.write ( ", " )
-        g.write ( f"{k}: {v:.3f}" )
-    g.write(str(times))
-    g.write("}\n")
-    g.close()
     totS = sum(totllhd.values())
     for k,v in totllhd.items():
         totllhd[k]=totllhd[k]/totS
@@ -273,24 +282,13 @@ def testAnalysisCombo( D ):
     if len(tpreds)==0:
         print ( f"[testAnalysisCombinations] no tpreds found to combine" )
         sys.exit()
-    print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
-    combiner = TheoryPredictionsCombiner(combine)
-    combiner.computeStatistics()
-    #print ( "a")
-    r = combiner.getRValue()
-    #print ( "r", r )
-    r = combiner.getRValue( expected=True )
-    #print ( "r", r )
-    mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
-                                                extended_output=True)
+    dictname = "llhds.dict"
+    if "dictname" in D:
+        dictname = D["dictname"]
+    writeDictFile ( dictname, llhds, times )
+
     # mu_hat = 1.
     plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$" )
-   # plt.plot ( [ mu_hat-sigma_mu, mu_hat-sigma_mu ], [ llmin, .7*llmax ], linestyle=":", c="k" )
-    #plt.plot ( [ mu_hat+sigma_mu, mu_hat+sigma_mu ], [ llmin, .7*llmax ], linestyle=":", c="k" )
-    # plt.yscale ( "log" )
-    ulmu = combiner.getUpperLimitOnMu()
-    #ulmu = 1.
-    # lmax = 1.
     print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
     plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$" )
 
@@ -328,9 +326,9 @@ def runSlew():
     sys.exit()
 
 def getSetup():
-    # D = getSetupT6bbHH()
+    D = getSetupT6bbHH()
     # D = getSetupTChiWZ()
-    D = getSetupTChiWH()
+    # D = getSetupTChiWH()
     # D = getSetupTChiWZ09()
     # D = getSetupTStauStau()
     return D
