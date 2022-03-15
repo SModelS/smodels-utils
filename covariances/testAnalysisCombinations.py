@@ -22,6 +22,7 @@ import numpy as np
 import os
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
+import time
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -45,6 +46,7 @@ def getSetupTStauStau():
             "SR": exp_results,
             "comb": comb_results,
             "murange": (-6., 10. ),
+            "dictname": "staustau.dict",
             "output": "combo_1804.png"
     }
     if jsonf[0] == "simplified.json":
@@ -72,7 +74,9 @@ def getSetupTChiWZ():
     ret = { "slhafile": "TChiWZ_460_230_460_230.slha", 
             "SR": exp_results,
             "comb": comb_results,
+            "dictname": "chiwz.dict",
             "murange": ( -4., 12. ),
+            "output": "combo_1806.png"
     }
     return ret
 
@@ -97,6 +101,7 @@ def getSetupT6bbHH():
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -1.5, 2. ),
+            "dictname": "t6bbhh.dict",
             "output": "combo_1831.png",
     }
     if "simplif" in jsonf[0]:
@@ -125,6 +130,8 @@ def getSetupTChiWZ09():
     ret = { "slhafile": "TChiWZ_460_230_460_230.slha", 
             "SR": exp_results,
             "comb": comb_results,
+            "dictname": "1909.dict",
+            "output": "combo_1909.png",
             "murange": (-4,5),
     }
     return ret
@@ -149,6 +156,8 @@ def getSetupTChiWH():
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -2.5, 2.5 ),
+            "dictname": "1908.dict",
+            "output": "combo_1908.png",
     }
     return ret
 
@@ -160,10 +169,9 @@ def getSetup():
     # D = getSetupTStauStau()
     return D
 
-def testConstruction():
+def testAnalysisCombo( D ):
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately """
-    D = getSetup()
     exp_results = D["SR"]
     comb_results = D["comb"]
     slhafile = D["slhafile"]
@@ -205,12 +213,15 @@ def testConstruction():
     if "murange" in D:
         xmin, xmax = D["murange"]
             
-    g = open ( "llhds.dict", "wt" )
-    g.write ( "{\n" )
+    dictname = "llhds.dict"
+    if "dictname" in D:
+        dictname = D["dictname"]
+    g = open ( dictname, "wt" )
+    g.write ( "llhds={\n" )
     nplots = 0
     args = { "ls": "-" }
+    times = {}
     for t in tpreds:
-        t.computeStatistics()
         dId = "combined"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
@@ -218,6 +229,8 @@ def testConstruction():
         #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"
         print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
+        t0 = time.time()
+        t.computeStatistics()
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
@@ -242,7 +255,16 @@ def testConstruction():
         if len(sl)>3:
             sl=sl[:-2]+"}"
         g.write ( f"'{Id}': {sl},\n" )
+        t = time.time()
+        times[Id]=(t-t0)
     g.write("}\n" )
+    g.write("times={" )
+    for i,(k,v) in enumerate(times.items() ):
+        if i > 0:
+            g.write ( ", " )
+        g.write ( f"{k}: {v:.3f}" )
+    g.write(str(times))
+    g.write("}\n")
     g.close()
     totS = sum(totllhd.values())
     for k,v in totllhd.items():
@@ -282,7 +304,7 @@ def testConstruction():
     label = ""
     if "label" in D:
         label = D["label"]+" "
-    plt.title ( f"{label}likelihoods for {slha}" )
+    plt.title ( f"pyhf {label}likelihoods for {slha}" )
     plt.legend()
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
@@ -291,6 +313,23 @@ def testConstruction():
         output = D["output"]
     plt.savefig ( output )
     plt.kittyPlot()
+    print ( f"[testAnalysisCombinations] saved to {output}" )
+
+def runSlew():
+    """ run them all """
+    print ( "[testAnalysisCombinations] run all functions" )
+    import sys
+    funcs = dir( sys.modules[__name__] )
+    setups = []
+    for f in funcs:
+        if f.startswith ( "getSetup" ) and not f.endswith ( "etup" ):
+            setups.append ( f )
+    for f in setups:
+        print ( f"[testAnalysisCombinations] running {f}" )
+        D = eval( f"{f}()" )
+        testAnalysisCombo( D )
 
 if __name__ == "__main__":
-    testConstruction()
+    runSlew()
+    D = getSetup()
+    testAnalysisCombo( D )
