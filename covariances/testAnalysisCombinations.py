@@ -234,7 +234,8 @@ def plotLlhds ( llhds, fits, setup ):
         print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         # mu_hat = 1.
         # plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
-        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="magenta", label=r"ul$_\mu$ (pyhf combo)" )
+        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
+        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, llmax ], linestyle="-.", c="r", label=r"ul$_\mu$ (pyhf combo)" )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -349,7 +350,7 @@ def testAnalysisCombo( setup ):
         for t in ts:
             tpreds.insert(0,t) ## put them in front so they always have same color
         ul = float ( ts[0].getUpperLimit() / ts[0].xsection.value )
-        muhat = 1. # ts[0].muhat
+        muhat = ts[0].muhat()
         fits["ul_combo"] = ul
         fits["muhat_combo"] = muhat
     nplots = 0
@@ -396,7 +397,7 @@ def getSetup():
 
 
 if __name__ == "__main__":
-    # runSlew()
+    runSlew()
     setup = getSetup()
     setup["rewrite"]=False
     testAnalysisCombo( setup )
