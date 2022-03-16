@@ -184,6 +184,17 @@ def writeDictFile ( dictname, llhds, times, fits ):
     g.write("fits="+str(fits)+"\n" )
     g.close()
 
+
+def getLlhdAt ( prodllhd, ulmu ):
+    ret = 1.0
+    dist=float("inf")
+    for k,v in prodllhd.items():
+        d = (k-ulmu)**2
+        if d < dist:
+            dist = d
+            ret = v
+    return ret
+
 def plotLlhds ( llhds, fits, setup ):
     """ plot the likelihoods in llhds,
         additional stuff in fits, setup is the setup dictionary
@@ -220,21 +231,25 @@ def plotLlhds ( llhds, fits, setup ):
     if True:
         mu_hat = fits["mu_hat"]
         ulmu = fits["ulmu"]
-        lmax = fits["lmax"]
+        lmax = max ( prodllhd.values() )
         print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
         # mu_hat = 1.
-        plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
-        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
+        plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
+        llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
+        plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
+                   c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
     if True:
         #mu_hat = fits["mu_hat"]
-        ulmu = fits["ul_combo"]
         # lmax = fits["lmax"]
         print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         # mu_hat = 1.
         # plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
-        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
-        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, llmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
+        # llhdul = fits["llhd_combo(ul)"]  
+        llhdul = .25 * llmax
+        plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
+        lmax = llmax
+        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -373,8 +388,10 @@ def testAnalysisCombo( setup ):
         sys.exit()
     writeDictFile ( dictname, llhds, times, fits )
 
-def runSlew():
-    """ run them all """
+def runSlew( rewrite = False ):
+    """ run them all 
+    :param rewrite: if true, rewrite the dicts, rerun the computations
+    """
     print ( "[testAnalysisCombinations] run all functions" )
     import sys
     funcs = dir( sys.modules[__name__] )
@@ -385,20 +402,22 @@ def runSlew():
     for f in setups:
         print ( f"[testAnalysisCombinations] running {f}" )
         setup = eval( f"{f}()" )
+        setup["rewrite"]=rewrite
         testAnalysisCombo( setup )
     sys.exit()
 
-def getSetup():
+def getSetup( rewrite = False ):
     setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
+    setup["rewrite"]=rewrite
     return setup
 
 
 if __name__ == "__main__":
-    # runSlew()
-    setup = getSetup()
-    setup["rewrite"]=False
+    rewrite = False 
+    runSlew( rewrite )
+    setup = getSetup( rewrite )
     testAnalysisCombo( setup )
