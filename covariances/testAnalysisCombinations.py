@@ -56,7 +56,7 @@ def getSetupTStauStau():
 
 def getSetupTChiWZ():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
     database = Database( dbpath )
@@ -71,7 +71,7 @@ def getSetupTChiWZ():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    ret = { "slhafile": "TChiWZ_460_230_460_230.slha", 
+    ret = { "slhafile": "TChiWZ_460_230_460_230.slha",
             "SR": exp_results,
             "comb": comb_results,
             "dictname": "chiwz.dict",
@@ -82,7 +82,7 @@ def getSetupTChiWZ():
 
 def getSetupT6bbHH():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
     database = Database( dbpath )
@@ -97,7 +97,7 @@ def getSetupT6bbHH():
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
     jsonf = list ( comb_results[0].globalInfo.jsonFiles.keys() )
-    ret = { "slhafile": "T6bbHH_504_241_111_504_241_111.slha", 
+    ret = { "slhafile": "T6bbHH_504_241_111_504_241_111.slha",
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -1.5, 2. ),
@@ -111,7 +111,7 @@ def getSetupT6bbHH():
 
 def getSetupTChiWZ09():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
     database = Database( dbpath )
@@ -127,7 +127,7 @@ def getSetupTChiWZ09():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    ret = { "slhafile": "TChiWZ_460_230_460_230.slha", 
+    ret = { "slhafile": "TChiWZ_460_230_460_230.slha",
             "SR": exp_results,
             "comb": comb_results,
             "dictname": "1909.dict",
@@ -138,7 +138,7 @@ def getSetupTChiWZ09():
 
 def getSetupTChiWH():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/" 
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
     database = Database( dbpath )
@@ -162,7 +162,7 @@ def getSetupTChiWH():
     return ret
 
 def writeDictFile ( dictname, llhds, times, fits ):
-    """ write out the likelihoods.dict file 
+    """ write out the likelihoods.dict file
     :param dictname: name of file, e.g. likelihoods.dict
     """
     g = open ( dictname, "wt" )
@@ -186,37 +186,36 @@ def writeDictFile ( dictname, llhds, times, fits ):
 
 def plotLlhds ( llhds, fits, setup ):
     """ plot the likelihoods in llhds,
-        additional stuff in fits, setup is the setup dictionary 
+        additional stuff in fits, setup is the setup dictionary
     :param fits: dictionary that contains ulmu, mu_hat
     :param setup: dictionary that contains slhafile, and more
     """
-    llmin,llmax = float("inf"), 0.
-    totllhd={}
+    prodllhd={}
+    alllhds = []
     for Id,l in llhds.items():
         args = { "ls": "-" }
         if "combine" in Id:
             args["linewidth"]=2
             args["c"]="r"
-        llmin = min ( list( l.values() ) + [ llmin ] )
-        llmax = max ( list ( l.values() ) + [ llmax ] )
+        alllhds += list( l.values() )
         for k,v in l.items():
-            if not k in totllhd:
-                totllhd[k]=1.
+            if not k in prodllhd:
+                prodllhd[k]=1.
             if not "combine" in Id:
-                totllhd[k]=totllhd[k]*v
+                prodllhd[k]=prodllhd[k]*v
         yv = list ( l.values() )
         if False:
             import random
             for i,y in enumerate(yv):
                 yv[i]=y*random.uniform(.9,1.1)
         plt.plot ( l.keys(), yv, label=Id, **args )
-    totS = sum(totllhd.values())
-    for k,v in totllhd.items():
-        totllhd[k]=totllhd[k]/totS
-    llmin = min ( list( totllhd.values() ) + [ llmin ] )
-    llmax = max ( list ( totllhd.values() ) + [ llmax ] )
+    totS = sum(prodllhd.values())
+    for k,v in prodllhd.items():
+        prodllhd[k]=prodllhd[k]/totS
+    llmin = min ( alllhds )
+    llmax = max ( alllhds )
 
-    plt.plot ( totllhd.keys(), totllhd.values(), label=r"$\Pi_i l_i$" )
+    plt.plot ( prodllhd.keys(), prodllhd.values(), c="k", label=r"$\Pi_i l_i$" )
 
     if True:
         mu_hat = fits["mu_hat"]
@@ -224,8 +223,8 @@ def plotLlhds ( llhds, fits, setup ):
         lmax = fits["lmax"]
         print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
         # mu_hat = 1.
-        plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
-        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$ (product)" )
+        plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
+        plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
     if True:
         #mu_hat = fits["mu_hat"]
@@ -235,7 +234,7 @@ def plotLlhds ( llhds, fits, setup ):
         # mu_hat = 1.
         # plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
         plt.plot ( [ ulmu, ulmu ], [ llmin, llmax*.25 ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
-        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, llmax ], linestyle="-.", c="r", label=r"ul$_\mu$ (pyhf combo)" )
+        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, llmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -256,14 +255,14 @@ def plotLlhds ( llhds, fits, setup ):
     print ( f"[testAnalysisCombinations] saved to {output}" )
 
 def createLlhds ( tpreds, setup ):
-    """ given the setup and tpreds, create llhds dicts 
+    """ given the setup and tpreds, create llhds dicts
     """
     #xmin, xmax = getSensibleMuRange ( tpreds )
     # xmin, xmax = -6., 10.
     xmin, xmax = -2.5, 4.5
     if "murange" in setup:
         xmin, xmax = setup["murange"]
-            
+
     times, llhds = {}, {}
     for t in tpreds:
         dId = "combined"
@@ -300,7 +299,7 @@ def readDictFile ( dictname ):
 
 def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
-        covariance matrix are constructed appropriately 
+        covariance matrix are constructed appropriately
     :param setup: dictionary, describing setup
     """
     dictname = "llhds.dict"
@@ -352,7 +351,9 @@ def testAnalysisCombo( setup ):
         ul = float ( ts[0].getUpperLimit() / ts[0].xsection.value )
         muhat = ts[0].muhat()
         fits["ul_combo"] = ul
+        fits["llhd_combo(ul)"] = ts[0].likelihood ( ul )
         fits["muhat_combo"] = muhat
+        fits["lmax_combo"] = ts[0].lmax()
     nplots = 0
     llhds, times = createLlhds ( tpreds, setup )
 
@@ -388,8 +389,8 @@ def runSlew():
     sys.exit()
 
 def getSetup():
-    # setup = getSetupT6bbHH()
-    setup = getSetupTChiWZ()
+    setup = getSetupT6bbHH()
+    # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
@@ -397,7 +398,7 @@ def getSetup():
 
 
 if __name__ == "__main__":
-    runSlew()
+    # runSlew()
     setup = getSetup()
     setup["rewrite"]=False
     testAnalysisCombo( setup )
