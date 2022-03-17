@@ -310,7 +310,11 @@ class Lister:
                     t=t[:t.find(" ")]
                 # ssuperseded = "[[#%s|%s]]" % ( t, s )
                 ssuperseded = "[%s](#%s)" % ( s, t )
-            self.f.write ( '| [%s](%s)<a name="%s%s"></a>' % ( Id, url, Id, s_eff ) )
+            sId = Id
+            if not sId.endswith ( "-eff" ) and not sId.endswith( "-ma5" ) and \
+               not sId.endswith ( "-agg" ):
+                   sId += "-eff"
+            self.f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, sId ) )
             if not hasattr ( ana.globalInfo, "prettyName" ):
                 print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
                 print ( "Please add a pretty name and repeat." )
