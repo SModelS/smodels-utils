@@ -119,7 +119,7 @@ def getSetupUL():
     database = Database( dbpath )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2018-40' ]
-    dsids = [ 'MultiBin1', 'MultiBin2' ]
+    dsids = [ 'MultiBin1', 'MultiBin2', 'MultiBin3', 'SingleBin', None ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
 
@@ -127,12 +127,14 @@ def getSetupUL():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    jsonf = list ( comb_results[0].globalInfo.jsonFiles.keys() )
+    jsonf = [ "x" ]
+    if len(comb_results)>0:
+        jsonf = list ( comb_results[0].globalInfo.jsonFiles.keys() )
     ret = { "slhafile": "T6bbHH_504_241_111_504_241_111.slha",
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -1.5, 2. ),
-            "dictname": "t6bbhh.dict",
+            "dictname": "ul.dict",
             "output": "ul_1840.png",
     }
     if "simplif" in jsonf[0]:
@@ -270,14 +272,9 @@ def plotLlhds ( llhds, fits, setup ):
         plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
                    c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
-    if True:
-        #mu_hat = fits["mu_hat"]
-        # lmax = fits["lmax"]
+    if True and "llhd_combo(ul)" in fits:
         print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
-        # mu_hat = 1.
-        # plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
         llhdul = fits["llhd_combo(ul)"]  
-        # llhdul = .25 * llmax
         print ( "llhd at", fits["ul_combo"], "is", llhdul )
         plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
         lmax = llmax
