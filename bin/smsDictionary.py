@@ -142,11 +142,13 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
         first=True
 
-        for ctr,txname in enumerate( keys ):
+        i=0
+        for _,txname in enumerate( keys ):
             constraint = topos[txname]
             txnames = multipleNames [ constraint ]
             if txname == list(txnames)[0]: ## only write if first in line
-                self.writeTopo ( ctr+1, txnames, constraint, first )
+                i+=1
+                self.writeTopo ( i, txnames, constraint, first )
                 first = False
 
     def run ( self ):
