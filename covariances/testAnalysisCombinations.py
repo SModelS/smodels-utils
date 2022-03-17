@@ -368,7 +368,7 @@ def testAnalysisCombo( setup ):
         fits["ul_combo"] = ul
         fits["llhd_combo(ul)"] = ts[0].likelihood ( ul )
         fits["muhat_combo"] = muhat
-        fits["lmax_combo"] = ts[0].lmax()
+        fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True )
     nplots = 0
     llhds, times = createLlhds ( tpreds, setup )
 
@@ -418,6 +418,6 @@ def getSetup( rewrite = False ):
 
 if __name__ == "__main__":
     rewrite = False 
-    runSlew( rewrite )
+    # runSlew( rewrite )
     setup = getSetup( rewrite )
     testAnalysisCombo( setup )
