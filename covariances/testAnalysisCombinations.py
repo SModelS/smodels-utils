@@ -20,9 +20,11 @@ from smodels.experiment.databaseObj import Database
 import unittest
 import numpy as np
 import os
+import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
-import time
+from smodels.tools import runtime
+runtime._experimental = True
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -106,6 +108,35 @@ def getSetupT6bbHH():
     }
     if "simplif" in jsonf[0]:
         ret["output"] = "combo_1831simplified.png"
+        ret["label"]="simplified"
+    return ret
+
+def getSetupUL():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
+    # dbpath = "../../smodels-database/"
+    # dbpath = "../../smodels/test/database/"
+    database = Database( dbpath )
+    dTypes = ["all"]
+    anaids = [ 'ATLAS-SUSY-2018-40' ]
+    dsids = [ 'MultiBin1', 'MultiBin2' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    anaids = [ 'ATLAS-SUSY-2018-31x' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    jsonf = list ( comb_results[0].globalInfo.jsonFiles.keys() )
+    ret = { "slhafile": "T6bbHH_504_241_111_504_241_111.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -1.5, 2. ),
+            "dictname": "t6bbhh.dict",
+            "output": "ul_1840.png",
+    }
+    if "simplif" in jsonf[0]:
+        ret["output"] = "combo_1840simplified.png"
         ret["label"]="simplified"
     return ret
 
@@ -245,8 +276,9 @@ def plotLlhds ( llhds, fits, setup ):
         print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         # mu_hat = 1.
         # plt.plot ( [ mu_hat, mu_hat ], [ llmin, llmax ], linestyle="-", c="k", label=r"$\hat\mu$ (product)" )
-        # llhdul = fits["llhd_combo(ul)"]  
-        llhdul = .25 * llmax
+        llhdul = fits["llhd_combo(ul)"]  
+        # llhdul = .25 * llmax
+        print ( "llhd at", fits["ul_combo"], "is", llhdul )
         plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
         lmax = llmax
         plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
@@ -407,11 +439,12 @@ def runSlew( rewrite = False ):
     sys.exit()
 
 def getSetup( rewrite = False ):
-    setup = getSetupT6bbHH()
+    # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
+    setup = getSetupUL()
     setup["rewrite"]=rewrite
     return setup
 
