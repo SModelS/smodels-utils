@@ -410,17 +410,19 @@ def testAnalysisCombo( setup ):
             continue
         for t in ts:
             tpreds.insert(0,t) ## put them in front so they always have same color
-        ul = float ( ts[0].getUpperLimit() / ts[0].xsection.value )
+        ull = ts[0].getUpperLimit()
+        if type(ull) != type(None):
+            ul = float ( ull / ts[0].xsection.value )
+            fits["ul_combo"] = ul
+            llhd_ul = ts[0].likelihood ( ul )
+            fits["llhd_combo(ul)"] = llhd_ul
         muhat = ts[0].muhat( allowNegativeSignals = True )
-        fits["ul_combo"] = ul
-        llhd_ul = ts[0].likelihood ( ul )
-        fits["llhd_combo(ul)"] = llhd_ul
         # print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True )
     nplots = 0
     llhds, sums, times = createLlhds ( tpreds, setup )
-    if len(ts)>0:
+    if len(ts)>0 and "llhd_combo(ul)" in fits:
         Id = f"{ts[0].dataset.globalInfo.id}:combined"
         S=sums[Id]
         fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
@@ -461,11 +463,11 @@ def runSlew( rewrite = False ):
     sys.exit()
 
 def getSetup( rewrite = False ):
-    #setup = getSetupT6bbHH()
+    setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
-    setup = getSetupTStauStau()
+    # setup = getSetupTStauStau()
     # setup = getSetupUL()
     setup["rewrite"]=rewrite
     return setup
