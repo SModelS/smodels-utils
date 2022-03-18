@@ -6,7 +6,17 @@ import json
 import simplify
 from simplify import yields
 
-pyhf.set_backend(pyhf.tensorlib, "minuit")
+# pyhf.set_backend(pyhf.tensorlib, "minuit")
+pyhf.set_backend(pyhf.tensorlib, "pytorch") # numpy
+
+def installPip ( version = None ):
+    import subprocess
+    if version == None:
+        cmd = "pip install --upgrade pyhf"
+    else:
+        cmd = f"pip install pyhf=={version}"
+    o = subprocess.getoutput ( cmd )
+    print ( cmd, ":", o )
 
 def correctMuSig ( newspec ):
     """ given a spec, correct mu_Sig -> mu_SIG """
@@ -48,4 +58,6 @@ def simplifyMe():
         json.dump(newspec, out_file, indent=4, sort_keys=True)
 
 if __name__ == "__main__":
+    installPip ( "0.5.4" )
     simplifyMe()
+    installPip ( )
