@@ -275,10 +275,21 @@ def plotLlhds ( llhds, fits, setup ):
     if True and "llhd_combo(ul)" in fits:
         print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_combo(ul)"]  
-        print ( "llhd at", fits["ul_combo"], "is", llhdul )
-        plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
-        lmax = llmax
+        print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
+        plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
+        # lmax = llmax
+        lmax = fits["lmax_combo"]
         plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
+
+    if True and "llhd_ul" in fits:
+        print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
+        llhdul = fits["llhd_ul"]  
+        print ( "llhd at", fits["ul_ul"], "is", llhdul )
+        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf ul)" )
+        lmax = llmax
+        plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (ul)" )
+
+
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -307,7 +318,7 @@ def createLlhds ( tpreds, setup ):
     if "murange" in setup:
         xmin, xmax = setup["murange"]
 
-    times, llhds = {}, {}
+    times, llhds, sums = {}, {}, {}
     for t in tpreds:
         dId = "combined"
         if hasattr ( t.dataset, "dataInfo" ):
@@ -323,9 +334,10 @@ def createLlhds ( tpreds, setup ):
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
         l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False )
         llhds[Id]=l
+        sums[Id] = S
         t1 = time.time()
         times[Id]=(t1-t0)
-    return llhds, times
+    return llhds, sums, times
 
 def readDictFile ( dictname ):
     """ read the dict file, as a cache """
@@ -381,6 +393,12 @@ def testAnalysisCombo( setup ):
         for t in ts:
             tpreds.append(t)
             combine.append(t)
+            if t.dataset.dataInfo.dataId == None:
+                lmax = t.lmax( allowNegativeSignals = True )
+                muhat = t.muhat( allowNegativeSignals = True )
+                fits["muhat_ul"] = muhat
+                fits["lmax_ul"] = lmax
+                print ( f"[testAnalysisCombinations] UL: {t.dataset.globalInfo.id}: muhat={muhat:.3f} lmax={lmax:.3g}" )
     for er in comb_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
@@ -393,13 +411,20 @@ def testAnalysisCombo( setup ):
         for t in ts:
             tpreds.insert(0,t) ## put them in front so they always have same color
         ul = float ( ts[0].getUpperLimit() / ts[0].xsection.value )
-        muhat = ts[0].muhat()
+        muhat = ts[0].muhat( allowNegativeSignals = True )
         fits["ul_combo"] = ul
-        fits["llhd_combo(ul)"] = ts[0].likelihood ( ul )
+        llhd_ul = ts[0].likelihood ( ul )
+        fits["llhd_combo(ul)"] = llhd_ul
+        print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True )
     nplots = 0
-    llhds, times = createLlhds ( tpreds, setup )
+    llhds, sums, times = createLlhds ( tpreds, setup )
+    if len(ts)>0:
+        Id = f"{ts[0].dataset.globalInfo.id}:combined"
+        S=sums[Id]
+        fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
+        fits["lmax_combo"] = fits["lmax_combo"] / S
 
     print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
     combiner = TheoryPredictionsCombiner(combine)
@@ -436,18 +461,18 @@ def runSlew( rewrite = False ):
     sys.exit()
 
 def getSetup( rewrite = False ):
-    # setup = getSetupT6bbHH()
+    #setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
-    # setup = getSetupTStauStau()
-    setup = getSetupUL()
+    setup = getSetupTStauStau()
+    # setup = getSetupUL()
     setup["rewrite"]=rewrite
     return setup
 
 
 if __name__ == "__main__":
-    rewrite = False 
+    rewrite = True
     # runSlew( rewrite )
     setup = getSetup( rewrite )
     testAnalysisCombo( setup )

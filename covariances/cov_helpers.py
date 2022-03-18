@@ -14,13 +14,14 @@ def printIndicator ( i ):
         print ( ".", flush=True, end="" )
 
 def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
-       equidistant = True, verbose = False ):
+       equidistant = True, verbose = False, normalize = True ):
     """ compute the likelhoods for theory prediction
     :param tpred: a theory prediction
     :param xmin: minimum mu
     :param xmax: maximum mu
     :param nbins: the number of bins
     :param equidistant: if False, allow for denser binning at center
+    :param normalize: if true, normalize histogram
     :returns dictionary of normalized likelihoods and normalization constant
     """
 
@@ -59,7 +60,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
             S+=l
             ret[mu]=l
     print ( "" )
-    if S > 0.:
+    if normalize and S > 0.:
         for k,v in ret.items():
             ret[k]=ret[k]/S
     return ret, S
