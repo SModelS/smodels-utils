@@ -273,18 +273,18 @@ def plotLlhds ( llhds, fits, setup ):
                    c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
     if True and "llhd_combo(ul)" in fits:
-        print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
+        # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_combo(ul)"]  
-        print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
+        # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
         plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
         # lmax = llmax
         lmax = fits["lmax_combo"]
         plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
 
     if True and "llhd_ul" in fits:
-        print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
+        # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_ul"]  
-        print ( "llhd at", fits["ul_ul"], "is", llhdul )
+        # print ( "llhd at", fits["ul_ul"], "is", llhdul )
         plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf ul)" )
         lmax = llmax
         plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (ul)" )
@@ -415,7 +415,7 @@ def testAnalysisCombo( setup ):
         fits["ul_combo"] = ul
         llhd_ul = ts[0].likelihood ( ul )
         fits["llhd_combo(ul)"] = llhd_ul
-        print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
+        # print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True )
     nplots = 0
