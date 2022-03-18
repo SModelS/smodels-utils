@@ -8,8 +8,20 @@ from simplify import yields
 
 pyhf.set_backend(pyhf.tensorlib, "minuit")
 
+def correctMuSig ( newspec ):
+    """ given a spec, correct mu_Sig -> mu_SIG """
+    if type(newspec) == dict:
+        for topl, content in newspec.items():
+            if type(content) in [ dict, list ]:
+                correctMuSig ( content )
+            if content == "mu_Sig":
+                newspec[topl]="mu_SIG"
+    if type(newspec) == list:
+        for i, content in enumerate ( newspec ):
+            correctMuSig ( content )
+
 def simplifyMe():
-    spec = json.load(open("likelihood.json", "r"))
+    spec = json.load(open("SRcombined.json", "r"))
     spec['measurements'][0]["config"]["poi"] = "lumi"
 
     model, data = simplify.model_tools.model_and_data(spec)
@@ -17,7 +29,7 @@ def simplifyMe():
     fixed_params = model.config.suggested_fixed()
     init_pars = model.config.suggested_init()
     # run fit
-    asimov = True
+    asimov = False
     fit_result = simplify.fitter.fit( model, data, init_pars=init_pars, 
                                       fixed_pars = fixed_params, asimov = asimov )
     exclude_process = []
@@ -30,6 +42,7 @@ def simplifyMe():
        spec, ylds, allowed_modifiers=[], prune_channels=[], include_signal=dummy_signal
     )
 
+    correctMuSig ( newspec )
     output_file = "simplified.json"
     with open ( output_file, "w+" ) as out_file:
         json.dump(newspec, out_file, indent=4, sort_keys=True)
