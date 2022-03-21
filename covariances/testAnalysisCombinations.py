@@ -51,7 +51,7 @@ def getSetupTStauStau():
             "dictname": "staustau.dict",
             "output": "combo_1804.png"
     }
-    if jsonf[0] == "simplified.json":
+    if "simplified" in jsonf[0]:
         ret["output"]="combo_1804simplified.png"
         ret["label"]="simplified"
     return ret
@@ -463,11 +463,11 @@ def runSlew( rewrite = False ):
     sys.exit()
 
 def getSetup( rewrite = False ):
-    setup = getSetupT6bbHH()
+    # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
-    # setup = getSetupTStauStau()
+    setup = getSetupTStauStau()
     # setup = getSetupUL()
     setup["rewrite"]=rewrite
     return setup
