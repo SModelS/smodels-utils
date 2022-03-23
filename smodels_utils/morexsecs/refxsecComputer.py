@@ -576,6 +576,9 @@ class RefXSecComputer:
                 return None, None, None
             logger.warning ( f"asked to compute N2 N2 production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
+            if False:
+                filename = "xsecEWKdegenerate%d.txt" % sqrts
+                comment = "fully degenerate N1, N2, C1"
             order = NLL
             pb = False
             isEWK=True
