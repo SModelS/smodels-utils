@@ -463,7 +463,10 @@ class RefXSecComputer:
             return False
         ## masses are tuple
         for i,mi in enumerate(mass):
-            xi = [ x[i] for x in xsecs ]
+            if type(xsecs[0]) in [ float, int ]:
+                xi = xsecs
+            else:
+                xi = [ x[i] for x in xsecs ]
             if mi < min(xi):
                 logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mi, min(xi) ) )
             if mi > max(xi):
@@ -591,7 +594,7 @@ class RefXSecComputer:
                 s2 = "N3"
             logger.warning ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
-            if True:
+            if False:
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
@@ -636,7 +639,8 @@ class RefXSecComputer:
             if comment == "":
                 comment = " (%s)" % ewk
         path = os.path.join ( self.shareDir, filename )
-        print ( f"[refxsecComputer] will query {filename}" )
+        if self.verbose:
+            print ( f"[refxsecComputer] will query {filename}" )
         if not os.path.exists ( path ):
             logger.info ( "%s missing" % path )
             sys.exit()
