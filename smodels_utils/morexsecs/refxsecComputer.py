@@ -56,6 +56,7 @@ class RefXSecComputer:
         xsec.value = D["xsec"]*pb
         xsec._pid = D["pids"]
         xsec.info = crossSection.XSectionInfo ( D["sqrts"]*TeV, D["order"], D["label"] )
+        xsec.comment = D["comment"]
         return xsec
 
     def lastLineShouldBeEmpty ( self, slhafile ):
@@ -103,6 +104,9 @@ class RefXSecComputer:
         for xsec in xsecs:
             xseccomment = f"reference xsecs v{self.version} [pb]"
             writeXsec = True
+            # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
+            if hasattr ( xsec, "comment" ):
+                xseccomment += " " + xsec.comment
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
                     writeXsec = False
@@ -184,6 +188,7 @@ class RefXSecComputer:
                 if tofile != False:
                     ## FIXME check if higher orders are already in from
                     ## ref xsecs
+                    # print ( "xsecs", self.xsecs, hasattr ( self.xsecs[0], "comment" ) )
                     nXSecs += self.addXSecToFile( self.xsecs, inputFile, complain)
                     complain = False
             if nXSecs > 0: ## only add if we actually added xsecs
@@ -379,9 +384,14 @@ class RefXSecComputer:
             channel["comment"] = comment
             orderStr = crossSection.orderToString(order,False,False)
             channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
-            xsecs.add ( self.dictToXSection ( channel ) )
+            a = self.dictToXSection ( channel )
+            a.comment = comment
+            # print ( "adding", a, hasattr ( a, "comment" ) )
+            xsecs.add ( a )
+        # print ( "xdding", xsecs, hasattr ( xsecs[0], "comment" ) )
         self.xsecs = xsecs
-        return xsecs
+        self.xsecs[0].comment = comment
+        # print ( "xdding", self.xsecs, hasattr ( self.xsecs[0], "comment" ) )
 
     def findOpenChannels ( self, slhafile ):
         slhadata = pyslha.readSLHAFile ( slhafile )
@@ -576,7 +586,7 @@ class RefXSecComputer:
                 return None, None, None
             logger.warning ( f"asked to compute N2 N2 production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
-            if False:
+            if True:
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
@@ -618,7 +628,8 @@ class RefXSecComputer:
         if ewk == "hino":
             filename = filename.replace(".txt","hino.txt" )
         if isEWK:
-            comment = " (%s)" % ewk
+            if comment == "":
+                comment = " (%s)" % ewk
         path = os.path.join ( self.shareDir, filename )
         if not os.path.exists ( path ):
             logger.info ( "%s missing" % path )
