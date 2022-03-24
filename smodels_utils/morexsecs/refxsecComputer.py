@@ -404,7 +404,7 @@ class RefXSecComputer:
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ) )
+        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ), ( 1000023, 1000025 ) )
         ## production modes to add that needs two different particles
         ## to be unfrozen
         # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
@@ -580,11 +580,16 @@ class RefXSecComputer:
             order = NLL
             pb = False
             isEWK=True
-        if pid1 in [ 1000023 ] and pid2 in [ 1000023 ]:
+        if pid1 in [ 1000023, 1000025 ] and pid2 in [ 1000023, 1000025 ]:
             if sqrts == 8:
                 print ( "[refxsecComputer] asking for N2 N1 production for 8 TeV. we only have 13 tev" )
                 return None, None, None
-            logger.warning ( f"asked to compute N2 N2 production xsecs, will recycle the N2 N1 ones!" )
+            s1, s2 = "N2", "N2"
+            if pid1 == 1000025:
+                s1 = "N3"
+            if pid2 == 1000025:
+                s2 = "N3"
+            logger.warning ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
             if True:
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
@@ -631,6 +636,7 @@ class RefXSecComputer:
             if comment == "":
                 comment = " (%s)" % ewk
         path = os.path.join ( self.shareDir, filename )
+        print ( f"[refxsecComputer] will query {filename}" )
         if not os.path.exists ( path ):
             logger.info ( "%s missing" % path )
             sys.exit()
