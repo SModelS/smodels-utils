@@ -243,7 +243,7 @@ def main():
         # o = CMD.getoutput ( cmd2 )
         addToCommandsFile ( cmd2 )
         o = CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
-        print ( "[publishDatabasePickle] NOT done:", cmd2 )
+        print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         #print ( "%s[publishDatabasePickle] then do also manually:%s" % \

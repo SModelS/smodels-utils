@@ -133,6 +133,8 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True,
         hasEnding = False
         doAdd = False
         for end in endings:
+            if end == "-agg":
+                continue
             if Id.endswith ( end ):
                 hasEnding = True
                 aId = Id [ :-len(end) ]
@@ -142,9 +144,23 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True,
                 if not aId in aggs and not invert:
                     ret.append ( er )
                     doAdd = True
-        if not hasEnding and not invert:
-            doAdd = True
-            ret.append ( er )
+        if not hasEnding:
+            if len(er.datasets)==1 and er.datasets[0].dataInfo.dataId == None:
+                ## UL result
+                if not invert:
+                    ret.append ( er )
+                    doAdd = True
+            # eff ersult
+            else:
+                if Id in aggs and invert:
+                    ret.append ( er )
+                    doAdd = True
+                if not Id in aggs and not invert:
+                    ret.append ( er )
+                    doAdd = True
+        #if not hasEnding and not invert:
+        #    doAdd = True
+        #    ret.append ( er )
         if not doAdd and verbose and not Id.endswith ( "-agg" ):
                 print ( f"[databaseManipulations] removing non-aggregated {Id}" )
     if not invert: ## add the aggs
@@ -297,13 +313,13 @@ if __name__ == "__main__":
     import os
     def pprint ( l ):
         for i, d in enumerate(l):
-            print ( f"{i} {d.globalInfo.id}" )
+            print ( f"{i} {d.globalInfo.id}:{d.datasets[0].dataInfo.dataType}" )
     db = Database ( os.path.expanduser ( "~/git/smodels-database" )  )
     ers = db.expResultList
-    pprint ( ers )
+    # pprint ( ers )
     newers = filterNonAggregatedFromList ( ers )
-    print ( f"old {len(ers)} new {len(newers)}" )
+    print ( f"filter non-aggregated: {len(ers)} new {len(newers)}" )
     pprint ( newers )
-    nonagg = filterNonAggregatedFromList ( ers, invert = True )
-    print ( f"old {len(ers)} new {len(nonagg)}" )
-    pprint ( nonagg )
+    #nonagg = filterNonAggregatedFromList ( ers, invert = True )
+    #print ( f"keep non-aggregated, remove rest: {len(ers)} new {len(nonagg)}" )
+    #pprint ( nonagg )
