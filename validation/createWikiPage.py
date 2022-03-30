@@ -412,6 +412,8 @@ CMS are for on- and off-shell at once.
             return "ATLAS"
         if "smodels" in source:
             return "SModelS"
+        if "ma5" in source:
+            return "MA5"
         return "unknown2"
 
     def anaHasChanged ( self, id, txname, tpe ):
