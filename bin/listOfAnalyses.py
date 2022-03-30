@@ -117,7 +117,8 @@ class Lister:
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
                     for ana in a:
-                        anas[exp].add ( ana.globalInfo.id )
+                        shortid = ana.globalInfo.id.replace("-agg","")
+                        anas[exp].add ( shortid )
             self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
 
             for exp in [ "ATLAS", "CMS" ]:
