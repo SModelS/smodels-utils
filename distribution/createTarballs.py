@@ -10,6 +10,7 @@
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
 from pathlib import Path
+sys.path.insert(0,"../")
 
 dummyRun=False ## True
 try:
@@ -301,16 +302,27 @@ def clarifyJsons ( path ):
         f = open ( gI, "rt" )
         lines = f.readlines()
         f.close()
-        for line in lines:
+        for i,line in enumerate(lines):
             p1 = line.find("#")
-            if p1 > 0:
+            if p1 >= 0:
                 line = line[:p1]
+            line = line.strip()
+            if line == "":
+                continue
             if not "jsonFiles:" in line:
                 continue
             txt = line.replace("jsonFiles:","")
-            txt = txt.strip()
-            D = eval(txt)
-            usedJsons = set ( D.keys() )
+            j=i
+            while "{" in txt and not "}" in txt and not j >= (len(lines)-1):
+                # seems like we need the next line
+                j+=1
+                txt += lines[j]
+            try:
+                D = eval(txt)
+            except Exception as e:
+                D = {}
+            for k in D.keys():
+                usedJsons.add ( k )
         jsons = glob.glob ( f"{path}/*.json" )
         for js in jsons:
             fname = os.path.basename ( js )
