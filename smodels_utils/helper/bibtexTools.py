@@ -372,6 +372,7 @@ class BibtexWriter:
     def processExpRes ( self, expRes, write_cache ):
         self.npublications += 1
         Id = expRes.globalInfo.id
+        Id = Id.replace( "-agg", "" )
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
 
@@ -444,7 +445,7 @@ class BibtexWriter:
             ID = expRes.globalInfo.id.replace("-eff","").replace("-agg","")
             if ID in ids:
                 continue
-            ids.add ( expRes.globalInfo.id )
+            ids.add ( ID )
             if not "ATLAS-SUSY-2015-01" in str(expRes):
                 pass
                 # continue
