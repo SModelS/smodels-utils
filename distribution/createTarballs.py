@@ -267,7 +267,6 @@ def cleanDatabase(dirname):
     walker = os.walk( fullpath )
     for record in walker:
         File=record[0]
-        # comment( "Now in %s" % File )
         # comment( "Now in %s: %s" %(File, record[1] ) )
         removals = [ "orig", ".git", "validation", "README.rst", "__pycache__" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
@@ -292,6 +291,33 @@ def cleanDatabase(dirname):
             fullpath = os.path.join( File, rf )
             if os.path.exists( fullpath):
                 os.unlink( fullpath )
+        clarifyJsons ( File )
+
+def clarifyJsons ( path ):
+        gI = f"{path}/globalInfo.txt"
+        if not os.path.exists ( gI ):
+            return
+        usedJsons = set()
+        f = open ( gI, "rt" )
+        lines = f.readlines()
+        f.close()
+        for line in lines:
+            p1 = line.find("#")
+            if p1 > 0:
+                line = line[:p1]
+            if not "jsonFiles:" in line:
+                continue
+            txt = line.replace("jsonFiles:","")
+            txt = txt.strip()
+            D = eval(txt)
+            usedJsons = set ( D.keys() )
+        jsons = glob.glob ( f"{path}/*.json" )
+        for js in jsons:
+            fname = os.path.basename ( js )
+            remove = fname not in usedJsons
+            if remove:
+                print ( f"[createTarballs] removing {fname}" )
+                os.unlink ( js )
 
 def clearGlobalInfos(path):
     walker = os.walk(path)
