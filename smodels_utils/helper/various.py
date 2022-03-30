@@ -55,6 +55,8 @@ def getSqrts ( Id ):
     year = year.replace("CERN-PH-EP-","")
     p1 = year.find("-")
     year = year[:p1]
+    if year == "20":
+        return 13
     if year.startswith("20"):
         year = year[2:]
     year = int ( year )
