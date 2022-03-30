@@ -445,7 +445,7 @@ def createDBRelease(output,tag,reuse):
 
     dirname = output
     if os.path.isdir(dirname) and not reuse:
-        comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz" %(output,output))
+        comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz, or reuse, i.e. run with -r" %(output,output))
         return False
 
     isDummy()
