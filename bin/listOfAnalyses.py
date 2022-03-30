@@ -231,20 +231,18 @@ class Lister:
         version = self.database.databaseVersion
         dotlessv = ""
         isEffMap = True
-        s_eff = "-eff"
         if Type == "upperLimit":
             isEffMap = False
-            s_eff = ""
         if self.add_version:
             dotlessv = version.replace(".","")
         keys, anadict = [], {}
         for ana in anas:
             id = ana.globalInfo.id
+            id = id.replace( "-agg", "" )
             xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
             # print ( "sqrts,xsqrts=", sqrts, xsqrts )
             if xsqrts != sqrts:
                 continue
-            id = ana.globalInfo.id
             if not experiment in id:
                 continue
             keys.append ( id )
@@ -314,6 +312,8 @@ class Lister:
             if not sId.endswith ( "-eff" ) and not sId.endswith( "-ma5" ) and \
                not sId.endswith ( "-agg" ):
                    sId += "-eff"
+            if Id.endswith ( "-agg" ):
+                Id = Id.replace("-agg","")
             self.f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, sId ) )
             if not hasattr ( ana.globalInfo, "prettyName" ):
                 print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )

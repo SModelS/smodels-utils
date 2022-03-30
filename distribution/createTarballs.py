@@ -181,7 +181,7 @@ def clone(dirname):
     distribution, and test.
     """
     comment( "Git-cloning smodels into %s(this might take a while)" % dirname )
-    cmd = "git clone -b %s https://github.com/SModelS/smodels.git %s" %(version, dirname)
+    cmd = "git clone --depth 1 -b %s https://github.com/SModelS/smodels.git %s" %(version, dirname)
 #     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
     if dummyRun:
         cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
@@ -214,7 +214,7 @@ def fetchDatabase(tag,dirname):
     #cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
     if False:
         dbversion = "develop"
-    cmd = "cd %s; git clone -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
+    cmd = "cd %s; git clone --depth 1 -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
            (dirname, dbversion)
 
     if dummyRun:

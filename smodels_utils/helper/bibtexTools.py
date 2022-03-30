@@ -465,7 +465,7 @@ class BibtexWriter:
             r = self.createSummaryCitation ( bibtex, i, False )
             f.write ( r + "\\newline\n\n" )
         f.write (
-"""\\bibliographystyle{elsarticle-num}
+"""\\bibliographystyle{plain}
 \\bibliography{database}
 \end{document}
 """ )
