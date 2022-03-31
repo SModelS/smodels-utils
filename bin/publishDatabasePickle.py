@@ -239,11 +239,14 @@ def main():
         cmd2 = "sshpass -f %s/.ssh/lxplus scp %s lxplus.cern.ch:%s%s" % \
                 ( home, pclfilename, eosdir, pclfilename )
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "cmd", cmd2 )
-        # o = CMD.getoutput ( cmd2 )
+        reallyDo = not args.dry_run
+        if reallyDo:
+            o = CMD.getoutput ( cmd2 )
+            print ( f"[publishDatabasePickle] {cmd2}: {o}" )
         addToCommandsFile ( cmd2 )
         o = CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
-        print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
+        if not reallyDo:
+            print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         #print ( "%s[publishDatabasePickle] then do also manually:%s" % \
