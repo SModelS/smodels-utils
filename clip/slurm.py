@@ -592,7 +592,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
         ram = 3. * nproc
     ncpus = int(nproc*1.5)
     if cutlang:
-        ram = 3.6 * nproc ## in GB
+        ram = 4. * nproc ## in GB
         ncpus = int(nproc*2)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
