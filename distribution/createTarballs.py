@@ -44,7 +44,7 @@ def isDummy( ):
 
 def run( cmd ):
     cmd=cmd.strip()
-    print( "%scmd: %s%s" %(GREEN,cmd,RESET) )
+    print( "%s[createTarballs] cmd: %s%s" %(GREEN,cmd,RESET) )
     f=open("/tmp/create.log","a")
     f.write( "cmd: %s\n" %(cmd) )
     # print('CMD=',cmd)
@@ -249,6 +249,9 @@ def clearGlobalInfo(filename):
     # skip.append( "figureUrl" )
     for line in lines:
         to_skip = False
+        p1 = line.find("#")
+        if p1 == 0:
+            to_skip = True
         for s in skip:
             if line.find(s)==0:
                 to_skip = True
