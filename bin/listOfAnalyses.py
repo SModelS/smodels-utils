@@ -126,6 +126,7 @@ class Lister:
                     nMaps = 0
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
+                    aids = set ( [ x.globalInfo.id.replace("-agg","") for x in a ] )
                     a_fastlim = 0
                     nres = 0
                     nres_hscp = set()
@@ -162,7 +163,7 @@ class Lister:
                     if "efficiency" in tpe:
                         mapsCountS = ", %d individual maps" % nMaps
 
-                    line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(a)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n" 
+                    line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n" 
                     self.f.write ( line )
 
 
