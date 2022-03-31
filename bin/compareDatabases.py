@@ -18,6 +18,7 @@ tx = { "tot": 0, "err": 0 }
 
 def error ( text, col=colors.red ):
     print ( "%s%s%s" % ( col, text, colors.reset ) )
+    tx["err"]+=1
 
 def getPath ( text ):
     return text[text.rfind("/")+1:]
@@ -79,6 +80,7 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
     if ( oldTx.txnameData != newTx.txnameData ):
         error ( "dataInfos differ!" )
+        tx["err"]+=1
         #sys.exit(-1)
     #print ( type ( oldTx.txnameData._V ) )
     #import IPython
@@ -127,11 +129,10 @@ def discussTxName ( ER, DS, oldTx, newTx ):
         #sys.exit(-1)
 
 def oldTxNotInNew ( ER, DS, Tx ):
-    error ( "The txname %s/%s/%s appears in the old DB, but not in the new." % \
-            ( ER, DS, Tx.txName ) )
+    error ( f"The txname {ER}/{DS}/{Tx.txName} appears in the first DB, but not in the second." )
+
 def newTxNotInOld ( ER, DS, Tx ):
-    error ( "The txname %s/%s/%s appears in the new DB, but not in the old." % \
-            ( ER, DS, Tx.txName ), colors.green )
+    error ( f"The txname {ER}/{DS}/{Tx.txName} appears in the second DB, but not in the first.", colors.green )
 
 def discussDSs ( ER, oldDS, newDS ):
     oldTxs=oldDS.txnameList
@@ -154,20 +155,20 @@ def discussDSs ( ER, oldDS, newDS ):
             newTxNotInOld ( ER, oldDS.path[oldDS.path.rfind("/")+1:], v )
 
 def oldDSNotInNew ( er, r ):
-    error ( "The dataset %s/%s appears in the old DB, but not in the new." % \
+    error ( "The dataset %s/%s appears in the first DB, but not in the second." % \
             ( er, getPath ( r.path ) ) ) 
 
 def newDSNotInNew ( er, r ):
-    error ( "The dataset %s/%s appears in the new DB, but not in the old." % \
+    error ( "The dataset %s/%s appears in the second DB, but not in the first." % \
             ( er, getPath ( r.path ) ), colors.green )
 
-def discussERs ( oldER, newER ):
+def discussERs ( oldER, newER, anaid ):
     oldDSs = oldER.datasets
     oldDSDict = { getPath ( x.path):x for x in oldDSs }
     newDSs = newER.datasets
     newDSDict = { getPath ( x.path):x for x in newDSs }
     if False:
-        print ()
+        print ( "anaid", anaid )
         print ( "oldER: %s, %d datasets" % (oldER.globalInfo.id,len(oldDSs) ) )
         print ( "newER: %s, %d datasets" % (newER.globalInfo.id,len(newDSs) ) )
     for k,v in oldDSDict.items():
@@ -181,28 +182,40 @@ def discussERs ( oldER, newER ):
 
 def oldResultNotInNew ( r ):
     """ there is an old result that does not appear in the new database """
-    error ( "The result %s appears in the old DB, but not in the new." % \
+    error ( "The analysis %s appears in the first DB, but not in the second." % \
             r.globalInfo.id, colors.yellow )
 
 def newResultNotInNew ( r ):
     """ there is a new result that does not appear in the old database """
-    error ( "The result %s appears in the new DB, but not in the old." % \
+    error ( "The analysis %s appears in the second DB, but not in the first." % \
             r.globalInfo.id, colors.yellow )
+
+def createDictionary ( er ):
+    ret = {}
+    for x in er:
+        Id = x.globalInfo.id
+        if len(x.datasets)==1 and x.datasets[0].dataInfo.dataId==None:
+            Id+=":ul"
+        else:
+            Id+=":eff"
+        ret[Id]=x
+    return ret
 
 def discussDBs ( oldD, newD ):
     if True:
         print ( "old: %s" % oldD )
         print ( "new: %s" % newD )
 
-    oldER = oldD.getExpResults ( useSuperseded=True, useNonValidated=True )
-    oldERDict = { x.globalInfo.id:x for x in oldER }
-    newER = newD.getExpResults ( useSuperseded=True, useNonValidated=True )
-    newERDict = { x.globalInfo.id:x for x in newER }
+    oldER = oldD.getExpResults ( useSuperseded=False, useNonValidated=False )
+    oldERDict = createDictionary ( oldER )
+    newER = newD.getExpResults ( useSuperseded=False, useNonValidated=False )
+    newERDict = createDictionary ( newER )
+
     for k,v in oldERDict.items():
         if not k in newERDict.keys():
             oldResultNotInNew ( v )
         else:
-            discussERs ( v, newERDict[k] )
+            discussERs ( v, newERDict[k], k )
     for k,v in newERDict.items():
         if not k in oldERDict.keys():
             newResultNotInNew ( v )
