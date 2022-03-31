@@ -89,7 +89,7 @@ def main():
         cmd += [ "-f", "-c" ]
     exec ( cmd, A.dry_run )
     if A.non_versioned:
-        exec ( [ "./smsDictionary.py" ], A.dry_run, "-d", d, "-d", dbb )
+        exec ( [ "./smsDictionary.py", "-d", db ], A.dry_run )
 
     if not A.no_pickle:
         gprint ( "\nCreate and publish database pickle" )
