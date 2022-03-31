@@ -414,6 +414,9 @@ CMS are for on- and off-shell at once.
             return "SModelS"
         if "ma5" in source:
             return "MA5"
+        if "recast" in source:
+            return txname.source
+        print ( f"[createWikiPage] there is an unknown2 in {source}" )
         return "unknown2"
 
     def anaHasChanged ( self, id, txname, tpe ):
