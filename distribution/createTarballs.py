@@ -42,9 +42,10 @@ def isDummy( ):
         comment( "DUMMY RUN!!!!" )
     return dummyRun
 
-def run( cmd ):
+def run( cmd, prtMsg = True ):
     cmd=cmd.strip()
-    print( "%s[createTarballs] cmd: %s%s" %(GREEN,cmd,RESET) )
+    if prtMsg:
+        print( "%s[createTarballs] cmd: %s%s" %(GREEN,cmd,RESET) )
     f=open("/tmp/create.log","a")
     f.write( "cmd: %s\n" %(cmd) )
     # print('CMD=',cmd)
@@ -259,7 +260,7 @@ def clearGlobalInfo(filename):
             g.write( line )
     g.close()
     cmd = "cp /tmp/tmp.txt %s" % filename
-    run( cmd )
+    run( cmd, prtMsg=False )
 
 def cleanDatabase(dirname):
     """
@@ -274,10 +275,12 @@ def cleanDatabase(dirname):
         # comment( "Now in %s: %s" %(File, record[1] ) )
         removals = [ "orig", ".git", "validation", "README.rst", "__pycache__" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
-                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "exclusion_lines.json", "general.comment", "README", "convert.pyc" ]
+                    "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "exclusion_lines.json", "general.comment", "README", "convert.pyc", "unused_files.txt", "convertOld.py", "plotRatios.py", "plotRatios.sh", "ratios.txt" ]
         globs = glob.glob ( f"{File}/*log" )
         globs = glob.glob ( f"{File}/__pycache__" )
         globs = glob.glob ( f"{File}/*.py" )
+        globs = glob.glob ( f"{File}/*.sh" )
+        globs = glob.glob ( f"{File}/*.png" )
         globs = glob.glob ( f"{File}/*.rst" )
         globs = glob.glob ( f"{File}/*.pyc" )
         globs += glob.glob ( f"{File}/old*" )
