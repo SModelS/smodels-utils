@@ -206,9 +206,9 @@ def discussDBs ( oldD, newD ):
         print ( "old: %s" % oldD )
         print ( "new: %s" % newD )
 
-    oldER = oldD.getExpResults ( useSuperseded=False, useNonValidated=False )
+    oldER = oldD.getExpResults ( useSuperseded=True, useNonValidated=False )
     oldERDict = createDictionary ( oldER )
-    newER = newD.getExpResults ( useSuperseded=False, useNonValidated=False )
+    newER = newD.getExpResults ( useSuperseded=True, useNonValidated=False )
     newERDict = createDictionary ( newER )
 
     for k,v in oldERDict.items():
