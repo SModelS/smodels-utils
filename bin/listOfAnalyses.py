@@ -162,8 +162,9 @@ class Lister:
                     if "efficiency" in tpe:
                         mapsCountS = ", %d individual maps" % nMaps
 
-                    self.f.write ( " * [%s %s](#%s%s%d): %d %s analyses, %s%s%s results%s\n" % \
-                              ( exp, tpe, exp, stpe, sqrts, len(a), aflim, nres, flim, llp, mapsCountS ) )
+                    line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(a)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n" 
+                    self.f.write ( line )
+
 
     def fields ( self, isEffMap ):
         """ get list of all columns.
