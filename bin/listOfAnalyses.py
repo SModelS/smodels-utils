@@ -251,7 +251,7 @@ class Lister:
         keys = list ( set ( keys ) )
         if len(keys) == 0:
             return
-        self.experimentHeader ( experiment, Type, sqrts, len(anas) )
+        self.experimentHeader ( experiment, Type, sqrts, len(keys) )
         keys.sort()
         # print ( keys )
         previous = keys[0]

@@ -195,7 +195,7 @@ CMS are for on- and off-shell at once.
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     stpe = tpe.replace ( " ", "" )
 
-                    nres, nnewres, nexpres, nnewexpres = 0, 0, 0, 0
+                    nres, nnewres, nexpres, nnewexpres = set(), set(), set(), set()
                     for expRes in expResList:
                         hasTn,hasNewTn=False,False
                         txns, newtxns = [], []
@@ -204,7 +204,9 @@ CMS are for on- and off-shell at once.
                             tname = tn.txName
                             if not self.ignore_validated and validated in [ "n/a" ]:
                                 continue
-                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe,
+                            Id = expRes.globalInfo.id
+                            Idnoagg = Id.replace("-agg","")
+                            isNew = self.isNewAnaID ( Id, tn.txName, tpe,
                                                       validated )
                             hasChanged = self.anaHasChanged ( expRes.globalInfo.id, tn.txName, tpe )
                             if "efficiency" in tpe:
@@ -214,19 +216,19 @@ CMS are for on- and off-shell at once.
                                 continue
                             txns.append ( tname )
                             hasTn=True
-                            nres += 1
+                            nres.add ( Idnoagg )
                             if isNew or hasChanged:
                                 hasNewTn = True
-                                nnewres += 1
+                                nnewres.add ( Idnoagg )
                                 newtxns.append ( tname )
-                        if hasTn: nexpres += 1
-                        if hasNewTn: nnewexpres += 1
+                        if hasTn: nexpres.add ( Idnoagg )
+                        if hasNewTn: nnewexpres.add ( Idnoagg )
 
-                    if nres > 0:
+                    if len(nres) > 0:
                         sanalyses = "%d analyses (%s new)" % \
-                                     ( nexpres, self.getNumber(nnewexpres) )
+                                     ( len(nexpres), self.getNumber(len(nnewexpres)) )
                         sresults = "%d results (%s new)" % \
-                                     ( nres, self.getNumber(nnewres) )
+                                     ( len(nres), self.getNumber(len(nnewres)) )
                         self.file.write ( " * [%s %s](#%s%s%d): %s, %s\n" % \
                                       ( exp, tpe, exp, stpe, sqrts, sanalyses, sresults ) )
 
