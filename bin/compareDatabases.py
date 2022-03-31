@@ -10,6 +10,7 @@ from smodels.experiment.txnameObj import TxNameData
 from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.colors import colors
 from smodels.tools.physicsUnits import fb
+import os
 colors.on = True
 TxNameData._keep_values = True
 
@@ -76,25 +77,26 @@ def discussTxName ( ER, DS, oldTx, newTx ):
             error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
             return
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
-    if ( oldTx.txnameData.dataTag != newTx.txnameData.dataTag ):
-        error ( "dataTags differ!" )
+    if ( oldTx.txnameData != newTx.txnameData ):
+        error ( "dataInfos differ!" )
         #sys.exit(-1)
     #print ( type ( oldTx.txnameData._V ) )
     #import IPython
     #IPython.embed()
     compareMatrices ( ER, DS, oldTx.txName, oldTx.txnameData._V, newTx.txnameData._V )
-    if ( oldTx.txnameData._1dim != newTx.txnameData._1dim ):
-        error ( "txnameData differ in _1dim! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+    #if ( oldTx.txnameData._1dim != newTx.txnameData._1dim ):
+    #    error ( "txnameData differ in _1dim! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         # sys.exit(-1)
 
     ## xsecs
-    oldUnit = oldTx.txnameData.unit 
-    if type(oldUnit)!=int:
-        oldUnit = oldUnit.asNumber (fb)
-    newUnit = newTx.txnameData.unit
-    if type(newUnit)!=int:
-        newUnit = newUnit.asNumber (fb)
-    if ( unequal ( oldUnit * sum ( oldTx.txnameData.xsec ), newUnit * sum (newTx.txnameData.xsec ), "xsec" ) ):
+    #oldUnit = oldTx.txnameData.unit 
+    #if type(oldUnit)!=int:
+    #    oldUnit = oldUnit.asNumber (fb)
+    #newUnit = newTx.txnameData.unit
+    #if type(newUnit)!=int:
+    #    newUnit = newUnit.asNumber (fb)
+    oldUnit, newUnit = 1., 1.
+    if ( unequal ( oldUnit * sum ( oldTx.txnameData.y_values ), newUnit * sum (newTx.txnameData.y_values ), "xsec" ) ):
         error ( "--> txnameData differ in xsec! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         error ( "    ::: n(entries)=%d, %d" % ( len ( oldTx.txnameData.xsec ), len ( newTx.txnameData.xsec ) ) )
         error ( " :ov=%s" % oldTx.txnameData.value[:88] )
@@ -103,8 +105,8 @@ def discussTxName ( ER, DS, oldTx, newTx ):
         fail=True
 
     ## delta_x
-    if ( unequal ( sum ( sum ( oldTx.txnameData.delta_x.A ) ),\
-                   sum ( sum (newTx.txnameData.delta_x.A ) ), "delta_x" ) ):
+    if ( unequal ( sum ( sum ( oldTx.txnameData.delta_x ) ),\
+                   sum ( sum (newTx.txnameData.delta_x ) ), "delta_x" ) ):
         error ( "--> txnameData differ in delta_x! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         fail=True
         #sys.exit(-1)
@@ -117,9 +119,9 @@ def discussTxName ( ER, DS, oldTx, newTx ):
         error ( "txname differs in condition! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         fail=True
         #sys.exit(-1)
-    if ( oldTx.conditionDescription != newTx.conditionDescription ):
-        error ( "txname differs in conditionDescription! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
-        fail=True
+    #if ( oldTx.conditionDescription != newTx.conditionDescription ):
+    #    error ( "txname differs in conditionDescription! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+    #    fail=True
     if fail:
         tx["err"]+=1
         #sys.exit(-1)
@@ -207,14 +209,26 @@ def discussDBs ( oldD, newD ):
 
     print ( "%d/%d txnames failed." % ( tx["err"], tx["tot"] ) )
 
-oldDname = "/home/walten/git/branches/smodels-database"
-newDname = "/home/walten/git/smodels-database"
+def compare():
+    import argparse
+    ap = argparse.ArgumentParser( description="compare two databases" )
+    ap.add_argument('-d1', '--database1', help='name of first database [~/git/smodels-database]', default="~/git/smodels-database" )
+    ap.add_argument('-d2', '--database2', help='name of second database [official]', default="official" )
+    args = ap.parse_args()
+    args.database1 = os.path.expanduser ( args.database1 )
+    args.database2 = os.path.expanduser ( args.database2 )
 
-if False:
-    oldDname = "/home/walten/git/branches/smodels/test/database"
-    newDname = "/home/walten/git/smodels/test/database"
+    #oldDname = "/home/walten/git/branches/smodels-database"
+    #newDname = "/home/walten/git/smodels-database"
 
-oldD = Database ( oldDname )
-newD = Database ( newDname )
+    #if False:
+    #    oldDname = "/home/walten/git/branches/smodels/test/database"
+    #    newDname = "/home/walten/git/smodels/test/database"
 
-discussDBs ( oldD, newD )
+    oldD = Database ( args.database1 )
+    newD = Database ( args.database2 )
+
+    discussDBs ( oldD, newD )
+
+if __name__ == "__main__":
+    compare()
