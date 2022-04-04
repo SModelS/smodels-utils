@@ -531,6 +531,9 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
     with open ( "%s/smodels-utils/clip/bake_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
+    if "cutlang" in recipe and not cutlang:
+        print ( f"[slurm.py] cutlang is mentioned in recipe but -l was not given. maybe use -l?" )
+        sys.exit()
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
