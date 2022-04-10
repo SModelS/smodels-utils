@@ -31,12 +31,14 @@ def extractFrom ( crashfile ):
                     isInFile = lines[i+1].strip()
                     skipper = i+4
                     fhandle = open ( isInFile, "wt" )
+                    print ( f"[extractFromCrashFile] extracting {isInFile}" )
             if isInFile != None:
                 continue
         if isInFile == None and line.startswith("* Output" ):
             isInFile = "output"
             skipper = i+2
             fhandle = open ( isInFile, "wt" )
+            print ( f"[extractFromCrashFile] extracting {isInFile}" )
             continue
         if isInFile != None:
             # we are in a file!!
