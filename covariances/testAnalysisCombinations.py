@@ -56,6 +56,28 @@ def getSetupTStauStau():
         ret["label"]="simplified"
     return ret
 
+def getSetupRExp():
+    """ collect the experimental results """
+    dbpath = "../../smodels/test/database/"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-CONF-2013-037', 'CMS-SUS-13-012' ]
+    dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "gluino_squarks.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-6., 10. ),
+            "dictname": "staustau.dict",
+            "output": "combo_1804.png"
+    }
+    return ret
+
 def getSetupTChiWZ():
     """ collect the experimental results """
     dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
@@ -256,12 +278,14 @@ def plotLlhds ( llhds, fits, setup ):
     totS = sum(prodllhd.values())
     for k,v in prodllhd.items():
         prodllhd[k]=prodllhd[k]/totS
-    llmin = min ( alllhds )
-    llmax = max ( alllhds )
+    llmin, llmax = 0., 1.
+    if len(alllhds)>0:
+        llmin = min ( alllhds )
+        llmax = max ( alllhds )
 
     plt.plot ( prodllhd.keys(), prodllhd.values(), c="k", label=r"$\Pi_i l_i$" )
 
-    if True:
+    if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
         ulmu = fits["ulmu"]
         lmax = max ( prodllhd.values() )
@@ -305,8 +329,7 @@ def plotLlhds ( llhds, fits, setup ):
     output = "combo.png"
     if "output" in setup:
         output = setup["output"]
-    plt.savefig ( output )
-    plt.kittyPlot()
+    plt.kittyPlot( output )
     print ( f"[testAnalysisCombinations] saved to {output}" )
 
 def createLlhds ( tpreds, setup ):
@@ -318,6 +341,7 @@ def createLlhds ( tpreds, setup ):
     if "murange" in setup:
         xmin, xmax = setup["murange"]
 
+    expected = setup["expected"]
     times, llhds, sums = {}, {}, {}
     for t in tpreds:
         dId = "combined"
@@ -328,11 +352,11 @@ def createLlhds ( tpreds, setup ):
         Id = f"{t.dataset.globalInfo.id}:{dId}"
         print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
         t0 = time.time()
-        t.computeStatistics()
+        t.computeStatistics( expected = expected )
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False )
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False, expected = expected )
         llhds[Id]=l
         sums[Id] = S
         t1 = time.time()
@@ -377,6 +401,7 @@ def testAnalysisCombo( setup ):
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
     smstopos = decomposer.decompose(model)
+    expected = setup["expected"]
     tpreds = []
     llhds = {}
     totllhd = {}
@@ -394,8 +419,8 @@ def testAnalysisCombo( setup ):
             tpreds.append(t)
             combine.append(t)
             if t.dataset.dataInfo.dataId == None:
-                lmax = t.lmax( allowNegativeSignals = True )
-                muhat = t.muhat( allowNegativeSignals = True )
+                lmax = t.lmax( allowNegativeSignals = True, expected = expected )
+                muhat = t.muhat( allowNegativeSignals = True, expected = expected )
                 fits["muhat_ul"] = muhat
                 fits["lmax_ul"] = lmax
                 print ( f"[testAnalysisCombinations] UL: {t.dataset.globalInfo.id}: muhat={muhat:.3f} lmax={lmax:.3g}" )
@@ -414,29 +439,31 @@ def testAnalysisCombo( setup ):
         if type(ull) != type(None):
             ul = float ( ull / ts[0].xsection.value )
             fits["ul_combo"] = ul
-            llhd_ul = ts[0].likelihood ( ul )
+            llhd_ul = ts[0].likelihood (  ul, expected = expected )
             fits["llhd_combo(ul)"] = llhd_ul
-        muhat = ts[0].muhat( allowNegativeSignals = True )
+        muhat = ts[0].muhat( allowNegativeSignals = True, expected = expected )
         # print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
         fits["muhat_combo"] = muhat
-        fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True )
+        fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True, expected= expected )
     nplots = 0
     llhds, sums, times = createLlhds ( tpreds, setup )
-    if len(ts)>0 and "llhd_combo(ul)" in fits:
+    if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
         Id = f"{ts[0].dataset.globalInfo.id}:combined"
-        S=sums[Id]
-        fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
-        fits["lmax_combo"] = fits["lmax_combo"] / S
+        if Id in sums:
+            S=sums[Id]
+            fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
+            fits["lmax_combo"] = fits["lmax_combo"] / S
 
     print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
-    combiner = TheoryPredictionsCombiner(combine)
-    combiner.computeStatistics()
-    r = combiner.getRValue()
-    r = combiner.getRValue( expected=True )
-    mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
-                                                extended_output=True)
-    ulmu = combiner.getUpperLimitOnMu()
-    fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax } )
+    if len(combine)>0:
+        combiner = TheoryPredictionsCombiner(combine)
+        combiner.computeStatistics()
+        r = combiner.getRValue()
+        r = combiner.getRValue( expected=True )
+        mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
+                                                    extended_output=True)
+        ulmu = combiner.getUpperLimitOnMu()
+        fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax } )
 
     plotLlhds ( llhds, fits, setup )
     if len(tpreds)==0:
@@ -462,19 +489,21 @@ def runSlew( rewrite = False ):
         testAnalysisCombo( setup )
     sys.exit()
 
-def getSetup( rewrite = False ):
+def getSetup( rewrite = False, expected = False ):
     # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
-    setup = getSetupTStauStau()
+    # setup = getSetupTStauStau()
+    setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=rewrite
+    setup["expected"]=expected
     return setup
 
 
 if __name__ == "__main__":
     rewrite = True
     # runSlew( rewrite )
-    setup = getSetup( rewrite )
+    setup = getSetup( rewrite, expected = True )
     testAnalysisCombo( setup )

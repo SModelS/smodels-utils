@@ -14,7 +14,8 @@ def printIndicator ( i ):
         print ( ".", flush=True, end="" )
 
 def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
-       equidistant = True, verbose = False, normalize = True ):
+       equidistant = True, verbose = False, normalize = True,
+       expected = False ):
     """ compute the likelhoods for theory prediction
     :param tpred: a theory prediction
     :param xmin: minimum mu
@@ -50,7 +51,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
     ret = {}
     for i,mu in enumerate(rng):
         printIndicator ( i )
-        l = tpred.likelihood ( mu, useCached=False )
+        l = tpred.likelihood ( mu, useCached=False, expected = expected )
         if l == None:
             l = float("nan")
         if tpred.dataset.getType() == "combined":

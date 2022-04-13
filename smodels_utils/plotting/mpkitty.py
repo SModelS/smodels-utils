@@ -11,7 +11,7 @@ def importBackend():
         import matplotlib, os, sys, subprocess
         from smodels_utils import SModelSUtils
         home = os.environ["HOME"]
-        info sys.version_info
+        info = sys.version_info
         ver = f"{info.major}.{info.minor}"
         path = f"{home}/.local/lib/python{ver}/site-packages/"
         name = "matplotlib-backend-kitty"
@@ -31,8 +31,18 @@ def importBackend():
 
 importBackend()
 import matplotlib.pyplot as plt
-def kittyPlot():
+def kittyPlot( filename = None ):
+    if filename == None:
+        # plt.show() should actually work, but doesnt right now
+        return # for now
+    plt.savefig ( filename )
     import os
-    if options["hasKittyBackend"] == True and "kitty" in os.environ["TERM"]:
-        plt.show()
+    if options["hasKittyBackend"] == True or "kitty" in os.environ["TERM"]:
+        cols = "120"
+        if "MPLBACKEND_KITTY_SIZING" in os.environ:
+            cols = os.environ["MPLBACKEND_KITTY_SIZING"]
+        cmd = f"timg -pkitty -g {cols}x80 -U -W {filename}"
+        import subprocess
+        o = subprocess.getoutput ( cmd )
+            
 from matplotlib.pyplot import *
