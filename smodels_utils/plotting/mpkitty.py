@@ -11,10 +11,12 @@ def importBackend():
         import matplotlib, os, sys, subprocess
         from smodels_utils import SModelSUtils
         home = os.environ["HOME"]
-        ver = sys.version[:3]
+        info sys.version_info
+        ver = f"{info.major}.{info.minor}"
         path = f"{home}/.local/lib/python{ver}/site-packages/"
         name = "matplotlib-backend-kitty"
-        if not os.path.exists ( os.path.join ( path, name ) ):
+        filename = os.path.join ( path, name )
+        if not os.path.exists ( filename ):
             cmd = f"mkdir -p {path}"
             subprocess.getoutput ( cmd )
             sourcedir = os.path.join ( SModelSUtils.installDirectory(), "smodels_utils", "plotting" )
