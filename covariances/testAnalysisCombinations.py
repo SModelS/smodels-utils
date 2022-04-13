@@ -74,7 +74,7 @@ def getSetupRExp():
             "comb": comb_results,
             "murange": (-10., 20. ),
             "dictname": "rexp.dict",
-            "output": "combo_1804.png"
+            "output": "debug_rexp.png"
     }
     return ret
 
@@ -216,7 +216,7 @@ def getSetupTChiWH():
     }
     return ret
 
-def writeDictFile ( dictname, llhds, times, fits ):
+def writeDictFile ( dictname, llhds, times, fits, setup ):
     """ write out the likelihoods.dict file
     :param dictname: name of file, e.g. likelihoods.dict
     """
@@ -237,6 +237,9 @@ def writeDictFile ( dictname, llhds, times, fits ):
         g.write ( f"'{k}': {v:.3f}" )
     g.write("}\n")
     g.write("fits="+str(fits)+"\n" )
+    setup.pop("SR")
+    setup.pop("comb")
+    g.write("setup="+str(setup)+"\n" )
     g.close()
 
 
@@ -342,6 +345,7 @@ def createLlhds ( tpreds, setup ):
         xmin, xmax = setup["murange"]
 
     expected = setup["expected"]
+    normalize = setup["normalize"]
     times, llhds, sums = {}, {}, {}
     for t in tpreds:
         dId = "combined"
@@ -356,7 +360,8 @@ def createLlhds ( tpreds, setup ):
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, equidistant=False, expected = expected )
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
+                normalize = normalize, equidistant=False, expected = expected )
         llhds[Id]=l
         sums[Id] = S
         t1 = time.time()
@@ -375,7 +380,7 @@ def readDictFile ( dictname ):
         os.unlink ( dictname )
         return [ None ]*3
     print ( f"[testAnalysisCombinations] recycling llhds from {dictname}, delete if you dont want that" )
-    return llhds, times, fits
+    return llhds, times, fits, setup
 
 def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
@@ -388,7 +393,8 @@ def testAnalysisCombo( setup ):
     if "dictname" in setup:
         dictname = setup["dictname"]
         if os.path.exists ( dictname ) and setup["rewrite"] == False:
-            llhds, times, fits = readDictFile ( dictname )
+            oldsetup = setup
+            llhds, times, fits, newsetup = readDictFile ( dictname )
             if llhds != None:
                 plotLlhds ( llhds, fits, setup )
                 return
@@ -460,16 +466,16 @@ def testAnalysisCombo( setup ):
         combiner.computeStatistics()
         r = combiner.getRValue()
         r = combiner.getRValue( expected=True )
-        mu_hat, sigma_mu, lmax = combiner.findMuHat(allowNegativeSignals=True,
-                                                    extended_output=True)
-        ulmu = combiner.getUpperLimitOnMu()
+        mu_hat, sigma_mu, lmax = combiner.findMuHat(expected=expected,
+                allowNegativeSignals=True, extended_output=True)
+        ulmu = combiner.getUpperLimitOnMu( expected = expected )
         fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax } )
 
     plotLlhds ( llhds, fits, setup )
     if len(tpreds)==0:
         print ( f"[testAnalysisCombinations] no tpreds found to combine" )
         sys.exit()
-    writeDictFile ( dictname, llhds, times, fits )
+    writeDictFile ( dictname, llhds, times, fits, setup )
 
 def runSlew( rewrite = False ):
     """ run them all 
@@ -500,6 +506,7 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     setup["rewrite"]=rewrite
     setup["expected"]=expected
     setup["addjitter"]=addjitter
+    setup["normalize"]=False
     return setup
 
 
