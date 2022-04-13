@@ -72,8 +72,8 @@ def getSetupRExp():
     ret = { "slhafile": "gluino_squarks.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-6., 10. ),
-            "dictname": "staustau.dict",
+            "murange": (-10., 20. ),
+            "dictname": "rexp.dict",
             "output": "combo_1804.png"
     }
     return ret
@@ -270,7 +270,7 @@ def plotLlhds ( llhds, fits, setup ):
             if not "combine" in Id:
                 prodllhd[k]=prodllhd[k]*v
         yv = list ( l.values() )
-        if False:
+        if setup["addjitter"]:
             import random
             for i,y in enumerate(yv):
                 yv[i]=y*random.uniform(.9,1.1)
@@ -489,7 +489,7 @@ def runSlew( rewrite = False ):
         testAnalysisCombo( setup )
     sys.exit()
 
-def getSetup( rewrite = False, expected = False ):
+def getSetup( rewrite = False, expected = False, addjitter=False ):
     # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
@@ -499,6 +499,7 @@ def getSetup( rewrite = False, expected = False ):
     # setup = getSetupUL()
     setup["rewrite"]=rewrite
     setup["expected"]=expected
+    setup["addjitter"]=addjitter
     return setup
 
 

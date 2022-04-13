@@ -37,12 +37,13 @@ def kittyPlot( filename = None ):
         return # for now
     plt.savefig ( filename )
     import os
-    if options["hasKittyBackend"] == True or "kitty" in os.environ["TERM"]:
+    if options["hasKittyBackend"] or "kitty" in os.environ["TERM"]:
         cols = "120"
         if "MPLBACKEND_KITTY_SIZING" in os.environ:
             cols = os.environ["MPLBACKEND_KITTY_SIZING"]
         cmd = f"timg -pkitty -g {cols}x80 -U -W {filename}"
         import subprocess
         o = subprocess.getoutput ( cmd )
+        print ( o )
             
 from matplotlib.pyplot import *
