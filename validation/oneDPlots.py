@@ -134,6 +134,7 @@ def create1DPlot( validationPlot, silentMode=True,
     official = validationPlot.officialCurves
     eofficial = validationPlot.expectedOfficialCurves
     # print ( "official", official )
+    rmin, rmax = 0, 1
     for o in official:
         if o["name"].startswith ( "obsExclusion" ):
             rmin, rmax = min ( yvs ), max ( yvs )

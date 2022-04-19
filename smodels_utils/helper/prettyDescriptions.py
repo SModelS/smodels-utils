@@ -14,6 +14,8 @@ from sympy import var
 from math import floor, log10
 from smodels.tools.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
+from inspect import currentframe, getframeinfo
+import sys
 x,y,z,w = var('x y z w')
 
 # pretty name of particle:
@@ -97,6 +99,8 @@ lowstrings = {
 
 # pretty name of decay:
 
+frame_ = getframeinfo(currentframe())
+daughterline_ = frame_.lineno + 3
 decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T1bbbb': 'gluino  --> bottom antibottom  lsp ',
     'T1bbbt': 'gluino gluino  --> bottom antibottom bottom top lsp lsp',
@@ -214,6 +218,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
     'TChiWH':'neutralino_2 chargino^pm_1 --> H W lsp lsp ',
     'TChiHH':'neutralino_2 neutralino_2 --> H H lsp lsp ',
+    'TChiHHG':'neutralino_2 neutralino_2 --> H H lsp lsp ',
     'TChiWW':'chargino^pm_1 --> W lsp ',
     'TChiH': 'neutralino_1 --> Z/h gravitino',
     'TChiZ': 'neutralino_1 --> Z lsp',
@@ -287,6 +292,9 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
 
 #Name of mother particles
 
+frame_ = getframeinfo(currentframe())
+us_ = frame_.filename
+motherline_ = frame_.lineno + 3
 motherDict = {"T1" :  "gluino",
     "T1bbbb" :  "gluino",
     "T1bbbt" :  "gluino",
@@ -404,6 +412,7 @@ motherDict = {"T1" :  "gluino",
     "TChiChipmStauStau" :  "neutralino_2 chargino^pm_1",
     "TChiWH" :  "neutralino_2 chargino^pm_1",
     "TChiHH" :  "neutralino_2 neutralino_2",
+    "TChiHHG" :  "neutralino_2 neutralino_2",
     "TChiWW" :  "chargino^pm_1 chargino^mp_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
     "TDTM1F" :  "chargino^pm_1 chargino^mp_1",
@@ -520,6 +529,9 @@ def getMothers(txname):
     :return: list of mother particles in standard format (e.g. ['gluino', 'gluino'])
     """
 
+    if not txname in motherDict:
+       print ( f"\n[prettyDescriptions] txname {txname} missing in motherDict {us_}:{motherline_}. Add!" ) 
+       sys.exit()
     mothers = motherDict[txname].lstrip().rstrip().split()
     if len(mothers) == 1:
         mothers = mothers*2
@@ -535,6 +547,9 @@ def getIntermediates(txname):
     :return: list of intermediate particles in standard format (e.g. ['stop', 'chargino^pm_1'])
     """
 
+    if not txname in decayDict:
+       print ( f"\n[prettyDescriptions] txname {txname} missing in decayDict {us_}:{daughterline_}. Add!" ) 
+       sys.exit()
     #Get the decays
     decays = decayDict[txname].split(',')
     #Find the subsequent decays:
