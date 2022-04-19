@@ -642,6 +642,9 @@ class DataHandler(object):
                         ret.append ( yr[i] )
                     yld = ret
                 if type ( self.index ) in [ int ]:
+                    if self.index >= len(yr):
+                        print ( f"[dataHandlerObjects] too high index {self.index} for {yr} in {self.path}" )
+                        sys.exit()
                     yld = yr[:self.dimensions] + [ yr[self.index] ]
                 yield yld
 
