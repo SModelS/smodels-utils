@@ -141,7 +141,7 @@ def create1DPlot( validationPlot, silentMode=True,
             plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
                        label="official observed exclusion" )
     for o in eofficial:
-        print ( "eo", o )
+        # logger.info ( f"exclusion object: {o}" )
         if o["name"].startswith ( "expExclusion" ):
             rmin, rmax = min ( yvs ), max ( yvs )
             plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
