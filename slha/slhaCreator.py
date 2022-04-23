@@ -47,6 +47,7 @@ class TemplateFile(object):
         """
 
         self.version = "1.1" ## slhaCreator version
+        self.verbose = False
         self.path = template
         self.slhaObj = None
         self.ewk = "wino"
@@ -125,6 +126,8 @@ class TemplateFile(object):
            sqrts = [[8,13]]
 
         masses = self.massPlane.getParticleMasses(**ptDict)
+        if self.verbose:
+            print ( f"[slhaCreator] create {masses}" )
         massDict = {}
         # print ( "masses=", masses )
         for ibr,br in enumerate(masses):
@@ -429,6 +432,8 @@ if __name__ == "__main__":
         type=float, default=None )
     argparser.add_argument( '-ly', '--logy', action='store_true',
         help="logarithmic scale for y axis (in which case dy is multiplicative)" )
+    argparser.add_argument( '-v', '--verbose', action='store_true',
+        help="be verbose" )
     argparser.add_argument ( '--zmin', nargs='?', help='minimum value for z [None]',
         type=float, default=None )
     argparser.add_argument ( '--zmax', nargs='?', help='maximum value for z [None]',
@@ -479,6 +484,7 @@ if __name__ == "__main__":
         sys.exit()
     tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion)
     tempf.nprocesses = args.nprocesses
+    tempf.verbose = args.verbose
     tempf.ewk = args.ewk
     if args.nprocesses < 0:
         tempf.nprocesses = runtime.nCPUs() + args.nprocesses + 1
