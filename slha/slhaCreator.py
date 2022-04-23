@@ -57,7 +57,8 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,template,axes,tempdir=None,pythiaVersion=6):
+    def __init__(self,template,axes,tempdir=None,pythiaVersion=6,
+                 keep=False):
         """
         :param template: path to the template file
         :param axes: string describing the axes for the template file
@@ -66,6 +67,7 @@ class TemplateFile(object):
                         a temporary folder will be created at the current location.
         :param pythiaVersion: Version of pythia to use (6 or 8). It specifies how
                               the pythiaCard will be generated.
+        :param keep: keep temporary files
         """
 
         self.version = "1.1" ## slhaCreator version
@@ -76,6 +78,7 @@ class TemplateFile(object):
         self.nprocesses = -1
         self.tags = []
         self.axes = axes
+        self.keep = keep
         self.motherPDGs = []
         self.pythiaCard = None
         self.pythiaVersion = pythiaVersion
@@ -84,7 +87,8 @@ class TemplateFile(object):
         else:
             self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
             print ( "[slhaCreator] tempdir at %s" % self.tempdir )
-            __tempfiles__.add ( self.tempdir )
+            if not self.keep:
+                __tempfiles__.add ( self.tempdir )
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
             logger.error("Template file %s not found." %template)
@@ -103,7 +107,8 @@ class TemplateFile(object):
 
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
-            __tempfiles__.add ( self.pythiaCard )
+            if not self.keep:
+                __tempfiles__.add ( self.pythiaCard )
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
 
@@ -511,7 +516,8 @@ if __name__ == "__main__":
         print ( "[slhaCreator] error: templatefile %s not found." %
                 templatefile )
         sys.exit()
-    tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion)
+    tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion,
+                         keep=args.keep)
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
