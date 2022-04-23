@@ -33,15 +33,7 @@ def isLocked ( f ):
         f = f[p1+1:]
     return os.path.exists ( f".{f}.lock" )
 
-def count( dirname ):
-    files = glob.glob( dirname+"T*slha" )
-    ctr=0
-    for f in files:
-        if not hasXSecs ( f ) and not isLocked ( f ):
-            ctr+=1
-    print ( f"{ctr}/{len(files)} processed" )
-
-def addXSecs( dirname ):
+def addXSecs( dirname, pretend = False ):
     files = glob.glob( dirname+"T*slha" )
     ctr=0
     hasXS = 0
@@ -61,12 +53,13 @@ def addXSecs( dirname ):
                 if pid == 0:
                     lock ( f )
                     print ( "cmd", cmd )
-                    o = subprocess.getoutput ( cmd )
+                    o = ""
+                    if not pretend:
+                        o = subprocess.getoutput ( cmd )
                     print ( "o", o )
                     unlock ( f )
                     sys.exit()
     print ( f"{ctr}/{len(files)} processing, {hasXS} have xsecs, {locked} locked" )
 
 if __name__ == "__main__":
-    addXSecs( "tmpcsz2ttbh/" )
-    # count( "tmpcsz2ttbh/" )
+    addXSecs( "tmpcsz2ttbh/", pretend = False )
