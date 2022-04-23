@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha
-import math, numpy, subprocess, time, sys
+import math, numpy, subprocess, time, sys, os
 try: ## smodels <= 122
     from smodels.theory import slhaDecomposer as decomposer
 except ImportError: ## smodels >= 200
@@ -28,6 +28,28 @@ from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools import xsecComputer, runtime
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
+import signal
+
+__tempfiles__ = set()
+
+def removeTempFiles():
+    for l in __tempfiles__:
+        if l == None:
+            continue
+        if not os.path.exists ( l ):
+            continue
+        cmd = f"rm -rf {l}"
+        subprocess.getoutput ( cmd )
+        # print ( f"[slhaCreator] {cmd}" )
+    __tempfiles__.clear()
+
+def signal_handler(sig, frame):
+    if len(__tempfiles__)>0:
+        # print( f'[slhaCreator] You pressed Ctrl+C, remove {len(__tempfiles__)} temporary files!')
+        removeTempFiles()
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 class TemplateFile(object):
     """
@@ -62,6 +84,7 @@ class TemplateFile(object):
         else:
             self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
             print ( "[slhaCreator] tempdir at %s" % self.tempdir )
+            __tempfiles__.add ( self.tempdir )
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
             logger.error("Template file %s not found." %template)
@@ -80,6 +103,7 @@ class TemplateFile(object):
 
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
+            __tempfiles__.add ( self.pythiaCard )
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
 
@@ -126,8 +150,8 @@ class TemplateFile(object):
            sqrts = [[8,13]]
 
         masses = self.massPlane.getParticleMasses(**ptDict)
-        if self.verbose:
-            print ( f"[slhaCreator] create {masses}" )
+        #if self.verbose:
+        #    print ( f"[slhaCreator] create {masses}" )
         massDict = {}
         # print ( "masses=", masses )
         for ibr,br in enumerate(masses):
@@ -215,29 +239,6 @@ class TemplateFile(object):
             if slhafile:
                 slhafiles.append(slhafile)
 
-            #Compute cross-sections
-            if computeXsecs:
-                if self.pythiaCard:
-                    xargs = argparse.Namespace()
-                    xargs.pythia6 = False
-                    xargs.pythia8 = True
-                    if self.pythiaVersion == 6:
-                        xargs.pythia6 = True
-                        xargs.pythia8 = False
-                    xargs.sqrts = sqrts
-                    xargs.ncpus = self.nprocesses
-                    xargs.nevents = nevents
-                    xargs.pythiacard = self.pythiaCard
-                    xargs.NLL = True
-                    xargs.tofile = False
-                    xargs.alltofile = True
-                    xargs.keep=False
-                    xargs.LOfromSLHA = False
-                    xargs.query = False
-                    xargs.colors = None
-                    xargs.verbosity = 30
-                    xargs.filename = self.tempdir
-                    xsecComputer.main(xargs)
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
                 computer = RefXSecComputer()
@@ -250,6 +251,34 @@ class TemplateFile(object):
                           comment = c, ignore_pids = ignore_pids,
                           ewk = self.ewk )
 
+        #Compute cross-sections
+        if computeXsecs:
+            if self.verbose:
+                print ( f"[slhaCreator] now compute xsecs for {len(slhafiles)} files on {self.nprocesses} cores" )
+            if self.pythiaCard:
+                xargs = argparse.Namespace()
+                xargs.pythia6 = False
+                xargs.pythia8 = True
+                if self.pythiaVersion == 6:
+                    xargs.pythia6 = True
+                    xargs.pythia8 = False
+                xargs.sqrts = sqrts
+                xargs.ncpus = self.nprocesses
+                xargs.nevents = nevents
+                xargs.pythiacard = self.pythiaCard
+                xargs.NLL = True
+                xargs.tofile = False
+                xargs.alltofile = True
+                xargs.keep=False
+                xargs.LOfromSLHA = False
+                xargs.query = False
+                xargs.colors = None
+                xargs.verbosity = 30
+                if self.verbose:
+                    xargs.verbosity = 17
+                # xargs.filename = slhafiles
+                xargs.filename = self.tempdir
+                xsecComputer.main(xargs)
         return slhafiles
 
     def addToRecipe ( self, directory, command ):
