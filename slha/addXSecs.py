@@ -48,7 +48,7 @@ def addXSecs( dirname, pretend = False ):
         else:
             ctr+=1
             if ctr < 40:
-                cmd = f"../../smodels/smodelsTools.py xseccomputer -f {f} -8 -N -P -e 200000 -v info -c 1 "
+                cmd = f"../../smodels/smodelsTools.py xseccomputer -f {f} -8 -N -P -e 200000 -v info -c 1 -s 13.6 "
                 pid = os.fork()
                 if pid == 0:
                     lock ( f )
@@ -62,4 +62,6 @@ def addXSecs( dirname, pretend = False ):
     print ( f"{ctr}/{len(files)} processing, {hasXS} have xsecs, {locked} locked" )
 
 if __name__ == "__main__":
-    addXSecs( "tmpcsz2ttbh/", pretend = False )
+    files = glob.glob ( "tmp*/" )
+    for f in files:
+        addXSecs( f, pretend = False )
