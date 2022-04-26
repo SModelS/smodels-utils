@@ -78,6 +78,30 @@ def getSetupRExp():
     }
     return ret
 
+def getSetupSabine():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/"
+    database = Database( dbpath )
+    dTypes = ["all"]
+    anaids = [ 'ATLAS-SUSY-2018-41-eff', 'CMS-SUS-20-001' ]
+    dsids = [ 'all' ]
+    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    #dsids = [ 'all' ]
+    #comb_results = database.getExpResults(analysisIDs=anaids,
+    #                                     datasetIDs=dsids, dataTypes=dTypes)
+    comb_results = []
+    ret = { "slhafile": "Mtwo700.0_muPos100.0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-5., 6. ),
+            "dictname": "rsabine.dict",
+            "output": "sabine.png"
+    }
+    return ret
+
 def getSetupTChiWZ():
     """ collect the experimental results """
     dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
@@ -501,7 +525,8 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
-    setup = getSetupRExp()
+    setup = getSetupSabine()
+    # setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=rewrite
     setup["expected"]=expected
