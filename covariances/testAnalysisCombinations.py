@@ -10,6 +10,8 @@
 import sys
 sys.path.insert(0, "../")
 
+from smodels.tools import runtime
+runtime._experimental = True
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.theory import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
@@ -17,14 +19,13 @@ from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList
 from smodels.experiment.databaseObj import Database
+from smodels.tools.physicsUnits import fb
 import unittest
 import numpy as np
 import os
 import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
-from smodels.tools import runtime
-runtime._experimental = True
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -84,19 +85,20 @@ def getSetupSabine():
     database = Database( dbpath )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2018-41-eff', 'CMS-SUS-20-001' ]
+    anaids = [ 'CMS-SUS-20-001' ]
     dsids = [ 'all' ]
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
 
-    #dsids = [ 'all' ]
-    #comb_results = database.getExpResults(analysisIDs=anaids,
-    #                                     datasetIDs=dsids, dataTypes=dTypes)
-    comb_results = []
+    anaids = [ 'ATLAS-SUSY-2018-41-eff' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
     ret = { "slhafile": "Mtwo700.0_muPos100.0.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-5., 6. ),
+            "murange": (-80., 15. ),
             "dictname": "rsabine.dict",
             "output": "sabine.png"
     }
@@ -430,7 +432,7 @@ def testAnalysisCombo( setup ):
     retrieveValidationFile ( slhafile )
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
-    smstopos = decomposer.decompose(model)
+    smstopos = decomposer.decompose(model, sigmacut = 0.005*fb )
     expected = setup["expected"]
     tpreds = []
     llhds = {}
@@ -442,7 +444,7 @@ def testAnalysisCombo( setup ):
     for er in exp_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=False, useBestDataset=False, marginalize=False)
-        print ( f"{ts} preds" )
+        print ( f"   --- {er.id()}:{len(er.datasets)}: {ts} single preds" )
         if ts == None:
             continue
         for t in ts:
@@ -457,7 +459,7 @@ def testAnalysisCombo( setup ):
     for er in comb_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
-        print ( f"   --- {er.globalInfo.id}: {len(ts)} SR results, {len(ts)} comb results" )
+        print ( f"   --- {er.id()}: {len(ts)} SR results, {len(ts)} comb results" )
         for t in ts:
             print ( f"   combined result {t.dataset.globalInfo.id}" )
         # ts = tsc
