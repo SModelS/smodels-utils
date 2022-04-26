@@ -34,6 +34,8 @@ errorcounts = { "pathtupleerror": False, "smallerthanzero": False,
                 "wildcards": False, "trimyaxis": False, "trimxaxis": False,
                 "trimzaxis": False, "zerovalue": False }
 
+suppressWarnings = { "objectname": False }
+
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
     for l in lst:
@@ -571,7 +573,8 @@ class DataHandler(object):
 
         waitFor = None
         if hasattr ( self, "objectName" ) and self.objectName is not None:
-            print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
+            if not suppressWarnings["objectname"]:
+                print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
             waitFor = self.objectName
         has_waited = False
         if waitFor == None:
