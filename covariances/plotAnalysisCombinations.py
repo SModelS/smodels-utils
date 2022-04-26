@@ -14,7 +14,8 @@ from smodels.tools import modelTester
 from testAnalysisCombinations import createLlhds
 import numpy as np
 
-import matplotlib.pyplot as plt
+import smodels_utils.plotting.mpkitty as plt
+# import matplotlib.pyplot as plt
 
 def getCombination(inputFile, parameterFile):
 
@@ -112,12 +113,13 @@ def getLlhds(combiner,setup):
 
     return muvals,llhds
 
-def getPlot(inputFile, parameterFile,outputFile):
+def getPlot(inputFile, parameterFile,options):
+    outputFile = options["output"]
 
     combiner = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     setup = {'expected' : False,'normalize' : False,
-              'murange' : (-2.5,4.5), 'nmu' : 100}
+              'murange' : (options["mumin"],options["mumax"]), 'nmu' : 100}
 
     if parser.has_section("setup"):
         setup = parser.get_section("setup").toDict()
@@ -131,6 +133,8 @@ def getPlot(inputFile, parameterFile,outputFile):
     fig = plt.figure(figsize=plotOptions['figsize'])
     for anaID,l in llhdDict.items():
         plt.plot(muvals,l,label=anaID)
+
+    plt.xlabel ( r"$\mu$" )
 
     if plotOptions['xlog']:
         plt.xscale('log')
@@ -152,14 +156,24 @@ def main():
     ap.add_argument('-f', '--filename',
             help='name of SLHA input file', required=True)
     ap.add_argument('-o', '--output',
-            help='name of output file (plot)', required=True)
+            help='name of output plot [likelihoods.png]', 
+            default = "likelihoods.png" )
     ap.add_argument('-p', '--parameterFile',
-            help='name of parameter file, where most options are defined', required=True)
+            help='name of parameter file, where most options are defined', 
+            required=True)
+    ap.add_argument('-m', '--mumin',
+            help='minimum mu [-3.]', type=float,
+            default = -3. )
+    ap.add_argument('-M', '--mumax',
+            help='maximum mu [5.]', type=float,
+            default = 5. )
 
     args = ap.parse_args()
     t0 = time.time()
 
-    fig = getPlot(args.filename, args.parameterFile,args.output)
+    options = { "mumin": args.mumin, "mumax": args.mumax,
+                "output": args.output }
+    fig = getPlot(args.filename, args.parameterFile, options)
     print('Done in %1.2f s' %(time.time()-t0))
 
 if __name__ == "__main__":
