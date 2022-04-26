@@ -14,8 +14,8 @@ from smodels.tools import modelTester
 from testAnalysisCombinations import createLlhds
 import numpy as np
 
-import smodels_utils.plotting.mpkitty as plt
-# import matplotlib.pyplot as plt
+# import smodels_utils.plotting.mpkitty as plt
+import matplotlib.pyplot as plt
 
 def getCombination(inputFile, parameterFile):
 
