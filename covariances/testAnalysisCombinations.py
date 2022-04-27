@@ -103,6 +103,30 @@ def getSetupSabine():
             "output": "sabine.png"
     }
     return ret
+    
+def getSetup19006():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/"
+    database = Database( dbpath )
+    dTypes = ["upperLimit"]
+    anaids = [ 'CMS-SUS-19-006' ]
+    dsids = [ 'all' ]
+    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    anaids = [ 'CMS-SUS-19-006-agg' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "T1_1250_250_1250_250.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-10., 10. ),
+            "dictname": "19006.dict",
+            "output": "19006.png"
+    }
+    return ret
 
 def getSetupTChiWZ():
     """ collect the experimental results """
@@ -527,7 +551,8 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
-    setup = getSetupSabine()
+    # setup = getSetupSabine()
+    setup = getSetup19006()
     # setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=rewrite

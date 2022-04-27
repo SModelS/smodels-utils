@@ -38,10 +38,12 @@ def kittyPlot( filename = None ):
     plt.savefig ( filename )
     import os
     if options["hasKittyBackend"] or "kitty" in os.environ["TERM"]:
+        from shutil import which
         cols = "120"
         if "MPLBACKEND_KITTY_SIZING" in os.environ:
             cols = os.environ["MPLBACKEND_KITTY_SIZING"]
-        cmd = f"timg -pkitty -g {cols}x80 -U -W {filename}"
+        exe = which ("timg", path=f"/usr/bin:{os.environ['PATH']}" )
+        cmd = f"{exe} -pkitty -g {cols}x80 -U -W {filename}"
         import subprocess
         o = subprocess.getoutput ( cmd )
         print ( o )
