@@ -115,6 +115,7 @@ def getSetup19006():
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
 
+    dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-19-006-agg' ]
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
@@ -122,7 +123,7 @@ def getSetup19006():
     ret = { "slhafile": "T1_1250_250_1250_250.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-10., 10. ),
+            "murange": (-.09, .13 ),
             "dictname": "19006.dict",
             "output": "19006.png"
     }
@@ -326,7 +327,7 @@ def plotLlhds ( llhds, fits, setup ):
         if setup["addjitter"]:
             import random
             for i,y in enumerate(yv):
-                yv[i]=y*random.uniform(.9,1.1)
+                yv[i]=y*random.uniform(.95,1.05 )
         plt.plot ( l.keys(), yv, label=Id, **args )
     totS = sum(prodllhd.values())
     for k,v in prodllhd.items():
@@ -403,6 +404,8 @@ def createLlhds ( tpreds, setup ):
             dId = t.dataset.dataInfo.dataId
         #if dId.find("_")>-1:
         #    dId = dId[:dId.find("_")]
+        if dId == None:
+            dId = "UL"
         Id = f"{t.dataset.globalInfo.id}:{dId}"
         print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
         t0 = time.time()
@@ -558,12 +561,12 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     setup["rewrite"]=rewrite
     setup["expected"]=expected
     setup["addjitter"]=addjitter
-    setup["normalize"]=False
+    setup["normalize"]=True
     return setup
 
 
 if __name__ == "__main__":
     rewrite = True
     # runSlew( rewrite )
-    setup = getSetup( rewrite, expected = True )
+    setup = getSetup( rewrite, expected = True, addjitter = True )
     testAnalysisCombo( setup )
