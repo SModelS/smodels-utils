@@ -98,7 +98,8 @@ def getSetupSabine():
     ret = { "slhafile": "Mtwo700.0_muPos100.0.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-80., 15. ),
+#            "murange": (-65., 15. ),
+            "murange": (-10., 10. ),
             "dictname": "rsabine.dict",
             "output": "sabine.png"
     }
@@ -376,9 +377,11 @@ def plotLlhds ( llhds, fits, uls, setup ):
         lmax = max ( prodllhd.values() )
         print ( f"[testAnalysisCombinations] muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
-        plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
+        if withinMuRange ( mu_hat, setup["murange"] ):
+            plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
-        plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
+        if withinMuRange ( ulmu, setup["murange"] ):
+            plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
                    c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
     if True and "llhd_combo(ul)" in fits:
