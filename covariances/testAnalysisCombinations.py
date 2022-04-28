@@ -110,8 +110,8 @@ def getSetupSabine2():
     database = Database( dbpath )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2016-06', 'CMS-EXO-19-010' ]
-    dsids = [ 'all' ]
-    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    # dsids = [ 'all' ]
+    dsids = [ 'SR_nlay6p', 'SR_EW' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
 
@@ -367,6 +367,8 @@ def plotLlhds ( llhds, fits, setup ):
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
         ulmu = fits["ulmu"]
+        r = fits["r"]
+        rexp = fits["rexp"]
         lmax = max ( prodllhd.values() )
         print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f} r {r:.2f} rexp {rexp:.2f}" )
         # mu_hat = 1.
@@ -547,7 +549,10 @@ def testAnalysisCombo( setup ):
         mu_hat, sigma_mu, lmax = combiner.findMuHat(expected=expected,
                 allowNegativeSignals=True, extended_output=True)
         ulmu = combiner.getUpperLimitOnMu( expected = expected )
-        fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax } )
+        r = combiner.getRValue()
+        rexp = combiner.getRValue( expected = True )
+        fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax,
+                        "r": r, "rexp": rexp } )
 
     plotLlhds ( llhds, fits, setup )
     if len(tpreds)==0:
