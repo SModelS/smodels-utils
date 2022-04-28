@@ -25,7 +25,7 @@ import numpy as np
 import os
 import time
 from smodels_utils.plotting import mpkitty as plt
-from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter
+from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -367,25 +367,23 @@ def plotLlhds ( llhds, fits, uls, setup ):
         addJitter ( prody )
     plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$" )
 
-    goodul = [ 0. ]
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
+        sigma_mu = fits["sigma_mu"]
         ulmu = fits["ulmu"]
         r = fits["r"]
         rexp = fits["rexp"]
         lmax = max ( prodllhd.values() )
-        print ( f"[testAnalysisCombinations] mu_hat={mu_hat:.2g} lmax={lmax:.2g} ul_mu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
+        print ( f"[testAnalysisCombinations] muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
         plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
-        goodul[0] = llhd_ulmu
         plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
                    c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
     if True and "llhd_combo(ul)" in fits:
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_combo(ul)"]  
-        goodul[0] = .95*llhdul
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
         plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
         # lmax = llmax
@@ -395,7 +393,6 @@ def plotLlhds ( llhds, fits, uls, setup ):
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
         llhdul = [ fits["llhd_ul"]]
-        goodul[0] = llhdul
         # print ( "llhd at", fits["ul_ul"], "is", llhdul )
         plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo ul)" )
         lmax = llmax
@@ -403,8 +400,9 @@ def plotLlhds ( llhds, fits, uls, setup ):
 
     for Id,values in uls.items():
         ul = values [ "ulmu" ]
+        if not withinMuRange ( ul, setup["murange"] ):
+            continue
         l = values [ "lulmu" ]
-        # l = goodul[0]
         label = r"ul$_\mu$ (%s)" % Id
         label = None
         plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
@@ -456,7 +454,11 @@ def createLlhds ( tpreds, setup ):
         ulmu = float ( ul / xsec )
         lulmu = t.likelihood ( mu = ulmu )
         eulmu = float ( ul / xsec )
-        print ( f"[testAnalysisCombinations] looking at {Id}: r={r:.2f} xsec={xsec} ul={ul} ulmu={ulmu:.2f}", end=" ", flush=True )
+        muhat = t.muhat( allowNegativeSignals = True )
+        sigma_mu = t.sigma_mu( allowNegativeSignals = True )
+        print ( f"[testAnalysisCombinations] looking at {Id}:" )
+        print ( f"   r={r:.2f} xsec={xsec} ul={ul} ulmu={ulmu:.2f}")
+        print ( f"   muhat={muhat} sigma_mu={sigma_mu}", end=" ", flush=True )
         t0 = time.time()
         t.computeStatistics( expected = expected )
         lsm = t.lsm()
@@ -581,7 +583,8 @@ def testAnalysisCombo( setup ):
         r = combiner.getRValue()
         rexp = combiner.getRValue( expected = True )
         fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax,
-                        "r": r, "rexp": rexp, "expected": expected } )
+                        "r": r, "rexp": rexp, "expected": expected,
+                        "sigma_mu": sigma_mu } )
 
     plotLlhds ( llhds, fits, uls, setup )
     if len(tpreds)==0:
@@ -613,15 +616,15 @@ def getSetup( ):
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
-    setup = getSetupSabine2()
-    # setup = getSetupSabine()
+    # setup = getSetupSabine2()
+    setup = getSetupSabine()
     # setup = getSetup19006()
     # setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=True
     setup["expected"]=False
     setup["addjitter"]=False
-    setup["normalize"]=False
+    setup["normalize"]=True
     setup["logy"]=False
     return setup
 

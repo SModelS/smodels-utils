@@ -166,3 +166,6 @@ def cutMatrix ( m : list, nmin : int, nmax : int ) -> list:
 
     return ret
 
+def withinMuRange ( mu, murange ):
+    """ check if mu is within the given murange """
+    return murange[0] < mu < murange[1]
