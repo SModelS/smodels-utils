@@ -388,10 +388,12 @@ def plotLlhds ( llhds, fits, uls, setup ):
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_combo(ul)"]  
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
-        plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
+        if withinMuRange ( fits["ul_combo"], setup["murange"] ):
+            plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
         # lmax = llmax
         lmax = fits["lmax_combo"]
-        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
+        if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
+            plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
@@ -625,8 +627,8 @@ def getSetup( ):
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
     # setup = getSetupSabine2()
-    setup = getSetupSabine()
-    # setup = getSetup19006()
+    # setup = getSetupSabine()
+    setup = getSetup19006()
     # setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=True
