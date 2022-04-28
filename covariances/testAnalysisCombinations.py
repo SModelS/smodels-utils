@@ -25,7 +25,7 @@ import numpy as np
 import os
 import time
 from smodels_utils.plotting import mpkitty as plt
-from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto
+from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -101,6 +101,30 @@ def getSetupSabine():
             "murange": (-80., 15. ),
             "dictname": "rsabine.dict",
             "output": "sabine.png"
+    }
+    return ret
+
+def getSetupSabine2():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/"
+    database = Database( dbpath )
+    dTypes = ["all"]
+    anaids = [ 'ATLAS-SUSY-2016-06', 'CMS-EXO-19-010' ]
+    dsids = [ 'all' ]
+    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    anaids = [ ] #  'ATLAS-SUSY-2018-41-eff' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "binoWino100.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-2., 2. ),
+            "dictname": "rsabine2.dict",
+            "output": "sabine2.png"
     }
     return ret
     
@@ -325,9 +349,7 @@ def plotLlhds ( llhds, fits, setup ):
                 prodllhd[k]=prodllhd[k]*v
         yv = list ( l.values() )
         if setup["addjitter"]:
-            import random
-            for i,y in enumerate(yv):
-                yv[i]=y*random.uniform(.95,1.05 )
+            addJitter ( yv )
         plt.plot ( l.keys(), yv, label=Id, **args )
     totS = sum(prodllhd.values())
     for k,v in prodllhd.items():
@@ -337,13 +359,16 @@ def plotLlhds ( llhds, fits, setup ):
         llmin = min ( alllhds )
         llmax = max ( alllhds )
 
-    plt.plot ( prodllhd.keys(), prodllhd.values(), c="k", label=r"$\Pi_i l_i$" )
+    prody = list ( prodllhd.values() )
+    if setup["addjitter"] and False:
+        addJitter ( prody )
+    plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$" )
 
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
         ulmu = fits["ulmu"]
         lmax = max ( prodllhd.values() )
-        print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f}" )
+        print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f} r {r:.2f} rexp {rexp:.2f}" )
         # mu_hat = 1.
         plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
@@ -554,8 +579,9 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
+    setup = getSetupSabine2()
     # setup = getSetupSabine()
-    setup = getSetup19006()
+    # setup = getSetup19006()
     # setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=rewrite

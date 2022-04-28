@@ -66,6 +66,13 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
             ret[k]=ret[k]/S
     return ret, S
 
+def addJitter ( yvalues, jitter=.015 ):
+    """ add jitter to the y-values """
+    import random
+    maxy = max(yvalues)
+    for i,y in enumerate(yvalues):
+        yvalues[i]+=maxy*random.uniform( -jitter,+jitter )
+
 def getSensibleMuRange ( tpred ):
     """ given a theory prediction, get a sensible range for mu.
         sensible meaning, smallest interval that covers 99% of the llhd
