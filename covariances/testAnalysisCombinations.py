@@ -98,8 +98,8 @@ def getSetupSabine():
     ret = { "slhafile": "Mtwo700.0_muPos100.0.slha",
             "SR": exp_results,
             "comb": comb_results,
-#            "murange": (-65., 15. ),
-            "murange": (-10., 10. ),
+            "murange": (-65., 15. ),
+#            "murange": (-10., 10. ),
             "dictname": "rsabine.dict",
             "output": "sabine.png"
     }
@@ -459,9 +459,13 @@ def createLlhds ( tpreds, setup ):
         eulmu = float ( ul / xsec )
         muhat = t.muhat( allowNegativeSignals = True )
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
+        if type(muhat)==float:
+            muhat = f"{muhat:.2f}"
+        if type(sigma_mu)==float:
+            sigma_mu = f"{sigma_mu:.2f}"
         print ( f"[testAnalysisCombinations] looking at {Id}:" )
-        print ( f"   r={r:.2f} xsec={xsec} ul={ul} ulmu={ulmu:.2f}")
-        print ( f"   muhat={muhat} sigma_mu={sigma_mu}", end=" ", flush=True )
+        print ( f"  `- r={r:.2f} xsec={xsec} ul={ul} ulmu={ulmu:.2f}")
+        print ( f"  `- muhat={muhat} sigma_mu={sigma_mu}", end=" ", flush=True )
         t0 = time.time()
         t.computeStatistics( expected = expected )
         lsm = t.lsm()
@@ -546,6 +550,7 @@ def testAnalysisCombo( setup ):
         print ( f"   --- {er.id()}: {len(ts)} SR results, {len(ts)} comb results" )
         for t in ts:
             print ( f"   combined result {t.dataset.globalInfo.id}" )
+            combine.append(t)
         # ts = tsc
         if ts == None:
             continue
@@ -574,8 +579,8 @@ def testAnalysisCombo( setup ):
             fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
             fits["lmax_combo"] = fits["lmax_combo"] / S
 
-    print ( f"[testAnalysisCombinations] now multiplying {len(combine)} tpreds" )
     if len(combine)>0:
+        print ( f"[testAnalysisCombinations] now combining {len(combine)} tpreds" )
         combiner = TheoryPredictionsCombiner(combine)
         combiner.computeStatistics()
         r = combiner.getRValue()
@@ -626,7 +631,7 @@ def getSetup( ):
     # setup = getSetupUL()
     setup["rewrite"]=True
     setup["expected"]=False
-    setup["addjitter"]=False
+    setup["addjitter"]=True
     setup["normalize"]=True
     setup["logy"]=False
     return setup
