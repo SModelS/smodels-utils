@@ -122,7 +122,7 @@ def getSetupSabine2():
     ret = { "slhafile": "binoWino100.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-1.8, 1.8 ),
+            "murange": (-1.5, 1.5 ),
             "dictname": "rsabine2.dict",
             "output": "sabine2.png"
     }
@@ -404,7 +404,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
     for Id,values in uls.items():
         ul = values [ "ulmu" ]
         l = values [ "lulmu" ]
-        l = goodul[0]
+        # l = goodul[0]
         label = r"ul$_\mu$ (%s)" % Id
         label = None
         plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
@@ -423,6 +423,8 @@ def plotLlhds ( llhds, fits, uls, setup ):
     output = "combo.png"
     if "output" in setup:
         output = setup["output"]
+    if setup["logy"]:
+        plt.yscale ( "log" )
     plt.kittyPlot( output )
     print ( f"[testAnalysisCombinations] saved to {output}" )
 
@@ -462,7 +464,7 @@ def createLlhds ( tpreds, setup ):
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
         l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
                 normalize = normalize, equidistant=False, expected = expected )
-        # print ( f">> ulmu({Id})={ulmu}, l={lulmu} S={S}" )
+        # print ( f">> ulmu({Id})={ulmu:.2f}, l={lulmu:.2g} S={S:.2f}" )
         uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu }
         llhds[Id]=l
         sums[Id] = S
@@ -579,7 +581,7 @@ def testAnalysisCombo( setup ):
         r = combiner.getRValue()
         rexp = combiner.getRValue( expected = True )
         fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax,
-                        "r": r, "rexp": rexp } )
+                        "r": r, "rexp": rexp, "expected": expected } )
 
     plotLlhds ( llhds, fits, uls, setup )
     if len(tpreds)==0:
@@ -605,7 +607,7 @@ def runSlew( rewrite = False ):
         testAnalysisCombo( setup )
     sys.exit()
 
-def getSetup( rewrite = False, expected = False, addjitter=False ):
+def getSetup( ):
     # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
@@ -616,15 +618,16 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     # setup = getSetup19006()
     # setup = getSetupRExp()
     # setup = getSetupUL()
-    setup["rewrite"]=rewrite
-    setup["expected"]=expected
-    setup["addjitter"]=addjitter
+    setup["rewrite"]=True
+    setup["expected"]=False
+    setup["addjitter"]=False
     setup["normalize"]=False
+    setup["logy"]=False
     return setup
 
 
 if __name__ == "__main__":
     rewrite = True
     # runSlew( rewrite )
-    setup = getSetup( rewrite, expected = True, addjitter = False )
+    setup = getSetup( )
     testAnalysisCombo( setup )
