@@ -61,6 +61,9 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
             S+=l
             ret[mu]=l
     print ( "" )
+    if normalize and S <= 0.:
+        print ( f"[cov_helpers] would like to normalize but S={S}" )
+    # print ( f"Normalizing {normalize} {S}" )
     if normalize and S > 0.:
         for k,v in ret.items():
             ret[k]=ret[k]/S

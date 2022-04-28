@@ -122,7 +122,7 @@ def getSetupSabine2():
     ret = { "slhafile": "binoWino100.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-2., 2. ),
+            "murange": (-1.8, 1.8 ),
             "dictname": "rsabine2.dict",
             "output": "sabine2.png"
     }
@@ -291,7 +291,7 @@ def getSetupTChiWH():
     }
     return ret
 
-def writeDictFile ( dictname, llhds, times, fits, setup ):
+def writeDictFile ( dictname, llhds, times, fits, uls, setup ):
     """ write out the likelihoods.dict file
     :param dictname: name of file, e.g. likelihoods.dict
     """
@@ -312,6 +312,7 @@ def writeDictFile ( dictname, llhds, times, fits, setup ):
         g.write ( f"'{k}': {v:.3f}" )
     g.write("}\n")
     g.write("fits="+str(fits)+"\n" )
+    g.write("uls="+str(uls)+"\n" )
     setup.pop("SR")
     setup.pop("comb")
     g.write("setup="+str(setup)+"\n" )
@@ -328,7 +329,7 @@ def getLlhdAt ( prodllhd, ulmu ):
             ret = v
     return ret
 
-def plotLlhds ( llhds, fits, setup ):
+def plotLlhds ( llhds, fits, uls, setup ):
     """ plot the likelihoods in llhds,
         additional stuff in fits, setup is the setup dictionary
     :param fits: dictionary that contains ulmu, mu_hat
@@ -336,6 +337,7 @@ def plotLlhds ( llhds, fits, setup ):
     """
     prodllhd={}
     alllhds = []
+    colors = {}
     for Id,l in llhds.items():
         args = { "ls": "-" }
         if "combine" in Id:
@@ -350,7 +352,8 @@ def plotLlhds ( llhds, fits, setup ):
         yv = list ( l.values() )
         if setup["addjitter"]:
             addJitter ( yv )
-        plt.plot ( l.keys(), yv, label=Id, **args )
+        x = plt.plot ( l.keys(), yv, label=Id, **args )
+        colors[Id] = x[0].get_color()
     totS = sum(prodllhd.values())
     for k,v in prodllhd.items():
         prodllhd[k]=prodllhd[k]/totS
@@ -364,37 +367,47 @@ def plotLlhds ( llhds, fits, setup ):
         addJitter ( prody )
     plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$" )
 
+    goodul = [ 0. ]
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
         ulmu = fits["ulmu"]
         r = fits["r"]
         rexp = fits["rexp"]
         lmax = max ( prodllhd.values() )
-        print ( f"[testAnalysisCombinations] mu_hat {mu_hat:.2g} lmax {lmax:.2g} ul_mu {ulmu:.2f} r {r:.2f} rexp {rexp:.2f}" )
+        print ( f"[testAnalysisCombinations] mu_hat={mu_hat:.2g} lmax={lmax:.2g} ul_mu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
         plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
+        goodul[0] = llhd_ulmu
         plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
                    c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
 
     if True and "llhd_combo(ul)" in fits:
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_combo(ul)"]  
+        goodul[0] = .95*llhdul
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
-        plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf combo)" )
+        plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
         # lmax = llmax
         lmax = fits["lmax_combo"]
-        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (pyhf combo)" )
+        plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
-        llhdul = fits["llhd_ul"]  
+        llhdul = [ fits["llhd_ul"]]
+        goodul[0] = llhdul
         # print ( "llhd at", fits["ul_ul"], "is", llhdul )
-        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (pyhf ul)" )
+        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo ul)" )
         lmax = llmax
         plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (ul)" )
 
-
+    for Id,values in uls.items():
+        ul = values [ "ulmu" ]
+        l = values [ "lulmu" ]
+        l = goodul[0]
+        label = r"ul$_\mu$ (%s)" % Id
+        label = None
+        plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -403,7 +416,7 @@ def plotLlhds ( llhds, fits, setup ):
     label = ""
     if "label" in setup:
         label = setup["label"]+" "
-    plt.title ( f"pyhf {label}likelihoods for {slha}" )
+    plt.title ( f"{label}likelihoods for {slha}" )
     plt.legend()
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
@@ -424,7 +437,7 @@ def createLlhds ( tpreds, setup ):
 
     expected = setup["expected"]
     normalize = setup["normalize"]
-    times, llhds, sums = {}, {}, {}
+    times, llhds, sums, uls = {}, {}, {}, {}
     for t in tpreds:
         dId = "combined"
         if hasattr ( t.dataset, "dataInfo" ):
@@ -434,7 +447,14 @@ def createLlhds ( tpreds, setup ):
         if dId == None:
             dId = "UL"
         Id = f"{t.dataset.globalInfo.id}:{dId}"
-        print ( f"[testAnalysisCombinations] looking at {Id}", end=" ", flush=True )
+        r = t.getRValue()
+        xsec = t.xsection.value
+        ul = t.getUpperLimit()
+        eul = t.getUpperLimit(expected=True )
+        ulmu = float ( ul / xsec )
+        lulmu = t.likelihood ( mu = ulmu )
+        eulmu = float ( ul / xsec )
+        print ( f"[testAnalysisCombinations] looking at {Id}: r={r:.2f} xsec={xsec} ul={ul} ulmu={ulmu:.2f}", end=" ", flush=True )
         t0 = time.time()
         t.computeStatistics( expected = expected )
         lsm = t.lsm()
@@ -442,11 +462,14 @@ def createLlhds ( tpreds, setup ):
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
         l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
                 normalize = normalize, equidistant=False, expected = expected )
+        # print ( f">> ulmu({Id})={ulmu}, l={lulmu} S={S}" )
+        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu }
         llhds[Id]=l
         sums[Id] = S
         t1 = time.time()
         times[Id]=(t1-t0)
-    return llhds, sums, times
+    ret = { "llhds": llhds, "sums": sums, "times": times, "uls": uls }
+    return ret
 
 def readDictFile ( dictname ):
     """ read the dict file, as a cache """
@@ -460,7 +483,7 @@ def readDictFile ( dictname ):
         os.unlink ( dictname )
         return [ None ]*3
     print ( f"[testAnalysisCombinations] recycling llhds from {dictname}, delete if you dont want that" )
-    return llhds, times, fits, setup
+    return llhds, times, fits, uls, setup
 
 def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
@@ -474,9 +497,9 @@ def testAnalysisCombo( setup ):
         dictname = setup["dictname"]
         if os.path.exists ( dictname ) and setup["rewrite"] == False:
             oldsetup = setup
-            llhds, times, fits, newsetup = readDictFile ( dictname )
+            llhds, times, fits, uls, newsetup = readDictFile ( dictname )
             if llhds != None:
-                plotLlhds ( llhds, fits, setup )
+                plotLlhds ( llhds, fits, uls, setup )
                 return
 
     exp_results = setup["SR"]
@@ -532,7 +555,11 @@ def testAnalysisCombo( setup ):
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True, expected= expected )
     nplots = 0
-    llhds, sums, times = createLlhds ( tpreds, setup )
+    d = createLlhds ( tpreds, setup )
+    llhds = d["llhds"]
+    sums = d["sums"]
+    times = d["times"]
+    uls = d["uls"]
     if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
         Id = f"{ts[0].dataset.globalInfo.id}:combined"
         if Id in sums:
@@ -554,11 +581,11 @@ def testAnalysisCombo( setup ):
         fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax,
                         "r": r, "rexp": rexp } )
 
-    plotLlhds ( llhds, fits, setup )
+    plotLlhds ( llhds, fits, uls, setup )
     if len(tpreds)==0:
         print ( f"[testAnalysisCombinations] no tpreds found to combine" )
         sys.exit()
-    writeDictFile ( dictname, llhds, times, fits, setup )
+    writeDictFile ( dictname, llhds, times, fits, uls, setup )
 
 def runSlew( rewrite = False ):
     """ run them all 
@@ -592,12 +619,12 @@ def getSetup( rewrite = False, expected = False, addjitter=False ):
     setup["rewrite"]=rewrite
     setup["expected"]=expected
     setup["addjitter"]=addjitter
-    setup["normalize"]=True
+    setup["normalize"]=False
     return setup
 
 
 if __name__ == "__main__":
     rewrite = True
     # runSlew( rewrite )
-    setup = getSetup( rewrite, expected = True, addjitter = True )
+    setup = getSetup( rewrite, expected = True, addjitter = False )
     testAnalysisCombo( setup )
