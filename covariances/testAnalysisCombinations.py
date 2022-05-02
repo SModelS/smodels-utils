@@ -132,6 +132,7 @@ def getSetupSabine2():
 def getSetup19006():
     """ collect the experimental results """
     dbpath = "../../smodels-database/"
+    # dbpath = "official"
     database = Database( dbpath )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-19-006' ]
@@ -139,15 +140,19 @@ def getSetup19006():
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
+    #exp_results = []
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-19-006-agg' ]
+    # dsids = [ 'AR1', 'AR2' ]
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                           datasetIDs=dsids, dataTypes=dTypes)
+    # comb_results = []
     ret = { "slhafile": "T1_1250_250_1250_250.slha",
             "SR": exp_results,
             "comb": comb_results,
+            # "murange": (-1.5, 1. ),
             "murange": (-.09, .13 ),
             "dictname": "19006.dict",
             "output": "19006.png"
@@ -462,7 +467,7 @@ def createLlhds ( tpreds, setup ):
         muhat = t.muhat( allowNegativeSignals = True )
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
         if type(muhat)==float:
-            muhat = f"{muhat:.2f}"
+            muhat = f"{muhat:.2g}"
         if type(sigma_mu)==float:
             sigma_mu = f"{sigma_mu:.2f}"
         print ( f"[testAnalysisCombinations] looking at {Id}:" )
@@ -587,8 +592,9 @@ def testAnalysisCombo( setup ):
         combiner.computeStatistics()
         r = combiner.getRValue()
         r = combiner.getRValue( expected=True )
-        mu_hat, sigma_mu, lmax = combiner.findMuHat(expected=expected,
+        fmh = combiner.findMuHat(expected=expected,
                 allowNegativeSignals=True, extended_output=True)
+        mu_hat, sigma_mu, lmax = fmh["muhat"], fmh["sigma_mu"], fmh["lmax"]
         ulmu = combiner.getUpperLimitOnMu( expected = expected )
         r = combiner.getRValue()
         rexp = combiner.getRValue( expected = True )
