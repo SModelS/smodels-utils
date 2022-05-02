@@ -26,6 +26,7 @@ import os
 import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange
+from colorama import Fore
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -140,7 +141,7 @@ def getSetup19006():
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    #exp_results = []
+    exp_results = []
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-19-006-agg' ]
@@ -587,7 +588,7 @@ def testAnalysisCombo( setup ):
             fits["lmax_combo"] = fits["lmax_combo"] / S
 
     if len(combine)>0:
-        print ( f"[testAnalysisCombinations] now combining {len(combine)} tpreds" )
+        print ( f"{Fore.GREEN}[testAnalysisCombinations] now combining {len(combine)} tpreds{Fore.RESET}" )
         combiner = TheoryPredictionsCombiner(combine)
         combiner.computeStatistics()
         r = combiner.getRValue()
