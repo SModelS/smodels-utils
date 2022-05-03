@@ -352,11 +352,6 @@ def plotLlhds ( llhds, fits, uls, setup ):
             args["linewidth"]=2
             args["c"]="r"
         alllhds += list( l.values() )
-        #for k,v in l.items():
-        #    if not k in prodllhd:
-        #        prodllhd[k]=1.
-        #    if not "combine" in Id:
-        #        prodllhd[k]=prodllhd[k]*v
         yv = list ( l.values() )
         if setup["addjitter"]:
             addJitter ( yv )
@@ -374,7 +369,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
     prody = list ( prodllhd.values() )
     if setup["addjitter"] and False:
         addJitter ( prody )
-    plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$" )
+    plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$ [tpc]" )
 
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
@@ -386,11 +381,11 @@ def plotLlhds ( llhds, fits, uls, setup ):
         print ( f"[testAnalysisCombinations] muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
         if withinMuRange ( mu_hat, setup["murange"] ):
-            plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$)" )
+            plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=r"$\hat\mu$ ($\Pi_i l_i$) [tpc]" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
         if withinMuRange ( ulmu, setup["murange"] ):
             plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
-                   c="k", label=r"ul$_\mu$ ($\Pi_i l_i$)" )
+                   c="k", label=r"ul$_\mu$ ($\Pi_i l_i$) [tpc]" )
 
     if True and "llhd_combo(ul)" in fits:
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
