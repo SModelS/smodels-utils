@@ -70,6 +70,22 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
             ret[k]=ret[k]/S
     return ret, S
 
+def createLine ( xv, ymin, ymax, addJitter = False, jitter=.1 ):
+    """ create a vertical line at xv from ymin to ymax,
+    potentially add jitter """
+    if not addJitter or jitter == 0.:
+        return { "x": [xv,xv], "y": [ymin, ymax] }
+    import random
+    nsteps = 20
+    xr, yr = [], []
+    for i in range(nsteps+1):
+        x_ = xv * random.uniform(1.-jitter,1.+jitter)
+        xr.append ( x_ )
+        y_ = ymin + i*(ymax-ymin)/nsteps
+        yr.append ( y_ )
+    # print ( f"line {xr} {yr} from {xv} {ymin} {ymax}" )
+    return { "x": xr, "y": yr }
+
 def addJitter ( yvalues, jitter=.015 ):
     """ add jitter to the y-values """
     import random
