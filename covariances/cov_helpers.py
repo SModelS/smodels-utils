@@ -49,6 +49,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
         #print ( "rng", len(rng), [ round(x,3) for x in rng ] )
 
     ret = {}
+    print ( ">> computing llhds:", end=" " )
     for i,mu in enumerate(rng):
         printIndicator ( i )
         l = tpred.likelihood ( mu, useCached=False, expected = expected )
