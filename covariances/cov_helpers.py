@@ -70,7 +70,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
             ret[k]=ret[k]/S
     return ret, S
 
-def createLine ( xv, ymin, ymax, addJitter = False, jitter=.1 ):
+def createLine ( xv, ymin, ymax, addJitter = False, jitter=.08 ):
     """ create a vertical line at xv from ymin to ymax,
     potentially add jitter """
     if not addJitter or jitter == 0.:

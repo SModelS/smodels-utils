@@ -25,7 +25,7 @@ import numpy as np
 import os
 import time
 from smodels_utils.plotting import mpkitty as plt
-from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange
+from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange, createLine
 from colorama import Fore
 
 def getSetupTStauStau():
@@ -392,11 +392,13 @@ def plotLlhds ( llhds, fits, uls, setup ):
         llhdul = fits["llhd_combo(ul)"]  
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
         if withinMuRange ( fits["ul_combo"], setup["murange"] ):
-            plt.plot ( [ fits["ul_combo"] ] *2, [ llmin, .95* llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
+            line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, .95* llhdul ] }
+            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
         # lmax = llmax
         lmax = fits["lmax_combo"]
         if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
-            plt.plot ( [ fits["muhat_combo"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
+            line = createLine ( fits["muhat_combo"], llmin, .95*lmax, False )
+            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
