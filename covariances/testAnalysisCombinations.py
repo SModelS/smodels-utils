@@ -141,7 +141,7 @@ def getSetup19006():
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    exp_results = []
+    # exp_results = []
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-19-006-agg' ]
@@ -342,25 +342,27 @@ def plotLlhds ( llhds, fits, uls, setup ):
     :param fits: dictionary that contains ulmu, mu_hat
     :param setup: dictionary that contains slhafile, and more
     """
-    prodllhd={}
     alllhds = []
     colors = {}
     for Id,l in llhds.items():
+        if Id == "combined":
+            continue
         args = { "ls": "-" }
         if "combine" in Id:
             args["linewidth"]=2
             args["c"]="r"
         alllhds += list( l.values() )
-        for k,v in l.items():
-            if not k in prodllhd:
-                prodllhd[k]=1.
-            if not "combine" in Id:
-                prodllhd[k]=prodllhd[k]*v
+        #for k,v in l.items():
+        #    if not k in prodllhd:
+        #        prodllhd[k]=1.
+        #    if not "combine" in Id:
+        #        prodllhd[k]=prodllhd[k]*v
         yv = list ( l.values() )
         if setup["addjitter"]:
             addJitter ( yv )
         x = plt.plot ( l.keys(), yv, label=Id, **args )
         colors[Id] = x[0].get_color()
+    prodllhd=llhds["combined"]
     totS = sum(prodllhd.values())
     for k,v in prodllhd.items():
         prodllhd[k]=prodllhd[k]/totS
@@ -440,6 +442,8 @@ def plotLlhds ( llhds, fits, uls, setup ):
 def createLlhds ( tpreds, setup ):
     """ given the setup and tpreds, create llhds dicts
     """
+    combiner = TheoryPredictionsCombiner( tpreds )
+    combiner.computeStatistics()
     #xmin, xmax = getSensibleMuRange ( tpreds )
     # xmin, xmax = -6., 10.
     xmin, xmax = -2.5, 4.5
@@ -470,7 +474,7 @@ def createLlhds ( tpreds, setup ):
         if type(muhat)==float:
             muhat = f"{muhat:.2g}"
         if type(sigma_mu)==float:
-            sigma_mu = f"{sigma_mu:.2f}"
+            sigma_mu = f"{sigma_mu:.2g}"
         print ( f"[testAnalysisCombinations] looking at {Id}:" )
         print ( f"  `- r={r:.2f} xsec={xsec} ul={ul} ulmu={ulmu:.2f}")
         print ( f"  `- muhat={muhat} sigma_mu={sigma_mu}", end=" ", flush=True )
@@ -504,6 +508,21 @@ def readDictFile ( dictname ):
     print ( f"[testAnalysisCombinations] recycling llhds from {dictname}, delete if you dont want that" )
     return llhds, times, fits, uls, setup
 
+def addCombinedLlhds ( d, combiner ):
+    """ add the combined likelihoods to d """
+    llhds = d["llhds"]
+    firstAnaId=list(llhds.keys())[0]
+    muvalues = list(llhds[firstAnaId].keys())
+    combL = {}
+    totllhd = 0.
+    for mu in muvalues:
+        llhd = combiner.likelihood ( mu=mu )
+        if llhd != None:
+            combL[mu]=llhd
+            totllhd+=llhd
+    d["llhds"]["combined"]=combL
+    return d
+    
 def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately
@@ -575,18 +594,8 @@ def testAnalysisCombo( setup ):
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True, expected= expected )
     nplots = 0
-    d = createLlhds ( tpreds, setup )
-    llhds = d["llhds"]
-    sums = d["sums"]
-    times = d["times"]
-    uls = d["uls"]
-    if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
-        Id = f"{ts[0].dataset.globalInfo.id}:combined"
-        if Id in sums:
-            S=sums[Id]
-            fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
-            fits["lmax_combo"] = fits["lmax_combo"] / S
 
+    d = createLlhds ( tpreds, setup )
     if len(combine)>0:
         print ( f"{Fore.GREEN}[testAnalysisCombinations] now combining {len(combine)} tpreds{Fore.RESET}" )
         combiner = TheoryPredictionsCombiner(combine)
@@ -602,6 +611,18 @@ def testAnalysisCombo( setup ):
         fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax,
                         "r": r, "rexp": rexp, "expected": expected,
                         "sigma_mu": sigma_mu } )
+        addCombinedLlhds ( d, combiner )
+
+    llhds = d["llhds"]
+    sums = d["sums"]
+    times = d["times"]
+    uls = d["uls"]
+    if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
+        Id = f"{ts[0].dataset.globalInfo.id}:combined"
+        if Id in sums:
+            S=sums[Id]
+            fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
+            fits["lmax_combo"] = fits["lmax_combo"] / S
 
     plotLlhds ( llhds, fits, uls, setup )
     if len(tpreds)==0:
