@@ -26,7 +26,7 @@ import os
 import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange, createLine
-from colorama import Fore
+from colorama import Fore, Cursor
 
 def getSetupTStauStau():
     """ collect the experimental results """
@@ -434,7 +434,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
     if setup["logy"]:
         plt.yscale ( "log" )
     plt.kittyPlot( output )
-    print ( f"[testAnalysisCombinations] saved to {output}" )
+    print ( f"{Cursor.UP()}[testAnalysisCombinations] saved to {output}" )
 
 def createLlhds ( tpreds, setup ):
     """ given the setup and tpreds, create llhds dicts
