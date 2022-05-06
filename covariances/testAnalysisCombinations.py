@@ -501,7 +501,6 @@ def createLlhds ( tpreds, setup ):
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
         if type(muhat)==float:
             muhat = f"{muhat:.2g}"
-        print ( "type", type(sigma_mu) )
         if type(sigma_mu)==float:
             sigma_mu = f"{sigma_mu:.2g}"
         print ( f"[testAnalysisCombinations] looking at {Id}:" )
@@ -682,8 +681,8 @@ def getSetup( ):
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
-    # setup = getSetupTStauStau()
-    setup = getSetupSabine2()
+    setup = getSetupTStauStau()
+    # setup = getSetupSabine2()
     # setup = getSetupSabine()
     # setup = getSetup19006()
     # setup = getSetup16050()
