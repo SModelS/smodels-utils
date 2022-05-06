@@ -99,8 +99,8 @@ def getSetupSabine():
     ret = { "slhafile": "Mtwo700.0_muPos100.0.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-65., 15. ),
-#            "murange": (-10., 10. ),
+#            "murange": (-70., 15. ),
+            "murange": (-10., 10. ),
             "dictname": "rsabine.dict",
             "output": "sabine.png"
     }
@@ -141,7 +141,7 @@ def getSetup19006():
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    # exp_results = []
+    exp_results = []
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-19-006-agg' ]
@@ -157,6 +157,36 @@ def getSetup19006():
             "murange": (-.09, .13 ),
             "dictname": "19006.dict",
             "output": "19006.png"
+    }
+    return ret
+
+def getSetup16050():
+    """ collect the experimental results """
+    dbpath = "../../smodels-database/"
+    # dbpath = "official"
+    database = Database( dbpath )
+    dTypes = ["upperLimit"]
+    anaids = [ 'CMS-SUS-16-050' ]
+    dsids = [ 'all' ]
+    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-16-050-agg' ]
+    # dsids = [ 'AR1', 'AR2' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    # comb_results = []
+    ret = { "slhafile": "gluino_squarks.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            # "murange": (-1.5, 1. ),
+            "murange": ( -15., 30. ),
+            "dictname": "16050.dict",
+            "output": "16050.png"
     }
     return ret
 
@@ -348,7 +378,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
         if Id == "combined":
             continue
         args = { "ls": "-" }
-        if "combine" in Id:
+        if "sr combo" in Id:
             args["linewidth"]=2
             args["c"]="r"
         alllhds += list( l.values() )
@@ -394,10 +424,11 @@ def plotLlhds ( llhds, fits, uls, setup ):
         if withinMuRange ( fits["ul_combo"], setup["murange"] ):
             line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, .95* llhdul ] }
             plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
-        # lmax = llmax
         lmax = fits["lmax_combo"]
+        # lmax = llmax
         if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
-            line = createLine ( fits["muhat_combo"], llmin, .95*lmax, False )
+            line = createLine ( fits["muhat_combo"], llmin, lmax, True )
+            # plt.plot ( [ fits["muhat_combo"] ]*2, [ llmin, .95*lmax], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
             plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
 
     if True and "llhd_ul" in fits:
@@ -451,7 +482,7 @@ def createLlhds ( tpreds, setup ):
     normalize = setup["normalize"]
     times, llhds, sums, uls = {}, {}, {}, {}
     for t in tpreds:
-        dId = "combined"
+        dId = "sr combo"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
         #if dId.find("_")>-1:
@@ -470,6 +501,7 @@ def createLlhds ( tpreds, setup ):
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
         if type(muhat)==float:
             muhat = f"{muhat:.2g}"
+        print ( "type", type(sigma_mu) )
         if type(sigma_mu)==float:
             sigma_mu = f"{sigma_mu:.2g}"
         print ( f"[testAnalysisCombinations] looking at {Id}:" )
@@ -551,7 +583,7 @@ def testAnalysisCombo( setup ):
     totllhd = {}
     combine = []
     ernames = set ( [ x.globalInfo.id for x in exp_results ] )
-    print ( f"[testAnalysisCombinations] {len(exp_results)} results:", ", ".join(ernames)  )
+    print ( f"[testAnalysisCombinations] {len(exp_results)} non-combined results:", ", ".join(ernames)  )
     fits = {}
     for er in exp_results:
         ts = theoryPredictionsFor(er, smstopos,
@@ -615,7 +647,7 @@ def testAnalysisCombo( setup ):
     times = d["times"]
     uls = d["uls"]
     if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
-        Id = f"{ts[0].dataset.globalInfo.id}:combined"
+        Id = f"{ts[0].dataset.globalInfo.id}:sr combo"
         if Id in sums:
             S=sums[Id]
             fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
@@ -651,9 +683,10 @@ def getSetup( ):
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
     # setup = getSetupTStauStau()
-    # setup = getSetupSabine2()
+    setup = getSetupSabine2()
     # setup = getSetupSabine()
-    setup = getSetup19006()
+    # setup = getSetup19006()
+    # setup = getSetup16050()
     # setup = getSetupRExp()
     # setup = getSetupUL()
     setup["rewrite"]=True
