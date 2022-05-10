@@ -168,6 +168,7 @@ def getSetupJamie():
     database = Database( dbpath )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
+    # anaids = [ 'ATLAS-SUSY-2016-07' ]
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
     dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
@@ -176,6 +177,7 @@ def getSetupJamie():
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
+    anaids = [ 'ATLAS-SUSY-2016-07' ]
     dsids = [ '2j_Meff_3600', 'SR2jt', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
     # dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
@@ -186,9 +188,11 @@ def getSetupJamie():
             "comb": comb_results,
             "murange": ( -30., 50. ),
             "dictname": "jamie1.dict",
-            "expected": True,
+            "expected": False,
             "output": "jamie1.png"
     }
+    if ret["expected"]==False:
+        ret["murange"] = ( -15., 65. )
     ret["addjitter"]=0.008
     return ret
 
