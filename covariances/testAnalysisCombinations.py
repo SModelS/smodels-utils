@@ -19,7 +19,7 @@ from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import fb
+from smodels.tools.physicsUnits import fb, GeV
 import unittest
 import numpy as np
 import os
@@ -158,6 +158,38 @@ def getSetup19006():
             "dictname": "19006.dict",
             "output": "19006.png"
     }
+    return ret
+
+
+def getSetupJamie():
+    """ collect the experimental results """
+    # dbpath = "../../smodels-database/"
+    dbpath = "official+fastlim"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
+    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
+    dsids = [ '2j_Meff_3600', 'SR2jt', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    # dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    comb_results = []
+    ret = { "slhafile": "100377801.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -30., 50. ),
+            "dictname": "jamie1.dict",
+            "expected": True,
+            "output": "jamie1.png"
+    }
+    ret["addjitter"]=0.008
     return ret
 
 def getSetup16050():
@@ -384,7 +416,10 @@ def plotLlhds ( llhds, fits, uls, setup ):
         alllhds += list( l.values() )
         yv = list ( l.values() )
         if setup["addjitter"]:
-            addJitter ( yv )
+            jitter = .015
+            if type(setup["addjitter"])==float:
+                jitter=setup["addjitter"]
+            addJitter ( yv, jitter )
         x = plt.plot ( l.keys(), yv, label=Id, **args )
         colors[Id] = x[0].get_color()
     prodllhd=llhds["combined"]
@@ -496,7 +531,7 @@ def createLlhds ( tpreds, setup ):
         eul = t.getUpperLimit(expected=True )
         ulmu = float ( ul / xsec )
         lulmu = t.likelihood ( mu = ulmu )
-        eulmu = float ( ul / xsec )
+        eulmu = float ( eul / xsec )
         muhat = t.muhat( allowNegativeSignals = True )
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
         if type(muhat)==float:
@@ -536,7 +571,7 @@ def readDictFile ( dictname ):
     print ( f"[testAnalysisCombinations] recycling llhds from {dictname}, delete if you dont want that" )
     return llhds, times, fits, uls, setup
 
-def addCombinedLlhds ( d, combiner ):
+def addCombinedLlhds ( d, combiner, expected ):
     """ add the combined likelihoods to d """
     llhds = d["llhds"]
     firstAnaId=list(llhds.keys())[0]
@@ -544,7 +579,7 @@ def addCombinedLlhds ( d, combiner ):
     combL = {}
     totllhd = 0.
     for mu in muvalues:
-        llhd = combiner.likelihood ( mu=mu )
+        llhd = combiner.likelihood ( mu=mu, expected=expected )
         if llhd != None:
             combL[mu]=llhd
             totllhd+=llhd
@@ -575,7 +610,10 @@ def testAnalysisCombo( setup ):
     retrieveValidationFile ( slhafile )
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=slhafile)
-    smstopos = decomposer.decompose(model, sigmacut = 0.005*fb )
+    sigmacut = 0.005*fb
+    mingap = 5.*GeV
+    smstopos = decomposer.decompose(model, sigmacut, doCompress=True,
+           doInvisible=True, minmassgap=mingap )
     expected = setup["expected"]
     tpreds = []
     llhds = {}
@@ -639,7 +677,7 @@ def testAnalysisCombo( setup ):
         fits.update ( { "mu_hat": mu_hat, "ulmu": ulmu, "lmax": lmax,
                         "r": r, "rexp": rexp, "expected": expected,
                         "sigma_mu": sigma_mu } )
-        addCombinedLlhds ( d, combiner )
+        addCombinedLlhds ( d, combiner, expected=expected )
 
     llhds = d["llhds"]
     sums = d["sums"]
@@ -676,24 +714,32 @@ def runSlew( rewrite = False ):
         testAnalysisCombo( setup )
     sys.exit()
 
+def addDefaults ( setup ):
+    default = {} 
+    default["rewrite"]=True
+    default["expected"]=False
+    default["addjitter"]=True
+    default["normalize"]=True
+    default["logy"]=False
+    for k,v in default.items():
+        if not k in setup:
+            setup[k]=v
+    return setup
+
 def getSetup( ):
     # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
     # setup = getSetupTChiWZ09()
-    setup = getSetupTStauStau()
+    # setup = getSetupTStauStau()
     # setup = getSetupSabine2()
     # setup = getSetupSabine()
     # setup = getSetup19006()
     # setup = getSetup16050()
     # setup = getSetupRExp()
     # setup = getSetupUL()
-    setup["rewrite"]=True
-    setup["expected"]=False
-    setup["addjitter"]=True
-    setup["normalize"]=True
-    setup["logy"]=False
-    return setup
+    setup = getSetupJamie()
+    return addDefaults ( setup )
 
 
 if __name__ == "__main__":
