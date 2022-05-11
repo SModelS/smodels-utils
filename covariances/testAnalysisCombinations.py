@@ -730,24 +730,45 @@ def addDefaults ( setup ):
             setup[k]=v
     return setup
 
-def getSetup( ):
+def getSetup( which="TChiWZ09" ):
+    name = f"getSetup{which}"
+    if not name in globals():
+        print ( f"[testAnalysisCombo] did not find {name}" )
+    func = globals()[name]
+    setup = func()
     # setup = getSetupT6bbHH()
     # setup = getSetupTChiWZ()
     # setup = getSetupTChiWH()
-    # setup = getSetupTChiWZ09()
-    # setup = getSetupTStauStau()
+    #setup = getSetupTChiWZ09()
+    #setup = getSetupTStauStau()
     # setup = getSetupSabine2()
     # setup = getSetupSabine()
     # setup = getSetup19006()
     # setup = getSetup16050()
     # setup = getSetupRExp()
     # setup = getSetupUL()
-    setup = getSetupJamie()
+    # setup = getSetupJamie()
     return addDefaults ( setup )
 
+def listSetups():
+    g = globals()
+    print ( "Available setups:" )
+    for i in g:
+        if i.startswith ( "getSetup" ) and not i == "getSetup":
+            l = i.replace("getSetup","" )
+            print ( f" - {l}" )
 
 if __name__ == "__main__":
-    rewrite = True
-    # runSlew( rewrite )
-    setup = getSetup( )
+    import argparse
+    argparser = argparse.ArgumentParser( description = "plot likelihoods" )
+    argparser.add_argument ( "-s", "--setup",
+            help="setup [TChiWZ09]",
+            type=str, default="TChiWZ09" )
+    argparser.add_argument ( "-l", "--list", action="store_true",
+            help="list all setups" )
+    args = argparser.parse_args()
+    if args.list:
+       listSetups() 
+       sys.exit()
+    setup = getSetup( args.setup )
     testAnalysisCombo( setup )
