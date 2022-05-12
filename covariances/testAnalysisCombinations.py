@@ -230,6 +230,37 @@ def getSetupJamie2():
     ret["addjitter"]=0.008
     return ret
 
+def getSetupTimothee1():
+    """ collect the experimental results """
+    # dbpath = "../../smodels-database/"
+    dbpath = "official+fastlim+nonaggregated"
+    database = Database( dbpath )
+    dTypes = ["upperLimit"]
+    anaids = [ 'CMS-SUS-20-001' ]
+    dsids = [ 'all' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2019-09' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    # comb_results = []
+    ret = { "slhafile": "wino_Spectrum_160_50.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -1., .5 ),
+            "dictname": "tim1.dict",
+            "expected": False,
+            "output": "tim1.png"
+    }
+    if ret["expected"]==False:
+        ret["murange"] = ( -1., .5 )
+    ret["addjitter"]=0.008
+    return ret
+
 
 def getSetup16050():
     """ collect the experimental results """
