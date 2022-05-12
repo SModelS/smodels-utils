@@ -196,6 +196,41 @@ def getSetupJamie():
     ret["addjitter"]=0.008
     return ret
 
+
+def getSetupJamie2():
+    """ collect the experimental results """
+    # dbpath = "../../smodels-database/"
+    dbpath = "official+fastlim+nonaggregated"
+    database = Database( dbpath )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012', 'CMS-SUS-19-006-ma5', 'CMS-SUS-19-006' ]
+    dsids = [ '2j_Meff_2400', 'SR2jt', 'SR76', 'SR26', 'SR120', '3NJet6_500HT800_600MHTinf', '6NJet8_500HT800_450MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
+    anaids = [ 'ATLAS-SUSY-2016-07' ]
+    dsids = [ '2j_Meff_3600', 'SR2jt', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    # dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    #comb_results = database.getExpResults(analysisIDs=anaids,
+    #                                          datasetIDs=dsids, dataTypes=dTypes)
+    comb_results = []
+    ret = { "slhafile": "111928145.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -10., 20. ),
+            "dictname": "jamie2.dict",
+            "expected": True,
+            "output": "jamie2.png"
+    }
+    if ret["expected"]==False:
+        ret["murange"] = ( -10., 20. )
+    ret["addjitter"]=0.008
+    return ret
+
+
 def getSetup16050():
     """ collect the experimental results """
     dbpath = "../../smodels-database/"
@@ -335,7 +370,8 @@ def getSetupTChiWZ09():
             "comb": comb_results,
             "dictname": "1909.dict",
             "output": "combo_1909.png",
-            "murange": (-4,5),
+#"murange": (-4,5),
+            "murange": (-1,2),
     }
     return ret
 
