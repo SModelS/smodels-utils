@@ -801,21 +801,14 @@ def getSetup( which="TChiWZ09" ):
     name = f"getSetup{which}"
     if not name in globals():
         print ( f"[testAnalysisCombo] did not find {name}" )
-    func = globals()[name]
-    setup = func()
-    # setup = getSetupT6bbHH()
-    # setup = getSetupTChiWZ()
-    # setup = getSetupTChiWH()
-    #setup = getSetupTChiWZ09()
-    #setup = getSetupTStauStau()
-    # setup = getSetupSabine2()
-    # setup = getSetupSabine()
-    # setup = getSetup19006()
-    # setup = getSetup16050()
-    # setup = getSetupRExp()
-    # setup = getSetupUL()
-    # setup = getSetupJamie()
-    return addDefaults ( setup )
+    try:
+        func = globals()[name]
+        setup = func()
+        return addDefaults ( setup )
+    except KeyError as e:
+        print ( f"[testAnalysisCombo] {name} not found" )
+        listSetups()
+        sys.exit()
 
 def listSetups():
     g = globals()
