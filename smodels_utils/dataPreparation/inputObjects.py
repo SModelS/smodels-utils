@@ -43,8 +43,26 @@ errormsgs = {}
 
 def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
     """ from an emBaked file, retrieve the names of the signal regions
+    :param filename: name of embaked file.
+                     if list of filenames, get SRs for all and check if equal
     :param exclude: list of SR regions to exclude
     """
+    if type ( filename) in [ list, tuple ]:
+        rets = {}
+        lens = {}
+        l0,l,lf = -1,-1,""
+        ret=None
+        for f in filename:
+            rets[f] = getSignalRegionsEMBaked ( f, exclude )
+            ret = rets[f]
+            l = len(rets[f])
+            lens[f] = l
+            if l0 > -1 and l != l0:
+                print ( "[inputObjects] number of signal regions in embaked files differ: {lf}:{l0}!={f}:{l}" )
+            l0,lf = l,f
+        return ret
+
+
     # ret = set()
     ret = []
     try:
