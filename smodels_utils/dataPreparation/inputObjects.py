@@ -45,7 +45,8 @@ def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
     """ from an emBaked file, retrieve the names of the signal regions
     :param exclude: list of SR regions to exclude
     """
-    ret = set()
+    # ret = set()
+    ret = []
     try:
         f=open( filename,"r")
         values=list(eval(f.read()).values())
@@ -56,7 +57,9 @@ def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
     for v in values:
         for k in v:
             if not k.startswith("__") and not k in exclude:
-                ret.add(k)
+                if not k in ret:
+                    ret.append(k)
+                #ret.add(k)
     return ret
 
 def getStatsEMBaked ( ):
