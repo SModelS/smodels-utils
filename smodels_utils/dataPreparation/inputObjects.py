@@ -366,11 +366,23 @@ class DataSetInput(Locker):
         try:
             from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
             comp = UpperLimitComputer ( self.ntoys, 1. - alpha )
-            m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
+            try:
+                # new API
+                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                        lumi = lumi )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True ) # / lumi.asNumber ( 1. / fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=True ) # / lumi.asNumber ( 1. / fb )
+            except:
+                # old API
+                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
+                ul = comp.ulSigma ( m, marginalize=True ) # / lumi.asNumber ( 1. / fb )
+                ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ) # / lumi.asNumber ( 1. / fb )
             ## first try with marginalization
-            ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True ) # / lumi.asNumber ( 1. / fb )
+            # old API
+            # ul = comp.ulSigma ( m, marginalize=True ) # / lumi.asNumber ( 1. / fb )
             ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=True ) # / lumi.asNumber ( 1. / fb )
+            # old API
+            # ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ) # / lumi.asNumber ( 1. / fb )
             # if that doesnt work, try with profiling
             if type(ul) == type(None):
                 ul = comp.ulSigma ( m, marginalize=False )
