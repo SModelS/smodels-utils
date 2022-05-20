@@ -251,13 +251,14 @@ def getSetupTimothee1():
     ret = { "slhafile": "wino_Spectrum_160_50.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": ( -1., .5 ),
+            "murange": ( -.2, .5 ),
             "dictname": "tim1.dict",
             "expected": False,
             "output": "tim1.png"
     }
     if ret["expected"]==False:
-        ret["murange"] = ( -1., .5 )
+        ret["murange"] = ( -.2, .5 )
+    ret["addjitter"]=0.008
     ret["addjitter"]=0.008
     return ret
 
@@ -481,7 +482,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
         if Id == "combined":
             continue
         args = { "ls": "-" }
-        if "sr combo" in Id:
+        if "sr combo" in Id or "pyhf combo" in Id:
             args["linewidth"]=2
             args["c"]="r"
         alllhds += list( l.values() )
@@ -589,6 +590,8 @@ def createLlhds ( tpreds, setup ):
     times, llhds, sums, uls = {}, {}, {}, {}
     for t in tpreds:
         dId = "sr combo"
+        if hasattr ( t.dataset.globalInfo, "jsonFiles" ):
+            dId = "pyhf combo"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
         #if dId.find("_")>-1:
@@ -756,6 +759,8 @@ def testAnalysisCombo( setup ):
     uls = d["uls"]
     if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
         Id = f"{ts[0].dataset.globalInfo.id}:sr combo"
+        if hasattr ( ts[0].dataset.globalInfo, "jsonFiles" ):
+            Id = f"{ts[0].dataset.globalInfo.id}:pyhf combo"
         if Id in sums:
             S=sums[Id]
             fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
@@ -826,9 +831,13 @@ if __name__ == "__main__":
             type=str, default="TChiWZ09" )
     argparser.add_argument ( "-l", "--list", action="store_true",
             help="list all setups" )
+    argparser.add_argument ( "-R", "--dont_rewrite", action="store_true",
+            help="do not rewrite dictionaries" )
     args = argparser.parse_args()
     if args.list:
        listSetups() 
        sys.exit()
     setup = getSetup( args.setup )
+    if args.dont_rewrite:
+        setup["rewrite"]=False
     testAnalysisCombo( setup )
