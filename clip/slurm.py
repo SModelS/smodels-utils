@@ -782,7 +782,12 @@ def main():
             dbpath = dbpath + ".pcl"
 
         if args.validate != None:
-            validate ( args.validate, args.dry_run, 20, 8, args.analyses, args.topo )
+            nproc = 20
+            hours = 8
+            if "combine" in args.validate:
+                nproc = 30 
+            validate ( args.validate, args.dry_run, nproc, hours, args.analyses, 
+                       args.topo )
             # validate ( args.validate, args.dry_run, args.nprocesses, args.time )
             continue
 
