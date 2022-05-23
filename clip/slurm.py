@@ -783,10 +783,9 @@ def main():
 
         if args.validate != None:
             nproc = 20
-            hours = 8
-            if "combine" in args.validate:
-                nproc = 30 
-            validate ( args.validate, args.dry_run, nproc, hours, args.analyses, 
+            if args.nprocesses > 0:
+                nproc = args.nprocesses
+            validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
                        args.topo )
             # validate ( args.validate, args.dry_run, args.nprocesses, args.time )
             continue
