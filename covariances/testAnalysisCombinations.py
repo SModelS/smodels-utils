@@ -29,7 +29,7 @@ from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJit
 from colorama import Fore, Cursor
 
 def getSetupTStauStau():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2018-04, pyhf """
     dbpath = "../../smodels-database/"
     database = Database( dbpath )
     dTypes = ["efficiencyMap"]
@@ -81,7 +81,7 @@ def getSetupRExp():
     return ret
 
 def getSetupSabine():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2018-41 and CMS-SUS-20-001 """
     dbpath = "../../smodels-database/"
     database = Database( dbpath )
     dTypes = ["all"]
@@ -162,7 +162,7 @@ def getSetup19006():
 
 
 def getSetupJamie():
-    """ collect the experimental results """
+    """ a few efficiency maps and a TPC combination """
     # dbpath = "../../smodels-database/"
     dbpath = "official+fastlim"
     database = Database( dbpath )
@@ -264,9 +264,9 @@ def getSetupTimothee1():
 
 
 def getSetup16050():
-    """ collect the experimental results """
+    """ CMS-SUS-16-050 combined with SL """
     dbpath = "../../smodels-database/"
-    # dbpath = "official"
+    dbpath = "official"
     database = Database( dbpath )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-16-050' ]
@@ -294,7 +294,7 @@ def getSetup16050():
     return ret
 
 def getSetupTChiWZ():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2017-03 and ATLAS-SUSY-2018-06 (pyhf) """
     dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
@@ -349,7 +349,7 @@ def getSetupT6bbHH():
     return ret
 
 def getSetupUL():
-    """ collect the experimental results """
+    """ a combination with an UL likelihood """
     dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
@@ -818,9 +818,12 @@ def getSetup( which="TChiWZ09" ):
 def listSetups():
     g = globals()
     print ( "Available setups:" )
-    for i in g:
+    for i,f in g.items():
         if i.startswith ( "getSetup" ) and not i == "getSetup":
             l = i.replace("getSetup","" )
+            if hasattr ( f, "__doc__" ):
+                docstring = f.__doc__
+                l+= f" {docstring}"
             print ( f" - {l}" )
 
 if __name__ == "__main__":
