@@ -380,7 +380,7 @@ def getSetupUL():
     return ret
 
 def getSetupTChiWZ09():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2017-03 and ATLAS-SUSY-2019-09 (pyhf) """
     dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
     # dbpath = "../../smodels-database/"
     # dbpath = "../../smodels/test/database/"
