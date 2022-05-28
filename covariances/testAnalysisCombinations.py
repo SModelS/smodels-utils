@@ -273,11 +273,10 @@ def getSetup16050():
     comb_results = database.getExpResults(analysisIDs=anaids,
                                           datasetIDs=dsids, dataTypes=dTypes)
     # comb_results = []
-    ret = { "slhafile": "gluino_squarks.slha",
+    ret = { "slhafile": "T2tt_880_150_880_150.slha",
             "SR": exp_results,
             "comb": comb_results,
-            # "murange": (-1.5, 1. ),
-            "murange": ( -15., 30. ),
+            "murange": (-3, 3. ),
             "dictname": "16050.dict",
             "output": "16050.png"
     }
@@ -713,6 +712,7 @@ def testAnalysisCombo( setup ):
     d = createLlhds ( tpreds, setup )
     if len(combine)>0:
         print ( f"{Fore.GREEN}[testAnalysisCombinations] now combining {len(combine)} tpreds{Fore.RESET}" )
+        print ( f"combine {combine}" )
         combiner = TheoryPredictionsCombiner(combine)
         combiner.computeStatistics()
         r = combiner.getRValue()
