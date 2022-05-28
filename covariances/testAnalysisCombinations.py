@@ -131,7 +131,7 @@ def getSetupSabine2():
     return ret
     
 def getSetup19006():
-    """ collect the experimental results """
+    """ CMS-SUS-19-006 (sr combo) """
     database = Database( dbpath[0] )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-19-006' ]
