@@ -27,11 +27,14 @@ import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange, createLine
 from colorama import Fore, Cursor
+    
+dbpath = [ "../../smodels-database/" ]
+# dbpath = [ "official" ]
+dbpath = [ "official+fastlim+nonaggregated" ]
 
 def getSetupTStauStau():
     """ ATLAS-SUSY-2018-04, pyhf """
-    dbpath = "../../smodels-database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2018-04' ]
     dsids = [ 'SRhigh', 'SRlow' ]
@@ -60,8 +63,7 @@ def getSetupTStauStau():
 
 def getSetupRExp():
     """ collect the experimental results """
-    dbpath = "../../smodels/test/database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-CONF-2013-037', 'CMS-SUS-13-012' ]
     dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
@@ -82,8 +84,7 @@ def getSetupRExp():
 
 def getSetupSabine():
     """ ATLAS-SUSY-2018-41 and CMS-SUS-20-001 """
-    dbpath = "../../smodels-database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2018-41-eff', 'CMS-SUS-20-001' ]
     anaids = [ 'CMS-SUS-20-001' ]
@@ -108,8 +109,7 @@ def getSetupSabine():
 
 def getSetupSabine2():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2016-06', 'CMS-EXO-19-010' ]
     # dsids = [ 'all' ]
@@ -132,9 +132,7 @@ def getSetupSabine2():
     
 def getSetup19006():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/"
-    # dbpath = "official"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-19-006' ]
     dsids = [ 'all' ]
@@ -163,9 +161,7 @@ def getSetup19006():
 
 def getSetupJamie():
     """ a few efficiency maps and a TPC combination """
-    # dbpath = "../../smodels-database/"
-    dbpath = "official+fastlim"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
     # anaids = [ 'ATLAS-SUSY-2016-07' ]
@@ -199,9 +195,7 @@ def getSetupJamie():
 
 def getSetupJamie2():
     """ collect the experimental results """
-    # dbpath = "../../smodels-database/"
-    dbpath = "official+fastlim+nonaggregated"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012', 'CMS-SUS-19-006-ma5', 'CMS-SUS-19-006' ]
     dsids = [ '2j_Meff_2400', 'SR2jt', 'SR76', 'SR26', 'SR120', '3NJet6_500HT800_600MHTinf', '6NJet8_500HT800_450MHTinf' ]
@@ -232,9 +226,7 @@ def getSetupJamie2():
 
 def getSetupTimothee1():
     """ collect the experimental results """
-    # dbpath = "../../smodels-database/"
-    dbpath = "official+fastlim+nonaggregated"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-20-001' ]
     dsids = [ 'all' ]
@@ -265,9 +257,7 @@ def getSetupTimothee1():
 
 def getSetup16050():
     """ CMS-SUS-16-050 combined with SL """
-    dbpath = "../../smodels-database/"
-    dbpath = "official"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-16-050' ]
     dsids = [ 'all' ]
@@ -295,10 +285,7 @@ def getSetup16050():
 
 def getSetupTChiWZ():
     """ ATLAS-SUSY-2017-03 and ATLAS-SUSY-2018-06 (pyhf) """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
-    # dbpath = "../../smodels-database/"
-    # dbpath = "../../smodels/test/database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2018-06'  ]
     dsids = [ 'SR2l_Int', 'SR_ISR', 'SR_low' ]
@@ -321,10 +308,7 @@ def getSetupTChiWZ():
 
 def getSetupT6bbHH():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
-    # dbpath = "../../smodels-database/"
-    # dbpath = "../../smodels/test/database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2018-31', 'ATLAS-SUSY-2018-xx'  ]
     dsids = [ 'SRB', 'SRA_M' ]
@@ -350,10 +334,7 @@ def getSetupT6bbHH():
 
 def getSetupUL():
     """ a combination with an UL likelihood """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
-    # dbpath = "../../smodels-database/"
-    # dbpath = "../../smodels/test/database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2018-40' ]
     dsids = [ 'MultiBin1', 'MultiBin2', 'MultiBin3', 'SingleBin', None ]
@@ -381,10 +362,7 @@ def getSetupUL():
 
 def getSetupTChiWZ09():
     """ ATLAS-SUSY-2017-03 and ATLAS-SUSY-2019-09 (pyhf) """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
-    # dbpath = "../../smodels-database/"
-    # dbpath = "../../smodels/test/database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2019-09'  ]
     #anaids = [ 'ATLAS-SUSY-2019-09'  ]
@@ -409,10 +387,7 @@ def getSetupTChiWZ09():
 
 def getSetupTChiWH():
     """ collect the experimental results """
-    dbpath = "../../smodels-database/" # +../../branches/smodels-database/"
-    # dbpath = "../../smodels-database/"
-    # dbpath = "../../smodels/test/database/"
-    database = Database( dbpath )
+    database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2017-01', 'ATLAS-SUSY-2019-08'  ]
     dsids = [ 'SRHad-Low', 'SR_MM_Low_MCT', 'SR_HM_Med_MCT' ]
@@ -836,7 +811,11 @@ if __name__ == "__main__":
             help="list all setups" )
     argparser.add_argument ( "-R", "--dont_rewrite", action="store_true",
             help="do not rewrite dictionaries" )
+    argparser.add_argument ( "-d", "--dbpath",
+            help="database path [../../smodels-database]",
+            type=str, default="../../smodels-database" )
     args = argparser.parse_args()
+    dbpath[0] = args.dbpath
     if args.list:
        listSetups() 
        sys.exit()
