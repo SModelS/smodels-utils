@@ -712,7 +712,6 @@ def testAnalysisCombo( setup ):
     d = createLlhds ( tpreds, setup )
     if len(combine)>0:
         print ( f"{Fore.GREEN}[testAnalysisCombinations] now combining {len(combine)} tpreds{Fore.RESET}" )
-        print ( f"combine {combine}" )
         combiner = TheoryPredictionsCombiner(combine)
         combiner.computeStatistics()
         r = combiner.getRValue()
