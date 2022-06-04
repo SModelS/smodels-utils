@@ -332,7 +332,7 @@ def getSetupTChiWZ():
     return ret
 
 def getSetupT6bbHH():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2018-31 (pyhf) """
     database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2018-31', 'ATLAS-SUSY-2018-xx'  ]
@@ -528,15 +528,18 @@ def plotLlhds ( llhds, fits, uls, setup ):
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
         llhdul = fits["llhd_combo(ul)"]  
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
+        srcombo = " (sr combo)"
+        if fits["llhdtype"]=="pyhf":
+            srcombo = " (pyhf combo)"
         if withinMuRange ( fits["ul_combo"], setup["murange"] ):
             line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, .95* llhdul ] }
-            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo)" )
+            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=rf"ul$_\mu${srcombo}" )
         lmax = fits["lmax_combo"]
         # lmax = llmax
         if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
             line = createLine ( fits["muhat_combo"], llmin, lmax, True )
             # plt.plot ( [ fits["muhat_combo"] ]*2, [ llmin, .95*lmax], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
-            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
+            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=rf"$\hat\mu${srcombo}" )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
@@ -724,9 +727,13 @@ def testAnalysisCombo( setup ):
         for t in ts:
             tpreds.insert(0,t) ## put them in front so they always have same color
         ull = ts[0].getUpperLimit()
+        llhdtype = "SL"
+        if hasattr ( er.globalInfo , "jsonFiles" ):
+            llhdtype = "pyhf"
         if type(ull) != type(None):
             ul = float ( ull / ts[0].xsection.value )
             fits["ul_combo"] = ul
+            fits["llhdtype"]=llhdtype
             llhd_ul = ts[0].likelihood (  ul, expected = expected )
             fits["llhd_combo(ul)"] = llhd_ul
         muhat = ts[0].muhat( allowNegativeSignals = True, expected = expected )
