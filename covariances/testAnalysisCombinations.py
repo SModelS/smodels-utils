@@ -254,7 +254,6 @@ def getSetupTimothee1():
     ret["addjitter"]=0.008
     return ret
 
-
 def getSetup16050():
     """ CMS-SUS-16-050 combined with SL """
     database = Database( dbpath[0] )
@@ -267,6 +266,33 @@ def getSetup16050():
     # exp_results = []
 
     dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-16-050' ]
+    # dsids = [ 'AR1', 'AR2' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    # comb_results = []
+    ret = { "slhafile": "T2tt_880_150_880_150.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-1, 1. ),
+            "dictname": "16050.dict",
+            "output": "16050.png"
+    }
+    return ret
+
+def getSetup16050agg():
+    """ CMS-SUS-16-050-agg combined with SL """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit"]
+    anaids = [ 'CMS-SUS-16-050' ]
+    dsids = [ 'all' ]
+    # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    exp_results = []
+
+    dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-16-050-agg' ]
     # dsids = [ 'AR1', 'AR2' ]
     dsids = [ 'all' ]
@@ -277,8 +303,8 @@ def getSetup16050():
             "SR": exp_results,
             "comb": comb_results,
             "murange": (-3, 3. ),
-            "dictname": "16050.dict",
-            "output": "16050.png"
+            "dictname": "16050agg.dict",
+            "output": "16050agg.png"
     }
     return ret
 
