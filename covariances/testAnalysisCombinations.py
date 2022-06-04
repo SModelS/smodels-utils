@@ -62,7 +62,7 @@ def getSetupTStauStau():
     return ret
 
 def getSetupRExp():
-    """ collect the experimental results """
+    """ ATLAS-CONF-2013-037, CMS-SUS-13-012 """
     database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-CONF-2013-037', 'CMS-SUS-13-012' ]
@@ -194,7 +194,7 @@ def getSetupJamie():
 
 
 def getSetupJamie2():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2016-07, CMS-SUS-19-006, ATLAS-SUSY-2013-02, CMS-SUS-13-012 """
     database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012', 'CMS-SUS-19-006-ma5', 'CMS-SUS-19-006' ]
@@ -225,7 +225,7 @@ def getSetupJamie2():
     return ret
 
 def getSetupTimothee1():
-    """ collect the experimental results """
+    """ CMS-SUS-20-001, ATLAS-SUSY-2019-09 """
     database = Database( dbpath[0] )
     dTypes = ["upperLimit"]
     anaids = [ 'CMS-SUS-20-001' ]
@@ -411,7 +411,7 @@ def getSetupTChiWZ09():
     return ret
 
 def getSetupTChiWH():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2017-01, ATLAS-SUSY-2019-08 """
     database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2017-01', 'ATLAS-SUSY-2019-08'  ]
