@@ -532,14 +532,14 @@ def plotLlhds ( llhds, fits, uls, setup ):
         if fits["llhdtype"]=="pyhf":
             srcombo = " (pyhf combo)"
         if withinMuRange ( fits["ul_combo"], setup["murange"] ):
-            line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, .95* llhdul ] }
-            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=rf"ul$_\mu${srcombo}" )
+            line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, 1.05* llhdul ] }
+            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=rf"ul$_\mu${srcombo}: {fits['ul_combo']:.2f}" )
         lmax = fits["lmax_combo"]
         # lmax = llmax
         if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
             line = createLine ( fits["muhat_combo"], llmin, lmax, True )
             # plt.plot ( [ fits["muhat_combo"] ]*2, [ llmin, .95*lmax], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
-            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=rf"$\hat\mu${srcombo}" )
+            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=rf"$\hat\mu${srcombo}: {fits['muhat_combo']:.2f}" )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
