@@ -108,7 +108,7 @@ def getSetupSabine():
     return ret
 
 def getSetupSabine2():
-    """ collect the experimental results """
+    """ ATLAS-SUSY-2016-06, CMS-EXO-19-010 """
     database = Database( dbpath[0] )
     dTypes = ["all"]
     anaids = [ 'ATLAS-SUSY-2016-06', 'CMS-EXO-19-010' ]
