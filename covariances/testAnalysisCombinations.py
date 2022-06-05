@@ -275,7 +275,7 @@ def getSetup16050():
     ret = { "slhafile": "T2tt_880_150_880_150.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-1, 1. ),
+            "murange": (-.6, .9 ),
             "dictname": "16050.dict",
             "output": "16050.png"
     }
