@@ -76,7 +76,7 @@ def getSetupRExp():
     ret = { "slhafile": "gluino_squarks.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": (-10., 20. ),
+            "murange": (-4., 6. ),
             "dictname": "rexp.dict",
             "output": "debug_rexp.png"
     }
