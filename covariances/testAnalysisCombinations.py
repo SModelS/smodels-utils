@@ -851,7 +851,7 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser( description = "plot likelihoods" )
     argparser.add_argument ( "-s", "--setup",
-            help="setup [TChiWZ09]",
+            help="choose setup (see --list for a list of options), or 'all' [TChiWZ09]",
             type=str, default="TChiWZ09" )
     argparser.add_argument ( "-l", "--list", action="store_true",
             help="list all setups" )
