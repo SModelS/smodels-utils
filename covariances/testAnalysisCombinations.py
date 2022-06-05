@@ -517,12 +517,17 @@ def plotLlhds ( llhds, fits, uls, setup ):
         lmax = max ( prodllhd.values() )
         print ( f"[testAnalysisCombinations] muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
+        ax = plt.gca()
         if withinMuRange ( mu_hat, setup["murange"] ):
             plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}]" )
+        else:
+            plt.text ( .6, -.11, rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
         if withinMuRange ( ulmu, setup["murange"] ):
             plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
                    c="k", label=rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]" )
+        else:
+            plt.text ( -.1, -.11, rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
 
     if True and "llhd_combo(ul)" in fits:
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
