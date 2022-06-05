@@ -827,16 +827,25 @@ def getSetup( which="TChiWZ09" ):
         listSetups()
         sys.exit()
 
-def listSetups():
+def listSetups( printOut = True ):
+    """ list all the setups,
+    :param printOut: if true, then print to stdout
+    :returns: list of setups
+    """
     g = globals()
-    print ( "Available setups:" )
+    ret = []
+    if printOut:
+        print ( "Available setups:" )
     for i,f in g.items():
         if i.startswith ( "getSetup" ) and not i == "getSetup":
             l = i.replace("getSetup","" )
+            ret.append ( l )
             if hasattr ( f, "__doc__" ):
                 docstring = f.__doc__
                 l+= f" {docstring}"
-            print ( f" - {l}" )
+            if printOut:
+                print ( f" - {l}" )
+    return ret
 
 if __name__ == "__main__":
     import argparse
@@ -856,6 +865,16 @@ if __name__ == "__main__":
     if args.list:
        listSetups() 
        sys.exit()
+    if args.setup == "all":
+        ret = listSetups( printOut = False ) 
+        for r in ret:
+            setup = getSetup ( r )
+            if args.dont_rewrite:
+                setup["rewrite"]=False
+            print ( f"[testAnalysisCombo] now testing {r}" )
+            testAnalysisCombo( setup )
+        sys.exit()
+        
     setup = getSetup( args.setup )
     if args.dont_rewrite:
         setup["rewrite"]=False
