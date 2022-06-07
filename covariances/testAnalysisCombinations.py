@@ -201,15 +201,15 @@ def getSetupJamie2():
     dsids = [ '2j_Meff_2400', 'SR2jt', 'SR76', 'SR26', 'SR120', '3NJet6_500HT800_600MHTinf', '6NJet8_500HT800_450MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    # exp_results = []
+    #exp_results = []
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
     anaids = [ 'ATLAS-SUSY-2016-07' ]
     dsids = [ '2j_Meff_3600', 'SR2jt', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
     # dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
-    #comb_results = database.getExpResults(analysisIDs=anaids,
-    #                                          datasetIDs=dsids, dataTypes=dTypes)
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
     comb_results = []
     ret = { "slhafile": "111928145.slha",
             "SR": exp_results,
@@ -224,7 +224,41 @@ def getSetupJamie2():
     ret["addjitter"]=0.008
     return ret
 
-def getSetupTimothee1():
+def getSetupTimotheeSR():
+    """ CMS-SUS-20-001, ATLAS-SUSY-2019-09 (no sr-combinations) """
+    database = Database( dbpath[0] )
+    dTypes = ["all"]
+    anaids = [ 'CMS-SUS-20-001', 'ATLAS-SUSY-2019-09' ]
+    dsids = [ None, "SRWZ_5" ]
+    tmp = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    exp_results = []
+    for t in tmp:
+        if t.id() == "ATLAS-SUSY-2019-09" and t.datasets[0].dataInfo.dataId == None:
+            continue
+        exp_results.append ( t )
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2019-09' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                          datasetIDs=dsids, dataTypes=dTypes)
+    comb_results = []
+    ret = { "slhafile": "wino_Spectrum_160_50.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -.2, .5 ),
+            "dictname": "timsr.dict",
+            "expected": False,
+            "output": "timsr.png"
+    }
+    if ret["expected"]==False:
+        ret["murange"] = ( -.2, .5 )
+    ret["addjitter"]=0.008
+    ret["addjitter"]=0.008
+    return ret
+
+def getSetupTimotheeCombined():
     """ CMS-SUS-20-001, ATLAS-SUSY-2019-09 """
     database = Database( dbpath[0] )
     dTypes = ["upperLimit"]
@@ -244,9 +278,9 @@ def getSetupTimothee1():
             "SR": exp_results,
             "comb": comb_results,
             "murange": ( -.2, .5 ),
-            "dictname": "tim1.dict",
+            "dictname": "timc.dict",
             "expected": False,
-            "output": "tim1.png"
+            "output": "timc.png"
     }
     if ret["expected"]==False:
         ret["murange"] = ( -.2, .5 )
