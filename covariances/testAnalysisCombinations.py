@@ -225,7 +225,7 @@ def getSetupJamie2():
     return ret
 
 def getSetupTimotheeSR():
-    """ CMS-SUS-20-001, ATLAS-SUSY-2019-09 (no sr-combinations) """
+    """ CMS-SUS-20-001 (UL), ATLAS-SUSY-2019-09 (best SR) """
     database = Database( dbpath[0] )
     dTypes = ["all"]
     anaids = [ 'CMS-SUS-20-001', 'ATLAS-SUSY-2019-09' ]
@@ -247,13 +247,13 @@ def getSetupTimotheeSR():
     ret = { "slhafile": "wino_Spectrum_160_50.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": ( -.2, .5 ),
+            "murange": ( -.8, .3 ),
             "dictname": "timsr.dict",
             "expected": False,
             "output": "timsr.png"
     }
     if ret["expected"]==False:
-        ret["murange"] = ( -.2, .5 )
+        ret["murange"] = ( -.8, .3 )
     ret["addjitter"]=0.008
     ret["addjitter"]=0.008
     return ret
@@ -752,7 +752,7 @@ def testAnalysisCombo( setup ):
                 muhat = t.muhat( allowNegativeSignals = True, expected = expected )
                 fits["muhat_ul"] = muhat
                 fits["lmax_ul"] = lmax
-                print ( f"[testAnalysisCombinations] UL: {t.dataset.globalInfo.id}: muhat={muhat:.3f} lmax={lmax:.3g}" )
+                print ( f"[testAnalysisCombinations] UL: {t.dataset.globalInfo.id}: muhat={muhat:.3f} lmax={lmax:.3g} ul={float(t.getUpperLimit()/t.xsection.value):.3g}" )
     for er in comb_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
