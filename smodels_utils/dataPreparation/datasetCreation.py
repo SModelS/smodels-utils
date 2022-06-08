@@ -101,17 +101,17 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
     comp = UpperLimitComputer ( ntoys, 1. - alpha )
-    m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
+    m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
     try:
-        ul = comp.ulSigma ( m, marginalize=False ) / lumi.asNumber ( 1./fb )
-        #ul = comp.ulSigma ( m, marginalize=False ).asNumber ( fb )
+        ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber(fb) 
+        #ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber ( fb )
     except Exception as e:
         print ( "Exception", e )
         print ( "observed:",newds.observedN )
         sys.exit()
     newds.upperLimit = str("%f*fb" % ul )
-    # ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
-    ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
+    # ule = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected=True ).asNumber ( fb )
+    ule = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
     newds.aggregated = aggregated[:-1]
     newds.originalSRs = originalSRs
