@@ -56,6 +56,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     :param origDataSets: the original DataSets, as a list
     :param covariance: covariance matrix
     :param aggidx: number of aggregate region
+    :param agg: list of aggregation indices
     :param lumi: luminosity, in fb^-1
     :param aggprefix: prefix to use for aggregate SRs, typically "ar"
     :returns: list of aggregated DataSets
@@ -386,7 +387,7 @@ class DatasetsFromEmbaked:
             if not hasattr ( self, "countbinnr" ):
                 self.countbinnr = {}
             if not srname in self.countbinnr:
-                self.countbinnr[srname] = len(self.countbinnr)
+                self.countbinnr[srname] = len(self.countbinnr)+1
             return self.countbinnr[srname]
 
         if srname.startswith ( self.sr_prefix ):
@@ -397,8 +398,13 @@ class DatasetsFromEmbaked:
             try:
                 return int(srname)
             except ValueError as e:
-                print ( f"[datasetCreation] I wanted to extract the bin number from SR name {srname} but failed: {e}. Please fix in code." )
-                sys.exit(-1)
+                if not hasattr ( self, "countbinnr" ):
+                    self.countbinnr = {}
+                if not srname in self.countbinnr:
+                    self.countbinnr[srname] = len(self.countbinnr)+1
+                return self.countbinnr[srname]
+                #print ( f"[datasetCreation] I wanted to extract the bin number from SR name {srname} but failed: {e}. Please fix in code." )
+                #sys.exit(-1)
         return -1 ## we filter out all others
 
     def createAllDatasets ( self ):
@@ -436,8 +442,6 @@ class DatasetsFromEmbaked:
             p1 = name.find("_")
             if p1 > 0:
                 name = name[:p1]
-            # name = "SR%d" % (binnr+1)
-            # name = "sr%d" % (binnr)
             dataId = key
             count_all+=1
             if not count_all in self.blinded_regions:
@@ -445,6 +449,7 @@ class DatasetsFromEmbaked:
                 dataset = DataSetInput ( dataId )
                 if "comment" in values:
                     dataset.comment = values["comment"]
+                # print ( f"data: {nobs}, {bg}+-{bgerr}" )
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '"%s"' % dataId )
