@@ -581,6 +581,16 @@ class ValidationPlot():
                 ret = [ ret[0] ]
         return ret
 
+    def slhafileInData ( self, slhafile ):
+        """ is slhafile already in the data? """
+        if self.data is None:
+            return False
+        for d in self.data:
+            slhashort = os.path.basename ( slhafile )
+            if d["slhafile"] in [ slhafile, slhashort ]:
+                return True
+        return False
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
