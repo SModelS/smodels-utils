@@ -28,6 +28,7 @@ from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
 from sympy import var
 import pyslha
 import string
+import glob
 
 logger.setLevel(level=logging.ERROR)
 
@@ -596,6 +597,7 @@ class ValidationPlot():
         Runs SModelS on the SLHA files from self.slhaDir and store
         the relevant data in self.data.
         Uses runSModelS.main.
+        Result is stored in self.data
         """
 
         #Get list of SLHA files:
@@ -611,7 +613,19 @@ class ValidationPlot():
         except Exception: ## old version?
             fileList = modelTester.getAllInputFiles(slhaDir)
             inDir = slhaDir
-
+        if self.options["generateData"]==None:
+            self.loadData()
+            tmp = []
+            countSkipped = 0
+            for f in fileList:
+                bf = os.path.basename ( f )
+                if self.slhafileInData ( bf ):
+                    countSkipped += 1
+                else:
+                    tmp.append ( f )
+            if countSkipped > 0:
+                logger.info ( f"skipped a total of {countSkipped} files: generateData was set to 'ondemand'." )
+            fileList = tmp
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
