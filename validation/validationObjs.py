@@ -659,7 +659,7 @@ class ValidationPlot():
         myglobals = globals()
         myglobals["inf"]=float("inf")
         myglobals["nan"]=float("nan")
-        for slhafile in slhafiles:
+        for slhafile in fileList: # slhafiles:
             if "recipe" in slhafile:
                 continue
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder

@@ -71,7 +71,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
             options["generateData"]=True
     if pretty in [ True, "dictonly" ]:
         valPlot.getPrettyPlot()
-        if options["generateData"]:
+        if options["generateData"]!=False:
+            # if ondemand we save also, new points might have been added
             valPlot.saveData()
         if pretty not in [ "dictonly" ]:
             valPlot.savePlot()
