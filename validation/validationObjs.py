@@ -626,6 +626,8 @@ class ValidationPlot():
             if countSkipped > 0:
                 logger.info ( f"skipped a total of {countSkipped} files: generateData was set to 'ondemand'." )
             fileList = tmp
+        else:
+            self.data = []
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -652,7 +654,6 @@ class ValidationPlot():
             logger.error ( "no mass plane!" )
             return False
         #Now read the output and collect the necessary data
-        self.data = []
         slhafiles= os.listdir(slhaDir)
         ct_nooutput=0
         slhafiles.sort() ## make sure we also go in the same order
