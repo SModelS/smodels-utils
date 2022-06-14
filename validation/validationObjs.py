@@ -67,7 +67,7 @@ class ValidationPlot():
         self.axes = Axes.strip()
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
-        self.data = None
+        self.data = []
         self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
         self.officialCurves = self.getOfficialCurves( get_all = not drawExpected,
@@ -447,9 +447,10 @@ class ValidationPlot():
         os.close(pf)
         return parFile
 
-    def loadData(self):
+    def loadData(self, overwrite = True ):
         """
         Tries to load an already existing python output.
+        :param overwrite:  if True, then overwrite any existing data
         """
 
         validationDir = os.path.join(self.expRes.path,'validation')
@@ -459,13 +460,24 @@ class ValidationPlot():
                 logger.error("Validation datafile %s not found" %datafile)
             else:
                 logger.info("Validation datafile %s not found" %datafile)
-            self.data = None
+            self.data = []
             return
+        nprev = len(self.data)
 
         from validationHelpers import getValidationFileContent
         content = getValidationFileContent ( datafile )
-        self.data = content["data"]
+        if overwrite:
+            self.data = []
+        slhafiles = { d["slhafile"] : d for d in self.data }
+        for d in content["data"]:
+            if d["slhafile"] in slhafiles:
+                continue
+            self.data.append ( d )
+        if not overwrite:
+            logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
+        # self.data = content["data"]
         self.meta = content["meta"]
+        self.meta["npoints"] = len ( self.data )
 
     def getWidthsFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """
@@ -584,8 +596,6 @@ class ValidationPlot():
 
     def slhafileInData ( self, slhafile ):
         """ is slhafile already in the data? """
-        if self.data is None:
-            return False
         for d in self.data:
             slhashort = os.path.basename ( slhafile )
             if d["slhafile"] in [ slhafile, slhashort ]:
@@ -854,7 +864,7 @@ class ValidationPlot():
     def isOneDimensional ( self ):
         """ are the data 1d? """
         # is1D = False
-        if self.data == None:
+        if self.data in [ [], None ]:
             return None
         for ctPoints,pt in enumerate(self.data):
             if pt == None:
@@ -991,6 +1001,9 @@ class ValidationPlot():
         if not hasattr(self,'data') or not self.data:
             logger.warning("No data found. Nothing will be saved")
             return False
+
+        if self.options["generateData"] in [ None, "ondemand" ]:
+            self.loadData ( overwrite = False )
 
         if not validationDir:
             validationDir = os.path.join(self.expRes.path,'validation')
