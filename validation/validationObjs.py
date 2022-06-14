@@ -468,11 +468,14 @@ class ValidationPlot():
         content = getValidationFileContent ( datafile )
         if overwrite:
             self.data = []
-        slhafiles = { d["slhafile"] : d for d in self.data }
+        slhafiles = { x["slhafile"] : x for x in self.data }
         for d in content["data"]:
             if d["slhafile"] in slhafiles:
+                if d != slhafiles[d["slhafile"]]:
+                    logger.error ( f"entry {d['slhafile']} changed content {d} != {slhafiles[d]}" )
                 continue
             self.data.append ( d )
+        self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
         # self.data = content["data"]
