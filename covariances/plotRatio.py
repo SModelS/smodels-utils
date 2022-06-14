@@ -146,6 +146,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             ul1 = uls[h]
         if h in effs.keys():
             eff1 = effs[h]
+        hasResult = False
         if not plotEfficiencies and ul1 and ul1>0. and "UL" in point:
             ul2 = point["UL"] / point["signal"]
             # ul2 = point["signal"] / point["UL"]
@@ -154,16 +155,21 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
                 ratio = ul1 / ul2
             # print ( "ratio",axes[0],axes[1],ratio )
             points.append ( (axes[0],axes[1],ratio ) )
-        elif plotEfficiencies and eff1 and eff1>0. and "efficiency" in point:
+            hasResult = True
+        if plotEfficiencies and eff1 and eff1>0. and "efficiency" in point:
             eff2 = point["efficiency"]
             ratio = float ("nan" )
             if eff2 > 0.:
                 ratio = eff1 / eff2
             points.append ( (axes[0],axes[1],ratio ) )
-        else:
+            hasResult = True
+        if not hasResult:
             err_msgs += 1
-            #if err_msgs < 5:
-            #    print ( "cannot find data for point", point["slhafile"] )
+            if err_msgs < 3:
+                errmsg = ""
+                if "error" in point:
+                    errmsg = f': {point["error"]}'
+                print ( f"[plotRatio] cannot find data for point {point['slhafile']}{errmsg}" )
 
     if len(points) == 0:
         print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {ipath2}" )
@@ -294,7 +300,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
                 plt.plot ( E["points"]["x"], E["points"]["y"], color='white', linestyle='-', linewidth=4, label="" )
                 plt.plot ( E["points"]["x"], E["points"]["y"], color='k', linestyle='-', linewidth=3, label=label )
                 label = ""
-        if t in el2:
+        if el2 != None and t in el2:
             for E in el2[t]:
                 label = anaId2
                 hasLegend = True
