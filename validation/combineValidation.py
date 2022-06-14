@@ -182,7 +182,7 @@ class ValidationCombiner:
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description="Produces combined validation plots, of aon- and offshell regions")
+    ap = argparse.ArgumentParser(description="Produces combined validation plots, of on- and offshell regions")
     ap.add_argument('-d', '--database',
             help='path to database [../../smodels-database]', type=str,
             default='../../smodels-database/')
