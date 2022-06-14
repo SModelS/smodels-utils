@@ -486,8 +486,8 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
             qos = "c_medium"
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    # ma5 seems to not need much RAM
-    ram = 1. * nproc
+    #ram = 1. * nproc
+    ram = 3. + .2 * nproc
     ncpus = nproc # int(nproc*1.5)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
