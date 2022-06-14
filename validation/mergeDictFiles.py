@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+
 def merge ( infile1, infile2 ):
     f1 = open ( infile1, "rt" )
     txt1 = f1.read()
@@ -14,11 +16,13 @@ def merge ( infile1, infile2 ):
     validationData2 = validationData
     f2.close()
     out = open ( "out.py", "wt" )
+    slhafiles = [ x["slhafile"] for x in validationData1 ]
     for v in validationData2:
-        if not v["slhafile"] in validationData1:
+        if not v["slhafile"] in slhafiles:
             validationData1.append ( v )
-    meta1["npoints"]=meta1["npoints"]+meta2["npoints"]
-    out.write ( f"validationData = " ) # {validationData1}\n" )
+    validationData1.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+    meta1["npoints"]=len(validationData1)
+    out.write ( f"validationData = [" )
     for i,v in enumerate ( validationData1 ):
         out.write ( f"{v}" )
         if i + 1 < len ( validationData1 ):
@@ -29,8 +33,16 @@ def merge ( infile1, infile2 ):
     out.close()
     
 if __name__ == "__main__":
-    dbpath = "../../smodels-database/13TeV/CMS/"
-    topodict = "T1_2EqMassAx_EqMassBy_combined.py"
+    ap = argparse.ArgumentParser(description="merge dictionary files")
+    ap.add_argument('-d', '--databasePath',
+            help='database path ../../smodels-database/13TeV/CMS/',
+            default = '../../smodels-database/13TeV/CMS/', type = str)
+    ap.add_argument('-t', '--topology',
+            help='topology [T1]',
+            default = 'T1', type = str)
+    args = ap.parse_args()
+    dbpath = args.databasePath
+    topodict = f"{args.topology}_2EqMassAx_EqMassBy_combined.py"
     infile1 = f"{dbpath}CMS-SUS-19-006-adl/validation/{topodict}"
     infile2 = f"{dbpath}CMS-SUS-19-006-adl-agg/validation/{topodict}"
     merge ( infile1, infile2 )
