@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, subprocess
+import argparse, subprocess, glob
 
 def merge ( infile1, infile2, copy ):
     """ merge infile1 and infile2
@@ -36,7 +36,7 @@ def merge ( infile1, infile2, copy ):
             out.write ( ",\n" )
         else:
             out.write ( "]\n" )
-    out.write ( f"meta={meta1}\n" )
+    out.write ( f"meta = {meta1}\n" )
     out.close()
     print ( f"[mergeDictFiles] merged {prevn1}+{prevn2}={postn} points to {outf}" )
     cmd = f"cp {outf} {infile1}"

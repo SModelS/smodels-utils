@@ -57,7 +57,7 @@ def getValidationFileContent ( validationfile : str ):
     ret["data"] = data
     meta = None
     if len(lines)>1 and lines[-1].startswith ( "meta" ):
-        meta = eval(lines[-1].replace("meta = ",""))
+        meta = eval(lines[-1].replace("meta = ","").replace("meta=","") )
     ret["meta"]=meta
     return ret
 
