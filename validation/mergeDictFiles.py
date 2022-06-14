@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
 
-import argparse
+import argparse, subprocess
 
-def merge ( infile1, infile2 ):
+def merge ( infile1, infile2, copy ):
+    """ merge infile1 and infile2
+    :param copy: copy output file to infile1
+    """
     f1 = open ( infile1, "rt" )
     txt1 = f1.read()
     exec ( txt1, globals() )
     meta1 = meta
     validationData1 = validationData
+    prevn1 = len ( validationData1)
     f1.close()
     f2 = open ( infile2, "rt" )
     txt2 = f2.read()
     exec ( txt2, globals() )
     meta2 = meta
     validationData2 = validationData
+    prevn2 = len ( validationData2)
     f2.close()
-    out = open ( "out.py", "wt" )
+    outf = "out.py"
+    out = open ( outf, "wt" )
     slhafiles = [ x["slhafile"] for x in validationData1 ]
     for v in validationData2:
         if not v["slhafile"] in slhafiles:
             validationData1.append ( v )
     validationData1.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+    postn = len ( validationData1 )
     meta1["npoints"]=len(validationData1)
     out.write ( f"validationData = [" )
     for i,v in enumerate ( validationData1 ):
@@ -31,6 +38,11 @@ def merge ( infile1, infile2 ):
             out.write ( "]\n" )
     out.write ( f"meta={meta1}\n" )
     out.close()
+    print ( f"[mergeDictFiles] merged {prevn1}+{prevn2}={postn} points to {outf}" )
+    cmd = f"cp {outf} {infile1}"
+    if copy:
+        subprocess.getoutput ( cmd )
+    print ( cmd )
     
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="merge dictionary files")
@@ -40,9 +52,11 @@ if __name__ == "__main__":
     ap.add_argument('-t', '--topology',
             help='topology [T1]',
             default = 'T1', type = str)
+    ap.add_argument('-c', '--copy',
+            help='copy file to target location', action="store_true" )
     args = ap.parse_args()
     dbpath = args.databasePath
     topodict = f"{args.topology}_2EqMassAx_EqMassBy_combined.py"
     infile1 = f"{dbpath}CMS-SUS-19-006-adl/validation/{topodict}"
     infile2 = f"{dbpath}CMS-SUS-19-006-adl-agg/validation/{topodict}"
-    merge ( infile1, infile2 )
+    merge ( infile1, infile2, args.copy )
