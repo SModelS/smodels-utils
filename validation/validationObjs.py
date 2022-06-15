@@ -476,10 +476,13 @@ class ValidationPlot():
                 continue
             self.data.append ( d )
         self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+        self.meta = content["meta"]
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
+            if not "merged" in self.meta:
+                self.meta["merged"]=0
+            self.meta["merged"]=self.meta["merged"]+1
         # self.data = content["data"]
-        self.meta = content["meta"]
         self.meta["npoints"] = len ( self.data )
 
     def getWidthsFromSLHAFileName ( self, filename ):
@@ -1005,6 +1008,7 @@ class ValidationPlot():
             logger.warning("No data found. Nothing will be saved")
             return False
 
+        print ( "[validationObjs] generateData", self.options["generateData"] )
         if self.options["generateData"] in [ None, "ondemand" ]:
             self.loadData ( overwrite = False )
 
