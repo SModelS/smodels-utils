@@ -487,7 +487,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
-    ram = 3. + .2 * nproc
+    ram = 4. + .25 * nproc
     ncpus = nproc # int(nproc*1.5)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
