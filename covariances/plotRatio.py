@@ -99,7 +99,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
        ylabel = "m$_{LSP}$ [GeV]"
 
     hasDebPkg()
-    uls,effs={},{}
+    rs,effs={},{}
     nsr=""
     noaxes = 0
     for ctr,point in enumerate(content1["data"] ):
@@ -124,7 +124,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         if point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
         if "UL" in point and point["UL"] != None:
-            uls[ h ] = point["UL" ] / point["signal"]
+            rs[ h ] = point["signal"] / point["UL" ]
         if "efficiency" in point and point["efficiency"] != None:
             effs[ h ] = point["efficiency"]
         # uls[ h ] = point["signal" ] / point["UL"]
@@ -140,19 +140,19 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         if axes == None:
             continue
         h = axisHash ( axes )
-        ul1 = None
+        r1 = None
         eff1 = None
-        if h in uls.keys():
-            ul1 = uls[h]
+        if h in rs.keys():
+            r1 = rs[h]
         if h in effs.keys():
             eff1 = effs[h]
         hasResult = False
-        if not plotEfficiencies and ul1 and ul1>0. and "UL" in point:
-            ul2 = point["UL"] / point["signal"]
+        if not plotEfficiencies and r1 and r1>0. and "UL" in point:
+            r2 = point["signal"] / point["UL"]
             # ul2 = point["signal"] / point["UL"]
             ratio = float("nan")
-            if ul2 > 0.:
-                ratio = ul1 / ul2
+            if r2 > 0.:
+                ratio = r1 / r2
             # print ( "ratio",axes[0],axes[1],ratio )
             points.append ( (axes[0],axes[1],ratio ) )
             hasResult = True
