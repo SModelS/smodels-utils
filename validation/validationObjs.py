@@ -469,19 +469,22 @@ class ValidationPlot():
         if overwrite:
             self.data = []
         slhafiles = { x["slhafile"] : x for x in self.data }
+        ctadded = 0
         for d in content["data"]:
             if d["slhafile"] in slhafiles:
                 if d != slhafiles[d["slhafile"]]:
                     logger.error ( f"entry {d['slhafile']} changed content {d} != {slhafiles[d]}" )
                 continue
+            ctadded+=1
             self.data.append ( d )
         self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
         self.meta = content["meta"]
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
             if not "merged" in self.meta:
-                self.meta["merged"]=0
-            self.meta["merged"]=self.meta["merged"]+1
+                self.meta["merged"]=f"{len(slhafiles)}+{ctadded}"
+            else:
+                self.meta["merged"]=self.meta["merged"]+"+"+f"{ctadded}"
         # self.data = content["data"]
         self.meta["npoints"] = len ( self.data )
 
@@ -640,7 +643,7 @@ class ValidationPlot():
                 else:
                     tmp.append ( f )
             if countSkipped > 0:
-                logger.info ( f"skipped a total of {countSkipped} files: generateData was set to 'ondemand'." )
+                logger.info ( f"skipped a total of {countSkipped} points: generateData was set to 'ondemand'." )
             fileList = tmp
         else:
             self.data = []
@@ -1011,6 +1014,7 @@ class ValidationPlot():
         print ( "[validationObjs] generateData", self.options["generateData"] )
         if self.options["generateData"] in [ None, "ondemand" ]:
             self.loadData ( overwrite = False )
+            print ( "[validationObjs] loaded", len(self.data) )
 
         if not validationDir:
             validationDir = os.path.join(self.expRes.path,'validation')
@@ -1021,6 +1025,7 @@ class ValidationPlot():
 
         if not datafile:
             datafile = self.getDataFile(validationDir)
+        print ( f"[validationObjs] saving data to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
         dataStr = str(self.data)
@@ -1044,6 +1049,8 @@ class ValidationPlot():
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
+        if "merged" in self.meta:
+            meta["merged"] = self.meta["merged"]
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
