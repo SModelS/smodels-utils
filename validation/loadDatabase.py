@@ -5,4 +5,4 @@ from smodels.tools.smodelsLogging import setLogLevel
 
 setLogLevel ( "debug" )
 
-db = Database ( "../../smodels-database", discard_zeroes = True, subpickle = True )
+db = Database ( "../../smodels-database", discard_zeroes = False, subpickle = True )
