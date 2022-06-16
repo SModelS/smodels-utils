@@ -1049,7 +1049,7 @@ class ValidationPlot():
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
-        if "merged" in self.meta:
+        if hasattr ( self, "meta" ) and "merged" in self.meta:
             meta["merged"] = self.meta["merged"]
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
