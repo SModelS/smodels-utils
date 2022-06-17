@@ -460,7 +460,8 @@ class ValidationPlot():
                 logger.error("Validation datafile %s not found" %datafile)
             else:
                 logger.info("Validation datafile %s not found" %datafile)
-            self.data = []
+            if overwrite:
+                self.data = []
             return
         nprev = len(self.data)
 
@@ -481,10 +482,11 @@ class ValidationPlot():
         self.meta = content["meta"]
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
-            if not "merged" in self.meta:
-                self.meta["merged"]=f"{len(slhafiles)}+{ctadded}"
+            if not "runs" in self.meta:
+                self.meta["runs"]=f"{len(self.data)}"
             else:
-                self.meta["merged"]=self.meta["merged"]+"+"+f"{ctadded}"
+                prev = eval ( self.meta["runs"] )
+                self.meta["runs"]=self.meta["runs"]+"+"+f"{len(self.data)-prev}"
         # self.data = content["data"]
         self.meta["npoints"] = len ( self.data )
 
@@ -1049,8 +1051,10 @@ class ValidationPlot():
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
-        if hasattr ( self, "meta" ) and "merged" in self.meta:
-            meta["merged"] = self.meta["merged"]
+        if hasattr ( self, "meta" ) and "runs" in self.meta:
+            meta["runs"] = self.meta["runs"]
+        if not "runs" in meta:
+            meta["runs"]=f"{len(self.data)}"
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
