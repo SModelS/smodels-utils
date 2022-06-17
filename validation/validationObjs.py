@@ -1042,6 +1042,8 @@ class ValidationPlot():
             if "error" in i:
                 nerr += 1
         dt = round ( ( time.time() - self.t0 ) / 60. / 60., 3 ) ## in hours
+        if dt < 0.002:
+            dt = round ( ( time.time() - self.t0 ) / 60. / 60., 4 ) ## in hours
         #hostname = "unknown"
         import socket
         hostname = socket.gethostname()
@@ -1051,8 +1053,14 @@ class ValidationPlot():
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
-        if hasattr ( self, "meta" ) and "runs" in self.meta:
-            meta["runs"] = self.meta["runs"]
+        if hasattr ( self, "meta" ):
+            if "runs" in self.meta:
+                meta["runs"] = self.meta["runs"]
+            if 'dt[h]' in self.meta:
+                dt = round ( dt + self.meta["dt[h]"], 3 )
+                if dt < 0.002:
+                    dt = round ( dt / 60. / 60., 4 ) ## in hours
+                meta["dt[h]"] = dt
         if not "runs" in meta:
             meta["runs"]=f"{len(self.data)}"
         if hasattr ( self, "ncpus" ):
