@@ -456,6 +456,7 @@ class ValidationPlot():
         """
         Tries to load an already existing python output.
         :param overwrite:  if True, then overwrite any existing data
+        :returns: number of points added
         """
 
         validationDir = os.path.join(self.expRes.path,'validation')
@@ -485,15 +486,18 @@ class ValidationPlot():
             self.data.append ( d )
         self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
         self.meta = content["meta"]
+        addedpoints = len(self.data)
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
             if not "runs" in self.meta:
                 self.meta["runs"]=f"{len(self.data)}"
             else:
                 prev = eval ( self.meta["runs"] )
-                self.meta["runs"]=self.meta["runs"]+"+"+f"{len(self.data)-prev}"
+                self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
+                addedpoints = len(self.data)-prev
         # self.data = content["data"]
         self.meta["npoints"] = len ( self.data )
+        return addedpoints
 
     def getWidthsFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """
@@ -1018,10 +1022,12 @@ class ValidationPlot():
             logger.warning("No data found. Nothing will be saved")
             return False
 
-        print ( "[validationObjs] generateData", self.options["generateData"] )
         if self.options["generateData"] in [ None, "ondemand" ]:
-            self.loadData ( overwrite = False )
+            nadded = self.loadData ( overwrite = False )
             print ( "[validationObjs] loaded", len(self.data) )
+            if nadded == 0:
+                logger.warning("No added points. Nothing will be saved")
+                return False
 
         if not validationDir:
             validationDir = os.path.join(self.expRes.path,'validation')
