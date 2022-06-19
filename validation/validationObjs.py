@@ -365,6 +365,11 @@ class ValidationPlot():
                 tar = tarfile.open(self.slhaDir,'r:gz')
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 members=tar.getmembers()
+                countm = 0
+                for m in members:
+                    if m.name.endswith ( ".slha" ):
+                        countm += 1
+                self.pointsInTarFile = countm
                 random.shuffle ( members )
                 limitPoints = self.options["limitPoints"]
                 if limitPoints != None and limitPoints > 0:
@@ -1049,6 +1054,8 @@ class ValidationPlot():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if hasattr ( self, "pointsInTarFile" ):
+            meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
         if hasattr ( self, "meta" ):
