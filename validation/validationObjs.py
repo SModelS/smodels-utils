@@ -493,8 +493,8 @@ class ValidationPlot():
                 self.meta["runs"]=f"{len(self.data)}"
             else:
                 prev = eval ( self.meta["runs"] )
-                self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
                 addedpoints = len(self.data)-prev
+                self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
         # self.data = content["data"]
         self.meta["npoints"] = len ( self.data )
         return addedpoints
