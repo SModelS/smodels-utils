@@ -360,7 +360,7 @@ class DatabaseCreator(list):
 
         return dataset
 
-    def getExclusionCurves(self):
+    def getExclusionCurvesROOT(self):
         """
         Gets all exclusion curves defined. If there are multiple datasets,
         then it does not include duplicated exclusion curves.
@@ -423,7 +423,71 @@ class DatabaseCreator(list):
                                 stGraph.SetLineStyle(2)
                             curves.append(label)  #Store curves (to avoid duplicates)
                             allCurves.append(stGraph)
+        return allCurves
 
+    def getExclusionCurves(self):
+        """
+        Gets all exclusion curves defined. If there are multiple datasets,
+        then it does not include duplicated exclusion curves.
+
+        :return: list with exclusion curves (TGraph objects)
+        """
+        curves = []
+        allCurves = []
+        #Loop over datasets
+        for dataset in self:
+            #Loop over txnames
+            for txname in dataset._txnameList:
+                for plane in txname._goodPlanes:
+                    if plane == None:
+                        continue
+                    for axes in str(plane.axes).split(";"):
+                        if plane.branches == None:
+                            plane2 = MassPlane.fromString ( plane._txDecay, axes )
+                            if plane2 != None:
+                                plane.branches = plane2.branches
+                        for exclusion in plane._exclusionCurves:
+                            if not exclusion:
+                                continue  #Exclusion source has not been defined
+                            name = '%s_%s' %(exclusion.name, axes)
+                            label = [txname.txName,exclusion.name,axes]
+                            if label in curves: #Curve already appears in dict
+                                continue
+                            stGraph = { "title": name, "name": exclusion.name,
+                                        "txname": txname.txName, "points": [] }
+                            i=0
+                            for pointDict in exclusion:
+                                point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                                if not 'y' in point:
+                                    point['y'] = 0.0
+                                try:
+                                    masses = plane.getParticleMasses ( **point )
+
+                                    meetsConstraints = txname.checkMassConstraints ( masses )
+                                    if not meetsConstraints:
+                                        continue
+                                    # print ( "masses", masses, meetsConstraints )
+                                except ValueError:
+                                    logger.info ( "cannot convert to coordinates: %s" % point )
+                                    continue
+                                if type(point["x"])==str or type(point["y"])==str:
+                                    logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
+                                    continue
+                                # stGraph.SetPoint(i,point['x'],point['y'])
+                                stGraph["points"].append ( point )
+                                i+=1
+                            #stGraph.SetLineColor(ROOT.kBlack)
+                            stGraph["linecolor"]="black"
+                            if 'expected' in exclusion.name:
+                                stGraph["linecolor"]="red"
+                                # stGraph.SetLineColor(ROOT.kRed)
+                            #stGraph.SetLineStyle(1)
+                            stGraph["linestyle"]=1
+                            if 'P1' in exclusion.name or 'M1' in exclusion.name:
+                                # stGraph.SetLineStyle(2)
+                                stGraph["linestyle"]=2
+                            curves.append(label)  #Store curves (to avoid duplicates)
+                            allCurves.append(stGraph)
         return allCurves
 
     def _setLastUpdate(self):
@@ -599,7 +663,7 @@ class DatabaseCreator(list):
         mode="recreate"
         if update:
             mode="update"
-        import json, uproot
+        import json
         fname = os.path.join ( self.base, self.exclusionsJsonFile )
         content = {}
         if update and os.path.exists ( fname ):
@@ -607,17 +671,20 @@ class DatabaseCreator(list):
                 content = json.load ( f )
                 f.close()
         for exclusion in self.exclusions:
-            dirname = exclusion.txname
+            dirname = exclusion["txname"]
             if not dirname in content:
                 content[dirname] = {}
-            name = exclusion.GetName()
+            name = exclusion["title"]
             name = name.strip()
             name = name.replace(" ","")
             xv,yv=[],[]
             xandy = []
-            for i in range(exclusion.GetN() ):
-                x = round_to_n ( exclusion.GetPointX(i), 4 )
-                y = round_to_n ( exclusion.GetPointY(i), 4 )
+            # for i in range(exclusion.GetN() ):
+            for pt in exclusion["points"]:
+                x = round_to_n ( pt["x"], 4 )
+                y = round_to_n ( pt["y"], 4 )
+                #x = round_to_n ( exclusion.GetPointX(i), 4 )
+                #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
                 yv.append ( y )
                 xandy.append ( { "x": x, "y": y } )
