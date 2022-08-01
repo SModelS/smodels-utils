@@ -6,9 +6,11 @@ a pickle file that should work with both python2 and python3. """
 
 from __future__ import print_function
 import pickle, os, sys, argparse, time, copy
-from smodels.experiment.databaseObj import Database
-from smodels_utils.helper.databaseManipulations import \
-    removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
+try:
+    from smodels.experiment.databaseObj import Database
+    from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
+except ModuleNotFoundError:
+    sys.path.append(os.path.expanduser('~/smodels'))
 import hashlib
 import pathlib
 import colorama
