@@ -679,6 +679,12 @@ def prettyTxname(txname,outputtype="root",protons=True):
 
     prodString = prettyProduction(txname,latex,protons)
     decayString = prettyDecay(txname,latex)
+    if prodString is None:
+        logging.warn( f"production string for {txname} not defined" )
+        prodString = f"?{txname}?"
+    if decayString is None:
+        logging.warn( f"decay string for {txname} not defined" )
+        decayString = f"?{txname}?"
     if outputtype == "latex":
         prodString = "$" + prodString.replace("#","\\" ) + "$"
         decayString = "$" + decayString.replace("#","\\" ) + "$"
