@@ -7,7 +7,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import sys,os,time
+import sys,os,time,timeit
 sys.path.insert(0, "../")
 sys.path.insert(0, os.path.expanduser("~/smodels"))
 from smodels.tools import modelTester
@@ -25,6 +25,7 @@ def getCombination(inputFile, parameterFile):
     from smodels.theory.theoryPrediction import theoryPredictionsFor
     from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
     from smodels.theory import decomposer
+    from smodels.theory import theoryPrediction
 
 
 
@@ -86,55 +87,155 @@ def getCombination(inputFile, parameterFile):
         for theoPred in allPredictions:
             theoPred.computeStatistics()
 
+
+    """ Define theory predictions list that collects all theoryPrediction objects which satisfy max condition."""
+    maxcond = parser.getfloat("parameters", "maxcond")
+    theoryPredictions = theoryPrediction.TheoryPredictionList(allPredictions, maxcond)
+
+
     combineAnas = parser.get("options", "combineAnas").replace(" ","").split(",")
     combiner = TheoryPredictionsCombiner.selectResultsFrom(allPredictions,
                                                                combineAnas)
-    return combiner
+    return combiner,theoryPredictions
 
 def getLlhds(combiner,setup):
+    from math import isnan
 
-    muvals = np.linspace(setup['murange'][0],setup['murange'][1],setup['nmu'])
+    muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
     expected = setup["expected"]
     normalize = setup["normalize"]
 
     llhds = {'combined' : np.ones(len(muvals))}
+    # llhds['combined_prev'] = np.ones(len(muvals))
     tpreds = combiner.theoryPredictions
     for t in tpreds:
         Id = t.analysisId()
-        t.computeStatistics( expected = expected )
+        #t.computeStatistics( expected = expected )
         lsm = t.lsm()
         l = np.array([t.likelihood(mu,expected=expected) for mu in muvals])
-        llhds['combined'] = llhds['combined']*l
+        # l_prev = np.array([t.likelihood(mu,expected=expected,useCached=False,previous=True) for mu in muvals])
+        for i in range(len(muvals)):
+            # If the fit did not converge, do not include it in the combined likelihood
+            if l[i] != None:
+                llhds['combined'][i] = llhds['combined'][i]*l[i]
+            # if l_prev[i] != None:
+            #     llhds['combined_prev'][i] = llhds['combined_prev'][i]*l_prev[i]
+            # else:
+            #     llhds['combined_prev'][i] = 0
         llhds[Id]=l
+        # llhds[Id+' prev']=l_prev
 
+    # Replace the points that did not converge by None in the combined likelihood
+    llhds['combined'] = np.array([llCombined if llCombined != 1 else None for llCombined in llhds['combined'].tolist()])
+    # llhds['combined_prev'] = np.array([llCombined_prev if llCombined_prev!=1 and llCombined_prev!=0 else None for llCombined_prev in llhds['combined_prev'].tolist()])
     if normalize:
         for Id,l in llhds.items():
-            llhds[Id] = l/np.sum(l)
+            norm = 0
+            # Compute the normalization factor
+            for elem in l:
+                if elem != None and not isnan(elem):
+                    if elem > norm:
+                        norm = elem
+                    # norm += elem
+            for i,elem in enumerate(l):
+                if elem != None and not isnan(elem):
+                    llhds[Id][i] = elem/norm
+
 
     return muvals,llhds
 
 def getPlot(inputFile, parameterFile,options):
+    from scipy.interpolate import interp1d
     outputFile = options["output"]
 
-    combiner = getCombination(inputFile, parameterFile)
+    combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
-    setup = {'expected' : False,'normalize' : False,
-              'murange' : (options["mumin"],options["mumax"]), 'nmu' : 100}
+    setup = {'expected' : False,'normalize' : True,
+              'murange' : (options["mumin"],options["mumax"]), 'step_mu' : 0.1}
 
     if parser.has_section("setup"):
         setup = parser.get_section("setup").toDict()
     muvals,llhdDict = getLlhds(combiner, setup)
+    print(llhdDict)
 
-    plotOptions = {'xlog' : False, 'ylog' : True, 'yrange' : None,
+    plotOptions = {'xlog' : False, 'ylog' : False, 'yrange' : None,
                     'figsize' : (10,7),'legend' : True}
     if parser.has_section("plotoptions"):
         plotOptions = parser.get_section("plotoptions").toDict()
 
+    tpDict = {}
+    for ana in tPredsList:
+        idDict = {}
+        idDict['ulmu'] = float(ana.upperLimit/ana.xsection.value)
+        idDict['r_obs'] = ana.getRValue(expected = False)
+        idDict['r_exp'] = ana.getRValue(expected = True)
+        tpDict[ana.dataset.globalInfo.id] = idDict
+        tpDict
+
+    muhat = combiner.muhat()
+    lmax = combiner.lmax()
+    lsm = combiner.lsm()
+    lbsm = combiner.likelihood(mu=1.0)
+    ymin = 0.
+
     fig = plt.figure(figsize=plotOptions['figsize'])
     for anaID,l in llhdDict.items():
-        plt.plot(muvals,l,label=anaID)
+        likelihoodInterp = interp1d(muvals,l)
+        if anaID == 'combined_prev':
+            zorder = 100
+            linestyle = '-.'
+            lbl=r'$\mu_{UL}$'
+            ulmu = combiner.getUpperLimitOnMu(expected = setup["expected"])
+            ulmu_comb = ulmu
+            #Draw vertical lines for muhat
+            if setup['murange'][0] <= muhat <= setup['murange'][1]:
+                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
+            x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=1)
+        elif anaID == 'combined':
+            zorder = 99
+            linestyle = '--'
+            lbl=r'$\mu_{UL}$'
+            ulmu = combiner.getUpperLimitOnMu(expected = setup["expected"])
+            ulmu_comb = ulmu
+            robs = combiner.getRValue(expected = False)
+            rexp = combiner.getRValue(expected = True)
+            #Draw vertical lines for muhat
+            if setup['murange'][0] <= muhat <= setup['murange'][1]:
+                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
+            x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=1)
+        else:
+            if 'prev' in anaID:
+                linestyle = ':'
+                zorder = 98
+                x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=1)
+            else:
+                linestyle = '-'
+                zorder = None
+                ulmu = tpDict[anaID]['ulmu']
+                robs = tpDict[anaID]['r_obs']
+                rexp = tpDict[anaID]['r_exp']
+                x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=1)
+            lbl=None
 
-    plt.xlabel ( r"$\mu$" )
+        #Draw vertical lines for ulmu
+        if setup['murange'][0] <= ulmu <= setup['murange'][1]:
+            plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
+
+    plt.xlabel( r"$\mu$" )
+    if setup["normalize"]:
+        plt.ylabel('Normalized Likelihood')
+    else:
+        plt.ylabel('Likelihood')
+
+
+    endFileName = parser.get("database", "dataselector")
+    if endFileName == 'all':
+        endFileName = 'UL+EM'
+    if parser.has_option("options", "combineSRs"):
+        if parser.getboolean("options", "combineSRs"):
+            endFileName = 'combined'
+    plt.title(os.path.basename(inputFile).replace('.slha','') + ', ' + endFileName + '\n' +
+              r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm))
 
     if plotOptions['xlog']:
         plt.xscale('log')
@@ -156,10 +257,10 @@ def main():
     ap.add_argument('-f', '--filename',
             help='name of SLHA input file', required=True)
     ap.add_argument('-o', '--output',
-            help='name of output plot [likelihoods.png]', 
+            help='name of output plot [likelihoods.png]',
             default = "likelihoods.png" )
     ap.add_argument('-p', '--parameterFile',
-            help='name of parameter file, where most options are defined', 
+            help='name of parameter file, where most options are defined',
             required=True)
     ap.add_argument('-m', '--mumin',
             help='minimum mu [-3.]', type=float,
@@ -169,12 +270,12 @@ def main():
             default = 5. )
 
     args = ap.parse_args()
-    t0 = time.time()
+    t0 = timeit.default_timer()
 
     options = { "mumin": args.mumin, "mumax": args.mumax,
                 "output": args.output }
     fig = getPlot(args.filename, args.parameterFile, options)
-    print('Done in %1.2f s' %(time.time()-t0))
+    print('Done in %1.2f s' %(timeit.default_timer()-t0))
 
 if __name__ == "__main__":
     main()
