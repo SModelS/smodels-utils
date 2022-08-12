@@ -1020,9 +1020,6 @@ class ValidationPlot():
         :param datafile: Name of the data file
         """
 
-        if not hasattr(self,'plot') or not self.plot:
-            logger.warning("No plot found. Nothing will be saved")
-            return False
         if not hasattr(self,'data') or not self.data:
             logger.warning("No data found. Nothing will be saved")
             return False
