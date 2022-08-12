@@ -486,6 +486,8 @@ class ValidationPlot():
             self.data.append ( d )
         self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
         self.meta = content["meta"]
+        if self.meta is None:
+            self.meta = {}
         addedpoints = len(self.data)
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
@@ -496,7 +498,10 @@ class ValidationPlot():
                 addedpoints = len(self.data)-prev
                 self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
         # self.data = content["data"]
-        self.meta["npoints"] = len ( self.data )
+        ndata = 0
+        if self.data != None:
+            ndata = len ( self.data )
+        self.meta["npoints"] = ndata
         return addedpoints
 
     def getWidthsFromSLHAFileName ( self, filename ):
