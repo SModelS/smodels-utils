@@ -263,6 +263,10 @@ def useNiceColorPalette( palette="temperature", f=0., ngradientcolors=20 ):
         print ( "[rootTools.py] error: did not find palette %s. Existing palettes are: temperature, blackwhite, darkbody, deepsea, blueyellow, rainbow, inverteddarkbody" )
 
 def setROOTColorPalette():
+    try:
+        import ROOT
+    except ImportError as e:
+        return
     #Set nice ROOT color palette for temperature plots:
     stops = [0.00, 0.34, 0.61, 0.84, 1.00]
     red   = [0.00, 0.00, 0.87, 1.00, 0.51]
@@ -273,7 +277,6 @@ def setROOTColorPalette():
     r = array('d', red)
     g = array('d', green)
     b = array('d', blue)
-    import ROOT
     ROOT.TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
     ROOT.gStyle.SetNumberContours(999)
 
