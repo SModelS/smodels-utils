@@ -7,6 +7,8 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
+    
+import logging as logger
 
 def getRootVersion ( astuple=False, useimport=False ):
     """ get the ROOT version from root-config
@@ -16,7 +18,6 @@ def getRootVersion ( astuple=False, useimport=False ):
     """
     if useimport: return getRootVersionFromImport_(astuple)
     import setPath
-    import logging as logger
     try:
         import subprocess
         S=subprocess.getoutput("root-config --version")
@@ -40,7 +41,11 @@ def boundingBoxIsFinite ( bb ):
 
 def destroyRoot():
     """ its one of the ROOT wtf's """
-    import ROOT
+    try:
+        import ROOT
+    except ImportError as e:
+        # logger.warning ( "could not import ROOT" ) 
+        return
     for i in ROOT.gROOT.GetListOfCanvases():
         i.Destructor()
 
@@ -266,6 +271,7 @@ def setROOTColorPalette():
     try:
         import ROOT
     except ImportError as e:
+        # logger.warning ( "could not import ROOT" ) 
         return
     #Set nice ROOT color palette for temperature plots:
     stops = [0.00, 0.34, 0.61, 0.84, 1.00]
