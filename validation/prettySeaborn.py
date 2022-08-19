@@ -9,7 +9,8 @@
 
 """
 
-import logging,os,sys,numpy,random,copy
+import logging,os,sys,random,copy
+import numpy as np
 sys.path.append('../')
 from array import array
 import math,ctypes
@@ -117,7 +118,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         else:
             if not "error" in pt.keys():
                 tgr.append( { "i": len(tgr), "x": x, "y": y, "r": r })
-                if numpy.isfinite ( rexp ):
+                if np.isfinite ( rexp ):
                     etgr.append( { "i": len(etgr), "x": x, "y": y, "rexp": rexp } )
                 if "chi2" in pt:
                     tgrchi2.append( { "i": len(tgrchi2), "x": x, "y": y, "chi2": pt["chi2"] / 3.84 } )
@@ -149,13 +150,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         etgrN = len(etgr)
         buff = etgr.GetX()
         #buff.SetSize(etgrN)
-        xpts = numpy.frombuffer(buff,count=etgrN)
+        xpts = np.frombuffer(buff,count=etgrN)
         buff = etgr.GetY()
         #buff.SetSize(etgrN)
-        ypts = numpy.frombuffer(buff,count=etgrN)
+        ypts = np.frombuffer(buff,count=etgrN)
         buff = etgr.GetZ()
         #buff.SetSize(etgrN)
-        zpts = numpy.frombuffer(buff,count=etgrN)
+        zpts = np.frombuffer(buff,count=etgrN)
         for i in range(etgrN):
             etgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
     if len(etgr) > 0. and ( max(exs) == min(exs) ):
@@ -164,15 +165,15 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         buff.reshape((etgr.GetN(),))
         #buff.SetSize(sys.maxsize)
         #print ( "count", etgr.GetN(), type(buff), buff.shape )
-        xpts = numpy.frombuffer(buff,count=etgr.GetN())
+        xpts = np.frombuffer(buff,count=etgr.GetN())
         buff = etgr.GetY()
         buff.reshape((etgr.GetN(),))
         #buff.SetSize(sys.maxsize)
-        ypts = numpy.frombuffer(buff,count=etgr.GetN())
+        ypts = np.frombuffer(buff,count=etgr.GetN())
         buff = etgr.GetZ()
         buff.reshape((etgr.GetN(),))
         #buff.SetSize(sys.maxsize)
-        zpts = numpy.frombuffer(buff,count=etgr.GetN())
+        zpts = np.frombuffer(buff,count=etgr.GetN())
         for i in range(etgr.GetN()):
             etgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
 
@@ -224,7 +225,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     types = list(set(types))
     if len(types) == 1: types = types[0]
     resultType = "%s" %str(types)
-    title = title + "  #scale[0.8]{("+resultType+")}"
+    title = title + " ("+resultType+")"
     """
     tgr.SetTitle(title)
     plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
@@ -253,6 +254,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     #Draw temp plot:
     rs = get ( "r", tgr )
     Z = {}
+    def closeValue ( x_, y_, tgr ):
+        dmin, v = float("inf"), None
+        for t in tgr:
+            d = (t["x"]-x_)**2 + (t["y"]-y_)**2
+            if d < dmin:
+                dmin = d
+                v = t["r"]
+        if dmin < 900.:
+            return v
+        return float("nan")
+
     for t in tgr:
         x = t["x"]
         y = t["y"]
@@ -261,20 +273,27 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             Z[x]={}
         Z[x][y]=float(r)
     xs = list ( Z.keys() )
-    xs.sort()
+    xs.sort( )
     T = []
-    ys.sort()
-    for x in xs:
+    ys.sort( reverse = True )
+    for y in ys:
         tmp = []
-        for y in ys:
+        for x in xs:
+            r = float("nan")
             if y in Z[x]:
-                tmp.append ( Z[x][y] )
+                r = Z[x][y]
             else:
-                tmp.append ( float("nan") )
+                r = closeValue ( x, y, tgr )
+            tmp.append ( r )
+            rs.append ( r )
+                # tmp.append ( float("nan") )
         T.append ( tmp )
-    T = numpy.asarray ( T )
-    print ( "T", T )
-    im = plt.imshow ( T, cmap=plt.cm.RdBu, interpolation="bilinear" )
+    T = np.asarray ( T )
+    #mask = np.isnan( T )
+    #T[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), T[~mask])
+    print ( "T", T[-3:] )
+    # im = plt.scatter ( xs, ys, rs )
+    im = plt.imshow ( T, cmap=plt.cm.RdBu, extent = ( min(xs), max(xs), min(ys), max(ys) ), interpolation="nearest" )
     plt.colorbar ( im )
     plt.title ( title )
     """
@@ -392,9 +411,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 grN = gr.GetN()
                 buff = gr.GetX()
                 #buff.SetSize(etgrN)
-                xpts = numpy.frombuffer(buff,count=grN)
+                xpts = np.frombuffer(buff,count=grN)
                 buff = gr.GetY()
-                ypts = numpy.frombuffer(buff,count=grN)
+                ypts = np.frombuffer(buff,count=grN)
                 for i in range(int(gr.GetN())):
                     gr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,2.))
                 # gr.SetLineStyle(5)
