@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,time,math,numpy,copy,ctypes,random
+import logging,os,sys,time,math,numpy,copy,random
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
