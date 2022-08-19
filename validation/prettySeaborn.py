@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 """
-.. module:: plottingFuncs
-   :synopsis: Main methods for dealing with the plotting of a validation plot
+.. module:: prettySeaborn
+   :synopsis: the module for the "pretty" seaborn-based plots
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
 
@@ -17,7 +18,6 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription
-from rootPlottingFuncs import getContours, setOptions, setAxes, setROOTColorPalette
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -36,10 +36,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     :param options: the options
     :return: TCanvas object containing the plot
     """
-    import ROOT
-
     # Check if data has been defined:
-    tgr, etgr, tgrchi2 = ROOT.TGraph2D(), ROOT.TGraph2D(), ROOT.TGraph2D()
+    tgr, etgr, tgrchi2 = [], [], []
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
     logY = yIsLog ( validationPlot )
@@ -118,58 +116,37 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 logger.warning("Condition violated for more points (not shown)")
         else:
             if not "error" in pt.keys():
-                tgr.SetPoint(tgr.GetN(), x, y, r)
+                tgr.append( { "i": len(tgr), "x": x, "y": y, "r": r })
                 if numpy.isfinite ( rexp ):
-                    etgr.SetPoint(etgr.GetN(), x, y, rexp )
+                    etgr.append( { "i": len(etgr), "x": x, "y": y, "rexp": rexp } )
                 if "chi2" in pt:
-                    tgrchi2.SetPoint(tgrchi2.GetN(), x, y, pt["chi2"] / 3.84 )
+                    tgrchi2.append( { "i": len(tgrchi2), "x": x, "y": y, "chi2": pt["chi2"] / 3.84 } )
     if options["drawExpected"] in [ "auto" ]:
         options["drawExpected"] = hasExpected
-    if tgr.GetN() < 4:
+    if len ( tgr ) < 4:
         logger.error("No good points for validation plot.")
         return (None,None)
 
     #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
     #necessary to smear the points if they rest in a single line.
-    if tgr.GetYmax() == tgr.GetYmin():
+    def get ( var, mlist ):
+        ret = []
+        for d in mlist:
+            ret.append(d[var])
+        return ret
+    xs = get( "x", tgr )
+    ys = get( "y", tgr )
+    exs = get( "x", etgr )
+    eys = get( "y", etgr )
+    if max(ys) == min(ys):
         logger.info("1d data detected, not plotting pretty plot.")
         return None, None
-        logger.info("1d data detected, smearing Y values")
-        tgrN = tgr.GetN()
-        buff = tgr.GetX()
-        #buff.SetSize(tgrN)
-        xpts = numpy.frombuffer(buff,count=tgrN)
-        buff = tgr.GetY()
-        #buff.SetSize(tgrN)
-        ypts = numpy.frombuffer(buff,count=tgrN)
-        buff = tgr.GetZ()
-        #buff.SetSize(tgrN)
-        zpts = numpy.frombuffer(buff,count=tgrN)
-        for i in range(tgrN):
-            yp = ypts[i]+random.uniform(0.,0.001)
-            tgr.SetPoint(i,xpts[i],yp,zpts[i])
-    if tgr.GetXmax() == tgr.GetXmin():
+    if max(xs) == min(xs):
         logger.info("1d data detected, not plotting pretty plot.")
         return None, None
-        logger.info("1d data detected, smearing X values")
-        buff = tgr.GetX()
-        buff.reshape((tgr.GetN(),))
-        #buff.SetSize(sys.maxsize)
-        #print ( "count", tgr.GetN(), type(buff), buff.shape )
-        xpts = numpy.frombuffer(buff,count=tgr.GetN())
-        buff = tgr.GetY()
-        buff.reshape((tgr.GetN(),))
-        #buff.SetSize(sys.maxsize)
-        ypts = numpy.frombuffer(buff,count=tgr.GetN())
-        buff = tgr.GetZ()
-        buff.reshape((tgr.GetN(),))
-        #buff.SetSize(sys.maxsize)
-        zpts = numpy.frombuffer(buff,count=tgr.GetN())
-        for i in range(tgr.GetN()):
-            tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
-    if etgr.GetN() > 0 and ( etgr.GetYmax() == etgr.GetYmin() ):
+    if len(etgr) > 0 and ( max(eys) == min(eys) ):
         logger.info("1d data detected, smearing Y values")
-        etgrN = etgr.GetN()
+        etgrN = len(etgr)
         buff = etgr.GetX()
         #buff.SetSize(etgrN)
         xpts = numpy.frombuffer(buff,count=etgrN)
@@ -181,7 +158,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         zpts = numpy.frombuffer(buff,count=etgrN)
         for i in range(etgrN):
             etgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
-    if etgr.GetN() > 0. and ( etgr.GetXmax() == etgr.GetXmin() ):
+    if len(etgr) > 0. and ( max(exs) == min(exs) ):
         logger.info("1d data detected, smearing X values")
         buff = etgr.GetX()
         buff.reshape((etgr.GetN(),))
@@ -232,9 +209,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 # print ( "y",y,rescaleWidth(y) )
                 contour.SetPoint(i,x.value,rescaleWidth(y.value) )
 
+    """
     if silentMode: ROOT.gROOT.SetBatch()
     setOptions(tgr, Type='allowed')
     setOptions(etgr, Type='allowed')
+    """
     title = validationPlot.expRes.globalInfo.id
     types = []
     for dataset in validationPlot.expRes.datasets:
@@ -246,6 +225,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if len(types) == 1: types = types[0]
     resultType = "%s" %str(types)
     title = title + "  #scale[0.8]{("+resultType+")}"
+    """
     tgr.SetTitle(title)
     plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
@@ -254,19 +234,50 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     plane.SetLeftMargin(0.12)
     ROOT.gStyle.SetTitleSize(0.045,"t")
     ROOT.gStyle.SetTitleY(1.005)
+    """
+    import seaborn as sns
+    import matplotlib.pylab as plt
+    sns.set()
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
     if options["drawExpected"]:
         contVals = [1.,1.,1.]
-    cgraphs = getContours(tgr,contVals, "prettyPlots:cgraphs" )
+    cgraphs = {} # getContours(tgr,contVals, "prettyPlots:cgraphs" )
     ecgraphs = {}
     if options["drawExpected"]:
         ecgraphs = getContours(etgr,contVals, "prettyPlots:ecgraphs" )
-    chi2graphs = getContours ( tgrchi2, [ 1. ] * 3, "prettyPlots:chi2graphs" )
+    chi2graphs = {} # getContours ( tgrchi2, [ 1. ] * 3, "prettyPlots:chi2graphs" )
     # print ( "chi2graphs", chi2graphs )
 
     #Draw temp plot:
+    rs = get ( "r", tgr )
+    Z = {}
+    for t in tgr:
+        x = t["x"]
+        y = t["y"]
+        r = t["r"]
+        if not x in Z:
+            Z[x]={}
+        Z[x][y]=float(r)
+    xs = list ( Z.keys() )
+    xs.sort()
+    T = []
+    ys.sort()
+    for x in xs:
+        tmp = []
+        for y in ys:
+            if y in Z[x]:
+                tmp.append ( Z[x][y] )
+            else:
+                tmp.append ( float("nan") )
+        T.append ( tmp )
+    T = numpy.asarray ( T )
+    print ( "T", T )
+    im = plt.imshow ( T, cmap=plt.cm.RdBu, interpolation="bilinear" )
+    plt.colorbar ( im )
+    plt.title ( title )
+    """
     h = tgr.GetHistogram()
     setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
@@ -430,7 +441,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         l1=ROOT.TLatex()
         l1.SetNDC()
         l1.SetTextSize(.025)
-        """l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)"""
+        # l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
         tgr.l1=l1
     if kfactor is not None and abs ( kfactor - 1.) > .01:
         l2=ROOT.TLatex()
@@ -578,5 +589,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if not hasYValues:
         logger.error ( "it seems like we do not have y-values, so we break off." )
         plane.dontplot = True
+    """
 
-    return plane,tgr
+    return plt,tgr
