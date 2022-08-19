@@ -49,6 +49,99 @@ def destroyRoot():
     for i in ROOT.gROOT.GetListOfCanvases():
         i.Destructor()
 
+def addROOTPointInFront ( curve, x, y ):
+    """ add a point at position 0 in tgraph """
+    #import ROOT
+    n=curve.GetN()+1
+    import ctypes
+    xt,yt=ctypes.c_double(),ctypes.c_double()
+    xtn,ytn=x,y
+    for i in range(n):
+        curve.GetPoint(i,xt,yt)
+        curve.SetPoint(i,xtn,ytn)
+        xtn,ytn=xt.value,yt.value
+
+def printROOTCurve ( curve ):
+    n=curve.GetN()
+    xt,yt=ctypes.c_double(),ctypes.c_double()
+    indices = list(range(3))+list(range(n-3,n))
+    for i in indices:
+        curve.GetPoint(i,xt,yt)
+        y = copy.deepcopy(yt)
+        if y < 0.:
+            y = unscaleWidth(y)
+        #if 0. < y < 1e-6:
+        #    y = unscaleWidth(y)
+        # print ( "%d: %f,%f" % ( i, xt, y ) )
+        # print ( "%d: %f,%g" % ( i, xt, y ) )
+
+def completeROOTGraph ( curve ):
+    """ complete the given graph at the ends to cross the axes """
+    if type(curve) == dict:
+        from smodels_utils.helper.rootTools import exclusionCurveToTGraph
+        curve = exclusionCurveToTGraph ( curve )
+    if not ( curve.GetN() > 3 ):
+        print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
+    if curve.GetN() <= 3:
+        return
+    import ctypes
+    x1,y1=ctypes.c_double(),ctypes.c_double()
+    x2,y2=ctypes.c_double(),ctypes.c_double()
+    xl,yl=ctypes.c_double(),ctypes.c_double()
+    # first compute k of the first three points
+    curve.GetPoint ( 0, x1, y1 ) ## get first point
+    curve.GetPoint ( 2, x2, y2 ) ## get third point
+    curve.GetPoint ( curve.GetN()-1, xl, yl ) ## get last point
+    if (( x1.value - xl.value )**2 + ( y1.value - yl.value ) ** 2 ) < 50.:
+        ## need not completion
+        return
+    logY=False
+    ax1, ay1 = x1.value, y1.value
+    ax2, ay2 = x2.value, y2.value
+    tx1, ty1 = x1.value, y1.value
+    if max(abs(ay2),abs(ay1))<1e-6:
+        logY=True
+        ay2 = rescaleWidth(ay2)
+        ay1 = rescaleWidth(ay1)
+    if ax2 == ax1:
+        ax2 = ax1 + 1e-16
+    dx = ax2 - ax1
+    if dx == 0.:
+        dx=1e-6
+    k = (ay2 - ay1) / dx
+    if abs(k) > 1:
+        ## the curve is more vertical -- close with the x-axis (y=0)
+        addROOTPointInFront ( curve, tx1, 0. )
+    else:
+        ## the curve is more horizontal -- close with the y-axis (x=0)
+        addROOTPointInFront ( curve, 0., ty1 )
+
+    n = curve.GetN()
+    curve.GetPoint ( n-3, x1, y1 ) ## get third last point
+    curve.GetPoint ( n-1, x2, y2 ) ## get last point
+    #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+    #tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
+    tx1, ty1 = x1.value, y1.value
+    tx2, ty2 = x2.value, y2.value
+    if logY:
+        ty2 = rescaleWidth(ty2)
+        ty1 = rescaleWidth(ty1)
+    if tx2 == tx1:
+        tx2 = tx1 + 1e-16
+    k = 99999.
+    if tx2 != tx1:
+        k = (ty2 - ty1) / ( tx2 - tx1 )
+    if k > 1 or k < -1:
+        ## the curve is more vertical -- close with the x-axis (y=0)
+        curve.SetPoint ( n, tx2, 0. )
+    elif k < 0:
+        ## the curve is more horizontal -- close with the y-axis (x=0)
+        curve.SetPoint ( n, tx2, 0. )
+    else:
+        ## the curve is more horizontal -- close with the y-axis (x=0)
+        curve.SetPoint ( n, 0., ty2 )
+    curve.SetPoint ( n+1, 0., 0. )
+
 def getBoundingBox ( graph ):
     """ from graph or container of graphs, return 2d bounding box
     :param graph: a TGraph, or a container of them

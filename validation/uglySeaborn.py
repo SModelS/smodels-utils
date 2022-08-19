@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-.. module:: uglyPlots
-   :synopsis: Main method for creating ugly plots
+.. module:: uglySeaborn
+   :synopsis: Main method for creating ugly plots, seaborn version
 
 .. moduleauthor:: Wolfgang Waltenberger
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, \
+from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
          setAxes, getDatasetDescription
 
 try:
@@ -34,11 +34,20 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
     """
+    def get ( var, mlist ):
+        ret = []
+        for d in mlist:
+            ret.append(d[var])
+        return ret
+    import seaborn as sns
+    import matplotlib.pylab as plt
     logger.info ( "now create ugly plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
          validationPlot.axes ) )
     origdata = getGridPoints ( validationPlot )
     xlabel, ylabel = 'x','y'
+    excluded, allowed, excluded_border, allowed_border, gridpoints = [],[],[],[],[]
+    cond_violated, noresult = [], []
     kfactor=None
     logY = yIsLog ( validationPlot )
     tavg = 0.
@@ -57,13 +66,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         nmax = 20
     dn = 50
     print ( " "*int(45+nmax/dn), end="<\r" )
-    print ( "[uglyPlots] checking validation points >", end="" )
+    print ( "[uglySeaborn] checking validation points >", end="" )
     ycontainer=[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
         if ctPoints == nmax:
-            print ( "[uglyPlots] emergency break" )
+            print ( "[uglySeaborn] emergency break" )
             break
         if "error" in pt.keys():
             vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
@@ -78,7 +87,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 if y_ is None:
                     logger.error ( "the data is 1d." ) # is separate module now
                     sys.exit()
-                noresult.SetPoint(noresult.GetN(), x_, y_ )
+                noresult.append( { "i": len(noresult), "x": x_, "y": y_ } )
             nErrors += 1
             continue
         countPts += 1
@@ -119,17 +128,17 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
 
         if 'condition' in pt and pt['condition'] and pt['condition'] > 0.05:
             logger.warning("Condition violated at %f for file %s" % ( pt['condition'], pt['slhafile']) )
-            cond_violated.SetPoint(cond_violated.GetN(), x, y)
+            cond_violated.append( { "i": len(cond_violated), "x": x, "y": y } )
         elif r > 1.:
             if r < looseness:
-                excluded_border.SetPoint(excluded_border.GetN(), x, y)
+                excluded_border.append( { "i": len(excluded_border), "x": x, "y": y } )
             else:
-                excluded.SetPoint(excluded.GetN(), x, y )
+                excluded.append( { "i": len(excluded), "x": x, "y": y } )
         else:
             if r> 1./looseness:
-                allowed_border.SetPoint(allowed_border.GetN(), x, y)
+                allowed_border.append( { "i": len(allowed_border), "x": x, "y": y } )
             else:
-                allowed.SetPoint(allowed.GetN(), x, y)
+                allowed.append( { "i": len(allowed), "x": x, "y": y } )
 
     logger.info ( "done!" )
 
@@ -138,39 +147,22 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         #masses = removeUnits ( pt[0], standardUnits=GeV )
         #coords = massPlane.getXYValues(masses)
         if coords != None and "y" in coords:
-            gridpoints.SetPoint( gridpoints.GetN(), coords["x"], coords["y"] )
+            gridpoints.append( { "i": len(gridpoints), "x": coords["x"], 
+                                 "y": coords["y"] } )
 
     if countPts == 0:
         logger.warning ( "no good points??" )
         return ( None, None )
     tavg = tavg / len (validationPlot.data )
 
-    from smodels_utils.helper.rootTools import exclusionCurveToTGraph
-    official = exclusionCurveToTGraph ( validationPlot.officialCurves )
-    eofficial = exclusionCurveToTGraph ( validationPlot.expectedOfficialCurves )
-    # Check if official exclusion curve has been defined:
-    if official == []:
-        logger.warning("Official curve for validation plot is not defined.")
-    else:
-        logger.debug("Official curves have length %d" % len (official) )
-    if eofficial == []:
-        logger.debug("Expected official curve for validation plot is not defined.")
-    else:
-        logger.debug("expected official curves have length %d" % len (eofficial) )
-
-    if silentMode: ROOT.gROOT.SetBatch()
-    setOptions(allowed, Type='allowed')
-    setOptions(cond_violated, Type='cond_violated')
-    setOptions(allowed_border, Type='allowed_border')
-    setOptions(excluded, Type='excluded')
-    setOptions(excluded_border, Type='excluded_border')
-    setOptions(noresult, Type='noresult')
-    base = ROOT.TMultiGraph()
-    for i in official:
-        setOptions( i, Type='official')
-    for i in eofficial:
-        setOptions( i, Type='eofficial')
-    setOptions(gridpoints, Type='gridpoints')
+    for p in validationPlot.officialCurves:
+		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion" )
+    ax = plt.gca()
+    fig = plt.gcf()
+    for p in validationPlot.expectedOfficialCurves:
+		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
+                   label="official exclusion (expected)" )
+    base = []
     dx = .12 ## top, left
     nleg = 5
     from sympy import var
@@ -184,27 +176,25 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if logY: # move it to top right
         x1_, x2_ = 0.37+dx, 0.775+dx
         y1_, y2_ = 0.78-0.040*nleg,0.84
-    leg = ROOT.TLegend( x1_,y1_,x2_,y2_ )
-    setOptions(leg)
-    leg.SetTextSize(0.04)
-    if allowed.GetN()>0:
-        base.Add(allowed, "P")
-        leg.AddEntry ( allowed, "allowed", "P" )
-    if excluded.GetN()>0:
-        base.Add(excluded, "P")
-        leg.AddEntry ( excluded, "excluded", "P" )
-    if allowed_border.GetN()>0:
-        base.Add(allowed_border, "P")
-        leg.AddEntry(allowed_border, "allowed (but close)", "P")
-    if excluded_border.GetN()>0:
-        base.Add(excluded_border, "P")
-        leg.AddEntry(excluded_border, "excluded (but close)", "P")
-    if cond_violated.GetN()>0:
-        base.Add(cond_violated, "P")
-        leg.AddEntry( cond_violated, "condition violated", "P" )
-    if noresult.GetN()>0:
-        base.Add(noresult, "P")
-        leg.AddEntry( noresult, "no result", "P" )
+    if len(allowed)>0:
+        plt.plot ( get("x",allowed), get("y",allowed), marker="o", \
+                linestyle=None, c="green", linewidth=0, label="allowed" )
+    if len(excluded)>0:
+        plt.plot ( get("x",excluded), get("y",excluded), marker="o", \
+                linestyle=None, c="red", linewidth=0, label="excluded" )
+    if len(allowed_border)>0:
+        plt.plot ( get("x",allowed_border), get("y",allowed_border), marker="o", \
+                linestyle=None, c="orange", linewidth=0, label="allowed (but close)")
+    if len(excluded_border)>0:
+        plt.plot ( get("x",excluded_border), get("y",excluded_border), marker="o", \
+                linestyle=None, c="lightgreen", linewidth=0, label="excluded (but close)")
+    if len(cond_violated)>0:
+        plt.plot ( get("x",cond_violated), get("y",cond_violated), marker="o", \
+                linestyle=None, c="gray", linewidth=0, label="condition violated")
+    if len(noresult)>0:
+        plt.plot ( get("x",noresult), get("y",noresult), marker="o", \
+                linestyle=None, c="gray", linewidth=0, markersize=2, label="no result")
+    """
     if xvals != None and len(xvals) == 1:
         for i in official:
             if i.GetN() == 1:
@@ -214,9 +204,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 if ytmp.value > .5:
                     yn = 0.
                 i.SetPoint(1, xtmp, yn )
-    for i in eofficial:
-        i.SetLineStyle ( 3 )
-        base.Add( i, "L")
     for ctr,i in enumerate(official):
         base.Add( i, "L")
         completed = copy.deepcopy ( i )
@@ -237,127 +224,70 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         c2.Draw("LP SAME" )
         if ctr == 0:
             leg.AddEntry ( i, "expected off. excl.", "L" )
-    #"""
-    if gridpoints.GetN()>0:
-        base.Add(gridpoints, "P")
-        leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
+    """
+    if len(gridpoints)>0:
+        plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
+                linestyle=None, c="blue", linewidth=0, markersize=2, label="%s SModelS grid points" % len(gridpoints) )
+        #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
     subtitle = getDatasetDescription ( validationPlot )
     figureUrl = getFigureUrl(validationPlot)
-    plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
-    base.SetTitle(title)
-    base.Draw("APsame")
-    setAxes ( base, options["style"] )
+    sns.set()
+    plt.title(title)
     if logY: # y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
         # print ( "set log", ycontainer )
-        plane.SetLogy()
+        #plane.SetLogy()
         ymin = min ( ycontainer ) * 0.5
         ymax = max ( ycontainer ) * 2.
-        base.GetYaxis().SetRangeUser( ymin, ymax )
+        #base.GetYaxis().SetRangeUser( ymin, ymax )
     else:
         if not "style" in options or not "axis" in options["style"]:
+            pass
+            """
             from smodels_utils.helper.rootTools import getBoundingBox, boundingBoxIsFinite
             bb = getBoundingBox ( official )
             if boundingBoxIsFinite ( bb ):
                 base.GetYaxis().SetRangeUser( .8*bb["y"][0], 1.25*bb["y"][1] )
                 base.GetXaxis().SetRangeUser( .8*bb["x"][0], 1.25*bb["x"][1] )
-    leg.Draw()
-    #base.Draw("Psame")
-    base.leg = leg
-    try:
-        base.GetXaxis().SetTitle(xlabel)
-        base.GetYaxis().SetTitle(ylabel)
-    except:
-        pass
+            """
+    plt.xlabel ( xlabel )
+    plt.ylabel ( ylabel )
+    """
     if xvals != None and len(xvals) == 1:
         base.GetYaxis().SetRangeUser(0.0,2.0)
-
-    l=ROOT.TLatex()
-    l.SetNDC()
-    l.SetTextSize(.04)
-    base.l=l
-    l0=ROOT.TLatex()
-    l0.SetNDC()
-    l0.SetTextSize(.025)
-    l0.DrawLatex(.05,.905,subtitle)
-    base.l0=l0
-    signal_factor = 1. # an additional factor that is multiplied with the signal cross section
-    agreement = 0.
-    weighted = options["weightedAgreementFactor"] # compute weighted agreement factor?
-    af = validationPlot.computeAgreementFactor( signal_factor = signal_factor,
-                                                weighted = weighted )
-    agreement = 0.
-    if math.isfinite(af):
-        agreement = round(100.*af)
-    logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % \
-                  ( agreement,"%",len(validationPlot.data) ) )
-    if options["extraInfo"]:
-        lex=ROOT.TLatex()
-        lex.SetNDC()
-        lex.SetTextColor( ROOT.kBlue+2 ) # kCyan-5 kMagenta-5 kBlue-5
-        lex.SetTextSize(.026 )
-        import socket
-        hn=socket.gethostname()
-        phn = hn.find(".")
-        if phn > 0:
-            hn = hn[:phn]
-        lex.DrawLatex(.63,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
-        base.lex=lex
-
+    """
+    plt.text(.05,.905,subtitle,fontsize=10, transform = fig.transFigure )
     if figureUrl:
-        l1=ROOT.TLatex()
-        l1.SetNDC()
-        l1.SetTextSize(.02)
-        l1.DrawLatex(.06,.02,"%s" % figureUrl)
-        base.l1=l1
-    l2=ROOT.TLatex()
-    l2.SetNDC()
-    l2.SetTextSize(.025)
-    l2.SetTextAngle(90.)
-    l2.SetTextColor( ROOT.kGray )
-    if True: # abs ( kfactor - 1. ) > 1e-5:
-        l2.DrawLatex(.93,.18,"k-factor %.2f" % kfactor)
-    base.l2=l2
+        plt.text ( .05, .023, str(figureUrl), fontsize=10, 
+                   transform=fig.transFigure )
 
-    l3=ROOT.TLatex()
-    l3.SetNDC()
-    l3.SetTextSize(.025)
-    l3.SetTextColor( ROOT.kGray )
+    plt.text ( .93, .18, "k-factor %.2f" % kfactor, c="gray",
+               fontsize = 10, rotation=90, transform = fig.transFigure )
+
     dxpnr=.68 ## top, right
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
-    l3.DrawLatex( dxpnr,.87,"%d / %d points with no results" % \
-                  (nErrors, len(validationPlot.data) ) )
-    base.l3=l3
-
+    plt.text ( dxpnr, .93, "%d / %d points with no results" % \
+            (nErrors, len(validationPlot.data) ), c="gray", fontsize=10,
+            transform = fig.transFigure )
+    plt.legend( loc="best" ) # could be upper right
     if options["extraInfo"]: ## a timestamp, on the right border
         import time
-        l9=ROOT.TLatex()
-        l9.SetNDC()
-        l9.SetTextSize(.025)
-        l9.SetTextAngle(90.)
-        l9.SetTextColor( ROOT.kGray )
-        l9.DrawLatex ( .93, .65, time.strftime("%b %d, %Y, %H:%M") )
-        base.l9 = l9
-
+        plt.text ( .93, .65, time.strftime("%b %d, %Y, %H:%M"), c="gray", 
+                   fontsize = 9, transform=fig.transFigure,
+                   rotation = 90 )
     if options["preliminary"]:
         ## preliminary label, ugly plot
-        tprel = ROOT.TLatex()
-        tprel.SetNDC()
-        tprel.SetTextSize(0.055)
-        tprel.SetTextFont(42)
-        tprel.SetTextColor ( ROOT.kBlue+3 )
-        tprel.SetTextAngle(-25.)
-        tprel.DrawLatex(.6,.85,"SModelS preliminary")
-        #tprel.SetTextAngle(25.)
-        #tprel.DrawLatex(.05,.7,"SModelS preliminary")
-        base.tprel = tprel
+        plt.text ( .3, .4, "SModelS preliminary", c="blue", 
+                   fontsize = 18, transform=fig.transFigure,
+                   rotation = -25, zorder=100 )
 
     if not silentMode:
         _ = raw_input("Hit any key to close\n")
 
-    return plane,base
+    plt.savefig ( "this.png" )
+    return plt,base

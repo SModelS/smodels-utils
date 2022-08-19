@@ -233,7 +233,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     for ctr,i in enumerate(official):
         base.Add( i, "L")
         completed = copy.deepcopy ( i )
-        validationPlot.completeGraph ( completed )
+        from smodels_utils.helper.rootTools import completeROOTGraph
+        completeROOTGraph ( completed )
         completed.SetLineColor( ROOT.kMagenta )
         completed.SetLineStyle( 3 ) # show also how plot is completed
         completed.Draw("LP SAME" )
@@ -245,7 +246,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, options : d
     for ctr,i in enumerate(eofficial):
         c2 = copy.deepcopy ( i )
         c2.SetLineColor( ROOT.kMagenta )
-        validationPlot.completeGraph ( c2 )
+        from smodels_utils.helper.rootTools import completeROOTGraph
+        completeROOTGraph ( c2 )
         c2.SetLineStyle( 2 ) # show also how plot is completed
         c2.Draw("LP SAME" )
         if ctr == 0:
