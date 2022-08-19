@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import yIsLog, getFigureUrl, getContours, setOptions, \
-         setAxes, setROOTColorPalette, getDatasetDescription
+from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription
+from rootPlottingFuncs import getContours, setOptions, setAxes, setROOTColorPalette
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth

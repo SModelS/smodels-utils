@@ -11,13 +11,13 @@
 import logging,os,sys,numpy,random,copy
 sys.path.append('../')
 from array import array
-import math, ctypes
+import math
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
-         setAxes, getDatasetDescription
+         getDatasetDescription
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth

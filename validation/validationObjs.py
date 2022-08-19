@@ -839,7 +839,14 @@ class ValidationPlot():
         in self.officialCurves to generate a pretty exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
-        from prettyPlots import createPrettyPlot
+        backend = str ( self.options["backend"] ).lower().strip()
+        if backend in [ "root" ]:
+            from prettyROOT import createPrettyPlot
+        else:
+            if backend not in [ "native", "default", "none", "python" ]:
+               logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
+               sys.exit(-1)
+            from prettySeaborn import createPrettyPlot
 
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
