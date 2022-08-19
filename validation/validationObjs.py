@@ -50,7 +50,7 @@ class ValidationPlot():
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
-    def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None, 
+    def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
                combine = False ):
         """
@@ -821,9 +821,13 @@ class ValidationPlot():
         if self.isOneDimensional():
             from oneDPlots import create1DPlot as createUglyPlot
         else:
-            if self.options["backend"] in [ "ROOT", "root", "Root" ]:
+            backend = str ( self.options["backend"] ).lower().strip()
+            if backend in [ "root" ]:
                 from uglyROOT import createUglyPlot
             else:
+                if backend not in [ "native", "default", "none", "python" ]:
+                   logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
+                   sys.exit(-1)
                 from uglySeaborn import createUglyPlot
         self.plot, self.base = createUglyPlot( self,silentMode=silentMode,
                                           options = self.options )
