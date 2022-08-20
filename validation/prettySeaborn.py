@@ -259,6 +259,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # print ( "T", T[-3:] )
     # cm = plt.cm.RdYlGn_r
     cm = plt.cm.RdYlBu_r
+    from plottingFuncs import getColormap
+    cm = getColormap()
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
     im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
                       vmax = 3.0, vmin = 0., aspect="auto" )
