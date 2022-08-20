@@ -846,8 +846,8 @@ class ValidationPlot():
             if backend not in [ "native", "default", "none", "python" ]:
                logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
                sys.exit(-1)
-            from prettyROOT import createPrettyPlot
-            # from prettySeaborn import createPrettyPlot
+            # from prettyROOT import createPrettyPlot
+            from prettySeaborn import createPrettyPlot
 
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
@@ -867,6 +867,7 @@ class ValidationPlot():
                 v += " -pk"
             cmd = f"{v} {filename}"
             o = subprocess.getoutput ( cmd )
+            print ( f"{cmd}" )
             print ( f"{o}" )
             return
 
@@ -912,7 +913,6 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'.png')
             try:
                 self.savefig(filename)
-                self.show ( filename )
             except Exception as e:
                 # if fails because of missing dep, then just proceed
                 pass
@@ -925,11 +925,11 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'.png')
             logger.debug ( "saving plot in %s (and pdf and root)" % filename )
             self.savefig ( filename )
-            self.show ( filename )
             addLogo ( filename )
             #filename = filename.replace('.png','.root')
             #self.savefig ( filename )
             # addLogo ( filename )
+        self.show ( filename )
 
         return True
 
