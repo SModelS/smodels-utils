@@ -42,7 +42,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     import seaborn as sns
     import matplotlib.pylab as plt
     plt.clf()
-    plt.grid(b=None)
+    plt.grid(visible=False )
     logger.info ( "now create ugly plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
          validationPlot.axes ) )
@@ -126,6 +126,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                     y = xvals['w']
         else:
             x,y = pt['axes']
+        if logY and y > 1e-8:
+            continue
         ycontainer.append ( y )
 
         if 'condition' in pt and pt['condition'] and pt['condition'] > 0.05:
@@ -149,6 +151,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         #masses = removeUnits ( pt[0], standardUnits=GeV )
         #coords = massPlane.getXYValues(masses)
         if coords != None and "y" in coords:
+            if logY and coords["y"]>1e-8:
+                continue
             gridpoints.append( { "i": len(gridpoints), "x": coords["x"], 
                                  "y": coords["y"] } )
 
@@ -164,6 +168,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.plot ( p["points"]["x"], p["points"]["y"], c="white", linewidth=4, zorder=50 ) 
         plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion", zorder=60 )
     ax = plt.gca()
+    if logY:
+        ax.set_yscale('log')
     fig = plt.gcf()
     for p in validationPlot.expectedOfficialCurves:
         if type(p) not in [ dict ]:
@@ -180,11 +186,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
     if reverse: ## if it is an [x,*],[y,*] plot, put legend to right, not left
         dx = .53
+    """
     x1_, x2_ = dx, 0.35+dx
     y1_, y2_ = 0.82-0.040*nleg,0.88
     if logY: # move it to top right
         x1_, x2_ = 0.37+dx, 0.775+dx
         y1_, y2_ = 0.78-0.040*nleg,0.84
+    """
     if len(allowed)>0:
         plt.plot ( get("x",allowed), get("y",allowed), marker="o", \
                 linestyle=None, c="limegreen", linewidth=0, label="allowed" )
@@ -203,37 +211,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if len(noresult)>0:
         plt.plot ( get("x",noresult), get("y",noresult), marker="o", \
                 linestyle=None, c="gray", linewidth=0, markersize=2, label="no result")
-    """
-    if xvals != None and len(xvals) == 1:
-        for i in official:
-            if i.GetN() == 1:
-                xtmp,ytmp=ctypes.c_double(),ctypes.c_double()
-                i.GetPoint(0,xtmp,ytmp)
-                yn = 1.1
-                if ytmp.value > .5:
-                    yn = 0.
-                i.SetPoint(1, xtmp, yn )
-    for ctr,i in enumerate(official):
-        base.Add( i, "L")
-        completed = copy.deepcopy ( i )
-        validationPlot.completeGraph ( completed )
-        completed.SetLineColor( ROOT.kMagenta )
-        completed.SetLineStyle( 3 ) # show also how plot is completed
-        completed.Draw("LP SAME" )
-        base.Add ( completed )
-        if ctr == 0:
-            leg.AddEntry ( i, "official exclusion", "L" )
-        #else:
-        #    leg.AddEntry ( i, f"what is this {i.GetName()}", "L" )
-    for ctr,i in enumerate(eofficial):
-        c2 = copy.deepcopy ( i )
-        c2.SetLineColor( ROOT.kMagenta )
-        validationPlot.completeGraph ( c2 )
-        c2.SetLineStyle( 2 ) # show also how plot is completed
-        c2.Draw("LP SAME" )
-        if ctr == 0:
-            leg.AddEntry ( i, "expected off. excl.", "L" )
-    """
     if len(gridpoints)>0:
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
                 linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS grid points" % len(gridpoints) )

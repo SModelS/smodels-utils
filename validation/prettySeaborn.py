@@ -83,9 +83,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"$r = \sigma_{signal}/\sigma_{UL}$"
     logY = yIsLog ( validationPlot )
-    if logY:
-        xlabel = "x [mass, GeV]"
-        ylabel = "y [width, GeV]"
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
@@ -147,8 +144,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         else:
             x,y = xvals
-        if logY:
-            y = rescaleWidth(y)
 
         if "condition" in pt.keys() and pt['condition'] and pt['condition'] > 0.05:
             condV += 1
@@ -201,7 +196,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     title = title + " ("+resultType+")"
     import matplotlib.pylab as plt
     plt.clf()
-    plt.grid(b=None)
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
@@ -256,9 +250,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     T = interpolate_missing_pixels ( T, mask, "cubic", fill_value=float("nan") )
     ax = plt.gca()
     fig = plt.gcf()
-    # print ( "T", T[-3:] )
-    # cm = plt.cm.RdYlGn_r
-    cm = plt.cm.RdYlBu_r
+    if logY:
+        xlabel = "x [mass, GeV]"
+        ylabel = "y [width, GeV]"
+        ax.set_yscale('log')
     from plottingFuncs import getColormap
     cm = getColormap()
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
@@ -290,127 +285,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     cs = plt.contour( T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
     csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)", 
                   transform = fig.transFigure ) 
-    """
-    ya = h.GetYaxis()
-    if logY:
-        ya.SetLabelSize(.06)
-        nbins = ya.GetNbins()
-        last = 0
-        for i in range( 1, nbins ):
-            center = ya.GetBinCenter(i)
-            width = unscaleWidth ( center )
-            if type(width) == type(GeV):
-                width = float ( width.asNumber(GeV) )
-            center10 = math.log10 ( width )
-            r_center = int ( round ( center10 ) )
-            delta = abs ( center10 - r_center )
-            if r_center != last and delta < .1:
-                ya.SetBinLabel( i, "10^{%d}" % r_center )
-                last = r_center
-    isEqual = {}
-    x1,x2 = ctypes.c_double(), ctypes.c_double()
-    y1,y2 = ctypes.c_double(), ctypes.c_double()
-    for cval,grlist in cgraphs.items():
-        isEqual[cval]={}
-        if ecgraphs is None or not cval in ecgraphs:
-            continue
-        tmpe = ecgraphs[cval]
-        for i,gr in enumerate(grlist):
-            if gr.GetN() == 0:
-                continue
-            isEqual[cval][i]=False
-            if i+1>len(tmpe):
-                continue
-            if gr.GetN() != tmpe[i].GetN():
-                continue
-            hasDiscrepancy = False
-            for j in range(gr.GetN()):
-                gr.GetPoint(j,x1,y1 )
-                tmpe[i].GetPoint(j,x2,y2 )
-                dx = abs ( (x1.value-x2.value) / ( x1.value+x2.value ) )
-                dy = abs ( (y1.value-y2.value) / ( y1.value+y2.value ) )
-                if dx > 1e-3 or dy > 1e-3:
-                    hasDiscrepancy = True
-                    break
-            if not hasDiscrepancy:
-                isEqual[cval][i]=True
-
-    if ecgraphs is not None:
-        for cval,grlist in ecgraphs.items():
-            if cval == 1.0:
-                ls = 2
-            else:
-                continue
-            for i,gr in enumerate(grlist):
-                try:
-                    if isEqual[cval][i]: ## is equal we need to add noise!
-                        for j in range(gr.GetN()):
-                            gr.GetPoint(j,x1,y1 )
-                            xn = x1.value*random.gauss(1.,.001)
-                            yn = y1.value*random.gauss(1.,.001)
-                            gr.SetPoint( j, xn, yn ) 
-                except KeyError as e:
-                    ## may not exist
-                    pass
-
-                setOptions(gr, Type='official')
-                gr.SetLineColor(ROOT.kRed) # ROOT.Orange+2)
-                # gr.SetLineColor(ROOT.kBlack) # ROOT.Orange+2)
-                gr.SetLineStyle(ls)
-                if gr.GetN() > 0:
-                    gr.Draw("L SAME")
-    for cval,grlist in cgraphs.items():
-        lw = 1
-        if cval == 1.0:
-            ls = 1
-            lw = 3
-        else:
-            ls = 2
-        if ecgraphs is not None and len(ecgraphs)>0 and options["drawExpected"]:
-            ls = 2 ## when expected are drawn also, make this dashed
-        for gr in grlist:
-            setOptions(gr, Type='official')
-            gr.SetLineColor(ROOT.kRed)
-            gr.SetLineWidth ( lw )
-            #gr.SetLineColor(ROOT.kGray+2)
-            #gr.SetLineStyle(ls)
-            if gr.GetN() > 0:
-                gr.Draw("L SAME")
-    if options["drawChi2Line"] and chi2graphs != None: # False:
-        for cval,grlist in chi2graphs.items():
-            for gr in grlist:
-                setOptions(gr, Type='official')
-                gr.SetLineColor(ROOT.kGreen+2)
-                grN = gr.GetN()
-                buff = gr.GetX()
-                #buff.SetSize(etgrN)
-                xpts = np.frombuffer(buff,count=grN)
-                buff = gr.GetY()
-                ypts = np.frombuffer(buff,count=grN)
-                for i in range(int(gr.GetN())):
-                    gr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,2.))
-                # gr.SetLineStyle(5)
-                if gr.GetN() > 0:
-                    gr.Draw("L SAME")
-    for gr in official:
-        # validationPlot.completeGraph ( gr )
-        setOptions(gr, Type='official')
-        gr.SetLineColor ( ROOT.kBlack )
-        if "P1" in gr.GetTitle() or "M1" in gr.GetTitle():
-            gr.SetLineWidth(1)
-            # gr.SetLineStyle(0)
-        if gr.GetN() > 0:
-            gr.Draw("L SAME")
-    if options["drawExpected"]:
-        for gr in expectedOfficialCurves:
-            # validationPlot.completeGraph ( gr )
-            setOptions(gr, Type='official')
-            gr.SetLineColor ( ROOT.kBlack )
-            gr.SetLineStyle ( 2 )
-            # gr.SetLineColor ( ROOT.kRed+2 )
-            if gr.GetN() > 0:
-                gr.Draw("L SAME")
-    """
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
@@ -438,64 +312,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     if validationPlot.validationType == "tpredcomb":
             subtitle = "combination of tpreds"
-    plt.text ( .6, .0222, subtitle, transform=fig.transFigure, fontsize=10 )
+    plt.text ( .95, .0222, subtitle, transform=fig.transFigure, fontsize=10,
+               horizontalalignment="right" )
     if figureUrl:
         plt.text( .13, .13, f"{figureUrl}", 
                   transform=fig.transFigure, c = "black", fontsize = 7 )
 		    # l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
 
-    """
-    nleg = 1
-    if cgraphs != None and official != None:
-    #Count the number of entries in legend:
-        nleg = min(2,len(cgraphs)-list(cgraphs.values()).count([])) + min(2,len(official))
-    #Draw legend:
-    dx = 0. ## top, left
-    dx = .33 ## top, right
-    hasExclLines = False
-    added = False
-    for gr in official:
-        if 'xclusion_' in gr.GetTitle():
-            leg.AddEntry(gr,"exclusion (official)","L")
-            hasExclLines = True
-        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and \
-                (not added):
-            leg.AddEntry(gr,"#pm1#sigma (official)","L")
-            hasExclLines = True
-            added = True
-    for cval,grlist in cgraphs.items():
-        if not grlist:
-            continue
-        if cval == 1.0:
-            leg.AddEntry(grlist[0],"exclusion (SModelS)","L")
-            hasExclLines = True
-        elif (cval == looseness or cval == 1./looseness) and not added:
-            leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
-            hasExclLines = True
-            added = True
-    added = False
-    if options["drawExpected"] and ecgraphs is not None:
-        for cval,grlist in ecgraphs.items():
-            if not grlist:
-                continue
-            if cval == 1.0:
-                leg.AddEntry(grlist[0],"exp. excl. (SModelS)","L")
-                hasExclLines = True
-            elif (cval == looseness or cval == 1./looseness) and not added:
-                leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
-                hasExclLines = True
-                added = True
-    if options["drawChi2Line"] and chi2graphs != None:
-        for cval,grlist in chi2graphs.items():
-            if not grlist:
-                continue
-            if cval == 1.0:
-                leg.AddEntry(grlist[0],"exclusion (#chi^{2})","L")
-                hasExclLines = True
-
-    if hasExclLines:
-        leg.Draw()
-    """
     if kfactor is not None and abs ( kfactor - 1.) > .01:
         plt.text( .65,.83, "k-factor = %.2f" % kfactor, fontsize=10,
                   c="gray", transform = fig.transFigure )

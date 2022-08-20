@@ -27,6 +27,8 @@ except:
 
 def getColormap():
     """ our matplotlib colormap for pretty plots """
+    # return plt.cm.RdYlBu_r
+    # return plt.cm.RdYlGn_r
     from  matplotlib.colors import LinearSegmentedColormap
     # c = ["darkred","red","lightcoral","lightyellow", "palegreen","green","darkgreen"]
     c = ["darkgreen", "green", "palegreen", "lightgoldenrodyellow", "lightcoral", "red", "darkred" ]
