@@ -325,11 +325,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     
 
     for p in validationPlot.officialCurves:
-		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion" )
+		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
 		        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
-                       label="official exclusion (expected)" )
+                       label="exclusion (official, expected)" )
     # from mpl_toolkits.axes_grid1 import make_axes_locatable
     # divider = make_axes_locatable(ax)
     # cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -496,13 +496,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         l1.SetTextSize(.025)
         # l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
         tgr.l1=l1
-    if kfactor is not None and abs ( kfactor - 1.) > .01:
-        l2=ROOT.TLatex()
-        l2.SetNDC()
-        l2.SetTextFont(132)
-        l2.SetTextSize(.04)
-        l2.DrawLatex(0.16,0.2,"k-factor = %.2f" % kfactor)
-        tgr.l2=l2
 
     subtitle = getDatasetDescription ( validationPlot )
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
@@ -598,6 +591,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if hasExclLines:
         leg.Draw()
     """
+    if kfactor is not None and abs ( kfactor - 1.) > .01:
+        plt.text( .64,.205, "k-factor = %.2f" % kfactor, fontsize=10,
+                  c="gray", transform = fig.transFigure )
     if options["preliminary"]:
         ## preliminary label, pretty plot
         plt.text ( .3, .4, "SModelS preliminary", transform=fig.transFigure,
