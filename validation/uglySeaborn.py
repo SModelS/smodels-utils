@@ -42,6 +42,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     import seaborn as sns
     import matplotlib.pylab as plt
     plt.clf()
+    plt.grid(b=None)
     logger.info ( "now create ugly plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
          validationPlot.axes ) )
@@ -160,7 +161,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
-        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion" )
+        plt.plot ( p["points"]["x"], p["points"]["y"], c="white", linewidth=4, zorder=50 ) 
+        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion", zorder=60 )
     ax = plt.gca()
     fig = plt.gcf()
     for p in validationPlot.expectedOfficialCurves:
@@ -234,7 +236,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     """
     if len(gridpoints)>0:
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
-                linestyle=None, c="blue", linewidth=0, markersize=2, label="%s SModelS grid points" % len(gridpoints) )
+                linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS grid points" % len(gridpoints) )
         #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
@@ -267,7 +269,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if xvals != None and len(xvals) == 1:
         base.GetYaxis().SetRangeUser(0.0,2.0)
     """
-    plt.text(.05,.905,subtitle,fontsize=10, transform = fig.transFigure )
+    plt.text(.05,.95, subtitle,fontsize=10, transform = fig.transFigure )
     if figureUrl:
         plt.text ( .05, .023, str(figureUrl), fontsize=10, 
                    transform=fig.transFigure )
@@ -278,7 +280,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     dxpnr=.68 ## top, right
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
-    plt.text ( dxpnr, .93, "%d / %d points with no results" % \
+    plt.text ( dxpnr, .95, "%d / %d points with no results" % \
             (nErrors, len(validationPlot.data) ), c="gray", fontsize=10,
             transform = fig.transFigure )
     plt.legend( loc="best" ) # could be upper right

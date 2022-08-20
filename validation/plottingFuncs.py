@@ -48,16 +48,18 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
         expResult=expResult[0]
     jsonfile = os.path.join(expResult.path,'exclusion_lines.json')
     if not os.path.isfile(jsonfile):
-        logger.error("json file %s not found" %jsonfile )
-        from rootPlottingFuncs import getExclusionCurvesForFromSmsRoot
-        return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes, get_all,
-                expected )
+        jsonfile = os.path.join(expResult.path,'exclusions.json')
+        if not os.path.isfile(jsonfile):
+            logger.error("json file %s not found" % jsonfile )
+            from rootPlottingFuncs import getExclusionCurvesForFromSmsRoot
+            return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes,
+                    get_all, expected )
     from smodels_utils.helper import various
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )
 
 def getDatasetDescription ( validationPlot ):
-    """ get the description of the dataset that appears as a subtitle 
+    """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
     subtitle = f"{len(validationPlot.expRes.datasets)} datasets: "
     if validationPlot.validationType == "tpredcomb":

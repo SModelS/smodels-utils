@@ -201,6 +201,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     title = title + " ("+resultType+")"
     import matplotlib.pylab as plt
     plt.clf()
+    plt.grid(b=None)
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
@@ -415,7 +416,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     axStr = axStr.replace("\\\\t","\\t")
     axStr = axStr.replace("\\\\p","\\p")
     axStr = axStr.replace("\\\\c","\\c")
-    plt.text(.77,.95,axStr,transform=fig.transFigure, fontsize=9 )
+    plt.text(.9,.95,axStr,transform=fig.transFigure, fontsize=9,
+               horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
 
     subtitle = getDatasetDescription ( validationPlot )
