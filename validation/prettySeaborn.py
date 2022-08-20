@@ -200,6 +200,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     resultType = "%s" %str(types)
     title = title + " ("+resultType+")"
     import matplotlib.pylab as plt
+    plt.clf()
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]

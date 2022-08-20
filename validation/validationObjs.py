@@ -823,7 +823,11 @@ class ValidationPlot():
         else:
             backend = str ( self.options["backend"] ).lower().strip()
             if backend in [ "root" ]:
-                from uglyROOT import createUglyPlot
+                try:
+                    import ROOT
+                    from uglyROOT import createUglyPlot
+                except ImportError as e:
+                    from uglySeaborn import createUglyPlot
             else:
                 if backend not in [ "native", "default", "none", "python" ]:
                    logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )

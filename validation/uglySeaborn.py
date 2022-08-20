@@ -41,6 +41,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         return ret
     import seaborn as sns
     import matplotlib.pylab as plt
+    plt.clf()
     logger.info ( "now create ugly plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
          validationPlot.axes ) )
