@@ -72,7 +72,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )
 
-def getDatasetDescription ( validationPlot ):
+def getDatasetDescription ( validationPlot, maxLength = 100 ):
     """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
     subtitle = f"{len(validationPlot.expRes.datasets)} datasets: "
@@ -95,8 +95,17 @@ def getDatasetDescription ( validationPlot ):
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
             validationPlot.combine == True:
         subtitle = "combination of %d signal regions" % len(validationPlot.expRes.datasets)
-    if len(subtitle) > 100:
-        subtitle = subtitle[:100] + " ..."
+    def find_all(a_str, sub):
+        start = 0
+        while True:
+            start = a_str.find(sub, start)
+            if start == -1: return
+            yield start
+            start += len(sub) # use start += 1 to find overlapping matches
+    if len(subtitle) > maxLength:
+        idx = list ( find_all ( subtitle, "," ) )
+        print ( "idx", idx )
+        subtitle = subtitle[:maxLength] + " ..."
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "dataset: UL"

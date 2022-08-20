@@ -34,11 +34,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
     """
-    def get ( var, mlist ):
-        ret = []
-        for d in mlist:
-            ret.append(d[var])
-        return ret
+    def get ( var, mlist ): # get variable "var" from list of dicts, mlist
+        return [ d[var] for d in mlist ]
     import seaborn as sns
     import matplotlib.pylab as plt
     plt.clf()
@@ -186,13 +183,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
     if reverse: ## if it is an [x,*],[y,*] plot, put legend to right, not left
         dx = .53
-    """
-    x1_, x2_ = dx, 0.35+dx
-    y1_, y2_ = 0.82-0.040*nleg,0.88
-    if logY: # move it to top right
-        x1_, x2_ = 0.37+dx, 0.775+dx
-        y1_, y2_ = 0.78-0.040*nleg,0.84
-    """
     if len(allowed)>0:
         plt.plot ( get("x",allowed), get("y",allowed), marker="o", \
                 linestyle=None, c="limegreen", linewidth=0, label="allowed" )
@@ -219,14 +209,12 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             + validationPlot.txName\
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
-    subtitle = getDatasetDescription ( validationPlot )
+    subtitle = getDatasetDescription ( validationPlot, maxLength = 50 )
     figureUrl = getFigureUrl(validationPlot)
     sns.set()
     plt.title(title)
     if logY: # y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
-        # print ( "set log", ycontainer )
-        #plane.SetLogy()
         ymin = min ( ycontainer ) * 0.5
         ymax = max ( ycontainer ) * 2.
         #base.GetYaxis().SetRangeUser( ymin, ymax )
