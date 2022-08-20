@@ -458,6 +458,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     lsub.SetNDC()
     legendplacement = options["legendplacement"]
     legendplacement = legendplacement.replace("'","")
+    legendplacement = legendplacement.replace("best","automatic")
     legendplacement = legendplacement.replace('"',"")
     legendplacement = legendplacement.lower()
     legendplacement = legendplacement.strip()
