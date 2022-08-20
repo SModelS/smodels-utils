@@ -282,9 +282,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
-    cs = plt.contour( T, colors="red", levels=[1.], extent = xtnt, 
-                       origin="image" )
-    cs = plt.plot([-1,-1],[0,0], c = "red", label = "exclusion (SModelS)", 
+    try:
+        from scipy.ndimage.filters import gaussian_filter
+        T = gaussian_filter( T, 1. )
+    except:
+        pass
+    cs = plt.contour( T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
+    csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)", 
                   transform = fig.transFigure ) 
     """
     ya = h.GetYaxis()
@@ -509,6 +513,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if legendplacement in [ "automatic", None, "", "None" ]:
         legendplacement = "best"
     plt.legend( loc=legendplacement ) # could be upper right
+    plt.grid(visible=False)
     # plt.tight_layout()
 
     if not silentMode:

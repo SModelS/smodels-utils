@@ -32,7 +32,7 @@ def getColormap():
     c = ["darkgreen", "green", "palegreen", "lightgoldenrodyellow", "lightcoral", "red", "darkred" ]
     #v = [0,.15,.4,.5,0.6,.9,1.]
     # v = [0,.1,.3,.67,0.8,.9,1.]
-    v = [0,.1,.2,.33,0.6,.8,1.]
+    v = [0,.1,.2,.33,0.6,.85,1.]
     l = list(zip(v,c))
     cmap=LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
