@@ -449,20 +449,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             leg.AddEntry(gr,"#pm1#sigma (official)","L")
             hasExclLines = True
             added = True
-    added = False
-    for gr in expectedOfficialCurves:
-        if 'xclusion_' in gr.GetTitle():
-            if options["drawExpected"]:
-                gr.SetLineColor ( ROOT.kBlack ) # make sure these are right
-                gr.SetLineStyle ( 2 )
-                leg.AddEntry(gr,"exp. excl. (official)","L")
-            hasExclLines = True
-        elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and \
-                (not added):
-            leg.AddEntry(gr,"#pm1#sigma (official)","L")
-            hasExclLines = True
-            added = True
-    added = False
     for cval,grlist in cgraphs.items():
         if not grlist:
             continue
