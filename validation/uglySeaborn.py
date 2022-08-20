@@ -157,11 +157,17 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     tavg = tavg / len (validationPlot.data )
 
     for p in validationPlot.officialCurves:
-		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion" )
+        if type(p) not in [ dict ]:
+            logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
+            continue
+        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion" )
     ax = plt.gca()
     fig = plt.gcf()
     for p in validationPlot.expectedOfficialCurves:
-		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
+        if type(p) not in [ dict ]:
+            logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
+            continue
+        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
                    label="official exclusion (expected)" )
     base = []
     dx = .12 ## top, left

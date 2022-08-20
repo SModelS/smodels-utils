@@ -252,7 +252,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T.append ( tmp )
     T = np.asarray ( T )
     mask = np.isnan( T )
-    T = interpolate_missing_pixels ( T, mask, "linear", fill_value=float("nan") )
+    T = interpolate_missing_pixels ( T, mask, "cubic", fill_value=float("nan") )
     ax = plt.gca()
     fig = plt.gcf()
     # print ( "T", T[-3:] )
@@ -266,12 +266,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
     
-
     for p in validationPlot.officialCurves:
-            plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="exclusion (official)" )
+        if type(p) not in [ dict ]:
+            logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
+            continue
+        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
-                plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
+            if type(p) not in [ dict ]:
+                logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
+                continue
+            plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
     cs = plt.contour( T, colors="red", levels=[1.], extent = xtnt, 
