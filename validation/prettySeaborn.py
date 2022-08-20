@@ -137,7 +137,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
-                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+                ylabel = "r = $\sigma_{signal}/\sigma_{UL}$"
             else:
                 x = xvals["x"]
                 if "y" in xvals:
@@ -169,13 +169,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         logger.error("No good points for validation plot.")
         return (None,None)
 
-    #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
-    #necessary to smear the points if they rest in a single line.
     def get ( var, mlist ):
         ret = []
         for d in mlist:
             ret.append(d[var])
         return ret
+
+    #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
+    #necessary to smear the points if they rest in a single line.
     xs = get( "x", tgr )
     ys = get( "y", tgr )
     exs = get( "x", etgr )
@@ -186,61 +187,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if max(xs) == min(xs):
         logger.info("1d data detected, not plotting pretty plot.")
         return None, None
-    if len(etgr) > 0 and ( max(eys) == min(eys) ):
-        logger.info("1d data detected, smearing Y values")
-        etgrN = len(etgr)
-        buff = etgr.GetX()
-        #buff.SetSize(etgrN)
-        xpts = np.frombuffer(buff,count=etgrN)
-        buff = etgr.GetY()
-        #buff.SetSize(etgrN)
-        ypts = np.frombuffer(buff,count=etgrN)
-        buff = etgr.GetZ()
-        #buff.SetSize(etgrN)
-        zpts = np.frombuffer(buff,count=etgrN)
-        for i in range(etgrN):
-            etgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
-    if len(etgr) > 0. and ( max(exs) == min(exs) ):
-        logger.info("1d data detected, smearing X values")
-        buff = etgr.GetX()
-        buff.reshape((etgr.GetN(),))
-        #buff.SetSize(sys.maxsize)
-        #print ( "count", etgr.GetN(), type(buff), buff.shape )
-        xpts = np.frombuffer(buff,count=etgr.GetN())
-        buff = etgr.GetY()
-        buff.reshape((etgr.GetN(),))
-        #buff.SetSize(sys.maxsize)
-        ypts = np.frombuffer(buff,count=etgr.GetN())
-        buff = etgr.GetZ()
-        buff.reshape((etgr.GetN(),))
-        #buff.SetSize(sys.maxsize)
-        zpts = np.frombuffer(buff,count=etgr.GetN())
-        for i in range(etgr.GetN()):
-            etgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
 
-    if logY:
-        for contour in official:
-            # x, y = Double(), Double()
-            x, y = ctypes.c_double(), ctypes.c_double()
-            n = contour.GetN()
-            for i in range(n):
-                contour.GetPoint(i,x,y)
-                # print ( "y",y,rescaleWidth(y) )
-                contour.SetPoint(i,x.value,rescaleWidth(y.value) )
-        for contour in expectedOfficialCurves:
-            # x, y = Double(), Double()
-            x, y = ctypes.c_double(), ctypes.c_double()
-            n = contour.GetN()
-            for i in range(n):
-                contour.GetPoint(i,x,y)
-                # print ( "y",y,rescaleWidth(y) )
-                contour.SetPoint(i,x.value,rescaleWidth(y.value) )
-
-    """
-    if silentMode: ROOT.gROOT.SetBatch()
-    setOptions(tgr, Type='allowed')
-    setOptions(etgr, Type='allowed')
-    """
     title = validationPlot.expRes.globalInfo.id
     types = []
     for dataset in validationPlot.expRes.datasets:
@@ -252,13 +199,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if len(types) == 1: types = types[0]
     resultType = "%s" %str(types)
     title = title + " ("+resultType+")"
-    """
-    ROOT.gStyle.SetTitleSize(0.045,"t")
-    ROOT.gStyle.SetTitleY(1.005)
-    """
-    import seaborn as sns
     import matplotlib.pylab as plt
-    sns.set()
 
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
@@ -267,7 +208,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     cgraphs = {} # getContours(tgr,contVals, "prettyPlots:cgraphs" )
     ecgraphs = {}
     if options["drawExpected"]:
-        ecgraphs = getContours(etgr,contVals, "prettyPlots:ecgraphs" )
+        ecgraphs = {} # getContours(etgr,contVals, "prettyPlots:ecgraphs" )
     chi2graphs = {} # getContours ( tgrchi2, [ 1. ] * 3, "prettyPlots:chi2graphs" )
     # print ( "chi2graphs", chi2graphs )
 
@@ -317,28 +258,26 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # cm = plt.cm.RdYlGn_r
     cm = plt.cm.RdYlBu_r
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
-    im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic" )
-    # plt.title ( title )
-    plt.text ( .28, .85, title, transform = fig.transFigure )
+    im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
+                      vmax = 3.0, vmin = 0., aspect="auto" )
+    plt.title ( title )
+    # plt.text ( .28, .85, title, transform = fig.transFigure )
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
     
 
     for p in validationPlot.officialCurves:
-		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="exclusion (official)" )
+            plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
-		        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
-                       label="exclusion (official, expected)" )
-    # from mpl_toolkits.axes_grid1 import make_axes_locatable
-    # divider = make_axes_locatable(ax)
-    # cax = divider.append_axes("right", size="5%", pad=0.05)
-    # plt.colorbar ( im, label=zlabel ) # , cax = cax )
-    plt.colorbar ( im, label=zlabel, fraction = .027, pad = .04 )
+                plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
+                       label="exp. excl. (official)" )
+    plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
+    cs = plt.contour( T, colors="red", levels=[1.], extent = xtnt, 
+                       origin="image" )
+    cs = plt.plot([-1,-1],[0,0], c = "red", label = "exclusion (SModelS)", 
+                  transform = fig.transFigure ) 
     """
-    h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
-    xa,ya = h.GetXaxis(),h.GetYaxis()
-    h.SetContour(200)
     ya = h.GetYaxis()
     if logY:
         ya.SetLabelSize(.06)
@@ -355,11 +294,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if r_center != last and delta < .1:
                 ya.SetBinLabel( i, "10^{%d}" % r_center )
                 last = r_center
-    palette = h.GetListOfFunctions().FindObject("palette")
-    palette.SetX1NDC(0.845)
-    palette.SetX2NDC(0.895)
-    palette.SetY1NDC(0.16)
-    palette.SetY2NDC(0.84)
     isEqual = {}
     x1,x2 = ctypes.c_double(), ctypes.c_double()
     y1,y2 = ctypes.c_double(), ctypes.c_double()
@@ -463,39 +397,20 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             # gr.SetLineColor ( ROOT.kRed+2 )
             if gr.GetN() > 0:
                 gr.Draw("L SAME")
-
-    #Draw additional info
-    ltx=ROOT.TLatex()
-    ltx.SetNDC()
-    ltx.SetTextSize(.035)
-    ltx.SetTextFont(42)
-    ltx2 = ltx.Clone()
-    ltx2.SetTextAlign(31)
-    infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
-    ltx.DrawLatex(.03,.88,txStr)
-    ltx2.DrawLatex(.96,.88,axStr)
     """
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
     txStr = validationPlot.txName +': '+pName
-    plt.text(.03,.78,txStr,transform=fig.transFigure, fontsize=9 )
+    plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
                        outputtype="latex")
     axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     axStr = axStr.replace("\\\\t","\\t")
     axStr = axStr.replace("\\\\p","\\p")
     axStr = axStr.replace("\\\\c","\\c")
-    plt.text(.60,.78,axStr,transform=fig.transFigure, fontsize=9 )
+    plt.text(.77,.95,axStr,transform=fig.transFigure, fontsize=9 )
     figureUrl = getFigureUrl(validationPlot)
-    """
-    tgr.ltx = ltx
-    if figureUrl:
-        l1=ROOT.TLatex()
-        l1.SetNDC()
-        l1.SetTextSize(.025)
-        # l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
-        tgr.l1=l1
 
     subtitle = getDatasetDescription ( validationPlot )
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
@@ -509,6 +424,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     if validationPlot.validationType == "tpredcomb":
             subtitle = "combination of tpreds"
+    plt.text ( .6, .0222, subtitle, transform=fig.transFigure, fontsize=10 )
+    if figureUrl:
+        plt.text( .13, .13, f"{figureUrl}", 
+                  transform=fig.transFigure, c = "black", fontsize = 7 )
+		    # l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
+
+    """
     nleg = 1
     if cgraphs != None and official != None:
     #Count the number of entries in legend:
@@ -517,23 +439,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     dx = 0. ## top, left
     dx = .33 ## top, right
     hasExclLines = False
-    # placement = "top left" ## "automatic", "top right", "top left"
-    possibleplacements = [ "automatic", "auto", "top left", "top right" ]
-    if legendplacement not in possibleplacements:
-        print ( "[plottingFuncs] ERROR placement %s not in %s" % \
-                ( legendplacement, ", ".join( possibleplacements ) ) )
-        sys.exit(-1)
-    leg = ROOT.TLegend() ## automatic placement
-    if legendplacement == "top right":
-        leg = ROOT.TLegend(0.23+dx,0.75-0.040*nleg,0.495+dx,0.83)
-    elif legendplacement == "top left":
-        leg = ROOT.TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
-    else:
-        leg = ROOT.TLegend(0.15,0.75-0.040*nleg,0.415,0.83)
-    setOptions(leg)
-    leg.SetMargin(.13)
-    # leg.SetFillStyle(0)
-    leg.SetTextSize(0.04)
     added = False
     for gr in official:
         if 'xclusion_' in gr.GetTitle():
@@ -592,14 +497,23 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         leg.Draw()
     """
     if kfactor is not None and abs ( kfactor - 1.) > .01:
-        plt.text( .64,.205, "k-factor = %.2f" % kfactor, fontsize=10,
+        plt.text( .65,.83, "k-factor = %.2f" % kfactor, fontsize=10,
                   c="gray", transform = fig.transFigure )
     if options["preliminary"]:
         ## preliminary label, pretty plot
         plt.text ( .3, .4, "SModelS preliminary", transform=fig.transFigure,
                    rotation = 25., fontsize = 18, c="blue", zorder=100 )
-    plt.legend( loc="best" ) # could be upper right
-    plt.tight_layout()
+    legendplacement = options["legendplacement"]
+    legendplacement = legendplacement.replace("'","")
+    legendplacement = legendplacement.replace("bottom","lower")
+    legendplacement = legendplacement.replace("top","upper")
+    legendplacement = legendplacement.replace('"',"")
+    legendplacement = legendplacement.lower()
+    legendplacement = legendplacement.strip()
+    if legendplacement in [ "automatic", None, "", "None" ]:
+        legendplacement = "best"
+    plt.legend( loc=legendplacement ) # could be upper right
+    # plt.tight_layout()
 
     if not silentMode:
         ans = raw_input("Hit any key to close\n")

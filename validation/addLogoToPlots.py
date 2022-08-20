@@ -28,7 +28,8 @@ def addLogo(filename,logo = None ):
         if 'pdf' in filename:
             logo = 'smodels-bannerRotated.png'
         else:
-            logo = 'smodels-banner.png'
+            # logo = 'smodels-banner.png'
+            logo = 'smodels-transparent.png'
     
     if '.pdf' in filename:
         from reportlab.pdfgen import canvas
@@ -82,7 +83,12 @@ def addLogo(filename,logo = None ):
         #Copy logo to layer, 0,0 is upper left corner        
         # layer.paste(mark, (500,0))
         # layer.paste(mark, (0, 505))
-        layer.paste(mark, (0, layer.size[1]-50))
+        y =layer.size[1]
+        if y > 550:
+            y = y - 45
+        else:
+            y = y - 40
+        layer.paste(mark, (0, y) )
         #Merge original image and layer and save
         tmpF = tempfile.mktemp(suffix=".png",dir="./")
         Image.composite(layer, im, layer).save( tmpF )
