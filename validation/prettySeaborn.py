@@ -25,6 +25,47 @@ try:
 except:
     pass
 
+from scipy import interpolate
+import numpy as np
+
+# copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
+def interpolate_missing_pixels(
+        image: np.ndarray,
+        mask: np.ndarray,
+        method: str = 'nearest',
+        fill_value: float = 0
+):
+    """
+    :param image: a 2D image
+    :param mask: a 2D boolean image, True indicates missing values
+    :param method: interpolation method, one of
+        'nearest', 'bilinear', 'bicubic'.
+    :param fill_value: which value to use for filling up data outside the
+        convex hull of known pixel values.
+        Default is 0, Has no effect for 'nearest'.
+    :return: the image with missing values interpolated
+    """
+    from scipy import interpolate
+
+    h, w = image.shape[:2]
+    xx, yy = np.meshgrid(np.arange(w), np.arange(h))
+
+    known_x = xx[~mask]
+    known_y = yy[~mask]
+    known_v = image[~mask]
+    missing_x = xx[mask]
+    missing_y = yy[mask]
+
+    interp_values = interpolate.griddata(
+        (known_x, known_y), known_v, (missing_x, missing_y),
+        method=method, fill_value=fill_value
+    )
+
+    interp_image = image.copy()
+    interp_image[missing_y, missing_x] = interp_values
+
+    return interp_image
+
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict, 
                       looseness : float ):
     """
@@ -40,7 +81,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # Check if data has been defined:
     tgr, etgr, tgrchi2 = [], [], []
     kfactor=None
-    xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
+    xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"$r = \sigma_{signal}/\sigma_{UL}$"
     logY = yIsLog ( validationPlot )
     if logY:
         xlabel = "x [mass, GeV]"
@@ -177,21 +218,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         for i in range(etgr.GetN()):
             etgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
 
-    from smodels_utils.helper.rootTools import exclusionCurveToTGraph
-    official = exclusionCurveToTGraph ( validationPlot.officialCurves )
-    validationPlot.rootcurves = { "official": official }
-    # Check if official exclusion curve has been defined:
-    if official == []:
-        logger.warning("Official curve for validation plot is not defined.")
-    else:
-        logger.debug("Official curves have length %d" % len (official) )
-
-    expectedOfficialCurves = exclusionCurveToTGraph ( validationPlot.expectedOfficialCurves )
-    validationPlot.rootcurves["expectedofficial"] = expectedOfficialCurves
-    # Check if official exclusion curve has been defined:
-    if expectedOfficialCurves == []:
-        logger.info("No expected official curves found.")
-
     if logY:
         for contour in official:
             # x, y = Double(), Double()
@@ -227,12 +253,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     resultType = "%s" %str(types)
     title = title + " ("+resultType+")"
     """
-    tgr.SetTitle(title)
-    plane = ROOT.TCanvas("Validation Plot", title, 0, 0, 800, 600)
-    plane.SetRightMargin(0.16)
-    plane.SetTopMargin(0.16)
-    plane.SetBottomMargin(0.16)
-    plane.SetLeftMargin(0.12)
     ROOT.gStyle.SetTitleSize(0.045,"t")
     ROOT.gStyle.SetTitleY(1.005)
     """
@@ -261,7 +281,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if d < dmin:
                 dmin = d
                 v = t["r"]
-        if dmin < 900.:
+        if dmin < 1.:
             return v
         return float("nan")
 
@@ -289,30 +309,36 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 # tmp.append ( float("nan") )
         T.append ( tmp )
     T = np.asarray ( T )
-    #mask = np.isnan( T )
-    #T[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), T[~mask])
-    print ( "T", T[-3:] )
-    # im = plt.scatter ( xs, ys, rs )
-    im = plt.imshow ( T, cmap=plt.cm.RdBu, extent = ( min(xs), max(xs), min(ys), max(ys) ), interpolation="nearest" )
-    plt.colorbar ( im )
-    plt.title ( title )
+    mask = np.isnan( T )
+    T = interpolate_missing_pixels ( T, mask, "linear", fill_value=float("nan") )
+    ax = plt.gca()
+    fig = plt.gcf()
+    # print ( "T", T[-3:] )
+    # cm = plt.cm.RdYlGn_r
+    cm = plt.cm.RdYlBu_r
+    xtnt = ( min(xs), max(xs), min(ys), max(ys) )
+    im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic" )
+    # plt.title ( title )
+    plt.text ( .28, .85, title, transform = fig.transFigure )
+    plt.xlabel ( xlabel )
+    plt.ylabel ( ylabel )
+    
+
+    for p in validationPlot.officialCurves:
+		    plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion" )
+    if options["drawExpected"]:
+        for p in validationPlot.expectedOfficialCurves:
+		        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
+                       label="official exclusion (expected)" )
+    # from mpl_toolkits.axes_grid1 import make_axes_locatable
+    # divider = make_axes_locatable(ax)
+    # cax = divider.append_axes("right", size="5%", pad=0.05)
+    # plt.colorbar ( im, label=zlabel ) # , cax = cax )
+    plt.colorbar ( im, label=zlabel, fraction = .027, pad = .04 )
     """
-    h = tgr.GetHistogram()
-    setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
-    h.GetXaxis().SetTitleFont(42)
     xa,ya = h.GetXaxis(),h.GetYaxis()
-    ya.SetTitleFont(42)
-    xa.SetTitleOffset(1.)
-    ya.SetTitleOffset(1.2)
-    xa.SetTitleSize(.04)
-    ya.SetTitleSize(.04)
-    xa.SetTitle(xlabel)
-    ya.SetTitle(ylabel)
-    h.GetZaxis().SetTitle(zlabel)
     h.SetContour(200)
-    h.Draw("COLZ")
-    setAxes ( h, options["style"] )
     ya = h.GetYaxis()
     if logY:
         ya.SetLabelSize(.06)
@@ -445,17 +471,25 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     ltx.SetTextFont(42)
     ltx2 = ltx.Clone()
     ltx2.SetTextAlign(31)
-    pName = prettyTxname(validationPlot.txName, outputtype="root" )
-    if pName == None:
-        pName = "define {validationPlot.txName} in prettyDescriptions"
-    txStr = validationPlot.txName +': '+pName
-    axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
-    axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
     ltx.DrawLatex(.03,.88,txStr)
     ltx2.DrawLatex(.96,.88,axStr)
-    tgr.ltx = ltx
+    """
+    pName = prettyTxname(validationPlot.txName, outputtype="latex" )
+    if pName == None:
+        pName = "define {validationPlot.txName} in prettyDescriptions"
+    txStr = validationPlot.txName +': '+pName
+    plt.text(.03,.78,txStr,transform=fig.transFigure, fontsize=9 )
+    axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
+                       outputtype="latex")
+    axStr = str(axStr).replace(']','').replace('[','').replace("'","")
+    axStr = axStr.replace("\\\\t","\\t")
+    axStr = axStr.replace("\\\\p","\\p")
+    axStr = axStr.replace("\\\\c","\\c")
+    plt.text(.60,.78,axStr,transform=fig.transFigure, fontsize=9 )
     figureUrl = getFigureUrl(validationPlot)
+    """
+    tgr.ltx = ltx
     if figureUrl:
         l1=ROOT.TLatex()
         l1.SetNDC()
@@ -482,32 +516,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     if validationPlot.validationType == "tpredcomb":
             subtitle = "combination of tpreds"
-    lsub=ROOT.TLatex()
-    lsub.SetNDC()
-    legendplacement = options["legendplacement"]
-    legendplacement = legendplacement.replace("'","")
-    legendplacement = legendplacement.replace('"',"")
-    legendplacement = legendplacement.lower()
-    legendplacement = legendplacement.strip()
-    if "sabine" in options["style"]:
-        lsub.SetTextSize(.037)
-        if legendplacement == "top left": # then we move to top right with this
-            lsub.DrawLatex(.57,.79,subtitle)
-        elif legendplacement == "top right": # then we move to top right with this
-            lsub.DrawLatex(.15,.79,subtitle)
-        else:
-            # lsub.DrawLatex(.57,.79,subtitle)
-            lsub.DrawLatex(.15,.79,subtitle)
-            # lsub.DrawLatex(.15,-.79,subtitle)
-    else:
-        lsub.SetTextAlign(31)
-        # lsub.SetTextSize(.025)
-        lsub.SetTextSize(.035)
-        # lsub.DrawLatex(.81,.068,subtitle)
-        # lsub.DrawLatex(.91,.068,subtitle)
-        lsub.DrawLatex(.91, .048,subtitle)
-    tgr.lsub=lsub
-
     nleg = 1
     if cgraphs != None and official != None:
     #Count the number of entries in legend:
@@ -589,25 +597,19 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
     if hasExclLines:
         leg.Draw()
-    tgr.leg = leg
+    """
     if options["preliminary"]:
         ## preliminary label, pretty plot
-        tprel = ROOT.TLatex()
-        tprel.SetTextColor ( ROOT.kBlue+3 )
-        tprel.SetNDC()
-        tprel.SetTextAngle(25.)
-        tprel.SetTextSize(0.055)
-        tprel.SetTextFont(42)
-        tprel.DrawLatex(.1,.7,"SModelS preliminary")
-        tgr.tprel = tprel
-    plane.Update()
+        plt.text ( .3, .4, "SModelS preliminary", transform=fig.transFigure,
+                   rotation = 25., fontsize = 18, c="blue", zorder=100 )
+    plt.legend( loc="best" ) # could be upper right
+    plt.tight_layout()
 
     if not silentMode:
         ans = raw_input("Hit any key to close\n")
 
     if not hasYValues:
         logger.error ( "it seems like we do not have y-values, so we break off." )
-        plane.dontplot = True
-    """
+        plt.dontplot = True
 
     return plt,tgr
