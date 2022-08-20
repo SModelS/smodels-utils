@@ -38,6 +38,7 @@ def clean ( obj ):
     """ check for some issues with the exclusion line
     :param obj: the ROOT.TGraph
     """
+    import ctypes
     ret = obj.ReadObj()
     n = ret.GetN()
     # x, y = Double(), Double()
