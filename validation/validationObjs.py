@@ -846,8 +846,8 @@ class ValidationPlot():
             if backend not in [ "native", "default", "none", "python" ]:
                logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
                sys.exit(-1)
-            # from prettyROOT import createPrettyPlot
-            from prettySeaborn import createPrettyPlot
+            from prettyROOT import createPrettyPlot
+            # from prettySeaborn import createPrettyPlot
 
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
