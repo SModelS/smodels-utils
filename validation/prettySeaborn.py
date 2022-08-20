@@ -39,7 +39,7 @@ def interpolate_missing_pixels(
     :param image: a 2D image
     :param mask: a 2D boolean image, True indicates missing values
     :param method: interpolation method, one of
-        'nearest', 'bilinear', 'bicubic'.
+        'nearest', 'linear', 'cubic'.
     :param fill_value: which value to use for filling up data outside the
         convex hull of known pixel values.
         Default is 0, Has no effect for 'nearest'.
@@ -422,7 +422,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     axStr = axStr.replace("\\\\t","\\t")
     axStr = axStr.replace("\\\\p","\\p")
     axStr = axStr.replace("\\\\c","\\c")
-    plt.text(.9,.95,axStr,transform=fig.transFigure, fontsize=9,
+    plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
 
