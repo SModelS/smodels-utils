@@ -39,6 +39,26 @@ def getColormap():
     cmap=LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
 
+def getAxisRange ( options : dict, label : str = "xaxis" ):
+    """ given an options dictionary, obtain a range for the axis named
+        <label> 
+    :returns: range list, e.g. [0,1000], or None
+    """
+    if not "style" in options:
+         return None
+    style = options["style"]
+    if label in style:
+        plabel = style.find(label)
+        pstart = style.find("[",plabel)
+        pend = style.find("]",pstart)
+        try:
+            xrange=eval(style[pstart:pend+1] )
+            return xrange
+        except Exception as e:
+            logger.error ( f"when evaluating {label} range: {e}" )
+    return None
+
+
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                           expected=False ):
     """

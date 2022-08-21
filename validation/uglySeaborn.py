@@ -17,7 +17,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
-         getDatasetDescription
+         getDatasetDescription, getAxisRange
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -45,6 +45,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
          validationPlot.axes ) )
     origdata = getGridPoints ( validationPlot )
     xlabel, ylabel = 'x','y'
+    xrange = getAxisRange ( options, "xaxis" )
+    yrange = getAxisRange ( options, "yaxis" )
     excluded, allowed, excluded_border, allowed_border, gridpoints = [],[],[],[],[]
     cond_violated, noresult = [], []
     kfactor=None
@@ -106,7 +108,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             logger.warning ( "No upper limit for %s" % xvals )
             continue
         r = pt['signal']/pt ['UL']
-        # print ( "x,y,r",r )
         if xvals == None:
             # dont have any coordinates? skip.
             logger.warning ( f'do I need to skip {pt}?' )
@@ -124,6 +125,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         else:
             x,y = pt['axes']
         if logY and y > 1e-8:
+            continue
+        if xrange != None and not ( xrange[0] < x < xrange[1] ):
+            continue
+        if yrange != None and not ( yrange[0] < y < yrange[1] ):
             continue
         ycontainer.append ( y )
 
@@ -149,6 +154,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         #coords = massPlane.getXYValues(masses)
         if coords != None and "y" in coords:
             if logY and coords["y"]>1e-8:
+                continue
+            if xrange != None and not ( xrange[0] < coords["x"] < xrange[1] ):
+                continue
+            if yrange != None and not ( yrange[0] < coords["y"] < yrange[1] ):
                 continue
             gridpoints.append( { "i": len(gridpoints), "x": coords["x"], 
                                  "y": coords["y"] } )
