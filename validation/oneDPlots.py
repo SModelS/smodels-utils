@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import getGridPoints, yIsLog, setOptions, getFigureUrl, \
-         setAxes, getDatasetDescription
+from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
+                          getDatasetDescription
+
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -126,7 +127,7 @@ def create1DPlot( validationPlot, silentMode=True,
         # plt.plot ( values[label]["x"], values[label]["y"], c=c )
     # fname = "me.png"
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
-    pAxis = "; ".join ( prettyAxes(validationPlot.txName, validationPlot.axes, outputtype="latex" ))
+    pAxis = prettyAxes(validationPlot.txName, validationPlot.axes, outputtype="latex" )
     title = f"{validationPlot.expRes.globalInfo.id}: {pName} \n {pAxis}" 
 #       ( validationPlot.expRes.globalInfo.id, validationPlot.txName, 
 #         validationPlot.axes ) )

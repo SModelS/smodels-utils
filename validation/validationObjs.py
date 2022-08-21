@@ -394,7 +394,10 @@ class ValidationPlot():
                 continue
             ctadded+=1
             self.data.append ( d )
-        self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+        try:
+            self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+        except:
+            self.data.sort ( key = lambda x: x["axes"]["x"] )
         self.meta = content["meta"]
         if self.meta is None:
             self.meta = {}
