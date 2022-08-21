@@ -642,7 +642,7 @@ def prettyDecay(txname,latex=True):
         decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
-def rootToLatex ( string, outputtype = "latex" ):
+def rootToLatex ( string : str, outputtype : str = "latex" ):
     """ translate root string to latex """
     if outputtype == "root":
         return string
@@ -650,7 +650,7 @@ def rootToLatex ( string, outputtype = "latex" ):
         ret = []
         for x in string:
             ret.append ( rootToLatex ( x, outputtype ) )
-        return ret
+        return ", ".join ( ret )
     string = "$" + string.replace("#","\\") + "$"
     return string
 
