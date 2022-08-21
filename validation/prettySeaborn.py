@@ -193,11 +193,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     import matplotlib.pylab as plt
     plt.clf()
 
-    #Get contour graphs:
-    contVals = [1./looseness,1.,looseness]
-    if options["drawExpected"]:
-        contVals = [1.,1.,1.]
-
     #Draw temp plot:
     rs = get ( "r", tgr )
     ers = get ( "r", etgr )
@@ -324,7 +319,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         legendplacement = "best"
     plt.legend( loc=legendplacement ) # could be upper right
     plt.grid(visible=False)
-    # plt.tight_layout()
 
     if not silentMode:
         ans = raw_input("Hit any key to close\n")
