@@ -457,11 +457,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     lsub=ROOT.TLatex()
     lsub.SetNDC()
     legendplacement = options["legendplacement"]
-    legendplacement = legendplacement.replace("'","")
     legendplacement = legendplacement.replace("best","automatic")
-    legendplacement = legendplacement.replace('"',"")
-    legendplacement = legendplacement.lower()
-    legendplacement = legendplacement.strip()
     if "sabine" in options["style"]:
         lsub.SetTextSize(.037)
         if legendplacement == "top left": # then we move to top right with this

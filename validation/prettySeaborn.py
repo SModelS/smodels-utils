@@ -165,11 +165,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         logger.error("No good points for validation plot.")
         return (None,None)
 
-    def get ( var, mlist ):
-        ret = []
-        for d in mlist:
-            ret.append(d[var])
-        return ret
+    def get ( var, mlist ): # get variable "var" from list of dicts, mlist
+        return [ d[var] for d in mlist ]
 
     #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
     #necessary to smear the points if they rest in a single line.
@@ -202,11 +199,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     contVals = [1./looseness,1.,looseness]
     if options["drawExpected"]:
         contVals = [1.,1.,1.]
-    cgraphs = {} # getContours(tgr,contVals, "prettyPlots:cgraphs" )
-    ecgraphs = {}
-    if options["drawExpected"]:
-        ecgraphs = {} # getContours(etgr,contVals, "prettyPlots:ecgraphs" )
-    chi2graphs = {} # getContours ( tgrchi2, [ 1. ] * 3, "prettyPlots:chi2graphs" )
 
     #Draw temp plot:
     rs = get ( "r", tgr )
@@ -313,13 +305,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         plt.text ( .3, .4, "SModelS preliminary", transform=fig.transFigure,
                    rotation = 25., fontsize = 18, c="blue", zorder=100 )
     legendplacement = options["legendplacement"]
-    legendplacement = legendplacement.replace("'","")
     legendplacement = legendplacement.replace("bottom","lower")
     legendplacement = legendplacement.replace("top","upper")
-    legendplacement = legendplacement.replace('"',"")
-    legendplacement = legendplacement.lower()
-    legendplacement = legendplacement.strip()
-    if legendplacement in [ "automatic", None, "", "None" ]:
+    if legendplacement in [ "automatic", None, "", "none" ]:
         legendplacement = "best"
     plt.legend( loc=legendplacement ) # could be upper right
     plt.grid(visible=False)

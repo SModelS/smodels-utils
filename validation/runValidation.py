@@ -525,6 +525,8 @@ if __name__ == "__main__":
 
         if parser.has_option("options","legendplacement"):
             options["legendplacement"] = parser.get("options", "legendplacement")
+            options["legendplacement"] = options["legendplacement"].\
+                replace("'","").replace('"',"").lower().strip()
         if parser.has_option("options","weightedAgreementFactor"):
             options["weightedAgreementFactor"] = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
