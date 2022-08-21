@@ -31,10 +31,10 @@ def getColormap():
     # return plt.cm.RdYlGn_r
     from  matplotlib.colors import LinearSegmentedColormap
     # c = ["darkred","red","lightcoral","lightyellow", "palegreen","green","darkgreen"]
-    c = ["darkgreen", "green", "palegreen", "lightgoldenrodyellow", "lightcoral", "red", "darkred" ]
+    c = ["darkgreen", "green", "palegreen", "lightgoldenrodyellow", "lightcoral", "red", (.9,0,0) ]
     #v = [0,.15,.4,.5,0.6,.9,1.]
     # v = [0,.1,.3,.67,0.8,.9,1.]
-    v = [0,.1,.2,.33,0.6,.85,1.]
+    v = [0,.1,.2,.33,0.45,.7,1.]
     l = list(zip(v,c))
     cmap=LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
