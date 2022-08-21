@@ -642,16 +642,25 @@ def prettyDecay(txname,latex=True):
         decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
-def rootToLatex ( string : str, outputtype : str = "latex" ):
-    """ translate root string to latex """
+def rootToLatex ( string : str, outputtype : str = "latex",
+                  rectify = True ):
+    """ translate root string to latex 
+    :param rectify: silly feature that rectifies the backslashes
+    """
     if outputtype == "root":
+        return string
+    def rectifyCommands ( string : str ):
+        for i in [ "t", "p", "c", "g", "q", "b", "u", "d" ]:
+            string = string.replace(f"\\\\{i}",f"\\{i}")
         return string
     if type ( string ) in [ list, tuple ]:
         ret = []
         for x in string:
-            ret.append ( rootToLatex ( x, outputtype ) )
-        return ", ".join ( ret )
+            ret.append ( rootToLatex ( x, outputtype, False ) )
+        return rectifyCommands ( ", ".join ( ret ) )
     string = "$" + string.replace("#","\\") + "$"
+    if rectify:
+        string = rectifyCommands ( string )
     return string
 
 def prettyTxname(txname,outputtype="root",protons=True):

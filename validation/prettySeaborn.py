@@ -271,9 +271,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
                        outputtype="latex")
-    axStr = axStr.replace("\\\\t","\\t")
-    axStr = axStr.replace("\\\\p","\\p")
-    axStr = axStr.replace("\\\\c","\\c")
     plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
