@@ -103,9 +103,12 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
             yield start
             start += len(sub) # use start += 1 to find overlapping matches
     if len(subtitle) > maxLength:
-        idx = list ( find_all ( subtitle, "," ) )
-        print ( "idx", idx )
-        subtitle = subtitle[:maxLength] + " ..."
+        pos = maxLength
+        idx = numpy.array ( list ( find_all ( subtitle, "," ) ) )
+        p1 = idx[idx<maxLength]
+        if len(p1)>0:
+            pos = p1[-1]
+        subtitle = subtitle[:pos] + ", ..."
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "dataset: UL"
