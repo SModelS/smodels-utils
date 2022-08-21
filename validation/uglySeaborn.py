@@ -89,6 +89,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 if y_ is None:
                     logger.error ( "the data is 1d." ) # is separate module now
                     sys.exit()
+                if xrange != None and not ( xrange[0] < x_ < xrange[1] ):
+                    continue
+                if yrange != None and not ( yrange[0] < y_ < yrange[1] ):
+                    continue
                 noresult.append( { "i": len(noresult), "x": x_, "y": y_ } )
             nErrors += 1
             continue
