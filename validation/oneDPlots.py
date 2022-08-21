@@ -46,6 +46,7 @@ def create1DPlot( validationPlot, silentMode=True,
     dn = 50
     nmax = len(validationPlot.data)
     from smodels_utils.plotting import mpkitty as plt
+    plt.dontplot = False
     fig, ax = plt.subplots()
 
     xvs, yvs = [], []
