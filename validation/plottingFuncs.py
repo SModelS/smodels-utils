@@ -58,6 +58,21 @@ def getAxisRange ( options : dict, label : str = "xaxis" ):
             logger.error ( f"when evaluating {label} range: {e}" )
     return None
 
+def getClosestValue ( x : float, y : float , graph : dict , dmax : float = 1. ):
+    """ from the graph dictionary, return point closest to x,y
+    :returns: closest value of graph dictionary, as long as its closer than dmax.
+              else return nan
+    """
+    dmin, v = float("inf"), None
+    for t in graph:
+        d = (t["x"]-x)**2 + (t["y"]-y)**2
+        if d < dmin:
+            dmin = d
+            v = t["r"]
+    if dmin < 1.:
+        return v
+    return float("nan")
+
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
                           expected=False ):

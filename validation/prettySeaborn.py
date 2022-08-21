@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription
+from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
+         getClosestValue
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -206,26 +207,12 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if options["drawExpected"]:
         ecgraphs = {} # getContours(etgr,contVals, "prettyPlots:ecgraphs" )
     chi2graphs = {} # getContours ( tgrchi2, [ 1. ] * 3, "prettyPlots:chi2graphs" )
-    # print ( "chi2graphs", chi2graphs )
 
     #Draw temp plot:
     rs = get ( "r", tgr )
     Z = {}
-    def closeValue ( x_, y_, tgr ):
-        dmin, v = float("inf"), None
-        for t in tgr:
-            d = (t["x"]-x_)**2 + (t["y"]-y_)**2
-            if d < dmin:
-                dmin = d
-                v = t["r"]
-        if dmin < 1.:
-            return v
-        return float("nan")
-
     for t in tgr:
-        x = t["x"]
-        y = t["y"]
-        r = t["r"]
+        x,y,r = t["x"],t["y"],t["r"]
         if not x in Z:
             Z[x]={}
         Z[x][y]=float(r)
@@ -240,7 +227,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if y in Z[x]:
                 r = Z[x][y]
             else:
-                r = closeValue ( x, y, tgr )
+                r = getClosestValue ( x, y, tgr, 1. )
             tmp.append ( r )
             rs.append ( r )
                 # tmp.append ( float("nan") )
