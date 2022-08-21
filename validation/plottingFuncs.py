@@ -95,9 +95,9 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     import json
     if type(expResult)==list:
         expResult=expResult[0]
-    jsonfile = os.path.join(expResult.path,'exclusion_lines.json')
+    jsonfile = os.path.join(expResult.path,'exclusions.json')
     if not os.path.isfile(jsonfile):
-        jsonfile = os.path.join(expResult.path,'exclusions.json')
+        jsonfile = os.path.join(expResult.path,'exclusion_lines.json')
         if not os.path.isfile(jsonfile):
             logger.error("json file %s not found" % jsonfile )
             from rootPlottingFuncs import getExclusionCurvesForFromSmsRoot

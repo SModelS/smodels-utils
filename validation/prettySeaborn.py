@@ -156,7 +156,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if not "error" in pt.keys():
                 tgr.append( { "i": len(tgr), "x": x, "y": y, "r": r })
                 if np.isfinite ( rexp ):
-                    etgr.append( { "i": len(etgr), "x": x, "y": y, "rexp": rexp } )
+                    etgr.append( { "i": len(etgr), "x": x, "y": y, "r": rexp } )
                 if "chi2" in pt:
                     tgrchi2.append( { "i": len(tgrchi2), "x": x, "y": y, "chi2": pt["chi2"] / 3.84 } )
     if options["drawExpected"] in [ "auto" ]:
@@ -202,12 +202,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
     #Draw temp plot:
     rs = get ( "r", tgr )
-    Z = {}
+    Z, eZ = {}, {}
     for t in tgr:
         x,y,r = t["x"],t["y"],t["r"]
         if not x in Z:
             Z[x]={}
         Z[x][y]=float(r)
+    for t in etgr:
+        x,y,r = t["x"],t["y"],t["r"]
+        if not x in eZ:
+            eZ[x]={}
+        eZ[x][y]=float(r)
     xs = list ( Z.keys() )
     xs.sort( )
     T = []
@@ -292,7 +297,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if figureUrl:
         plt.text( .13, .13, f"{figureUrl}", 
                   transform=fig.transFigure, c = "black", fontsize = 7 )
-		    # l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
 
     if kfactor is not None and abs ( kfactor - 1.) > .01:
         plt.text( .65,.83, "k-factor = %.2f" % kfactor, fontsize=10,
