@@ -38,6 +38,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         return [ d[var] for d in mlist ]
     import seaborn as sns
     import matplotlib.pylab as plt
+    plt.dontplot = False
     plt.clf()
     plt.grid(visible=False )
     logger.info ( "now create ugly plot for %s, %s: %s" % \

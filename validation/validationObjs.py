@@ -903,7 +903,7 @@ class ValidationPlot():
             logger.warning("No plot found. Nothing will be saved")
             return False
 
-        if hasattr ( self.plot, "dontplot" ):
+        if hasattr ( self.plot, "dontplot" ) and self.plot.dontplot == True:
             logger.warning("Plotting got inhibited." )
             return False
 
