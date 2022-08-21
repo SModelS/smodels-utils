@@ -111,8 +111,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if (not "error" in pt.keys()) and ("kfactor" in pt.keys()) and (abs(kfactor - pt['kfactor'])> 1e-5):
             logger.error("kfactor not a constant throughout the plane!")
             sys.exit()
-        #import IPython
-        # IPython.embed()
         if not "axes" in pt:
             ## try to get axes from slha file
             pt["axes"] = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
@@ -202,6 +200,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
     #Draw temp plot:
     rs = get ( "r", tgr )
+    ers = get ( "r", etgr )
     Z, eZ = {}, {}
     for t in tgr:
         x,y,r = t["x"],t["y"],t["r"]
@@ -215,23 +214,31 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         eZ[x][y]=float(r)
     xs = list ( Z.keys() )
     xs.sort( )
-    T = []
+    T, eT = [], []
     ys.sort( reverse = True )
     for y in ys:
-        tmp = []
+        tmp, etmp = [], []
         for x in xs:
-            r = float("nan")
+            r, er = float("nan"), float("nan")
             if y in Z[x]:
                 r = Z[x][y]
-            else:
-                r = getClosestValue ( x, y, tgr, 1. )
+            if y in eZ[x]:
+                er = eZ[x][y]
+            #else: ## try this if not dense enough
+            #    r = getClosestValue ( x, y, tgr, 1. )
             tmp.append ( r )
+            etmp.append ( er )
             rs.append ( r )
+            ers.append ( er )
                 # tmp.append ( float("nan") )
         T.append ( tmp )
+        eT.append ( etmp )
     T = np.asarray ( T )
+    eT = np.asarray ( eT )
     mask = np.isnan( T )
+    emask = np.isnan( eT )
     T = interpolate_missing_pixels ( T, mask, "cubic", fill_value=float("nan") )
+    eT = interpolate_missing_pixels ( eT, emask, "cubic", fill_value=float("nan") )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
@@ -269,6 +276,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     cs = plt.contour( T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
     csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)", 
                   transform = fig.transFigure ) 
+    if options["drawExpected"] == True:
+        cs = plt.contour( eT, colors="blue", linestyles = "dotted", levels=[1.], 
+                          extent = xtnt, origin="image" )
+        ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)", 
+                        transform = fig.transFigure, linestyle="dotted" ) 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"

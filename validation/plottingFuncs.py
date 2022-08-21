@@ -66,11 +66,13 @@ def getClosestValue ( x : float, y : float , graph : dict , dmax : float = 1. ):
     dmin, v = float("inf"), None
     for t in graph:
         d = (t["x"]-x)**2 + (t["y"]-y)**2
+        if d < dmax:
+            return v
         if d < dmin:
             dmin = d
             v = t["r"]
-    if dmin < 1.:
-        return v
+    #if dmin < dmax:
+    #    return v
     return float("nan")
 
 
