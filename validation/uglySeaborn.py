@@ -253,8 +253,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.text ( .05, .023, str(figureUrl), fontsize=10, 
                    transform=fig.transFigure )
 
-    plt.text ( .93, .18, "k-factor %.2f" % kfactor, c="gray",
-               fontsize = 10, rotation=90, transform = fig.transFigure )
+    if kfactor != None and abs ( kfactor - 1. ) > 1e-2:
+        plt.text ( .93, .18, "k-factor %.2f" % kfactor, c="gray",
+                   fontsize = 10, rotation=90, transform = fig.transFigure )
 
     dxpnr=.68 ## top, right
     if reverse: ## if reverse put this line at left of plot
