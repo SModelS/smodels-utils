@@ -134,10 +134,11 @@ class MetaInfoInput(Locker):
     (publication means: physic summary note or conference note)
     """
 
-    infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
+    infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type', 'includeCRs']
+    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type', 
+    'includeCRs', 'onnxFiles' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
