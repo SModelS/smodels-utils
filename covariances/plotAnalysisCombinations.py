@@ -161,7 +161,7 @@ def getPlot(inputFile, parameterFile,options):
     print(llhdDict)
 
     plotOptions = {'xlog' : False, 'ylog' : False, 'yrange' : None,
-                    'figsize' : (10,7),'legend' : True}
+                    'figsize' : (13,8),'legend' : True}
     if parser.has_section("plotoptions"):
         plotOptions = parser.get_section("plotoptions").toDict()
 
@@ -192,7 +192,7 @@ def getPlot(inputFile, parameterFile,options):
             #Draw vertical lines for muhat
             if setup['murange'][0] <= muhat <= setup['murange'][1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=1)
+            x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=2)
         elif anaID == 'combined':
             zorder = 99
             linestyle = '--'
@@ -204,30 +204,32 @@ def getPlot(inputFile, parameterFile,options):
             #Draw vertical lines for muhat
             if setup['murange'][0] <= muhat <= setup['murange'][1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=1)
+            x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
         else:
             if 'prev' in anaID:
                 linestyle = ':'
                 zorder = 98
-                x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=1)
+                x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=2)
             else:
                 linestyle = '-'
                 zorder = None
                 ulmu = tpDict[anaID]['ulmu']
                 robs = tpDict[anaID]['r_obs']
                 rexp = tpDict[anaID]['r_exp']
-                x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=1)
+                x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
             lbl=None
 
         #Draw vertical lines for ulmu
         if setup['murange'][0] <= ulmu <= setup['murange'][1]:
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
 
-    plt.xlabel( r"$\mu$" )
+    plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
     if setup["normalize"]:
-        plt.ylabel('Normalized Likelihood')
+        plt.ylabel('Normalized Likelihood', fontsize=18)
     else:
-        plt.ylabel('Likelihood')
+        plt.ylabel('Likelihood', fontsize=18)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
 
 
     endFileName = parser.get("database", "dataselector")
@@ -236,8 +238,8 @@ def getPlot(inputFile, parameterFile,options):
     if parser.has_option("options", "combineSRs"):
         if parser.getboolean("options", "combineSRs"):
             endFileName = 'combined'
-    plt.title(os.path.basename(inputFile).replace('.slha','') + ', ' + endFileName + '\n' +
-              r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm))
+    plt.title( r'Wino-Higgsino, $M_2=500 GeV$, $\mu=200 GeV$' + ', ' + 'combined SRs'+ '\n' +
+              r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm),fontsize=20)
 
     if plotOptions['xlog']:
         plt.xscale('log')
@@ -246,7 +248,7 @@ def getPlot(inputFile, parameterFile,options):
     if plotOptions['yrange']:
         plt.ylim(plotOptions['yrange'][0],plotOptions['yrange'][1])
     if plotOptions['legend']:
-        plt.legend()
+        plt.legend(fontsize=14)
 
     plt.savefig(outputFile)
     return fig
