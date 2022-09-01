@@ -115,8 +115,10 @@ def getLlhds(combiner,setup):
         l = np.array([t.likelihood(mu,expected=expected) for mu in muvals])
         # l_prev = np.array([t.likelihood(mu,expected=expected,useCached=False,previous=True) for mu in muvals])
         for i in range(len(muvals)):
-            # If the fit did not converge, do not include it in the combined likelihood
-            if l[i] != None:
+            # If the fit did not converge, set the combined likelihood to nan
+            if l[i] == None:
+                llhds['combined'][i] = float("nan")
+            else:
                 llhds['combined'][i] = llhds['combined'][i]*l[i]
             # if l_prev[i] != None:
             #     llhds['combined_prev'][i] = llhds['combined_prev'][i]*l_prev[i]
