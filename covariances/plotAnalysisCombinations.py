@@ -158,7 +158,6 @@ def getPlot(inputFile, parameterFile,options):
     if parser.has_section("setup"):
         setup = parser.get_section("setup").toDict()
     muvals,llhdDict = getLlhds(combiner, setup)
-    print(llhdDict)
 
     plotOptions = {'xlog' : False, 'ylog' : False, 'yrange' : None,
                     'figsize' : (13,8),'legend' : True}
