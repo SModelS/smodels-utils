@@ -82,6 +82,26 @@ def getSetupRExp():
     }
     return ret
 
+def getSetupFilter():
+    database = Database( dbpath[0] )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2019-09', 'ATLAS-SUSY-2018-12', "CMS-SUS-12-024" ]
+    dsids = [ 'SRATT', 'SRWZ_14', 'MET4_HT4_nb3' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "gluino_squarks.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-4., 6. ),
+            "dictname": "rexp.dict",
+            "output": "debug_rexp.png"
+    }
+    return ret
+
 def getSetupSabine():
     """ ATLAS-SUSY-2018-41 and CMS-SUS-20-001 """
     database = Database( dbpath[0] )
