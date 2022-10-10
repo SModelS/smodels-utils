@@ -215,3 +215,7 @@ DECAY   1000024      	1.0   # C1 decays, charge violation is on purpose
 #          BR         NDA      ID1       ID2
           1.0         2     1000022      25  # BR(C1 -> N1 h )
 # 
+
+DECAY   1000025      	1.0   # N3 decays
+#          BR         NDA      ID1       ID2
+          1.0         2     1000022      25  # BR(N2 -> N1 h )

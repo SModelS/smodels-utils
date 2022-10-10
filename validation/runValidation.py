@@ -199,10 +199,6 @@ def run ( expResList, options : dict, keep ):
             axis = options["axis"]
             # logger.info ( "axis", axis )
             if axis is None:
-                fname = tarfile.replace ( slhadir, "" ).replace(".tar.gz","")
-                if fname.startswith ( "/" ):
-                    fname = fname[1:]
-                fname = fname.lower()
 
                 for ax in axes:
                     hasCorrectAxis_ = hasCorrectAxis
@@ -223,17 +219,17 @@ def run ( expResList, options : dict, keep ):
                                 if myaxis == ax:
                                     hasCorrectAxis_ = True
                                     break
-                    if fname in kfactorDict:
+                    if fname_ in kfactorDict:
                         # print ( "namedTarball", namedTarball, "ax", ax )
                         if type(namedTarball) == str and ":" in namedTarball:
                             myaxis,fname_= namedTarball.split(":")[:2]
                             myaxis = str ( eval ( myaxis ) )
                             if myaxis == ax:
-                                kfactor = float(kfactorDict[fname])
+                                kfactor = float(kfactorDict[fname_])
                                 logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
                         else:
-                            kfactor = float(kfactorDict[fname])
-                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname}" )
+                            kfactor = float(kfactorDict[fname_])
+                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
                     localopts = copy.deepcopy ( options )
                     if hasattr ( txname, "xrange" ):
                         localopts = addRange ( "x", localopts, txname.xrange )
