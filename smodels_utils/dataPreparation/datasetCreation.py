@@ -14,7 +14,6 @@ import math
 import copy
 import sys
 import re
-import ROOT
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.tools.smodelsLogging import logger
@@ -292,6 +291,7 @@ class DatasetsFromRoot:
             filename and name of histo are separated with a ":".
         :param readDatasetNames: try to retrieve dataset names from histogram
         """
+        import ROOT
         fname_obs, hname_obs = observed_histo.split(":")
         fname_bg, hname_bg = bg_histo.split(":")
         self.file_obs = ROOT.TFile ( fname_obs )
