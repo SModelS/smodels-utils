@@ -61,7 +61,7 @@ def create1DPlot( validationPlot, silentMode=True,
         if ctPoints == nmax:
             logger.error ( "emergency break" )
             break
-        if "axes" in pt and "x" in pt["axes"]:
+        if "axes" in pt and pt["axes"] is not None and "x" in pt["axes"]:
             x = pt["axes"]["x"]
             y, ey = float ( "nan" ), float ( "nan" )
             if "signal" in pt and "UL" in pt:
