@@ -399,7 +399,7 @@ class RefXSecComputer:
         # print ( "findOpenChannels" )
         channels = []
         # productions of same-sign-pid pairs when the particle is within reach
-        samesignmodes = ( 1000021, 1000023 )
+        samesignmodes = ( 1000021, 1000023, 1000025 )
         # production of opposite-sign-pid pairs when the particle is within reach
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
