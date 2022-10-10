@@ -199,7 +199,6 @@ def run ( expResList, options : dict, keep ):
             axis = options["axis"]
             # logger.info ( "axis", axis )
             if axis is None:
-
                 for ax in axes:
                     hasCorrectAxis_ = hasCorrectAxis
                     x,y,z = var("x y z")
@@ -210,6 +209,7 @@ def run ( expResList, options : dict, keep ):
                         myaxis = str ( eval ( myaxis ) )
                         if myaxis == ax:
                             hasCorrectAxis_ = True
+                            break
                     if type(namedTarball) == list:
                         # looks like were given multiples
                         for nt in namedTarball:
@@ -218,6 +218,8 @@ def run ( expResList, options : dict, keep ):
                                 myaxis = str ( eval ( myaxis ) )
                                 if myaxis == ax:
                                     hasCorrectAxis_ = True
+                                    pnamedTarball = fname_
+                                    tarfile = os.path.join(slhadir,fname_)
                                     break
                     if fname_ in kfactorDict:
                         # print ( "namedTarball", namedTarball, "ax", ax )
