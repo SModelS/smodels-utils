@@ -166,8 +166,12 @@ def run ( expResList, options : dict, keep ):
             # for named tarballs, but current axis is different
             hasCorrectAxis=False
             if options["generateData"] != False:
-                tokens = tarfile.split(";") #
+                tokens = tarfile
+                if type(tokens) == str:
+                    tokens = [ tarfile ]
+                #tokens = tarfile.split(";")
                 for tf in tokens:
+                    tf = tf.strip()
                     #  and not os.path.isfile(tarfile):
                     fname = tf
                     if ":" in tf:
@@ -243,6 +247,14 @@ def run ( expResList, options : dict, keep ):
                     myaxis = str ( eval ( myaxis ) )
                     if myaxis == ax:
                         hasCorrectAxis = True
+                if type(namedTarball) == list:
+                    # looks like were given multiples
+                    for nt in namedTarball:
+                        if ":" in nt:
+                            myaxis,fname_= nt.split(":")[:2]
+                            myaxis = str ( eval ( myaxis ) )
+                            if myaxis == ax:
+                                hasCorrectAxis = True
                 ## we need "local" options, since we switch one flag
                 pnamedTarball = namedTarball
                 if not hasCorrectAxis:
