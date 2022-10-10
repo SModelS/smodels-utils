@@ -158,7 +158,10 @@ def run ( expResList, options : dict, keep ):
             if hasattr ( txname, "validationTarball" ):
                 tarfile = txname.validationTarball
                 namedTarball = tarfile
-                l=f"Database entry specifies a validation tarball: {tarfile}. Will use it."
+                if type(tarfile) == list:
+                    l=f"Database entry specifies validation tarballs: {','.join(tarfile)}. Will use them."
+                else:
+                    l=f"Database entry specifies a validation tarball: {tarfile}. Will use it."
                 logger.info( l )
             # tarfile = os.path.join(slhadir,tarfile)
 
@@ -255,6 +258,7 @@ def run ( expResList, options : dict, keep ):
                             myaxis = str ( eval ( myaxis ) )
                             if myaxis == ax:
                                 hasCorrectAxis = True
+                                break
                 ## we need "local" options, since we switch one flag
                 pnamedTarball = namedTarball
                 if not hasCorrectAxis:
