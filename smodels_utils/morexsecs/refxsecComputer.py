@@ -21,13 +21,14 @@ from smodels_utils.SModelSUtils import installDirectory
 from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 from smodels import installation as smodelsinstallation
 import os, sys, io, shutil, pyslha
-
+        
 class RefXSecComputer:
     """
     The xsec computer that simply looks up reference cross sections,
     and interpolates them.
     """
     version = "1.0" ## make sure we can trace changes in the tables
+    hasWarned = { "omitted": 0 }
 
     def __init__( self, verbose = False ):
         """
@@ -38,6 +39,17 @@ class RefXSecComputer:
             setLogLevel ( "info" )
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
                                        "morexsecs", "tables" )
+    def warn ( self, *txt ):
+        stxt=str(*txt)
+        if not stxt in self.hasWarned:
+            self.hasWarned[stxt]=0
+        self.hasWarned[stxt]+=1
+        if self.hasWarned[stxt]<3:
+            logger.warning ( *txt )
+        if self.hasWarned[stxt]==3:
+            self.hasWarned["omitted"]+=1
+            if self.hasWarned["omitted"]<2:
+                logger.warning ( "(omitted similar msgs)" )
 
     def checkFileExists(self, inputFile):
         """
@@ -592,7 +604,7 @@ class RefXSecComputer:
                 s1 = "N3"
             if pid2 == 1000025:
                 s2 = "N3"
-            logger.warning ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
+            self.warn ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
             if False:
                 filename = "xsecEWKdegenerate%d.txt" % sqrts

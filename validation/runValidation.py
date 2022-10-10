@@ -214,6 +214,15 @@ def run ( expResList, options : dict, keep ):
                         myaxis = str ( eval ( myaxis ) )
                         if myaxis == ax:
                             hasCorrectAxis_ = True
+                    if type(namedTarball) == list:
+                        # looks like were given multiples
+                        for nt in namedTarball:
+                            if ":" in nt:
+                                myaxis,fname_= nt.split(":")[:2]
+                                myaxis = str ( eval ( myaxis ) )
+                                if myaxis == ax:
+                                    hasCorrectAxis_ = True
+                                    break
                     if fname in kfactorDict:
                         # print ( "namedTarball", namedTarball, "ax", ax )
                         if type(namedTarball) == str and ":" in namedTarball:
@@ -242,7 +251,7 @@ def run ( expResList, options : dict, keep ):
                         # if not ":" in namedTarball:
                         localopts["generateData"]=False
                         oldNamedTarball = pnamedTarball
-            else:
+            else: # axis is not None
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
                 if type(namedTarball) == str and ":" in namedTarball:
