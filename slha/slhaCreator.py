@@ -572,5 +572,6 @@ if __name__ == "__main__":
     print ( f"[slhaCreator] New tarball {tarball}" )
     if not args.keep:
         subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
+        subprocess.getoutput ( "rm -rf %s" % tempf.pythiaCard )
         subprocess.getoutput ( "rm -rf %s" % newtemp )
 
