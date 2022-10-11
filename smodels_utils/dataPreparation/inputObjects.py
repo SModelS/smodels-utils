@@ -17,7 +17,8 @@ from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
-from smodels_utils.dataPreparation.covarianceHandler import CovarianceHandler
+from smodels_utils.dataPreparation.covarianceHandler import \
+         ROOTCovarianceHandler, CSVCovarianceHandler
 from smodels_utils.dataPreparation import covarianceHandler
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -161,7 +162,7 @@ class MetaInfoInput(Locker):
         databaseCreator.metaInfo = metaInfo
         return metaInfo
 
-    def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
+    def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
                           max_datasets=None, aggregate = None, datasets = None,
                           histoIsCorrelations=False, aggprefix="ar" ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
@@ -179,8 +180,12 @@ class MetaInfoInput(Locker):
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         """
-        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate,
-                                      aggprefix )
+        if filename.endswith ( ".csv" ):
+            handler = CSVCovarianceHandler ( filename, 
+                    max_datasets, aggregate, aggprefix )
+        else:
+            handler = ROOTCovarianceHandler ( filename, histoname, max_datasets, 
+                    aggregate, aggprefix )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:

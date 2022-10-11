@@ -11,6 +11,7 @@
 import sys
 import copy
 import logging
+import numpy
 from smodels_utils.helper import prettyDescriptions
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -64,7 +65,7 @@ def aggregateMe ( covariance, aggregate, aggprefix="AR" ):
             newCov[ctr][ctr2]=cov
     return newCov, newDSOrder
 
-class CovarianceHandler:
+class ROOTCovarianceHandler:
     def __init__ ( self, filename, histoname, max_datasets=None,
                    aggregate = None, aggprefix = "ar" ):
         """ constructor.
@@ -97,6 +98,137 @@ class CovarianceHandler:
                    el = 1e-4
                 row.append ( el )
             self.covariance.append ( row )
+
+        if aggregate != None:
+            ## aggregate the stuff
+            self.aggregateThis ( aggregate )
+
+        self.removeSmallValues()
+        self.checkCovarianceMatrix()
+
+    def checkCovarianceMatrix( self ):
+        """ a quick check if the covariance matrix is invertible. """
+        from smodels.tools.simplifiedLikelihoods import Data
+        import scipy.linalg
+        n=len(self.covariance)
+        m=Data( [0.]*n, [0.]*n, self.covariance )
+        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
+        try:
+            # I=(m.covariance)**(-1)
+            I=scipy.linalg.inv(m.covariance)
+        except Exception as e:
+            logger.error ( "Inversion failed. %s" % e )
+            sys.exit()
+        try:
+            from scipy import stats
+            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
+        except Exception as e:
+            import numpy
+            logger.error ( "computation of logpdf failed: %s" % e )
+            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
+            sys.exit()
+
+    def removeSmallValues ( self ):
+        """ set small values in covariance matrix to zero """
+        return
+        #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
+        #        type(self.covariance[0][0]) )
+        threshold = .05
+        removed, ntot = 0, 0
+        for irow,row in enumerate ( self.covariance ):
+            for icol,col in enumerate ( row ):
+                if icol >= irow:
+                    continue
+                corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
+                ntot += 1
+                if corr < threshold:
+                    removed += 1
+                    # print ( f"removing {corr:.3f} <= {threshold} at ({irow},{icol}). was: {self.covariance[irow][icol]:.3f}." )
+                    self.covariance[irow][icol]=0.
+                    self.covariance[icol][irow]=0.
+        if removed > 0:
+            logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
+
+    def aggregateThis ( self, aggregate ):
+        """ yo. aggregate. """
+        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate, 
+                                           self.aggprefix )
+        self.covariance = newCov
+        self.datasetOrder=newDSOrder
+
+    def getHistogram ( self, f, histoname ):
+        """ simple method to retrieve histogram
+        :param f: filehandle
+        """
+        h=f.Get ( histoname )
+        if h: return h
+        if not "/" in histoname:
+            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
+            sys.exit()
+        tokens = histoname.split("/")
+        if not len(tokens)==2:
+            logger.error ( "cannot interpret histoname %s in %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        c= f.Get ( tokens[0] )
+        if not c:
+            logger.error ( "cannot retrieve %s from %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        if c.ClassName() == "TCanvas":
+            h=c.GetPrimitive ( tokens[1] )
+            if h: return h
+            logger.error ( "cannot retrieve %s from %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        logger.error ( "cannot interpret %s in %s" % \
+                        ( histoname, f.name ) )
+        sys.exit()
+
+class CSVCovarianceHandler:
+    def __init__ ( self, filename, max_datasets=None,
+                   aggregate = None, aggprefix = "ar" ):
+        """ constructor.
+        :param filename: filename of root file to retrieve covariance matrix
+                         from.
+        """
+        self.aggprefix = aggprefix
+        f=open(filename,"rt")
+        lines = f.readlines()
+        f.close()
+        #self.n=-1
+        #if max_datasets:
+        #    self.n=min(max_datasets+1,self.n)
+        self.datasetOrder = []
+        self.covariance = []
+        self.blinded_regions = []
+        tuples = []
+
+        nmax = -1
+        for line in lines:
+            p1 = line.find("#")
+            if p1 > -1:
+                line = line[:p1]
+            line = line.strip()
+            if len(line)==0:
+                continue
+            if "Bin" in line: # tables header
+                continue
+            tokens = line.split(",")
+            x,y,z = int(float(tokens[0])), int(float(tokens[1])), float(tokens[2])
+            if x > nmax:
+                nmax = x
+            entry = [x-1,y-1,z]
+            tuples.append ( entry )
+        self.n = nmax
+        for i in range(1,nmax+1):
+            self.datasetOrder.append ( f"sr{i}" )
+        a = numpy.array ( [ [0.]*nmax ]*nmax, dtype=float )
+        for t in tuples:
+            a[t[0]][t[1]]=t[2]
+        a = a.tolist()
+        self.covariance = a
+        print ( len(a) )
 
         if aggregate != None:
             ## aggregate the stuff
