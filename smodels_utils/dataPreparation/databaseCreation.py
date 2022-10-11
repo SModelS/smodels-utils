@@ -54,6 +54,20 @@ class DatabaseCreator(list):
     -txName.txt (one for every txName and every kin. region,
     if the kin. region exist)
     """
+    __hasWarned__ = { "omitted": 0 }
+
+    def warn ( self, *txt ):
+        t=str(*txt)
+        if not t in self.__hasWarned__:
+            self.__hasWarned__[t] = 0
+        self.__hasWarned__[t]+=1
+        if self.__hasWarned__[t]<2:
+            logger.warn ( t )
+        if self.__hasWarned__[t]==2:
+            self.__hasWarned__["omitted"]+=1
+            if self.__hasWarned__["omitted"]<2:
+                logger.warn ( "(omitted more such msgs)" )
+
 
     def __init__(self):
 
@@ -410,8 +424,11 @@ class DatabaseCreator(list):
                                 except ValueError:
                                     logger.info ( "cannot convert to coordinates: %s" % point )
                                     continue
-                                if type(point["x"])==str or type(point["y"])==str:
-                                    logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
+                                if type(point["x"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points ''{point['x']}''. skip it." )
+                                    continue
+                                if type(point["y"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points ''{point['y']}''. skip it." )
                                     continue
                                 stGraph.SetPoint(i,point['x'],point['y'])
                                 i+=1
@@ -470,8 +487,11 @@ class DatabaseCreator(list):
                                 except ValueError:
                                     logger.info ( "cannot convert to coordinates: %s" % point )
                                     continue
-                                if type(point["x"])==str or type(point["y"])==str:
-                                    logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
+                                if type(point["x"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points {point['x']}. skip it." )
+                                    continue
+                                if type(point["y"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points {point['y']}. skip it." )
                                     continue
                                 # stGraph.SetPoint(i,point['x'],point['y'])
                                 stGraph["points"].append ( point )
@@ -794,7 +814,7 @@ class DatabaseCreator(list):
             if attr == "axes":
                 ## remove full 3d entries
                 if "z" in value:
-                    logger.warning ( "There is a 3d axis. Will try to remove it." )
+                    self.warn ( "There is a 3d axis. Will try to remove it." )
                     tokens = value.split(";")
                     value=""
                     for t in tokens:

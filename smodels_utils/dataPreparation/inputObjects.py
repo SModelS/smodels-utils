@@ -138,7 +138,7 @@ class MetaInfoInput(Locker):
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type', 
+    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type',
     'includeCRs', 'onnxFiles' ]
     internalAttr = ['_sqrts', '_lumi']
 
@@ -181,10 +181,10 @@ class MetaInfoInput(Locker):
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         """
         if filename.endswith ( ".csv" ):
-            handler = CSVCovarianceHandler ( filename, 
+            handler = CSVCovarianceHandler ( filename,
                     max_datasets, aggregate, aggprefix )
         else:
-            handler = ROOTCovarianceHandler ( filename, histoname, max_datasets, 
+            handler = ROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
@@ -539,6 +539,7 @@ class TxNameInput(Locker):
     infoAttr.append ( 'finalState' )
     infoAttr.append ( 'intermediateState' )
     requiredAttr.append ( 'finalState' )
+    __hasWarned__ = { "omitted": 0 }
 
     def addValidationTarballsFromPlanes ( self ):
         """ if a mass plane has a validation tarball defined,
@@ -966,6 +967,18 @@ class TxNameInput(Locker):
                 elConstraint.append(branchConstraint)
             self.massConstraints.append(elConstraint)
 
+    def warn ( self, *txt ):
+        t=str(*txt)
+        if not t in self.__hasWarned__:
+            self.__hasWarned__[t] = 0
+        self.__hasWarned__[t]+=1
+        if self.__hasWarned__[t]<2:
+            logger.warn ( t )
+        if self.__hasWarned__[t]==2:
+            self.__hasWarned__["omitted"]+=1
+            if self.__hasWarned__["omitted"]<2:
+                logger.warn ( "(omitted more such msgs)" )
+
     def checkMassConstraints(self,massArray):
         """
         Check if massArray satisfies the mass constraints defined in massConstraints
@@ -1010,8 +1023,11 @@ class TxNameInput(Locker):
                     m2 = massArray[ib][iv+1]
                     if type(m2) == tuple:
                         m2 = m2[0]
-                    if type(m1)==str and type(m2)==str:
-                        logger.warn ( f"expected masses/floats, got strings: {m1},{m2}. skip it." )
+                    if type(m1)==str:
+                        self.warn ( f"expected masses/floats, got string: ''{m1}''. skip it." )
+                        continue
+                    if type(m2)==str:
+                        self.warn ( f"expected masses/floats, got string: ''{m2}''. skip it." )
                         continue
                     massDiff = m1-m2
                     if massDiff < 0.:
