@@ -654,8 +654,8 @@ class RefXSecComputer:
         if self.verbose:
             print ( f"[refxsecComputer] will query {filename}" )
         if not os.path.exists ( path ):
-            logger.info ( "%s missing" % path )
-            sys.exit()
+            logger.error ( "%s missing" % path )
+            sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
         return xsecs,order,comment
 
