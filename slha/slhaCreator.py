@@ -32,7 +32,7 @@ import signal
 
 __tempfiles__ = set()
 
-def removeTempFiles():
+def removeTempFiles( verbose : bool = False ):
     for l in __tempfiles__:
         if l == None:
             continue
@@ -40,7 +40,8 @@ def removeTempFiles():
             continue
         cmd = f"rm -rf {l}"
         subprocess.getoutput ( cmd )
-        # print ( f"[slhaCreator] {cmd}" )
+        if verbose:
+            print ( f"[slhaCreator] {cmd}" )
     __tempfiles__.clear()
 
 def signal_handler(sig, frame):
@@ -492,6 +493,8 @@ if __name__ == "__main__":
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
+    argparser.add_argument('-o', '--overwrite', action='store_true',
+        help="overwrite existing tarball")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
         help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'. Currently works only with reference_xsecs.")
     argparser.add_argument('--swapBranches', action='store_true',
@@ -510,6 +513,9 @@ if __name__ == "__main__":
     if args.pythia6:
         pythiaVersion = 6
     tarball = args.tarball.replace ( "@@topo@@", args.topology )
+    if args.overwrite and os.path.exists ( tarball ):
+        print ( f"[slhaCreator] overwriting existing {tarball}" )
+        os.unlink ( tarball )
 
     templatefile="../slha/templates/%s.template" % args.topology
     if not os.path.exists ( templatefile ):
@@ -551,6 +557,7 @@ if __name__ == "__main__":
                    ignore_pids = args.ignore_pids, comment = args.comment )
     print ( "[slhaCreator] Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
+    __tempfiles__.add ( newtemp )
     #oldtarball = f"{args.topology}.tar.gz"
     oldtarball = tarball
     if os.path.exists ( oldtarball ):
@@ -571,7 +578,4 @@ if __name__ == "__main__":
             ( newtemp, tarball, args.topology ) )
     print ( f"[slhaCreator] New tarball {tarball}" )
     if not args.keep:
-        subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
-        subprocess.getoutput ( "rm -rf %s" % tempf.pythiaCard )
-        subprocess.getoutput ( "rm -rf %s" % newtemp )
-
+        removeTempFiles()
