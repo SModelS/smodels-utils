@@ -221,7 +221,7 @@ class CSVCovarianceHandler:
             entry = [x-1,y-1,z]
             tuples.append ( entry )
         self.n = nmax
-        for i in range(1,nmax+1):
+        for i in range(nmax):
             self.datasetOrder.append ( f"sr{i}" )
         a = numpy.array ( [ [0.]*nmax ]*nmax, dtype=float )
         for t in tuples:
