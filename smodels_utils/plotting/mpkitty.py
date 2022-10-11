@@ -23,8 +23,11 @@ def importBackend():
             cmd = f"cp -r {sourcedir}/{name} {path}"
             o = subprocess.getoutput ( cmd )
 
-        matplotlib.use('module://matplotlib-backend-kitty')
-        options["hasKittyBackend"] = True
+        try:
+            matplotlib.use('module://matplotlib-backend-kitty')
+            options["hasKittyBackend"] = True
+        except (ModuleNotFoundError,ImportError) as e:
+            options["hasKittyBackend"] = False
 
     except Exception as e:
         pass
