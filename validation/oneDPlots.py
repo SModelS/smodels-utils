@@ -25,6 +25,34 @@ try:
 except:
     pass
 
+def getMinGap ( xs ):
+    """ determine smallest gap in values """
+    dx_ = []
+    for i in range(len(xs)-1):
+        dx_.append ( xs[i+1]-xs[i] )
+    return min ( dx_ )
+
+def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = ":"):
+    """ plotting routine so we can split up 
+    """
+    dxmax = getMinGap ( xvalues )
+    from smodels_utils.plotting import mpkitty as plt
+    chunks = []
+    chunk = { "x": [ xvalues[0] ], "y": [ yvalues[0] ] }
+    for i in range(len(xvalues)-1):
+        dx_ = xvalues[i+1]-xvalues[i]
+        if dx_ < dxmax*2.1:
+            chunk["x"].append ( xvalues[i+1] )
+            chunk["y"].append ( yvalues[i+1] ) 
+        else:
+            if len(chunk)>0:
+                chunks.append ( chunk )
+                chunk = { "x": [ xvalues[i+1] ], "y": [ yvalues[i+1] ] }
+    chunks.append ( chunk )
+    for chunk in chunks:
+        plt.plot ( chunk["x"], chunk["y"], c=color, marker=marker, \
+                   label=label, linestyle=linestyle )
+
 def create1DPlot( validationPlot, silentMode=True, 
         looseness = 1.2, options : dict = {} ):
     """
@@ -123,13 +151,15 @@ def create1DPlot( validationPlot, silentMode=True,
         if label == "allowed_border":
             lbl = "SModelS allowed (but close)"
         linestyle = "-"
-        if c != "r":
-            linestyle = ""
-        plt.plot ( values[label]["x"], values[label]["y"], c=c, marker="o", label=lbl, linestyle=linestyle )
+        #if c != "r":
+        #    linestyle = ""
+        xs, ys = values[label]["x"], values[label]["y"]
+        plot ( xs, ys, color=c, marker="o", label=lbl, linestyle=linestyle )
         #if len(values[label]["ey"]) == len(values[label]["ex"]):
         if linestyle != "":
             linestyle = ":"
-        plt.plot ( values[label]["ex"], values[label]["ey"], c=c, linestyle=linestyle, marker=None )
+        plot ( values[label]["ex"], values[label]["ey"], color=c, 
+                linestyle=linestyle, marker=None )
         # plt.plot ( values[label]["x"], values[label]["y"], c=c )
     # fname = "me.png"
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
@@ -163,8 +193,8 @@ def create1DPlot( validationPlot, silentMode=True,
         dx = max(xvs)+( max(xvs)-min(xvs))*.07
         plt.text ( dx, rs, t, c="grey", rotation="vertical" )
     figureUrl = getFigureUrl(validationPlot)
-    subtitle = getDatasetDescription ( validationPlot )
-    plt.text ( -.08, 1.03, subtitle, transform = ax.transAxes, c="grey" )
+    subtitle = getDatasetDescription ( validationPlot, maxLength = 60 )
+    plt.text ( -.12, -.1, subtitle, transform = ax.transAxes, c="grey" )
     if figureUrl:
         plt.text ( -.15, -.122, figureUrl, fontsize=7, c="b", 
                    transform = ax.transAxes )
