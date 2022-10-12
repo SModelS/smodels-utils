@@ -210,6 +210,7 @@ def run ( expResList, options : dict, keep ):
                         myaxis = str ( eval ( myaxis ) )
                         if myaxis == ax:
                             hasCorrectAxis_ = True
+                            tarfile = os.path.join(slhadir,fname_)
                             break
                     if type(namedTarball) == list:
                         # looks like were given multiples
@@ -257,6 +258,7 @@ def run ( expResList, options : dict, keep ):
                     myaxis,fname_= namedTarball.split(":")[:2]
                     myaxis = str ( eval ( myaxis ) )
                     if myaxis == ax:
+                        tarfile = os.path.join(slhadir,fname_)
                         hasCorrectAxis = True
                 if type(namedTarball) == list:
                     # looks like were given multiples
@@ -265,6 +267,7 @@ def run ( expResList, options : dict, keep ):
                             myaxis,fname_= nt.split(":")[:2]
                             myaxis = str ( eval ( myaxis ) )
                             if myaxis == ax:
+                                tarfile = os.path.join(slhadir,fname_)
                                 hasCorrectAxis = True
                                 break
                 ## we need "local" options, since we switch one flag
