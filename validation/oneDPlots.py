@@ -58,6 +58,7 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
     for chunk in chunks:
         plt.plot ( chunk["x"], chunk["y"], c=color, marker=marker, \
                    label=label, linestyle=linestyle )
+        label = ""
 
 def create1DPlot( validationPlot, silentMode=True, 
         looseness = 1.2, options : dict = {} ):
