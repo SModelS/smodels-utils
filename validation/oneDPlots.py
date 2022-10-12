@@ -27,6 +27,8 @@ except:
 
 def getMinGap ( xs ):
     """ determine smallest gap in values """
+    if len(xs)==1:
+        return 0.
     dx_ = []
     for i in range(len(xs)-1):
         dx_.append ( xs[i+1]-xs[i] )
@@ -35,6 +37,8 @@ def getMinGap ( xs ):
 def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = ":"):
     """ plotting routine so we can split up 
     """
+    if len(xvalues)==0:
+        return
     dxmax = getMinGap ( xvalues )
     from smodels_utils.plotting import mpkitty as plt
     chunks = []
@@ -48,6 +52,8 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
             if len(chunk)>0:
                 chunks.append ( chunk )
                 chunk = { "x": [ xvalues[i+1] ], "y": [ yvalues[i+1] ] }
+    chunk["x"].append ( xvalues[-1] )
+    chunk["y"].append ( yvalues[-1] )
     chunks.append ( chunk )
     for chunk in chunks:
         plt.plot ( chunk["x"], chunk["y"], c=color, marker=marker, \
@@ -170,7 +176,6 @@ def create1DPlot( validationPlot, silentMode=True,
     plt.title ( title )
     official = validationPlot.officialCurves
     eofficial = validationPlot.expectedOfficialCurves
-    # print ( "official", official )
     rmin, rmax = 0, 1
     for o in official:
         if o["name"].startswith ( "obsExclusion" ):
