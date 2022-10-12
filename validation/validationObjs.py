@@ -1016,7 +1016,8 @@ class ValidationPlot():
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
-            meta["tarball"]=self.namedTarball
+            meta["namedTarball"]=self.namedTarball
+        meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         f.write("meta = %s\n" % str(meta) )
         f.close()
 
