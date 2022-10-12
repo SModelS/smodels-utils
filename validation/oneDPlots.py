@@ -122,9 +122,14 @@ def create1DPlot( validationPlot, silentMode=True,
             lbl = "SModelS allowed"
         if label == "allowed_border":
             lbl = "SModelS allowed (but close)"
-        plt.plot ( values[label]["x"], values[label]["y"], c=c, marker="o", label=lbl )
+        linestyle = "-"
+        if c != "r":
+            linestyle = ""
+        plt.plot ( values[label]["x"], values[label]["y"], c=c, marker="o", label=lbl, linestyle=linestyle )
         #if len(values[label]["ey"]) == len(values[label]["ex"]):
-        plt.plot ( values[label]["ex"], values[label]["ey"], c=c, linestyle=":", marker=None )
+        if linestyle != "":
+            linestyle = ":"
+        plt.plot ( values[label]["ex"], values[label]["ey"], c=c, linestyle=linestyle, marker=None )
         # plt.plot ( values[label]["x"], values[label]["y"], c=c )
     # fname = "me.png"
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
