@@ -833,6 +833,7 @@ class ValidationPlot():
                 try:
                     import ROOT
                     from uglyROOT import createUglyPlot
+                    logger.error ( f"using ROOT backend for ugly plot. consider switching to matplotlib backend!" )
                 except ImportError as e:
                     from uglySeaborn import createUglyPlot
             else:
@@ -855,6 +856,7 @@ class ValidationPlot():
             try:
                 import ROOT
                 from prettyROOT import createPrettyPlot
+                logger.error ( f"using ROOT backend for pretty plot. consider switching to matplotlib backend!" )
             except ImportError as e:
                 from prettySeaborn import createPrettyPlot
         else:
