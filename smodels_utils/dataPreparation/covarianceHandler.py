@@ -77,18 +77,18 @@ class ROOTCovarianceHandler:
         f=ROOT.TFile ( filename )
         h=self.getHistogram ( f, histoname )
         xaxis = h.GetXaxis()
-        self.n=h.GetNbinsX()+1
+        self.n=h.GetNbinsX()
         if max_datasets:
-            self.n=min(max_datasets+1,self.n)
+            self.n=min(max_datasets+1,self.n+1)
         self.datasetOrder = []
         self.covariance = []
         self.blinded_regions = []
-        for i in range ( 1, self.n ):
+        for i in range ( 1, self.n+1 ):
             if i in self.blinded_regions:
                 continue
             self.datasetOrder.append ( xaxis.GetBinLabel(i) )
             row = []
-            for j in range ( 1, self.n ):
+            for j in range ( 1, self.n+1 ):
                 if j in self.blinded_regions:
                     continue
                 el = h.GetBinContent ( i, j )
@@ -220,7 +220,7 @@ class CSVCovarianceHandler:
                 nmax = x
             entry = [x-1,y-1,z]
             tuples.append ( entry )
-        self.n = nmax
+        self.n = len ( tuples )
         for i in range(nmax):
             self.datasetOrder.append ( f"SR{i+1}" )
         a = numpy.array ( [ [0.]*nmax ]*nmax, dtype=float )
@@ -228,7 +228,6 @@ class CSVCovarianceHandler:
             a[t[0]][t[1]]=t[2]
         a = a.tolist()
         self.covariance = a
-        print ( len(a) )
 
         if aggregate != None:
             ## aggregate the stuff
