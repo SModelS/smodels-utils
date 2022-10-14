@@ -835,7 +835,7 @@ class DatabaseCreator(list):
                         tokens.append ( t )
                     # tokens = [ x.strip() for x in tokens ]
 
-                    tokens.sort()
+                    # tokens.sort()
                     value = "; ".join( tokens )
                     while value.find("  ")>-1:
                         value = value.replace( "  ", " " )
