@@ -83,10 +83,16 @@ class ROOTCovarianceHandler:
         self.datasetOrder = []
         self.covariance = []
         self.blinded_regions = []
+        cterr = 0
         for i in range ( 1, self.n+1 ):
             if i in self.blinded_regions:
                 continue
-            self.datasetOrder.append ( xaxis.GetBinLabel(i) )
+            dsId = xaxis.GetBinLabel(i)
+            try:
+                dsId = f"SR{int(dsId)}"
+            except Exception as e:
+                cterr += 1
+            self.datasetOrder.append ( dsId )
             row = []
             for j in range ( 1, self.n+1 ):
                 if j in self.blinded_regions:
