@@ -800,6 +800,7 @@ class DatabaseCreator(list):
                 sys.exit()
 
         obj.addValidationTarballsFromPlanes()
+        obj.addXYRangesFromPlanes()
 
         for attr in obj.infoAttr:
             if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):

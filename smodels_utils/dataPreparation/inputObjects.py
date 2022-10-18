@@ -553,6 +553,23 @@ class TxNameInput(Locker):
                 else:
                     self.validationTarball += ";" + line
 
+    def addXYRangesFromPlanes ( self ):
+        """ if a mass plane has xrange or yrange defined, add it to this
+            TxnameInput object, together with the axis name """
+        for p in self._planes:
+           if hasattr ( p, "xrange" ):
+                line = str(p).replace(" ","")+":"+p.xrange
+                if not hasattr ( self, "xrange" ) or self.xrange in [ "", None ]:
+                    self.xrange = line
+                else:
+                    self.xrange += ";" + line
+           if hasattr ( p, "yrange" ):
+                line = str(p).replace(" ","")+":"+p.yrange
+                if not hasattr ( self, "yrange" ) or self.yrange in [ "", None ]:
+                    self.yrange = line
+                else:
+                    self.yrange += ";" + line
+
     def __init__(self,txName):
 
         """initialize the txName related values an objects
