@@ -91,10 +91,20 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
     destroyRoot()
     return True
 
-def addRange ( var : str, opts : dict, xrange : str ):
+def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     """ add a range condition to options, overwrite one if already there
     :param var: variable, "x" or "y"
+    :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]', '[[x,0.0],[x,0.0]]:[220,520]'], or '[200,500]'
     """
+    if type(xrange) == list:
+        ax = eval ( axis )
+        for xr in xrange:
+            tokens = xr.split(":")
+            if eval(tokens[0])==eval(axis):
+                xrange = tokens[1]
+                logger.info ( f"using {xrange} for {var}range"  )
+                break
+
     if "style" in opts:
         if var+"axis" in opts["style"]:
             styles = opts["style"].split(";")
@@ -236,9 +246,9 @@ def run ( expResList, options : dict, keep ):
                             logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
                     localopts = copy.deepcopy ( options )
                     if hasattr ( txname, "xrange" ):
-                        localopts = addRange ( "x", localopts, txname.xrange )
+                        localopts = addRange ( "x", localopts, txname.xrange, ax )
                     if hasattr ( txname, "yrange" ):
-                        localopts = addRange ( "y", localopts, txname.yrange )
+                        localopts = addRange ( "y", localopts, txname.yrange, ax )
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
