@@ -165,10 +165,8 @@ class ROOTCovarianceHandler:
 
     def aggregateThis ( self, aggregate ):
         """ yo. aggregate. """
-        print ( "dsorder", self.datasetOrder )
         newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
                                            self.aggprefix )
-        print ( "newCov", newDSOrder )
         self.covariance = newCov
         self.datasetOrder=newDSOrder
 
