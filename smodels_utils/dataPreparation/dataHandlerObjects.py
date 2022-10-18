@@ -980,7 +980,8 @@ class DataHandler(object):
 
         #Check dimensions:
         if not self.dimensions == hist.GetDimension():
-            logger.error("Data dimensions and histogram dimensions do not match")
+            logger.error( f"Data dimensions ({self.dimensions}) and histogram dimensions ({hist.GetName()}:{hist.GetDimension()}) do not match {self.path}" )
+            # import IPython; IPython.embed()
             sys.exit()
 
         xAxis = hist.GetXaxis()
