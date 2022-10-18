@@ -186,6 +186,7 @@ class MetaInfoInput(Locker):
         else:
             handler = ROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
+
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
@@ -312,7 +313,7 @@ class DataSetInput(Locker):
 
     infoAttr = ['dataId','dataType','observedN','expectedBG','bgError', 'comment',
                 'upperLimit', 'expectedUpperLimit', 'aggregated', 'jsonfile', 'lumi',
-                'originalSRs' ]
+                'originalSRs', 'thirdMomentum' ]
     internalAttr = ['_name','_txnameList']
 
     requiredAttr = ['dataType', 'dataId']
