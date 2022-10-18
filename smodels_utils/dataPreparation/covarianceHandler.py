@@ -48,12 +48,20 @@ def aggregateMe ( covariance, aggregate, aggprefix="AR" ):
     oldcov = copy.deepcopy ( covariance )
     for i in range(nNew):
         newCov.append ( copy.deepcopy(row) )
+    newDSOrder = [ f"{aggprefix}{ctr}" for ctr in range(nNew) ]
+    if aggprefix == "SR":
+    #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+        newDSOrder = [ f"{aggprefix}{agg}{ctr}" for agg in aggregate ]
+    if type(aggregate) == dict:
+        newDSOrder = []
+        tmp = []
+        for k,v in aggregate.items():
+            newDSOrder.append ( k )
+            tmp.append ( v )
+        aggregate = tmp
+
     #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
     for ctr,agg in enumerate ( aggregate ):
-        if aggprefix == "SR":
-            newDSOrder.append ( f"{aggprefix}{agg[0]}" )
-        else:
-            newDSOrder.append ( f"{aggprefix}{ctr}" )
         V=0.
         for i in agg:
             for j in agg:
@@ -157,8 +165,10 @@ class ROOTCovarianceHandler:
 
     def aggregateThis ( self, aggregate ):
         """ yo. aggregate. """
-        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate, 
+        print ( "dsorder", self.datasetOrder )
+        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
                                            self.aggprefix )
+        print ( "newCov", newDSOrder )
         self.covariance = newCov
         self.datasetOrder=newDSOrder
 
@@ -287,7 +297,7 @@ class CSVCovarianceHandler:
 
     def aggregateThis ( self, aggregate ):
         """ yo. aggregate. """
-        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate, 
+        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
                                            self.aggprefix )
         self.covariance = newCov
         self.datasetOrder=newDSOrder
