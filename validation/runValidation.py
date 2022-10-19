@@ -504,7 +504,7 @@ if __name__ == "__main__":
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
                 "show": False, ## show image after producing it?
-                "backend": "ROOT", ## backend, can be ROOT or native
+                "backend": "native", ## backend, can be ROOT or native
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
     }
     if parser.has_section("options"):
