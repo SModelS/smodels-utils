@@ -19,7 +19,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
-         getClosestValue
+         getClosestValue, getAxisRange, isWithinRange
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -198,13 +198,23 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     rs = get ( "r", tgr )
     ers = get ( "r", etgr )
     Z, eZ = {}, {}
+    xrange = getAxisRange ( options, "xaxis" )
+    yrange = getAxisRange ( options, "yaxis" )
     for t in tgr:
         x,y,r = t["x"],t["y"],t["r"]
+        if not isWithinRange ( yrange, y ):
+            continue
+        if not isWithinRange ( xrange, x ):
+            continue
         if not x in Z:
             Z[x]={}
         Z[x][y]=float(r)
     for t in etgr:
         x,y,r = t["x"],t["y"],t["r"]
+        if not isWithinRange ( yrange, y ):
+            continue
+        if not isWithinRange ( xrange, x ):
+            continue
         if not x in eZ:
             eZ[x]={}
         eZ[x][y]=float(r)
@@ -214,7 +224,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     ys.sort( reverse = True )
     for y in ys:
         tmp, etmp = [], []
+        if not isWithinRange ( yrange, y ):
+            continue
         for x in xs:
+            if not isWithinRange ( xrange, x ):
+                continue
             r, er = float("nan"), float("nan")
             if y in Z[x]:
                 r = Z[x][y]

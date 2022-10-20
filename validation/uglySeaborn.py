@@ -17,7 +17,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
-         getDatasetDescription, getAxisRange
+         getDatasetDescription, getAxisRange, isWithinRange
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -89,9 +89,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 if y_ is None:
                     logger.error ( "the data is 1d." ) # is separate module now
                     sys.exit()
-                if xrange != None and not ( xrange[0] < x_ < xrange[1] ):
+                if not isWithinRange ( xrange, x_ ):
                     continue
-                if yrange != None and not ( yrange[0] < y_ < yrange[1] ):
+                if not isWithinRange ( yrange, y_ ):
                     continue
                 noresult.append( { "i": len(noresult), "x": x_, "y": y_ } )
             nErrors += 1
