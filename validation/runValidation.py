@@ -285,11 +285,15 @@ def run ( expResList, options : dict, keep ):
                 if not hasCorrectAxis:
                     pnamedTarball = None
                     tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
-                localoptions = copy.deepcopy ( options )
+                localopts = copy.deepcopy ( options )
+                if hasattr ( txname, "xrange" ):
+                    localopts = addRange ( "x", localopts, txname.xrange, ax )
+                if hasattr ( txname, "yrange" ):
+                    localopts = addRange ( "y", localopts, txname.yrange, ax )
                 for p in prettyorugly:
-                    validatePlot( expRes,txnameStr,ax,tarfile, localoptions,
+                    validatePlot( expRes,txnameStr,ax,tarfile, localopts,
                                   gkfactor, p, combine, namedTarball = pnamedTarball )
-                    localoptions["generateData"] = False
+                    localopts["generateData"] = False
             logger.info( "------ %s %s validated in  %.1f min %s" % \
                          (RED, txnameStr,(time.time()-txt0)/60., RESET) )
         logger.info( "--- %s %s validated in %.1f min %s" % \
