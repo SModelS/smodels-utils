@@ -249,12 +249,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 # tmp.append ( float("nan") )
         T.append ( tmp )
         eT.append ( etmp )
-    T = np.asarray ( T )
-    eT = np.asarray ( eT )
-    mask = np.isnan( T )
-    emask = np.isnan( eT )
-    T = interpolate_missing_pixels ( T, mask, "cubic", fill_value=float("nan") )
-    eT = interpolate_missing_pixels ( eT, emask, "cubic", fill_value=float("nan") )
+    def interpolateOverMissing ( T ):
+        """ interpolate over missing values (nans) """
+        T = np.asarray ( T )
+        return interpolate_missing_pixels ( T, np.isnan(T), "cubic", \
+                fill_value=float("nan") )
+    T = interpolateOverMissing ( T )
+    eT = interpolateOverMissing ( eT )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
