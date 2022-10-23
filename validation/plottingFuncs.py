@@ -58,7 +58,6 @@ def filterWithinRanges ( points : dict, xrange : Optional[list], \
             continue
         px.append ( x )
         py.append ( y )
-    print ( "filter", px, py, "ranges", xrange, yrange )
     return px, py
 
 def getAxisRange ( options : dict, label : str = "xaxis" ):
