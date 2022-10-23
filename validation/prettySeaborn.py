@@ -225,7 +225,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     xs = list ( Z.keys() )
     xs.sort( )
     T, eT = [], []
-    ys.sort( reverse = True )
+    ys = list ( set ( ys ) )
+    ys.sort( )
+    # ys.sort( reverse = True )
     for y in ys:
         tmp, etmp = [], []
         if not isWithinRange ( yrange, y ):
@@ -262,8 +264,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     from plottingFuncs import getColormap
     cm = getColormap()
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
-    im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
-                      vmax = 3.0, vmin = 0., aspect="auto" )
+    #im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
+    #                  vmax = 3.0, vmin = 0., aspect="auto" )
+    im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0., 
+                          shading="gouraud" )
     plt.title ( title )
     # plt.text ( .28, .85, title, transform = fig.transFigure )
     plt.xlabel ( xlabel )
@@ -301,11 +305,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T = gaussian_filter( T, 1. )
     except:
         pass
-    cs = plt.contour( T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
+    cs = plt.contour( xs, ys, T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
     csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
     if options["drawExpected"] == True:
-        cs = plt.contour( eT, colors="blue", linestyles = "dotted", levels=[1.],
+        cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                           extent = xtnt, origin="image" )
         ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                         transform = fig.transFigure, linestyle="dotted" )
