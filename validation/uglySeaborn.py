@@ -17,7 +17,8 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
-         getDatasetDescription, getAxisRange, isWithinRange
+         getDatasetDescription, getAxisRange, isWithinRange, \
+         filterWithinRanges
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -131,9 +132,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             x,y = pt['axes']
         if logY and y > 1e-8:
             continue
-        if xrange != None and not ( xrange[0] < x < xrange[1] ):
+        if not isWithinRange ( xrange, x ):
             continue
-        if yrange != None and not ( yrange[0] < y < yrange[1] ):
+        if not isWithinRange ( yrange, y ):
             continue
         ycontainer.append ( y )
 
@@ -176,8 +177,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
-        plt.plot ( p["points"]["x"], p["points"]["y"], c="white", linewidth=4, zorder=50 ) 
-        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", label="official exclusion", zorder=60 )
+        px, py = filterWithinRanges ( p["points"], xrange, yrange )
+        plt.plot ( px, py, c="white", linewidth=4, zorder=50 ) 
+        plt.plot ( px, py, c="black", label="official exclusion", zorder=60 )
     ax = plt.gca()
     if logY:
         ax.set_yscale('log')
@@ -186,7 +188,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
-        plt.plot ( p["points"]["x"], p["points"]["y"], c="black", linestyle="dotted", 
+        px, py = filterWithinRanges ( p["points"], xrange, yrange )
+        plt.plot ( px, py, c="black", linestyle="dotted", 
                    label="official exclusion (expected)" )
     base = []
     dx = .12 ## top, left

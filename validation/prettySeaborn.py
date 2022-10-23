@@ -19,7 +19,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
-         getClosestValue, getAxisRange, isWithinRange
+         getClosestValue, getAxisRange, isWithinRange, filterWithinRanges
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -67,7 +67,7 @@ def interpolate_missing_pixels(
 
     return interp_image
 
-def createPrettyPlot( validationPlot,silentMode : bool , options : dict, 
+def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                       looseness : float ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
@@ -80,6 +80,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     :return: TCanvas object containing the plot
     """
     # Check if data has been defined:
+    xrange = getAxisRange ( options, "xaxis" )
+    yrange = getAxisRange ( options, "yaxis" )
     tgr, etgr, tgrchi2 = [], [], []
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"$r = \sigma_{signal}/\sigma_{UL}$"
@@ -143,6 +145,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         else:
             x,y = xvals
+        if not isWithinRange ( xrange, x ):
+            continue
+        if not isWithinRange ( yrange, y ):
+            continue
 
         if "condition" in pt.keys() and pt['condition'] and pt['condition'] > 0.05:
             condV += 1
@@ -198,8 +204,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     rs = get ( "r", tgr )
     ers = get ( "r", etgr )
     Z, eZ = {}, {}
-    xrange = getAxisRange ( options, "xaxis" )
-    yrange = getAxisRange ( options, "yaxis" )
     for t in tgr:
         x,y,r = t["x"],t["y"],t["r"]
         if not isWithinRange ( yrange, y ):
@@ -264,26 +268,32 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # plt.text ( .28, .85, title, transform = fig.transFigure )
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
-    
+
     for p in validationPlot.officialCurves:
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
+        px, py = filterWithinRanges ( p["points"], xrange, yrange )
+        """
         x_ = p["points"]["x"]
         y_ = [0.]*len(x_)
         if "y" in p["points"]:
             y_ = p["points"]["y"]
-        plt.plot ( x_, y_, c="black", label="exclusion (official)" )
+        """
+        plt.plot ( px, py, c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
             if type(p) not in [ dict ]:
                 logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
                 continue
+            """
             x_ = p["points"]["x"]
             y_ = [0.]*len(x_)
             if "y" in p["points"]:
                 y_ = p["points"]["y"]
-            plt.plot ( x_, y_, c="black", linestyle="dotted", 
+            """
+            px, py = filterWithinRanges ( p["points"], xrange, yrange )
+            plt.plot ( px, py, c="black", linestyle="dotted",
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
     try:
@@ -292,13 +302,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     except:
         pass
     cs = plt.contour( T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
-    csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)", 
-                  transform = fig.transFigure ) 
+    csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
+                  transform = fig.transFigure )
     if options["drawExpected"] == True:
-        cs = plt.contour( eT, colors="blue", linestyles = "dotted", levels=[1.], 
+        cs = plt.contour( eT, colors="blue", linestyles = "dotted", levels=[1.],
                           extent = xtnt, origin="image" )
-        ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)", 
-                        transform = fig.transFigure, linestyle="dotted" ) 
+        ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
+                        transform = fig.transFigure, linestyle="dotted" )
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
@@ -325,7 +335,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     plt.text ( .95, .0222, subtitle, transform=fig.transFigure, fontsize=10,
                horizontalalignment="right" )
     if figureUrl:
-        plt.text( .13, .13, f"{figureUrl}", 
+        plt.text( .13, .13, f"{figureUrl}",
                   transform=fig.transFigure, c = "black", fontsize = 7 )
 
     if kfactor is not None and abs ( kfactor - 1.) > .01:

@@ -9,6 +9,7 @@
 """
 
 import logging,os,sys,numpy,random,copy
+from typing import Union, Optional
 sys.path.append('../')
 from array import array
 import math, ctypes
@@ -39,11 +40,26 @@ def getColormap():
     cmap=LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
 
-def isWithinRange ( xyrange, xy ):
+def isWithinRange ( xyrange : list, xy : float ):
     """ check if xy is within xyrange """
     if xyrange == None:
         return True
     return xyrange[0] <= xy <= xyrange[1]
+
+def filterWithinRanges ( points : dict, xrange : Optional[list], \
+        yrange : Optional[list] ):
+    """ filter from points all that is not within xrange or yrange """
+    pxs, pys = points["x"], points["y"]
+    px, py = [], []
+    for x,y in zip ( pxs, pys ):
+        if not isWithinRange ( xrange, x ):
+            continue
+        if not isWithinRange ( yrange, y ):
+            continue
+        px.append ( x )
+        py.append ( y )
+    print ( "filter", px, py, "ranges", xrange, yrange )
+    return px, py
 
 def getAxisRange ( options : dict, label : str = "xaxis" ):
     """ given an options dictionary, obtain a range for the axis named
