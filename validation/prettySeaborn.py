@@ -195,6 +195,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     types = list(set(types))
     if len(types) == 1: types = types[0]
     resultType = "%s" %str(types)
+    if len ( validationPlot.expRes.datasets ) > 1:
+        resultType = "combined"
     title = title + " ("+resultType+")"
     import matplotlib.pylab as plt
     plt.dontplot = False
@@ -353,7 +355,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                horizontalalignment="right" )
     if figureUrl:
         plt.text( .13, .13, f"{figureUrl}",
-                  transform=fig.transFigure, c = "black", fontsize = 7 )
+                  transform=fig.transFigure, c = "blue", fontsize = 6 )
 
     if kfactor is not None and abs ( kfactor - 1.) > .01:
         plt.text( .65,.83, "k-factor = %.2f" % kfactor, fontsize=10,
