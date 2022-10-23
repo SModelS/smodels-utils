@@ -106,15 +106,8 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
                 break
 
     if "style" in opts:
-        if var+"axis" in opts["style"]:
-            styles = opts["style"].split(";")
-            newstyles=[ f"{var}axis{xrange}" ]
-            for style in styles:
-                style = style.strip()
-                if not f"{var}axis" in style and style !="":
-                    newstyles.append ( style )
-            opts["style"]=";".join(newstyles)
-        else:
+        # if xy-axis is already in, we dont overwrite
+        if not var+"axis" in opts["style"]:
             styles = opts["style"].split(";")
             newstyles=[ f"{var}axis{xrange}" ]
             for style in styles:

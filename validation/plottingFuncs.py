@@ -43,7 +43,7 @@ def isWithinRange ( xyrange, xy ):
     """ check if xy is within xyrange """
     if xyrange == None:
         return True
-    return xyrange[0] < xy < xyrange[1]
+    return xyrange[0] <= xy <= xyrange[1]
 
 def getAxisRange ( options : dict, label : str = "xaxis" ):
     """ given an options dictionary, obtain a range for the axis named
