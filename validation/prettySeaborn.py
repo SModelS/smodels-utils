@@ -249,12 +249,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 # tmp.append ( float("nan") )
         T.append ( tmp )
         eT.append ( etmp )
-    def interpolateOverMissing ( T ):
+    def interpolateOverMissing ( T, fill_value = float("nan") ):
         """ interpolate over missing values (nans) """
         T = np.asarray ( T )
         return interpolate_missing_pixels ( T, np.isnan(T), "cubic", \
-                fill_value=float("nan") )
+                fill_value=fill_value )
     T = interpolateOverMissing ( T )
+    vT = interpolateOverMissing ( T, -10. )
     eT = interpolateOverMissing ( eT )
     ax = plt.gca()
     fig = plt.gcf()
@@ -267,8 +268,19 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
     #im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
     #                  vmax = 3.0, vmin = 0., aspect="auto" )
+    """
+    from scipy.interpolate import interp2d
+    X, Y = np.meshgrid ( xs, ys )
+    f = interp2d(xs, ys, vT, kind='cubic')
+    xnew = np.arange ( min(xs), max(xs)+1e-5, 3. )
+    ynew = np.arange ( min(ys), max(ys)+1e-5, 3. )
+    Xn, Yn = np.meshgrid(xnew, ynew)
+    Tnew = f(xnew, ynew )
+    Tnew[Tnew<-0.]=float("nan")
+    im = plt.pcolormesh ( Xn, Yn, Tnew, cmap = cm, vmax=3., vmin = 0. )
+    """
     im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0., 
-                          shading="gouraud" )
+                          shading="nearest" )
     plt.title ( title )
     # plt.text ( .28, .85, title, transform = fig.transFigure )
     plt.xlabel ( xlabel )
