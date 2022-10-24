@@ -35,9 +35,13 @@ def importBackend():
 importBackend()
 import matplotlib.pyplot as plt
 def kittyPlot( filename = None ):
+    deleteIt = False
     if filename == None:
+        import tempfile
+        filename = tempfile.mktemp(suffix=".png")
         # plt.show() should actually work, but doesnt right now
-        return # for now
+        # return # for now
+        deleteIt = True
     plt.savefig ( filename )
     import os
     if options["hasKittyBackend"] or "kitty" in os.environ["TERM"]:
@@ -50,5 +54,7 @@ def kittyPlot( filename = None ):
         import subprocess
         o = subprocess.getoutput ( cmd )
         print ( o )
+    if deleteIt and os.path.exists ( filename ):
+        os.unlink ( filename )
             
 from matplotlib.pyplot import *
