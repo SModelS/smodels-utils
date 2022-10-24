@@ -5,4 +5,8 @@ from smodels.tools.smodelsLogging import setLogLevel
 
 setLogLevel ( "debug" )
 
-db = Database ( "../../smodels-database", discard_zeroes = False, subpickle = True )
+dbpath = "../../smodels-database"
+# dbpath = "https://smodels.github.io/database/official222pre1"
+dbpath = "https://smodels.github.io/database/official222pre1+https://smodels.github.io/database/fastlim222pre1+https://smodels.github.io/database/superseded222pre1+https://smodels.github.io/database/nonaggregated222pre1"
+db = Database ( dbpath, discard_zeroes = False, subpickle = True )
+print ( db )
