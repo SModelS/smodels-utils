@@ -47,9 +47,20 @@ def isWithinRange ( xyrange : list, xy : float ):
     return xyrange[0] <= xy <= xyrange[1]
 
 def filterWithinRanges ( points : dict, xrange : Optional[list], \
-        yrange : Optional[list] ):
-    """ filter from points all that is not within xrange or yrange """
-    pxs, pys = points["x"], points["y"]
+        yrange : Optional[list], defRetZeroes : bool = False ):
+    """ filter from points all that is not within xrange or yrange 
+    :param defRetZeroes: if true, then return list of zeroes if no y coordinates
+    """
+    pxs = points["x"]
+    px = []
+    if not "y" in points:
+        for x in pxs:
+            if not isWithinRange ( xrange, x ):
+                continue
+            px.append ( x )
+        py = [0.] * len(px) if defRetZeroes else None
+        return px, py
+    pys = points["y"]
     px, py = [], []
     for x,y in zip ( pxs, pys ):
         if not isWithinRange ( xrange, x ):

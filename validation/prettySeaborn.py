@@ -292,26 +292,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
-        px, py = filterWithinRanges ( p["points"], xrange, yrange )
-        """
-        x_ = p["points"]["x"]
-        y_ = [0.]*len(x_)
-        if "y" in p["points"]:
-            y_ = p["points"]["y"]
-        """
+        px, py = filterWithinRanges ( p["points"], xrange, yrange, True )
         plt.plot ( px, py, c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
             if type(p) not in [ dict ]:
                 logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
                 continue
-            """
-            x_ = p["points"]["x"]
-            y_ = [0.]*len(x_)
-            if "y" in p["points"]:
-                y_ = p["points"]["y"]
-            """
-            px, py = filterWithinRanges ( p["points"], xrange, yrange )
+            px, py = filterWithinRanges ( p["points"], xrange, yrange, True )
             plt.plot ( px, py, c="black", linestyle="dotted",
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
