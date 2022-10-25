@@ -427,7 +427,13 @@ class ValidationPlot():
         if not tokens[0].startswith ( "T" ):
             print ( "why does token 0 not start with a T??? %s" % tokens[0] )
             sys.exit(-1)
-        widths = list ( map ( float, tokens[1:] ) )
+        widths = []
+        for t in tokens[1:]:
+            try:
+                v = float(t)
+                widths.append ( v )
+            except ValueError as e:
+                pass
         ret = []
         for m in widths:
             if m>0. and m<1e-10:
@@ -440,7 +446,13 @@ class ValidationPlot():
         if not tokens[0].startswith ( "T" ):
             print ( "why does token 0 not start with a T??? %s" % tokens[0] )
             sys.exit(-1)
-        masses = list ( map ( float, tokens[1:] ) )
+        masses = []
+        for t in tokens[1:]:
+            try:
+                v = float(t)
+                masses.append ( v )
+            except ValueError as e:
+                pass
         for m in masses:
             if m>0. and m<1e-10:
                 continue
