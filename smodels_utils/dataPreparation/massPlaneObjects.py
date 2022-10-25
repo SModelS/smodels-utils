@@ -356,6 +356,7 @@ class Axes(object):
             logger.error("Masses must be a list")
             sys.exit()
 
+        self.hasWarned = {}
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
         if widthVars:
@@ -529,6 +530,19 @@ class Axes(object):
             self._xyFunction[xv] = _lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
+    def tuplesInMassContainer ( self, massArray ):
+        for im,mass in enumerate(massArray):
+            if type(mass)==tuple: ## the old way
+                return True
+        return False
+
+    def warn ( self, line ):
+        if not line in self.hasWarned:
+            self.hasWarned[line]=0
+        self.hasWarned[line]+=1
+        if self.hasWarned[line]<2:
+            logger.warning ( line )
+
     def getXYValues(self,massArray,widthArray=None):
 
         """
@@ -558,11 +572,13 @@ class Axes(object):
             ## it seems the widths ended up in the mass array
             widthArray = massArray[1::2]
             massArray = massArray[0::2]
-        for im,mass in enumerate(massArray):
-            if type(mass)==tuple: ## the old way
+        if self.tuplesInMassContainer ( massArray ):
+            ## there are tuples, do it the old way
+            for im,mass in enumerate(massArray):
                 massInput[ str(self._massVars[im]) ] = mass[0]
                 massInput[ str(self._widthVars[im]) ] = mass[1]
-            else:
+        else:
+            for im,mass in enumerate(massArray):
                 if False:
                     print ( "----------------" )
                     print ( "mass", mass )
@@ -571,7 +587,8 @@ class Axes(object):
                     print ( "im", im )
                     print ( "massVars", self._massVars )
                     print ( "widthVars", self._widthVars )
-                massInput[ str(self._massVars[im]) ] = mass
+                if im < len(self._massVars):
+                    massInput[ str(self._massVars[im]) ] = mass
         if widthArray is None:
             wv = str(self._widthVars[im])
             if not wv in massInput:
@@ -580,7 +597,8 @@ class Axes(object):
             #    massInput[ str(self._widthVars[im]) ] = None
         else:
             for im,width in enumerate(widthArray):
-                massInput[ str(self._widthVars[im]) ] = width
+                if im < len(self._widthVars):
+                    massInput[ str(self._widthVars[im]) ] = width
         #Define dictionary with mass variables and values
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
         xValues = {}
@@ -594,9 +612,19 @@ class Axes(object):
         #print ( "[getXYValues] massInput", massInput )
         #print ( "[getXYValues] xyFunc", self._xyFunction, str(self._xyFunction) )
         #print ( "massArray", massArray )
+        """import IPython
+        IPython.embed()
+        sys.exit()"""
         for xv,xfunc in self._xyFunction.items():
-            #print ( ". xv", xv, "func", xfunc.expr )
-            xValues[str(xv)] = xfunc(**massInput)
+            fexpr = str ( xfunc.expr )
+            cleanedInput = {}
+            for k,v in massInput.items():
+                if not k in fexpr:
+                    line = f"key {k} is not in func {fexpr}!!" 
+                    self.warn ( line )
+                else:
+                    cleanedInput[k]=v
+            xValues[str(xv)] = xfunc(**cleanedInput)
 
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)

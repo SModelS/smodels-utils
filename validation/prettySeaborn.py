@@ -57,6 +57,9 @@ def interpolate_missing_pixels(
     missing_x = xx[mask]
     missing_y = yy[mask]
 
+    if len(known_x) == 0:
+        logger.warning ( "we have no known_x values" )
+        return image
     interp_values = interpolate.griddata(
         (known_x, known_y), known_v, (missing_x, missing_y),
         method=method, fill_value=fill_value
@@ -238,9 +241,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if not isWithinRange ( xrange, x ):
                 continue
             r, er = float("nan"), float("nan")
-            if y in Z[x]:
+            if x in Z and y in Z[x]:
                 r = Z[x][y]
-            if y in eZ[x]:
+            if x in eZ and y in eZ[x]:
                 er = eZ[x][y]
             #else: ## try this if not dense enough
             #    r = getClosestValue ( x, y, tgr, 1. )
