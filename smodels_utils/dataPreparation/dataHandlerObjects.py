@@ -24,6 +24,8 @@ from sympy import var
 x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
+        
+max_nbins = 10000
 
 ## for debugging, if set to true, allow for the acceptance files
 ## to have multiple entries for the same mass point. that is obviously a bug,
@@ -484,6 +486,15 @@ class DataHandler(object):
             lines.append ( values )
         xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
         lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
+        if len(lines) > max_nbins:
+            trimmingFactor = int ( round ( math.sqrt ( len(lines) / 6000. ) ) )
+            trimmingFactor = trimmingFactor * trimmingFactor
+            newyields = []
+            for cty,y in enumerate ( lines ):
+                if cty % trimmingFactor == 0:
+                    newyields.append ( y )
+            logger.warn ( f"trimmed down csv file '{self.name}' from {len(lines)} to {len(newyields)}" )
+            lines = newlines
         for line in lines:
             yield line
 
@@ -617,6 +628,15 @@ class DataHandler(object):
                         fr[1]=frx
                 yields.append ( fr )
             csvfile.close()
+            if len(yields) > max_nbins:
+                trimmingFactor = int ( round ( math.sqrt ( len(yields) / 6000. ) ) )
+                trimmingFactor = trimmingFactor * trimmingFactor
+                newyields = []
+                for cty,y in enumerate ( yields ):
+                    if cty % trimmingFactor == 0:
+                        newyields.append ( y )
+                logger.warn ( f"trimmed down csv file '{self.name}' from {len(yields)} to {len(newyields)}" )
+                yields = newyields
             # sort upper limits and efficiencies but not points in exclusion lines.
             if "xclusion" in self.name:
                 xs,ys=[],[]
@@ -987,15 +1007,14 @@ class DataHandler(object):
         xAxis = hist.GetXaxis()
         xRange = range(1,xAxis.GetNbins() + 1)
         n_bins = len(xRange)
-        max_nbins = 10000
         if self.dimensions > 1:
             yAxis = hist.GetYaxis()
             yRange = range(1,yAxis.GetNbins() + 1)
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
             if total_points > 6000.:
-                trimmingFactor = int ( math.sqrt ( total_points / 6000. ) )
-                logger.warning ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor}" )
+                trimmingFactor = int ( round ( math.sqrt ( total_points / 6000. ) ) )
+                logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor}" )
         if self.dimensions > 2:
             zAxis = hist.GetZaxis()
             zRange = range(1,zAxis.GetNbins() + 1)
@@ -1005,7 +1024,7 @@ class DataHandler(object):
                     if allowTrimming:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Too large map (nbins=%d). Will trim z-axis." % n_bins )
+                            logger.warning ( f"'{self.name}' is too large a map (nbins={n_bins}). Will trim z-axis." )
                         n_bins = n_bins / len(zRange)
                         zRange = range(1,zAxis.GetNbins() + 1, trimmingFactor )
                         n_bins = n_bins * len(zRange)
@@ -1018,34 +1037,32 @@ class DataHandler(object):
                 if allowTrimming:
                     yRange = range(1,yAxis.GetNbins() + 1, trimmingFactor )
                     if not errorcounts["trimyaxis"]:
-                        logger.warning ( "Too large map (nbins=%d > %s). Will trim y-axis from %d to %d (turn this off via dataHandlerObjects.allowTrimming)." % \
-                                        ( n_bins, max_nbins, yAxis.GetNbins(), len(yRange) ))
+                        logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {yAxis.GetNbins()} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
-                    n_bins = n_bins / len(yRange)
+                    n_bins = n_bins / yAxis.GetNbins()
                     n_bins = n_bins * len(yRange)
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
                         logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
-        if n_bins > max_nbins:
+        if n_bins > max_nbins/2.:
             if allowTrimming:
                 xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Too large map (nbins=%d > %d). Will trim x-axis from %d to %d (turn this off via dataHandlerObjects.allowTrimming)" % \
-                                 ( n_bins, max_nbins, xAxis.GetNbins(), len(xRange)  ) )
+                    logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {xAxis.GetNbins()} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
+                n_bins = n_bins / xAxis.GetNbins()
+                n_bins = n_bins * len(xRange)
 
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
                     logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
 
+        if False: # total_points > n_bins:
+            logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
 
-
-
-
-        # print ( "n_bins=%d, n_dims=%d, xRange=%d" % ( n_bins, self.dimensions, len(xRange) ) )
-
+        ct = 0
         for xBin in xRange:
             x = xAxis.GetBinCenter(xBin)
             if self.dimensions == 1:
@@ -1058,6 +1075,9 @@ class DataHandler(object):
                     if self.dimensions == 2:
                         ul = hist.GetBinContent(xBin, yBin)
                         if ul == 0.: continue
+                        ct+=1
+                        #if ct % 300 == 0:
+                        #    print ( f"yield {ct}: {yBin}/{x},{y} {ul}" )
                         yield [x, y, ul]
                     elif self.dimensions == 3:
                         for zBin in zRange:
