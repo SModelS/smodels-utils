@@ -1018,33 +1018,30 @@ class DataHandler(object):
                 if allowTrimming:
                     yRange = range(1,yAxis.GetNbins() + 1, trimmingFactor )
                     if not errorcounts["trimyaxis"]:
-                        logger.warning ( "Too large map (nbins=%d > %s). Will trim y-axis from %d to %d (turn this off via dataHandlerObjects.allowTrimming)." % \
-                                        ( n_bins, max_nbins, yAxis.GetNbins(), len(yRange) ))
+                        logger.warning ( f"Too large map (nbins={n_bins} > {max_nbins}). Will trim y-axis from {yAxis.GetNbins()} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
-                    n_bins = n_bins / len(yRange)
+                    n_bins = n_bins / yAxis.GetNbins()
                     n_bins = n_bins * len(yRange)
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
                         logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
-        if n_bins > max_nbins:
+        if n_bins > max_nbins/2.:
             if allowTrimming:
                 xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Too large map (nbins=%d > %d). Will trim x-axis from %d to %d (turn this off via dataHandlerObjects.allowTrimming)" % \
-                                 ( n_bins, max_nbins, xAxis.GetNbins(), len(xRange)  ) )
+                    logger.warning ( f"Too large map (nbins={n_bins} > {max_nbins}). Will trim x-axis from {xAxis.GetNbins()} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
+                n_bins = n_bins / xAxis.GetNbins()
+                n_bins = n_bins * len(xRange)
 
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
                     logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
 
-
-
-
-
-        # print ( "n_bins=%d, n_dims=%d, xRange=%d" % ( n_bins, self.dimensions, len(xRange) ) )
+        if total_points > n_bins:
+            logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]}" )
 
         for xBin in xRange:
             x = xAxis.GetBinCenter(xBin)
