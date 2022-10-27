@@ -1041,8 +1041,9 @@ class DataHandler(object):
                     logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
 
         if total_points > n_bins:
-            logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]}" )
+            logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
 
+        ct = 0
         for xBin in xRange:
             x = xAxis.GetBinCenter(xBin)
             if self.dimensions == 1:
@@ -1055,6 +1056,9 @@ class DataHandler(object):
                     if self.dimensions == 2:
                         ul = hist.GetBinContent(xBin, yBin)
                         if ul == 0.: continue
+                        ct+=1
+                        #if ct % 300 == 0:
+                        #    print ( f"yield {ct}: {yBin}/{x},{y} {ul}" )
                         yield [x, y, ul]
                     elif self.dimensions == 3:
                         for zBin in zRange:
