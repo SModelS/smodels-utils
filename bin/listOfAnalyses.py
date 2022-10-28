@@ -254,7 +254,25 @@ class Lister:
         if len(keys) == 0:
             return
         self.experimentHeader ( experiment, Type, sqrts, len(keys) )
-        keys.sort( reverse=True )
+        def sorter(key):
+            tuples = key.split("-")
+            ct=0
+            number=0
+            for t in tuples[::-1]:
+                if t in [ "SUS", "EXO", "B2G", "HIG" ]:
+                    continue
+                if t in [ "PAS", "CONF" ]:
+                    number -= 10**9
+                    continue
+                try:
+                    number += int(t) * 1000**ct
+                    ct+=1
+                except:
+                    pass
+            return number
+        ## now we need to sort the analysis ids
+        keys.sort( key = sorter, reverse=True ) ## sorting purely by the numbers
+        # keys.sort( reverse=True ) # sorting, but taking into account sus, exo, pas,
         # print ( "xxxx keys", keys )
         previous = keys[0]
 
