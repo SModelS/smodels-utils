@@ -98,12 +98,17 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     """
     if type(xrange) == list:
         ax = eval ( axis )
+        hasFound = False
         for xr in xrange:
             tokens = xr.split(":")
-            if eval(tokens[0])==eval(axis):
+            if eval(tokens[0])==ax:
                 xrange = tokens[1]
                 logger.info ( f"using {xrange} for {var}range"  )
+                hasFound=True
                 break
+        if not hasFound: # we did not find this
+            logger.warning ( f"we did not find axis range for {axis} in {xrange} in database entry {var}range" )
+            return opts
 
     if "style" in opts:
         # if xy-axis is already in, we dont overwrite
