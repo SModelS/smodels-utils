@@ -254,8 +254,8 @@ class Lister:
         if len(keys) == 0:
             return
         self.experimentHeader ( experiment, Type, sqrts, len(keys) )
-        keys.sort()
-        # print ( keys )
+        keys.sort( reverse=True )
+        # print ( "xxxx keys", keys )
         previous = keys[0]
 
         self.emptyLine( previous, isEffMap )
@@ -453,7 +453,7 @@ class Lister:
         self.header()
         self.listTables ( )
         print ( "Database:", self.database.databaseVersion )
-        experiments=[ "CMS", "ATLAS" ]
+        experiments=[ "ATLAS", "CMS" ]
         for sqrts in [ 13, 8 ]:
             for experiment in experiments:
                 self.writeExperiment ( experiment, sqrts )
