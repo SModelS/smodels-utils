@@ -457,7 +457,11 @@ class Axes(object):
             if not str(xv) in xMass:  #Missing a variable
                 logger.error("Input variable %s missing for computing mass" %xv)
                 return None
-            xValues[str(xv)] = xMass[str(xv)]
+            value = xMass[str(xv)]
+            if type(value) in [ str ]:
+                logger.error(f"Input variable ''{xv}'' has a string value of ''{value}''" )
+                return None
+            xValues[str(xv)] = value
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
         widthArray = [mfunc(**xValues) for mfunc in self._widthFunctions]

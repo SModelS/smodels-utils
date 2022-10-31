@@ -847,6 +847,9 @@ class TxNameInput(Locker):
             skipMass = False
             #Check if the massArray is positive and value is positive:
             for br in massArray:
+                if br == None:
+                    skipMass = True
+                    continue
                 for M in br:
                     if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
                         skipMass = True
