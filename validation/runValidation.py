@@ -96,8 +96,8 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     :param var: variable, "x" or "y"
     :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]', '[[x,0.0],[x,0.0]]:[220,520]'], or '[200,500]'
     """
+    ax = eval ( axis )
     if type(xrange) == list:
-        ax = eval ( axis )
         hasFound = False
         for xr in xrange:
             tokens = xr.split(":")
@@ -109,7 +109,12 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
         if not hasFound: # we did not find this
             logger.warning ( f"we did not find axis range for {axis} in {xrange} in database entry {var}range" )
             return opts
-
+    else:
+        tokens = xrange.split(":")
+        if eval(tokens[0])==ax:
+            xrange = tokens[1]
+            logger.info ( f"using {xrange} for {var}range"  )
+            hasFound=True
     if "style" in opts:
         # if xy-axis is already in, we dont overwrite
         if not var+"axis" in opts["style"]:

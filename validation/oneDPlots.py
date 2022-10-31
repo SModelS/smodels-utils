@@ -17,7 +17,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
-                          getDatasetDescription
+                          getDatasetDescription, getAxisRange, isWithinRange
 
 
 try:
@@ -70,6 +70,7 @@ def create1DPlot( validationPlot, silentMode=True,
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
     """
+    xrange = getAxisRange ( options, "xaxis" )
     logger.error ( "now create 1d plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName, 
          validationPlot.axes ) )
@@ -98,6 +99,8 @@ def create1DPlot( validationPlot, silentMode=True,
             break
         if "axes" in pt and pt["axes"] is not None and "x" in pt["axes"]:
             x = pt["axes"]["x"]
+            if not isWithinRange (xrange, x ):
+                continue
             y, ey = float ( "nan" ), float ( "nan" )
             if "signal" in pt and "UL" in pt:
                 y = pt["signal"] / pt["UL"] 
