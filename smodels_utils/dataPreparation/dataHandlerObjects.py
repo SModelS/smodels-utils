@@ -705,6 +705,9 @@ class DataHandler(object):
                     logger.error ( "it seems that point %s is not in all paths? in %s" % \
                                    (str(k), self.path ) )
                     break
+                if type(p[k]) in [ str ]:
+                    logger.warning ( f"skipping value {p[k]} as it is a string" )
+                    continue
                 ret = ret * p[k]
             y = list(k)+[ret]
             if ret < 0.:
