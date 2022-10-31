@@ -184,15 +184,21 @@ def create1DPlot( validationPlot, silentMode=True,
     for o in official:
         if o["name"].startswith ( "obsExclusion" ):
             rmin, rmax = min ( yvs ), max ( yvs )
-            plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
-                       label="official observed exclusion" )
+            xvals = set(o["points"]["x"])
+            ## we assume the exclusion lines to be "points", so
+            ## we draw horizontal lines in each point
+            for xv in xvals:
+                plt.plot ( [xv]*2, [ rmin, rmax ], c="k", 
+                           label="official observed exclusion" )
     for o in eofficial:
         # logger.info ( f"exclusion object: {o}" )
         if o["name"].startswith ( "expExclusion" ):
             rmin, rmax = min ( yvs ), max ( yvs )
-            plt.plot ( o["points"]["x"], [ rmin, rmax ], c="k", 
-                       linestyle = ":",
-                       label="dashed lines are expected values" )
+            xvals = set(o["points"]["x"])
+            for xv in xvals:
+                plt.plot ( [xv]*2, [ rmin, rmax ], c="k", 
+                           linestyle = ":",
+                           label="dashed lines are expected values" )
     plt.legend( framealpha=.5 )
 
     if options["extraInfo"]: ## a timestamp, on the right border
