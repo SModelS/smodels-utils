@@ -13,8 +13,9 @@ def combineResults( database, anas_and_SRs : dict, debug=False ):
     """
     import copy
     anaids = anas_and_SRs.keys()
-    expResults = database.getExpResults( analysisIDs = anaids,
+    database.selectExpResults( analysisIDs = anaids,
                                          dataTypes = [ "efficiencyMap" ] )
+    expResults = database.expResultList
     datasets,datasetorder,covariance_matrix = [], [], []
     anaIds = []
     ctdses = 0
@@ -239,7 +240,7 @@ def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     supers, newers = [], []
     olders = db.expResultList
     supers = filterSupersededFromList ( olders, invert )
-    db.subs[0].expResultList = supers
+    db.subs[0].allExpResults = supers
     db.subs = [ db.subs[0] ]
     print ( "[databaseManipulations] after removal of superseded",len(db.expResultList),
             "results" )

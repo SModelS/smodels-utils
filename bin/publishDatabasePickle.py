@@ -58,7 +58,8 @@ def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
     """
     has_nonValidated = False
-    expResults = database.getExpResults( useNonValidated=True )
+    database.selectExpResults(useNonValidated=True )
+    expResults = database.expResultList
     has_nonValidated = False
     nonValidateds = set()
     for e in expResults:
@@ -105,13 +106,10 @@ def main():
         
     has_nonValidated = False
     nonValidated = []
-    discard_zeroes=True
-    if "test" in dbname:
-        discard_zeroes = False
     fastlim = True
     picklefile = dbname
     if not args.build:
-        d = Database ( dbname, discard_zeroes=discard_zeroes )
+        d = Database ( dbname, )
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
@@ -123,17 +121,17 @@ def main():
         import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
-        d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
+        d = Database ( dbname, progressbar=True )
         dbver = d.databaseVersion
         if args.remove_superseded:
             # e = copy.deepcopy( d )
-            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
+            e = Database ( dbname, progressbar=True )
             e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
             print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
             d = removeSupersededFromDB ( d )
         if args.remove_fastlim:
             # e = copy.deepcopy( d )
-            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
+            e = Database ( dbname, progressbar=True )
             ## create fastlim only
             e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
             d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
@@ -143,7 +141,7 @@ def main():
             e.subs[0].databaseVersion="fastlim"+dbver
         if args.remove_nonaggregated:
             # e = copy.deepcopy( d )
-            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
+            e = Database ( dbname, progressbar=True )
             ## create fastlim only
             e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
             d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
