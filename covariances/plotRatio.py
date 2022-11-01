@@ -44,7 +44,9 @@ def convertNewAxes ( newa ):
     if type(newa)==list:
         return axes[::-1]
     if type(newa)==dict:
-        axes = [ newa["x"], newa["y"] ]
+        axes = [ newa["x"] ]
+        if "y" in newa:
+            axes.append ( newa["y"] )
         if "z" in newa:
             axes.append ( newa["z"] )
         return axes[::-1]
@@ -121,7 +123,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         h = axisHash ( axes )
         if not "UL" and not "efficiency" in point:
             continue
-        if point["axes"]["x"]<point["axes"]["y"]:
+        if "y" in point["axes"] and point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
         if "UL" in point and point["UL"] != None:
             rs[ h ] = point["signal"] / point["UL" ]
@@ -154,7 +156,10 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             if r2 > 0.:
                 ratio = r1 / r2
             # print ( "ratio",axes[0],axes[1],ratio )
-            points.append ( (axes[0],axes[1],ratio ) )
+            tpl = (axes[0],ratio )
+            if len(axes)>1:
+                tpl = (axes[0],axes[1],ratio )
+            points.append ( tpl )
             hasResult = True
         if plotEfficiencies and eff1 and eff1>0. and "efficiency" in point:
             eff2 = point["efficiency"]
@@ -201,7 +206,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
-    col = griddata ( points[::,0:2], points[::,2], yx, rescale=True )
+    if len(points[0])==2:
+        x = yx[::,0]
+        y = [0.]*len(x)
+    dim = len(points[0])-1
+    col = griddata ( points[::,0:2], points[::,dim], yx, rescale=True )
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % \
                 (err_msgs, len( content2["data"] ) ) )
@@ -297,8 +306,14 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
                 name = E["name"]
                 # print ( "name", name )
                 hasLegend = True
-                plt.plot ( E["points"]["x"], E["points"]["y"], color='white', linestyle='-', linewidth=4, label="" )
-                plt.plot ( E["points"]["x"], E["points"]["y"], color='k', linestyle='-', linewidth=3, label=label )
+                px = E["points"]["x"]
+                if "y" in E["points"]:
+                    py = E["points"]["y"]
+                else:
+                    py = px
+                    px = [ 0. ] * len (py)
+                plt.plot ( px, py, color='white', linestyle='-', linewidth=4, label="" )
+                plt.plot ( px, py, color='k', linestyle='-', linewidth=3, label=label )
                 label = ""
         if el2 != None and t in el2:
             for E in el2[t]:
@@ -306,8 +321,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
                 hasLegend = True
                 if "points" in E:
                     E = E["points"]
-                plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=4, label="" )
-                plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
+                px = E["x"]
+                plt.plot ( px, E["y"], color='white', linestyle='-', linewidth=4, label="" )
+                plt.plot ( px, E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
                 label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
     if not os.path.exists ( smodels_root ):
@@ -322,7 +338,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     label="SModelS exclsuion"
     for E in el2:
         hasLegend = True
-        plt.plot ( E["x"], E["y"], color='grey', linestyle='-', linewidth=4, label=label )
+        px = E["x"]
+        plt.plot ( px, E["y"], color='grey', linestyle='-', linewidth=4, label=label )
         label=""
 
     maxx = max(x)

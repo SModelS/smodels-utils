@@ -129,7 +129,6 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     if maxes != None:
         maxes = axes.replace(" ","").strip()
     from sympy import var
-    print ( "axes", axes, "maxes", maxes )
     x,y,z,w = var('x y z w')
     caxes = eval ( maxes )
     exp = "obs"
