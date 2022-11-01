@@ -75,6 +75,13 @@ def cutPoints ( points, ranges ):
         ranges["y"]=[ float("-inf"), float("inf") ]
     if not "x" in ranges:
         ranges["x"]=[ float("-inf"), float("inf") ]
+    if not "y" in points:
+        ret = { "x": [] }
+        for kx in points["x"]:
+            if ranges["x"][0] < kx < ranges["x"][1]:
+                    ret["x"].append ( kx )
+        return ret
+
     ret = { "x": [], "y": [] }
     for kx, ky in zip ( points["x"], points["y"] ):
         if ranges["x"][0] < kx < ranges["x"][1] and \
@@ -122,6 +129,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     if maxes != None:
         maxes = axes.replace(" ","").strip()
     from sympy import var
+    print ( "axes", axes, "maxes", maxes )
     x,y,z,w = var('x y z w')
     caxes = eval ( maxes )
     exp = "obs"
