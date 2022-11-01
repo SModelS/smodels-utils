@@ -206,10 +206,12 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
-    if len(points[0])==2:
+    dim = len(points[0])-1
+    s = 0.35 # size
+    if dim==1:
         x = yx[::,0]
         y = [0.]*len(x)
-    dim = len(points[0])-1
+        s = 20.
     col = griddata ( points[::,0:2], points[::,dim], yx, rescale=True )
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % \
@@ -231,7 +233,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if vmax > 5.:
         opts = { "norm": matplotlib.colors.LogNorm()  }
 
-    scatter = plt.scatter ( x, y, s=0.35, c=col, marker="o", cmap=cm,
+    scatter = plt.scatter ( x, y, s=s, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
     plt.ylabel ( ylabel, size=13 )
