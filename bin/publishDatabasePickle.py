@@ -61,7 +61,8 @@ def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
     """
     has_nonValidated = False
-    expResults = database.getExpResults( useNonValidated=True )
+    database.selectExpResults(useNonValidated=True )
+    expResults = database.expResultList
     has_nonValidated = False
     nonValidateds = set()
     for e in expResults:
@@ -109,9 +110,6 @@ def main():
 
     has_nonValidated = False
     nonValidated = []
-    discard_zeroes=True
-    if "test" in dbname:
-        discard_zeroes = False
     fastlim = True
     picklefile = dbname
     if not args.build:
@@ -145,6 +143,36 @@ def main():
             if not hasattr ( txnd, "origdata" ):
                 print ( "[publishDatabasePickle] FATAL: why arent there origdata in tnamedata??" )
                 sys.exit()
+        dbver = d.databaseVersion
+        if args.remove_superseded:
+            # e = copy.deepcopy( d )
+            e = Database ( dbname, progressbar=True )
+            e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
+            print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
+            d = removeSupersededFromDB ( d )
+        if args.remove_fastlim:
+            # e = copy.deepcopy( d )
+            e = Database ( dbname, progressbar=True )
+            ## create fastlim only
+            e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
+            d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
+            d.pcl_meta.hasFastLim = False
+            d.txt_meta.hasFastLim = False
+            d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+            e.subs[0].databaseVersion="fastlim"+dbver
+        if args.remove_nonaggregated:
+            # e = copy.deepcopy( d )
+            e = Database ( dbname, progressbar=True )
+            ## create fastlim only
+            e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
+            d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
+            d.pcl_meta.hasFastLim = False
+            d.txt_meta.hasFastLim = False
+            d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+            e.subs[0].databaseVersion="nonaggregated"+dbver
+        if not args.skipValidation:
+            validated, which = checkNonValidated(d)
+            has_nonValidated = validated
         else:
             txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
             if hasattr ( txnd, "origdata" ):
