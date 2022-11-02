@@ -349,7 +349,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "best SR"
     if validationPlot.validationType == "tpredcomb":
             subtitle = "combination of tpreds"
-    plt.text ( .95, .0222, subtitle, transform=fig.transFigure, fontsize=10,
+    plt.text ( .97, .0222, subtitle, transform=fig.transFigure, fontsize=10,
                horizontalalignment="right" )
     if figureUrl:
         plt.text( .13, .13, f"{figureUrl}",
