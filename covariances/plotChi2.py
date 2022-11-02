@@ -46,28 +46,30 @@ def plot ( chi2, slhafile ):
     plt.plot ( chi2.keys(), values )
     ax = plt.gca()
     ax.set_ylim ( [0,10.] )
-    plt.title ( slhafile )
+    plt.title ( rf"$\Delta\chi^2$, {slhafile}" )
     plt.ylabel ( r"$\Delta\chi^2$")
     plt.xlabel ( r"signal strength $\mu$")
     plt.kittyPlot ( f"chi2_{slhafile}.png" )
 
-def getSetup():
-    bill1 = { "slhafile": "TChiHH_300_0_300_0.slha",
+def getSetup( i=1 ):
+    bills = {}
+    bills[1] = { "slhafile": "TChiHH_300_0_300_0.slha",
               "xrange": { "min": -.3, "max": 4., "delta": .1 } }
-    bill2 = { "slhafile": "TChiHH_750_0_750_0.slha",
+    bills[2] = { "slhafile": "TChiHH_750_0_750_0.slha",
               "xrange": { "min": -.8, "max": 4., "delta": .1 } }
-    bill3 = { "slhafile": "TChiHH_450_0_450_0.slha",
+    bills[3] = { "slhafile": "TChiHH_450_0_450_0.slha",
               "xrange": { "min": -.1, "max": 3., "delta": .1 } }
-    return bill2
+    return bills[i]
 
 def main():
     res = fetch()
-    setup = getSetup()
-    slhafile = setup["slhafile"]
-    tp = getTheoryPrediction ( res, slhafile )
-    xrange = setup["xrange"]
-    chi2 = computeChi2s( tp, xrange )
-    plot ( chi2, slhafile = slhafile )
+    for i in [ 1,2,3]:
+        setup = getSetup( i)
+        slhafile = setup["slhafile"]
+        tp = getTheoryPrediction ( res, slhafile )
+        xrange = setup["xrange"]
+        chi2 = computeChi2s( tp, xrange )
+        plot ( chi2, slhafile = slhafile )
 
 if __name__ == "__main__":
     main()
