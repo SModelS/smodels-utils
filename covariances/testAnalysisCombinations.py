@@ -318,6 +318,7 @@ def getSetupBill2():
             dataTypes=dTypes, useNonValidated = True )
 
     exp_results = tmp
+    # exp_results = []
 
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-20-004' ]
@@ -327,7 +328,7 @@ def getSetupBill2():
     ret = { "slhafile": "TChiHH_750_0_750_0.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "murange": ( 0., 3. ),
+            "murange": ( -1., 4. ),
             "dictname": "20004b.dict",
             "expected": False,
             "output": "20-004b.png"
@@ -335,7 +336,8 @@ def getSetupBill2():
     ret["addjitter"]=0.002
     ret["addjitter"]=0.002
     ret["rewrite"]=True
-    ret["logy"]=True
+    ret["logy"]=False
+    ret["normalize"]=True
     ret["plotproduct"]=False
     return ret
 
@@ -612,6 +614,8 @@ def plotLlhds ( llhds, fits, uls, setup ):
         colors[Id] = x[0].get_color()
     prodllhd=llhds["combined"]
     totS = sum(prodllhd.values())
+    if setup["normalize"]==False:
+        totS=1.
     for k,v in prodllhd.items():
         prodllhd[k]=prodllhd[k]/totS
     llmin, llmax = 0., 1.
@@ -680,7 +684,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
             continue
         l = values [ "lulmu" ]
         label = r"ul$_\mu$ (%s)" % Id
-        label = None
+        # label = None
         plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
 
     slha = setup["slhafile"]
@@ -751,7 +755,7 @@ def createLlhds ( tpreds, setup ):
         l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
                 normalize = normalize, equidistant=False, expected = expected )
         # print ( f">> ulmu({Id})={ulmu:.2f}, l={lulmu:.2g} S={S:.2f}" )
-        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu }
+        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu/S }
         llhds[Id]=l
         sums[Id] = S
         t1 = time.time()
@@ -862,7 +866,7 @@ def testAnalysisCombo( setup ):
             llhd_ul = ts[0].likelihood (  ul, expected = expected )
             fits["llhd_combo(ul)"] = llhd_ul
         muhat = ts[0].muhat( allowNegativeSignals = True, expected = expected )
-        # print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
+        print ( f"[testAnalysisCombinations] ul:{ul} llhd_ul:{llhd_ul} muhat:{muhat}" )
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True, expected= expected )
     nplots = 0
