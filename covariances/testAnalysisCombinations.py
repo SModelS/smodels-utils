@@ -273,7 +273,38 @@ def getSetupTimotheeSR():
             "output": "timsr.png"
     }
     if ret["expected"]==False:
-        ret["murange"] = ( -.8, .3 )
+        ret["murange"] = ( -.8, 1.3 )
+    ret["addjitter"]=0.008
+    ret["addjitter"]=0.008
+    return ret
+
+def getSetupBill():
+    """ CMS-SUS-20-004 (UL), CMS-SUS-20-004 (combined) """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ None ]
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids, 
+            dataTypes=dTypes )
+
+    exp_results = tmp
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids, 
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    #comb_results = []
+    ret = { "slhafile": "TChiHH_300_0_300_0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -.8, 1.3 ),
+            "dictname": "20004.dict",
+            "expected": False,
+            "output": "20-004.png"
+    }
+    #if ret["expected"]==False:
+    #    ret["murange"] = ( -.8, 1.3 )
     ret["addjitter"]=0.008
     ret["addjitter"]=0.008
     return ret
@@ -877,7 +908,7 @@ def getSetup( which="TChiWZ09" ):
         setup = func()
         return addDefaults ( setup )
     except KeyError as e:
-        print ( f"[testAnalysisCombo] {name} not found" )
+        print ( f"[testAnalysisCombo] {name} not found: {e}" )
         listSetups()
         sys.exit()
 
