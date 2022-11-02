@@ -27,7 +27,7 @@ import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange, createLine
 from colorama import Fore, Cursor
-    
+
 dbpath = [ "../../smodels-database/" ]
 # dbpath = [ "official" ]
 dbpath = [ "official+fastlim+nonaggregated" ]
@@ -149,7 +149,7 @@ def getSetupSabine2():
             "output": "sabine2.png"
     }
     return ret
-    
+
 def getSetup19006():
     """ CMS-SUS-19-006 (sr combo) """
     database = Database( dbpath[0] )
@@ -284,7 +284,7 @@ def getSetupBill():
     dTypes = ["upperLimit" ]
     anaids = [ 'CMS-SUS-20-004' ]
     dsids = [ None ]
-    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids, 
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids,
             dataTypes=dTypes, useNonValidated = True )
 
     exp_results = tmp
@@ -292,7 +292,7 @@ def getSetupBill():
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-20-004' ]
     dsids = [ 'all' ]
-    comb_results = database.getExpResults(analysisIDs=anaids, 
+    comb_results = database.getExpResults(analysisIDs=anaids,
             datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
     ret = { "slhafile": "TChiHH_300_0_300_0.slha",
             "SR": exp_results,
@@ -314,7 +314,7 @@ def getSetupBill2():
     dTypes = ["upperLimit" ]
     anaids = [ 'CMS-SUS-20-004' ]
     dsids = [ None ]
-    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids, 
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids,
             dataTypes=dTypes, useNonValidated = True )
 
     exp_results = tmp
@@ -323,7 +323,7 @@ def getSetupBill2():
     dTypes = ["efficiencyMap"]
     anaids = [ 'CMS-SUS-20-004' ]
     dsids = [ 'all' ]
-    comb_results = database.getExpResults(analysisIDs=anaids, 
+    comb_results = database.getExpResults(analysisIDs=anaids,
             datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
     ret = { "slhafile": "TChiHH_750_0_750_0.slha",
             "SR": exp_results,
@@ -332,6 +332,39 @@ def getSetupBill2():
             "dictname": "20004b.dict",
             "expected": False,
             "output": "20-004b.png"
+    }
+    ret["addjitter"]=0.002
+    ret["addjitter"]=0.002
+    ret["rewrite"]=True
+    ret["logy"]=False
+    ret["normalize"]=True
+    ret["plotproduct"]=False
+    return ret
+
+def getSetupBill3():
+    """ CMS-SUS-20-004 (UL), CMS-SUS-20-004 (combined) """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit" ]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ None ]
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids,
+            dataTypes=dTypes, useNonValidated = True )
+
+    exp_results = tmp
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    ret = { "slhafile": "TChiHH_450_0_450_0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -1., 3. ),
+            "dictname": "20004c.dict",
+            "expected": False,
+            "output": "20-004c.png"
     }
     ret["addjitter"]=0.002
     ret["addjitter"]=0.002
@@ -645,17 +678,17 @@ def plotLlhds ( llhds, fits, uls, setup ):
             else:
                 plt.text ( .6, -.11, rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
-        
+
         if setup["plotproduct"]:
             if withinMuRange ( ulmu, setup["murange"] ):
-                plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
+                plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted",
                        c="k", label=rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]" )
             else:
                 plt.text ( -.1, -.11, rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
 
     if True and "llhd_combo(ul)" in fits:
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
-        llhdul = fits["llhd_combo(ul)"]  
+        llhdul = fits["llhd_combo(ul)"]
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
         srcombo = " (sr combo)"
         if fits["llhdtype"]=="pyhf":
@@ -762,7 +795,7 @@ def createLlhds ( tpreds, setup ):
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100,
                 normalize = normalize, equidistant=False, expected = expected )
         # print ( f">> ulmu({Id})={ulmu:.2f}, l={lulmu:.2g} S={S:.2f}" )
         uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu/S, "muhat": fmuhat, "lmax": lmax/S }
@@ -801,7 +834,7 @@ def addCombinedLlhds ( d, combiner, expected ):
             totllhd+=llhd
     d["llhds"]["combined"]=combL
     return d
-    
+
 def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately
@@ -919,7 +952,7 @@ def testAnalysisCombo( setup ):
     writeDictFile ( dictname, llhds, times, fits, uls, setup )
 
 def runSlew( rewrite = False ):
-    """ run them all 
+    """ run them all
     :param rewrite: if true, rewrite the dicts, rerun the computations
     """
     print ( "[testAnalysisCombinations] run all functions" )
@@ -937,7 +970,7 @@ def runSlew( rewrite = False ):
     sys.exit()
 
 def addDefaults ( setup ):
-    default = {} 
+    default = {}
     default["rewrite"]=True
     default["expected"]=False
     default["addjitter"]=True
@@ -998,10 +1031,10 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     dbpath[0] = args.dbpath
     if args.list:
-       listSetups() 
+       listSetups()
        sys.exit()
     if args.setup == "all":
-        ret = listSetups( printOut = False ) 
+        ret = listSetups( printOut = False )
         for r in ret:
             setup = getSetup ( r )
             if args.dont_rewrite:
@@ -1009,7 +1042,7 @@ if __name__ == "__main__":
             print ( f"[testAnalysisCombo] now testing {r}" )
             testAnalysisCombo( setup )
         sys.exit()
-        
+
     setup = getSetup( args.setup )
     if args.dont_rewrite:
         setup["rewrite"]=False
