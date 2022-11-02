@@ -308,6 +308,38 @@ def getSetupBill():
     ret["plotproduct"]=False
     return ret
 
+def getSetupBill2():
+    """ CMS-SUS-20-004 (UL), CMS-SUS-20-004 (combined) """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit" ]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ None ]
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids, 
+            dataTypes=dTypes, useNonValidated = True )
+
+    exp_results = tmp
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids, 
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    ret = { "slhafile": "TChiHH_750_0_750_0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( 0., 3. ),
+            "dictname": "20004b.dict",
+            "expected": False,
+            "output": "20-004b.png"
+    }
+    ret["addjitter"]=0.002
+    ret["addjitter"]=0.002
+    ret["rewrite"]=True
+    ret["logy"]=True
+    ret["plotproduct"]=False
+    return ret
+
+
 def getSetupTimotheeCombined():
     """ CMS-SUS-20-001, ATLAS-SUSY-2019-09 """
     database = Database( dbpath[0] )
@@ -590,7 +622,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
     prody = list ( prodllhd.values() )
     if setup["addjitter"] and False:
         addJitter ( prody )
-    if not "plotproduct" in setup or setup["plotproduct"]==True:
+    if setup["plotproduct"]:
        plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$ [tpc]" )
 
     if "mu_hat" in fits:
@@ -600,17 +632,17 @@ def plotLlhds ( llhds, fits, uls, setup ):
         r = fits["r"]
         rexp = fits["rexp"]
         lmax = max ( prodllhd.values() )
-        print ( f"[testAnalysisCombinations] muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
+        print ( f"[testAnalysisCombinations] product: muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
         ax = plt.gca()
-        if not "plotproduct" in setup or setup["plotproduct"]==True:
+        if setup["plotproduct"]:
             if withinMuRange ( mu_hat, setup["murange"] ):
                 plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}]" )
             else:
                 plt.text ( .6, -.11, rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
         
-        if not "plotproduct" in setup or setup["plotproduct"]==True:
+        if setup["plotproduct"]:
             if withinMuRange ( ulmu, setup["murange"] ):
                 plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
                        c="k", label=rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]" )
@@ -897,6 +929,7 @@ def addDefaults ( setup ):
     default["addjitter"]=True
     default["normalize"]=True
     default["logy"]=False
+    default["plotproduct"]=True
     for k,v in default.items():
         if not k in setup:
             setup[k]=v
