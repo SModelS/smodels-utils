@@ -137,6 +137,7 @@ def main():
         import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
+<<<<<<< HEAD
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True,
                        force_load = force_load )
         if args.txnamevalues:
@@ -189,6 +190,42 @@ def main():
 
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+=======
+        d = Database(dbname, progressbar=True)
+    dbver = d.databaseVersion
+    if args.remove_superseded:
+        # e = copy.deepcopy( d )
+        e = Database(dbname, progressbar=True)
+        e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
+        print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
+        d = removeSupersededFromDB ( d )
+    if args.remove_fastlim:
+        # e = copy.deepcopy( d )
+        e = Database ( dbname, progressbar=True )
+        ## create fastlim only
+        e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
+        d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
+        d.pcl_meta.hasFastLim = False
+        d.txt_meta.hasFastLim = False
+        d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+        e.subs[0].databaseVersion="fastlim"+dbver
+    if args.remove_nonaggregated:
+        # e = copy.deepcopy( d )
+        e = Database ( dbname, progressbar=True )
+        ## create fastlim only
+        e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
+        d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
+        d.pcl_meta.hasFastLim = False
+        d.txt_meta.hasFastLim = False
+        d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+        e.subs[0].databaseVersion="nonaggregated"+dbver
+    if not args.skipValidation:
+        validated, which = checkNonValidated(d)
+        has_nonValidated = validated
+    else:
+        has_nonValidated = False
+    picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+>>>>>>> ba5e18de9 (Small improvement in publishPickle)
 
     if args.remove_superseded:
         # e = copy.deepcopy( d )
