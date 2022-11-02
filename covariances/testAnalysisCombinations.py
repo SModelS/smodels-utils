@@ -685,7 +685,15 @@ def plotLlhds ( llhds, fits, uls, setup ):
         l = values [ "lulmu" ]
         label = r"ul$_\mu$ (%s)" % Id
         # label = None
-        plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
+        if not "combo" in Id:
+            plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
+        muhat = values["muhat"]
+        lmax = values["lmax"]
+        # if muhat < 0.:
+        label = f"$\hat\mu$ ({Id})"
+        if not "combo" in Id:
+            plt.plot ( [ muhat ] *2, [ llmin, lmax ], linestyle="-.", \
+                        c=colors[Id], label= label )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -738,7 +746,9 @@ def createLlhds ( tpreds, setup ):
         ulmu = float ( ul / xsec )
         lulmu = t.likelihood ( mu = ulmu )
         eulmu = float ( eul / xsec )
-        muhat = t.muhat( allowNegativeSignals = True )
+        fmuhat = t.muhat( allowNegativeSignals = True )
+        muhat = fmuhat
+        lmax = t.likelihood ( mu = muhat )
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
         if type(muhat)==float:
             muhat = f"{muhat:.2g}"
@@ -755,7 +765,7 @@ def createLlhds ( tpreds, setup ):
         l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
                 normalize = normalize, equidistant=False, expected = expected )
         # print ( f">> ulmu({Id})={ulmu:.2f}, l={lulmu:.2g} S={S:.2f}" )
-        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu/S }
+        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu/S, "muhat": fmuhat, "lmax": lmax/S }
         llhds[Id]=l
         sums[Id] = S
         t1 = time.time()
@@ -866,7 +876,7 @@ def testAnalysisCombo( setup ):
             llhd_ul = ts[0].likelihood (  ul, expected = expected )
             fits["llhd_combo(ul)"] = llhd_ul
         muhat = ts[0].muhat( allowNegativeSignals = True, expected = expected )
-        print ( f"[testAnalysisCombinations] ul:{ul} llhd_ul:{llhd_ul} muhat:{muhat}" )
+        print ( f"[testAnalysisCombinations] ul:{ul:.2g} llhd_ul:{llhd_ul} muhat:{muhat}" )
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True, expected= expected )
     nplots = 0
