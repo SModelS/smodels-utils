@@ -107,7 +107,8 @@ def main():
         sys.path.append('../')
         from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
 
-
+    from smodels.base.smodelsLogging import logger
+    logger.setLevel('ERROR')
     has_nonValidated = False
     nonValidated = []
     fastlim = True
