@@ -1001,6 +1001,13 @@ class TxNameInput(Locker):
             if self.__hasWarned__["omitted"]<2:
                 logger.warn ( "(omitted more such msgs)" )
 
+    def error ( self, line ):
+        if not line in self.__hasWarned__:
+            self.__hasWarned__[line]=0
+        self.__hasWarned__[line]+=1
+        if self.__hasWarned__[line]<2:
+            logger.error ( line )
+
     def checkMassConstraints(self,massArray):
         """
         Check if massArray satisfies the mass constraints defined in massConstraints
@@ -1033,11 +1040,11 @@ class TxNameInput(Locker):
             goodMasses = True
             for ib,br in enumerate(elMass):
                 if len(massArray)<=ib:
-                    logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
+                    self.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
                     return True
                 for iv,vertex in enumerate(br):
                     if len(massArray[ib])<=iv:
-                        logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
+                        self.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
                         return True
                     m1 = massArray[ib][iv]
                     if type(m1) == tuple:
