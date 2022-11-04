@@ -456,11 +456,11 @@ class Axes(object):
         for xv in self._xvars:
             if not str(xv) in xMass:  #Missing a variable
                 logger.error("Input variable %s missing for computing mass" %xv)
-                return None
+                return []
             value = xMass[str(xv)]
             if type(value) in [ str ]:
                 logger.error(f"Input variable ''{xv}'' has a string value of ''{value}''" )
-                return None
+                return []
             xValues[str(xv)] = value
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
