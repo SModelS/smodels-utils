@@ -220,7 +220,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 linestyle=None, c="gray", linewidth=0, markersize=2, label="no result")
     if len(gridpoints)>0:
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
-                linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS grid points" % len(gridpoints) )
+                linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints) )
         #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
