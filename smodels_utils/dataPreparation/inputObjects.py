@@ -171,6 +171,10 @@ class MetaInfoInput(Locker):
         a list of lists of signal region names, e.g.
         [ [ "sr1", "sr2" ], [ "sr3", "sr4" ] ] or as a list of lists of
         signal numbers, e.g.  [ [ 1, 2 ], [ 3, 4 ] ]
+        :param addOrder: False, True, or "overwrite". should a datasetOrder field
+                         be defined purely from the signal regions (overwrite),
+                         only if no datasetOrder is explicitly given (True),
+                         or the standard "SRx" names be used (False)
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
