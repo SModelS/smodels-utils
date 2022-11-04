@@ -187,10 +187,11 @@ class MetaInfoInput(Locker):
             handler = ROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
 
-        if addOrder:
-            self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
-        else:
-            self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n ) ] )
+        if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
+            if addOrder:
+                self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
+            else:
+                self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n ) ] )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
