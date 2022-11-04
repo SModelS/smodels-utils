@@ -339,6 +339,8 @@ class Axes(object):
     No units supported!
     """
 
+    hasWarned = {}
+
     def __init__(self, massEqs,massVars,widthVars=None ):
 
         """
@@ -356,7 +358,6 @@ class Axes(object):
             logger.error("Masses must be a list")
             sys.exit()
 
-        self.hasWarned = {}
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
         if widthVars:
@@ -455,11 +456,11 @@ class Axes(object):
         xValues = {}
         for xv in self._xvars:
             if not str(xv) in xMass:  #Missing a variable
-                logger.error("Input variable %s missing for computing mass" %xv)
+                self.error("Input variable %s missing for computing mass" %xv)
                 return []
             value = xMass[str(xv)]
             if type(value) in [ str ]:
-                logger.error(f"Input variable ''{xv}'' has a string value of ''{value}''" )
+                self.error(f"Input variable ''{xv}'' has a string value of ''{value}''" )
                 return []
             xValues[str(xv)] = value
 
@@ -547,6 +548,13 @@ class Axes(object):
         if self.hasWarned[line]<2:
             logger.warning ( line )
 
+    def error ( self, line ):
+        if not line in self.hasWarned:
+            self.hasWarned[line]=0
+        self.hasWarned[line]+=1
+        if self.hasWarned[line]<2:
+            logger.error ( line )
+
     def getXYValues(self,massArray,widthArray=None):
 
         """
@@ -624,7 +632,7 @@ class Axes(object):
             cleanedInput = {}
             for k,v in massInput.items():
                 if not k in fexpr:
-                    line = f"key {k} is not in func {fexpr}!!" 
+                    line = f"key {k} is not in func {fexpr}!!"
                     self.warn ( line )
                 else:
                     cleanedInput[k]=v
