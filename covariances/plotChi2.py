@@ -15,11 +15,14 @@ def fetch():
     dbpath = "../../smodels-database/"
     database = Database( dbpath )
     dTypes = ["efficiencyMap"]
-    anaids = [ 'CMS-SUS-20-004' ]
+    anaids = [ 'CMS-SUS-20-004', 'CMS-SUS-20-004-slv1' ]
     dsids = [ 'all' ]
     results = database.getExpResults(analysisIDs=anaids,
-            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )[0]
-    return results
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    ret = {}
+    for r in results:
+        ret[r.globalInfo.id]=r
+    return ret
 
 def getTheoryPrediction( res, slhafile ):
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
@@ -40,16 +43,20 @@ def computeChi2s( tp, xrange : dict  ):
         chi2s[i]= chi2
     return chi2s
 
-def plot ( chi2, setup ):
+def plot ( chi2v2, chi2v1, setup ):
     plt.clf()
     slhafile = setup["slhafile"]
     xrange = setup["xrange"]
     full = setup["full"]
     slv1 = setup["SLv1"]
     slv2 = setup["SLv2"]
+    chi2 = chi2v2
     minChi2 = min ( chi2.values() )
+    minChi2v1 = min ( chi2v1.values() )
     values = np.array ( list ( chi2.values() ) ) - minChi2
+    valuesv1 = np.array ( list ( chi2v1.values() ) ) - minChi2v1
     plt.plot ( chi2.keys(), values, c="green", label="SModelS SLv2" )
+    plt.plot ( chi2v1.keys(), valuesv1, c="magenta", label="SModelS SLv1" )
     plt.plot ( full[0], full[1], c="blue", label="Bill, full" )
     plt.plot ( slv1[0], slv1[1], c="black", label="Bill, slv1" )
     plt.plot ( slv2[0], slv2[1], c="red", label="Bill, slv2" )
@@ -81,10 +88,12 @@ def main():
     for i in [ 1,2,3]:
         setup = getSetup( i)
         slhafile = setup["slhafile"]
-        tp = getTheoryPrediction ( res, slhafile )
+        tpV2 = getTheoryPrediction ( res["CMS-SUS-20-004"], slhafile )
+        tpV1 = getTheoryPrediction ( res["CMS-SUS-20-004-slv1"], slhafile )
         xrange = setup["xrange"]
-        chi2 = computeChi2s( tp, xrange )
-        plot ( chi2, setup )
+        chi2v2 = computeChi2s( tpV2, xrange )
+        chi2v1 = computeChi2s( tpV1, xrange )
+        plot ( chi2v2, chi2v1, setup )
 
 if __name__ == "__main__":
     main()
