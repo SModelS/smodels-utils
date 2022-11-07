@@ -1046,11 +1046,11 @@ class TxNameInput(Locker):
             for ib,br in enumerate(elMass):
                 if len(massArray)<=ib:
                     self.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
-                    return True
+                    return False
                 for iv,vertex in enumerate(br):
                     if len(massArray[ib])<=iv:
                         self.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
-                        return True
+                        return False
                     m1 = massArray[ib][iv]
                     if type(m1) == tuple:
                         m1 = m1[0]
