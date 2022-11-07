@@ -120,7 +120,7 @@ class PDFAtlasReader():
         print ( f"[PDFAtlasReader] writing {destname}" )
         f = open ( destname, "wt" )
         filename = os.path.basename ( self.config['name'] )
-        f.write ( f"# upper limit values, extracted from {filename}\n" )
+        f.write ( f"# upper limit values, extracted from {filename}, using PDFAtlasReader\n" )
         if "axes" in self.config:
             f.write ( f"# axes are {self.config['axes']}\n" )
         f.write ( f"# x range {self.config['x']}\n" )
