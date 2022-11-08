@@ -73,13 +73,148 @@ def aggregateMe ( covariance, aggregate, aggprefix="AR" ):
             newCov[ctr][ctr2]=cov
     return newCov, newDSOrder
 
-class ROOTCovarianceHandler:
+class CovarianceHandler:
+    """ generic covariance handler class, contains e.g. the aggregation code,
+    and the interaction method.  will be inherited by the concrete covariance
+    handlers """
+    def interact ( self, stuff ):
+        import IPython
+        IPython.embed()
+        sys.exit() 
+
+    def checkCovarianceMatrix( self ):
+        """ a quick check if the covariance matrix is invertible. """
+        from smodels.tools.simplifiedLikelihoods import Data
+        import scipy.linalg
+        n=len(self.covariance)
+        m=Data( [0.]*n, [0.]*n, self.covariance )
+        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
+        try:
+            # I=(m.covariance)**(-1)
+            I=scipy.linalg.inv(m.covariance)
+        except Exception as e:
+            logger.error ( "Inversion failed. %s" % e )
+            sys.exit()
+        try:
+            from scipy import stats
+            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
+        except Exception as e:
+            import numpy
+            logger.error ( "computation of logpdf failed: %s" % e )
+            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
+            sys.exit()
+
+    def removeSmallValues ( self ):
+        """ set small values in covariance matrix to zero """
+        return
+        threshold = .05
+        removed, ntot = 0, 0
+        for irow,row in enumerate ( self.covariance ):
+            for icol,col in enumerate ( row ):
+                if icol >= irow:
+                    continue
+                corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
+                ntot += 1
+                if corr < threshold:
+                    removed += 1
+                    # print ( f"removing {corr:.3f} <= {threshold} at ({irow},{icol}). was: {self.covariance[irow][icol]:.3f}." )
+                    self.covariance[irow][icol]=0.
+                    self.covariance[icol][irow]=0.
+        if removed > 0:
+            logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
+
+    def aggregateThis ( self, aggregate ):
+        """ yo. aggregate. """
+        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
+                                           self.aggprefix )
+        self.covariance = newCov
+        self.datasetOrder=newDSOrder
+
+class UPROOTCovarianceHandler ( CovarianceHandler ):
     def __init__ ( self, filename, histoname, max_datasets=None,
                    aggregate = None, aggprefix = "ar" ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
                          from.
         """
+        self.aggprefix = aggprefix
+        import uproot
+        f=uproot.open ( filename )
+        h=self.getHistogram ( f, histoname )
+        xaxis = h.axes[0]
+        self.n=len(xaxis)
+        if max_datasets:
+            self.n=min(max_datasets+1,self.n+1)
+        self.datasetOrder = []
+        self.covariance = []
+        self.blinded_regions = []
+        cterr = 0
+        # self.interact ( xaxis )
+        for i in range ( self.n ):
+            if i in self.blinded_regions:
+                continue
+            dsId = xaxis.labels()[i]
+            try:
+                dsId = f"SR{int(dsId)}"
+            except Exception as e:
+                cterr += 1
+            self.datasetOrder.append ( dsId )
+            row = []
+            for j in range ( self.n ):
+                if j in self.blinded_regions:
+                    continue
+                el = h.values()[i][j]
+                if i==j and el < 1e-4:
+                   logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
+                   logger.error ( "will set it to 1e-4" )
+                   el = 1e-4
+                row.append ( el )
+            self.covariance.append ( row )
+
+        if aggregate != None:
+            ## aggregate the stuff
+            self.aggregateThis ( aggregate )
+
+        self.removeSmallValues()
+        self.checkCovarianceMatrix()
+
+    def getHistogram ( self, f, histoname ):
+        """ simple method to retrieve histogram
+        :param f: filehandle
+        """
+        h=f.get ( histoname )
+        if h: return h
+        if not "/" in histoname:
+            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
+            sys.exit()
+        tokens = histoname.split("/")
+        if not len(tokens)==2:
+            logger.error ( "cannot interpret histoname %s in %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        c= f.Get ( tokens[0] )
+        if not c:
+            logger.error ( "cannot retrieve %s from %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        if c.ClassName() == "TCanvas":
+            h=c.GetPrimitive ( tokens[1] )
+            if h: return h
+            logger.error ( "cannot retrieve %s from %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        logger.error ( "cannot interpret %s in %s" % \
+                        ( histoname, f.name ) )
+        sys.exit()
+
+class PYROOTCovarianceHandler ( CovarianceHandler ):
+    def __init__ ( self, filename, histoname, max_datasets=None,
+                   aggregate = None, aggprefix = "ar" ):
+        """ constructor.
+        :param filename: filename of root file to retrieve covariance matrix
+                         from.
+        """
+        logger.error ( "using pyroot covariance handler. you may want to switch to uproot" )
         self.aggprefix = aggprefix
         import ROOT
         f=ROOT.TFile ( filename )
@@ -120,56 +255,6 @@ class ROOTCovarianceHandler:
         self.removeSmallValues()
         self.checkCovarianceMatrix()
 
-    def checkCovarianceMatrix( self ):
-        """ a quick check if the covariance matrix is invertible. """
-        from smodels.tools.simplifiedLikelihoods import Data
-        import scipy.linalg
-        n=len(self.covariance)
-        m=Data( [0.]*n, [0.]*n, self.covariance )
-        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
-        try:
-            # I=(m.covariance)**(-1)
-            I=scipy.linalg.inv(m.covariance)
-        except Exception as e:
-            logger.error ( "Inversion failed. %s" % e )
-            sys.exit()
-        try:
-            from scipy import stats
-            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
-        except Exception as e:
-            import numpy
-            logger.error ( "computation of logpdf failed: %s" % e )
-            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
-            sys.exit()
-
-    def removeSmallValues ( self ):
-        """ set small values in covariance matrix to zero """
-        return
-        #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
-        #        type(self.covariance[0][0]) )
-        threshold = .05
-        removed, ntot = 0, 0
-        for irow,row in enumerate ( self.covariance ):
-            for icol,col in enumerate ( row ):
-                if icol >= irow:
-                    continue
-                corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
-                ntot += 1
-                if corr < threshold:
-                    removed += 1
-                    # print ( f"removing {corr:.3f} <= {threshold} at ({irow},{icol}). was: {self.covariance[irow][icol]:.3f}." )
-                    self.covariance[irow][icol]=0.
-                    self.covariance[icol][irow]=0.
-        if removed > 0:
-            logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
-
-    def aggregateThis ( self, aggregate ):
-        """ yo. aggregate. """
-        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
-                                           self.aggprefix )
-        self.covariance = newCov
-        self.datasetOrder=newDSOrder
-
     def getHistogram ( self, f, histoname ):
         """ simple method to retrieve histogram
         :param f: filehandle
@@ -199,7 +284,7 @@ class ROOTCovarianceHandler:
                         ( histoname, f.name ) )
         sys.exit()
 
-class CSVCovarianceHandler:
+class CSVCovarianceHandler ( CovarianceHandler ):
     def __init__ ( self, filename, max_datasets=None,
                    aggregate = None, aggprefix = "ar" ):
         """ constructor.
@@ -249,56 +334,6 @@ class CSVCovarianceHandler:
 
         self.removeSmallValues()
         self.checkCovarianceMatrix()
-
-    def checkCovarianceMatrix( self ):
-        """ a quick check if the covariance matrix is invertible. """
-        from smodels.tools.simplifiedLikelihoods import Data
-        import scipy.linalg
-        n=len(self.covariance)
-        m=Data( [0.]*n, [0.]*n, self.covariance )
-        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
-        try:
-            # I=(m.covariance)**(-1)
-            I=scipy.linalg.inv(m.covariance)
-        except Exception as e:
-            logger.error ( "Inversion failed. %s" % e )
-            sys.exit()
-        try:
-            from scipy import stats
-            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
-        except Exception as e:
-            import numpy
-            logger.error ( "computation of logpdf failed: %s" % e )
-            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
-            sys.exit()
-
-    def removeSmallValues ( self ):
-        """ set small values in covariance matrix to zero """
-        return
-        #print ( "[CovarianceHandler] cov=",len(self.covariance), type(self.covariance),
-        #        type(self.covariance[0][0]) )
-        threshold = .05
-        removed, ntot = 0, 0
-        for irow,row in enumerate ( self.covariance ):
-            for icol,col in enumerate ( row ):
-                if icol >= irow:
-                    continue
-                corr = abs ( col ) / math.sqrt(self.covariance[irow][irow]*self.covariance[icol][icol])
-                ntot += 1
-                if corr < threshold:
-                    removed += 1
-                    # print ( f"removing {corr:.3f} <= {threshold} at ({irow},{icol}). was: {self.covariance[irow][icol]:.3f}." )
-                    self.covariance[irow][icol]=0.
-                    self.covariance[icol][irow]=0.
-        if removed > 0:
-            logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
-
-    def aggregateThis ( self, aggregate ):
-        """ yo. aggregate. """
-        newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
-                                           self.aggprefix )
-        self.covariance = newCov
-        self.datasetOrder=newDSOrder
 
     def getHistogram ( self, f, histoname ):
         """ simple method to retrieve histogram

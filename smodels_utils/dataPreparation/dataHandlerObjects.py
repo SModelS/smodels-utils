@@ -55,6 +55,7 @@ class DataHandler(object):
     Holds attributes for describing original data types and
     methods to set the data source and preprocessing the data
     """
+    hasWarned = {}
 
     def __init__(self,dataLabel,coordinateMap,xvars):
 
@@ -902,7 +903,7 @@ class DataHandler(object):
     def uprootByName(self, name):
         """ generator, but by name """
         import uproot
-        print ( "[dataHandlerObjects] using uproot on", self.path )
+        # print ( "[dataHandlerObjects] using uproot on", self.path )
         rootFile = uproot.open(self.path)
         obj = rootFile.get(name)
         # self.interact()
@@ -921,8 +922,18 @@ class DataHandler(object):
         except Exception as e:
             return self.uprootByName ( name )
 
+    def error ( self, line ):
+        if not line in self.hasWarned:
+            self.hasWarned[line]=0
+        self.hasWarned[line]+=1
+        if self.hasWarned[line]<2:
+            logger.error ( line )
+        if self.hasWarned[line]==2:
+            logger.error ( "(suppressing similar messages)" )
+
     def pyrootByName(self, name):
         """ generator, but by name, pyroot bindings """
+        self.error ( "using pyroot, consider switching to uproot" )
         import ROOT
         rootFile = ROOT.TFile(self.path)
         obj = rootFile.Get(name)
@@ -1002,7 +1013,6 @@ class DataHandler(object):
         """
         import uproot
         from uproot.models import TGraph, TH
-        print ( "trying to get points", obj.classname )
 
         if obj.classname in [ "TH1F", "TH2D" ]:
             return self._getHistoPoints(obj)
@@ -1048,7 +1058,6 @@ class DataHandler(object):
             (Data is defined as %i-th dimensional)" %self.dimensions)
             sys.exit()
 
-        print ( "check dimension", hist )
         #Check dimensions:
         if not self.dimensions == len ( hist.axes ):
             logger.error( f"Data dimensions ({self.dimensions}) and histogram dimensions ({hist.name}:{len (hist.axes) }) do not match {self.path}" )
