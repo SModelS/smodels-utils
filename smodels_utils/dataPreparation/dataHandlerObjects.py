@@ -435,8 +435,8 @@ class DataHandler(object):
         if self.allowNegativeValues:
             return True
         for value in values:
-            if type(value) not in [ float, np.float64, int, np.int ]:
-                print ( f"[dataHandlerObjects] value {value} cannot be cast to float." )
+            if type(value) not in [ float, np.float64, int, np.int, np.float32 ]:
+                print ( f"[dataHandlerObjects] value {value}, {type(value)} cannot be cast to float." )
                 if type(value) == str and "{" in value:
                     print ( "[dataHandlerObjects] did you try to parse an embaked file as a csv file maybe?" )
                     sys.exit(-1)
@@ -485,6 +485,7 @@ class DataHandler(object):
                 sys.exit()
 
             lines.append ( values )
+        x,y = var('x y')
         xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
         lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
         if len(lines) > max_nbins:
@@ -885,7 +886,7 @@ class DataHandler(object):
             if not isinstance(obj,ROOT.TGraph):
                 obj.SetDirectory(0)
 
-            for point in self._getPyrootPoints(obj):
+            for point in self._getPyRootPoints(obj):
                 Hsh = _Hash(point[:-1])
                 if not Hsh in pts:
                     pts[ Hsh ] = 0.
@@ -912,7 +913,7 @@ class DataHandler(object):
             sys.exit()
         rootFile.close()
 
-        for point in self._getUprootPoints(obj):
+        for point in self._getUpRootPoints(obj):
             yield point
 
     def rootByName ( self, name ):
@@ -969,7 +970,7 @@ class DataHandler(object):
             logger.error("Object %s not found in %s" %(self.objectName,self.path))
             sys.exit()
 
-        for point in self._getUprootPoints(limit):
+        for point in self._getUpRootPoints(limit):
             yield point
 
     def canvas(self):
@@ -1004,7 +1005,7 @@ class DataHandler(object):
         for point in self._getPoints(limit):
             yield point
 
-    def _getUprootPoints(self,obj):
+    def _getUpRootPoints(self,obj):
 
         """
         Iterable metod for extracting points from root histograms
@@ -1014,12 +1015,12 @@ class DataHandler(object):
         import uproot
         from uproot.models import TGraph, TH
 
-        if obj.classname in [ "TH1F", "TH2D" ]:
-            return self._getHistoPoints(obj)
+        if obj.classname in [ "TH1F", "TH2D", "TH1D", "TH2F" ]:
+            return self._getUpRootHistoPoints(obj)
         elif obj.classname in [ "TGraph", "TGraph2D" ]:
-            return self._getPyrootGraphPoints(obj)
+            return self._getUpRootGraphPoints(obj)
         else:
-            logger.error("ROOT object must be a THx or TGraphx object")
+            logger.error( f"ROOT object must be a THx or TGraphx object, not a {obj.classname}")
             sys.exit()
 
     def _getPyRootPoints(self,obj):
@@ -1032,9 +1033,9 @@ class DataHandler(object):
         import ROOT
 
         if isinstance(obj,ROOT.TH1):
-            return self._getPyrootHistoPoints(obj)
+            return self._getPyRootHistoPoints(obj)
         elif isinstance(obj,ROOT.TGraph) or isinstance(obj,ROOT.TGraph2D):
-            return self._getPyrootGraphPoints(obj)
+            return self._getPyRootGraphPoints(obj)
         else:
             logger.error("ROOT object must be a THx or TGraphx object")
             sys.exit()
@@ -1045,7 +1046,7 @@ class DataHandler(object):
         IPython.embed ( )
         sys.exit()
 
-    def _getHistoPoints(self,hist):
+    def _getUpRootHistoPoints(self,hist):
 
         """
         Iterable metod for extracting points from root histograms
@@ -1149,7 +1150,7 @@ class DataHandler(object):
                             if ul == 0.: continue
                             yield [x, y, z, ul]
 
-    def _getPyrootHistoPoints(self,hist):
+    def _getPyRootHistoPoints(self,hist):
 
         """
         Iterable metod for extracting points from root histograms
@@ -1249,8 +1250,37 @@ class DataHandler(object):
                             if ul == 0.: continue
                             yield [x, y, z, ul]
 
+    def _getUpRootGraphPoints(self,graph):
 
-    def _getPyrootGraphPoints(self,graph):
+        """
+        Iterable metod for extracting points from root TGraph objects
+        :param graph: Root graph object (TGraphx)
+        :yield: tgraph point
+        """
+        import uproot
+
+        if self.dimensions >= 3:
+            logger.error("Root graphs can not contain more than 2 axes. \
+            (Data is defined as %i-th dimensional)" %self.dimensions)
+            sys.exit()
+
+        #Check dimensions:
+        if self.dimensions == 1 and not graph.classname in [ "TGraph" ]:
+            logger.error("TGraph dimensions do not match data")
+            sys.exit()
+        if self.dimensions == 2 and not graph.classname in [ "TGraph2D" ]:
+            logger.error("TGraph dimensions do not match data")
+            sys.exit()
+
+        for i in range( len(graph.values()[0]) ):
+            x, y = graph.values()[0][i], graph.values()[1][i]
+            if graph.classname in [ "TGraph" ]:
+                yield [ x, y ]
+            elif graph.classname in [ "TGraph2D" ]:
+                z = graph.values()[2][i]
+                yield [ x, y, z ]
+
+    def _getPyRootGraphPoints(self,graph):
 
         """
         Iterable metod for extracting points from root TGraph objects
