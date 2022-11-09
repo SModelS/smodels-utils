@@ -16,8 +16,10 @@ def sumUp( filename, sqrts ):
             if order != "NLO+LL":
                 continue
             S += x.value
-            print ( "xsec", sqrts, "order", order, "value", x.value )
-    print ( "total is", S, "pb" )
+            print ( f"xsec {sqrts} TeV, {xsecs.pidsfinal}, {order} {x.value:.3g} pb" )
+    print ( f"total is {S:.3g} pb" )
+    if False:
+        import IPython; IPython.embed()
 
 def unpack ( tarball, slhafile ):
     """ get slhafile out of tarball """
@@ -33,9 +35,9 @@ def unpack ( tarball, slhafile ):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="sum up all xsecs in an slhafile")
 
-    argparser.add_argument ( '--tarball', help='name of tarball, None if file is already unpacked [None]',
+    argparser.add_argument ( '-t', '--tarball', help='name of tarball, None if file is already unpacked [None]',
         type=str, default=None )
-    argparser.add_argument ( '--slhafile', help='name of slhafile [None]',
+    argparser.add_argument ( '-f', '--slhafile', help='name of slhafile [None]',
         type=str, default=None )
     argparser.add_argument ( '-s', '--sqrts', help='center-of-mass energy [13]',
         type=int, default=13 )
