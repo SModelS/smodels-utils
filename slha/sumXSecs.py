@@ -17,7 +17,7 @@ def sumUp( filename, sqrts ):
                 continue
             S += x.value
             print ( "xsec", sqrts, "order", order, "value", x.value )
-    print ( "total is", S )
+    print ( "total is", S, "pb" )
 
 def unpack ( tarball, slhafile ):
     """ get slhafile out of tarball """
@@ -39,6 +39,8 @@ if __name__ == "__main__":
         type=str, default=None )
     argparser.add_argument ( '-s', '--sqrts', help='center-of-mass energy [13]',
         type=int, default=13 )
+    argparser.add_argument( '-k', '--keep', action='store_true',
+        help="keep temporary slha file" )
     args=argparser.parse_args()
     slhafile = args.slhafile
     doUnlink = False
@@ -51,5 +53,5 @@ if __name__ == "__main__":
         print ( f"[sumXSecs] could not find {slhafile}" )
         sys.exit()
     sumUp ( slhafile, args.sqrts )
-    if doUnlink:
+    if doUnlink and not args.keep:
         os.unlink ( slhafile )
