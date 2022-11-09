@@ -18,7 +18,7 @@ from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
 from smodels_utils.dataPreparation.covarianceHandler import \
-         ROOTCovarianceHandler, CSVCovarianceHandler
+         UPROOTCovarianceHandler, CSVCovarianceHandler, PYROOTCovarianceHandler
 from smodels_utils.dataPreparation import covarianceHandler
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -188,7 +188,12 @@ class MetaInfoInput(Locker):
             handler = CSVCovarianceHandler ( filename,
                     max_datasets, aggregate, aggprefix )
         else:
-            handler = ROOTCovarianceHandler ( filename, histoname, max_datasets,
+            try:
+                import ROOT
+                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
+                    aggregate, aggprefix )
+            except ModuleNotFoundError as e:
+                handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
 
         if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
@@ -1045,11 +1050,13 @@ class TxNameInput(Locker):
             goodMasses = True
             for ib,br in enumerate(elMass):
                 if len(massArray)<=ib:
-                    self.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
+                    if not massArray == [[], []]:
+                        self.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
                     return False
                 for iv,vertex in enumerate(br):
                     if len(massArray[ib])<=iv:
-                        self.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
+                        if not massArray == [[], []]:
+                            self.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
                         return False
                     m1 = massArray[ib][iv]
                     if type(m1) == tuple:
