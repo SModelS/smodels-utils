@@ -241,9 +241,12 @@ def main():
         print ( a )
         
     home = os.environ["HOME"]
+    import shutil
+    hasSSHpass = (shutil.which("sshpass")!=None)
     if ssh:
-        cmd2 = "sshpass -f %s/.ssh/lxplus scp %s lxplus.cern.ch:%s%s" % \
-                ( home, pclfilename, eosdir, pclfilename )
+        cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
+        if hasSSHpass:
+            cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         reallyDo = not args.dry_run
         if reallyDo:
@@ -257,7 +260,9 @@ def main():
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         #print ( "%s[publishDatabasePickle] then do also manually:%s" % \
         #        ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        cmd = f"sshpass -f {home}/.ssh/lxplus ssh lxplus.cern.ch smodels/www/database/create.py"
+        cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
+        if hasSSHpass:
+            cmd = f"sshpass -f {home}/.ssh/lxplus "+cmd
         CMD.getoutput ( cmd )
         print ( "[publishDatabasePickle] done:", cmd )
         if args.finalize_commands:
