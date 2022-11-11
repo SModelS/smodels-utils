@@ -146,7 +146,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
 def getDatasetDescription ( validationPlot, maxLength = 100 ):
     """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
-    subtitle = f"{len(validationPlot.expRes.datasets)} datasets: "
+    subtitle = f"best of {len(validationPlot.expRes.datasets)} datasets: "
     if validationPlot.validationType == "tpredcomb":
         subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
 
