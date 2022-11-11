@@ -318,7 +318,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T = gaussian_filter( T, 1. )
     except:
         pass
-    cs = plt.contour( xs, ys, T, colors="blue", levels=[1.], extent = xtnt, origin="image" )
+    cs = plt.contour( xs, ys, vT, colors="blue", levels=[1.], extent = xtnt, origin="image" )
     csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
     if options["drawExpected"] == True:
