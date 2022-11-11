@@ -248,6 +248,7 @@ def main():
         if hasSSHpass:
             cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( cmd2 )
         reallyDo = not args.dry_run
         if reallyDo:
             o = CMD.getoutput ( cmd2 )
@@ -262,7 +263,7 @@ def main():
         #        ( colorama.Fore.RED, colorama.Fore.RESET ) )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
         if hasSSHpass:
-            cmd = f"sshpass -f {home}/.ssh/lxplus "+cmd
+            cmd = f"sshpass -f {home}/.ssh/lxplus {cmd}"
         CMD.getoutput ( cmd )
         print ( "[publishDatabasePickle] done:", cmd )
         if args.finalize_commands:
