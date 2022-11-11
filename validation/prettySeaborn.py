@@ -204,7 +204,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     types = list(set(types))
     if len(types) == 1: types = types[0]
     resultType = "%s" %str(types)
-    if len ( validationPlot.expRes.datasets ) > 1:
+    if len ( validationPlot.expRes.datasets ) > 1 and validationPlot.combine:
         resultType = "combined"
     title = title + " ("+resultType+")"
     import matplotlib.pylab as plt
