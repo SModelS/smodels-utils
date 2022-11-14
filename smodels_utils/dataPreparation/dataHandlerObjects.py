@@ -24,7 +24,7 @@ from sympy import var
 x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
-        
+
 max_nbins = 10000
 
 ## for debugging, if set to true, allow for the acceptance files
@@ -45,7 +45,7 @@ def _Hash ( lst ): ## simple hash function for our masses
     return ret
 
 allowTrimming=True ## allow big grids to be trimmed down
-trimmingFactor = 2 ## the factor by which to trim
+trimmingFactor = [ 2 ] ## the factor by which to trim
 
 class DataHandler(object):
 
@@ -97,12 +97,16 @@ class DataHandler(object):
         if len(coordinateMap) != self.dimensions+1 and \
             len(newCoordinateMap) == self.dimensions+1:
                 coordinateMap = newCoordinateMap
-                
+
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error("Coordinate map %s (dim %d) is not consistent with number of dimensions (%i) in %s"
                          %(coordinateMap, len(coordinateMap), self.dimensions+1, dataLabel))
             sys.exit()
+        for xy in { "x": x, "y": y, "z": z }.items(): # allow also strings
+            if xy[0] in coordinateMap:
+                coordinateMap[xy[1]] = coordinateMap[xy[0]]
+                coordinateMap.pop ( xy[0] )
         for xv in self.xvars:
             if not xv in coordinateMap:
                 logger.error("Coordinate %s has not been defined in coordinateMap" %xv)
@@ -489,11 +493,11 @@ class DataHandler(object):
         xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
         lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
         if len(lines) > max_nbins:
-            trimmingFactor = int ( round ( math.sqrt ( len(lines) / 6000. ) ) )
-            trimmingFactor = trimmingFactor * trimmingFactor
+            trimmingFactor[0] = int ( round ( math.sqrt ( len(lines) / 6000. ) ) )
+            trimmingFactor[0] = trimmingFactor[0]**2
             newyields = []
             for cty,y in enumerate ( lines ):
-                if cty % trimmingFactor == 0:
+                if cty % trimmingFactor[0] == 0:
                     newyields.append ( y )
             logger.warn ( f"trimmed down csv file '{self.name}' from {len(lines)} to {len(newyields)}" )
             lines = newlines
@@ -631,11 +635,11 @@ class DataHandler(object):
                 yields.append ( fr )
             csvfile.close()
             if len(yields) > max_nbins:
-                trimmingFactor = int ( round ( math.sqrt ( len(yields) / 6000. ) ) )
-                trimmingFactor = trimmingFactor * trimmingFactor
+                trimmingFactor[0] = int ( round ( math.sqrt ( len(yields) / 6000. ) ) )
+                trimmingFactor[0] = trimmingFactor[0]**2
                 newyields = []
                 for cty,y in enumerate ( yields ):
-                    if cty % trimmingFactor == 0:
+                    if cty % trimmingFactor[0] == 0:
                         newyields.append ( y )
                 logger.warn ( f"trimmed down csv file '{self.name}' from {len(yields)} to {len(newyields)}" )
                 yields = newyields
@@ -787,7 +791,7 @@ class DataHandler(object):
             with open(self.path) as f:
                 D=eval(f.read())
         except Exception as e:
-            logger.error ( f"could not read {self.path}: {e}" ) 
+            logger.error ( f"could not read {self.path}: {e}" )
             sys.exit(-1)
         keys = list(D.keys() )
         keys.sort()
@@ -918,10 +922,14 @@ class DataHandler(object):
 
     def rootByName ( self, name ):
         try:
+            import uproot
+            return self.uprootByName ( name )
+        except Exception as e:
             import ROOT
             return self.pyrootByName ( name )
         except Exception as e:
-            return self.uprootByName ( name )
+            logger.error ( "neither uproot nor ROOT module found" )
+            sys.exit(-1)
 
     def error ( self, line ):
         if not line in self.hasWarned:
@@ -1015,9 +1023,11 @@ class DataHandler(object):
         import uproot
         from uproot.models import TGraph, TH
 
+        if obj.classname in [ "TH3F", "TH3D" ]:
+            return self._getUpRootHistoPoints3D(obj)
         if obj.classname in [ "TH1F", "TH2D", "TH1D", "TH2F" ]:
             return self._getUpRootHistoPoints(obj)
-        elif obj.classname in [ "TGraph", "TGraph2D" ]:
+        if obj.classname in [ "TGraph", "TGraph2D" ]:
             return self._getUpRootGraphPoints(obj)
         else:
             logger.error( f"ROOT object must be a THx or TGraphx object, not a {obj.classname}")
@@ -1045,6 +1055,115 @@ class DataHandler(object):
         import IPython
         IPython.embed ( )
         sys.exit()
+
+    def _getUpRootHistoPoints3D(self,hist):
+
+        """
+        Iterable metod for extracting points from root histograms
+        :param hist: Root histogram object (THx)
+        :yield: [x-axes, y-axes,..., bin contend]
+        """
+        if not "index" in self.__dict__:
+            logger.error ( "for 3d histos i need a coordinateMap with a 'bin' entry, plus an index" )
+        index = self.__dict__["index"]
+        #print ( "three D!", self.__dict__ )
+        #sys.exit()
+
+        if self.dimensions > 3:
+            logger.error("Root histograms can not contain more than 3 axes. \
+            (Data is defined as %i-th dimensional)" %self.dimensions)
+            sys.exit()
+
+        #Check dimensions:
+        if not self.dimensions+1 == len ( hist.axes ):
+            logger.error( f"Data dimensions ({self.dimensions}) and histogram dimensions ({hist.name}:{len (hist.axes) }) do not match {self.path}" )
+
+        xAxis = hist.axes[0] # make sure this is the x axis
+        assert ( xAxis.tojson()["fName"] == "xaxis" )
+        xRange = range(len(xAxis))
+        n_bins = len(xRange)
+        # self.interact( hist )
+        if len(hist.axes) > 1:
+            yAxis = hist.axes[1]
+            assert ( yAxis.tojson()["fName"] == "yaxis" )
+            yRange = range(len(yAxis))
+            n_bins=n_bins * len(yRange )
+            total_points = len(yRange)*len(xRange)
+            if total_points > 6000.:
+                trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
+                logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
+        if len(hist.axes) > 2:
+            zAxis = hist.axes[2]
+            assert ( zAxis.tojson()["fName"] == "zaxis" )
+            zRange = range(len(zAxis))
+            n_bins=n_bins * len(zRange )
+            if n_bins > max_nbins:
+                if len(zRange)>50:
+                    if allowTrimming:
+                        if not errorcounts["trimzaxis"]:
+                            errorcounts["trimzaxis"]=True
+                            logger.warning ( f"'{self.name}' is too large a map (nbins={n_bins}). Will trim z-axis." )
+                        n_bins = n_bins / len(zRange)
+                        zRange = range(1,len(zAxis) + 1, trimmingFactor[0] )
+                        n_bins = n_bins * len(zRange)
+                    else:
+                        if not errorcounts["trimzaxis"]:
+                            errorcounts["trimzaxis"]=True
+                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+        if self.dimensions > 1 and n_bins > max_nbins:
+            if len(yRange)>50:
+                if allowTrimming:
+                    yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
+                    if not errorcounts["trimyaxis"]:
+                        logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {len(yAxis)} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
+                        errorcounts["trimyaxis"]=True
+                    n_bins = n_bins / len(yAxis)
+                    n_bins = n_bins * len(yRange)
+                else:
+                    if not errorcounts["trimyaxis"]:
+                        errorcounts["trimyaxis"]=True
+                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+        if n_bins > max_nbins/2.:
+            if allowTrimming:
+                xRange = range(1,len(xAxis) + 1, trimmingFactor[0] )
+                if not errorcounts["trimxaxis"]:
+                    errorcounts["trimxaxis"]=True
+                    logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
+                n_bins = n_bins / len(xAxis)
+                n_bins = n_bins * len(xRange)
+
+            else:
+                if not errorcounts["trimxaxis"]:
+                    errorcounts["trimxaxis"]=True
+                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+
+        if False: # total_points > n_bins:
+            logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
+
+        ct = 0
+        # self.interact ( hist )
+        for xBin in xRange:
+            x = xAxis.centers()[xBin]
+            if self.dimensions == 1:
+                ul = hist.values()[xBin]
+                if ul == 0.: continue
+                yield [x, ul]
+            elif self.dimensions > 1:
+                for yBin in yRange:
+                    y = yAxis.centers()[yBin]
+                    ul = hist.values()[xBin][yBin]
+                    if type(ul) in [ float, np.float, np.float32, np.float64 ]:
+                        if ul == 0.: continue
+                        ct+=1
+                        yield [x, y, ul]
+                    else:
+                        zRange = range(len(zAxis) ) # , trimmingFactor[0] )
+                        for zBin in zRange:
+                            z = zAxis.centers()[zBin]
+                            ul = hist.values()[xBin][yBin][zBin]
+                            #if ul == 0.: continue
+                            if zBin == index:
+                                yield [x, y, ul]
 
     def _getUpRootHistoPoints(self,hist):
 
@@ -1075,8 +1194,8 @@ class DataHandler(object):
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
             if total_points > 6000.:
-                trimmingFactor = int ( round ( math.sqrt ( total_points / 6000. ) ) )
-                logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor}" )
+                trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
+                logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
         if self.dimensions > 2:
             zAxis = hist.axes[2]
             assert ( zAxis.tojson()["fName"] == "zaxis" )
@@ -1089,7 +1208,7 @@ class DataHandler(object):
                             errorcounts["trimzaxis"]=True
                             logger.warning ( f"'{self.name}' is too large a map (nbins={n_bins}). Will trim z-axis." )
                         n_bins = n_bins / len(zRange)
-                        zRange = range(1,len(zAxis) + 1, trimmingFactor )
+                        zRange = range(1,len(zAxis) + 1, trimmingFactor[0] )
                         n_bins = n_bins * len(zRange)
                     else:
                         if not errorcounts["trimzaxis"]:
@@ -1098,7 +1217,7 @@ class DataHandler(object):
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
-                    yRange = range(1,len(yAxis) + 1, trimmingFactor )
+                    yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
                     if not errorcounts["trimyaxis"]:
                         logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {len(yAxis)} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
@@ -1110,7 +1229,7 @@ class DataHandler(object):
                         logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
         if n_bins > max_nbins/2.:
             if allowTrimming:
-                xRange = range(1,len(xAxis) + 1,  trimmingFactor )
+                xRange = range(1,len(xAxis) + 1,  trimmingFactor[0] )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
                     logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
@@ -1177,8 +1296,8 @@ class DataHandler(object):
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
             if total_points > 6000.:
-                trimmingFactor = int ( round ( math.sqrt ( total_points / 6000. ) ) )
-                logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor}" )
+                trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
+                logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
         if self.dimensions > 2:
             zAxis = hist.GetZaxis()
             zRange = range(1,zAxis.GetNbins() + 1)
@@ -1190,7 +1309,7 @@ class DataHandler(object):
                             errorcounts["trimzaxis"]=True
                             logger.warning ( f"'{self.name}' is too large a map (nbins={n_bins}). Will trim z-axis." )
                         n_bins = n_bins / len(zRange)
-                        zRange = range(1,zAxis.GetNbins() + 1, trimmingFactor )
+                        zRange = range(1,zAxis.GetNbins() + 1, trimmingFactor[0] )
                         n_bins = n_bins * len(zRange)
                     else:
                         if not errorcounts["trimzaxis"]:
@@ -1199,7 +1318,7 @@ class DataHandler(object):
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
-                    yRange = range(1,yAxis.GetNbins() + 1, trimmingFactor )
+                    yRange = range(1,yAxis.GetNbins() + 1, trimmingFactor[0] )
                     if not errorcounts["trimyaxis"]:
                         logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {yAxis.GetNbins()} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
@@ -1211,7 +1330,7 @@ class DataHandler(object):
                         logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
         if n_bins > max_nbins/2.:
             if allowTrimming:
-                xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor )
+                xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor[0] )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
                     logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {xAxis.GetNbins()} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
