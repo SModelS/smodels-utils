@@ -460,7 +460,7 @@ class Axes(object):
                 return []
             value = xMass[str(xv)]
             if type(value) in [ str ]:
-                self.error(f"Input variable ''{xv}'' has a string value of ''{value}''" )
+                self.warn(f"Input variable ''{xv}'' has a string value of ''{value}''. Will skip entry." )
                 return []
             xValues[str(xv)] = value
 
