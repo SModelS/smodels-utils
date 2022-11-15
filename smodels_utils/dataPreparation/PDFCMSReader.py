@@ -5,6 +5,7 @@
 """
 
 from math import log, exp
+import numpy as np
 
 def delta( r, g, b, ct ):
     return abs(ct[0]-r) + abs(ct[1]-g) + abs(ct[2]-b) 
@@ -226,12 +227,24 @@ class PDFLimitReader():
                             "obsExclusionM1": [], "expExclusionP1": [], "expExclusionM1": [] 
         }
         self.get_axis_dict()
+
+    def createULCsv ( self ):
+        f = open ( "ul.csv", "wt" )
+        # get the limit at the bottom right
+        xrange = self.data["x"]["limits"]
+        yrange = self.data["y"]["limits"]
+        for x in np.arange ( *xrange ):
+            for y in np.arange ( *yrange ):
+                ul = r.get_limit(x,y)
+                if ul != None:
+                    f.write ( f"{x},{y},{ul}\n" )
+        f.close()
  
 if __name__ == "__main__":
     data =  {
         'name': 'CMS-SUS-19-007_Figure_010',
-        'x':{'limits': (800, 2600, 25) },
-        'y':{'limits': (0, 2000, 25) },
+        'x':{'limits': (800, 2600, 50) },
+        'y':{'limits': (0, 2000, 50) },
         'z':{'limits': (10**-1, 80 ), 'log':True},
         }
 
@@ -243,5 +256,4 @@ if __name__ == "__main__":
         for pt in pts:
             f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
         f.close()
-    # get the limit at the bottom right
-    print (r.get_limit(2000,200) )
+    r.createULCsv ()
