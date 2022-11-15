@@ -6,11 +6,12 @@ import os, time, glob, shutil
 
 def clear():
     files = glob.glob ( "tmp*" )
+    # files += glob.glob ( "pythia*" )
     t0=time.time()
     for f in files:
         timestamp = ( t0 - os.stat ( f ).st_mtime ) / 60 / 60 / 24.
         if timestamp > 3: ## 3 days
-            print ( f, timestamp )
+            print ( f"deleting {f}: {timestamp:.1f} days old" )
             shutil.rmtree ( f )
 
 if __name__ == "__main__":
