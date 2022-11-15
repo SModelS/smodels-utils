@@ -66,8 +66,8 @@ def plot ( chi2v2, chi2v1, setup ):
     plt.plot ( x, slv1, c="green", label="Bill, SLv1" )
     plt.plot ( x, slv2, c="red", label="Bill, SLv2" )
 
-    plt.plot ( chi2.keys(), values, c="darkred", linestyle="dashed", label="SModelS SLv2" )
     plt.plot ( chi2v1.keys(), valuesv1, c="darkgreen", linestyle="dashed", label="SModelS SLv1" )
+    plt.plot ( chi2.keys(), values, c="darkred", linestyle="dashed", label="SModelS SLv2" )
     plt.legend()
     ax = plt.gca()
     ax.set_ylim ( [0,10.] )
