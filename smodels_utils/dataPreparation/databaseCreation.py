@@ -101,6 +101,8 @@ class DatabaseCreator(list):
             self.ncpus =  multiprocessing.cpu_count()
         except:
             self.ncpus = 1
+	
+        self.ncpus = 1
 
         list.__init__(self)
 
