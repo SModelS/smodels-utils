@@ -322,9 +322,6 @@ if __name__ == "__main__":
     # execfile("model-90_100000toys.py")
     #exec(open("./model-90_100000toys.py").read())
     exec(open("./slHHmet_300.py").read())
-    mus = np.arange(-.8,4.,.1) ## FIXME range! 750
-    # mus = np.arange(-.1,3,.1) ## FIXME range! 450
-    mus = np.arange ( -.3,4,.1) ## range for 300
     NBINS = nbins
     BG_M1 = np.array(background)
     BG_M2 = np.array(covariance).reshape([NBINS,NBINS]) #!

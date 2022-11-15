@@ -488,8 +488,11 @@ class RefXSecComputer:
         return False
 
     def collapse ( self, mass ):
+        """ ??? """
         if type(mass) in [ int, float ]:
             return mass
+        if type(mass) in [ str ]:
+            return float(mass)
         for i in range(len(mass)-1):
             if abs (mass[i]-mass[i+1]) / (mass[i]+mass[i+1]) > 1e-3:
                 return mass
@@ -497,6 +500,9 @@ class RefXSecComputer:
 
     def interpolate ( self, mass, xsecs ):
         """ interpolate between masses """
+        if len ( xsecs ) == 0:
+            logger.error ( f"cannot interpolate empty set" )
+            return None
         mass =self.collapse(mass )
         if mass in xsecs:
             return xsecs[mass]
