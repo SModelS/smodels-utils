@@ -80,7 +80,11 @@ class PDFLimitReader():
     def get_axis_dict( self ):
         import minecart
         # open pdf file
-        fname = self.data["name"]+".pdf"
+        fname = self.data["name"]#
+        if not fname.endswith ( ".pdf" ):
+            if not fname.endswith ( "." ):
+                fname += "."
+            fname+="pdf"
         pdffile = open(fname, 'rb')
         doc = minecart.Document(pdffile)
         page = doc.get_page(0)
@@ -225,16 +229,16 @@ class PDFLimitReader():
  
 if __name__ == "__main__":
     data =  {
-        'name': 'CMS-SUS-16-048_Figure_005',
-        'x':{'limits': (100, 260)},
-        'y':{'limits': (7.5, 50)},
-        'z':{'limits': (10**-1, 10**2), 'log':True},
+        'name': 'CMS-SUS-19-007_Figure_010',
+        'x':{'limits': (800, 2600) },
+        'y':{'limits': (0, 2000) },
+        'z':{'limits': (10**-1, 80 ), 'log':True},
         }
 
     r = PDFLimitReader( data )
     for i in [ "obsExclusion", "expExclusion", "obsExclusionP1", "obsExclusionM1",
                "expExclusionP1", "expExclusionM1" ]:
-        f=open ( f"TChiWZoff_{i}.csv", "wt" )
+        f=open ( f"T1tttt_{i}.csv", "wt" )
         pts = r.exclusions[i]
         for pt in pts:
             f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
