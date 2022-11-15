@@ -59,15 +59,15 @@ def plot ( chi2v2, chi2v1, setup ):
     minChi2v1 = min ( chi2v1.values() )
     values = np.array ( list ( chi2.values() ) ) - minChi2
     valuesv1 = np.array ( list ( chi2v1.values() ) ) - minChi2v1
-    plt.plot ( chi2.keys(), values, c="green", label="SModelS SLv2" )
-    plt.plot ( chi2v1.keys(), valuesv1, c="magenta", label="SModelS SLv1" )
-    print ( "slv1", len(slv1), "x", len(x) )
     if "fullx" in setup:
         fullx = setup["fullx"]
         fully = setup["fully"]
-        plt.plot ( fullx, fully, c="blue", label="Bill, full" )
-    plt.plot ( x, slv1, c="black", label="Bill, slv1" )
-    plt.plot ( x, slv2, c="red", label="Bill, slv2" )
+        plt.plot ( fullx, fully, c="black", label="Bill, full" )
+    plt.plot ( x, slv1, c="green", label="Bill, SLv1" )
+    plt.plot ( x, slv2, c="red", label="Bill, SLv2" )
+
+    plt.plot ( chi2.keys(), values, c="darkred", linestyle="dashed", label="SModelS SLv2" )
+    plt.plot ( chi2v1.keys(), valuesv1, c="darkgreen", linestyle="dashed", label="SModelS SLv1" )
     plt.legend()
     ax = plt.gca()
     ax.set_ylim ( [0,10.] )
