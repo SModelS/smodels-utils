@@ -117,7 +117,7 @@ class RefXSecComputer:
             xseccomment = f"reference xsecs v{self.version} [pb]"
             writeXsec = True
             # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
-            if hasattr ( xsec, "comment" ):
+            if hasattr ( xsec, "comment" ) and xsec.comment != None:
                 xseccomment += " " + xsec.comment
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
