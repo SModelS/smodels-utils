@@ -216,6 +216,7 @@ DECAY   1000024      	1.0   # C1 decays, charge violation is on purpose
           1.0         2     1000022      25  # BR(C1 -> N1 h )
 # 
 XSECTION  1.30E+04  2212 2212 2 1000023 1000023 # reference xsecs v1.0 [pb] refxsec [pb]
-  0  2  0  0  0  0    9.44017000E-03 SModelSv2.2.1
+#  0  2  0  0  0  0    9.44017000E-03 SModelSv2.2.1
+  0  2  0  0  0  0    9.4677E-03 # MSTW2008nlo90cl numbers: NLO-NLL hino-like χ̃01χ̃02
 
 # produced via slhaCreator v1.1

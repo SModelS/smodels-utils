@@ -84,7 +84,7 @@ BLOCK MASS  # Mass Spectrum
    2000015     1.00000000E+05   # ~tau_2
    1000016     1.00000000E+05   # ~nu_tauL
    1000021     1.10000000E+05   # ~g
-   1000022     1.0			    # ~chi_10
+   1000022     0.0			    # ~chi_10
    1000023     750.0			    # ~chi_20
    1000025     1.00000000E+05   # ~chi_30
    1000035     1.00000000E+05   # ~chi_40
@@ -216,7 +216,6 @@ DECAY   1000024      	1.0   # C1 decays, charge violation is on purpose
           1.0         2     1000022      25  # BR(C1 -> N1 h )
 # 
 XSECTION  1.30E+04  2212 2212 2 1000023 1000023 # reference xsecs v1.0 [pb] refxsec [pb]
-#  0  2  0  0  0  0    8.26366000E-04 SModelSv2.2.1
-  0  2  0  0  0  0    8.2489E-04 # MSTW2008nlo90cl numbers: NLO-NLL hino-like 
+  0  2  0  0  0  0    8.26366000E-04 SModelSv2.2.1
 
 # produced via slhaCreator v1.1
