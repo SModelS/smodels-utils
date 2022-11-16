@@ -380,7 +380,7 @@ def createMassRanges ( args ):
                     masses.append ( { "x": x, "y": y } )
                     y = y * args.dy
             else:
-                for y in numpy.arange(args.ymin,args.ymax+1,args.dy):
+                for y in numpy.arange(args.ymin,args.ymax+args.dy*.1,args.dy):
                     if excludeInvertedMasses and y > x:
                         break
                     if args.max_dxy != None and (x-y) > args.max_dxy:
