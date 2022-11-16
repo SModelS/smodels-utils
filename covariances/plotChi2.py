@@ -44,6 +44,8 @@ def computeChi2s( tp, xrange : dict  ):
         llhd = tp.likelihood ( i )
         chi2 = -2.*np.log ( llhd )
         chi2s[i]= chi2
+    lmax = -2. * np.log ( tp.lmax() )
+    chi2s["lmax"] = lmax
     return chi2s
 
 
@@ -54,11 +56,14 @@ def plot ( chi2v2, chi2v1, setup ):
     x = createRange ( xrange )
     slv1 = setup["SLv1"]
     slv2 = setup["SLv2"]
-    chi2 = chi2v2
-    minChi2 = min ( chi2.values() )
-    minChi2v1 = min ( chi2v1.values() )
-    values = np.array ( list ( chi2.values() ) ) - minChi2
-    valuesv1 = np.array ( list ( chi2v1.values() ) ) - minChi2v1
+    min1 = chi2v1.pop ( "lmax" )
+    min2 = chi2v2.pop ( "lmax" )
+    #minChi2v1 = min ( chi2v1.values() )
+    #print ( "min1",min1,minChi2v1 )
+    # minChi2v2 = min ( chi2v2.values() )
+    #print ( "min2",min2,minChi2v2 )
+    valuesv1 = np.array ( list ( chi2v1.values() ) ) - min1 # minChi2v1
+    valuesv2 = np.array ( list ( chi2v2.values() ) ) - min2 # minChi2v2
     if "fullx" in setup:
         fullx = setup["fullx"]
         fully = setup["fully"]
@@ -67,7 +72,7 @@ def plot ( chi2v2, chi2v1, setup ):
     plt.plot ( x, slv2, c="red", label="Bill, SLv2" )
 
     plt.plot ( chi2v1.keys(), valuesv1, c="darkgreen", linestyle="dashed", label="SModelS SLv1" )
-    plt.plot ( chi2.keys(), values, c="darkred", linestyle="dashed", label="SModelS SLv2" )
+    plt.plot ( chi2v2.keys(), valuesv2, c="darkred", linestyle="dashed", label="SModelS SLv2" )
     plt.legend()
     ax = plt.gca()
     ax.set_ylim ( [0,10.] )
