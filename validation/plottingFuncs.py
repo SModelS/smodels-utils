@@ -165,8 +165,9 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
             validationPlot.combine == True:
-        ver = 0
-        if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment"):
+        ver = ""
+        dI = validationPlot.expRes.datasets[0].dataInfo
+        if hasattr ( dI, "thirdMoment") and dI.thirdMoment != None:
             ver=" (SLv2)"
         subtitle = f"combination{ver} of {len(validationPlot.expRes.datasets)} signal regions"
     def find_all(a_str, sub):
