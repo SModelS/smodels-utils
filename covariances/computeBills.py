@@ -130,13 +130,14 @@ class SLParams(object):
         self.bg_m3 = np.array(bg_m3) if bg_m3 is not None else None
         self.obs = np.array(obs) if obs is not None else None
         self.sig = np.array(sig) if sig is not None else None
-        # print("Inputs:")
-        # print("bkg:"); print(self.bg_m1)
-        # print("covariance:"); print(self.bg_m2)
-        # print("m3:\n"); print(self.bg_m3)
-        # print("obs:\n"); print(self.obs)
-        # print("sig:\n"); print(self.sig)
-        # print()
+        if False:
+            print("Inputs:")
+            print("bkg:"); print(self.bg_m1)
+            print("covariance:"); print(self.bg_m2)
+            print("m3:\n"); print(self.bg_m3)
+            print("obs:\n"); print(self.obs)
+            print("sig:\n"); print(self.sig)
+            print()
         #
         self.aparams, self.bparams, self.cparams = getCoeffsABC(self.bg_m1, self.bg_m2, self.bg_m3, skew=skew)
         self.rhoparams = getRho(self.bg_m1, self.bg_m2, self.bg_m3, skew=skew)

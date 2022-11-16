@@ -230,8 +230,8 @@ class PDFLimitReader():
 if __name__ == "__main__":
     data =  {
         'name': 'CMS-SUS-19-007_Figure_010',
-        'x':{'limits': (800, 2600) },
-        'y':{'limits': (0, 2000) },
+        'x':{'limits': (800, 2600, 25) },
+        'y':{'limits': (0, 2000, 25) },
         'z':{'limits': (10**-1, 80 ), 'log':True},
         }
 
@@ -244,4 +244,4 @@ if __name__ == "__main__":
             f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
         f.close()
     # get the limit at the bottom right
-    # print (r.get_limit(1199,0))
+    print (r.get_limit(2000,200) )
