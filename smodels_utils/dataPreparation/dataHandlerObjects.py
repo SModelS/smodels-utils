@@ -491,7 +491,8 @@ class DataHandler(object):
             lines.append ( values )
         x,y = var('x y')
         xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
-        lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
+        ## FIXME should we ever sort here?
+        # lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
         if len(lines) > max_nbins:
             trimmingFactor[0] = int ( round ( math.sqrt ( len(lines) / 6000. ) ) )
             trimmingFactor[0] = trimmingFactor[0]**2
