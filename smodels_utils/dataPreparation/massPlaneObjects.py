@@ -587,8 +587,11 @@ class Axes(object):
         if self.tuplesInMassContainer ( massArray ):
             ## there are tuples, do it the old way
             for im,mass in enumerate(massArray):
-                massInput[ str(self._massVars[im]) ] = mass[0]
-                massInput[ str(self._widthVars[im]) ] = mass[1]
+                if type(mass) in [ tuple ]:
+                    massInput[ str(self._massVars[im]) ] = mass[0]
+                    massInput[ str(self._widthVars[im]) ] = mass[1]
+                else:
+                    massInput[ str(self._massVars[im]) ] = mass
         else:
             for im,mass in enumerate(massArray):
                 if False:
