@@ -57,7 +57,7 @@ class DataHandler(object):
     """
     hasWarned = {}
 
-    def __init__(self,dataLabel,coordinateMap,xvars):
+    def __init__(self,dataLabel,coordinateMap,xvars, txName = None ):
 
         """
         initialize data-source attributes with None
@@ -69,8 +69,10 @@ class DataHandler(object):
               plane axes.  (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
               where x,y,.. are the sympy symbols and the value key can be anything)
         :param xvars: List with x,y,.. variables (sympy symbols).
+        :param txName: the txname, for debugging only
         """
 
+        self.txName = txName
         self.name = dataLabel
         self.dimensions = len(xvars)
         self.coordinateMap = coordinateMap
@@ -1220,7 +1222,7 @@ class DataHandler(object):
                 if allowTrimming:
                     yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
                     if not errorcounts["trimyaxis"]:
-                        logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {len(yAxis)} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
+                        logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {len(yAxis)} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
                     n_bins = n_bins / len(yAxis)
                     n_bins = n_bins * len(yRange)
@@ -1233,7 +1235,7 @@ class DataHandler(object):
                 xRange = range(1,len(xAxis) + 1,  trimmingFactor[0] )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
+                    logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
                 n_bins = n_bins / len(xAxis)
                 n_bins = n_bins * len(xRange)
 

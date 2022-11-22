@@ -224,7 +224,8 @@ class MassPlane(object):
                 coordinateMap = dict([[xv,i] for i,xv in enumerate(allvars[:dimensions])])
                 coordinateMap['value'] = dimensions
             #Initialize a data handler
-            dataObject = DataHandler(dataLabel,coordinateMap,self.xvars)
+            dataObject = DataHandler(dataLabel,coordinateMap,self.xvars,
+                                     str(self._txDecay) )
         else:
             #Define the default 1D coordinate mapping for exclusion curves
             if not coordinateMap:
