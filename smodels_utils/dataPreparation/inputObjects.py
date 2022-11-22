@@ -551,6 +551,7 @@ class TxNameInput(Locker):
     infoAttr.append ( 'intermediateState' )
     requiredAttr.append ( 'finalState' )
     __hasWarned__ = { "omitted": 0 }
+    round_to = 6 ## number of digits to round to
 
     def addValidationTarballsFromPlanes ( self ):
         """ if a mass plane has a validation tarball defined,
@@ -591,7 +592,6 @@ class TxNameInput(Locker):
         the same decay chain
         """
 
-        self.round_to = 5 ## number of digits to round to
         self._name = txName
         self._smallerThanError = 0
         self.txName = txName
