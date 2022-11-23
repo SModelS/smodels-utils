@@ -351,7 +351,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "combination of tpreds"
     plt.text ( .97, .0222, subtitle, transform=fig.transFigure, fontsize=10,
                horizontalalignment="right" )
-    if figureUrl:
+    #if figureUrl:
+    if False:
         plt.text( .13, .13, f"{figureUrl}",
                   transform=fig.transFigure, c = "blue", fontsize = 6 )
 
