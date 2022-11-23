@@ -136,7 +136,7 @@ class MetaInfoInput(Locker):
     """
 
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
-    'publication', 'contact', 'supersededBy','supersedes', 'comment',
+    'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
     'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type',
     'includeCRs', 'onnxFiles' ]
