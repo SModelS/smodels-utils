@@ -229,6 +229,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             #+ "_" + validationPlot.niceAxes
     subtitle = getDatasetDescription ( validationPlot, maxLength = 50 )
     figureUrl = getFigureUrl(validationPlot)
+
+    if len(validationPlot.expRes.datasets) == 1 and \
+            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+        subtitle = "dataset: UL"
+        
     sns.set()
     plt.title(title)
     if logY: # y>1e-24 and y<1e-6:
