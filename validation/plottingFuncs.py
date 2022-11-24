@@ -184,9 +184,10 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
         if len(p1)>0:
             pos = p1[-1]
         subtitle = subtitle[:pos] + ", ..."
-    if len(validationPlot.expRes.datasets) == 1 and \
-            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+    #if len(validationPlot.expRes.datasets) == 1 and \
+     #       type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         #subtitle = "dataset: UL"
+        
     return subtitle
 
 def getFigureUrl( validationPlot ):
