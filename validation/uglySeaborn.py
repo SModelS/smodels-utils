@@ -178,8 +178,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
-        plt.plot ( px, py, c="white", linewidth=4, zorder=50 ) 
-        plt.plot ( px, py, c="black", label="official exclusion", zorder=60 )
+        plt.plot ( px, py, c="white", linewidth=4, zorder=7 ) 
+        plt.plot ( px, py, c="black", label="official exclusion", zorder=8 )
     ax = plt.gca()
     if logY:
         ax.set_yscale('log')
@@ -203,25 +203,25 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         dx = .53
     if len(allowed)>0:
         plt.plot ( get("x",allowed), get("y",allowed), marker="o", \
-                   linestyle=None, c="limegreen", linewidth=0, label="allowed", zorder = 10 )
+                   linestyle=None, c="limegreen", linewidth=0, label="allowed", zorder = 3 )
     if len(excluded)>0:
         plt.plot ( get("x",excluded), get("y",excluded), marker="o", \
-                   linestyle=None, c="red", linewidth=0, label="excluded", zorder = 11 )
+                   linestyle=None, c="red", linewidth=0, label="excluded", zorder = 4 )
     if len(allowed_border)>0:
         plt.plot ( get("x",allowed_border), get("y",allowed_border), marker="o", \
-                   linestyle=None, c="darkgreen", linewidth=0, label="allowed (but close)", zorder = 15)
+                   linestyle=None, c="darkgreen", linewidth=0, label="allowed (but close)", zorder = 5)
     if len(excluded_border)>0:
         plt.plot ( get("x",excluded_border), get("y",excluded_border), marker="o", \
-                   linestyle=None, c="orange", linewidth=0, label="excluded (but close)", zorder = 20)
+                   linestyle=None, c="orange", linewidth=0, label="excluded (but close)", zorder = 6)
     if len(cond_violated)>0:
         plt.plot ( get("x",cond_violated), get("y",cond_violated), marker="o", \
                 linestyle=None, c="gray", linewidth=0, label="condition violated")
     if len(noresult)>0:
         plt.plot ( get("x",noresult), get("y",noresult), marker="o", \
-                   linestyle=None, c="gray", linewidth=0, markersize=2, label="no result", zorder = 2)
+                   linestyle=None, c="gray", linewidth=0, markersize=2, label="no result", zorder = 1)
     if len(gridpoints)>0:
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
-                   linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints), zorder = 1 )
+                   linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints), zorder = 2 )
         #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
@@ -273,7 +273,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     plt.text ( dxpnr, .95, "%d / %d points with no results" % \
             (nErrors, len(validationPlot.data) ), c="gray", fontsize=10,
             transform = fig.transFigure )
-    plt.legend( loc="best" ) # could be upper right
+    l = plt.legend( loc="best") # could be upper right
+    l.set_zorder(20)
     if options["extraInfo"]: ## a timestamp, on the right border
         import time
         plt.text ( .93, .65, time.strftime("%b %d, %Y, %H:%M"), c="gray", 
