@@ -37,6 +37,9 @@ def getTheoryPrediction( res, slhafile ):
     return ts[0]
 
 def checkBills():
+    print ( "=======" )
+    print ( "Bills  " )
+    print ( "=======" )
     import numpy as np
     from scipy import stats as st
     exec(open("./slHHmet_750.py").read(),globals())
@@ -53,18 +56,21 @@ def checkBills():
     ## Create the key SL params objects
     slp1 = SLParams(BG_M1, BG_M2, obs=DATA, sig=SIGNAL)
     for mu in [ 0., 0.4 ]:
-        t = slp1.tmu( mu )
-        print ( "mu", mu, "t", t )
+        nll = - slp1.maxloglike( mu )
+        print ( "[checkSLV2 Bills] mu", mu, "nll", nll )
 
 def checkSModelS():
+    print ( "=======" )
+    print ( "SModelS" )
+    print ( "=======" )
     r = fetch()['CMS-SUS-20-004-slv1']
     slhafile = "TChiHH_750_1_750_1.slha"
     tpv1 = getTheoryPrediction ( r, slhafile )
     llhd = tpv1.likelihood ( mu=0.4, nll=True )
-    print ( "nll(0.4)=", llhd )
+    print ( "[checkSLv2 SModelS] nll(0.4)=", llhd )
     llhd = tpv1.likelihood ( mu=0., nll=True )
-    print ( "nll(0.)=", llhd )
+    print ( "[checkSLv2 SModelS] nll(0.)=", llhd )
 
 if __name__ == "__main__":
-    checkSModelS()
     checkBills()
+    checkSModelS()
