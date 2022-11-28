@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,numpy,random,copy
+import logging,os,sys,numpy,random,copy,shutil
 sys.path.append('../')
 from array import array
 import math
@@ -67,9 +67,17 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     nmax = len(validationPlot.data)
     if False:
         nmax = 20
-    dn = 50
-    print ( " "*int(45+nmax/dn), end="<\r" )
-    print ( "[uglySeaborn] checking validation points >", end="" )
+    ndots = 30
+    ndigits = int(math.ceil(math.log10(nmax)))
+    try:
+        ndots = shutil.get_terminal_size().columns - 45-ndigits
+    except Exception as e:
+        pass
+    if "COLUMNS" in os.environ:
+        ndots = int(os.environ["COLUMNS"])-45-ndigits
+    dn = int(math.ceil(nmax/ndots))
+    print ( " "*int(43+ndigits+ndots), end="<\r" )
+    print ( f"[uglySeaborn] checking {nmax} validation points >", end="" )
     ycontainer=[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
@@ -79,23 +87,24 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             break
         if "error" in pt.keys():
             vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
-            # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
             if vD != None:
-                # print ( "adding no-result point", noresult.GetN(), vD )
-                x_, y_ = copy.deepcopy ( vD["x"] ), None
+                x_, y_ = vD["x"], None
+                if not isWithinRange ( xrange, x_ ):
+                    continue
                 if "y" in vD.keys():
-                    y_ = copy.deepcopy ( vD["y"] )
+                    y_ = vD["y"]
                 elif "w" in vD.keys():
-                    y_ = copy.deepcopy ( vD["w"] )
+                    y_ = vD["w"]
                 if y_ is None:
                     logger.error ( "the data is 1d." ) # is separate module now
                     sys.exit()
-                if not isWithinRange ( xrange, x_ ):
-                    continue
                 if not isWithinRange ( yrange, y_ ):
                     continue
-                noresult.append( { "i": len(noresult), "x": x_, "y": y_ } )
+                noresult.append( { "x": x_, "y": y_ } )
             nErrors += 1
+            continue
+        if pt["UL"] == None:
+            logger.warning ( "No upper limit for %s" % xvals )
             continue
         countPts += 1
         if kfactor == None:
@@ -106,19 +115,14 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
 
         xvals = pt['axes']
         if xvals == None:
-            # happens when not on the plane?
-            continue
-        if "t" in pt:
-            tavg += pt["t"]
-        if pt["UL"] == None:
-            logger.warning ( "No upper limit for %s" % xvals )
-            continue
-        r = pt['signal']/pt ['UL']
-        if xvals == None:
             # dont have any coordinates? skip.
             logger.warning ( f'do I need to skip {pt}?' )
             continue
-        if isinstance(xvals,dict):
+        if "t" in pt:
+            tavg += pt["t"]
+        r = pt['signal']/pt ['UL']
+        if type(xvals) == dict:
+        # if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
@@ -137,20 +141,22 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if not isWithinRange ( yrange, y ):
             continue
         ycontainer.append ( y )
+        coords = { "x": x, "y": y }
 
         if 'condition' in pt and pt['condition'] and pt['condition'] > 0.05:
             logger.warning("Condition violated at %f for file %s" % ( pt['condition'], pt['slhafile']) )
-            cond_violated.append( { "i": len(cond_violated), "x": x, "y": y } )
+            cond_violated.append( coords )
         elif r > 1.:
             if r < looseness:
-                excluded_border.append( { "i": len(excluded_border), "x": x, "y": y } )
+                excluded_border.append( coords )
             else:
-                excluded.append( { "i": len(excluded), "x": x, "y": y } )
+                excluded.append( coords )
         else:
             if r> 1./looseness:
-                allowed_border.append( { "i": len(allowed_border), "x": x, "y": y } )
+                allowed_border.append( coords )
             else:
-                allowed.append( { "i": len(allowed), "x": x, "y": y } )
+                allowed.append( coords )
+    print ( )
 
     logger.info ( "done!" )
 
@@ -220,8 +226,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.plot ( get("x",noresult), get("y",noresult), marker="o", \
                    linestyle=None, c="gray", linewidth=0, markersize=2, label="no result", zorder = 1)
     if len(gridpoints)>0:
+        zorder = 12
+        if len(gridpoints)>3000: # a lot of points? put to background!
+            zorder = 2
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
-                   linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints), zorder = 2 )
+                   linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints), zorder = zorder )
         #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
@@ -266,13 +275,14 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if kfactor != None and abs ( kfactor - 1. ) > 1e-2:
         plt.text ( .93, .18, "k-factor %.2f" % kfactor, c="gray",
                    fontsize = 10, rotation=90, transform = fig.transFigure )
-
-    dxpnr=.68 ## top, right
+    dxpnr = .95
+    halign = "right"
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
-    plt.text ( dxpnr, .95, "%d / %d points with no results" % \
+        halign = "left"
+    plt.text ( dxpnr, 0.95, "%d / %d points with no results" % \
             (nErrors, len(validationPlot.data) ), c="gray", fontsize=10,
-            transform = fig.transFigure )
+            transform = fig.transFigure, horizontalalignment=halign )
     l = plt.legend( loc="best") # could be upper right
     l.set_zorder(20)
     if options["extraInfo"]: ## a timestamp, on the right border

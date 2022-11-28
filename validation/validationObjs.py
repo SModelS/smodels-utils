@@ -65,6 +65,7 @@ class ValidationPlot():
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
+        self.massPlane = MassPlane.fromString(self.txName,self.axes)
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = []
@@ -525,13 +526,12 @@ class ValidationPlot():
             ret = [ masses[0][0], masses[0][1] ]
         else:
             ret = [ masses[0][0], masses[1][0] ]
-        massPlane = MassPlane.fromString(self.txName,self.axes)
 
-        varsDict = massPlane.getXYValues(masses,None)
-        if varsDict != None and "y" in varsDict:
-            ret = [ varsDict["x"], varsDict["y"] ]
+        varsDict = self.massPlane.getXYValues(masses,None)
         if varsDict == None: ## not on this plane!!!
             ret = None
+        if varsDict != None and "y" in varsDict:
+            ret = [ varsDict["x"], varsDict["y"] ]
         if "T3GQ" in filename: ## fixme we sure?
             ret = [ masses[1][0], masses[1][1] ]
         if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
