@@ -636,6 +636,8 @@ class ValidationPlot():
         for slhafile in fileList: # slhafiles:
             if "recipe" in slhafile:
                 continue
+            if "coordinates" in slhafile:
+                continue
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
             fout = os.path.join(outputDir,slhafile + '.py')

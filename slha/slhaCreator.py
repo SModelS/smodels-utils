@@ -119,8 +119,12 @@ class TemplateFile(object):
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
 
-    def writeOutCoordinates ( self ):
+    def writeOutCoordinates ( self, directory ):
         """ the entry in ../validation/filenameCoords.py """
+        fpath = f"{directory}/coordinates"
+        f = open ( fpath, "wt" )
+        f.write ( f"{self.coordDicts}\n" )
+        f.close()
         fpath = "../validation/filenameCoords.py"
         f = open ( fpath, "rt" )
         lines = f.readlines()
@@ -607,8 +611,7 @@ if __name__ == "__main__":
     print ( "[slhaCreator] Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
                            ( newtemp, tarball ) )
-    cmd = "cp %s/%s*.slha %s/recipe %s" % \
-            ( tempf.tempdir, args.topology, tempf.tempdir, newtemp )
+    cmd = "cp {tempf.tempdir}/{args.topology}*.slha {tempf.tempdir}/recipe {tempf.tempdir}/coordinates {newtemp}"
     # print ( "cmd", cmd )
     subprocess.getoutput ( cmd )
     argvs = sys.argv
@@ -616,8 +619,8 @@ if __name__ == "__main__":
         if "(" in a or "[" in a:
             argvs[i]=f'"{a}"'
     tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
-    tempf.writeOutCoordinates ()
-    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % \
+    tempf.writeOutCoordinates ( newtemp )
+    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe coordinates" % \
             ( newtemp, tarball, args.topology ) )
     print ( f"[slhaCreator] New tarball {tarball}" )
     if not args.keep:
