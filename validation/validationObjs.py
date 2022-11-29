@@ -493,12 +493,21 @@ class ValidationPlot():
         replacedc = copy.deepcopy ( oldc )
         for ib,b in enumerate(oldc["masses"]):
             for iv,v in enumerate(b):
+                if v >= len(tokens):
+                    logger.error ( f"filename {filename} does not have {v} labels. Can you please check filenameCoords.py, entry for {self.txName}? It currently reads: {oldc}." )
+                    sys.exit(-1)
+
                 try:
                     replacedc["masses"][ib][iv]=float(tokens[v])
                 except ValueError as e:
                     print ( f"[validationObjs] caught ValueError {e}" )
                     if v == 0:
                         print ( "[validationObj] seems like you used index 0 in filenameCoords.py, which points to the tx name" )
+                    sys.exit(-1)
+                except IndexError as e:
+                    print ( "[validationObjs] tokens {tokens} v {v}" )
+                    print ( "[validationObjs] replacedc {replacedc['masses']}, ib {ib} iv {iv}" )
+                    print ( f"[validationObjs] caught IndexError {e}" )
                     sys.exit(-1)
         if type(oldc["widths"]) == list:
             for ib,b in enumerate(oldc["widths"]):
