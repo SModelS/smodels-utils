@@ -425,6 +425,9 @@ class RefXSecComputer:
         for pid,mass in masses.items():
             if pid < 999999:
                 continue
+            if type(mass) not in [ float, int ]:
+                logger.error ( f"I found a mass of {mass} in {slhafile}, do not know what to do with it." )
+                sys.exit(-1)
             if mass > 5000:
                 continue
 

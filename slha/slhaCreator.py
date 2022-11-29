@@ -58,10 +58,10 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,template,axes,tempdir=None,pythiaVersion=6,
-                 keep=False):
+    def __init__(self,topology,axes,tempdir=None,pythiaVersion=6,
+                 keep=False, txName = None ):
         """
-        :param template: path to the template file
+        :param topology: the txname
         :param axes: string describing the axes for the template file
                     (i.e. 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,x-80.0))
         :param tempdir: Folder to store the SLHA files. If not set,
@@ -70,10 +70,16 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         :param keep: keep temporary files
         """
+        template="../slha/templates/%s.template" % topology
+        if not os.path.exists ( template ):
+            print ( "[slhaCreator] error: templatefile %s not found." %
+                    template )
+            sys.exit()
 
         self.version = "1.1" ## slhaCreator version
         self.verbose = False
         self.path = template
+        self.txName = topology
         self.slhaObj = None
         self.ewk = "wino"
         self.nprocesses = -1
@@ -112,6 +118,35 @@ class TemplateFile(object):
                 __tempfiles__.add ( self.pythiaCard )
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
+
+    def writeOutCoordinates ( self ):
+        """ the entry in ../validation/filenameCoords.py """
+        fpath = "../validation/filenameCoords.py"
+        f = open ( fpath, "rt" )
+        lines = f.readlines()
+        f.close()
+        D={}
+        exec("\n".join(lines),D)
+        tempf = "../validation/filenameCoords2.py"
+        g = open ( tempf, "wt" )
+        for line in lines:
+            if not '"'+self.txName+'"' in line:
+                g.write ( line )
+        g.write ( f'coords["{self.txName}"]={self.coordDicts}\n' )
+        g.close()
+        f2 = open ( tempf, "rt" )
+        lines = f2.readlines()
+        f2.close()
+        D2={}
+        exec("\n".join(lines),D2)
+        if D==D2:
+            print ( f"[slhaCreator] {fpath} did not change." )
+        else:
+            cmd = f"cp {tempf} {fpath}"
+            subprocess.getoutput ( cmd )
+            print ( f"Updated {fpath}, please make sure you git-push." )
+        os.unlink ( tempf )
+
 
     def findWidthTags ( self, filename ):
         """ in a template file <template>, search for "width tags",
@@ -185,6 +220,7 @@ class TemplateFile(object):
             fdata = fdata.replace(tag+"-5",str(massDict[tag]-5))
             fdata = fdata.replace(tag,str(massDict[tag]))
 
+        self.coordDicts = { "masses": [], "widths": None }
         #Create SLHA filename (if not defined)
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
@@ -196,12 +232,23 @@ class TemplateFile(object):
                 slhaname = "%s" % (templateName)
                 if swapBranches:
                     masses = [ masses[1], masses[0] ]
+                ctr = 1
                 for br in masses:
+                    self.coordDicts["masses"].append([])
+                    if self.coordDicts["widths"]!=None:
+                        self.coordDicts["widths"].append([])
                     for m in br:
                         if type(m)==tuple:
+                            self.coordDicts["masses"][-1].append(ctr)
                             slhaname += "_%d_%.2g" % (m[0],m[1] )
+                            if self.coordDicts["widths"]==None:
+                                self.coordDicts["widths"]=[[]]
+                            self.coordDicts["widths"][-1].append(ctr+1)
+                            ctr+=2
                         else:
+                            self.coordDicts["masses"][-1].append(ctr)
                             slhaname += "_%d" % m
+                            ctr+=1
                 slhaname += ".slha"
                 slhaname = os.path.join(self.tempdir,slhaname)
 
@@ -517,13 +564,8 @@ if __name__ == "__main__":
         print ( f"[slhaCreator] overwriting existing {tarball}" )
         os.unlink ( tarball )
 
-    templatefile="../slha/templates/%s.template" % args.topology
-    if not os.path.exists ( templatefile ):
-        print ( "[slhaCreator] error: templatefile %s not found." %
-                templatefile )
-        sys.exit()
-    tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion,
-                         keep=args.keep)
+    tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
+                         keep=args.keep )
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
@@ -574,6 +616,7 @@ if __name__ == "__main__":
         if "(" in a or "[" in a:
             argvs[i]=f'"{a}"'
     tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
+    tempf.writeOutCoordinates ()
     subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % \
             ( newtemp, tarball, args.topology ) )
     print ( f"[slhaCreator] New tarball {tarball}" )
