@@ -351,9 +351,12 @@ class Writer:
             outfile.close()
 
         self.createLatexDocument ( self.texfile )
-        print ( "Number of analyses",self.n_anas )
-        print ( "Number of topo/ana pairs",self.n_topos )
+        self.pprint ( "number of analyses:",self.n_anas )
+        self.pprint ( "number of topo/ana pairs:",self.n_topos )
         return toprint
+
+    def pprint ( self, *args ):
+        print ( "[writeAnalysesTable]",*args )
 
     def createPdfFile ( self ):
         texfile = "tab.tex"
@@ -362,16 +365,16 @@ class Writer:
             base = self.experiment
         if self.sqrts != "all":
             base += str(self.sqrts)
-        print ( "now latexing smodels.tex" )
+        self.pprint ( "now latexing smodels.tex" )
         o1 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         o2 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
-        print ( "done latexing, see %s.pdf" % base )
+        self.pprint ( "done latexing, see %s.pdf" % base )
         if os.path.exists ( "/bin/pdftrimwhite" ):
             trimcmd = "pdftrimwhite %s.pdf %strimmed.pdf" % ( base, base )
             C.getoutput ( trimcmd )
-            print ( f"trimmed version: {base}trimmed.pdf" )
+            self.pprint ( f"trimmed version: {base}trimmed.pdf" )
         if self.experiment != "both":
             C.getoutput ( "mv smodels.pdf %s.pdf" % base )
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
@@ -395,7 +398,7 @@ class Writer:
             base += str(self.sqrts)
         pngfile= base + ".png"
         pdffile= base + ".pdf"
-        print ( "now creating %s.png" % base )
+        self.pprint ( "now creating %s.png" % base )
         whiteBG = True
         swbg=""
         if whiteBG:
@@ -461,12 +464,28 @@ if __name__ == "__main__":
             action='store_true' )
         argparser.add_argument( '-H','--href', help='add href links', 
             action='store_true' )
+        argparser.add_argument( '--combinations', help='cycle through all combinations (8 TeV / 13 TeV, CMS / ATLAS )', 
+            action='store_true' )
         args=argparser.parse_args()
-        writer = Writer ( args )
-        #Generate table:
-        writer.generateAnalysisTable( )
-        # create pdf
-        if args.pdf or args.png: 
-            writer.createPdfFile()
-        if args.png:
-            writer.createPngFile()
+        if not args.combinations:
+            writer = Writer ( args )
+            #Generate table:
+            writer.generateAnalysisTable( )
+            # create pdf
+            if args.pdf or args.png: 
+                writer.createPdfFile()
+            if args.png:
+                writer.createPngFile()
+            sys.exit()
+        for s in [ 8, 13 ]:
+            args.sqrts = str(s)
+            for e in [ "CMS", "ATLAS" ]:
+                args.experiment = e
+                writer = Writer ( args )
+                #Generate table:
+                writer.generateAnalysisTable( )
+                # create pdf
+                if args.pdf or args.png: 
+                    writer.createPdfFile()
+                if args.png:
+                    writer.createPngFile()
