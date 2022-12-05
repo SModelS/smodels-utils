@@ -186,7 +186,7 @@ def getSetupJamie():
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
     # anaids = [ 'ATLAS-SUSY-2016-07' ]
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
-    dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', ]# '8NJetinf_1000HT1250_200MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
     # exp_results = []
@@ -209,7 +209,7 @@ def getSetupJamie():
     }
     if ret["expected"]==False:
         ret["murange"] = ( -15., 65. )
-    ret["addjitter"]=0.008
+    ret["addjitter"]=0. # 0.008
     return ret
 
 
@@ -660,7 +660,8 @@ def plotLlhds ( llhds, fits, uls, setup ):
     if setup["addjitter"] and False:
         addJitter ( prody )
     if setup["plotproduct"]:
-       plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$ [tpc]" )
+       plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$ [tpc]",
+              linewidth=3 )
 
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
@@ -767,6 +768,8 @@ def createLlhds ( tpreds, setup ):
             dId = "pyhf combo"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
+            if len(dId)>20:
+                dId = dId[:10]+"..."
         #if dId.find("_")>-1:
         #    dId = dId[:dId.find("_")]
         if dId == None:
