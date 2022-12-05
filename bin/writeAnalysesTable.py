@@ -68,7 +68,7 @@ class Writer:
                          numbers = args.enumerate, prettyNames=args.prettyNames,
                          superseded = args.superseded, topos = args.topologies,
                          showsqrts=args.show_sqrts, longtable = args.longtable,
-                         likelihoods = args.likelihoods, 
+                         likelihoods = args.likelihoods,
                          extended_llhds = args.extended_likelihoods,
                          bibtex = args.bibtex, colors = args.colors,
                          href = args.href )
@@ -83,7 +83,7 @@ class Writer:
         self.getExpResults ( superseded = args.superseded )
         self.texfile = args.output
         self.href = args.href
-        self.experiment = args.experiment 
+        self.experiment = args.experiment
         self.likelihoods = args.likelihoods
         self.extended_likelihoods = args.extended_likelihoods
         self.addcombos = args.extended_likelihoods
@@ -110,7 +110,7 @@ class Writer:
             self.table = "longtable"
 
     def getExpResults ( self, superseded ):
-        """ get the experimental results, and filter 
+        """ get the experimental results, and filter
         :param superseded: allow superseded results
         """
         self.listOfAnalyses = []
@@ -135,29 +135,29 @@ class Writer:
         return text
 
     def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
-        """ write the entry of a single analysis 
+        """ write the entry of a single analysis
         :param nextIsSame: true, if next is same
         :param nextAna: the next analysis (if same)
         """
         lines= [ "" ]
-        sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) ) 
+        sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) )
         if sqrts != self.lasts and self.lasts != None:
             lines[0] = "\\hline\n"
         ananr=""
         anaid = ana.globalInfo.id
         anaid = anaid.replace("-agg","")
-        if anaid != self.last_ana: 
+        if anaid != self.last_ana:
             self.n_anas += 1
             self.last_ana = anaid
             ananr="%d" % self.n_anas
         ret = ""
-        txnobjs = ana.getTxNames() 
+        txnobjs = ana.getTxNames()
         t_txnames = [ x.txName for x in txnobjs ]
         t_txnames.sort()
         txnames=[]
         for i in OrderedSet ( t_txnames ):
-            if "off" in i: 
-                on = i.replace("off","") 
+            if "off" in i:
+                on = i.replace("off","")
                 if on in txnames: txnames.remove ( on )
                 txnames.append ( i.replace("off","[off]" ) )
             else:
@@ -180,7 +180,7 @@ class Writer:
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
-        self.currentcolor = "red!80"
+        self.currentcolor = "red!65"
         llhds = "no"
         if hasLLHD ( ana ):
             llhds = "yes"
@@ -189,20 +189,28 @@ class Writer:
             dt = "ul, eff"
         if "ul" in dt:
             if hasLLHD ( ana ):
-                self.currentcolor = "orange!80"
+                self.currentcolor = "orange!65"
         if nextIsSame or "eff" in dt:
-            self.currentcolor = "green!60"
+            #self.currentcolor = "green!60"
+            self.currentcolor = "yellow!75"
         hasComb = False
+        darkgreen = "darkgreen!70"
+        # darkgreen = "ForestGreen!65"
         if hasattr ( ana.globalInfo, "jsonFiles" ):
             hasComb = True
+            self.currentcolor = darkgreen
         if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
+            self.currentcolor = darkgreen
             hasComb = True
+        lightgreen = "green!60"
         if hasattr ( ana.globalInfo, "covariance" ):
             hasComb = True
+            self.currentcolor = lightgreen
         if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
             hasComb = True
-        if hasComb:
-            self.currentcolor = "green"
+            self.currentcolor = lightgreen
+        #if hasComb:
+        #    self.currentcolor = "green"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
         gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
         Url = ana.globalInfo.url
@@ -283,7 +291,7 @@ class Writer:
 
     def generateAnalysisTable( self ):
         """ Generates a raw latex table with all the analyses in listOfAnalyses,
-        writes it to texfile (if not None), and returns it as its return value. 
+        writes it to texfile (if not None), and returns it as its return value.
         :param texfile: where the tex gets written to, e.g. tab.tex
         """
         frmt = "|l"
@@ -305,7 +313,7 @@ class Writer:
         if self.prettyNames:
             # toprint += "{\\bf Pretty Name} & "
             toprint += "{\\bf Short Description} & "
-            
+
         if self.topos:
             toprint += "{\\bf Topologies} &"
         if not self.extended_likelihoods:
@@ -379,7 +387,7 @@ class Writer:
             C.getoutput ( "mv smodels.pdf %s.pdf" % base )
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
         for i in [ "smodels.log", "smodels.out", "smodels.aux" ]:
-            os.unlink ( i ) 
+            os.unlink ( i )
         if not self.keep:
             for i in [ "smodels.tex", "tab.tex" ]:
                 os.unlink ( i )
@@ -420,51 +428,51 @@ if __name__ == "__main__":
         argparser = argparse.ArgumentParser(description=
                       'simple tool to generate a latex table with all analysis used')
         dbpath = os.path.abspath( '../../smodels-database/' )
-        argparser.add_argument ( '-d', '--database', nargs='?', 
-                            help='path to database [%s]' % dbpath, type=str, 
+        argparser.add_argument ( '-d', '--database', nargs='?',
+                            help='path to database [%s]' % dbpath, type=str,
                             default=dbpath )
         outfile = "tab.tex"
-        argparser.add_argument ( '-o', '--output', nargs='?', 
+        argparser.add_argument ( '-o', '--output', nargs='?',
             help='output file [%s]' % outfile, type=str, default=outfile )
-        argparser.add_argument('-k', '--keep', help='keep tex files', 
+        argparser.add_argument('-k', '--keep', help='keep tex files',
             action='store_true' )
-        argparser.add_argument ( '-e', '--experiment', nargs='?', 
+        argparser.add_argument ( '-e', '--experiment', nargs='?',
             help='experiment [both]', type=str, default='both')
-        argparser.add_argument ( '-S', '--sqrts', nargs='?', 
-            help="show only certain runs, e.g. 8, 13, or 'all' ['all']", 
+        argparser.add_argument ( '-S', '--sqrts', nargs='?',
+            help="show only certain runs, e.g. 8, 13, or 'all' ['all']",
             type=str, default='all' )
-        argparser.add_argument('-p', '--pdf', help='produce pdf file', 
+        argparser.add_argument('-p', '--pdf', help='produce pdf file',
             action='store_true' )
-        argparser.add_argument('-P', '--png', help='produce png file', 
+        argparser.add_argument('-P', '--png', help='produce png file',
             action='store_true' )
-        argparser.add_argument('-s', '--superseded', help='add superseded results', 
+        argparser.add_argument('-s', '--superseded', help='add superseded results',
             action='store_true' )
-        argparser.add_argument('-c', '--caption', help='add figure caption', 
+        argparser.add_argument('-c', '--caption', help='add figure caption',
             action='store_true' )
-        argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
+        argparser.add_argument('-n', '--enumerate', help='enumerate analyses',
             action='store_true' )
-        argparser.add_argument('-L', '--likelihoods', help='add likelihood info', 
+        argparser.add_argument('-L', '--likelihoods', help='add likelihood info',
             action='store_true' )
-        argparser.add_argument('-X', '--extended_likelihoods', 
+        argparser.add_argument('-X', '--extended_likelihoods',
             help='add extended likelihood info', action='store_true' )
-        argparser.add_argument('-t', '--topologies', help='add topologies', 
+        argparser.add_argument('-t', '--topologies', help='add topologies',
             action='store_true' )
-        argparser.add_argument('-l', '--longtable', help='use longtable not tabular', 
+        argparser.add_argument('-l', '--longtable', help='use longtable not tabular',
             action='store_true' )
-        argparser.add_argument('--show_sqrts', help='show sqrts column', 
+        argparser.add_argument('--show_sqrts', help='show sqrts column',
             action='store_true' )
-        argparser.add_argument('--timg', '-T', help='run timg on picture', 
+        argparser.add_argument('--timg', '-T', help='run timg on picture',
             action='store_true' )
-        argparser.add_argument('-N', '--prettyNames', 
+        argparser.add_argument('-N', '--prettyNames',
             help='add column for description of analyses', action='store_true' )
-        argparser.add_argument('-b', '--bibtex', help='add bibtex references', 
+        argparser.add_argument('-b', '--bibtex', help='add bibtex references',
             action='store_true' )
-        argparser.add_argument('--colors', 
-            help='use colors according to availability of likelihood', 
+        argparser.add_argument('--colors',
+            help='use colors according to availability of likelihood',
             action='store_true' )
-        argparser.add_argument( '-H','--href', help='add href links', 
+        argparser.add_argument( '-H','--href', help='add href links',
             action='store_true' )
-        argparser.add_argument( '--combinations', help='cycle through all combinations (8 TeV / 13 TeV, CMS / ATLAS )', 
+        argparser.add_argument( '--combinations', help='cycle through all combinations (8 TeV / 13 TeV, CMS / ATLAS )',
             action='store_true' )
         args=argparser.parse_args()
         if not args.combinations:
@@ -472,7 +480,7 @@ if __name__ == "__main__":
             #Generate table:
             writer.generateAnalysisTable( )
             # create pdf
-            if args.pdf or args.png: 
+            if args.pdf or args.png:
                 writer.createPdfFile()
             if args.png:
                 writer.createPngFile()
@@ -485,7 +493,7 @@ if __name__ == "__main__":
                 #Generate table:
                 writer.generateAnalysisTable( )
                 # create pdf
-                if args.pdf or args.png: 
+                if args.pdf or args.png:
                     writer.createPdfFile()
                 if args.png:
                     writer.createPngFile()
