@@ -44,9 +44,7 @@ def isIn ( i, txnames ):
 
 
 class Writer:
-    def __init__ ( self, db, experiment, sqrts, keep, caption, numbers, prettyNames,
-                   superseded, topos, showsqrts, longtable = False, likelihoods = False,
-                   extended_llhds = False, bibtex=False, colors = False, href = False ):
+    def __init__ ( self, args ):
         """ writer class
         :param experiment: select on experiment, e.g. CMS, ATLAS, or both
         :param sqrts: select on sqrts (str)
@@ -63,38 +61,52 @@ class Writer:
         :param colors: use colors according to likelihood availability
         :param href: add href links
         """
+        """
+        writer = Writer( db = args.database, experiment=args.experiment,
+                         sqrts = args.sqrts,
+                         keep = args.keep, caption = args.caption,
+                         numbers = args.enumerate, prettyNames=args.prettyNames,
+                         superseded = args.superseded, topos = args.topologies,
+                         showsqrts=args.show_sqrts, longtable = args.longtable,
+                         likelihoods = args.likelihoods, 
+                         extended_llhds = args.extended_likelihoods,
+                         bibtex = args.bibtex, colors = args.colors,
+                         href = args.href )
+        """
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
         #Creat analyses list:
         self.bibtex = None
-        if bibtex:
+        self.timg = args.timg
+        if args.bibtex:
             self.bibtex = BibtexWriter ( args.database )
-        self.getExpResults ( superseded = superseded )
-        self.href = href
-        self.experiment = experiment 
-        self.likelihoods = likelihoods
-        self.extended_likelihoods = extended_llhds
-        self.addcombos = extended_llhds
-        self.sqrts = sqrts.lower()
-        self.colors = colors
+        self.getExpResults ( superseded = args.superseded )
+        self.texfile = args.output
+        self.href = args.href
+        self.experiment = args.experiment 
+        self.likelihoods = args.likelihoods
+        self.extended_likelihoods = args.extended_likelihoods
+        self.addcombos = args.extended_likelihoods
+        self.sqrts = args.sqrts.lower()
+        self.colors = args.colors
         self.sqrts = self.sqrts.replace("*","").replace("tev","").replace("both","all").replace("none","all")
         if self.sqrts == "":
             self.sqrts = "all"
         if self.sqrts == "8":
             print ( "[writeAnalysesTable] sqrts is 8, so no column for combos" )
             self.addcombos = False
-        self.keep = keep
-        self.topos = topos
-        self.caption = caption
-        self.numbers = numbers
-        self.prettyNames = prettyNames
-        self.showsqrts = showsqrts
+        self.keep = args.keep
+        self.topos = args.topologies
+        self.caption = args.caption
+        self.numbers = args.enumerate
+        self.prettyNames = args.prettyNames
+        self.showsqrts = args.show_sqrts
         self.n_anas = 0 ## counter for analyses
         self.n_topos = 0 ## counter fo topologies
         self.lasts = None ## last sqrt-s (for hline )
         self.last_ana = None ## last ana id ( for counting )
         self.table = "tabular"
-        if longtable:
+        if args.longtable:
             self.table = "longtable"
 
     def getExpResults ( self, superseded ):
@@ -269,7 +281,7 @@ class Writer:
             return True
         return False
 
-    def generateAnalysisTable( self, texfile ):
+    def generateAnalysisTable( self ):
         """ Generates a raw latex table with all the analyses in listOfAnalyses,
         writes it to texfile (if not None), and returns it as its return value. 
         :param texfile: where the tex gets written to, e.g. tab.tex
@@ -333,12 +345,12 @@ class Writer:
             toprint += "\\label{tab:SModelS database}\n"
         toprint += "\\end{%s}\n" % self.table
 
-        if texfile:
-            outfile = open(texfile,"w")
+        if self.texfile:
+            outfile = open(self.texfile,"w")
             outfile.write(toprint)
             outfile.close()
 
-        self.createLatexDocument ( texfile )
+        self.createLatexDocument ( self.texfile )
         print ( "Number of analyses",self.n_anas )
         print ( "Number of topo/ana pairs",self.n_topos )
         return toprint
@@ -392,11 +404,12 @@ class Writer:
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
-        a = shutil.which ( "timg" )
-        if a:
-            cmd = f"timg -p kitty {pngfile}"
-            a = C.getoutput ( cmd )
-            print ( a )
+        if self.timg:
+            a = shutil.which ( "timg" )
+            if a:
+                cmd = f"timg -p kitty {pngfile}"
+                a = C.getoutput ( cmd )
+                print ( a )
 
 if __name__ == "__main__":
         import setPath, argparse, types, os
@@ -409,60 +422,49 @@ if __name__ == "__main__":
                             default=dbpath )
         outfile = "tab.tex"
         argparser.add_argument ( '-o', '--output', nargs='?', 
-                            help='output file [%s]' % outfile, type=str, 
-                            default=outfile )
+            help='output file [%s]' % outfile, type=str, default=outfile )
         argparser.add_argument('-k', '--keep', help='keep tex files', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument ( '-e', '--experiment', nargs='?', 
-                            help='experiment [both]', type=str, default='both')
+            help='experiment [both]', type=str, default='both')
         argparser.add_argument ( '-S', '--sqrts', nargs='?', 
-                            help="show only certain runs, e.g. 8, 13, or 'all' ['all']", 
-                            type=str, default='all' )
+            help="show only certain runs, e.g. 8, 13, or 'all' ['all']", 
+            type=str, default='all' )
         argparser.add_argument('-p', '--pdf', help='produce pdf file', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('-P', '--png', help='produce png file', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('-s', '--superseded', help='add superseded results', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('-c', '--caption', help='add figure caption', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('-L', '--likelihoods', help='add likelihood info', 
-                            action='store_true' )
-        argparser.add_argument('-X', '--extended_likelihoods', help='add extended likelihood info', 
-                            action='store_true' )
+            action='store_true' )
+        argparser.add_argument('-X', '--extended_likelihoods', 
+            help='add extended likelihood info', action='store_true' )
         argparser.add_argument('-t', '--topologies', help='add topologies', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('-l', '--longtable', help='use longtable not tabular', 
-                            action='store_true' )
+            action='store_true' )
         argparser.add_argument('--show_sqrts', help='show sqrts column', 
-                            action='store_true' )
+            action='store_true' )
+        argparser.add_argument('--timg', '-T', help='run timg on picture', 
+            action='store_true' )
         argparser.add_argument('-N', '--prettyNames', 
-                            help='add column for description of analyses', 
-                            action='store_true' )
-        argparser.add_argument('-b', '--bibtex', 
-                            help='add bibtex references', 
-                            action='store_true' )
+            help='add column for description of analyses', action='store_true' )
+        argparser.add_argument('-b', '--bibtex', help='add bibtex references', 
+            action='store_true' )
         argparser.add_argument('--colors', 
-                            help='use colors according to availability of likelihood', 
-                            action='store_true' )
-        argparser.add_argument( '-H','--href', 
-                            help='add href links', 
-                            action='store_true' )
+            help='use colors according to availability of likelihood', 
+            action='store_true' )
+        argparser.add_argument( '-H','--href', help='add href links', 
+            action='store_true' )
         args=argparser.parse_args()
-        writer = Writer( db = args.database, experiment=args.experiment,
-                         sqrts = args.sqrts,
-                         keep = args.keep, caption = args.caption,
-                         numbers = args.enumerate, prettyNames=args.prettyNames,
-                         superseded = args.superseded, topos = args.topologies,
-                         showsqrts=args.show_sqrts, longtable = args.longtable,
-                         likelihoods = args.likelihoods, 
-                         extended_llhds = args.extended_likelihoods,
-                         bibtex = args.bibtex, colors = args.colors,
-                         href = args.href )
+        writer = Writer ( args )
         #Generate table:
-        writer.generateAnalysisTable( args.output )
+        writer.generateAnalysisTable( )
         # create pdf
         if args.pdf or args.png: 
             writer.createPdfFile()
