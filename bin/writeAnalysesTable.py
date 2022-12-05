@@ -194,8 +194,7 @@ class Writer:
             #self.currentcolor = "green!60"
             self.currentcolor = "yellow!75"
         hasComb = False
-        darkgreen = "darkgreen!70"
-        # darkgreen = "ForestGreen!65"
+        darkgreen = "darkgreen!85"
         if hasattr ( ana.globalInfo, "jsonFiles" ):
             hasComb = True
             self.currentcolor = darkgreen
