@@ -130,14 +130,6 @@ class SLParams(object):
         self.bg_m3 = np.array(bg_m3) if bg_m3 is not None else None
         self.obs = np.array(obs) if obs is not None else None
         self.sig = np.array(sig) if sig is not None else None
-        if False:
-            print("Inputs:")
-            print("bkg:"); print(self.bg_m1)
-            print("covariance:"); print(self.bg_m2)
-            print("m3:\n"); print(self.bg_m3)
-            print("obs:\n"); print(self.obs)
-            print("sig:\n"); print(self.sig)
-            print()
         #
         self.aparams, self.bparams, self.cparams = getCoeffsABC(self.bg_m1, self.bg_m2, self.bg_m3, skew=skew)
         self.rhoparams = getRho(self.bg_m1, self.bg_m2, self.bg_m3, skew=skew)
@@ -146,6 +138,20 @@ class SLParams(object):
         #
         self.llmax = None #< for caching of unconditional max LL
         self.llnosig = None #< for caching of no-signal LL
+        if True:
+            print("Inputs:")
+            print("bkg:"); print(self.bg_m1)
+            print("covariance:"); print(self.bg_m2)
+            print("m3:\n"); print(self.bg_m3)
+            print("obs:\n"); print(self.obs)
+            print("sig:\n"); print(self.sig)
+            print("params:\n" )
+            print(f"A: {self.aparams}" )
+            print(f"B: {self.bparams}" )
+            print(f"C: {self.cparams}" )
+            print(f"rho: {self.rhoparams[0]}" )
+            print(f"thetadbn: {self.thetadbn}" )
+            print()
 
     @property
     def size(self):
@@ -285,6 +291,7 @@ class SLParams(object):
                     self.llnosig = (minres, llopt) #< mu=0 caching
             if not minres.success:
                 print("mu = "+"{:6.2f}".format(mu)+", fit success = "+str(minres.success))
+        print ( f"log(lmax)({mu}) = {llopt}, x={minres.x}" )
         if rtnparams:
             return llopt, minres.x
         else:
@@ -322,7 +329,7 @@ if __name__ == "__main__":
     ## Load data from the model script
     # execfile("model-90_100000toys.py")
     #exec(open("./model-90_100000toys.py").read())
-    exec(open("./slHHmet_300.py").read())
+    exec(open("./slHHmet_750.py").read())
     NBINS = nbins
     BG_M1 = np.array(background)
     BG_M2 = np.array(covariance).reshape([NBINS,NBINS]) #!
@@ -361,12 +368,13 @@ if __name__ == "__main__":
     # plt.plot(mustrue, tmustrue, "-", color="black", label="Full likelihood")
     # plt.plot(mus, tmus1, "--", color="red", label="Simplified likelihood (linear)")
     # plt.plot(mus, tmus2, "--", color="green", label="Simplified likelihood (quadratic)")
-    print ( )
-    print ( "mus", list(mus) )
-    print ( "tmus1", tmus1 ) 
-    print ( "tmus2", tmus2 )
-    print ( "mustrue", list(mustrue) )
-    print ( "full", tmustrue )
+    if False:
+        print ( )
+        print ( "mus", list(mus) )
+        print ( "tmus1", tmus1 )
+        print ( "tmus2", tmus2 )
+        print ( "mustrue", list(mustrue) )
+        print ( "full", tmustrue )
     # plt.legend(loc="best")
     # #
     # plt.xlabel(r"Signal strength $\mu$")

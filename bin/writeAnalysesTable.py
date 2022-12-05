@@ -12,8 +12,7 @@
 
 """
 
-from __future__ import print_function
-import sys, os
+import sys, os, shutil
 try:
     import subprocess as C ## python3
 except:
@@ -393,6 +392,11 @@ class Writer:
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
+        a = shutil.which ( "timg" )
+        if a:
+            cmd = f"timg -p kitty {pngfile}"
+            a = C.getoutput ( cmd )
+            print ( a )
 
 if __name__ == "__main__":
         import setPath, argparse, types, os

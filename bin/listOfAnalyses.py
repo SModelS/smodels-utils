@@ -2,15 +2,14 @@
 
 """
 .. module:: listOfAnalyses
-         :synopsis: Small script to produce the ListOfAnalyses wiki page,
-                    markdown syntax.
+  :synopsis: Small script to produce the ListOfAnalyses wiki page, markdown syntax,
+             see https://smodels.github.io/docs/ListOfAnalyses
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 
 """
 
-from __future__ import print_function
 import setPath
 try:
     import subprocess as C
@@ -163,7 +162,7 @@ class Lister:
                     if "efficiency" in tpe:
                         mapsCountS = ", %d individual maps" % nMaps
 
-                    line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n" 
+                    line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n"
                     self.f.write ( line )
 
 
@@ -424,11 +423,11 @@ class Lister:
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
         argparser.add_argument ( '-n', '--no_superseded', action='store_true',
                                  help='ignore (filter out) superseded results' )
-        argparser.add_argument ( '-d', '--database', 
+        argparser.add_argument ( '-d', '--database',
                                  help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
-        argparser.add_argument ( '-v', '--verbose', 
-                                 help='verbosity level (error, warning, info, debug) [info]', 
+        argparser.add_argument ( '-v', '--verbose',
+                                 help='verbosity level (error, warning, info, debug) [info]',
                                  type=str, default='info' )
         argparser.add_argument ( '-i', '--ignore', action='store_true',
                                   help='ignore the validation flags of analysis '\
