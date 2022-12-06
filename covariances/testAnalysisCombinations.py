@@ -419,11 +419,11 @@ def getSetupReinterpretationForum():
     dsids = [ 'all' ]
     comb_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
-    ret = { "slhafile": "TChiWZ_460_230_460_230.slha",
+    ret = { "slhafile": "TChiWZ_560_130_560_130.slha",
             "SR": exp_results,
             "comb": comb_results,
-            "dictname": "1909.dict",
-            "output": "combo_1909.png",
+            "dictname": "reinterpret.dict",
+            "output": "combo_rif.png",
 #"murange": (-4,5),
             "murange": (-.7,.7),
     }
