@@ -51,3 +51,6 @@ bin/refs.bib
 EM_Creator/LLP/ufo2slha
 EM_Creator/LLP/pythia8
 EM_Creator/LLP/MG5
+*/.DS_Store
+.DS_Store
+*/*/.DS_Store
