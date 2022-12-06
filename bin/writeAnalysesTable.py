@@ -180,7 +180,7 @@ class Writer:
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
-        self.currentcolor = "red!65"
+        self.currentcolor = "white" #  "red!65"
         llhds = "no"
         if hasLLHD ( ana ):
             llhds = "yes"
@@ -189,25 +189,29 @@ class Writer:
             dt = "ul, eff"
         if "ul" in dt:
             if hasLLHD ( ana ):
-                self.currentcolor = "orange!65"
+                self.currentcolor = "red!65"
+                # self.currentcolor = "orange!65"
         if nextIsSame or "eff" in dt:
-            #self.currentcolor = "green!60"
-            self.currentcolor = "yellow!75"
+            self.currentcolor = "orange!65"
+            # self.currentcolor = "yellow!75"
         hasComb = False
         darkgreen = "darkgreen!85"
         if hasattr ( ana.globalInfo, "jsonFiles" ):
             hasComb = True
             self.currentcolor = darkgreen
         if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
-            self.currentcolor = darkgreen
             hasComb = True
+            self.currentcolor = darkgreen
         lightgreen = "green!60"
+        yellow = "yellow!75"
         if hasattr ( ana.globalInfo, "covariance" ):
             hasComb = True
-            self.currentcolor = lightgreen
+            self.currentcolor = yellow
+            # self.currentcolor = lightgreen
         if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
             hasComb = True
-            self.currentcolor = lightgreen
+            self.currentcolor = yellow
+            # self.currentcolor = lightgreen
         #if hasComb:
         #    self.currentcolor = "green"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
