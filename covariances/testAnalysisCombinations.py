@@ -402,7 +402,34 @@ def getSetupTimotheeCombined():
     if ret["expected"]==False:
         ret["murange"] = ( -.2, .5 )
     ret["addjitter"]=0.008
-    ret["addjitter"]=0.008
+    ret["addVerticalLabels"]=False
+    return ret
+
+def getSetupReinterpretationForum():
+    """ ATLAS-SUSY-2018-41 and ATLAS-SUSY-2019-09 (pyhf) """
+    database = Database( dbpath[0] )
+    dTypes = ["efficiencyMap"]
+    anaids = [  'ATLAS-SUSY-2018-41'  ]
+    dsids = [ 'all' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    print ( "exp_Results", [ x.globalInfo.id for x in exp_results ] )
+    anaids = [ 'ATLAS-SUSY-2019-09' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "TChiWZ_460_230_460_230.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "dictname": "1909.dict",
+            "output": "combo_1909.png",
+#"murange": (-4,5),
+            "murange": (-.7,.7),
+    }
+    ret["addjitter"]=0.
+    ret["title"]="likelihoods, TChiWZ model"
+    ret["addVerticalLabels"]=False
     return ret
 
 def getSetup16050():
@@ -541,7 +568,7 @@ def getSetupTChiWZ09():
     database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2019-09'  ]
-    #anaids = [ 'ATLAS-SUSY-2019-09'  ]
+    #anaids = [ 'ATLAS-SUSY-2019-09'  ]naids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2019-09'  ]
     dsids = [ 'SR2l_Int', 'SRWZ_10', 'SRWZ_20' ]
     #dsids = [ 'all' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
@@ -559,6 +586,8 @@ def getSetupTChiWZ09():
 #"murange": (-4,5),
             "murange": (-1,2),
     }
+    ret["addjitter"]=0.
+    ret["addVerticalLabels"]=False
     return ret
 
 def getSetupTChiWH():
@@ -629,6 +658,9 @@ def plotLlhds ( llhds, fits, uls, setup ):
     """
     alllhds = []
     colors = {}
+    addVerticalLabels = True # add horizontal lines to legend
+    if "addVerticalLabels" in setup:
+        addVerticalLabels = setup["addVerticalLabels"]
     for Id,l in llhds.items():
         if Id == "combined":
             continue
@@ -660,8 +692,8 @@ def plotLlhds ( llhds, fits, uls, setup ):
     if setup["addjitter"] and False:
         addJitter ( prody )
     if setup["plotproduct"]:
-       plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$ [tpc]",
-              linewidth=3 )
+       label = r"$\Pi_i l_i$ [tpc]"
+       plt.plot ( prodllhd.keys(), prody, c="k", label=label, linewidth=3 )
 
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
@@ -675,15 +707,24 @@ def plotLlhds ( llhds, fits, uls, setup ):
         ax = plt.gca()
         if setup["plotproduct"]:
             if withinMuRange ( mu_hat, setup["murange"] ):
-                plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}]" )
+                label = None
+                if addVerticalLabels:
+                    label = rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}]"
+                plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=label )
             else:
-                plt.text ( .6, -.11, rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
+                label = None
+                if addVerticalLabels:
+                    label = rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)",
+                plt.text ( .6, -.11, label, transform=ax.transAxes, fontsize=9, c="gray" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
 
         if setup["plotproduct"]:
             if withinMuRange ( ulmu, setup["murange"] ):
+                label = None
+                if addVerticalLabels:
+                    label = rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]"
                 plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted",
-                       c="k", label=rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]" )
+                       c="k", label=label )
             else:
                 plt.text ( -.1, -.11, rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
 
@@ -696,35 +737,54 @@ def plotLlhds ( llhds, fits, uls, setup ):
             srcombo = " (pyhf combo)"
         if withinMuRange ( fits["ul_combo"], setup["murange"] ):
             line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, 1.05* llhdul ] }
-            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=rf"ul$_\mu${srcombo}: {fits['ul_combo']:.2f}" )
+            label = None
+            if addVerticalLabels:
+                label=rf"ul$_\mu${srcombo}: {fits['ul_combo']:.2f}"
+            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r",
+                       label=label )
         lmax = fits["lmax_combo"]
         # lmax = llmax
         if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
             line = createLine ( fits["muhat_combo"], llmin, lmax, True )
-            # plt.plot ( [ fits["muhat_combo"] ]*2, [ llmin, .95*lmax], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
-            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=rf"$\hat\mu${srcombo}: {fits['muhat_combo']:.2f}" )
+            label = None
+            if addVerticalLabels:
+                label = rf"$\hat\mu${srcombo}: {fits['muhat_combo']:.2f}"
+
+            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=label )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
         llhdul = [ fits["llhd_ul"]]
         # print ( "llhd at", fits["ul_ul"], "is", llhdul )
-        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo ul)" )
+        label = None
+        if addVerticalLabels:
+            label=r"ul$_\mu$ (sr combo ul)"
+        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted",
+                   c="r", label=label )
         lmax = llmax
-        plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (ul)" )
+        label = None
+        if addVerticalLabels:
+            label = r"$\hat\mu$ (ul)"
+        plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.",
+                   c="r", label=label )
 
     for Id,values in uls.items():
         ul = values [ "ulmu" ]
         if not withinMuRange ( ul, setup["murange"] ):
             continue
         l = values [ "lulmu" ]
-        label = r"ul$_\mu$ (%s)" % Id
+        label = None
+        if addVerticalLabels:
+            label = r"ul$_\mu$ (%s)" % Id
         # label = None
         if not "combo" in Id:
             plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
         muhat = values["muhat"]
         lmax = values["lmax"]
         # if muhat < 0.:
-        label = f"$\hat\mu$ ({Id})"
+        label = None
+        if addVerticalLabels:
+            label = f"$\hat\mu$ ({Id})"
         if not "combo" in Id:
             plt.plot ( [ muhat ] *2, [ llmin, lmax ], linestyle="-.", \
                         c=colors[Id], label= label )
@@ -736,7 +796,10 @@ def plotLlhds ( llhds, fits, uls, setup ):
     label = ""
     if "label" in setup:
         label = setup["label"]+" "
-    plt.title ( f"{label}likelihoods for {slha}" )
+    title = f"{label}likelihoods for {slha}"
+    if "title" in setup:
+        title = setup["title"]
+    plt.title ( title )
     plt.legend()
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
@@ -768,12 +831,12 @@ def createLlhds ( tpreds, setup ):
             dId = "pyhf combo"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
-            if len(dId)>20:
-                dId = dId[:10]+"..."
-        #if dId.find("_")>-1:
-        #    dId = dId[:dId.find("_")]
         if dId == None:
             dId = "UL"
+        if len(dId)>20:
+            dId = dId[:10]+"..."
+        #if dId.find("_")>-1:
+        #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"
         r = t.getRValue()
         xsec = t.xsection.value
@@ -892,10 +955,11 @@ def testAnalysisCombo( setup ):
     for er in comb_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
-        print ( f"   --- {er.id()}: {len(ts)} SR results, {len(ts)} comb results" )
-        for t in ts:
-            print ( f"   combined result {t.dataset.globalInfo.id}" )
-            combine.append(t)
+        if ts != None:
+            print ( f"   --- {er.id()}: {len(ts)} SR results, {len(ts)} comb results" )
+            for t in ts:
+                print ( f"   combined result {t.dataset.globalInfo.id}" )
+                combine.append(t)
         # ts = tsc
         if ts == None:
             continue
