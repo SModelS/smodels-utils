@@ -602,7 +602,8 @@ if __name__ == "__main__":
                    swapBranches = args.swapBranches, 
                    ignore_pids = args.ignore_pids, comment = args.comment )
     print ( "[slhaCreator] Produced %s slha files" % len(slhafiles ) )
-    newtemp = tempfile.mkdtemp(dir="./" )
+    # newtemp = tempfile.mkdtemp(dir="./" ) # FIXME now idea what that was for
+    newtemp = tempf.tempdir # FIXME anyways this does it correctly it seems
     __tempfiles__.add ( newtemp )
     #oldtarball = f"{args.topology}.tar.gz"
     oldtarball = tarball
@@ -620,8 +621,10 @@ if __name__ == "__main__":
             argvs[i]=f'"{a}"'
     tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
     tempf.writeOutCoordinates ( newtemp )
-    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe coordinates" % \
-            ( newtemp, tarball, args.topology ) )
+    cmd = f"cd {newtemp}; tar czvf ../{tarball} {args.topology}*slha recipe coordinates"
+    if False:
+        print ( f"[slhaCreator] {cmd}" )
+    o = subprocess.getoutput ( cmd )
     print ( f"[slhaCreator] New tarball {tarball}" )
     if not args.keep:
         removeTempFiles()
