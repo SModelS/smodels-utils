@@ -59,7 +59,7 @@ def discussExperiment ( anas, experiment, title, verbose ):
 
     print ()
 
-def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
+def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose, lumi ):
     print ()
     print ( "---------------" )
     title = "Excluding superseded results, "
@@ -70,6 +70,8 @@ def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
                 title += "without FastLim, " 
         else:
             title += "with FastLim, "
+    if lumi != None:
+        title += f"lumi>{lumi}/fb, "
     anas = db.getExpResults( useSuperseded=superseded )
     if sqrts == "all":
         title += "all runs, "
@@ -79,6 +81,7 @@ def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
         anas = manips.filterSqrtsFromList ( anas, sqrts )
     anas = manips.filterFastLimFromList ( anas, invert=False, 
                                           really=filter_fastlim, update=update )
+    anas = manips.filterByLumi  ( anas, lumi, invert=False )
     cms,atlas=[],[]
     for expRes in anas:
         Id=expRes.globalInfo.id
@@ -113,10 +116,12 @@ def main():
               type=str, default="both" )
     argparser.add_argument ( '-S', '--sqrts', help='select sqrts (8/13/all) [all]',
               type=str, default="all" )
+    argparser.add_argument ( '-L', '--lumi', help='require a minimum lumi, in 1/fb [None]',
+              type=float, default=None )
     argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     argparser.add_argument ( '-t', '--topologies', help='list topologies, also', action='store_true' )
-    argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official_fastlim]',
-              type=str,default='official_fastlim' )
+    argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official]',
+              type=str,default='official' )
     args = argparser.parse_args()
     db = Database ( args.database )
     ss = [ True, False ]
@@ -130,7 +135,7 @@ def main():
     if args.fastlim.lower() in [ "no", "false" ]: fl = [ True ]
     for filter_fastlim in fl:
         for superseded in ss:
-            discuss ( superseded, filter_fastlim, db, args.update, sqrts, args.verbose )
+            discuss ( superseded, filter_fastlim, db, args.update, sqrts, args.verbose, args.lumi )
             if args.topologies:
                 countTopos ( superseded, filter_fastlim, db, args.update, args.verbose )
 if __name__ == '__main__':

@@ -3,6 +3,7 @@
 """ module that contains a few methods to manipulate the database """
 
 from smodels.experiment.databaseObj import Database
+from smodels.tools.physicsUnits import TeV, fb
 
 def combineResults( database, anas_and_SRs : dict, debug=False ):
     """ combine the <anas_and_SRs> results in <database>
@@ -247,6 +248,26 @@ def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
         db.subs[0].databaseVersion = "superseded" + db.databaseVersion
     db.createBinaryFile( outfile )
     return db
+
+def filterByLumi ( expRes, minlumi, invert=False ):
+    """ filter out results with too low lumi, keep all with lumi >= minlumi
+    :param invert: if true, keep all with lumi < minlumi
+    :returns: list of results
+    """
+    if type(minlumi) == type(1./fb):
+        minlumi = minlumi.asNumber ( 1./fb)
+    if type(minlumi) == type(None):
+        return expRes
+    high, low = [], []
+    for er in expRes:
+        lumi = er.globalInfo.lumi.asNumber ( 1./fb)
+        if lumi > minlumi:
+            high.append ( er )
+        else:
+            low.append ( er )
+    if invert:
+        return low
+    return high
 
 def filterSupersededFromList ( expRes, invert=False ):
     """ filter out superseded results,
