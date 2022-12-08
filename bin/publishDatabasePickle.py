@@ -58,7 +58,6 @@ def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
     """
     has_nonValidated = False
-    database.selectExpResults(useNonValidated=True )
     expResults = database.expResultList
     has_nonValidated = False
     nonValidateds = set()
@@ -104,14 +103,14 @@ def main():
         from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB    
 
         
-    from smodels.base.smodelsLogging import logger
-    logger.setLevel('ERROR')
     has_nonValidated = False
     nonValidated = []
     fastlim = True
     picklefile = dbname
     if not args.build:
         d = Database(dbname)
+        dbver = d.databaseVersion
+        picklefile = dbname
     else:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
@@ -124,7 +123,10 @@ def main():
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
         d = Database(dbname, progressbar=True)
-    dbver = d.databaseVersion
+        dbver = d.databaseVersion
+        picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+      
+    print('BBBBBLA',args.remove_superseded)
     if args.remove_superseded:
         # e = copy.deepcopy( d )
         e = Database(dbname, progressbar=True)
@@ -156,7 +158,7 @@ def main():
         has_nonValidated = validated
     else:
         has_nonValidated = False
-    picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
@@ -241,10 +243,14 @@ def main():
         print ( a )
         
     home = os.environ["HOME"]
-    if ssh:
-        cmd2 = "sshpass -f %s/.ssh/lxplus scp %s lxplus.cern.ch:%s%s" % \
-                ( home, pclfilename, eosdir, pclfilename )
+    import shutil
+    hasSSHpass = (shutil.which("sshpass")!=None)
+    if ssh and not args.dry_run:
+        cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
+        if hasSSHpass:
+            cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( cmd2 )
         reallyDo = not args.dry_run
         if reallyDo:
             o = CMD.getoutput ( cmd2 )
@@ -257,7 +263,9 @@ def main():
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         #print ( "%s[publishDatabasePickle] then do also manually:%s" % \
         #        ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        cmd = f"sshpass -f {home}/.ssh/lxplus ssh lxplus.cern.ch smodels/www/database/create.py"
+        cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
+        if hasSSHpass:
+            cmd = f"sshpass -f {home}/.ssh/lxplus {cmd}"
         CMD.getoutput ( cmd )
         print ( "[publishDatabasePickle] done:", cmd )
         if args.finalize_commands:

@@ -69,8 +69,8 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     filtered = filterFastLimFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     # dbverold = dbverold.replace(".","")
-    db.subs[0].activeResults = None    
-    db.subs[0].allExpResults = filtered
+    db.subs[0]._activeResults = filtered[:]    
+    db.subs[0]._allExpResults = filtered
     if invert:
         db.subs[0].txt_meta.databaseVersion = "fastlim" + dbverold
     db.subs = [ db.subs[0] ]
@@ -94,8 +94,8 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
             len(db.expResultList), "results" )
     filtered = filterNonAggregatedFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
-    db.subs[0].allExpResults = filtered
-    db.subs[0].activeResults = None    
+    db.subs[0]._allExpResults = filtered
+    db.subs[0]._activeResults = filtered[:]    
     if invert:
         db.subs[0].txt_meta.databaseVersion = "nonaggregated" + dbverold
     db.subs = [ db.subs[0] ]
@@ -243,8 +243,8 @@ def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     olders = db.expResultList
     supers = filterSupersededFromList ( olders, invert )
     print('Found %i non-superseded results' %len(supers))
-    db.subs[0].allExpResults = supers
-    db.subs[0].activeResults = None
+    db.subs[0]._allExpResults = supers
+    db.subs[0]._activeResults = supers[:]
     db.subs = [ db.subs[0] ]
     print ( "[databaseManipulations] after removal of superseded",len(db.expResultList),
             "results" )
