@@ -112,7 +112,9 @@ def main():
     picklefile = dbname
     if not args.build:
         d = Database ( dbname, discard_zeroes=discard_zeroes )
-    if args.build:
+        dbver = d.databaseVersion
+        picklefile = dbname
+    else:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
@@ -125,38 +127,41 @@ def main():
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
         dbver = d.databaseVersion
-        if args.remove_superseded:
-            # e = copy.deepcopy( d )
-            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
-            e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
-            print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
-            d = removeSupersededFromDB ( d )
-        if args.remove_fastlim:
-            # e = copy.deepcopy( d )
-            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
-            ## create fastlim only
-            e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
-            d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
-            d.pcl_meta.hasFastLim = False
-            d.txt_meta.hasFastLim = False
-            d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
-            e.subs[0].databaseVersion="fastlim"+dbver
-        if args.remove_nonaggregated:
-            # e = copy.deepcopy( d )
-            e = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
-            ## create fastlim only
-            e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
-            d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
-            d.pcl_meta.hasFastLim = False
-            d.txt_meta.hasFastLim = False
-            d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
-            e.subs[0].databaseVersion="nonaggregated"+dbver
-        if not args.skipValidation:
-            validated, which = checkNonValidated(d)
-            has_nonValidated = validated
-        else:
-            has_nonValidated = False
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+      
+
+    if args.remove_superseded:
+        # e = copy.deepcopy( d )
+        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
+        print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
+        d = removeSupersededFromDB ( d )
+    if args.remove_fastlim:
+        # e = copy.deepcopy( d )
+        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        ## create fastlim only
+        e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
+        d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
+        d.pcl_meta.hasFastLim = False
+        d.txt_meta.hasFastLim = False
+        d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+        e.subs[0].databaseVersion="fastlim"+dbver
+    if args.remove_nonaggregated:
+        # e = copy.deepcopy( d )
+        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )   
+        ## create fastlim only
+        e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
+        d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
+        d.pcl_meta.hasFastLim = False
+        d.txt_meta.hasFastLim = False
+        d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+        e.subs[0].databaseVersion="nonaggregated"+dbver
+    if not args.skipValidation:
+        validated, which = checkNonValidated(d)
+        has_nonValidated = validated
+    else:
+        has_nonValidated = False
+    
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
@@ -243,7 +248,7 @@ def main():
     home = os.environ["HOME"]
     import shutil
     hasSSHpass = (shutil.which("sshpass")!=None)
-    if ssh:
+    if ssh and not args.dry_run:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
         if hasSSHpass:
             cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
