@@ -61,7 +61,6 @@ def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
     """
     has_nonValidated = False
-    database.selectExpResults(useNonValidated=True )
     expResults = database.expResultList
     has_nonValidated = False
     nonValidateds = set()
@@ -137,7 +136,6 @@ def main():
         import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
-<<<<<<< HEAD
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True,
                        force_load = force_load )
         if args.txnamevalues:
@@ -192,7 +190,10 @@ def main():
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
 =======
         d = Database(dbname, progressbar=True)
-    dbver = d.databaseVersion
+        dbver = d.databaseVersion
+        picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
+      
+    print('BBBBBLA',args.remove_superseded)
     if args.remove_superseded:
         # e = copy.deepcopy( d )
         e = Database(dbname, progressbar=True)
@@ -225,7 +226,6 @@ def main():
     else:
         has_nonValidated = False
     picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
->>>>>>> ba5e18de9 (Small improvement in publishPickle)
 
     if args.remove_superseded:
         # e = copy.deepcopy( d )
@@ -369,6 +369,7 @@ def main():
         print ( a )
 
     home = os.environ["HOME"]
+    import shutil
     hasSSHpass = (shutil.which("sshpass")!=None)
     if ssh and not args.dry_run:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
