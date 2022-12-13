@@ -2,7 +2,8 @@
 
 """
 .. module:: uglyPlots
-   :synopsis: Main method for creating ugly plots
+   :synopsis: Main method for creating ugly plots, 
+              the (obsolete) ROOT backend
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
