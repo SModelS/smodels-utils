@@ -79,7 +79,11 @@ class Lister:
             n_anas.add ( expId )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )
-            for d in expR.getValuesFor ( "dataId" ):
+            #dataIds = expR.getValuesFor ( "dataId" )
+            #print ( ">>> dataIds", dataIds )
+            dataIds = [ x.dataInfo.dataId for x in expR.datasets if x != None ]
+            # print ( ">>> XataIds", dataIds )
+            for d in dataIds:
                 ds = expR.getDataset ( d )
                 n_results += 1
                 if ds == None:
