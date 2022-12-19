@@ -26,6 +26,19 @@ try:
 except:
     from backwardCompatibility import removeUnits
 
+import time
+rt0 = [ time.time() ]
+
+def timeStamp ( comment, t = None ):
+    if t == "start":
+        t0 = time.time()
+        rt0[0] = t0
+        t = t0
+    if t == None:
+        t = time.time()
+    dt = t-rt0[0]
+    print ( f"{dt:.2f}: {comment}" )
+
 def getColormap():
     """ our matplotlib colormap for pretty plots """
     # return plt.cm.RdYlBu_r
