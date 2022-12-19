@@ -464,7 +464,7 @@ class Lister:
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags
         self.includeFastlim = args.fastlim
-        self.expRes = self.database.getExpResults ( useSuperseded = self.includeSuperseded )
+        self.expRes = self.database.getExpResults ( )
         if not self.includeSuperseded:
             self.expRes = manips.filterSupersededFromList ( self.expRes )
         if not self.includeFastlim:
