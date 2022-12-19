@@ -189,11 +189,12 @@ class MetaInfoInput(Locker):
                     max_datasets, aggregate, aggprefix )
         else:
             try:
-                import ROOT
-                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
+                import uproot
+                handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
             except ModuleNotFoundError as e:
-                handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
+                logger.error ( "could not import uproot, trying pyroot now" )
+                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
 
         if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
