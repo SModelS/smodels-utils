@@ -82,6 +82,10 @@ class Lister:
             for d in expR.getValuesFor ( "dataId" ):
                 ds = expR.getDataset ( d )
                 n_results += 1
+                if ds == None:
+                    print ( f"warning, {expR.id()},{d} is empty" )
+                    # sys.exit(-1)
+                    continue
                 n_maps += len ( ds.txnameList )
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
         self.f.write ( "List of analyses and topologies in the SMS results database, " )
