@@ -77,8 +77,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
             valPlot.saveData()
         if pretty not in [ "dictonly" ]:
             valPlot.savePlot( fformat = "png" )
-        if True and pretty not in [ "dictonly" ]:
-        # if options["pngAlso"] and pretty not in [ "dictonly" ]:
+        if options["pdfAlso"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
     from smodels_utils.helper.rootTools import destroyRoot
     destroyRoot()
@@ -86,9 +85,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
         valPlot.getUglyPlot()
         if options["generateData"]:
             valPlot.saveData()
-        valPlot.savePlot()
-        if options["pngAlso"]:
-            valPlot.savePlot(fformat="png")
+        valPlot.savePlot( fformat = "png" )
+        if options["pdfAlso"]:
+            valPlot.toPdf()
     destroyRoot()
     return True
 
@@ -508,12 +507,13 @@ if __name__ == "__main__":
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
                 "pngAlso": False, ## only pdf plots?
+                "pdfAlso": True, ## only png plots?
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
                 "show": False, ## show image after producing it?
                 "backend": "native", ## backend, can be ROOT or native
-                "interpolationType": "linear", ## interpolation type for matplotlib plots
+                "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
     }
     if parser.has_section("options"):
@@ -530,6 +530,8 @@ if __name__ == "__main__":
             options["drawExpected"] = drawExpected
         if parser.has_option("options","pngPlots"):
             options["pngAlso"] = parser.getboolean("options", "pngPlots" )
+        if parser.has_option("options","pdfPlots"):
+            options["pdfAlso"] = parser.getboolean("options", "pdfPlots" )
         if parser.has_option("options","backend"):
             options["backend"] = parser.get("options", "backend" )
         options["expectationType"] = "posteriori"

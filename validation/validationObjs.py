@@ -895,7 +895,7 @@ class ValidationPlot():
     def show ( self, filename ):
         """ we were asked to also show <filename> """
         term = os.environ["TERM"]
-        if not self.options["show"] and not term == "xterm-kitty":
+        if not self.options["show"] or not term == "xterm-kitty":
             return
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
@@ -923,10 +923,13 @@ class ValidationPlot():
             vDir = os.path.join(self.expRes.path,'validation')
         else: vDir = validationDir
         oldfilename = self.getPlotFileName(vDir,"png")
+        if self.pretty:
+            oldfilename = oldfilename.replace('.png','_pretty.png')
         newfilename = oldfilename.replace(".png",".pdf")
         command = f"convert {oldfilename} {newfilename}"
         import subprocess
         o = subprocess.getoutput ( command )
+        # print ( "toPdf", command, o )
 
     def savePlot(self,validationDir=None,fformat='png'):
         """
@@ -957,6 +960,7 @@ class ValidationPlot():
 
         filename = self.getPlotFileName(vDir,fformat)
 
+
         if not self.pretty:
             logger.info ( "saving plot in %s" % filename )
             self.savefig(filename)
@@ -972,13 +976,19 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
             self.savefig ( filename )
             addLogo ( filename )
-            filename = filename.replace('.'+fformat,'.png')
+            newfilename = filename.replace('.'+fformat,'.pdf')
+            if self.options["pdfAlso"]:
+               cmd = f"convert {filename} {newfilename}" 
+               import subprocess
+               o = subprocess.getoutput ( cmd )
+            """
             logger.debug ( "saving plot in %s (and pdf and root)" % filename )
             self.savefig ( filename )
             addLogo ( filename )
             #filename = filename.replace('.png','.root')
             #self.savefig ( filename )
             # addLogo ( filename )
+            """
         self.show ( filename )
 
         return True
