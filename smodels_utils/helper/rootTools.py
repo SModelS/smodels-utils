@@ -7,7 +7,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-    
+
 import logging as logger
 
 def getRootVersion ( astuple=False, useimport=False ):
@@ -40,14 +40,17 @@ def boundingBoxIsFinite ( bb ):
     return True
 
 def destroyRoot():
-    """ its one of the ROOT wtf's """
+    """ its one of the ROOT wtf's
+    :returns: true, if it found ROOT and destroyed it, else false
+    """
     try:
         import ROOT
     except ImportError as e:
-        # logger.warning ( "could not import ROOT" ) 
-        return
+        # logger.warning ( "could not import ROOT" )
+        return False
     for i in ROOT.gROOT.GetListOfCanvases():
         i.Destructor()
+    return True
 
 def addROOTPointInFront ( curve, x, y ):
     """ add a point at position 0 in tgraph """
@@ -364,7 +367,7 @@ def setROOTColorPalette():
     try:
         import ROOT
     except ImportError as e:
-        # logger.warning ( "could not import ROOT" ) 
+        # logger.warning ( "could not import ROOT" )
         return
     #Set nice ROOT color palette for temperature plots:
     stops = [0.00, 0.34, 0.61, 0.84, 1.00]
