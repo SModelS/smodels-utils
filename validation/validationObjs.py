@@ -917,7 +917,18 @@ class ValidationPlot():
         if hasattr ( self.plot, "savefig" ):
             self.plot.savefig(filename)
 
-    def savePlot(self,validationDir=None,fformat='pdf'):
+    def toPdf ( self, validationDir=None ):
+        """ convert from png to pdf (new, for uproot) """
+        if not validationDir:
+            vDir = os.path.join(self.expRes.path,'validation')
+        else: vDir = validationDir
+        oldfilename = self.getPlotFileName(vDir,"png")
+        newfilename = oldfilename.replace(".png",".pdf")
+        command = f"convert {oldfilename} {newfilename}"
+        import subprocess
+        o = subprocess.getoutput ( command )
+
+    def savePlot(self,validationDir=None,fformat='png'):
         """
         Saves the plot in the format specified in the validationDir folder.
         If the folder does not exist, it will be created.

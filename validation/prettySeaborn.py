@@ -270,9 +270,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T = np.asarray ( T )
         return interpolate_missing_pixels ( T, np.isnan(T), interpolation, \
             fill_value=fill_value )
-    interpolation = "linear"
-    if "interpolationType" in options:
-        interpolation = options["interpolationType"]
+    interpolation = options["interpolationType"]
     T = interpolateOverMissing ( T, float("nan"), interpolation )
     vT = interpolateOverMissing ( T, -10., interpolation )
     eT = interpolateOverMissing ( eT, float("nan"), interpolation )

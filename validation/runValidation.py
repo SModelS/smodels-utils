@@ -76,9 +76,10 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
             # if ondemand we save also, new points might have been added
             valPlot.saveData()
         if pretty not in [ "dictonly" ]:
-            valPlot.savePlot()
-        if options["pngAlso"] and pretty not in [ "dictonly" ]:
-            valPlot.savePlot(fformat="png")
+            valPlot.savePlot( fformat = "png" )
+        if True and pretty not in [ "dictonly" ]:
+        # if options["pngAlso"] and pretty not in [ "dictonly" ]:
+            valPlot.toPdf()
     from smodels_utils.helper.rootTools import destroyRoot
     destroyRoot()
     if pretty in [ False ]:
@@ -512,11 +513,14 @@ if __name__ == "__main__":
                 "model": "default", ## which model to use (default = mssm)
                 "show": False, ## show image after producing it?
                 "backend": "native", ## backend, can be ROOT or native
+                "interpolationType": "linear", ## interpolation type for matplotlib plots
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
     }
     if parser.has_section("options"):
         if parser.has_option("options","ncpus"):
             options["ncpus"] = parser.getint("options","ncpus")
+        if parser.has_option("options","interpolationType"):
+            options["interpolationType"]=parser.get("options","interpolationType")
         if parser.has_option("options","drawExpected"):
             drawExpected = parser.get("options","drawExpected")
             if drawExpected in [ "1", "true", "True", True, 1, "yes" ]:
