@@ -56,9 +56,7 @@ class SmsDictWriter:
         if self.private:
             protected = "-All:read"
         self.f.write (
-"""
-
-# SMS dictionary
+"""# SMS dictionary
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
