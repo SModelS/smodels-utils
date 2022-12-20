@@ -269,6 +269,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 for res in results:
                     ID = res.globalInfo.id
                     ID = ID.replace("-agg","" )
+                    if True:
+                        ID = ID.replace("-strong","").replace("-ewk","")
                     if ID in hi:
                         continue
                     #ID = ID.replace("CMS-","**C**-" )

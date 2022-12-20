@@ -125,6 +125,9 @@ class Writer:
         ana2n = ana2.globalInfo.id
         ana1n = ana1n.replace("-agg","" )
         ana2n = ana2n.replace("-agg","" )
+        if True:
+            ana1n = ana1n.replace("-strong","").replace("-ewk","")
+            ana2n = ana2n.replace("-strong","").replace("-ewk","")
         return ana1n == ana2n
 
     def addColor ( self, text ):

@@ -76,6 +76,8 @@ class Lister:
         for expR in self.expRes:
             self.stats.add ( expR.id() )
             expId = expR.id().replace("-agg","")
+            if True:
+                expId = expId.replace("-strong","").replace("-ewk","")
             n_anas.add ( expId )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )

@@ -28,6 +28,8 @@ def discussExperiment ( anas, experiment, title, verbose ):
     for expRes in anas:
         Id = expRes.globalInfo.id
         Id = Id.replace("-agg","")
+        if True:
+            Id = Id.replace("-strong","").replace("-ewk","")
         contact = ""
         if hasattr ( expRes.globalInfo, "contact" ):
             contact = expRes.globalInfo.contact
