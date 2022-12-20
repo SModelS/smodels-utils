@@ -13,9 +13,10 @@
 
 ## python2 needed because of pyfeyn!
 
-from __future__ import print_function
+# from __future__ import print_function
 import setPath
 from smodels.experiment.databaseObj import Database
+from smodels_utils.helper.various import removeAnaIdSuffices
 import os, time
 
 try:
@@ -267,10 +268,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 l = []
                 hi = [] ## remove dupes
                 for res in results:
-                    ID = res.globalInfo.id
-                    ID = ID.replace("-agg","" )
-                    if True:
-                        ID = ID.replace("-strong","").replace("-ewk","")
+                    ID = removeAnaIdSuffices ( res.globalInfo.id )
                     if ID in hi:
                         continue
                     #ID = ID.replace("CMS-","**C**-" )

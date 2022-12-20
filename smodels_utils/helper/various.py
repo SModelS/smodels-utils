@@ -11,6 +11,12 @@
 import os, sys
 import logging as logger
 
+def removeAnaIdSuffices ( anaId ):
+    """ given  analysis id <anaId>, remove all kinds of suffices """
+    x = anaId.replace("-agg","")
+    x = x.replace("-strong","").replace("-ewk","")
+    return x
+
 def round_to_n ( x, n ):
     """ round x to n significant digits """
     if x in [ None, 0. ]:

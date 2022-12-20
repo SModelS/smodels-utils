@@ -19,7 +19,7 @@ import sys, os, time
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
-from smodels_utils.helper.various import hasLLHD
+from smodels_utils.helper.various import hasLLHD, removeAnaIdSuffices
 from smodels_utils.helper import databaseManipulations as manips
 
 class Lister:
@@ -75,9 +75,7 @@ class Lister:
         n_anas = set()
         for expR in self.expRes:
             self.stats.add ( expR.id() )
-            expId = expR.id().replace("-agg","")
-            if True:
-                expId = expId.replace("-strong","").replace("-ewk","")
+            expId = removeAnaIdSuffices ( expR.id() )
             n_anas.add ( expId )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )
@@ -126,7 +124,7 @@ class Lister:
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
                     for ana in a:
-                        shortid = ana.globalInfo.id.replace("-agg","")
+                        shortid = removeAnaIdSuffices ( ana.globalInfo.id )
                         anas[exp].add ( shortid )
             self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
 
@@ -135,7 +133,7 @@ class Lister:
                     nMaps = 0
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
-                    aids = set ( [ x.globalInfo.id.replace("-agg","") for x in a ] )
+                    aids = set ( [ removeAnaIdSuffices ( x.globalInfo.id ) for x in a ] )
                     a_fastlim = 0
                     nres = 0
                     nres_hscp = set()
@@ -249,8 +247,7 @@ class Lister:
             dotlessv = version.replace(".","")
         keys, anadict = [], {}
         for ana in anas:
-            id = ana.globalInfo.id
-            id = id.replace( "-agg", "" )
+            id = removeAnaIdSuffices ( ana.globalInfo.id )
             xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
             # print ( "sqrts,xsqrts=", sqrts, xsqrts )
             if xsqrts != sqrts:
@@ -342,8 +339,7 @@ class Lister:
             if not sId.endswith ( "-eff" ) and not sId.endswith( "-ma5" ) and \
                not sId.endswith ( "-agg" ):
                    sId += "-eff"
-            if Id.endswith ( "-agg" ):
-                Id = Id.replace("-agg","")
+            Id = removeAnaIdSuffices ( Id )
             self.f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, sId ) )
             if not hasattr ( ana.globalInfo, "prettyName" ):
                 print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )

@@ -21,6 +21,7 @@ from smodels.tools.physicsUnits import fb, TeV
 from smodels_utils.helper.various import hasLLHD
 from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList
+from smodels_utils.helper.various import removeAnaIdSuffices
 from smodels_utils.helper.bibtexTools import BibtexWriter
 import IPython
 
@@ -121,13 +122,10 @@ class Writer:
         self.listOfAnalyses = ers
 
     def sameAnaIds ( self, ana1, ana2 ):
-        ana1n = ana1.globalInfo.id
-        ana2n = ana2.globalInfo.id
-        ana1n = ana1n.replace("-agg","" )
-        ana2n = ana2n.replace("-agg","" )
-        if True:
-            ana1n = ana1n.replace("-strong","").replace("-ewk","")
-            ana2n = ana2n.replace("-strong","").replace("-ewk","")
+        """ check if analysis ids are identical, *after* removing all
+            the suffices """
+        ana1n = removeAnaIdSuffices ( ana1.globalInfo.id )
+        ana2n = removeAnaIdSuffices ( ana2.globalInfo.id )
         return ana1n == ana2n
 
     def addColor ( self, text ):
@@ -147,8 +145,7 @@ class Writer:
         if sqrts != self.lasts and self.lasts != None:
             lines[0] = "\\hline\n"
         ananr=""
-        anaid = ana.globalInfo.id
-        anaid = anaid.replace("-agg","")
+        anaid = removeAnaIdSuffices ( ana.globalInfo.id )
         if anaid != self.last_ana:
             self.n_anas += 1
             self.last_ana = anaid
@@ -218,7 +215,8 @@ class Writer:
         #if hasComb:
         #    self.currentcolor = "green"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
-        gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
+        gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","")
+        gi_id = removeAnaIdSuffices ( gi_id )
         Url = ana.globalInfo.url
         if " " in Url: Url = Url[:Url.find(" ")]
         #if "ATLAS-CONF-2013-093" in Url:

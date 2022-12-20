@@ -16,6 +16,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels_utils.helper import databaseManipulations as manips
+from smodels_utils.helper.various import removeAnaIdSuffices
 setLogLevel("debug")
 
 def discussExperiment ( anas, experiment, title, verbose ):
@@ -26,10 +27,7 @@ def discussExperiment ( anas, experiment, title, verbose ):
     n_results_ul = 0
     n_results_em = 0
     for expRes in anas:
-        Id = expRes.globalInfo.id
-        Id = Id.replace("-agg","")
-        if True:
-            Id = Id.replace("-strong","").replace("-ewk","")
+        Id = removeAnaIdSuffices ( expRes.globalInfo.id )
         contact = ""
         if hasattr ( expRes.globalInfo, "contact" ):
             contact = expRes.globalInfo.contact
