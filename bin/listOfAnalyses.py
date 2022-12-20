@@ -45,7 +45,9 @@ class Lister:
         if hasattr ( B.globalInfo, "jsonFiles" ):
             return "json"
         if hasattr ( B.globalInfo, "covariance" ):
-            return "cov."
+            if hasattr ( B.datasets[0].dataInfo, "thirdMoment" ):
+                return "SLv2"
+            return "SLv1"
         return ""
 
     def header( self ):
@@ -106,7 +108,7 @@ class Lister:
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
         self.f.write ( "<a name='A2'>(2)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         self.f.write ( "<a name='A3'>(3)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'cov' = a covariance matrix for a simplified likelihood. 'json' = full likelihoods as pyhf json files.\n" )
+        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihoodv1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n" )
         if self.includeFastlim:
             self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
