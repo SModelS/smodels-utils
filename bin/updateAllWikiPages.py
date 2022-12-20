@@ -24,8 +24,13 @@ def exec(cmd, dry_run ):
 def gprint ( line ):
     print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
 
-def gitPush( dry_run ):
-    cmd = "cd ../../smodels.github.io/; git pull; git commit -am 'automated update'; git push"
+def gitPush( dry_run, commit ):
+    """ git commit and git push 
+    :param commit: commit message. if None, then do not commit
+    """
+    if commit == None:
+        return
+    cmd = f"cd ../../smodels.github.io/; git pull; git commit -am '{commit}'; git push"
     print ( "[updateAllWikiPages.py] %s" % cmd )
     if dry_run:
         return
@@ -52,8 +57,8 @@ def main():
     argparser.add_argument('-R', '--reference_database', help='path to reference database  [../../smodels-database-release]', 
                     type=str, default="../../smodels-database-release" )
     argparser.add_argument ( '-c', '--commit', 
-            help='git-commit and git-push to smodels.github.io',
-            action='store_true' )
+            help='git-commit and git-push to smodels.github.io (specify commit msg)',
+            type=str, default = None )
     argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     A = argparser.parse_args()
     #db = "~/git/smodels-database/"
@@ -110,8 +115,7 @@ def main():
     if A.non_versioned:
         exec ( cmd + [ "-s", "-f" ], A.dry_run )
         exec ( cmd + [ "--ugly" ], A.dry_run )
-    if A.commit:
-        gitPush( A.dry_run )
+    gitPush( A.dry_run, A.commit )
 
 if __name__ == "__main__":
     main()
