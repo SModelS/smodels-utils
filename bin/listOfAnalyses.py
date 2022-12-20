@@ -45,7 +45,7 @@ class Lister:
         if hasattr ( B.globalInfo, "jsonFiles" ):
             return "json"
         if hasattr ( B.globalInfo, "covariance" ):
-            if hasattr ( B.datasets[0].dataInfo, "thirdMoment" ):
+            if hasattr ( B.datasets[0].dataInfo, "thirdMoment" ) and B.datasets[0].dataInfo.thirdMoment != None:
                 return "SLv2"
             return "SLv1"
         return ""
