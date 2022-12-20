@@ -441,7 +441,8 @@ class DataHandler(object):
         if self.allowNegativeValues:
             return True
         for value in values:
-            if type(value) not in [ float, np.float64, int, np.int, np.float32 ]:
+            if not isinstance ( value, ( np.floating, float, int, np.integer) ):
+#            if type(value) not in [ float, np.float64, int, np.int32, np.int64, np.int16, np.float32, np.float16 ]:
                 print ( f"[dataHandlerObjects] value {value}, {type(value)} cannot be cast to float." )
                 if type(value) == str and "{" in value:
                     print ( "[dataHandlerObjects] did you try to parse an embaked file as a csv file maybe?" )
