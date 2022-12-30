@@ -425,7 +425,7 @@ def getSetupReinterpretationForum():
             "dictname": "reinterpret.dict",
             "output": "combo_rif.png",
 #"murange": (-4,5),
-            "murange": (-.7,.7),
+            "murange": (-.5,.7),
     }
     ret["addjitter"]=0.
     ret["title"]="likelihoods, TChiWZ model"
@@ -587,6 +587,7 @@ def getSetupTChiWZ09():
             "murange": (-1,2),
     }
     ret["addjitter"]=0.
+    ret["title"]="likelihoods, TChiWZ model"
     ret["addVerticalLabels"]=False
     return ret
 
@@ -665,7 +666,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
         if Id == "combined":
             continue
         args = { "ls": "-" }
-        if "sr combo" in Id or "pyhf combo" in Id:
+        if "sr combo" in Id or "pyhf" in Id:
             args["linewidth"]=2
             args["c"]="r"
         alllhds += list( l.values() )
@@ -692,7 +693,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
     if setup["addjitter"] and False:
         addJitter ( prody )
     if setup["plotproduct"]:
-       label = r"$\Pi_i l_i$ [tpc]"
+       label = r"$\Pi_i l_i$" # [tpc]"
        plt.plot ( prodllhd.keys(), prody, c="k", label=label, linewidth=3 )
 
     if "mu_hat" in fits:
@@ -797,10 +798,11 @@ def plotLlhds ( llhds, fits, uls, setup ):
     if "label" in setup:
         label = setup["label"]+" "
     title = f"{label}likelihoods for {slha}"
+    print  ("setup", setup )
     if "title" in setup:
         title = setup["title"]
     plt.title ( title )
-    plt.legend()
+    plt.legend( loc=(.53,.8))
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
     output = "combo.png"
@@ -828,7 +830,7 @@ def createLlhds ( tpreds, setup ):
     for t in tpreds:
         dId = "sr combo"
         if hasattr ( t.dataset.globalInfo, "jsonFiles" ):
-            dId = "pyhf combo"
+            dId = "pyhf"# combo"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
         if dId == None:
@@ -1006,7 +1008,7 @@ def testAnalysisCombo( setup ):
     if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
         Id = f"{ts[0].dataset.globalInfo.id}:sr combo"
         if hasattr ( ts[0].dataset.globalInfo, "jsonFiles" ):
-            Id = f"{ts[0].dataset.globalInfo.id}:pyhf combo"
+            Id = f"{ts[0].dataset.globalInfo.id}:pyhf"
         if Id in sums:
             S=sums[Id]
             fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
