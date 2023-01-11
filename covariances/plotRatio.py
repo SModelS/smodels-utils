@@ -372,9 +372,17 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
-    plt.savefig ( figname )
-    plt.kittyPlot()
+    try:
+        plt.savefig ( figname )
+    except (RuntimeError,FileNotFoundError) as e:
+        print ( f"[plotRatio] error when calling savefig: {e}" )
+        if "tex" in str(e).lower():
+            print ( f"[plotRatio] consider loading/installing latex, eg via:" )
+            print ( f"ml load texlive/20210324-gcccore-10.2.0 # on the clip cluster" )
+            print ( f"sudo apt install texlive # on debian based linux distros" )
+            sys.exit()
     if options["show"]:
+        plt.kittyPlot()
         plt.show()
     if copy:
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
