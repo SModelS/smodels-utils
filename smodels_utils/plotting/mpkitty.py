@@ -34,6 +34,31 @@ def importBackend():
 
 importBackend()
 import matplotlib.pyplot as plt
+
+def timg( filename ):
+    """ use timg to show filename in the terminal """
+    import os
+    if not options["hasKittyBackend"] and not "kitty" in os.environ["TERM"]:
+        return
+    from shutil import which
+    exe = which ("timg", path=f"/usr/bin:{os.environ['PATH']}" )
+    if exe is None:
+        return
+    import subprocess
+    ver = subprocess.getoutput ( f"{exe} --version" )
+    ver = ver.replace("timg ","")
+    ver = ver.strip()
+    cols = "120"
+    if "MPLBACKEND_KITTY_SIZING" in os.environ:
+        cols = os.environ["MPLBACKEND_KITTY_SIZING"]
+    cmd = f"{exe} -pkitty -g {cols}x80 -U -W {filename}"
+    if ver.startswith ( "1.1" ):
+        cmd = f"{exe} -s 80 -c extended {filename}"
+
+    o = subprocess.getoutput ( cmd )
+    # print ( f"[mpkitty] {o}" )
+    print ( o )
+            
 def kittyPlot( filename = None ):
     deleteIt = False
     if filename == None:
@@ -43,24 +68,8 @@ def kittyPlot( filename = None ):
         # return # for now
         deleteIt = True
     plt.savefig ( filename )
-    import os
-    if options["hasKittyBackend"] or "kitty" in os.environ["TERM"]:
-        from shutil import which
-        import subprocess
-        exe = which ("timg", path=f"/usr/bin:{os.environ['PATH']}" )
-        ver = subprocess.getoutput ( f"{exe} --version" )
-        ver = ver.replace("timg ","")
-        ver = ver.strip()
-        cols = "120"
-        if "MPLBACKEND_KITTY_SIZING" in os.environ:
-            cols = os.environ["MPLBACKEND_KITTY_SIZING"]
-        cmd = f"{exe} -pkitty -g {cols}x80 -U -W {filename}"
-        if ver.startswith ( "1.1" ):
-            cmd = f"{exe} -s 80 -c extended {filename}"
-
-        o = subprocess.getoutput ( cmd )
-        print ( f"[mpkitty] {o}" )
+    timg ( filename )
     if deleteIt and os.path.exists ( filename ):
         os.unlink ( filename )
-            
+
 from matplotlib.pyplot import *
