@@ -126,7 +126,7 @@ class Lister:
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
         pvaluesplot = self.pvaluesPlotFileName()
-        self.f.write ( f"\n![{pvaluesplot}]({pvaluesplot}?{time.time()})\n" )
+        self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
     def pvaluesPlotFileName ( self ):
         sinc = ""
