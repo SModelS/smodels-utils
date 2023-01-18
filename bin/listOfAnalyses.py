@@ -43,8 +43,8 @@ class Lister:
         poptions["show"] = True
         plotter = plotDBDict.Plotter ( poptions )
         print ( "[listOfAnalyses] ending roughviz" )
-        pngname = f"pvalues{self.includeSuperseded}_{self.dotlessv}.png"
-        cmd = f"mv tmp.png ../../smodels.github.io/images/{pngname}"
+        pvaluesplot = self.pvaluesPlotFileName()
+        cmd = f"mv tmp.png ../../smodels.github.io/{pvaluesplot}"
         os.system ( cmd )
         print ( cmd )
         os.unlink ( "dbtemp.dict" )
@@ -125,8 +125,16 @@ class Lister:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
-        pvaluesplot = f"images/pvalues{self.includeSuperseded}_{self.dotlessv}.png"
+        pvaluesplot = self.pvaluesPlotFileName()
         self.f.write ( f"![{pvaluesplot}]({pvaluesplot}?{time.time()})" )
+
+    def pvaluesPlotFileName ( self ):
+        sinc = ""
+        if self.includeSuperseded:
+            sinc = "iss"
+        pngname = f"pvalues{sinc}{self.dotlessv}.png"
+        pvaluesplot = f"images/{pngname}"
+        return pvaluesplot
 
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
