@@ -273,7 +273,7 @@ def cleanDatabase(dirname):
     for record in walker:
         File=record[0]
         # comment( "Now in %s: %s" %(File, record[1] ) )
-        removals = [ "orig", ".git", "validation", "README.rst", "__pycache__" ]
+        removals = [ "orig", ".git", "validation", "README.rst", "__pycache__", "moreValidation" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
                     "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "exclusion_lines.json", "general.comment", "README", "convert.pyc", "unused_files.txt", "convertOld.py", "plotRatios.py", "plotRatios.sh", "ratios.txt" ]
         globs = glob.glob ( f"{File}/*log" )
