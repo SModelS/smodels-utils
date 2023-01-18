@@ -47,7 +47,7 @@ class Lister:
         cmd = f"mv tmp.png ../../smodels.github.io/images/{pngname}"
         os.system ( cmd )
         print ( cmd )
-
+        os.unlink ( "dbtemp.dict" )
 
     def convert ( self, string ):
         ret = string.replace ( ">=", "&ge;" )
