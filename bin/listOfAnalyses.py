@@ -27,6 +27,28 @@ class Lister:
         self.n_homegrown = 0
         self.stats = set()
 
+    def createRoughvizPlot ( self ):
+        sys.path.insert(0,"../../protomodels/ptools")
+        sys.path.insert(0,"../../protomodels")
+        sys.path.insert(0,"../../")
+        from protomodels.ptools import expResModifier
+        print ( "[listOfAnalyses] starting roughviz" )
+        options = { "compute_ps": True, "suffix": "temp" }
+        # options["database"]="../../smodels-database" 
+        options["dbpath"]=self.dbpath
+        modifier = expResModifier.ExpResModifier ( options )
+        from protomodels.plotting import plotDBDict
+        poptions = { "topologies": None, "roughviz": True }
+        poptions["dictfile"] = "./dbtemp.dict"
+        poptions["show"] = True
+        plotter = plotDBDict.Plotter ( poptions )
+        print ( "[listOfAnalyses] ending roughviz" )
+        pngname = f"pvalues{self.includeSuperseded}_{self.dotlessv}.png"
+        cmd = f"mv tmp.png ../../smodels.github.io/database/{pngname}"
+        os.system ( cmd )
+        print ( cmd )
+
+
     def convert ( self, string ):
         ret = string.replace ( ">=", "&ge;" )
         ret = ret.replace ( "alphaT", "&alpha;<sub>T</sub>" )
@@ -61,6 +83,7 @@ class Lister:
         dotlessv = ""
         if self.add_version:
             dotlessv = version.replace(".","")
+        self.dotlessv = dotlessv
         titleplus = ""
         referToOther = "Link to list of results [including superseded and fastlim results](ListOfAnalyses%sWithSuperseded)" % dotlessv
         if self.includeSuperseded:
@@ -96,13 +119,14 @@ class Lister:
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
         self.f.write ( "List of analyses and topologies in the SMS results database, " )
         self.f.write ( f"comprising {n_maps} individual maps from {n_results} distinct signal regions, ")
-        self
         self.f.write ( f"{len(n_topos)} different SMS topologies, from a total of {len(n_anas)} analyses.\n" )
         self.f.write ( f"The list has been created from the database version `{version}.`\n")
         if self.includeFastlim:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
+        pvaluesplot = f"database/pvalues{self.includeSuperseded}_{self.dotlessv}.png"
+        self.f.write ( f"![{pvaluesplot}]({pvaluesplot}?{time.time()})" )
 
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
@@ -485,6 +509,7 @@ class Lister:
         print ( "%d home-grown now" % self.n_homegrown )
         self.footer ( )
         self.diff()
+        self.createRoughvizPlot()
         self.moveToGithub( )
         self.writeStatsFile()
 

@@ -59,7 +59,10 @@ def timg( filename ):
     # print ( f"[mpkitty] {o}" )
     print ( o )
             
-def kittyPlot( filename = None ):
+def kittyPlot( filename = None, show = True ):
+    """ save to filename, possibly also show in terminal
+    :param show: if True, then also print to terminal
+    """
     deleteIt = False
     if filename == None:
         import tempfile
@@ -68,7 +71,8 @@ def kittyPlot( filename = None ):
         # return # for now
         deleteIt = True
     plt.savefig ( filename )
-    timg ( filename )
+    if show:
+        timg ( filename )
     if deleteIt and os.path.exists ( filename ):
         os.unlink ( filename )
 
