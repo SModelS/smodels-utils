@@ -44,7 +44,7 @@ class Lister:
         plotter = plotDBDict.Plotter ( poptions )
         print ( "[listOfAnalyses] ending roughviz" )
         pngname = f"pvalues{self.includeSuperseded}_{self.dotlessv}.png"
-        cmd = f"mv tmp.png ../../smodels.github.io/database/{pngname}"
+        cmd = f"mv tmp.png ../../smodels.github.io/images/{pngname}"
         os.system ( cmd )
         print ( cmd )
 
@@ -125,7 +125,7 @@ class Lister:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
-        pvaluesplot = f"database/pvalues{self.includeSuperseded}_{self.dotlessv}.png"
+        pvaluesplot = f"images/pvalues{self.includeSuperseded}_{self.dotlessv}.png"
         self.f.write ( f"![{pvaluesplot}]({pvaluesplot}?{time.time()})" )
 
     def footer ( self ):
