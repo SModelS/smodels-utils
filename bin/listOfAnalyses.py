@@ -46,7 +46,7 @@ class Lister:
         pvaluesplot = self.pvaluesPlotFileName()
         cmd = f"mv tmp.png ../../smodels.github.io/{pvaluesplot}"
         os.system ( cmd )
-        print ( cmd )
+        print ( f"[listOfAnalyses] {cmd}" )
         os.unlink ( "dbtemp.dict" )
 
     def convert ( self, string ):
@@ -132,8 +132,9 @@ class Lister:
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
-        pngname = f"pvalues{sinc}{self.dotlessv}.png"
-        pvaluesplot = f"images/{pngname}"
+        #pngname = f"pvalues{sinc}{self.dotlessv}.png"
+        #pvaluesplot = f"images/{pngname}"
+        pvaluesplot = f"validation/{self.dotlessv}/pvalues{sinc}.png"
         return pvaluesplot
 
     def footer ( self ):
@@ -232,7 +233,7 @@ class Lister:
         cmd="mv %s ../../smodels.github.io/docs/%s.md" % \
              ( self.filename, self.filename )
         os.system ( cmd )
-        print ( cmd )
+        print ( f"[listOfAnalyses] {cmd}" )
 
     def experimentHeader ( self, experiment, Type, sqrts, nr ):
         self.f.write ( "\n" )
@@ -401,7 +402,7 @@ class Lister:
     def writeStatsFile ( self ):
         """ write out the stats file """
         statsfile = "analyses.py"
-        print ( f"Writing stats file {statsfile}." )
+        print ( f"[listOfAnalyses] Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
         f.write ( "# superseded: %d\n" % self.includeSuperseded )
         f.write ( "A=" + str ( self.stats )+"\n" )
@@ -423,7 +424,7 @@ class Lister:
         return ret
 
     def writeExperiment ( self,  experiment, sqrts ):
-        print ( "Experiment:", experiment )
+        print ( "[listOfAnalyses] Experiment:", experiment )
         for Type in [ "upperLimit", "efficiencyMap" ]:
             anas = []
             for ana in self.expRes:
@@ -451,7 +452,7 @@ class Lister:
         if len(o)==0:
             print ( "No changes in %s since last call." % self.filename )
             return
-        print ( "%s has changed (%d changes)" % ( self.filename, len(o.split() ) ) )
+        print ( "[listOfAnalyses] %s has changed (%d changes)" % ( self.filename, len(o.split() ) ) )
 
     def createSuperseded ( self ):
         """ create the database of superseded results """
@@ -509,12 +510,12 @@ class Lister:
         self.f = open ( filename, "w" )
         self.header()
         self.listTables ( )
-        print ( "Database:", self.database.databaseVersion )
+        print ( "[listOfAnalyses] Database:", self.database.databaseVersion )
         experiments=[ "ATLAS", "CMS" ]
         for sqrts in [ 13, 8 ]:
             for experiment in experiments:
                 self.writeExperiment ( experiment, sqrts )
-        print ( "%d home-grown now" % self.n_homegrown )
+        print ( "[listOfAnalyses] %d home-grown now" % self.n_homegrown )
         self.footer ( )
         self.diff()
         self.createRoughvizPlot()
