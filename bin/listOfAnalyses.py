@@ -41,6 +41,7 @@ class Lister:
         poptions = { "topologies": None, "roughviz": True }
         poptions["dictfile"] = "./dbtemp.dict"
         poptions["show"] = True
+        poptions["title"] = ""
         plotter = plotDBDict.Plotter ( poptions )
         print ( "[listOfAnalyses] ending roughviz" )
         pvaluesplot = self.pvaluesPlotFileName()
@@ -126,7 +127,8 @@ class Lister:
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
         pvaluesplot = self.pvaluesPlotFileName()
-        self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
+        self.f.write ( f"\n<p align='center'><img src='../{pvaluesplot}?{time.time()}' alt='p-values plot' width='400' /></p>\n" )
+        # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
     def pvaluesPlotFileName ( self ):
         sinc = ""
