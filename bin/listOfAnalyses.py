@@ -42,6 +42,9 @@ class Lister:
         poptions["dictfile"] = "./dbtemp.dict"
         poptions["show"] = True
         poptions["title"] = ""
+        poptions["Zmax"] = 3.25
+        poptions["nbins"] = 13
+        poptions["options"] = {'ylabel':'# signal regions'}
         # poptions["roughviz"] = False
         poptions["significances"] = True
         poptions["outfile"] = "tmp.png"
