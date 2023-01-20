@@ -27,12 +27,12 @@ class Lister:
         self.n_homegrown = 0
         self.stats = set()
 
-    def createRoughvizPlot ( self ):
+    def metaStatisticsPlot ( self ):
         sys.path.insert(0,"../../protomodels/ptools")
         sys.path.insert(0,"../../protomodels")
         sys.path.insert(0,"../../")
         from protomodels.ptools import expResModifier
-        print ( "[listOfAnalyses] starting roughviz" )
+        # print ( "[listOfAnalyses] starting roughviz" )
         options = { "compute_ps": True, "suffix": "temp" }
         # options["database"]="../../smodels-database" 
         options["dbpath"]=self.dbpath
@@ -42,8 +42,11 @@ class Lister:
         poptions["dictfile"] = "./dbtemp.dict"
         poptions["show"] = True
         poptions["title"] = ""
+        # poptions["roughviz"] = False
+        poptions["significances"] = True
+        poptions["outfile"] = "tmp.png"
         plotter = plotDBDict.Plotter ( poptions )
-        print ( "[listOfAnalyses] ending roughviz" )
+        #print ( "[listOfAnalyses] ending roughviz" )
         pvaluesplot = self.pvaluesPlotFileName()
         cmd = f"mv tmp.png ../../smodels.github.io/{pvaluesplot}"
         os.system ( cmd )
@@ -520,7 +523,7 @@ class Lister:
         print ( "[listOfAnalyses] %d home-grown now" % self.n_homegrown )
         self.footer ( )
         self.diff()
-        self.createRoughvizPlot()
+        self.metaStatisticsPlot()
         self.moveToGithub( )
         self.writeStatsFile()
 
