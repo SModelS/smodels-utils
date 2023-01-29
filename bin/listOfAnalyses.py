@@ -38,13 +38,14 @@ class Lister:
         options["dbpath"]=self.dbpath
         modifier = expResModifier.ExpResModifier ( options )
         from protomodels.plotting import plotDBDict
-        poptions = { "topologies": None, "roughviz": True }
+        poptions = { "topologies": None, "roughviz": False }
         poptions["dictfile"] = "./dbtemp.dict"
         poptions["show"] = True
         poptions["title"] = ""
         poptions["Zmax"] = 3.25
         poptions["nbins"] = 13
-        poptions["options"] = {'ylabel':'# signal regions'}
+        poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
+           'plotStats': False }
         # poptions["roughviz"] = False
         poptions["significances"] = True
         poptions["outfile"] = "tmp.png"
