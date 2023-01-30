@@ -51,8 +51,8 @@ class Lister:
         poptions["outfile"] = "tmp.png"
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
-        pvaluesplot = self.pvaluesPlotFileName()
-        cmd = f"mv tmp.png ../../smodels.github.io/{pvaluesplot}"
+        sigsplot = self.significancesPlotFileName()
+        cmd = f"mv tmp.png ../../smodels.github.io/{sigsplot}"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
         os.unlink ( "dbtemp.dict" )
@@ -133,17 +133,17 @@ class Lister:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
-        pvaluesplot = self.pvaluesPlotFileName()
-        self.f.write ( f"\n<p align='center'><img src='../{pvaluesplot}?{time.time()}' alt='p-values plot' width='400' /></p>\n" )
+        sigsplot = self.significancesPlotFileName()
+        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
-    def pvaluesPlotFileName ( self ):
+    def significancesPlotFileName ( self ):
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
         #pngname = f"pvalues{sinc}{self.dotlessv}.png"
         #pvaluesplot = f"images/{pngname}"
-        pvaluesplot = f"validation/{self.dotlessv}/pvalues{sinc}.png"
+        pvaluesplot = f"validation/{self.dotlessv}/significances{sinc}.png"
         return pvaluesplot
 
     def footer ( self ):
