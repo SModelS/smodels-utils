@@ -134,7 +134,7 @@ class Lister:
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
         sigsplot = self.significancesPlotFileName()
-        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><font size=-1><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution ist expected if no new physics is in the data. New physics would manifest itself as an overabundance of large significances.</sub></p>\n" )
+        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution ist expected if no new physics is in the data. New physics would manifest itself as an overabundance of large significances.</sub></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
     def significancesPlotFileName ( self ):
