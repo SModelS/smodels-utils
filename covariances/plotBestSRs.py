@@ -269,7 +269,7 @@ if __name__ == "__main__":
             help="upper bound on y axis [None]",
             type=float, default=None )
     argparser.add_argument ( "-r", "--rank",
-            help="which rank to draw [1]",
+            help="which rank to draw, e.g. leading signal region, or second, or ... [1]",
             type=int, default=1 )
     argparser.add_argument ( "-n", "--nmax",
             help="maximum numbers of SRs [6]",
