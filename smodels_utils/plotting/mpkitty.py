@@ -73,6 +73,7 @@ def kittyPlot( filename = None, show = True ):
     plt.savefig ( filename )
     if show:
         timg ( filename )
+    import os
     if deleteIt and os.path.exists ( filename ):
         os.unlink ( filename )
 
