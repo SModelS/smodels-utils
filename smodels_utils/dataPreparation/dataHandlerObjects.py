@@ -1156,7 +1156,7 @@ class DataHandler(object):
                 for yBin in yRange:
                     y = yAxis.centers()[yBin]
                     ul = hist.values()[xBin][yBin]
-                    if type(ul) in [ float, np.float, np.float32, np.float64 ]:
+                    if type(ul) in [ float, np.float32, np.float64 ]:
                         if ul == 0.: continue
                         ct+=1
                         yield [x, y, ul]
