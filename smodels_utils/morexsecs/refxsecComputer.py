@@ -484,9 +484,9 @@ class RefXSecComputer:
             else:
                 xi = [ x[i] for x in xsecs ]
             if mi < min(xi):
-                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mi, min(xi) ) )
+                logger.info ( f"{i}st mass {mi}<{min(xi)} too low to interpolate, leave it as is." )
             if mi > max(xi):
-                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mi, max(xi) ) )
+                logger.info ( f"{i}st mass {mi}>{max(xi)} too high to interpolate, leave it as is." )
                 return True
         return False
 
@@ -685,7 +685,7 @@ if __name__ == "__main__":
     if sqrts == None:
         sqrts = [ 8, 13 ]
     setLogLevel ( "debug" )
-    tool = RefXSecComputer()
+    tool = RefXSecComputer( args.verbose )
     slhapaths = args.inputfile
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None

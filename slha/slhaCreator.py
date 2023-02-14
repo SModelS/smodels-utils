@@ -298,7 +298,7 @@ class TemplateFile(object):
 
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
-                computer = RefXSecComputer()
+                computer = RefXSecComputer( self.verbose )
                 c = f"produced via slhaCreator v{self.version}"
                 if comment != None:
                     c+= f": {comment}"
