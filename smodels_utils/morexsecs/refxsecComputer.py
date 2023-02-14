@@ -616,7 +616,7 @@ class RefXSecComputer:
                 s2 = "N3"
             self.warn ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
-            if False:
+            if ewk == "degenerate":
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
