@@ -342,7 +342,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
 
-    subtitle = getDatasetDescription ( validationPlot )
+    subtitle = getDatasetDescription ( validationPlot, 35 )
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
         for ctr,x in enumerate(validationPlot.data):
             if "error" in x.keys():

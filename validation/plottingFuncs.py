@@ -159,7 +159,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
 def getDatasetDescription ( validationPlot, maxLength = 100 ):
     """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
-    subtitle = f"best of {len(validationPlot.expRes.datasets)} signal regions: "
+    subtitle = f"best of {len(validationPlot.expRes.datasets)} SRs: "
     if validationPlot.validationType == "tpredcomb":
         subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
 
@@ -172,8 +172,8 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
         if not validationPlot.txName in ds_txnames:
             continue
         dataId = str(dataset.dataInfo.dataId)
-        if len(dataId)>10:
-            dataId = dataId[:9]+"*"
+        if len(dataId)>8:
+            dataId = dataId[:7]+"*"
         subtitle+=dataId+", "
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
@@ -200,7 +200,6 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""
-    print ( "subtitle", subtitle )
         
     return subtitle
 
