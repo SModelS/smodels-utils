@@ -172,8 +172,8 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
         if not validationPlot.txName in ds_txnames:
             continue
         dataId = str(dataset.dataInfo.dataId)
-        if len(dataId)>11:
-            dataId = dataId[:8]+" ... "
+        if len(dataId)>10:
+            dataId = dataId[:9]+"*"
         subtitle+=dataId+", "
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
@@ -200,6 +200,7 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""
+    print ( "subtitle", subtitle )
         
     return subtitle
 
