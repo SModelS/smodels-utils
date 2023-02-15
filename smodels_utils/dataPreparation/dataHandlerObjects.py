@@ -793,6 +793,7 @@ class DataHandler(object):
         SR = self.objectName
         try:
             with open(self.path) as f:
+                print ( f"[dataHandler] reading {self.path} searching for {SR}" )
                 D=eval(f.read())
         except Exception as e:
             logger.error ( f"could not read {self.path}: {e}" )
