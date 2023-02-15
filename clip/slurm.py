@@ -554,7 +554,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir, cutlang,
                 args += ' --cutlang'
             f.write ( line.replace("@@ARGS@@", args ) )
         f.close()
-    with open ( "run_bakery_template.sh", "rt" ) as f:
+    templatefile = f"{codedir}/smodels-utils/clip/run_bakery_template.sh"
+    with open ( templatefile, "rt" ) as f:
         lines = f.readlines()
         f.close()
     tdir = "./temp"
