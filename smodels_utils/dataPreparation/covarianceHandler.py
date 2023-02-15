@@ -370,8 +370,7 @@ class FakeCovarianceHandler ( CovarianceHandler ):
     def __init__ ( self, stats, max_datasets=None,
                    aggregate = None, aggprefix = "ar" ):
         """ constructor.
-        :param filename: filename of root file to retrieve covariance matrix
-                         from.
+        :param stats: a dictionary containing the SR statistics
         """
         if aggregate != None or max_datasets != None:
             print ( "FIXME need to implement this" )
