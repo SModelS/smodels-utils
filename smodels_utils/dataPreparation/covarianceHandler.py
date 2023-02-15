@@ -364,3 +364,32 @@ class CSVCovarianceHandler ( CovarianceHandler ):
                         ( histoname, f.name ) )
         sys.exit()
 
+class FakeCovarianceHandler ( CovarianceHandler ):
+    """ a covariance handler that creates the covariances from statistics,
+    setting correlations to zero (for now) """
+    def __init__ ( self, stats, max_datasets=None,
+                   aggregate = None, aggprefix = "ar" ):
+        """ constructor.
+        :param filename: filename of root file to retrieve covariance matrix
+                         from.
+        """
+        if aggregate != None or max_datasets != None:
+            print ( "FIXME need to implement this" )
+            sys.exit()
+        self.aggprefix = aggprefix
+        self.datasetOrder = []
+        cov = []
+        n = len(stats.items())
+        self.n = n
+        for i,(name,values) in enumerate(stats.items()):
+            self.datasetOrder.append ( name )
+            row = [0.]*i + [ values["deltanb"]**2 ] + [0.]*(n-i-1)
+            cov.append ( row )
+        self.covariance = cov
+
+        if aggregate != None:
+            ## aggregate the stuff
+            self.aggregateThis ( aggregate )
+
+        self.removeSmallValues()
+        self.checkCovarianceMatrix()

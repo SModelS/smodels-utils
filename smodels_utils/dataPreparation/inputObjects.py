@@ -18,7 +18,8 @@ from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
 from smodels_utils.dataPreparation.covarianceHandler import \
-         UPROOTCovarianceHandler, CSVCovarianceHandler, PYROOTCovarianceHandler
+         UPROOTCovarianceHandler, CSVCovarianceHandler, PYROOTCovarianceHandler,\
+         FakeCovarianceHandler
 from smodels_utils.dataPreparation import covarianceHandler
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -184,7 +185,10 @@ class MetaInfoInput(Locker):
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         """
-        if filename.endswith ( ".csv" ):
+        if type(filename)==dict:
+            handler = FakeCovarianceHandler ( filename, max_datasets, aggregate,
+                    aggprefix )
+        elif filename.endswith ( ".csv" ):
             handler = CSVCovarianceHandler ( filename,
                     max_datasets, aggregate, aggprefix )
         else:
