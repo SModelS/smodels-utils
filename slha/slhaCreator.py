@@ -298,7 +298,7 @@ class TemplateFile(object):
 
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
-                computer = RefXSecComputer()
+                computer = RefXSecComputer( self.verbose )
                 c = f"produced via slhaCreator v{self.version}"
                 if comment != None:
                     c+= f": {comment}"
@@ -496,7 +496,7 @@ if __name__ == "__main__":
         type=str, default='@@topo@@.tar.gz' )
     argparser.add_argument ( '-C', '--comment', nargs='?', help='add a comment to all files [None]',
         type=str, default=None )
-    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino or hino [wino]',
+    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino, hino, or degenerate [wino]',
         type=str, default="wino" )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
         type=str, default='2*[[x, y]]' )

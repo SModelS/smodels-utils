@@ -484,9 +484,9 @@ class RefXSecComputer:
             else:
                 xi = [ x[i] for x in xsecs ]
             if mi < min(xi):
-                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mi, min(xi) ) )
+                logger.info ( f"{i}st mass {mi}<{min(xi)} too low to interpolate, leave it as is." )
             if mi > max(xi):
-                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mi, max(xi) ) )
+                logger.info ( f"{i}st mass {mi}>{max(xi)} too high to interpolate, leave it as is." )
                 return True
         return False
 
@@ -616,7 +616,7 @@ class RefXSecComputer:
                 s2 = "N3"
             self.warn ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
-            if False:
+            if ewk == "degenerate":
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
@@ -685,7 +685,7 @@ if __name__ == "__main__":
     if sqrts == None:
         sqrts = [ 8, 13 ]
     setLogLevel ( "debug" )
-    tool = RefXSecComputer()
+    tool = RefXSecComputer( args.verbose )
     slhapaths = args.inputfile
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None
