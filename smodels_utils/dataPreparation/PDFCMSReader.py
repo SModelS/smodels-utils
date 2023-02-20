@@ -4,6 +4,7 @@
     https://github.com/schoef/fun/blob/master/python/pdf-to-root/
 """
 
+import os, sys
 from math import log, exp
 import numpy as np
 
@@ -86,6 +87,10 @@ class PDFLimitReader():
             if not fname.endswith ( "." ):
                 fname += "."
             fname+="pdf"
+        if not os.path.exists ( fname ):
+            gname = "pdfconfigs/"+fname
+            if os.path.exists ( gname ):
+                fname = gname
         pdffile = open(fname, 'rb')
         doc = minecart.Document(pdffile)
         page = doc.get_page(0)
@@ -102,14 +107,32 @@ class PDFLimitReader():
             if shape.fill == None and shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
                 excllines.append ( shape )
             # these colored boxes have identical stroke and fill color and are neither black or white
-            if shape.fill and shape.stroke and hasattr(shape.stroke, 'color') and shape.stroke.color.as_rgb()==shape.fill.color.as_rgb():
+            #if shape.stroke and hasattr(shape.stroke, 'color'):
+                #there are two 'h' objects at the end
+                #y_vals.append(shape.path[-3])
+            #    colored_shapes.append(shape)
+            #print ( "-----" )
+            #print ( "|shape|", shape, "|fill|", shape.fill, "|stroke|", shape.stroke )
+            if not shape.fill and shape.stroke and hasattr(shape.stroke, 'color'):
+                color = shape.stroke.color.as_rgb()
+                if color in [(1,1,1), (0,0,0)]: continue
+                #print ( "+++++" )
+                #print ( "|color|", color, "path", shape.path )
+                colored_shapes.append(shape)
+            if shape.fill and shape.stroke and hasattr(shape.stroke, 'color') and \
+                    shape.stroke.color.as_rgb()==shape.fill.color.as_rgb():
+                #print ( "-----" )
+                #print ( "|shape|", shape, "|fill|", shape.fill, "|stroke|", shape.stroke )
                 if shape.fill.color.as_rgb() in [(1,1,1), (0,0,0)]: continue
                 #print (shape.fill.color.as_rgb(), len(shape.path))
                 if len(shape.path)!=6:
-                    raise RuntimeError("You need to look at this shape: %r" % shape.path)
+                    raise RuntimeError( f"You need to look at this shape, it has the wrong length ({len(shape.path)}): {shape.path}" )
                 #there are two 'h' objects at the end
                 #y_vals.append(shape.path[-3])
                 colored_shapes.append(shape)
+        if len(colored_shapes)==0:
+            print ( "[PDFCMSReader] could not find suitable shapes!" )
+            sys.exit()
         pdffile.close()
        
         # global max_x for all appropriately colored shapes 
@@ -118,7 +141,10 @@ class PDFLimitReader():
         self.z_axis_shapes = list(filter( lambda s: max_x(s)==max_x_global, colored_shapes ))
         self.z_axis_dict = {}
         for shape in self.z_axis_shapes:
-            self.z_axis_dict[tuple(shape.fill.color.as_rgb())] = { 'ymin':shape.path[0][2], 'ymax':shape.path[2][2] }
+            color = shape.stroke.color.as_rgb()
+            if shape.fill:
+                color = shape.fill.color.as_rgb()
+            self.z_axis_dict[tuple(color)] = { 'ymin':shape.path[0][2], 'ymax':shape.path[2][2] }
         self.z_axis_ymax = max( [ d['ymax'] for d in self.z_axis_dict.values() ] )
         self.z_axis_ymin = min( [ d['ymin'] for d in self.z_axis_dict.values() ] )
         self.z_max_color = next( k for k, v in self.z_axis_dict.items() if v['ymax']==self.z_axis_ymax ) 
@@ -189,7 +215,10 @@ class PDFLimitReader():
         #    print("Warning! This is the max color!")
         #if (r,g,b)==self.z_min_color:
         #    print("Warning! This is the min color!")
-        return exp( log(self.data['z']['limits'][0]) + (self.z_axis_dict[best_match]['ymin'] - self.z_axis_ymin)/(self.z_axis_ymax-self.z_axis_ymin) * ( log(self.data['z']['limits'][1])  - log(self.data['z']['limits'][0]) ) )
+        zlimits = self.data['z']['limits']
+        if self.data["z"]["log"]==True:
+            return exp( log(zlimits[0]) + (self.z_axis_dict[best_match]['ymin'] - self.z_axis_ymin)/(self.z_axis_ymax-self.z_axis_ymin) * ( log(zlimits[1])  - log(zlimits[0]) ) )
+        return zlimits[0] + (self.z_axis_dict[best_match]['ymin'] - self.z_axis_ymin)/(self.z_axis_ymax-self.z_axis_ymin) * ( zlimits[1] - zlimits[0] )
 
     def get_limit( self, x, y ):
         ''' get limit in the coordinates of the original plot
@@ -219,7 +248,8 @@ class PDFLimitReader():
                 break
 
         if this_shape:
-            return self.get_z( *this_shape.fill.color.as_rgb() )
+            return self.get_z( *this_shape.stroke.color.as_rgb() )
+            # return self.get_z( *this_shape.fill.color.as_rgb() )
         
     def __init__( self, limit_dict ): 
         self.data = limit_dict
@@ -228,8 +258,9 @@ class PDFLimitReader():
         }
         self.get_axis_dict()
 
-    def createULCsv ( self ):
-        f = open ( "ul.csv", "wt" )
+    def createCsv ( self ):
+        fname = "output.csv"
+        f = open ( fname, "wt" )
         # get the limit at the bottom right
         xrange = self.data["x"]["limits"]
         yrange = self.data["y"]["limits"]
@@ -238,15 +269,21 @@ class PDFLimitReader():
                 ul = r.get_limit(x,y)
                 if ul != None:
                     f.write ( f"{x},{y},{ul}\n" )
+        print ( f"[PDFCMSReader] wrote to {fname}" )
         f.close()
  
 if __name__ == "__main__":
+    """
     data =  {
         'name': 'CMS-SUS-19-007_Figure_010',
         'x':{'limits': (800, 2600, 50) },
         'y':{'limits': (0, 2000, 50) },
         'z':{'limits': (10**-1, 80 ), 'log':True},
         }
+    """
+    with open ( "pdfconfigs/CMS-SUS-19-010-aux-018b.py" ) as f:
+        txt = f.read()
+        data = eval(txt)
 
     r = PDFLimitReader( data )
     for i in [ "obsExclusion", "expExclusion", "obsExclusionP1", "obsExclusionM1",
@@ -256,4 +293,4 @@ if __name__ == "__main__":
         for pt in pts:
             f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
         f.close()
-    r.createULCsv ()
+    r.createCsv ()
