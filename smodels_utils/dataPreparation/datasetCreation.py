@@ -245,7 +245,8 @@ class DatasetsFromLatex:
                 dataset = DataSetInput ( name )
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-                self.datasetOrder.append ( '"%s"' % dataId )
+                self.datasetOrder.append ( '%s' % dataId )
+                # self.datasetOrder.append ( '"%s"' % dataId )
                 self.datasets.append ( dataset )
         if self.aggregate != None:
             self.aggregateDSs()
