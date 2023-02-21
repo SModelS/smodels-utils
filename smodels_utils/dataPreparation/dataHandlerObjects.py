@@ -950,6 +950,9 @@ class DataHandler(object):
         self.error ( "using pyroot, consider switching to uproot" )
         import ROOT
         rootFile = ROOT.TFile(self.path)
+        if '"' in name:
+            logger.warning ( f"Object {name} has quotation marks in name, will take them out" )
+            name = name.replace('"','')
         obj = rootFile.Get(name)
         if not obj:
             logger.error("Object %s not found in %s" %(name,self.path))
@@ -1015,8 +1018,16 @@ class DataHandler(object):
                           %(self.objectName,self.index))
             sys.exit()
 
-        for point in self._getPoints(limit):
+        for point in self._getRootPoints(limit):
             yield point
+
+    def _getRootPoints ( self, obj ):
+        try:
+            import uproot
+            return self._getUprootPoints ( obj )
+        except:
+            pass
+        return self._getPyRootPoints( obj )
 
     def _getUpRootPoints(self,obj):
 

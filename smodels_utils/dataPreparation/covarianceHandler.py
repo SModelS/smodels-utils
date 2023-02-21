@@ -185,19 +185,25 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         h=f.get ( histoname )
         if h: return h
         if not "/" in histoname:
-            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
+            logger.error ( "cannot find %s in %s" % (histoname, f.parent.file_path))
             sys.exit()
         tokens = histoname.split("/")
+        """
+        if len(tokens)==1:
+            return f.get(tokens[0])
+        """
         if not len(tokens)==2:
             logger.error ( "cannot interpret histoname %s in %s" % \
                             ( histoname, f.name ) )
             sys.exit()
-        c= f.Get ( tokens[0] )
+        c= f.get ( tokens[0] )
         if not c:
             logger.error ( "cannot retrieve %s from %s" % \
                             ( histoname, f.name ) )
             sys.exit()
-        if c.ClassName() == "TCanvas":
+        if c.classname == "TCanvas":
+            logger.error ( "we cannot read tcanvas objects with uproot!" )
+            sys.exit()
             h=c.GetPrimitive ( tokens[1] )
             if h: return h
             logger.error ( "cannot retrieve %s from %s" % \
