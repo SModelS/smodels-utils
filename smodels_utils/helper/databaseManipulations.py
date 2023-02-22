@@ -83,6 +83,23 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
+def selectFullLikelihoodsFromDB ( db, picklefile = "temp.pcl" ):
+    """ select results with full likelihoods from database db
+    :param db: database object
+    :param picklefile: picklefile to store fastlim-free database
+    """
+    print ( f"[databaseManipulations] before selection of full likelihoods {len(db.expResultList)} results" )
+    filtered = filterFullLikelihoodsFromList ( db.expResultList )
+    dbverold = db.databaseVersion
+    # dbverold = dbverold.replace(".","")
+    db.subs[0].expResultList = filtered
+    db.subs[0].txt_meta.databaseVersion = "full_llhds" + dbverold
+    db.subs = [ db.subs[0] ]
+    print ( f"[databaseManipulations] selected {len(db.expResultList)} results with full likelihoods" )
+    if picklefile not in [ None, "" ]:
+        db.createBinaryFile( picklefile )
+    return db
+
 def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     """ remove results from database db for which we have an aggregated result
     :param db: database object
@@ -209,6 +226,46 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
     if invert:
         return fastlimList
     return filteredList
+
+def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
+    """ filter out all results that have jsonFiles_FullLikelihood defined. 
+        replace jsonFiles with jsonFiles_FullLikelihood, return these results.
+    :param expResList: list of experiment results
+    :param really: if False, then do not actually filter
+    :param update: consider entries only after this date (yyyy/mm/dd)
+    """
+    if not really:
+        return expResList
+    fullLLhds,filteredList = [], []
+    ctr = 0
+    for e in expResList:
+        gI = e.globalInfo
+        if update not in [ "" , None ]:
+            lu = getattr ( e.globalInfo, "lastUpdate" )
+            if type(lu) != str:
+                print ( "[databaseManipulations] we have lastUpdate that reads %s in %s" % \
+                        (lu, e.globalInfo.id ) )
+                import sys
+                sys.exit(-1)
+            from datetime import datetime
+            after = datetime.strptime ( update, "%Y/%m/%d" )
+            this = datetime.strptime ( lu, "%Y/%m/%d" )
+            if this < after:
+                continue
+        if not hasattr ( gI, "jsonFiles_FullLikelihood" ):
+            filteredList.append ( e )
+            continue
+        ctr+=1
+        if ctr < 4:
+            print ( "[databaseManipulations] found a full likelihood", gI.id )
+        if ctr == 4:
+            print ( "                        .... (and a few more) ... " )
+        gI.jsonFiles = gI.jsonFiles_FullLikelihood
+        del gI.jsonFiles_FullLikelihood
+        fullLLhds.append ( e )
+    #if invert:
+    #    return filteredList
+    return fullLLhds
 
 def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
     """ filter list of exp results by sqrts
