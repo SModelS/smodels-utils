@@ -243,6 +243,15 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
+    if True: # always build the backup version
+        backupfile = "backup"+ver
+        #if not args.remove_fastlim:
+        #    backupfile = "backup_fastlim"
+        cmd = "cp ../../smodels.github.io/database/%s ../../smodels.github.io/database/%s" %\
+               ( infofile, backupfile )
+        if not args.dry_run:
+            a=CMD.getoutput ( cmd )
+            print ( "[publishDatabasePickle] update latest:", cmd, a )
     cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
     if args.latest:
         cmd += f"git add database/{latestfile}; "
