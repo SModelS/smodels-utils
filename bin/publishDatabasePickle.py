@@ -129,7 +129,6 @@ def main():
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
 
-
     if args.remove_superseded:
         # e = copy.deepcopy( d )
         e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
@@ -184,17 +183,17 @@ def main():
     infofile = "official%s%s" % ( ver, sfastlim )
     pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
     if "nonaggregated" in ver:
-        infofile = "nonaggregated%s%s" % ( ver.replace("nonaggregated",""), sfastlim )
-        pclfilename = "nonaggregated%s%s.pcl" % ( ver.replace("nonaggregated",""), sfastlim )
+        infofile = "nonaggregated%s" % ( ver.replace("nonaggregated","") )
+        pclfilename = "nonaggregated%s.pcl" % ( ver.replace("nonaggregated","") )
     if "full_llhds" in ver:
         infofile = "full_llhds%s" % ( ver.replace("full_llhds","") )
         pclfilename = "full_llhds%s.pcl" % ( ver.replace("full_llhds","") )
     if "superseded" in ver:
-        infofile = "superseded%s%s" % ( ver.replace("superseded",""), sfastlim )
-        pclfilename = "superseded%s%s.pcl" % ( ver.replace("superseded",""), sfastlim )
+        infofile = "superseded%s" % ( ver.replace("superseded","") )
+        pclfilename = "superseded%s.pcl" % ( ver.replace("superseded","") )
     if "fastlim" in ver:
-        infofile = "fastlim%s%s" % ( ver.replace("fastlim",""), sfastlim )
-        pclfilename = "fastlim%s%s.pcl" % ( ver.replace("fastlim",""), sfastlim )
+        infofile = "fastlim%s" % ( ver.replace("fastlim","") )
+        pclfilename = "fastlim%s.pcl" % ( ver.replace("fastlim","") )
 
     if ver == "unittest":
         smodels_ver = "112"
