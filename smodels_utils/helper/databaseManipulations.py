@@ -93,8 +93,12 @@ def selectFullLikelihoodsFromDB ( db, picklefile = "temp.pcl" ):
     dbverold = db.databaseVersion
     # dbverold = dbverold.replace(".","")
     db.subs[0].expResultList = filtered
-    db.subs[0].txt_meta.databaseVersion = "full_llhds" + dbverold
+    dbver = dbverold
+    if not "full_llhds" in dbver:
+        dbver = "full_llhds" + dbverold
+    db.subs[0].txt_meta.databaseVersion = dbver
     db.subs = [ db.subs[0] ]
+    #print ( f"[databaseManipulations] oldver {dbverold} newver {db.databaseVersion}" )
     print ( f"[databaseManipulations] selected {len(db.expResultList)} results with full likelihoods" )
     if picklefile not in [ None, "" ]:
         db.createBinaryFile( picklefile )

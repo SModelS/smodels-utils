@@ -94,15 +94,15 @@ def main():
     dbname = args.filename
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
-        
-    from smodels.experiment.databaseObj import Database    
+
+    from smodels.experiment.databaseObj import Database
     try:
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB    
+        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB, selectFullLikelihoodsFromDB
     except ModuleNotFoundError:
         sys.path.append('../')
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB    
+        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
 
-        
+
     has_nonValidated = False
     nonValidated = []
     discard_zeroes=True
@@ -128,7 +128,7 @@ def main():
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
-      
+
 
     if args.remove_superseded:
         # e = copy.deepcopy( d )
@@ -148,7 +148,7 @@ def main():
         e.subs[0].databaseVersion="fastlim"+dbver
     if args.remove_nonaggregated:
         # e = copy.deepcopy( d )
-        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )   
+        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
         ## create fastlim only
         e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
         d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
@@ -156,12 +156,18 @@ def main():
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion="nonaggregated"+dbver
+    if True:
+        f = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
+        f.subs[0].databaseVersion=dbver
+        # print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )
+
     if not args.skipValidation:
         validated, which = checkNonValidated(d)
         has_nonValidated = validated
     else:
         has_nonValidated = False
-    
+
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
@@ -180,6 +186,9 @@ def main():
     if "nonaggregated" in ver:
         infofile = "nonaggregated%s%s" % ( ver.replace("nonaggregated",""), sfastlim )
         pclfilename = "nonaggregated%s%s.pcl" % ( ver.replace("nonaggregated",""), sfastlim )
+    if "full_llhds" in ver:
+        infofile = "full_llhds%s" % ( ver.replace("full_llhds","") )
+        pclfilename = "full_llhds%s.pcl" % ( ver.replace("full_llhds","") )
     if "superseded" in ver:
         infofile = "superseded%s%s" % ( ver.replace("superseded",""), sfastlim )
         pclfilename = "superseded%s%s.pcl" % ( ver.replace("superseded",""), sfastlim )
@@ -235,7 +244,7 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
-    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "  
+    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
     if args.latest:
         cmd += f"git add database/{latestfile}; "
     cmd += "git commit -m 'auto-commited by publishDatabasePickle.py'; git push"
@@ -244,7 +253,7 @@ def main():
     else:
         a=CMD.getoutput ( cmd )
         print ( a )
-        
+
     home = os.environ["HOME"]
     import shutil
     hasSSHpass = (shutil.which("sshpass")!=None)
