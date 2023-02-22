@@ -264,8 +264,12 @@ def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
             print ( "[databaseManipulations] found a full likelihood", gI.id )
         if ctr == 4:
             print ( "                        .... (and a few more) ... " )
+
+        if hasattr ( gI, "jsons" ):
+            del gI.jsons
         gI.jsonFiles = gI.jsonFiles_FullLikelihood
         del gI.jsonFiles_FullLikelihood
+        gI.cacheJsons()
         fullLLhds.append ( e )
     #if invert:
     #    return filteredList
