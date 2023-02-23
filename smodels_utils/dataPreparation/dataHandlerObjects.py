@@ -1023,11 +1023,11 @@ class DataHandler(object):
 
     def _getRootPoints ( self, obj ):
         try:
-            import uproot
-            return self._getUprootPoints ( obj )
+            import ROOT
+            return self._getPyRootPoints( obj )
         except:
             pass
-        return self._getPyRootPoints( obj )
+        return self._getUprootPoints ( obj )
 
     def _getUpRootPoints(self,obj):
 
