@@ -122,6 +122,24 @@ def main():
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
         d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True,
                        force_load = force_load )
+        if args.txnamevalues:
+            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
+            if not hasattr ( txnd, "origdata" ):
+                print ( "[publishDatabasePickle] FATAL: why arent there origdata in tnamedata??" )
+                sys.exit()
+        else:
+            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
+            if hasattr ( txnd, "origdata" ):
+                print ( "[publishDatabasePickle] we have orig data! lets repickle with force_load = txt" )
+                force_load = "txt"
+                d = Database ( dbname, discard_zeroes=discard_zeroes, 
+                               progressbar=True, force_load = force_load )
+                txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
+                if hasattr ( txnd, "origdata" ):
+                    print ( "[publishDatabasePickle] FATAL: we still have orig data!" )
+                    sys.exit()
+
+                
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
 
