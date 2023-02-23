@@ -100,11 +100,12 @@ def main():
         gprint ( "\nCreate and publish database pickle" )
         #exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
         #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-a", "-p", "-s", "-r", "-b", "-f", db ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./nonaggregated.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./full_llhds.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-F", "-f", "./fastlim.pcl" ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "--txnamevalues", "-b", "-f", db ], A.dry_run )
 
 
     gprint ( "\nCreate Validation" )

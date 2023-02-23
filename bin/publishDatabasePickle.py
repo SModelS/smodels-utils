@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-""" makes a database pickle file publically available.
-The script is deliberately run with python2. That way we get
-a pickle file that should work with both python2 and python3. """
+""" makes a database pickle file publically available. """
 
 from __future__ import print_function
 import pickle, os, sys, argparse, time, copy
@@ -13,12 +11,6 @@ if sys.version[0]=="2":
     import commands as CMD
 else:
     import subprocess as CMD
-
-# print ( f"[publishDatabasePickle] using scipy version {version('scipy')}" )
-# from importlib.metadata import version
-# if version("scipy")[:3] == "1.8":
-#     print ( "[publishDatabasePickle] you sure you want to pickle with scipy 1.8.x?" )
-#     sys.exit()
 
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
@@ -83,6 +75,7 @@ def main():
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
     ap.add_argument('-a', '--remove_nonaggregated', help='build pickle file, remove nonaggregated results', action="store_true" )
+    ap.add_argument( '--full_llhds', help='create also full llhds pickle file', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
@@ -118,14 +111,17 @@ def main():
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
+        force_load = None
         if args.txnamevalues:
             print ( "[publishDatabasePickle] building with txname values!" )
             import smodels.experiment.txnameObj
             smodels.experiment.txnameObj.TxNameData._keep_values = True
+            force_load = "txt"
         import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
-        d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True )
+        d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True,
+                       force_load = force_load )
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
 
@@ -155,7 +151,7 @@ def main():
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion="nonaggregated"+dbver
-    if True:
+    if args.full_llhds:
         f = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
         f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
         f.subs[0].databaseVersion=dbver
@@ -170,18 +166,22 @@ def main():
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
+    p.close()
     fastlim = meta.hasFastLim
     if args.remove_fastlim:
         fastlim = False
-    print ( meta )
+    print ( f"[publishDatabasePickle] {meta}" )
     ver = meta.databaseVersion.replace(".","")
-    p.close()
     sfastlim=""
     if fastlim:
         sfastlim="_fastlim"
 
     infofile = "official%s%s" % ( ver, sfastlim )
     pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
+    if args.txnamevalues:
+        d.subs[0].databaseVersion="debug"+dbver
+        infofile = "debug%s" % ( ver.replace("debug","") )
+        pclfilename = "debug%s.pcl" % ( ver.replace("debug","") )
     if "nonaggregated" in ver:
         infofile = "nonaggregated%s" % ( ver.replace("nonaggregated","") )
         pclfilename = "nonaggregated%s.pcl" % ( ver.replace("nonaggregated","") )
@@ -243,7 +243,7 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
-    if True: # always build the backup version
+    if not args.txnamevalues: # always build the backup version
         backupfile = "backup"+ver
         #if not args.remove_fastlim:
         #    backupfile = "backup_fastlim"
@@ -251,7 +251,7 @@ def main():
                ( infofile, backupfile )
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
-            print ( "[publishDatabasePickle] update latest:", cmd, a )
+            print ( "[publishDatabasePickle] update backup:", cmd, a )
     cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
     if args.latest:
         cmd += f"git add database/{latestfile}; "
