@@ -607,7 +607,7 @@ class RefXSecComputer:
             isEWK=True
         if pid1 in [ 1000023, 1000025 ] and pid2 in [ 1000023, 1000025 ]:
             if sqrts == 8:
-                print ( "[refxsecComputer] asking for N2 N1 production for 8 TeV. we only have 13 tev" )
+                print ( f"[refxsecComputer] asking for N2 N1 {(pid1,pid2)} production for 8 TeV. we only have 13 tev" )
                 return None, None, None
             s1, s2 = "N2", "N2"
             if pid1 == 1000025:
