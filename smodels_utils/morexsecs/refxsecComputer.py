@@ -497,7 +497,8 @@ class RefXSecComputer:
         if type(mass) in [ str ]:
             return float(mass)
         for i in range(len(mass)-1):
-            if abs (mass[i]-mass[i+1]) / (mass[i]+mass[i+1]) > 1e-3:
+            smass = mass[i]+mass[i+1]
+            if smass > 1e-6 and abs (mass[i]-mass[i+1]) / smass > 1e-3:
                 return mass
         return mass[0]
 
@@ -575,7 +576,8 @@ class RefXSecComputer:
             order = NLL
             isEWK=True
             pb = False
-            if type(masses) == tuple and abs(masses[1]-masses[0])/(masses[1]+masses[0]) > 1e-3:
+            smass = masses[0]+masses[1]
+            if type(masses) == tuple and smass > 1e-6 and abs(masses[1]-masses[0])/smass > 1e-3:
                 filename = "xsecN2C1mnondegenp%d.txt" % sqrts
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
@@ -585,7 +587,8 @@ class RefXSecComputer:
             order = NLL
             pb = False
             isEWK=True
-            if type(masses) == tuple and abs(masses[1]-masses[0])/(masses[1]+masses[0]) > 1e-3:
+            smasses = masses[1]+masses[0]
+            if type(masses) == tuple and smasses > 1e-6 and abs(masses[1]-masses[0])/smasses > 1e-3:
                 filename = "xsecN2C1pnondegenp%d.txt" % sqrts
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
