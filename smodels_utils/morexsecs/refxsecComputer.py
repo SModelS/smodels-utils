@@ -565,7 +565,8 @@ class RefXSecComputer:
         pb = True
         columns = { "mass": 0, "xsec": 1 }
         isEWK=False
-        comment="refxsec [pb]"
+        comment = ""
+        # comment="refxsec [pb]"
         if pid1 in [ 1000021 ] and pid2 == pid1:
             filename = "xsecgluino%d.txt" % sqrts
             columns["xsec"]=2

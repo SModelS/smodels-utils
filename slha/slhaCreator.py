@@ -567,6 +567,8 @@ if __name__ == "__main__":
     if args.overwrite and os.path.exists ( tarball ):
         print ( f"[slhaCreator] overwriting existing {tarball}" )
         os.unlink ( tarball )
+    if os.path.exists ( tarball ) and not args.overwrite:
+        print ( f"[slhaCreator] NOT overwriting existing results from {tarball}!" )
 
     tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
                          keep=args.keep )
