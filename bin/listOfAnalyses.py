@@ -47,7 +47,7 @@ class Lister:
         poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
            'plotStats': False }
         # poptions["roughviz"] = False
-        poptions["significances"] = True
+        poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
