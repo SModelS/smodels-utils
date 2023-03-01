@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 
-""" makes a database pickle file publically available. """
+"""
+.. module:: publishDatabasePickle
+   :synposis: makes database pickle files publically available. FIXME this
+              script should be split in two: one script that prepares all pickles
+              (official, fastlim, nonaggregated, superseded, full_llhds),
+              another script that uploads them and writes the jsons
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
+"""
 
 from __future__ import print_function
 import pickle, os, sys, argparse, time, copy
@@ -12,7 +21,7 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
-def sizeof_fmt(num, suffix='B'):
+def sizeof_f(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
         if abs(num) < 1024.:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -132,14 +141,14 @@ def main():
             if hasattr ( txnd, "origdata" ):
                 print ( "[publishDatabasePickle] we have orig data! lets repickle with force_load = txt" )
                 force_load = "txt"
-                d = Database ( dbname, discard_zeroes=discard_zeroes, 
+                d = Database ( dbname, discard_zeroes=discard_zeroes,
                                progressbar=True, force_load = force_load )
                 txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
                 if hasattr ( txnd, "origdata" ):
                     print ( "[publishDatabasePickle] FATAL: we still have orig data!" )
                     sys.exit()
 
-                
+
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
 
@@ -261,7 +270,7 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
-    if not args.txnamevalues: # always build the backup version
+    if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = "backup"+ver
         #if not args.remove_fastlim:
         #    backupfile = "backup_fastlim"
