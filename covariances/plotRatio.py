@@ -216,8 +216,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % \
                 (err_msgs, len( content2["data"] ) ) )
-
-    cm = plt.cm.get_cmap('jet')
+    
+    #changed colormap to have discrete bins instead of continuous
+    cm = plt.cm.get_cmap('seismic')
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
     vmin, vmax = options["zmin"], options["zmax"]
@@ -236,6 +237,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     scatter = plt.scatter ( x, y, s=s, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
+    fig = plt.gcf()
     plt.ylabel ( ylabel, size=13 )
     plt.xlabel ( xlabel, size=13 )
     if logScale:
@@ -302,7 +304,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             label = ""
         if el2 == el: # if its exactly identical, then drop
             el2 = []
-            label += f"(+{anaId2})"
+            #removing analysisID name for contour line
+            #label += f"(+{anaId2})"
         if t in el:
             for E in el[t]:
                 name = E["name"]
@@ -369,6 +372,10 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if options["ploteffs"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
     plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
+
+    #text about no of SR in combined dataset
+    #plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
+               horizontalalignment="right" )
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
