@@ -370,7 +370,7 @@ class ValidationPlot():
         :returns: number of points added
         """
 
-        validationDir = os.path.join(self.expRes.path,'validation')
+        validationDir = self.getValidationDir ( None )
         datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
             if self.options["generateData"] == False:
@@ -618,7 +618,10 @@ class ValidationPlot():
         listOfExpRes = [self.expRes]
 
         """ Test all input points """
-        modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
+        validationFolder = "validation"
+        if "validationFolder" in self.options:
+            validationFolder = self.options["validationFolder"]
+        modelTester.testPoints(fileList, inDir, outputDir, parser, validationFolder,
                  listOfExpRes, 5000, False, parameterFile)
 
         #Define original plot
@@ -919,9 +922,7 @@ class ValidationPlot():
 
     def toPdf ( self, validationDir=None ):
         """ convert from png to pdf (new, for uproot) """
-        if not validationDir:
-            vDir = os.path.join(self.expRes.path,'validation')
-        else: vDir = validationDir
+        vDir = self.getValidationDir ( validationDir )
         oldfilename = self.getPlotFileName(vDir,"png")
         if self.pretty:
             oldfilename = oldfilename.replace('.png','_pretty.png')
@@ -950,13 +951,7 @@ class ValidationPlot():
             logger.warning("Plotting got inhibited." )
             return False
 
-        if not validationDir:
-            vDir = os.path.join(self.expRes.path,'validation')
-        else: vDir = validationDir
-
-        if not os.path.isdir(vDir):
-            logger.debug("Creating validation folder "+vDir)
-            os.mkdir(vDir)
+        vDir = self.getValidationDir ( validationDir )
 
         filename = self.getPlotFileName(vDir,fformat)
 
@@ -993,6 +988,23 @@ class ValidationPlot():
 
         return True
 
+    def getValidationDir ( self, validationDir ):
+        """ obtain the validation directory, usually, 
+            self.expRes.path + "/validation" """
+        def mkdir ( mydir ):
+            if not os.path.isdir(mydir):
+                logger.info( f"Creating validation folder {mydir}")
+                os.mkdir(mydir)
+        if validationDir:
+            mkdir ( validationDir )
+            return validationDir
+        validationFolder = "validation"
+        if "validationFolder" in self.options:
+            validationFolder = self.options["validationFolder"]
+        validationDir = os.path.join(self.expRes.path,validationFolder)
+        mkdir ( validationDir )
+        return validationDir
+
     def saveData(self,validationDir=None,datafile=None):
         """
         Saves the data and plot in a text file in the validationDir folder.
@@ -1016,12 +1028,7 @@ class ValidationPlot():
                 logger.warning("No added points. Nothing will be saved")
                 return False
 
-        if not validationDir:
-            validationDir = os.path.join(self.expRes.path,'validation')
-
-        if not os.path.isdir(validationDir):
-            logger.info("Creating validation folder "+validationDir)
-            os.mkdir(validationDir)
+        validationDir = self.getValidationDir ( validationDir )
 
         if not datafile:
             datafile = self.getDataFile(validationDir)

@@ -519,6 +519,8 @@ if __name__ == "__main__":
     if parser.has_section("options"):
         if parser.has_option("options","ncpus"):
             options["ncpus"] = parser.getint("options","ncpus")
+        if parser.has_option("options","validationFolder"):
+            options["validationFolder"] = parser.get("options","validationFolder")
         if parser.has_option("options","interpolationType"):
             options["interpolationType"]=parser.get("options","interpolationType")
         if parser.has_option("options","drawExpected"):
