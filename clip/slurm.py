@@ -450,7 +450,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
         lines = f.readlines()
         f.close()
     filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
-    print ( "creating script at %s/%s" % ( Dir, filename ) )
+    print ( "[slurm.py] creating script at %s/%s" % ( Dir, filename ) )
     nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     newFile = f"{Dir}/{filename}"
     with open ( newFile, "wt" ) as f:
