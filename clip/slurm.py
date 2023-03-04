@@ -452,27 +452,27 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
     print ( "creating script at %s/%s" % ( Dir, filename ) )
     nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
-    with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
+    newFile = f"{Dir}/{filename}"
+    with open ( newFile, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@INIFILE@@", newini ) )
         f.close()
-    with open ( "run_validation_template.sh", "rt" ) as f:
-        lines = f.readlines()
-        f.close()
+    #with open ( "run_validation_template.sh", "rt" ) as f:
+    #    lines = f.readlines()
+    #    f.close()
     tdir = "./temp"
     if not os.path.exists ( tdir ):
         os.mkdir ( tdir )
-    tmpfile = tempfile.mktemp(prefix="V", suffix=".sh",dir=tdir )
-    with open ( tmpfile, "wt" ) as f:
-        for line in lines:
-            f.write ( line.replace ( "@@SCRIPT@@", filename ) )
-        f.write ( f"\n# this script will perform:\n" )
-        f.write ( f"# runValidation.py -p {newini}\n" )
-        f.write ( f"# which is essentially:\n" )
-        f.write ( f"# runValidation.py -p {inifile}\n" )
-        f.close()
-    os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
-    os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
+    #tmpfile = tempfile.mktemp(prefix="V", suffix=".sh",dir=tdir )
+    #with open ( tmpfile, "wt" ) as f:
+    #    for line in lines:
+    #        f.write ( line.replace ( "@@SCRIPT@@", filename ) )
+    #    f.write ( f"\n# this script will perform:\n" )
+    #    f.write ( f"# runValidation.py -p {newini}\n" )
+    #    f.write ( f"# which is essentially:\n" )
+    #    f.write ( f"# runValidation.py -p {inifile}\n" )
+    #    f.close()
+    os.chmod( newFile, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out",
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out" ]
@@ -491,7 +491,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     ncpus = nproc # int(nproc*1.5)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
-    cmd += [ tmpfile ]
+    cmd += [ newFile ]
     # cmd += [ "./run_bakery.sh" ]
     print ("[slurm.py] validating %s" % " ".join ( cmd ) )
     if not dry_run:
