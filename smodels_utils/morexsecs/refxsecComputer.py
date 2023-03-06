@@ -577,6 +577,8 @@ class RefXSecComputer:
             order = NLL
             isEWK=True
             pb = False
+            if sqrts == 8:
+                pb = True
             smass = masses[0]+masses[1]
             if type(masses) == tuple and smass > 1e-6 and abs(masses[1]-masses[0])/smass > 1e-3:
                 filename = "xsecN2C1mnondegenp%d.txt" % sqrts
@@ -587,6 +589,8 @@ class RefXSecComputer:
             filename = "xsecN2C1p%d.txt" % sqrts
             order = NLL
             pb = False
+            if sqrts == 8:
+                pb = True
             isEWK=True
             smasses = masses[1]+masses[0]
             if type(masses) == tuple and smasses > 1e-6 and abs(masses[1]-masses[0])/smasses > 1e-3:
