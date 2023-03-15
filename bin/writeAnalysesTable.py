@@ -430,7 +430,7 @@ if __name__ == "__main__":
         import setPath, argparse, types, os
 
         argparser = argparse.ArgumentParser(description=
-                      'simple tool to generate a latex table with all analysis used')
+                      'simple tool to generate a latex table with all analyses used')
         dbpath = os.path.abspath( '../../smodels-database/' )
         argparser.add_argument ( '-d', '--database', nargs='?',
                             help='path to database [%s]' % dbpath, type=str,
@@ -476,7 +476,7 @@ if __name__ == "__main__":
             action='store_true' )
         argparser.add_argument( '-H','--href', help='add href links',
             action='store_true' )
-        argparser.add_argument( '--combinations', help='cycle through all combinations (8 TeV / 13 TeV, CMS / ATLAS )',
+        argparser.add_argument( '--combinations', help='cycle through all combinations (8TeV/13TeV, CMS/ATLAS)',
             action='store_true' )
         args=argparser.parse_args()
         if not args.combinations:
