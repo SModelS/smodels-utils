@@ -68,6 +68,7 @@ class ValidationPlot():
         self.massPlane = MassPlane.fromString(self.txName,self.axes)
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
+        self.currentSLHADir = None
         self.data = []
         self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
@@ -270,6 +271,7 @@ class ValidationPlot():
         """
 
         if os.path.isdir(self.slhaDir):
+            self.currentSLHADir = self.slhaDir
             return self.slhaDir
         elif os.path.isfile(self.slhaDir):
             try:
@@ -288,6 +290,7 @@ class ValidationPlot():
                 tar.extractall(path=tempdir,members=members)
                 tar.close()
                 logger.debug("SLHA files extracted to %s" %tempdir)
+                self.currentSLHADir = tempdir
                 return tempdir
             except Exception as e:
                 logger.error("Could not extract SLHA files from %s: %s" %\
@@ -577,14 +580,14 @@ class ValidationPlot():
         if not self.slhaDir:
             logger.warning("SLHA folder not defined")
             return False
-        slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.debug("SLHA files for validation at %s" %slhaDir)
+        self.getSLHAdir()  #Path to the folder containing the SLHA files
+        logger.debug("SLHA files for validation at %s" %self.currentSLHADir)
 
         #Get list of input files to be tested
         try:
-            fileList, inDir = modelTester.getAllInputFiles(slhaDir)
+            fileList, inDir = modelTester.getAllInputFiles(self.currentSLHADir)
         except Exception: ## old version?
-            fileList = modelTester.getAllInputFiles(slhaDir)
+            fileList = modelTester.getAllInputFiles(self.currentSLHADir)
             inDir = slhaDir
         if self.options["generateData"]==None:
             self.loadData()
@@ -603,7 +606,7 @@ class ValidationPlot():
             self.data = []
 
         #Set temporary outputdir:
-        outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
+        outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
@@ -630,7 +633,7 @@ class ValidationPlot():
             logger.error ( "no mass plane!" )
             return False
         #Now read the output and collect the necessary data
-        slhafiles= os.listdir(slhaDir)
+        slhafiles= os.listdir(self.currentSLHADir)
         ct_nooutput=0
         slhafiles.sort() ## make sure we also go in the same order
         myglobals = globals()
@@ -641,7 +644,7 @@ class ValidationPlot():
                 continue
             if "coordinates" in slhafile:
                 continue
-            if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
+            if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
             fout = os.path.join(outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
@@ -729,7 +732,7 @@ class ValidationPlot():
                 roundmass = self.getMassesFromSLHAFileName ( slhafile )
             # print ( "after", slhafile, roundmass )
             mass = [br[:] for br in roundmass]
-            slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
+            slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
             for i,br in enumerate(mass):
                 for im,m in enumerate(br):
@@ -815,7 +818,8 @@ class ValidationPlot():
                 self.data.append(Dict)
 
         #Remove temporary folder
-        if slhaDir != self.slhaDir and not self.keep: shutil.rmtree(slhaDir)
+        if self.currentSLHADir != self.slhaDir and not self.keep: 
+            shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
             logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
