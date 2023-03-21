@@ -39,8 +39,8 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             x = xs[xi]
             if not isWithinRange ( xrange, x ):
                 continue
-            if not math.isnan ( value )  and y > x:
-                print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
+            # if not math.isnan ( value )  and y > x:
+            print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                       looseness : float ):
@@ -234,11 +234,12 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T.append ( tmp )
         eT.append ( etmp )
 
-    # idea copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
     def interpolateOverMissing ( xs, ys, T, fill_value = float("nan"),
            method = "linear" ):
+        # idea copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
         """ interpolate over missing values (nans) 
-        :param interpolation: one of: cubic, nearest, linear
+        :param fill_value: what to fill outside of convex hull with
+        :param method: one of: cubic, nearest, linear
         """
         image = np.asarray ( T )
         mask = np.isnan ( T )
@@ -246,28 +247,34 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         h, w = image.shape[:2]
         xx, yy = np.meshgrid(np.arange(w), np.arange(h))
+        def pluginValues ( indices, values ):
+            """ translate list of indices to list of values """
+            return [ values[x] for x in indices ]
 
         known_x = xx[~mask]
+        if len(known_x) == 0:
+            logger.warning ( "we have no known_x values" )
+            return image
         known_y = yy[~mask]
         known_v = image[~mask]
         missing_x = xx[mask]
         missing_y = yy[mask]
+        vknown_x = pluginValues ( known_x, xs )
+        vknown_y = pluginValues ( known_y, ys )
+        vmissing_x = pluginValues ( missing_x, xs )
+        vmissing_y = pluginValues ( missing_y, ys )
 
-        if len(known_x) == 0:
-            logger.warning ( "we have no known_x values" )
-            return image
         interp_values = interpolate.griddata(
-            (known_x, known_y), known_v, (missing_x, missing_y),
-            method=method, fill_value=fill_value
-        )
+            (vknown_x, vknown_y), known_v, (vmissing_x, vmissing_y),
+            method=method, fill_value=fill_value)
 
         interp_image = image.copy()
         interp_image[missing_y, missing_x] = interp_values
         return interp_image
 
     interpolation = options["interpolationType"]
-    # print ( "before" )
-    # pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
+    #print ( "before" )
+    #pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
     T = interpolateOverMissing ( xs, ys, T, float("nan"), interpolation )
     vT = interpolateOverMissing ( xs, ys, T, -10., interpolation )
     eT = interpolateOverMissing ( xs, ys, eT, float("nan"), interpolation )
@@ -280,13 +287,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     from plottingFuncs import getColormap
     cm = getColormap()
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
-    #im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
-    #                  vmax = 3.0, vmin = 0., aspect="auto" )
     # print ( "after" )
     # pprint ( xs, ys, T ) # , xrange=(500,1000), yrange=(800,900) )
     # shading is one of: 'gouraud', 'nearest', 'flat', 'auto'
     im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0., 
-                          shading="gouraud" )
+                          shading="nearest" )
     plt.title ( title )
     # plt.text ( .28, .85, title, transform = fig.transFigure )
     plt.xlabel ( xlabel )
