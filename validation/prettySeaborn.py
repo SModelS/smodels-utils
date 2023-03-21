@@ -29,46 +29,18 @@ except:
 from scipy import interpolate
 import numpy as np
 
-# copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
-def interpolate_missing_pixels(
-        image: np.ndarray,
-        mask: np.ndarray,
-        method: str = 'nearest',
-        fill_value: float = 0
-):
-    """
-    :param image: a 2D image
-    :param mask: a 2D boolean image, True indicates missing values
-    :param method: interpolation method, one of
-        'nearest', 'linear', 'cubic'.
-    :param fill_value: which value to use for filling up data outside the
-        convex hull of known pixel values.
-        Default is 0, Has no effect for 'nearest'.
-    :return: the image with missing values interpolated
-    """
-    from scipy import interpolate
-
-    h, w = image.shape[:2]
-    xx, yy = np.meshgrid(np.arange(w), np.arange(h))
-
-    known_x = xx[~mask]
-    known_y = yy[~mask]
-    known_v = image[~mask]
-    missing_x = xx[mask]
-    missing_y = yy[mask]
-
-    if len(known_x) == 0:
-        logger.warning ( "we have no known_x values" )
-        return image
-    interp_values = interpolate.griddata(
-        (known_x, known_y), known_v, (missing_x, missing_y),
-        method=method, fill_value=fill_value
-    )
-
-    interp_image = image.copy()
-    interp_image[missing_y, missing_x] = interp_values
-
-    return interp_image
+def pprint ( xs, ys, values, xrange = None, yrange = None ):
+    """ pretty print the values, for debugging """
+    for yi,line in enumerate ( values ):
+        y = ys[yi]
+        if not isWithinRange ( yrange, y ):
+            continue
+        for xi, value in enumerate ( line ):
+            x = xs[xi]
+            if not isWithinRange ( xrange, x ):
+                continue
+            if not math.isnan ( value )  and y > x:
+                print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                       looseness : float ):
@@ -262,18 +234,43 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T.append ( tmp )
         eT.append ( etmp )
 
-    def interpolateOverMissing ( T, fill_value = float("nan"),
-           interpolation = "linear" ):
+    # idea copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
+    def interpolateOverMissing ( xs, ys, T, fill_value = float("nan"),
+           method = "linear" ):
         """ interpolate over missing values (nans) 
         :param interpolation: one of: cubic, nearest, linear
         """
-        T = np.asarray ( T )
-        return interpolate_missing_pixels ( T, np.isnan(T), interpolation, \
-            fill_value=fill_value )
+        image = np.asarray ( T )
+        mask = np.isnan ( T )
+        from scipy import interpolate
+
+        h, w = image.shape[:2]
+        xx, yy = np.meshgrid(np.arange(w), np.arange(h))
+
+        known_x = xx[~mask]
+        known_y = yy[~mask]
+        known_v = image[~mask]
+        missing_x = xx[mask]
+        missing_y = yy[mask]
+
+        if len(known_x) == 0:
+            logger.warning ( "we have no known_x values" )
+            return image
+        interp_values = interpolate.griddata(
+            (known_x, known_y), known_v, (missing_x, missing_y),
+            method=method, fill_value=fill_value
+        )
+
+        interp_image = image.copy()
+        interp_image[missing_y, missing_x] = interp_values
+        return interp_image
+
     interpolation = options["interpolationType"]
-    T = interpolateOverMissing ( T, float("nan"), interpolation )
-    vT = interpolateOverMissing ( T, -10., interpolation )
-    eT = interpolateOverMissing ( eT, float("nan"), interpolation )
+    # print ( "before" )
+    # pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
+    T = interpolateOverMissing ( xs, ys, T, float("nan"), interpolation )
+    vT = interpolateOverMissing ( xs, ys, T, -10., interpolation )
+    eT = interpolateOverMissing ( xs, ys, eT, float("nan"), interpolation )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
@@ -285,19 +282,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
     #im = plt.imshow ( T, cmap=cm, extent=xtnt, interpolation="bicubic",
     #                  vmax = 3.0, vmin = 0., aspect="auto" )
-    """
-    from scipy.interpolate import interp2d
-    X, Y = np.meshgrid ( xs, ys )
-    f = interp2d(xs, ys, vT, kind='cubic')
-    xnew = np.arange ( min(xs), max(xs)+1e-5, 3. )
-    ynew = np.arange ( min(ys), max(ys)+1e-5, 3. )
-    Xn, Yn = np.meshgrid(xnew, ynew)
-    Tnew = f(xnew, ynew )
-    Tnew[Tnew<-0.]=float("nan")
-    im = plt.pcolormesh ( Xn, Yn, Tnew, cmap = cm, vmax=3., vmin = 0. )
-    """
+    # print ( "after" )
+    # pprint ( xs, ys, T ) # , xrange=(500,1000), yrange=(800,900) )
+    # shading is one of: 'gouraud', 'nearest', 'flat', 'auto'
     im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0., 
-                          shading="nearest" )
+                          shading="gouraud" )
     plt.title ( title )
     # plt.text ( .28, .85, title, transform = fig.transFigure )
     plt.xlabel ( xlabel )
