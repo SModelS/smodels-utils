@@ -374,8 +374,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
 
     #text about no of SR in combined dataset
-    #plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
-               horizontalalignment="right" )
+    # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
+    #            horizontalalignment="right" )
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
