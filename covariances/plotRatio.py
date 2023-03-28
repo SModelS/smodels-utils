@@ -362,6 +362,25 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
     a1, a2 = options["label1"], options["label2"]
+    if a1 == None:
+        a1 = "???"
+        if anaId2 in anaId:
+            a1 = anaId.replace(anaId2,"")
+        if anaId in anaId2:
+            a1 = "ul"
+        if a1.startswith("-"):
+            a1 = a1[1:]
+        print ( f"[plotRatio] have been asked to guess the label for {anaId}: {a1}" )
+    if a2 == None:
+        a2 = "???"
+        if anaId2 in anaId:
+            a2 = "ul"
+        if anaId in anaId2:
+            a2 = anaId2.replace(anaId,"")
+        if a2.startswith("-"):
+            a2 = a2[1:]
+        print ( f"[plotRatio] have been asked to guess the label for {anaId2}: {a2}" )
+        
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
@@ -446,14 +465,14 @@ def main():
             help="second analysis name, like the directory name, if not specified then same as analysis1 [None]",
             type=str, default=None )
     argparser.add_argument ( "-l1", "--label1",
-            help="label in the legend for analysis1 [susy]",
-            type=str, default="susy" )
+            help="label in the legend for analysis1, guess if None [None]",
+            type=str, default=None )
     argparser.add_argument ( "-o", "--output",
             help="outputfile, the @x's get replaced [ratios_@a_@t.png]",
             type=str, default="ratios_@a_@t.png" )
     argparser.add_argument ( "-l2", "--label2",
-            help="label in the legend for analysis2 [conf]",
-            type=str, default="conf" )
+            help="label in the legend for analysis2, guess if None [None]",
+            type=str, default=None )
     argparser.add_argument ( "-yl", "--ylabel",
             help="label on the y axis",
             type=str, default=None )
