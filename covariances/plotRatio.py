@@ -263,6 +263,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         stopo = prettyDescriptions.prettyTxname ( t, outputtype="latex" ).replace("*","^{*}" )
         stopos.append ( stopo )
     stopo = "+".join ( stopos )
+    if len(topos)==1:
+        stopo = "".join(topos)+": "+stopo
 
     isEff = False
     if "-eff" in analysis1 or "-eff" in analysis2:
@@ -271,10 +273,18 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
     anaId2 = analysis2.replace("-andre","")
     anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
-    title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
-    if anaId2 == anaId:
-        title = "ratio: %s, %s" % ( anaId, topo )
+    #title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
+    #if anaId2 == anaId:
+    #    title = "ratio: %s, %s" % ( anaId, topo )
+    title = options["title"]
+    if title is None:
+        if anaId2 in anaId:
+            title = anaId2
+        if anaId in anaId2:
+            title = anaId
     plt.title ( title )
+    txStr = stopo
+    plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( xlabel, fontsize=13 )
@@ -366,6 +376,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         a1 = "???"
         if anaId2 in anaId:
             a1 = anaId.replace(anaId2,"")
+            if "combined" in valfile1:
+                a1 = "combined"
         if anaId in anaId2:
             a1 = "ul"
         if a1.startswith("-"):
@@ -377,6 +389,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             a2 = "ul"
         if anaId in anaId2:
             a2 = anaId2.replace(anaId,"")
+            if "combined" in valfile2:
+                a2 = "combined"
         if a2.startswith("-"):
             a2 = a2[1:]
         print ( f"[plotRatio] have been asked to guess the label for {anaId2}: {a2}" )
@@ -479,6 +493,9 @@ def main():
     argparser.add_argument ( "-xl", "--xlabel",
             help="label on the x-axis",
             type=str, default=None )
+    argparser.add_argument ( "--title",
+            help="plot title, guess if None",
+            type=str, default=None )
     argparser.add_argument ( "-z", "--zmin",
             help="minimum z value, None means auto [.5]",
             type=float, default=.5 )
@@ -534,7 +551,7 @@ def main():
 
         options = { "meta": args.meta, "show": args.show, "xlabel": args.xlabel,
                     "ylabel": args.ylabel, "zmax": args.zmax, "zmin": args.zmin,
-                    "copy": args.copy, "output": args.output,
+                    "copy": args.copy, "output": args.output, "title": args.title,
                     "label1": args.label1, "label2": args.label2,
                     "ploteffs": args.efficiencies, "xmin": args.xmin,
                     "xmax": args.xmax, "ymin": args.ymin, "ymax": args.ymax }
