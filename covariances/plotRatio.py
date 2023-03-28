@@ -74,15 +74,17 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
     :option zmin: the minimum z value, e.g. .5
     :option zmax: the maximum z value, e.g. 1.7
-    :option xlabel: label on x axis, default: m$_{mother}$ [GeV]
-    :option ylabel: label on y axis, default: m$_{LSP}$ [GeV]
+    :option xlabel: label on x axis, default: x [GeV]
+    :option ylabel: label on y axis, default: y [GeV]
     :option show: show plot in terminal
     """
     contents = []
     topos = set()
+    axis1, axi2 = None, None
     for valfile in valfile1.split(","):
         ipath1 = getPathName ( dbpath, analysis1, valfile )
         content = getValidationFileContent ( ipath1 )
+        axis1 = content["meta"]["axes"]
         contents.append ( content )
         p1 = valfile.find("_")
         topos.add ( valfile[:p1] )
@@ -91,14 +93,17 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     for valfile in valfile2.split(","):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
         content = getValidationFileContent ( ipath2 )
+        axis2 = content["meta"]["axes"]
         contents.append ( content )
     content2 = mergeValidationData ( contents )
 
     xlabel, ylabel = options["xlabel"], options["ylabel"]
     if xlabel in [  None, "" ]:
-       xlabel = "m$_{mother}$ [GeV]"
+       xlabel = "x [GeV]"
+       # xlabel = "m$_{mother}$ [GeV]"
     if ylabel in [  None, "" ]:
-       ylabel = "m$_{LSP}$ [GeV]"
+       ylabel = "y [GeV]"
+       # ylabel = "m$_{LSP}$ [GeV]"
 
     hasDebPkg()
     rs,effs={},{}
@@ -285,6 +290,12 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     plt.title ( title )
     txStr = stopo
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
+    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, outputtype="latex" )
+    if axis1 != axis2:
+        print ( f"[plotRatio] error, different axes!" )
+        sys.exit()
+    plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
+            horizontalalignment="right" )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( xlabel, fontsize=13 )
@@ -488,10 +499,10 @@ def main():
             help="label in the legend for analysis2, guess if None [None]",
             type=str, default=None )
     argparser.add_argument ( "-yl", "--ylabel",
-            help="label on the y axis",
+            help="label on the y axis, guess if None",
             type=str, default=None )
     argparser.add_argument ( "-xl", "--xlabel",
-            help="label on the x-axis",
+            help="label on the x-axis, guess if None",
             type=str, default=None )
     argparser.add_argument ( "--title",
             help="plot title, guess if None",
