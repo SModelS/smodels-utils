@@ -8,7 +8,7 @@
 """
 
 import math, os, numpy, copy, sys, glob, ctypes
-import setPath
+# import setPath
 from smodels_utils.plotting import mpkitty as plt
 import matplotlib
 import time
@@ -74,6 +74,16 @@ def getSModelSExclusionFromContent ( content ):
     line = []
     return line
 
+def addDefaults ( options ):
+    defaults = { "xmin": None, "xmax": None, "xlabel": None, "ylabel": None,
+                 "ploteffs": False, "ymin": None, "ymax": None, "zmin": None,
+                 "zmax": None, "title": None, "output": "ratios_@a_@t.png",
+                 "label1": None, "label2": None, "show": False, "meta": False,
+                 "copy": False
+                }
+    defaults.update(options)
+    return defaults
+
 def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
     :option zmin: the minimum z value, e.g. .5
@@ -82,6 +92,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     :option ylabel: label on y axis, default: y [GeV]
     :option show: show plot in terminal
     """
+    options = addDefaults ( options )
     contents = []
     topos = set()
     axis1, axi2 = None, None
@@ -439,7 +450,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if options["show"]:
         plt.kittyPlot()
         plt.show()
-    if copy:
+    if options["copy"]:
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
       print ( "[plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )

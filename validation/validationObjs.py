@@ -1036,6 +1036,7 @@ class ValidationPlot():
 
         if not datafile:
             datafile = self.getDataFile(validationDir)
+        self.datafile = datafile
         print ( f"[validationObjs] saving data to {datafile}" )
         #Save data to file
         f = open(datafile,'w')

@@ -44,7 +44,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
     :param combine: combine signal regions, or use best signal region
     :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :param keep: keep temporary directories
-    :return: True on success
+    :return: ValidationPlot object or False
     """
 
     starting( expRes, txnameStr, axes )
@@ -89,7 +89,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
         if options["pdfAlso"]:
             valPlot.toPdf()
     destroyRoot()
-    return True
+    return valPlot
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     """ add a range condition to options, overwrite one if already there
@@ -129,11 +129,47 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
         opts["style"]=f"{var}axis{xrange}"
     return opts
 
-def run ( expResList, options : dict, keep ):
+def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
+       axis ):
+    """ check if we should plot a ratio plot 
+    :param txname: the txname
+    :param combine: is a a combined result that is asked for?
+    :param db: the database
+    :param datafile: validation file
+    """
+    from smodels_utils.helper.prettyDescriptions import prettyAxes
+    from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+    massplane = MassPlane.fromString(txname, ax )
+    #axis = prettyAxes ( txname, ax, output )
+    # axis = str(massplane)#  ax.replace(" ","")
+    axis = axis.replace(",","").replace("(","").replace(")","").\
+                    replace("/","d").replace("*","")
+    if not combine: # if it isnt a combination, we dont want 
+        return False # a ratio plot
+    ulres = db.getExpResults ( [ expRes.globalInfo.id ], [ None ], [ txname ],
+                       dataTypes = [ "upperLimit" ] )
+    if len(ulres)==0:
+        return False # we actually do not have an UL result for that
+    dbpath = db.subs[0].base
+    ana1 = datafile.replace(dbpath,"")
+    p1 = ana1.find("validation")
+    ana1 = ana1[:p1-1]
+    p2 = ana1.rfind("/")
+    ana1 = ana1[p2+1:]
+    valfile1 = os.path.basename ( datafile )
+    ana2 = expRes.globalInfo.id
+    valfile2 = valfile1.replace("_combined","")
+    output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
+    options = { "show": opts["show"], "output": output }
+    import plotRatio
+    plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
+
+def run ( expResList, options : dict, keep, db ):
     """
     Loop over experimental results and validate plots
     :param options: all flags in the "options" part of the ini file
     :param keep: keep temporary directories
+    :param db: database, so we can check if ratio plots are desirable
     """
     for expRes in expResList:
         expt0 = time.time()
@@ -258,12 +294,16 @@ def run ( expResList, options : dict, keep ):
                         tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
 
                     for p in prettyorugly:
-                        validatePlot(expRes,txnameStr,ax, tarfile, localopts,
+                        re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
                                 kfactor, p, combine, namedTarball = pnamedTarball,
                                 keep = keep )
                         # if not ":" in namedTarball:
                         localopts["generateData"]=False
                         oldNamedTarball = pnamedTarball
+                        validationDir = re.getValidationDir ( None )
+                        datafile = re.getDataFile(validationDir)
+                    checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
+                                         localopts, datafile, re.niceAxes )
             else: # axis is not None
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
@@ -363,7 +403,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             options["ncpus"] = 1
 
     tval0 = time.time()
-    run ( expResList, options, keep )
+    run ( expResList, options, keep, db )
     dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
