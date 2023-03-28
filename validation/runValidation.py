@@ -160,7 +160,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana2 = expRes.globalInfo.id
     valfile2 = valfile1.replace("_combined","")
     output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
-    options = { "show": opts["show"], "output": output }
+    options = { "show": opts["show"], "output": output, "zmin": 0.,
+                "zmax": 2. }
     import plotRatio
     plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
 

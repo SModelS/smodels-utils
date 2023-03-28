@@ -244,7 +244,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     vmin, vmax = options["zmin"], options["zmax"]
     if vmax is None or abs(vmax)<1e-5:
         vmax = numpy.nanmax ( col )*1.1
-    if vmin is None or abs(vmin)<1e-5:
+    if vmin is None: # or abs(vmin)<1e-5:
         vmin = numpy.nanmin ( col )*0.9
     opts = { }
     #print ( "vmax", vmax )
