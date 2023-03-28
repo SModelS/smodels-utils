@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
-""" Plot the ratio between the upper limit from the UL map, and our
-own upper limit computed from combining the efficiency maps. """
+"""
+.. module:: plotRatio.py
+   :synopsis: plots the ratio between two similar results, typically
+              the ration of the upper limit from the UL map, and the
+              upper limit computed from combining the efficiency maps.
+"""
 
 import math, os, numpy, copy, sys, glob, ctypes
 import setPath
