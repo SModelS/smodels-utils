@@ -582,4 +582,5 @@ def main():
         if args.copy:
             print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
 
-main()
+if __name__ == "__main__":
+    main()
