@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
-""" Plot the ratio between the upper limit from the UL map, and our
-own upper limit computed from combining the efficiency maps. """
+"""
+.. module:: plotRatio.py
+   :synopsis: plots the ratio between two similar results, typically
+              the ration of the upper limit from the UL map, and the
+              upper limit computed from combining the efficiency maps.
+"""
 
 import math, os, numpy, copy, sys, glob, ctypes
 import setPath
@@ -74,15 +78,17 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
     :option zmin: the minimum z value, e.g. .5
     :option zmax: the maximum z value, e.g. 1.7
-    :option xlabel: label on x axis, default: m$_{mother}$ [GeV]
-    :option ylabel: label on y axis, default: m$_{LSP}$ [GeV]
+    :option xlabel: label on x axis, default: x [GeV]
+    :option ylabel: label on y axis, default: y [GeV]
     :option show: show plot in terminal
     """
     contents = []
     topos = set()
+    axis1, axi2 = None, None
     for valfile in valfile1.split(","):
         ipath1 = getPathName ( dbpath, analysis1, valfile )
         content = getValidationFileContent ( ipath1 )
+        axis1 = content["meta"]["axes"]
         contents.append ( content )
         p1 = valfile.find("_")
         topos.add ( valfile[:p1] )
@@ -91,14 +97,17 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     for valfile in valfile2.split(","):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
         content = getValidationFileContent ( ipath2 )
+        axis2 = content["meta"]["axes"]
         contents.append ( content )
     content2 = mergeValidationData ( contents )
 
     xlabel, ylabel = options["xlabel"], options["ylabel"]
     if xlabel in [  None, "" ]:
-       xlabel = "m$_{mother}$ [GeV]"
+       xlabel = "x [GeV]"
+       # xlabel = "m$_{mother}$ [GeV]"
     if ylabel in [  None, "" ]:
-       ylabel = "m$_{LSP}$ [GeV]"
+       ylabel = "y [GeV]"
+       # ylabel = "m$_{LSP}$ [GeV]"
 
     hasDebPkg()
     rs,effs={},{}
@@ -263,6 +272,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         stopo = prettyDescriptions.prettyTxname ( t, outputtype="latex" ).replace("*","^{*}" )
         stopos.append ( stopo )
     stopo = "+".join ( stopos )
+    if len(topos)==1:
+        stopo = "".join(topos)+": "+stopo
 
     isEff = False
     if "-eff" in analysis1 or "-eff" in analysis2:
@@ -271,10 +282,24 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
     anaId2 = analysis2.replace("-andre","")
     anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
-    title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
-    if anaId2 == anaId:
-        title = "ratio: %s, %s" % ( anaId, topo )
+    #title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
+    #if anaId2 == anaId:
+    #    title = "ratio: %s, %s" % ( anaId, topo )
+    title = options["title"]
+    if title is None:
+        if anaId2 in anaId:
+            title = anaId2
+        if anaId in anaId2:
+            title = anaId
     plt.title ( title )
+    txStr = stopo
+    plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
+    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, outputtype="latex" )
+    if axis1 != axis2:
+        print ( f"[plotRatio] error, different axes!" )
+        sys.exit()
+    plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
+            horizontalalignment="right" )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( xlabel, fontsize=13 )
@@ -362,6 +387,29 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
     a1, a2 = options["label1"], options["label2"]
+    if a1 == None:
+        a1 = "???"
+        if anaId2 in anaId:
+            a1 = anaId.replace(anaId2,"")
+            if "combined" in valfile1:
+                a1 = "combined"
+        if anaId in anaId2:
+            a1 = "ul"
+        if a1.startswith("-"):
+            a1 = a1[1:]
+        print ( f"[plotRatio] have been asked to guess the label for {anaId}: {a1}" )
+    if a2 == None:
+        a2 = "???"
+        if anaId2 in anaId:
+            a2 = "ul"
+        if anaId in anaId2:
+            a2 = anaId2.replace(anaId,"")
+            if "combined" in valfile2:
+                a2 = "combined"
+        if a2.startswith("-"):
+            a2 = a2[1:]
+        print ( f"[plotRatio] have been asked to guess the label for {anaId2}: {a2}" )
+        
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
@@ -374,8 +422,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
 
     #text about no of SR in combined dataset
-    #plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
-               horizontalalignment="right" )
+    # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
+    #            horizontalalignment="right" )
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
@@ -446,19 +494,22 @@ def main():
             help="second analysis name, like the directory name, if not specified then same as analysis1 [None]",
             type=str, default=None )
     argparser.add_argument ( "-l1", "--label1",
-            help="label in the legend for analysis1 [susy]",
-            type=str, default="susy" )
+            help="label in the legend for analysis1, guess if None [None]",
+            type=str, default=None )
     argparser.add_argument ( "-o", "--output",
             help="outputfile, the @x's get replaced [ratios_@a_@t.png]",
             type=str, default="ratios_@a_@t.png" )
     argparser.add_argument ( "-l2", "--label2",
-            help="label in the legend for analysis2 [conf]",
-            type=str, default="conf" )
+            help="label in the legend for analysis2, guess if None [None]",
+            type=str, default=None )
     argparser.add_argument ( "-yl", "--ylabel",
-            help="label on the y axis",
+            help="label on the y axis, guess if None",
             type=str, default=None )
     argparser.add_argument ( "-xl", "--xlabel",
-            help="label on the x-axis",
+            help="label on the x-axis, guess if None",
+            type=str, default=None )
+    argparser.add_argument ( "--title",
+            help="plot title, guess if None",
             type=str, default=None )
     argparser.add_argument ( "-z", "--zmin",
             help="minimum z value, None means auto [.5]",
@@ -515,7 +566,7 @@ def main():
 
         options = { "meta": args.meta, "show": args.show, "xlabel": args.xlabel,
                     "ylabel": args.ylabel, "zmax": args.zmax, "zmin": args.zmin,
-                    "copy": args.copy, "output": args.output,
+                    "copy": args.copy, "output": args.output, "title": args.title,
                     "label1": args.label1, "label2": args.label2,
                     "ploteffs": args.efficiencies, "xmin": args.xmin,
                     "xmax": args.xmax, "ymin": args.ymin, "ymax": args.ymax }
@@ -535,4 +586,5 @@ def main():
         if args.copy:
             print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
 
-main()
+if __name__ == "__main__":
+    main()

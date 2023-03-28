@@ -21,7 +21,7 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
-def sizeof_f(num, suffix='B'):
+def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
         if abs(num) < 1024.:
             return "%3.1f%s%s" % (num, unit, suffix)
