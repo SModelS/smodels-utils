@@ -6,6 +6,8 @@
 
 """
 
+__all__ = [ "validatePlot" ]
+
 import sys,os,copy
 try:
     import colorama as __c
@@ -20,6 +22,7 @@ try:
     from ConfigParser import SafeConfigParser, NoOptionError
 except ImportError as e:
     from configparser import ConfigParser, NoOptionError
+
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -252,7 +255,7 @@ def run ( expResList, options : dict, keep, db ):
                 axes = txname.axes
             axis = options["axis"]
             # logger.info ( "axis", axis )
-            if axis is None:
+            if axis in [ None, "None", "" ]:
                 for ax in axes:
                     hasCorrectAxis_ = hasCorrectAxis
                     x,y,z = var("x y z")
@@ -412,7 +415,19 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
-def _doGenerate ( parser ):
+def updateOptions ( options : dict, parser ):
+    """ update the default options with the content from the config file """
+    for option,default in options.items():
+        otype = type(default)
+        if parser.has_option("options",option):
+            if otype == bool:
+                options[option] = parser.getboolean("options",option)
+            if otype == int:
+                options[option] = parser.getint("options",option)
+            if otype == str:
+                options[option] = parser.get("options",option)
+
+def doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),
     explicitly do not generate any data (False), or generate only on-demand
     (None) """
@@ -537,10 +552,10 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
 
-    options = { "prettyPlots": False, # ## only pretty plots, only ugly plots, or both
+    options = { "prettyPlots": "False", # ## only pretty plots, only ugly plots, or both
                 "keepTopNSRs": 0, ## keep an ordered list of <n> most sensitive signal regions, needed for trimming and aggregating
                 "drawChi2Line": False, # draw an exclusion line derived from chi2 values in green (only on pretty plot )
-                "limitPoints": None, ## limit the number of points to run on
+                "limitPoints": -1, ## limit the number of points to run on
                 "axis": None, ## the axes to plot. If not given, take from sms.root
                 "style": "", # specify a plotting style, currently only
                 "ratioPlots": True, ## create ratioplots if possible
@@ -554,6 +569,7 @@ if __name__ == "__main__":
                 "extraInfo": False, ## add extra info to the plot?
                 "pngPlots": True, ## also png plots?
                 "pdfPlots": True, ## also pdf plots?
+                "expectationType": "posteriori",
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
@@ -562,13 +578,10 @@ if __name__ == "__main__":
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
     }
+
+    # some options receive special treatment
     if parser.has_section("options"):
-        if parser.has_option("options","ncpus"):
-            options["ncpus"] = parser.getint("options","ncpus")
-        if parser.has_option("options","validationFolder"):
-            options["validationFolder"] = parser.get("options","validationFolder")
-        if parser.has_option("options","interpolationType"):
-            options["interpolationType"]=parser.get("options","interpolationType")
+        updateOptions ( options, parser )
         if parser.has_option("options","drawExpected"):
             drawExpected = parser.get("options","drawExpected")
             if drawExpected in [ "1", "true", "True", True, 1, "yes" ]:
@@ -576,17 +589,6 @@ if __name__ == "__main__":
             if drawExpected in [ "0", "false", "False", False, 0, "no" ]:
                 drawExpected = False
             options["drawExpected"] = drawExpected
-        if parser.has_option("options","pngPlots"):
-            options["pngPlots"] = parser.getboolean("options", "pngPlots" )
-        if parser.has_option("options","ratioPlots"):
-            options["ratioPlots"] = parser.getboolean("options", "ratioPlots" )
-        if parser.has_option("options","pdfPlots"):
-            options["pdfPlots"] = parser.getboolean("options", "pdfPlots" )
-        if parser.has_option("options","backend"):
-            options["backend"] = parser.get("options", "backend" )
-        options["expectationType"] = "posteriori"
-        if parser.has_option("options","expectationType"):
-            options["expectationType"] = parser.get ( "options", "expectationType" )
         if parser.has_option("options","keepTopNSRs"):
             options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
             if dataselector in [ "combined", "upperLimit" ] and options["keepTopNSRs"]>0:
@@ -594,10 +596,6 @@ if __name__ == "__main__":
         else:
             if dataselector in [ "efficiencyMap" ]:
                 options["keepTopNSRs"] = 10 ## for effiency maps we want that per default
-        if parser.has_option("options","axis"):
-            options["axis"] = parser.get("options","axis" )
-        if parser.has_option("options","drawChi2Line"):
-            options["drawChi2Line"] = parser.getboolean("options","drawChi2Line" )
         if parser.has_option("options","prettyPlots"):
             spretty = parser.get("options", "prettyPlots" ).lower()
             if spretty in [ "true", "yes", "1" ]:
@@ -611,12 +609,6 @@ if __name__ == "__main__":
             if options["prettyPlots"] == False and spretty not in [ "false", "0", "no", "dictonly" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
-        if parser.has_option("options","limitPoints"):
-            options["limitPoints"] = parser.getint("options","limitPoints")
-        if parser.has_option("options","extraInfo"):
-            options["extraInfo"] = parser.getboolean("options", "extraInfo")
-        if parser.has_option("options","preliminary"):
-            options["preliminary"] = parser.getboolean("options", "preliminary")
         if parser.has_option("options","style"):
             o = parser.get("options", "style")
             options["style"] = o
@@ -627,16 +619,10 @@ if __name__ == "__main__":
             options["legendplacement"] = parser.get("options", "legendplacement")
             options["legendplacement"] = options["legendplacement"].\
                 replace("'","").replace('"',"").lower().strip()
-        if parser.has_option("options","weightedAgreementFactor"):
-            options["weightedAgreementFactor"] = parser.getboolean("options", "weightedAgreementFactor")
-        if parser.has_option("options","model" ):
-            options["model"] = parser.get("options","model")
-        if parser.has_option("options","show" ):
-            options["show"] = parser.get("options","show")
     ## Set to True to run SModelS on the slha files. If False, use the already
     ## existing *.py files in the validation folder. If None or
     ## 'ondemand', produce data only if none are found
-    options["generateData"] = _doGenerate ( parser )
+    options["generateData"] = doGenerate ( parser )
 
     if args.show:
         options["show"]=True
