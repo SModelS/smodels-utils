@@ -77,7 +77,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
             valPlot.saveData()
         if pretty not in [ "dictonly" ]:
             valPlot.savePlot( fformat = "png" )
-        if options["pdfAlso"] and pretty not in [ "dictonly" ]:
+        if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
     from smodels_utils.helper.rootTools import destroyRoot
     destroyRoot()
@@ -86,7 +86,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
         if options["generateData"]:
             valPlot.saveData()
         valPlot.savePlot( fformat = "png" )
-        if options["pdfAlso"]:
+        if options["pdfPlots"]:
             valPlot.toPdf()
     destroyRoot()
     return valPlot
@@ -544,7 +544,7 @@ if __name__ == "__main__":
                 "limitPoints": None, ## limit the number of points to run on
                 "axis": None, ## the axes to plot. If not given, take from sms.root
                 "style": "", # specify a plotting style, currently only
-                "ratioplots": True, ## create ratioplots if possible
+                "ratioPlots": True, ## create ratioplots if possible
                 # "" and "sabine" are known
                 # style "sabine": SR label "pyhf combining 2 SRs" gets moved to
                 # top left corner of temperature p lot in pretty print
@@ -553,8 +553,8 @@ if __name__ == "__main__":
                 "weightedAgreementFactor": False,
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
-                "pngAlso": False, ## only pdf plots?
-                "pdfAlso": True, ## only png plots?
+                "pngPlots": True, ## also png plots?
+                "pdfPlots": True, ## also pdf plots?
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)
                 "preliminary": False, ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
@@ -578,11 +578,11 @@ if __name__ == "__main__":
                 drawExpected = False
             options["drawExpected"] = drawExpected
         if parser.has_option("options","pngPlots"):
-            options["pngAlso"] = parser.getboolean("options", "pngPlots" )
-        if parser.has_option("options","ratioplots"):
-            options["ratioplots"] = parser.getboolean("options", "ratioplots" )
+            options["pngPlots"] = parser.getboolean("options", "pngPlots" )
+        if parser.has_option("options","ratioPlots"):
+            options["ratioPlots"] = parser.getboolean("options", "ratioPlots" )
         if parser.has_option("options","pdfPlots"):
-            options["pdfAlso"] = parser.getboolean("options", "pdfPlots" )
+            options["pdfPlots"] = parser.getboolean("options", "pdfPlots" )
         if parser.has_option("options","backend"):
             options["backend"] = parser.get("options", "backend" )
         options["expectationType"] = "posteriori"
