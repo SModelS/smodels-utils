@@ -892,7 +892,7 @@ class TxNameInput(Locker):
                 continue
             #Check if mass array is consistent with the mass constraints given by the
             #txname constraint. If not, skip this mass.
-            if not self.checkMassConstraints(massArray):
+            if not self.checkMassConstraints(massArray,value):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
@@ -1033,7 +1033,7 @@ class TxNameInput(Locker):
         if self.__hasWarned__[line]<2:
             logger.error ( line )
 
-    def checkMassConstraints(self,massArray):
+    def checkMassConstraints(self,massArray, value = None ):
         """
         Check if massArray satisfies the mass constraints defined in massConstraints
 
@@ -1042,6 +1042,7 @@ class TxNameInput(Locker):
 
         :param massArray: array with masses to be checked. It must be consistend with the
                           topology of the txname constraint.
+        :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
         """
         if hasattr(self,'massConstraint'):
             if not self.massConstraint:
@@ -1086,11 +1087,11 @@ class TxNameInput(Locker):
                         self.warn ( f"expected masses/floats, got string: ''{m2}''. skip it." )
                         continue
                     massDiff = m1-m2
-                    if massDiff < 0.:
+                    if massDiff < 0. and ( value is None or value > 0. ):
                         self._smallerThanError += 1
                         if not quenchNegativeMasses:
                             if self._smallerThanError < 3:
-                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
+                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s value is %s" % (m1,m2,str(self),value))
                             if self._smallerThanError == 3:
                                 logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
