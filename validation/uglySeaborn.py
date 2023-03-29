@@ -299,5 +299,5 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if not silentMode:
         _ = raw_input("Hit any key to close\n")
 
-    plt.savefig ( "this.png" )
+    # plt.savefig ( "this.png" )
     return plt,base
