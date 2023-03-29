@@ -21,7 +21,8 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
-         getClosestValue, getAxisRange, isWithinRange, filterWithinRanges
+         getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
+         importMatplot
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -108,17 +109,6 @@ class Wrapper:
             self.parent.callable_results.append(ret)
             return ret
     
-def importMatplot ( record : bool ):
-    """ import matplotlib """
-    if not record:
-        import matplotlib.pylab as plt
-        return plt
-    import matplotlib.pylab as actualplt
-    plt = Wrapper ( actualplt )
-    import atexit
-    atexit.register ( plt.closeFile )
-    return plt
-
 def pprint ( xs, ys, values, xrange = None, yrange = None ):
     """ pretty print the values, for debugging """
     for yi,line in enumerate ( values ):

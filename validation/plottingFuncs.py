@@ -39,6 +39,21 @@ def timeStamp ( comment, t = None ):
     dt = t-rt0[0]
     print ( f"{dt:.2f}: {comment}" )
 
+def importMatplot ( record : bool ):
+    """ import matplotlib 
+    :param record: if true, then wrap the module into a recorder class.
+                   this class will create a recorder.py script 
+    """
+    if not record:
+        import matplotlib.pylab as plt
+        return plt
+    import matplotlib.pylab as actualplt
+    plt = Wrapper ( actualplt )
+    import atexit
+    atexit.register ( plt.closeFile )
+    return plt
+
+
 def getColormap():
     """ our matplotlib colormap for pretty plots """
     # return plt.cm.RdYlBu_r
