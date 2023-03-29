@@ -136,7 +136,11 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     :param combine: is a a combined result that is asked for?
     :param db: the database
     :param datafile: validation file
+    :returns: True, if ratioplots were created, else False
     """
+    print ( "opts", opts )
+    if opts["ratioplots"]==False:
+        return False
     from smodels_utils.helper.prettyDescriptions import prettyAxes
     from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
     massplane = MassPlane.fromString(txname, ax )
@@ -164,6 +168,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
                 "zmax": 2. }
     import plotRatio
     plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
+    return True
 
 def run ( expResList, options : dict, keep, db ):
     """
@@ -539,6 +544,7 @@ if __name__ == "__main__":
                 "limitPoints": None, ## limit the number of points to run on
                 "axis": None, ## the axes to plot. If not given, take from sms.root
                 "style": "", # specify a plotting style, currently only
+                "ratioplots": True, ## create ratioplots if possible
                 # "" and "sabine" are known
                 # style "sabine": SR label "pyhf combining 2 SRs" gets moved to
                 # top left corner of temperature p lot in pretty print
@@ -573,6 +579,8 @@ if __name__ == "__main__":
             options["drawExpected"] = drawExpected
         if parser.has_option("options","pngPlots"):
             options["pngAlso"] = parser.getboolean("options", "pngPlots" )
+        if parser.has_option("options","ratioplots"):
+            options["ratioplots"] = parser.getboolean("options", "ratioplots" )
         if parser.has_option("options","pdfPlots"):
             options["pdfAlso"] = parser.getboolean("options", "pdfPlots" )
         if parser.has_option("options","backend"):
