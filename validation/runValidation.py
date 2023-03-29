@@ -609,16 +609,14 @@ if __name__ == "__main__":
             if options["prettyPlots"] == False and spretty not in [ "false", "0", "no", "dictonly" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
-        if parser.has_option("options","style"):
-            o = parser.get("options", "style")
-            options["style"] = o
-            if o.count("; ")>1 or o.count(" ;")>1:
-                logger.warning ( "found more than one semicolon with space in style field ''{o}''. Please check if you didnt add one space too many!" )
 
         if parser.has_option("options","legendplacement"):
             options["legendplacement"] = parser.get("options", "legendplacement")
             options["legendplacement"] = options["legendplacement"].\
                 replace("'","").replace('"',"").lower().strip()
+
+    if options["style"].count("; ")>1 or options["style"].count(" ;")>1:
+        logger.warning ( "found more than one semicolon with space in style field ''{o}''. Please check if you didnt add one space too many!" )
     ## Set to True to run SModelS on the slha files. If False, use the already
     ## existing *.py files in the validation folder. If None or
     ## 'ondemand', produce data only if none are found
