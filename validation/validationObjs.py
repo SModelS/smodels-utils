@@ -976,7 +976,7 @@ class ValidationPlot():
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
-            if self.options["pdfAlso"]:
+            if self.options["pdfPlots"]:
                cmd = f"convert {filename} {newfilename}" 
                import subprocess
                o = subprocess.getoutput ( cmd )

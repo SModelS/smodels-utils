@@ -138,8 +138,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     :param datafile: validation file
     :returns: True, if ratioplots were created, else False
     """
-    print ( "opts", opts )
-    if opts["ratioplots"]==False:
+    if opts["ratioPlots"]==False:
         return False
     from smodels_utils.helper.prettyDescriptions import prettyAxes
     from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
