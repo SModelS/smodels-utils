@@ -235,8 +235,8 @@ class MetaInfoInput(Locker):
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x and not matrixIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
-                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) at (%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
+                            if dsVar > 1.5 * x and not matrixIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
+                                logger.error ( "variance determined from table (%.2g) is more than 1.5*variance in covariance matrix (%.2g) at #(%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
                             off = max ( dsVar,x ) / min ( dsVar,x)
@@ -1089,9 +1089,9 @@ class TxNameInput(Locker):
                     if massDiff < 0.:
                         self._smallerThanError += 1
                         if not quenchNegativeMasses:
-                            if self._smallerThanError < 4:
+                            if self._smallerThanError < 3:
                                 logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
-                            if self._smallerThanError == 4:
+                            if self._smallerThanError == 3:
                                 logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
