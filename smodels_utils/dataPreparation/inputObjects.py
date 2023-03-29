@@ -165,7 +165,7 @@ class MetaInfoInput(Locker):
 
     def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
                           max_datasets=None, aggregate = None, datasets = None,
-                          histoIsCorrelations=False, aggprefix="ar" ):
+                          matrixIsCorrelations=False, aggprefix="ar" ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -180,7 +180,7 @@ class MetaInfoInput(Locker):
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
          matrix with the errors given per signal region
-        :param histoIsCorrelations: if true, then assume that we histoname
+        :param matrixIsCorrelations: if true, then assume that we histoname
         refers to a correlation matrix, not a covariance matrix, so multiply with
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
@@ -222,7 +222,7 @@ class MetaInfoInput(Locker):
             for rowctr,row in enumerate(handler.covariance):
                 self.covariance += "["
                 for colctr,x in enumerate(row):
-                    if histoIsCorrelations:
+                    if matrixIsCorrelations:
                         if datasets == None:
                             logger.error ( "you supplied correlations, now i need datasets" )
                             sys.exit()
@@ -235,7 +235,7 @@ class MetaInfoInput(Locker):
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x and not histoIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
+                            if dsVar > 1.2 * x and not matrixIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
                                 logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) at (%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
