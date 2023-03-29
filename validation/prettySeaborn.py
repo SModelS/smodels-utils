@@ -9,6 +9,8 @@
 
 """
 
+__all__ = [ "createPrettyPlot" ]
+
 import logging,os,sys,random,copy
 import numpy as np
 sys.path.append('../')
