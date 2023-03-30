@@ -18,7 +18,7 @@ from validation.validationHelpers import getValidationFileContent, shortTxName, 
        mergeExclusionLines, mergeValidationData
 from typing import Union
 
-__all__ = [ "draw" ]
+__all__ = [ "plot" ]
         
 warnings.simplefilter("ignore")
 
@@ -180,7 +180,7 @@ def fetchAllOtherPoints ( bestSRs : list, regions : list ) -> tuple:
         ys.append ( point["y"] )
     return xs, ys
 
-def draw( dbpath : str, analysis : str, validationfiles : str, 
+def plot( dbpath : str, analysis : str, validationfiles : str, 
         max_x : Union[None,float], max_y : Union[None,float], 
         outputfile : str, defcolors : Union[None,list], rank : int, nmax : int,
         show : bool = False ):
@@ -339,6 +339,8 @@ if __name__ == "__main__":
             type=str, default="./@rSR_@a_@t.png" )
     argparser.add_argument ( "-D", "--default", action="store_true",
             help="default run on arguments. currently set to be the exo 13 006 plots" )
+    argparser.add_argument ( "-s", "--show", action="store_true",
+            help="show plot, after plotting" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     argparser.add_argument ( "-p", "--push", action="store_true",
@@ -351,16 +353,16 @@ if __name__ == "__main__":
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
                 print ( "[plotBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
-                fname = draw( ipath, args.max_x, args.max_y, args.outputfile,
-                              rank = args.rank, nmax = args.nmax )
+                fname = plot( ipath, args.max_x, args.max_y, args.outputfile,
+                              rank = args.rank, nmax = args.nmax, show = args.show )
                 if args.copy:
                     cmd = "cp %s ../../smodels.github.io/plots/" % fname
                     o = subprocess.getoutput ( cmd )
                     print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
     else:
-        fname = draw( args.dbpath, args.analysis, args.validationfiles, 
+        fname = plot( args.dbpath, args.analysis, args.validationfiles, 
                       args.max_x, args.max_y, args.outputfile, args.colors,
-                      rank = args.rank, nmax = args.nmax )
+                      rank = args.rank, nmax = args.nmax, show=args.show )
         if args.copy:
             cmd = "cp %s ../../smodels.github.io/plots/" % fname
             o = subprocess.getoutput ( cmd )

@@ -197,15 +197,15 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     p2 = ana.rfind("/")
     ana = ana[p2+1:]
     valfile = os.path.basename ( datafile )
-    logger.info ( "now plotting a bestSR plot!" )
-    print ( f"dbpath {dbpath}, ana {ana}, valfile {valfile}" )
+    # print ( f"dbpath {dbpath}, ana {ana}, valfile {valfile}" )
     max_x, max_y = None, None
     rank = 1
     nmax = 6
     output = os.path.dirname ( datafile ) + f"/bestSR_{txname}_{axis}.png"
+    logger.info ( f"now plotting bestSR plot to {output}" )
     defcolors = None
-    from plotBestSRs import draw
-    draw( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
+    from plotBestSRs import plot
+    plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"] )
 
 def run ( expResList, options : dict, keep, db ):
