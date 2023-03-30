@@ -208,17 +208,14 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         region = regions[i] # thats the region we are interested in
         xs, ys = fetchPoints ( bestSRs, region )
         plt.scatter ( xs, ys, s=25, c=[ color ]*len(xs), label=region )
-        miny = min ( *ys, miny )
-        maxy = max ( *ys, maxy )
+        miny, maxy = min ( *ys, miny ), max ( *ys, maxy )
     xs, ys = fetchAllOtherPoints ( bestSRs, regions )
-    miny = min ( *ys, miny )
-    maxy = max ( *ys, maxy )
+    miny, maxy = min ( *ys, miny ), max ( *ys, maxy )
     plt.scatter ( xs, ys, s=25, c=[ "k" ]*len(xs), label="others" )
     # plot also the no results
     xs, ys = fetchPoints ( bestSRs, None )
     plt.scatter ( xs, ys, s=2, c=[ "grey" ]*len(xs), label="no result" )
-    miny = min ( *ys, miny )
-    maxy = max ( *ys, maxy )
+    miny, maxy = min ( *ys, miny ), max ( *ys, maxy )
 
     handles, labels = plt.gca().get_legend_handles_labels()
     i =1
