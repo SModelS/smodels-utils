@@ -39,6 +39,86 @@ def timeStamp ( comment, t = None ):
     dt = t-rt0[0]
     print ( f"{dt:.2f}: {comment}" )
 
+class Recorder:
+    """ a wrapper class that records the function calls, stores
+        thme in recorder.py """
+    def __init__(self, obj):
+        self.recordingfilename = "recorder.py"
+        self.recordingfile = open ( self.recordingfilename, "wt" )
+        self.recordingfile.write ( "#!/usr/bin/env python3\n" )
+        self.recordingfile.write ( "#\n" )
+        self.recordingfile.write ( "# a python script that recorded the plotting statements,\n" )
+        self.recordingfile.write ( "# so we can reproduce the plotting\n\n" )
+        self.recordingfile.write ( "from matplotlib import pyplot as plt\n" )
+        self.recordingfile.write ( "from plottingFuncs import getColormap\n" )
+        # from matplotlib.transforms import BboxTransformTo, TransformedBbox, Bbox
+        self.recordingfile.write ( "import numpy as np\n" )
+        self.recordingfile.write ( "from numpy import array\n" )
+        self.obj = obj
+        self.callable_results = []
+
+    def closeFile ( self ):
+        self.recordingfile.close()
+        os.chmod ( self.recordingfilename, 0o755 )
+
+    def __getattr__(self, attr):
+       #  print("Getting {0}.{1}".format(type(self.obj).__name__, attr))
+        ret = getattr(self.obj, attr)
+        if hasattr(ret, "__call__"):
+            return self.FunctionWrapper(self, ret)
+        return ret
+
+    class FunctionWrapper:
+        def __init__(self, parent, callable):
+            self.parent = parent
+            self.callable = callable
+
+        def __call__(self, *args, **kwargs):
+            #if self.callable.__name__ == "pcolormesh":
+            #    import IPython; IPython.embed()
+            s_args = ""
+            for a in args:
+                if "matplotlib" in str(type(a)):
+                    continue
+                if len(s_args):
+                    s_args += ","
+                if type(a) == str:
+                    a = f"'{a}'"
+                if type(a) in [  np.array, np.ndarray ]:
+                    a=list(a)
+                a = str(a)
+                a = a.replace("nan","np.nan" )
+                a = a.replace( r"\r","\\\\r" )
+                a = a.replace( r"\t","\\\\t" )
+                s_args += a
+            for k,v in kwargs.items():
+                if "matplotlib.colors.LinearSegmentedColormap" in str(v):
+                    s_args += f",{k}=getColormap()"
+                    continue
+                if "transform" in k:
+                    s_args += f",transform=fig.transFigure"
+                    continue
+                #if "matplotlib" in str(type(v)):
+                #    print ( "v", v )
+                #    continue
+                if len(s_args):
+                    s_args += ","
+                s_args += f"{k}="
+                if type(v)==str:
+                    s_args += f"'{str(v)}'"
+                else:
+                    s_args += f"{str(v)}"
+            line = f"plt.{self.callable.__name__}({s_args})\n"
+            if "savefig" in line:
+                line = "plt.savefig('recorded.png')\n"
+            if "plt.gcf()" in line:
+                line = "fig=plt.gcf()\n"
+            self.parent.recordingfile.write ( line )
+            ret = self.callable(*args, **kwargs)
+            self.parent.callable_results.append(ret)
+            return ret
+    
+
 def importMatplot ( record : bool ):
     """ import matplotlib 
     :param record: if true, then wrap the module into a recorder class.
@@ -48,7 +128,7 @@ def importMatplot ( record : bool ):
         import matplotlib.pylab as plt
         return plt
     import matplotlib.pylab as actualplt
-    plt = Wrapper ( actualplt )
+    plt = Recorder ( actualplt )
     import atexit
     atexit.register ( plt.closeFile )
     return plt
