@@ -134,7 +134,7 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
 
 def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
        axis ):
-    """ check if we should plot a ratio plot 
+    """ check if we should plot a ratio plot. plot, if we should
     :param txname: the txname
     :param combine: is a a combined result that is asked for?
     :param db: the database
@@ -143,9 +143,9 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     """
     if opts["ratioPlots"]==False:
         return False
-    from smodels_utils.helper.prettyDescriptions import prettyAxes
-    from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-    massplane = MassPlane.fromString(txname, ax )
+    # from smodels_utils.helper.prettyDescriptions import prettyAxes
+    # from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+    # massplane = MassPlane.fromString(txname, ax )
     #axis = prettyAxes ( txname, ax, output )
     # axis = str(massplane)#  ax.replace(" ","")
     axis = axis.replace(",","").replace("(","").replace(")","").\
@@ -171,6 +171,41 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     import plotRatio
     plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
     return True
+
+def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
+       axis ):
+    """ check if we should plot a best signal region plot
+    :param expRes: the experimental result
+    :param txname: the txname
+    :param combine: is a a combined result that is asked for?
+    :param db: the database
+    :param datafile: validation file
+    :returns: True, if ratioplots were created, else False
+    """
+    axis = axis.replace(",","").replace("(","").replace(")","").\
+                    replace("/","d").replace("*","")
+    if opts["bestSRPlots"]==False:
+        return False
+    if combine: # for combined plots, we dont do best SR plots
+        return False 
+    if len ( expRes.datasets ) == 1:
+        return False ## obviously not needed, whether it is effmap or UL
+    dbpath = db.subs[0].base
+    ana = datafile.replace(dbpath,"")
+    p1 = ana.find("validation")
+    ana = ana[:p1-1]
+    p2 = ana.rfind("/")
+    ana = ana[p2+1:]
+    valfile = os.path.basename ( datafile )
+    logger.info ( "now plotting a bestSR plot!" )
+    print ( f"dbpath {dbpath}, ana {ana}, valfile {valfile}" )
+    max_x, max_y = None, None
+    rank = 1
+    nmax = 6
+    output = os.path.dirname ( datafile ) + f"/bestSR_{txname}_{axis}.png"
+    defcolors = None
+    from plotBestSRs import draw
+    draw( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax)
 
 def run ( expResList, options : dict, keep, db ):
     """
@@ -311,6 +346,8 @@ def run ( expResList, options : dict, keep, db ):
                         validationDir = re.getValidationDir ( None )
                         datafile = re.getDataFile(validationDir)
                     checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
+                                         localopts, datafile, re.niceAxes )
+                    checkForBestSRPlots ( expRes, txnameStr, ax, db, combine, 
                                          localopts, datafile, re.niceAxes )
             else: # axis is not None
                 x,y,z = var("x y z")
@@ -559,6 +596,7 @@ if __name__ == "__main__":
                 "axis": None, ## the axes to plot. If not given, take from sms.root
                 "style": "", # specify a plotting style, currently only
                 "ratioPlots": True, ## create ratioplots if possible
+                "bestSRPlots": True, ## create best SR plots if meaningful
                 # "" and "sabine" are known
                 # style "sabine": SR label "pyhf combining 2 SRs" gets moved to
                 # top left corner of temperature p lot in pretty print
