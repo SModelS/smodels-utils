@@ -165,7 +165,7 @@ class MetaInfoInput(Locker):
 
     def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
                           max_datasets=None, aggregate = None, datasets = None,
-                          histoIsCorrelations=False, aggprefix="ar" ):
+                          matrixIsCorrelations=False, aggprefix="ar" ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -180,7 +180,7 @@ class MetaInfoInput(Locker):
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
          matrix with the errors given per signal region
-        :param histoIsCorrelations: if true, then assume that we histoname
+        :param matrixIsCorrelations: if true, then assume that we histoname
         refers to a correlation matrix, not a covariance matrix, so multiply with
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
@@ -222,7 +222,7 @@ class MetaInfoInput(Locker):
             for rowctr,row in enumerate(handler.covariance):
                 self.covariance += "["
                 for colctr,x in enumerate(row):
-                    if histoIsCorrelations:
+                    if matrixIsCorrelations:
                         if datasets == None:
                             logger.error ( "you supplied correlations, now i need datasets" )
                             sys.exit()
@@ -235,8 +235,8 @@ class MetaInfoInput(Locker):
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x and not histoIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
-                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) at (%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
+                            if dsVar > 1.5 * x and not matrixIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
+                                logger.error ( "variance determined from table (%.2g) is more than 1.5*variance in covariance matrix (%.2g) at #(%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
                             off = max ( dsVar,x ) / min ( dsVar,x)
@@ -892,7 +892,7 @@ class TxNameInput(Locker):
                 continue
             #Check if mass array is consistent with the mass constraints given by the
             #txname constraint. If not, skip this mass.
-            if not self.checkMassConstraints(massArray):
+            if not self.checkMassConstraints(massArray,value):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
@@ -1033,7 +1033,7 @@ class TxNameInput(Locker):
         if self.__hasWarned__[line]<2:
             logger.error ( line )
 
-    def checkMassConstraints(self,massArray):
+    def checkMassConstraints(self,massArray, value = None ):
         """
         Check if massArray satisfies the mass constraints defined in massConstraints
 
@@ -1042,6 +1042,7 @@ class TxNameInput(Locker):
 
         :param massArray: array with masses to be checked. It must be consistend with the
                           topology of the txname constraint.
+        :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
         """
         if hasattr(self,'massConstraint'):
             if not self.massConstraint:
@@ -1086,12 +1087,12 @@ class TxNameInput(Locker):
                         self.warn ( f"expected masses/floats, got string: ''{m2}''. skip it." )
                         continue
                     massDiff = m1-m2
-                    if massDiff < 0.:
+                    if massDiff < 0. and ( value is None or value > 0. ):
                         self._smallerThanError += 1
                         if not quenchNegativeMasses:
-                            if self._smallerThanError < 4:
-                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
-                            if self._smallerThanError == 4:
+                            if self._smallerThanError < 3:
+                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s value is %s" % (m1,m2,str(self),value))
+                            if self._smallerThanError == 3:
                                 logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
