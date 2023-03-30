@@ -16,6 +16,9 @@ from smodels_utils.helper.various import getPathName, getExclusionCurvesFor
 from smodels_utils.helper import prettyDescriptions
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
+from typing import Union
+
+__all__ = [ "draw" ]
         
 warnings.simplefilter("ignore")
 
@@ -32,17 +35,9 @@ def convertNewAxes ( newa ):
     print ( f"[plotBestSRs] cannot convert axis {newa}" )
     return None
 
-def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors,
-          rank : int, nmax : int ):
-    """ plot.
-    :param dbpath: path to database
-    :param analysis: analysis to consider
-    :param validationfiles: T*.py files
-    :param outputfile: name of outputfile, using @a and @t to stand for
-     analysis and topology, respectively
-    :param defcolors: user-specified colors
-    :param rank: draw best (rank=1), or second best or ....
-    :param nmax: maximum SRs to draw (6 by default)
+
+def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict: 
+    """ fetch and merge the contents of validation files
     """
     vfiles = validationfiles.split(",")
     lines = []
@@ -62,28 +57,39 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
         eljson = os.path.join ( smspath, "exclusion_lines.json" )
         if os.path.exists ( eljson ):
             ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
-            # print ( "ll", ll[topo] )
             lines.append (  ll[topo] )
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )
-    bestSRs = []
-    noResults = []
-    nbsrs = []
-    skipped, err = 0, None
+    return { "data": data, "line": line, "txnames": txnames, "axis": axisv }
+
+def isWithinValue ( value, maxvalue ):
+    if maxvalue == None:
+        return True
+    if value <= maxvalue:
+        return True
+    return False
+
+def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float], 
+                 rank ) -> list:
+    """ get a list of dictionaries of signal regions, None for no result
+    :param rank: get best (rank=1), or second best or ....
+    """
+    bestSRs = [] # a list of dictioanries of x,y,SR
+    skipped, err = 0, None # we also count the number of error points
     for point in data:
         if "error" in point:
             skipped += 1
             err = point["error"]
             if "axes" in point and point["axes"] != None:
                 axes = convertNewAxes ( point["axes"] )
-                if max_x != None and axes[1]>max_x:
+                if not isWithinValue ( axes[1], max_x ):
                     continue
-                if max_y != None and axes[0]>max_y:
+                if not isWithinValue ( axes[0], max_y ):
                     continue
                 if axes == None:
                     continue
-                noResults.append ( ( axes[1], axes[0] ) )
+                bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": None } )
             continue
         axes = convertNewAxes ( point["axes"] )
         if max_x != None and axes[1]>max_x:
@@ -96,90 +102,124 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
                 print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Maybe rerun validation?")
                 return
             ds = point["leadingDSes"][rank][1]
-        bestSRs.append ( ( axes[1], axes[0], ds ) )
-        nbsrs.append ( ( axes[1], axes[0], 0 ) )
+        bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
         print ( "[plotBestSRs] skipped %d/%d points: %s" % \
                 ( skipped, len(data), err ) )
-    bestSRs.sort()
-    nbsrs = numpy.array ( nbsrs )
-    srDict, nrDict = {}, {}
-    srNum = 0
-    predefined = {}
-    # predefined = { "c000": 3, "c100": 2, "c200": 0, "c300": 1 }
-    for k,v in predefined.items():
-        srDict[k]=v
-        nrDict[v]=k
-    for ctr,x in enumerate(bestSRs):
-        if x[2] not in srDict.keys():
-            while srNum in nrDict:
-                srNum+=1
-            srDict[x[2]]=srNum
-            nrDict[srNum]=x[2]
-            srNum+=1
-        nbsrs[ctr][0] = x[0]
-        nbsrs[ctr][1] = x[1]
-        nbsrs[ctr][2] = srDict[x[2]]
-    colorCounts,cCounts={},{}
-    for i in range(int(1+max(nbsrs[::,2]) ) ):
-        colorCounts[i]=list(map(int,nbsrs[::,2])).count(i)
-    for k,v in colorCounts.items():
-        if not v in cCounts:
-            cCounts[v]=[]
-        cCounts[v].append(k)
-    occs = list ( cCounts.keys() )
-    occs.sort( reverse=True )
-    ctr = 0
-    origcolors = [ "r", "g", "b", "c", "m", "y" ] # "#ffa500", '#115f6a', "#A52A2A", "k" ]
-    origcolors += [ "navy", "teal", "maroon", "coral", "lime", "aqua", "indigo", "wheat" ]
-    #origcolors += [ "slate" ]
-    for i in range(30):
-        origcolors.append ( "k" )
-    for i in range(nmax,len(origcolors)):
-        origcolors[i]="k"
-    if defcolors not in [ "", None ]:
-        for i,c in enumerate(defcolors.split(",")[:28]):
-            origcolors[i]=c
-    colors = copy.deepcopy ( origcolors )
-    sortByOccurences = True # False
-    if defcolors not in [ "", None ]:
-        sortByOccurences = False
-    if sortByOccurences:
-        for occ in occs:
-            if occ == 0:
-                break
-            for nr in cCounts[occ]:
-                colors[nr]=origcolors[ctr]
-                ctr+=1
-    ctr = 0
-    while len(nrDict.keys()) > len(colors):
-        print ( "ERROR: not enough colors defined (%d needed, %d defined)!!" % \
-                ( len(nrDict.keys()), len(colors) ) )
-        colors.append ( list(C.cnames.keys())[ctr] )
-        ctr += 1
-    noRx, noRy = [], []
-    for i in noResults:
-        noRx.append ( i[0] )
-        noRy.append ( i[1] )
-    ax = plt.gca()
-    keys = list ( nrDict.items() )
-    keys.sort( key = lambda x: x[1] )
-    # print ( "colors", colors )
-    for i,(n,v) in enumerate(keys):
-        x,y=[],[]
-        for x_,y_,z_ in nbsrs:
-            if n == int(z_):
-                x.append ( x_ )
-                y.append ( y_ )
-        if len(x)==0:
+    return bestSRs
+
+def countSignalRegions ( bestSRs : dict ) -> dict:
+    """ count how often each signal region appears """
+    counts = {}
+    for bestSR in bestSRs:
+        srname = bestSR["SR"]
+        if not srname in counts:
+            counts[ srname ] = 0
+        counts[ srname ] += 1
+    return counts
+
+def getListOfColors ( defcolors : Union[None,list], nr : int ) -> list:
+    """ get the list of colors we will be using.
+    :param defcolors: in case the user gave us a list of colors, use it
+    :param nr: the number of colors we will be needing
+    """
+    colors = []
+    if defcolors == None: # here are our defaults
+        colors = [ "r", "g", "b", "c", "m", "y" ] 
+        # "#ffa500", '#115f6a', "#A52A2A", "k" ]
+        colors += [ "navy", "teal", "maroon", "coral", "lime", "aqua" ]
+        colors += [ "indigo", "wheat" ]
+    else:
+        colors = defcolors
+    if len(colors) < nr:
+        colors += [ "k" ]*(nr-len(colors))
+    colors = colors[:nr]
+    return colors
+
+def getListOfSignalRegions ( srcounts : dict, nmax : int ) -> list:
+    """ get the ordered list signal regions we actually wish to plot, i.e.
+        the <nmax> most prominent ones """
+    regions = []
+    invertedSRCounts = {} # a dictionary of signal regions with n_occurenses as keys
+    for k,v in srcounts.items():
+        if k is None:
             continue
-        #col = colors[n]
-        col = colors[i]
-        label = nrDict[n]
-        if col == "k":
-            label = "others"
-        plt.scatter ( x, y, s=25, c=[ col ]*len(x), label=label )
-    plt.scatter ( noRx, noRy, s=2, c=["grey"]*len(noRx), label="no result" )
+        if not v in invertedSRCounts:
+            invertedSRCounts[v]=[]
+        invertedSRCounts[v].append(k)
+    counts = list ( invertedSRCounts.keys() )
+    counts.sort( reverse = True )
+    for count in counts: ## go downwards
+        for sr in invertedSRCounts[count]: # go through SRs for the count
+            regions.append ( sr )
+            if len(regions) >= nmax:
+                return regions
+        
+def fetchPoints ( bestSRs : list, region : Union[str,None] ) -> tuple:
+    """ fetch the coordinates of the points that have region as the 
+        best signal region.
+    :returns: tuple ( x_coordinates, y_coordinates )
+    """
+    xs, ys = [], [] # that will be the coordinates
+    for point in bestSRs:
+        if point["SR"]!=region:
+            continue
+        xs.append ( point["x"] )
+        ys.append ( point["y"] )
+    return xs, ys
+
+def fetchAllOtherPoints ( bestSRs : list, regions : list ) -> tuple:
+    """ fetch the coordinates of all points *not* in regions
+    :returns: tuple ( x_coordinates, y_coordinates )
+    """
+    xs, ys = [], [] # that will be the coordinates
+    for point in bestSRs:
+        if point["SR"] in regions or point["SR"] is None:
+            continue
+        xs.append ( point["x"] )
+        ys.append ( point["y"] )
+    return xs, ys
+
+def draw( dbpath : str, analysis : str, validationfiles : str, 
+        max_x : Union[None,float], max_y : Union[None,float], 
+        outputfile : str, defcolors : Union[None,list], rank : int, nmax : int,
+        show : bool = False ):
+    """ plot.
+    :param dbpath: path to database
+    :param analysis: analysis to consider
+    :param validationfiles: T*.py files
+    :param outputfile: name of outputfile, using @a and @t to stand for
+     analysis and topology, respectively
+    :param defcolors: user-specified colors
+    :param rank: draw best (rank=1), or second best or ....
+    :param nmax: maximum SRs to draw (6 by default)
+    :param show: show plot in the terminal (kitty only)
+    """
+    content = fetchContent ( validationfiles, dbpath, analysis )
+    data, line = content["data"], content["line"]
+    txnames, axisv = content["txnames"], content["axis"]
+    bestSRs = getBestSRs ( data, max_x, max_y, rank )
+    srcounts = countSignalRegions ( bestSRs )
+    colors = getListOfColors ( defcolors, min(len(srcounts),nmax) )
+    regions = getListOfSignalRegions ( srcounts, nmax )
+    miny, maxy = float("inf"), -float("inf")
+    for i,color in enumerate ( colors ): ## lets do it!
+        # lets make the scatter plot for color #i
+        region = regions[i] # thats the region we are interested in
+        xs, ys = fetchPoints ( bestSRs, region )
+        plt.scatter ( xs, ys, s=25, c=[ color ]*len(xs), label=region )
+        miny = min ( *ys, miny )
+        maxy = max ( *ys, maxy )
+    xs, ys = fetchAllOtherPoints ( bestSRs, regions )
+    miny = min ( *ys, miny )
+    maxy = max ( *ys, maxy )
+    plt.scatter ( xs, ys, s=25, c=[ "k" ]*len(xs), label="others" )
+    # plot also the no results
+    xs, ys = fetchPoints ( bestSRs, None )
+    plt.scatter ( xs, ys, s=2, c=[ "grey" ]*len(xs), label="no result" )
+    miny = min ( *ys, miny )
+    maxy = max ( *ys, maxy )
+
     handles, labels = plt.gca().get_legend_handles_labels()
     i =1
     while i<len(labels):
@@ -192,17 +232,14 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     if line != None:
         plt.plot ( line["x"], line["y"], linewidth=3, color="white" )
         plt.plot ( line["x"], line["y"], linewidth=1, color="black" )
-    #plt.xlabel ( "m$_{mother}$ [GeV]" )
-    # plt.ylabel ( "m$_{daughter}$ [GeV]" )
     plt.xlabel ( "x [GeV]" )
     plt.ylabel ( "y [GeV]" )
-    if min(y)>1e-30 and max(y)<1e-1:
+    if miny>1e-30 and maxy<1e-1:
         # the y axis seems to be widths
         ax.set_yscale('log')
-        ax.set_ylim ( min(y)*.2, max(y)*5. )
-        plt.ylabel ( "$\Gamma$ [GeV]" )
-        plt.xlabel ( "m [GeV]" )
-    shorttopo = shortTxName ( txnames )
+        ax.set_ylim ( miny*.2, maxy*5. )
+        # plt.ylabel ( "$\Gamma$ [GeV]" )
+        # plt.xlabel ( "m [GeV]" )
     ttl = "Best Signal Region"
     if rank > 1:
         sr = f"{rank}nth"
@@ -212,6 +249,7 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
             sr = "third"
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
+    topo = txnames[0]
     axis = prettyDescriptions.prettyAxes ( topo, axisv, outputtype="latex" )
     fig = plt.gcf()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
@@ -219,8 +257,9 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     plt.title ( f"{ttl}, {ananame}" )
     txStr = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
-    print ( "[plotBestSRs] plotting %s (%s)" % ( analysis, shorttopo ) )
-    fname = outputfile.replace( "@a", analysis ).replace( "@t", shorttopo )
+    topo = shortTxName ( txnames )
+    print ( "[plotBestSRs] plotting %s (%s)" % ( analysis, topo ) )
+    fname = outputfile.replace( "@a", analysis ).replace( "@t", topo )
     srank = "best"
     if rank == 2:
         srank = "second"
@@ -229,9 +268,10 @@ def draw( dbpath, analysis, validationfiles, max_x, max_y, outputfile, defcolors
     if rank > 3:
         srank = f"{rank}nth"
     fname = fname.replace ( "@r", srank )
-    print ( "[plotBestSRs] saving to %s" % fname )
+    # print ( "[plotBestSRs] saving to %s" % fname )
     plt.savefig ( fname )
-    plt.kittyPlot()
+    if show:
+        plt.kittyPlot()
     plt.clf()
     return fname
 

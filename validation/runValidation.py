@@ -205,7 +205,8 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     output = os.path.dirname ( datafile ) + f"/bestSR_{txname}_{axis}.png"
     defcolors = None
     from plotBestSRs import draw
-    draw( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax)
+    draw( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
+          options["show"] )
 
 def run ( expResList, options : dict, keep, db ):
     """
