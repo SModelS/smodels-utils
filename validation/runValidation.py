@@ -190,6 +190,8 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         return False 
     if len ( expRes.datasets ) == 1:
         return False ## obviously not needed, whether it is effmap or UL
+    if not "y" in axis: # dont make these plots for 1d cases
+        return False
     dbpath = db.subs[0].base
     ana = datafile.replace(dbpath,"")
     p1 = ana.find("validation")
