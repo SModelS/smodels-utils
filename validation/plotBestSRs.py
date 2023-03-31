@@ -138,7 +138,6 @@ def getListOfColors ( defcolors : Union[None,list], nr : int ) -> list:
     if len(colors) < nr:
         colors += [ "k" ]*(nr-len(colors))
     colors = colors[:nr]
-    print ( "colors", colors )
     return colors
 
 def getListOfSignalRegions ( srcounts : dict, nmax : int ) -> list:
