@@ -131,9 +131,14 @@ def getListOfColors ( defcolors : Union[None,list], nr : int ) -> list:
         colors += [ "indigo", "wheat" ]
     else:
         colors = defcolors
+        if type(defcolors)==str:
+            colors = defcolors.split(",")
+        for i,c in enumerate(colors):
+            colors[i]=c.replace("'","").replace('"','')
     if len(colors) < nr:
         colors += [ "k" ]*(nr-len(colors))
     colors = colors[:nr]
+    print ( "colors", colors )
     return colors
 
 def getListOfSignalRegions ( srcounts : dict, nmax : int ) -> list:
@@ -154,6 +159,7 @@ def getListOfSignalRegions ( srcounts : dict, nmax : int ) -> list:
             regions.append ( sr )
             if len(regions) >= nmax:
                 return regions
+    return regions
         
 def fetchPoints ( bestSRs : list, region : Union[str,None] ) -> tuple:
     """ fetch the coordinates of the points that have region as the 
@@ -205,17 +211,19 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     miny, maxy = float("inf"), -float("inf")
     for i,color in enumerate ( colors ): ## lets do it!
         # lets make the scatter plot for color #i
+        if i >= len(regions):
+            continue
         region = regions[i] # thats the region we are interested in
         xs, ys = fetchPoints ( bestSRs, region )
         plt.scatter ( xs, ys, s=25, c=[ color ]*len(xs), label=region )
-        miny, maxy = min ( *ys, miny ), max ( *ys, maxy )
+        miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
     xs, ys = fetchAllOtherPoints ( bestSRs, regions )
-    miny, maxy = min ( *ys, miny ), max ( *ys, maxy )
+    miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
     plt.scatter ( xs, ys, s=25, c=[ "k" ]*len(xs), label="others" )
     # plot also the no results
     xs, ys = fetchPoints ( bestSRs, None )
     plt.scatter ( xs, ys, s=2, c=[ "grey" ]*len(xs), label="no result" )
-    miny, maxy = min ( *ys, miny ), max ( *ys, maxy )
+    miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
 
     handles, labels = plt.gca().get_legend_handles_labels()
     i =1
@@ -326,8 +334,8 @@ if __name__ == "__main__":
             help="analysis name, like the directory name [CMS-SUS-16-050-eff]",
             type=str, default="CMS-SUS-16-050-eff" )
     argparser.add_argument ( "-C", "--colors",
-            help="specify colors, as string with commas ['r,g,b']",
-            type=str, default="r,b,g" )
+            help="specify colors, as string with commas, e.g. 'r,g,b' [None]",
+            type=str, default=None )
     argparser.add_argument ( "-v", "--validationfiles",
             help="validation file(s), comma separated within string [T2tt_2EqMassAx_EqMassBy.py]",
             type=str, default="T2tt_2EqMassAx_EqMassBy.py" )
