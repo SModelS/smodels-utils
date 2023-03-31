@@ -24,3 +24,4 @@ coords["T1Disp"]={'masses': [[1, 3], [4, 6]], 'widths': [[2], [5]]}
 coords["TChiZH"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChiWH"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChiWZoff"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TChi_WinoBino_BRN2toZ50"]={'masses': [[1, 2], [3, 4]], 'widths': None}
