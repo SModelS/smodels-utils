@@ -186,8 +186,8 @@ DECAY   1000022     0.00000000E+00   # neutralino1 decays
 #
 DECAY   1000023     0.10000000E+00   # neutralino2 decays
 #           BR         NDA      ID1       ID2       ID3
-     0.50000000E+00    2    23    1000022 # N1 + Z
-     0.50000000E+00    2    25    1000022 # N1 + higgs
+#     0.00000000E+00    2    23    1000022 # N1 + Z
+     1.00000000E+00    2    25    1000022 # N1 + higgs
 #
 DECAY   1000024     0.10000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
