@@ -608,6 +608,7 @@ if __name__ == "__main__":
                 "weightedAgreementFactor": False,
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
+                "validationFolder": "validation", # you can change the folder that stores the validation files
                 "pngPlots": True, ## also png plots?
                 "recordPlotCreation": False, ## record the plot creation?
                 "pdfPlots": True, ## also pdf plots?
