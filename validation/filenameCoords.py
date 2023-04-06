@@ -28,3 +28,5 @@ coords["TChi_WinoBino_BRN2toZ50"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChi_WinoBino_BRN2toZ100"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChi_WinoBino_BRN2toH100"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChiWZ"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TChi_HinoBino_BRN2Z100"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TChi_HinoBino_BRN2Z50"]={'masses': [[1, 2], [3, 4]], 'widths': None}
