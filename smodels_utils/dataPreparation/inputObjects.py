@@ -388,26 +388,7 @@ class DataSetInput(Locker):
                 val = str(val.asNumber(fb))+"*fb"
             setattr(self,key,val)
 
-    def computeStatistics(self):
-        """Compute expected and observed limits and store them """
-
-        if not hasattr(databaseCreator, 'metaInfo'):
-            logger.error('MetaInfo must be defined before computing statistics')
-            sys.exit()
-        elif not hasattr(databaseCreator.metaInfo, 'lumi'):
-            logger.error('Luminosity must be defined in MetaInfo')
-            sys.exit()
-        elif not hasattr(self, 'observedN') or not hasattr(self, 'expectedBG') or not hasattr(self, 'bgError'):
-            if hasattr(self,"jsonfile"):
-                logger.error ( "pyhf result. for now I wont compute anything. FIXME probably should though." )
-                # self.upperLimit = str(ul)+'*fb'
-                # self.expectedUpperLimit = str(ulExpected)+'*fb'
-                return
-
-            logger.error('observedN, expectedBG and bgError must be defined before computing statistics')
-            sys.exit()
-
-
+    def computeULs ( self ):
         #First check if a luminosity has been defined for the dataset
         if hasattr(self,"lumi"):
             lumi = self.lumi
@@ -415,6 +396,26 @@ class DataSetInput(Locker):
             lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
+        lumi = lumi.asNumber(1./fb)
+        try:
+            import spey
+        except ImportError as e:
+            print ( f"[inputObjects] seems like you dont have spey. install it!" )
+            sys.exit()
+        from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
+        statModel = get_uncorrelated_nbin_statistical_model(
+                data = float(self.observedN),backgrounds=self.expectedBG,
+                background_uncertainty = self.bgError, 
+                signal_yields = 1., backend = "simplified_likelihoods",
+                analysis = "x", xsection = 1. )
+        ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed )/lumi
+        ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori )/lumi
+        #Round numbers:
+        ulspey = round_list(ulspey, 3)
+        ulspeyE = round_list(ulspeyE, 3)
+        return ulspey, ulspeyE
+        """
+        print ( "spey ul", ulspey, ulspeyE )
         alpha = .05
         try:
             from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
@@ -422,11 +423,13 @@ class DataSetInput(Locker):
             try:
                 # new API
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
-                       lumi = lumi )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=True ).asNumber ( fb )
+                           lumi = lumi )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False) # .asNumber ( fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected="posteriori" ).asNumber ( fb )
+                print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "ul", ul, "ule", ulExpected )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber ( fb )
+                 
                 if type(ulExpected) == type(None):
                     ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=False ).asNumber ( fb )
             except:
@@ -451,10 +454,30 @@ class DataSetInput(Locker):
                    self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
             ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
                    self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
+        return ul, ulExpected
+        """
 
-        #Round numbers:
-        ul = round_list(ul, 3)
-        ulExpected = round_list(ulExpected, 3)
+
+    def computeStatistics(self):
+        """Compute expected and observed limits and store them """
+
+        if not hasattr(databaseCreator, 'metaInfo'):
+            logger.error('MetaInfo must be defined before computing statistics')
+            sys.exit()
+        elif not hasattr(databaseCreator.metaInfo, 'lumi'):
+            logger.error('Luminosity must be defined in MetaInfo')
+            sys.exit()
+        elif not hasattr(self, 'observedN') or not hasattr(self, 'expectedBG') or not hasattr(self, 'bgError'):
+            if hasattr(self,"jsonfile"):
+                logger.error ( "pyhf result. for now I wont compute anything. FIXME probably should though." )
+                # self.upperLimit = str(ul)+'*fb'
+                # self.expectedUpperLimit = str(ulExpected)+'*fb'
+                return
+
+            logger.error('observedN, expectedBG and bgError must be defined before computing statistics')
+            sys.exit()
+
+        ul, ulExpected = self.computeULs ( )
         self.upperLimit = str(ul)+'*fb'
         self.expectedUpperLimit = str(ulExpected)+'*fb'
 
