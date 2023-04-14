@@ -410,6 +410,7 @@ class DataSetInput(Locker):
                 analysis = "x", xsection = 1. )
         ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed )/lumi
         ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori )/lumi
+        # ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.aposteriori )/lumi
         #Round numbers:
         ulspey = round_list(ulspey, 3)
         ulspeyE = round_list(ulspeyE, 3)
