@@ -23,6 +23,8 @@ logger.setLevel(level=logging.WARNING)
 ## overwrite with conservative estimate
 overrideWithConservativeErrors = True
 
+minVariance = 1e-4 ## the minimum value for variance
+
 def computeAggCov ( covariance, agg1, agg2 ):
     """ compute the covariance between agg1 and agg2
     :param covariance: the covariance matrix
@@ -248,9 +250,8 @@ class PYROOTCovarianceHandler ( CovarianceHandler ):
                     continue
                 el = h.GetBinContent ( i, j )
                 if i==j and el < 1e-4:
-                   logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
-                   logger.error ( "will set it to 1e-4" )
-                   el = 1e-4
+                    logger.error ( f"variance in the covariance matrix at position {i} has a very small ({el:.4g}) value: will set to {minVariance}" )
+                    el = minVariance
                 row.append ( el )
             self.covariance.append ( row )
 

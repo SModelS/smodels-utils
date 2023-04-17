@@ -24,6 +24,8 @@ from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 
 errorcounts = { "errorsvary": 0, "moreconservative": 0 }
 
+minimumBackgroundEstimate = 1e-4
+
 def createAggregationList ( aggregationborders ):
     """
     Very simple helper function that creates the lists of lists of aggregate
@@ -84,6 +86,9 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     if len(comments)>0:
         newds.comment = ";".join ( comments )
     newds.observedN = observedN
+    if expectedBG == 0.:
+        logger.warning ( f"background estimate for {newds._name} is at 0.0. Will put to {minimumBackgroundEstimate}" ) 
+        expectedBG=minimumBackgroundEstimate
     newds.expectedBG = round ( expectedBG, 5 )
     oldBgError = round ( math.sqrt ( bgError2 ), 5 )
     bgErr2 = covariance[aggidx][aggidx]
@@ -101,6 +106,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
     comp = UpperLimitComputer ( ntoys, 1. - alpha )
+    logger.error ( "FIXME need to replace with spey!" )
     m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
     try:
         ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber(fb) 
@@ -243,6 +249,10 @@ class DatasetsFromLatex:
             if not count_all in self.blinded_regions:
                 counter+=1
                 dataset = DataSetInput ( name )
+                if bg == 0.:
+                    logger.warning ( f"background estimate for {name} is at 0.0. Will put to {minimumBackgroundEstimate}" ) 
+                    bg=minimumBackgroundEstimate
+                    
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '%s' % dataId )
@@ -338,6 +348,9 @@ class DatasetsFromRoot:
         bg = self.histo_bg.GetBinContent ( self.counter )
         bgerr = self.histo_bg.GetBinError ( self.counter )
         dataset = DataSetInput ( name )
+        if bg == 0.:
+            logger.warning ( f"background estimate for {name} is at 0.0. Will put to {minimumBackgroundEstimate}" ) 
+            bg=minimumBackgroundEstimate
         dataset.setInfo ( dataType="efficiencyMap", dataId = name, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
         return dataset
@@ -451,6 +464,9 @@ class DatasetsFromEmbaked:
                 if "comment" in values:
                     dataset.comment = values["comment"]
                 # print ( f"data: {nobs}, {bg}+-{bgerr}" )
+                if bg == 0.:
+                    logger.warning ( f"background estimate for {dataId} is at 0.0. Will put to {minimumBackgroundEstimate}" ) 
+                    bg=minimumBackgroundEstimate
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '"%s"' % dataId )
