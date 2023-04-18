@@ -404,8 +404,8 @@ class DataSetInput(Locker):
             sys.exit()
         from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
         statModel = get_uncorrelated_nbin_statistical_model(
-                data = float(self.observedN),backgrounds=self.expectedBG,
-                background_uncertainty = self.bgError, 
+                data = float(self.observedN),backgrounds=float(self.expectedBG),
+                background_uncertainty = float(self.bgError), 
                 signal_yields = 1., backend = "simplified_likelihoods",
                 analysis = "x", xsection = 1. )
         ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed )/lumi
@@ -430,7 +430,7 @@ class DataSetInput(Locker):
                 print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "ul", ul, "ule", ulExpected )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber ( fb )
-                 
+
                 if type(ulExpected) == type(None):
                     ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=False ).asNumber ( fb )
             except:
