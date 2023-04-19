@@ -396,27 +396,22 @@ class DataSetInput(Locker):
             lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
-        lumi = lumi.asNumber(1./fb)
+        # lumi = lumi.asNumber(1./fb)
         try:
             import spey
         except ImportError as e:
             print ( f"[inputObjects] seems like you dont have spey. install it!" )
             sys.exit()
-        from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
-        statModel = get_uncorrelated_nbin_statistical_model(
-                data = float(self.observedN),backgrounds=float(self.expectedBG),
-                background_uncertainty = float(self.bgError), 
-                signal_yields = 1., backend = "simplified_likelihoods",
-                analysis = "x", xsection = 1. )
-        ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed )/lumi
-        ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori )/lumi
-        # ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.aposteriori )/lumi
+        from smodels.tools.speyTools import SpeyComputer, SimpleSpeyDataSet
+        dataset = SimpleSpeyDataSet ( float(self.observedN),
+                    float(self.expectedBG), float(self.bgError), lumi )
+        computer = SpeyComputer ( dataset, 1. )
+        ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
+        ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
         #Round numbers:
-        ulspey = round_list(ulspey, 3)
-        ulspeyE = round_list(ulspeyE, 3)
+        ulspey, ulspeyE = round_list(( ulspey.asNumber(fb),ulspeyE.asNumber(fb)), 4)
         return ulspey, ulspeyE
-        """
-        print ( "spey ul", ulspey, ulspeyE )
+        """ that was the old code that used the UpperLimitComputer
         alpha = .05
         try:
             from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
@@ -427,34 +422,18 @@ class DataSetInput(Locker):
                            lumi = lumi )
                 ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False) # .asNumber ( fb )
                 ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected="posteriori" ).asNumber ( fb )
-                print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "ul", ul, "ule", ulExpected )
                 if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber ( fb )
+                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False )
 
                 if type(ulExpected) == type(None):
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=False ).asNumber ( fb )
-            except:
-                # old API
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
-                ul = comp.ulSigmaTimesEff ( m, marginalize=True ) # / lumi.asNumber ( 1. / fb )
-                ulExpected = comp.ulSigmaTimesEff ( m, marginalize=True, expected=True ) # / lumi.asNumber ( 1. / fb )
-                if type(ul) == type(None):
-                    ul = comp.ulSigmaTimesEff ( m, marginalize=False )
-                if type(ulExpected) == type(None):
-                    ulExpected = comp.ulSigmaTimesEff ( m, marginalize=False, expected=True )
-                # finally, divide by lumi
-                if type(ul) != type(None):
-                    ul = ul / lumi.asNumber ( 1. / fb )
-                if type(ulExpected) != type(None):
-                    ulExpected = ulExpected / lumi.asNumber ( 1. / fb )
-        except ModuleNotFoundError as e:
-            ## maybe smodels < 1.1.2?
-            logger.error ( "cannot import simplifiedLikelihoods module: %s. Maybe upgrade to smodels >= v1.1.3?" % e )
-            from smodels.tools import statistics
-            ul = statistics.upperLimit(self.observedN, self.expectedBG,
-                   self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
-            ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
-                   self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
+                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=False )
+            except Exception as e:
+                print ( "Exception", e  )
+        except Exception as e:
+            print ( "Exception", e  )
+        print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
+        print ( "SModelS ul", ul, "ule", ulExpected )
+        print ( "spey ul", ulspey, ulspeyE )
         return ul, ulExpected
         """
 
