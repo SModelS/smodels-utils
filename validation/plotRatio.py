@@ -107,8 +107,10 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     contents = []
     for valfile in valfile2.split(","):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
-        content = getValidationFileContent ( ipath2 )
-        axis2 = content["meta"]["axes"]
+        ontent = getValidationFileContent ( ipath2 )
+        axis2 = axis1
+        if "axes" in content["meta"]:
+            axis2 = content["meta"]["axes"]
         contents.append ( content )
     content2 = mergeValidationData ( contents )
 
