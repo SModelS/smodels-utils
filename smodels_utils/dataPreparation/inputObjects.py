@@ -420,7 +420,7 @@ class DataSetInput(Locker):
                 # new API
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False) # .asNumber ( fb )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False).asNumber ( fb )
                 ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected="posteriori" ).asNumber ( fb )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False )
@@ -431,9 +431,10 @@ class DataSetInput(Locker):
                 print ( "Exception", e  )
         except Exception as e:
             print ( "Exception", e  )
-        print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
-        print ( "SModelS ul", ul, "ule", ulExpected )
-        print ( "spey ul", ulspey, ulspeyE )
+        # print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
+        # print ( "SModelS ul", ul, "ule", ulExpected )
+        # print ( "spey ul", ulspey, ulspeyE )
+        ul, ulExpected = round_list(( ul, ulExpected ), 4)
         return ul, ulExpected
 
     def computeStatistics(self):
