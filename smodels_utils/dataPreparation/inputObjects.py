@@ -397,21 +397,21 @@ class DataSetInput(Locker):
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
         # lumi = lumi.asNumber(1./fb)
-        try:
-            import spey
-        except ImportError as e:
-            print ( f"[inputObjects] seems like you dont have spey. install it!" )
-            sys.exit()
-        from smodels.tools.speyTools import SpeyComputer, SimpleSpeyDataSet
-        dataset = SimpleSpeyDataSet ( float(self.observedN),
-                    float(self.expectedBG), float(self.bgError), lumi )
-        computer = SpeyComputer ( dataset, 1. )
-        ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
-        ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
-        #Round numbers:
-        ulspey, ulspeyE = round_list(( ulspey.asNumber(fb),ulspeyE.asNumber(fb)), 4)
-        return ulspey, ulspeyE
-        """ that was the old code that used the UpperLimitComputer
+        if False: ## the spey stuff
+            try:
+                import spey
+            except ImportError as e:
+                print ( f"[inputObjects] seems like you dont have spey. install it!" )
+                sys.exit()
+            from smodels.tools.speyTools import SpeyComputer, SimpleSpeyDataSet
+            dataset = SimpleSpeyDataSet ( float(self.observedN),
+                        float(self.expectedBG), float(self.bgError), lumi )
+            computer = SpeyComputer ( dataset, 1. )
+            ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
+            ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
+            #Round numbers:
+            ulspey, ulspeyE = round_list(( ulspey.asNumber(fb),ulspeyE.asNumber(fb)), 4)
+            return ulspey, ulspeyE
         alpha = .05
         try:
             from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
@@ -435,8 +435,6 @@ class DataSetInput(Locker):
         print ( "SModelS ul", ul, "ule", ulExpected )
         print ( "spey ul", ulspey, ulspeyE )
         return ul, ulExpected
-        """
-
 
     def computeStatistics(self):
         """Compute expected and observed limits and store them """

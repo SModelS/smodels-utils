@@ -114,17 +114,18 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         print ( "Exception", e )
         print ( "observed:",newds.observedN )
         sys.exit()
-    from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
-    nsig = 1.
-    statModel = get_uncorrelated_nbin_statistical_model(
-            data = float(newds.observedN),backgrounds=float(newds.expectedBG),
-            background_uncertainty = float(newds.bgError),
-            signal_yields = nsig, backend = "simplified_likelihoods",
-            analysis = "x", xsection = 1. ) # nsig/lumi )
-    # print ( "stat model is", str ( statModel ) )
-    # lumi = lumi.asNumber(1./fb)
-    ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
-    ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
+    if False: # the spey version
+        from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
+        nsig = 1.
+        statModel = get_uncorrelated_nbin_statistical_model(
+                data = float(newds.observedN),backgrounds=float(newds.expectedBG),
+                background_uncertainty = float(newds.bgError),
+                signal_yields = nsig, backend = "simplified_likelihoods",
+                analysis = "x", xsection = 1. ) # nsig/lumi )
+        # print ( "stat model is", str ( statModel ) )
+        # lumi = lumi.asNumber(1./fb)
+        ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
+        ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
     newds.upperLimit = str("%f*fb" % ul )
     ule = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
