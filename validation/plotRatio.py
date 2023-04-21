@@ -456,11 +456,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
       print ( "[plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
-    rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
+    rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
             f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
-    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
+    print ( f"[plotRatio] ratio={rmean:.2f} +/- {rstd:.2f} (with {npoints} points)" )
     plt.clf()
 
 def writeMDPage( copy ):
