@@ -92,6 +92,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     :option ylabel: label on y axis, default: y [GeV]
     :option show: show plot in terminal
     """
+    plt.clf()
     options = addDefaults ( options )
     contents = []
     topos = set()
