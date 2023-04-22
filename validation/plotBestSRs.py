@@ -200,6 +200,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     :param nmax: maximum SRs to draw (6 by default)
     :param show: show plot in the terminal (kitty only)
     """
+    plt.clf()
     content = fetchContent ( validationfiles, dbpath, analysis )
     data, line = content["data"], content["line"]
     txnames, axisv = content["txnames"], content["axis"]

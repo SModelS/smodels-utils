@@ -92,6 +92,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     :option ylabel: label on y axis, default: y [GeV]
     :option show: show plot in terminal
     """
+    plt.clf()
     options = addDefaults ( options )
     contents = []
     topos = set()
@@ -107,7 +108,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     contents = []
     for valfile in valfile2.split(","):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
-        ontent = getValidationFileContent ( ipath2 )
+        content = getValidationFileContent ( ipath2 )
         axis2 = axis1
         if "axes" in content["meta"]:
             axis2 = content["meta"]["axes"]
@@ -126,7 +127,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     rs,effs={},{}
     nsr=""
     noaxes = 0
-    for ctr,point in enumerate(content1["data"] ):
+    data1 = content1["data"]
+    for ctr,point in enumerate( data1 ):
         if not "axes" in point:
             noaxes+=1
             if noaxes < 5:
@@ -155,11 +157,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
 
     err_msgs = 0
 
-    ipoints = content2["data"]
+    data2 = content2["data"]
     points = []
     plotEfficiencies = options["ploteffs"]
 
-    for ctr,point in enumerate(ipoints):
+    for ctr,point in enumerate(data2):
         axes = convertNewAxes ( point["axes"] )
         if axes == None:
             continue
@@ -177,7 +179,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             ratio = float("nan")
             if r2 > 0.:
                 ratio = r1 / r2
-            # print ( "ratio",axes[0],axes[1],ratio )
+            #print ( f"masses:{axes[0],axes[1]} r={ratio} from r1,r2={r1,r2}" )
+            #sys.exit()
             tpl = (axes[0],ratio )
             if len(axes)>1:
                 tpl = (axes[0],axes[1],ratio )
@@ -456,11 +459,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
       print ( "[plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
-    rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
+    rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
             f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
-    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
+    print ( f"[plotRatio] ratio={rmean:.2f} +/- {rstd:.2f} (with {npoints} points)" )
     plt.clf()
 
 def writeMDPage( copy ):
