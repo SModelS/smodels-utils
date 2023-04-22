@@ -624,8 +624,11 @@ class ValidationPlot():
         validationFolder = "validation"
         if "validationFolder" in self.options:
             validationFolder = self.options["validationFolder"]
+        timeOut = 5000
+        if "timeOut" in self.options:
+            timeOut = self.options["timeOut"]
         modelTester.testPoints(fileList, inDir, outputDir, parser, validationFolder,
-                 listOfExpRes, 5000, False, parameterFile)
+                 listOfExpRes, timeOut, False, parameterFile)
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)

@@ -609,6 +609,7 @@ if __name__ == "__main__":
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
                 "validationFolder": "validation", # you can change the folder that stores the validation files
+                "timeOut": 5000, # change the timeout per point, in seconds
                 "pngPlots": True, ## also png plots?
                 "recordPlotCreation": False, ## record the plot creation?
                 "pdfPlots": True, ## also pdf plots?
