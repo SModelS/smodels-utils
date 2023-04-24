@@ -77,4 +77,4 @@ if __name__ == "__main__":
     copyContainers()
     gitClone()
     mkTempDir()
-    storeDirectory()
+    # storeDirectory()
