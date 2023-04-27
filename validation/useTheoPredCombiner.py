@@ -39,7 +39,7 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
     model.updateParticles(inputFile=fullpath )
     smstopos = decompose ( model )
     tpreds = theoryPredictionsFor ( expRes, smstopos,
-           combinedResults=False, useBestDataset=False, marginalize=False )
+           combinedResults=False, useBestDataset=False ) # , marginalize=False )
     rdicts[slhafile]["success"] = False
     rdicts[slhafile]["reason"] = "unknown"
     if tpreds == None:
