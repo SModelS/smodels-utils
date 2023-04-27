@@ -17,20 +17,6 @@ def setup14021():
     mus = np.arange ( -1.5, 2.01, .03 )
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus }
 
-def setup1316():
-    anaid = "ATLAS-SUSY-2013-16"
-    slhafile = "T2tt_720_240_720_240.slha"
-    mus = np.arange ( -1.5, 2.01, .1 )
-    print ( "we dont have expected upper limits for that one!" )
-    return { "anaid": anaid, "slhafile": slhafile, "mus": mus }
-
-def setup16039():
-    anaid = "CMS-SUS-16-039"
-    slhafile = "TChiWZ_500_215_500_215.slha"
-    mus = np.arange ( -1.5, 2.01, .1 )
-    print ( "we dont have expected upper limits for that one!" )
-    return { "anaid": anaid, "slhafile": slhafile, "mus": mus }
-
 def setup16033():
     anaid = "CMS-SUS-16-033"
     slhafile = "T2tt_720_80_720_80.slha"
@@ -41,7 +27,7 @@ def run():
     db = Database ( "debug" )
     mus = np.arange ( -1.5, 2.01, .03 )
     ret = setup16033()
-    ret = setup14021()
+    # ret = setup14021()
     anaid, slhafile, mus = ret["anaid"], ret["slhafile"], ret["mus"]
 
     er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "upperLimit" ] )
@@ -86,7 +72,7 @@ def run():
     plt.xlabel ( r"$\mu$" )
     plt.title ( f"comparison of likelihoods, {anaid}" )
     plt.legend()
-    plt.savefig ( "llhds.png" )
+    plt.savefig ( f"{anaid}.png" )
     plt.show()
 
 if __name__ == "__main__":
