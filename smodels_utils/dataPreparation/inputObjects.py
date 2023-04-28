@@ -415,7 +415,7 @@ class DataSetInput(Locker):
         alpha = .05
         try:
             from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
-            comp = UpperLimitComputer ( self.ntoys, 1. - alpha )
+            comp = UpperLimitComputer ( 1. - alpha )
             try:
                 # new API
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
