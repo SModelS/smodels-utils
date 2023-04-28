@@ -132,6 +132,14 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
         opts["style"]=f"{var}axis{xrange}"
     return opts
 
+def find_nth(haystack, needle, n):
+    """ find the n-th needle in haystack """
+    start = haystack.find(needle)
+    while start >= 0 and n > 1:
+        start = haystack.find(needle, start+len(needle))
+        n -= 1
+    return start
+
 def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
        axis ):
     """ check if we should plot a ratio plot. plot, if we should
@@ -143,16 +151,18 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     """
     if opts["ratioPlots"]==False:
         return False
-    # from smodels_utils.helper.prettyDescriptions import prettyAxes
-    # from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-    # massplane = MassPlane.fromString(txname, ax )
-    #axis = prettyAxes ( txname, ax, output )
-    # axis = str(massplane)#  ax.replace(" ","")
     axis = axis.replace(",","").replace("(","").replace(")","").\
                     replace("/","d").replace("*","")
     if not combine: # if it isnt a combination, we dont want 
         return False # a ratio plot
-    ulres = db.getExpResults ( [ expRes.globalInfo.id ], [ None ], [ txname ],
+    anaId = expRes.globalInfo.id
+    dashes = anaId.count ( "-" )
+    if dashes > 3:
+        pos = find_nth ( anaId, "-", 4 )
+        anaId = anaId[:pos]
+    print ( "checking for ratio plots", opts["ratioPlots"], "combined", combine,
+            "check", anaId )
+    ulres = db.getExpResults ( [ anaId ], [ None ], [ txname ],
                        dataTypes = [ "upperLimit" ] )
     if len(ulres)==0:
         return False # we actually do not have an UL result for that
@@ -163,7 +173,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     p2 = ana1.rfind("/")
     ana1 = ana1[p2+1:]
     valfile1 = os.path.basename ( datafile )
-    ana2 = expRes.globalInfo.id
+    ana2 = anaId # expRes.globalInfo.id
     valfile2 = valfile1.replace("_combined","")
     output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
     options = { "show": opts["show"], "output": output, "zmin": 0.,

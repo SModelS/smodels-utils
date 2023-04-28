@@ -109,7 +109,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     logger.error ( "FIXME need to replace with spey!" )
     m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
     try:
-        ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber(fb)
+        ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber(fb)
     except Exception as e:
         print ( "Exception", e )
         print ( "observed:",newds.observedN )
@@ -127,7 +127,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
         ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
     newds.upperLimit = str("%f*fb" % ul )
-    ule = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
+    ule = comp.getUpperLimitOnSigmaTimesEff ( m, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
     # print ( f"@@@ UL {ul:.2f} {ulspey:.2f}" )
     # print ( f"@@@ ULE {ule:.2f} {ulspeyE:.2f}" )

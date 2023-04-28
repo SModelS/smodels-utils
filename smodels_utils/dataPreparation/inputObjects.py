@@ -420,13 +420,11 @@ class DataSetInput(Locker):
                 # new API
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected="posteriori" ).asNumber ( fb )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
                 if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False )
+                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
 
-                if type(ulExpected) == type(None):
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=False )
             except Exception as e:
                 print ( "Exception", e  )
         except Exception as e:

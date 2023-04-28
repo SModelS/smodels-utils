@@ -182,7 +182,7 @@ def create1DPlot( validationPlot, silentMode=True,
     eofficial = validationPlot.expectedOfficialCurves
     rmin, rmax = 0, 1
     for o in official:
-        if o["name"].startswith ( "obsExclusion" ):
+        if o["name"].startswith ( "obsExclusion" ) and len( yvs ) > 0:
             rmin, rmax = min ( yvs ), max ( yvs )
             xvals = set(o["points"]["x"])
             ## we assume the exclusion lines to be "points", so
@@ -194,7 +194,7 @@ def create1DPlot( validationPlot, silentMode=True,
                 label = ""
     for o in eofficial:
         # logger.info ( f"exclusion object: {o}" )
-        if o["name"].startswith ( "expExclusion" ):
+        if o["name"].startswith ( "expExclusion" ) and len ( yvs ) > 0:
             rmin, rmax = min ( yvs ), max ( yvs )
             xvals = set(o["points"]["x"])
             label = "dashed lines are expected values" 
@@ -208,7 +208,9 @@ def create1DPlot( validationPlot, silentMode=True,
         import time
         t = time.strftime("%b %d, %Y, %H:%M")
         rs = rmin + ( rmax - rmin ) * .6
-        dx = max(xvs)+( max(xvs)-min(xvs))*.07
+        dx = 0.
+        if len(xvs)>0:
+            dx = max(xvs)+( max(xvs)-min(xvs))*.07
         plt.text ( dx, rs, t, c="grey", rotation="vertical" )
     figureUrl = getFigureUrl(validationPlot)
     subtitle = getDatasetDescription ( validationPlot, maxLength = 60 )
