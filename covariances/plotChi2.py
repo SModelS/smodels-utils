@@ -32,7 +32,7 @@ def getTheoryPrediction( res, slhafile ):
     smstopos = decomposer.decompose(model, sigmacut, doCompress=True,
            doInvisible=True, minmassgap=mingap )
     ts = theoryPredictionsFor(res, smstopos,
-        combinedResults=True, useBestDataset=False, marginalize=False)
+        combinedResults=True, useBestDataset=False )
     return ts[0]
 
 def createRange ( xrange ):
