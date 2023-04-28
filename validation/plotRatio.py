@@ -440,6 +440,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     #text about no of SR in combined dataset
     # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
+    rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
+    plt.text ( .80, .025, f"f={rmean:.2f}+-{rstd:.2f}", 
+            transform=fig.transFigure, c="grey", fontsize=12  )
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
@@ -459,7 +462,6 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
       print ( "[plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
-    rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
             f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
