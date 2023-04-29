@@ -169,7 +169,7 @@ def create1DPlot( validationPlot, silentMode=True,
         if linestyle != "":
             linestyle = ":"
         plot ( values[label]["ex"], values[label]["ey"], color=c, 
-                linestyle=linestyle, marker=None )
+                linestyle=linestyle, marker="." )
         # plt.plot ( values[label]["x"], values[label]["y"], c=c )
     # fname = "me.png"
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
