@@ -117,7 +117,7 @@ class RefXSecComputer:
             xseccomment = f"reference xsecs v{self.version} [pb]"
             writeXsec = True
             # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
-            if hasattr ( xsec, "comment" ) and xsec.comment != None:
+            if hasattr ( xsec, "comment" ) and xsec.comment not in [ None, "", "None", " (None)" ]:
                 xseccomment += " " + xsec.comment
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
@@ -166,7 +166,7 @@ class RefXSecComputer:
 
     def computeForOneFile ( self, sqrtses, inputFile,
                  tofile, ssmultipliers = None, comment = None,
-                 ignore_pids = None, ewk = "wino" ):
+                 ignore_pids = None, ewk = None ):
         """
         Compute the cross sections for one file.
 
@@ -298,7 +298,7 @@ class RefXSecComputer:
     def isIn ( self, pids, ignores ):
         """ are pids in the ignores? """
         anyTuples = False
-        if type(ignores)==tuple:
+        if type(ignores) in [ tuple, list ]:
             for i in ignores:
                 if type(i)==tuple:
                     anyTuples = True
@@ -557,7 +557,7 @@ class RefXSecComputer:
 
     def getXSecsFor ( self, pid1, pid2, sqrts, ewk, masses ):
         """ get the xsec dictionary for pid1/pid2, sqrts
-        :param ewk: specify the ewkino process (hino, or wino)
+        :param ewk: specify the ewkino process (hino, or wino, or None)
         """
         logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
         filename=None
@@ -622,7 +622,7 @@ class RefXSecComputer:
                 s1 = "N3"
             if pid2 == 1000025:
                 s2 = "N3"
-            self.warn ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
+            self.warn ( f"asked to compute {s1,pid1} {s2,pid2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
             if ewk == "degenerate":
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
@@ -697,8 +697,8 @@ if __name__ == "__main__":
     slhapaths = args.inputfile
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None
-    # ignores= eval ( args.ignore_pids )
     ignores= args.ignore_pids
+    ignores= eval ( args.ignore_pids )
     for slhapath in slhapaths:
         tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
                       ssmultipliers = ssmultipliers, ignore_pids = ignores )
