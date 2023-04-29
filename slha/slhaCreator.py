@@ -76,12 +76,12 @@ class TemplateFile(object):
                     template )
             sys.exit()
 
-        self.version = "1.1" ## slhaCreator version
+        self.version = "1.2" ## slhaCreator version
         self.verbose = False
         self.path = template
         self.txName = topology
         self.slhaObj = None
-        self.ewk = "wino"
+        self.ewk = None
         self.nprocesses = -1
         self.tags = []
         self.axes = axes
@@ -496,8 +496,8 @@ if __name__ == "__main__":
         type=str, default='@@topo@@.tar.gz' )
     argparser.add_argument ( '-C', '--comment', nargs='?', help='add a comment to all files [None]',
         type=str, default=None )
-    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino, hino, or degenerate [wino]',
-        type=str, default="wino" )
+    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino, hino, or degenerate [None]',
+        type=str, default=None )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
         type=str, default='2*[[x, y]]' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x [100]',
