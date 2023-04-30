@@ -1,4 +1,6 @@
 #!/bin/bash
+## this is the validation script for @@ANALYSES@@ @@TOPO@@
+## the template inifile was @@ORIGINIFILE@@
 
 SCRIPT=$(readlink -f $0)
 

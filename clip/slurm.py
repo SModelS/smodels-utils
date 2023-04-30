@@ -455,23 +455,15 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     newFile = f"{Dir}/{filename}"
     with open ( newFile, "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@INIFILE@@", newini ) )
+            newline = line.replace("@@INIFILE@@", newini )
+            newline = newline.replace("@@ANALYSES@@", analyses )
+            newline = newline.replace("@@TOPO@@", topo )
+            newline = newline.replace("@@ORIGINIFILE@@", inifile  )
+            f.write ( newline )
         f.close()
-    #with open ( "run_validation_template.sh", "rt" ) as f:
-    #    lines = f.readlines()
-    #    f.close()
     tdir = "./temp"
     if not os.path.exists ( tdir ):
         os.mkdir ( tdir )
-    #tmpfile = tempfile.mktemp(prefix="V", suffix=".sh",dir=tdir )
-    #with open ( tmpfile, "wt" ) as f:
-    #    for line in lines:
-    #        f.write ( line.replace ( "@@SCRIPT@@", filename ) )
-    #    f.write ( f"\n# this script will perform:\n" )
-    #    f.write ( f"# runValidation.py -p {newini}\n" )
-    #    f.write ( f"# which is essentially:\n" )
-    #    f.write ( f"# runValidation.py -p {inifile}\n" )
-    #    f.close()
     os.chmod( newFile, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out",
