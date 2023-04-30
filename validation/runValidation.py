@@ -474,7 +474,8 @@ def updateOptions ( options : dict, parser ):
                 options[option] = parser.getboolean("options",option)
             if otype == int:
                 options[option] = parser.getint("options",option)
-            if otype == str:
+            if otype in [ type(None), str ]:
+                # if default is none, we assume its actually a string
                 options[option] = parser.get("options",option)
 
 def doGenerate ( parser ):
@@ -619,6 +620,7 @@ if __name__ == "__main__":
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
                 "validationFolder": "validation", # you can change the folder that stores the validation files
+                "tempdir": None, ## specify the name of the tempdir, if you wish
                 "timeOut": 5000, # change the timeout per point, in seconds
                 "pngPlots": True, ## also png plots?
                 "recordPlotCreation": False, ## record the plot creation?

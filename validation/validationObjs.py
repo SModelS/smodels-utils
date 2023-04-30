@@ -277,6 +277,11 @@ class ValidationPlot():
             try:
                 tar = tarfile.open(self.slhaDir,'r:gz')
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
+                if "tempdir" in self.options and self.options["tempdir"]!=None:
+                    tdir =  self.options["tempdir"]
+                    if "/" in tdir or "." in tdir:
+                        logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
+                    tempdir = os.path.join ( os.getcwd(), tdir )
                 members=tar.getmembers()
                 countm = 0
                 for m in members:
