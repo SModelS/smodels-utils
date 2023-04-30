@@ -439,10 +439,13 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
         lines = f.readlines()
         f.close()
     newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
+    tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
+    # if possible name the tempdir the same as the temp script and the temp ini file
     with open ( newini, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
+            newline = newline.replace("@@TEMPDIR@@", tempdir )
             f.write ( newline )
         f.close()
 
