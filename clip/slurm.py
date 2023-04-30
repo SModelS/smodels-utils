@@ -449,7 +449,8 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     with open ( "%s/smodels-utils/clip/validate_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
-    filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
+    # filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
+    filename = os.path.basename ( newini ).replace(".ini",".sh")
     print ( "[slurm.py] creating script at %s/%s" % ( Dir, filename ) )
     nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     newFile = f"{Dir}/{filename}"
