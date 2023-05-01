@@ -23,6 +23,7 @@ slha/T*.slha
 validation/twiki/twiki*.txt
 validation/results
 validation/tmp*
+validation/_V*
 covariances/.CMS*
 distribution/smodels-v*
 smodels_utils/plotting/T*pdf
