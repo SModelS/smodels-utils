@@ -345,7 +345,12 @@ class ValidationPlot():
                 self.ncpus = self.options["ncpus"]
 
         if tempdir is None: tempdir = os.getcwd()
-        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        parFile = os.path.join ( tempdir, "parameter.ini" )
+        if os.path.exists ( parFile ):
+            logger.warning ( f"weird, parameter file {parFile} already exists?" )
+            parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        pf = open ( parFile, "wt" )
+
         combine = "False"
         if self.combine:
             combine = "True"
@@ -368,7 +373,8 @@ class ValidationPlot():
             expected = self.options["expectationType"]
             f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
             f.close()
-        os.close(pf)
+        # os.close(pf)
+        pf.close()
         return parFile
 
     def loadData(self, overwrite = True ):
@@ -611,7 +617,12 @@ class ValidationPlot():
             self.data = []
 
         #Set temporary outputdir:
-        outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+        outputDir = os.path.join ( self.currentSLHADir, "results" )
+        if os.path.exists ( outputDir ):
+            logger.warning ( f"weird, {outputDir} already exists?" )
+            outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+        else:
+            os.mkdir ( outputDir )
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
