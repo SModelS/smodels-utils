@@ -533,8 +533,8 @@ def main():
             help="minimum z value, None means auto [.5]",
             type=float, default=.5 )
     argparser.add_argument ( "-Z", "--zmax",
-            help="maximum Z value, None means auto [1.7]",
-            type=float, default=1.7 )
+            help="maximum Z value, None means auto [1.5]",
+            type=float, default=1.5 )
     argparser.add_argument ( "-x", "--xmin",
             help="minimum x value, None means auto [None]",
             type=float, default=None )
