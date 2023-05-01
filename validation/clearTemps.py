@@ -9,6 +9,7 @@ def clear( hours : int, verbose : bool ):
     :param hours: minimum age for deletion, in hours
     """
     files = glob.glob ( "tmp*" )
+    files += glob.glob ( "_V*" )
     # files += glob.glob ( "pythia*" )
     t0=time.time()
     for f in files:
