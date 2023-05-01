@@ -183,7 +183,7 @@ def create1DPlot( validationPlot, silentMode=True,
     rmin, rmax = 0, 1
     for o in official:
         if o["name"].startswith ( "obsExclusion" ) and len( yvs ) > 0:
-            rmin, rmax = min ( yvs ), min ( 2., max ( yvs ) )
+            rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
             xvals = set(o["points"]["x"])
             ## we assume the exclusion lines to be "points", so
             ## we draw horizontal lines in each point
@@ -195,7 +195,7 @@ def create1DPlot( validationPlot, silentMode=True,
     for o in eofficial:
         # logger.info ( f"exclusion object: {o}" )
         if o["name"].startswith ( "expExclusion" ) and len ( yvs ) > 0:
-            rmin, rmax = min ( yvs ), min ( 2., max ( yvs ) )
+            rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
             xvals = set(o["points"]["x"])
             label = "dashed lines are expected values" 
             for xv in xvals:
