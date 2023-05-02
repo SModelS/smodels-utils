@@ -40,6 +40,7 @@ def setup16033():
 
 def setup19006():
     anaid = "CMS-SUS-19-006"
+    # anaid = "CMS-SUS-19-006-agg"
     slhafile = "T2tt_720_80_720_80.slha"
     mus = np.arange ( -.5, .5, .018 )
     # the signal region is SR6_Njet2_Nb2_HT500_MHT500
@@ -49,15 +50,24 @@ def setup19006():
     combined = True
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
 
-def normalize ( container : list ):
+def normalizeLlhds ( container : list ):
     T = np.nansum(container)
     if T == 0.:
-        return
+        return container
     for i,c in enumerate(container):
         container[i]=c/T
     return container
 
-def wiggle ( container : list , r : float = .05 ):
+def normalizeNLLs ( container : list ):
+    """ for NLLs we just find the minimum """
+    if len(container)==0:
+        return container
+    nllMin = min(container)
+    for i,c in enumerate(container):
+        container[i]=c-nllMin
+    return container
+
+def wiggle ( container : list , r : float = .03 ):
     T = np.nansum(container)
     if T == 0.:
         return
@@ -101,24 +111,27 @@ def run():
     # pprint ( f"truncated gaussian returned {ret}" )
     doEfficiencies = False
     for mu in mus:
-        ul = prUL[0].likelihood ( mu=mu )
+        ul = prUL[0].likelihood ( mu=mu, return_nll=True )
+        print ( f"ul for {mu:.2f} is {ul}" )
         if ul == None:
-            print ( f"warning: ul is None for mu={mu}. (do we have euls?)" )
+            print ( f"warning: ul is None for mu={mu:.2f}. (do we have euls?)" )
         uls.append ( ul )
-        ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=False )
+        ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=True )
         ul0s.append ( ul0 )
-        eff = prEff[0].likelihood ( mu=mu, nll=False )
-        print ( f"llhd for {mu} is {eff}" )
-        effs.append ( eff )
+        effN = prEff[0].likelihood ( mu=mu, return_nll=True )
+        eff = prEff[0].likelihood ( mu=mu, return_nll=False )
+        print ( f"[plotCorrectedLlhds] llhd for {prEff[0].dataId()} {mu:.2f} is {effN},{eff}" )
+        effs.append ( effN )
         if doEfficiencies:
-            ulE = prUL[0].likelihood ( mu=mu, expected=True )
+            ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=True )
             ulsE.append ( ulE )
-            ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=False )
+            ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=True )
             ul0sE.append ( ul0E )
-            effE = prEff[0].likelihood ( mu=mu, expected=True )
+            effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=True )
             effsE.append ( effE )
     for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE  ]:
-        normalize ( x )
+        normalizeNLLs ( x )
+    wiggle ( uls )
     from smodels_utils.plotting import mpkitty as plt
     plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
     plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
