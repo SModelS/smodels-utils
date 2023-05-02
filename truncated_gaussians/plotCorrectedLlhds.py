@@ -2,7 +2,8 @@
 
 from smodels.tools import runtime
 runtime._experimental = True
-from smodels.theory.theoryPrediction import theoryPredictionsFor, fiveValuesFromLimits
+from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.tools.statsTools import StatsComputer
 from smodels.experiment.databaseObj import Database
 from smodels.theory import decomposer
 from smodels.theory.model import Model
@@ -24,6 +25,7 @@ def setup16033():
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus }
 
 def run():
+    # db = Database ( "official" )
     db = Database ( "debug" )
     mus = np.arange ( -1.5, 2.01, .03 )
     ret = setup16033()
@@ -51,7 +53,8 @@ def run():
         if ul == None:
             print ( f"warning: ul is None for mu={mu}. (do we have euls?)" )
         uls.append ( ul )
-        ret = fiveValuesFromLimits ( prUL[0], mu=mu, corr = 0.01 )
+        computer = StatsComputer.forTruncatedGaussian ( prUL )
+        ret = computer.get_five_values ( prUL[0], mu=mu, corr = 0.01 )
         ul0 = ret["lbsm"]
         ul0s.append ( ul0 )
         eff = prEff[0].likelihood ( mu=mu )
