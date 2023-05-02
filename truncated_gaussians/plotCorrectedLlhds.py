@@ -28,8 +28,8 @@ def run():
     # db = Database ( "official" )
     db = Database ( "debug" )
     mus = np.arange ( -1.5, 2.01, .03 )
-    ret = setup16033()
-    # ret = setup14021()
+    # ret = setup16033()
+    ret = setup14021()
     anaid, slhafile, mus = ret["anaid"], ret["slhafile"], ret["mus"]
 
     er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "upperLimit" ] )
@@ -53,8 +53,8 @@ def run():
         if ul == None:
             print ( f"warning: ul is None for mu={mu}. (do we have euls?)" )
         uls.append ( ul )
-        computer = StatsComputer.forTruncatedGaussian ( prUL )
-        ret = computer.get_five_values ( prUL[0], mu=mu, corr = 0.01 )
+        computer = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
+        ret = computer.get_five_values ( prUL[0] )
         ul0 = ret["lbsm"]
         ul0s.append ( ul0 )
         eff = prEff[0].likelihood ( mu=mu )
