@@ -114,13 +114,21 @@ def pprint ( *args ):
         return
     print ( f"[plotCorrectedLlhds] {' '.join(args)}" )
 
+def defaults ( ):
+    """ define some default values """
+    ret= {}
+    ret["dbpath"]="debug"
+    ret["dbpath"]="official"
+    ret["dbpath"]="../../smodels-database"
+    ret["doNLL"]=True
+    ret["addExpectations"]=False
+    ret["verbose"]=False
+    return ret
+
 def runOneSetup ( setup : dict ):
     """ run with the given setup """
-    dbpath = "debug" # "official"
-    dbpath = "../../smodels-database" 
-    if "dbpath" in setup:
-        dbpath = setup["dbpath"]
-    db = Database ( dbpath )
+    doNLL = setup["doNLL"]
+    db = Database ( setup["dbpath"] )
     retrieveValidationFile ( setup["slhafile"] )
     combined = setup["combined"]
     mus = setup["mus"]
@@ -149,8 +157,6 @@ def runOneSetup ( setup : dict ):
     computer = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
     ret = computer.get_five_values ( False )
     # pprint ( f"truncated gaussian returned {ret}" )
-    addExpectations = False
-    doNLL = False
     for mu in mus:
         ul = prUL[0].likelihood ( mu=mu, return_nll=doNLL )
         pprint ( f"ul for {mu:.2f} is {ul}" )
@@ -162,7 +168,7 @@ def runOneSetup ( setup : dict ):
         effN = prEff[0].likelihood ( mu=mu, return_nll=doNLL )
         pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN}" )
         effs.append ( effN )
-        if addExpectations:
+        if setup["addExpectations"]:
             ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
             ulsE.append ( ulE )
             ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
@@ -179,7 +185,7 @@ def runOneSetup ( setup : dict ):
     plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
     plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
     plt.plot ( mus, effs, label = "from efficiencies", c="k" )
-    if addExpectations:
+    if setup["addExpectations"]:
         plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
         plt.plot ( mus, ul0sE, label = "from limits, no corr, expected", c="g", ls="dotted" )
         plt.plot ( mus, effsE, label = "from efficiencies, expected", ls="dotted", c="k" )
@@ -195,6 +201,12 @@ def run():
                   'a tool to compare likelihood plots')
     argparser.add_argument ( '-a', '--analysis', nargs='?',
                         help='analysis', type=str, default=None )
+    argparser.add_argument ( '-l', '--llhds', help="likelihoods, not NLLs",
+                        action="store_true" )
+    argparser.add_argument ( '-e', '--expectations', help="add expectations",
+                        action="store_true" )
+    argparser.add_argument ( '-v', '--verbose', help="be verbose",
+                        action="store_true" )
     args=argparser.parse_args()
     method = f"setup{args.analysis}"
     if not method in globals():
@@ -203,7 +215,15 @@ def run():
             if "setup" in g:
                 print ( g )
     func = globals()[method]
-    setup = func()
+    setup = defaults()
+    add = func()
+    setup.update (add )
+    if args.llhds:
+        setup["doNLL"]=False
+    if args.expectations:
+        setup["addExpectations"]=True
+    if args.verbose:
+        setup["verbose"]=True
     #ret = setup16033()
     # ret = setup14021()
     # ret = setup19006()
