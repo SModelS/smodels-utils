@@ -29,7 +29,7 @@ def setup14021():
 def setup16033():
     anaid = "CMS-SUS-16-033"
     slhafile = "T2tt_720_80_720_80.slha"
-    mus = np.arange ( -1., 1.51, .018 )
+    mus = np.arange ( -1., 1.01, .018 )
     # the signal region is SR6_Njet2_Nb2_HT500_MHT500
     # which has oUL = 2.46*fb, eUL = 1.85*fb  
     # however, we get oUL_mu = .218, eUL_mu = .24
@@ -43,7 +43,7 @@ def setup16033():
 def setup16050():
     anaid = "CMS-SUS-16-050"
     slhafile = "T2tt_720_80_720_80.slha"
-    mus = np.arange ( -.7, .9, .006 )
+    mus = np.arange ( -.4, .6, .006 )
     # the signal region is SR6_Njet2_Nb2_HT500_MHT500
     # which has oUL = 2.46*fb, eUL = 1.85*fb  
     # however, we get oUL_mu = .218, eUL_mu = .24
@@ -240,7 +240,7 @@ def override ( setup, args ):
 def allSetups():
     ret = []
     for g in globals():
-        if "setup" in g:
+        if "setup" in g and not "all" in g:
             ret.append ( g )
     return ret
 
