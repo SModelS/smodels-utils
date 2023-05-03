@@ -206,7 +206,7 @@ class Runner:
         plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
         plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
         plt.plot ( mus, ul20s, label = "from limits, corr=1.0", c="b" )
-        plt.plot ( mus, effs, label = "from efficiencies", c="k" )
+        plt.plot ( mus, effs, label = "from efficiencies", c="k", lw=2 )
         if self.setup["addExpectations"]:
             plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
             plt.plot ( mus, ul0sE, label = "from limits, no corr, expected", c="g", ls="dotted" )
