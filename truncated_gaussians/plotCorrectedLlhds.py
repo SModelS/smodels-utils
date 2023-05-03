@@ -38,6 +38,18 @@ def setup16033():
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus,
              "combined": combined }
 
+def setup16050():
+    anaid = "CMS-SUS-16-050"
+    slhafile = "T2tt_720_80_720_80.slha"
+    mus = np.arange ( -1., 1.51, .018 )
+    # the signal region is SR6_Njet2_Nb2_HT500_MHT500
+    # which has oUL = 2.46*fb, eUL = 1.85*fb  
+    # however, we get oUL_mu = .218, eUL_mu = .24
+    # we cannot combine
+    combined = False
+    return { "anaid": anaid, "slhafile": slhafile, "mus": mus,
+             "combined": combined }
+
 def setup19006():
     anaid = "CMS-SUS-19-006"
     # anaid = "CMS-SUS-19-006-agg"
@@ -82,6 +94,7 @@ def run():
     #ret = setup16033()
     # ret = setup14021()
     ret = setup19006()
+    # ret = setup16050()
     combined = ret["combined"]
     mus = ret["mus"]
     anaid, slhafile, mus = ret["anaid"], ret["slhafile"], ret["mus"]
