@@ -39,7 +39,7 @@ def setup16033():
 def setup16050():
     anaid = "CMS-SUS-16-050"
     slhafile = "T2tt_720_80_720_80.slha"
-    mus = np.arange ( -1., 1.51, .018 )
+    mus = np.arange ( -.7, .9, .006 )
     # the signal region is SR6_Njet2_Nb2_HT500_MHT500
     # which has oUL = 2.46*fb, eUL = 1.85*fb  
     # however, we get oUL_mu = .218, eUL_mu = .24
@@ -60,6 +60,19 @@ def setup19006():
     combined = True
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
 
+def setup1909():
+    anaid = "ATLAS-SUSY-2019-09"
+    slhafile = "TChiWZ_300_110_300_110.slha"
+    mus = np.arange ( -.5, .5, .018 )
+    # the signal region is SR6_Njet2_Nb2_HT500_MHT500
+    # which has oUL = 2.46*fb, eUL = 1.85*fb  
+    # however, we get oUL_mu = .218, eUL_mu = .24
+    # we cannot combine
+    combined = True
+    ret = { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
+    ret["dbpath"]="debug"
+    return ret
+
 def setup20004():
     anaid = "CMS-SUS-20-004"
     slhafile = "TChiHH_200_20_200_20.slha"
@@ -70,7 +83,8 @@ def setup20004():
     # however, we get oUL_mu = .218, eUL_mu = .24
     # we cannot combine
     combined = True
-    return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
+    ret= { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
+    return ret
 
 def setup21002():
     anaid = "CMS-SUS-21-002"
@@ -104,7 +118,7 @@ class Runner:
             container[i]=c-nllMin
         return container
 
-    def wiggle ( self, container : list , r : float = .02 ):
+    def wiggle ( self, container : list , r : float = .01 ):
         T = np.nansum(container)
         if T == 0.:
             return
@@ -143,11 +157,12 @@ class Runner:
         toplist = decomposer.decompose(model, doCompress=True, doInvisible=True )
         prUL = theoryPredictionsFor(erUL, toplist, combinedResults=False )
         prEff = theoryPredictionsFor(erEff, toplist, combinedResults=combined )
-        uls, ul0s, effs = [], [], []
+        uls, ul0s, effs, ul20s = [], [], [], []
         ulsE, ul0sE, effsE = [], [], []
-        computer = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
-        self.pprint ( f"the limits are observed {computer.ul}, expected {computer.eul}" )
-        ret = computer.get_five_values ( False )
+        computer0 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
+        computer20 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 2.0 )
+        self.pprint ( f"the limits are observed {computer0.ul}, expected {computer0.eul}" )
+        ret = computer0.get_five_values ( False )
         self.pprint ( f"truncated gaussian returned {ret}" )
         for mu in mus:
             ul = prUL[0].likelihood ( mu=mu, return_nll=doNLL )
@@ -155,15 +170,17 @@ class Runner:
             if ul == None:
                 self.pprint ( f"warning: ul is None for mu={mu:.2f}. (do we have euls?)" )
             uls.append ( ul )
-            ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
+            ul0 = computer0.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
+            ul20 = computer20.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
             ul0s.append ( ul0 )
+            ul20s.append ( ul20 )
             effN = prEff[0].likelihood ( mu=mu, return_nll=True )
             # self.pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN},{eff}" )
             effs.append ( effN )
             if self.setup["addExpectations"]:
                 ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
                 ulsE.append ( ulE )
-                ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
+                ul0E = computer0.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
                 ul0sE.append ( ul0E )
                 effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=True )
                 effsE.append ( effE )
@@ -175,7 +192,7 @@ class Runner:
             for i,x in enumerate(effsE):
                 effsE[i]=np.exp( T-x )
 
-        for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE  ]:
+        for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE, ul20s ]:
             if doNLL:
                 self.normalizeNLLs ( x )
             else:
@@ -184,6 +201,7 @@ class Runner:
         from smodels_utils.plotting import mpkitty as plt
         plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
         plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
+        plt.plot ( mus, ul20s, label = "from limits, corr=2.0", c="b" )
         plt.plot ( mus, effs, label = "from efficiencies", c="k" )
         if self.setup["addExpectations"]:
             plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
