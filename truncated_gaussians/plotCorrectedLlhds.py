@@ -83,36 +83,109 @@ def setup21002():
     combined = True
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
 
+class Runner:
+    def __init__ ( self, setup ):
+        self.setup = setup
 
-def normalizeLlhds ( container : list ):
-    T = np.nansum(container)
-    if T == 0.:
+    def normalizeLlhds ( self, container : list ):
+        T = np.nansum(container)
+        if T == 0.:
+            return container
+        for i,c in enumerate(container):
+            container[i]=c/T
         return container
-    for i,c in enumerate(container):
-        container[i]=c/T
-    return container
 
-def normalizeNLLs ( container : list ):
-    """ for NLLs we just find the minimum """
-    if len(container)==0:
+    def normalizeNLLs ( self, container : list ):
+        """ for NLLs we just find the minimum """
+        if len(container)==0:
+            return container
+        nllMin = min(container)
+        for i,c in enumerate(container):
+            container[i]=c-nllMin
         return container
-    nllMin = min(container)
-    for i,c in enumerate(container):
-        container[i]=c-nllMin
-    return container
 
-def wiggle ( container : list , r : float = .03 ):
-    T = np.nansum(container)
-    if T == 0.:
-        return
-    for i,c in enumerate(container):
-        container[i]=c*random.uniform(1-r,1+r)
-    return container
+    def wiggle ( self, container : list , r : float = .02 ):
+        T = np.nansum(container)
+        if T == 0.:
+            return
+        for i,c in enumerate(container):
+            container[i]=c*random.uniform(1-r,1+r)
+        return container
 
-def pprint ( *args ):
-    if True:
-        return
-    print ( f"[plotCorrectedLlhds] {' '.join(args)}" )
+    def pprint ( self, *args ):
+        if self.setup["verbose"]==False:
+            return
+        print ( f"[plotCorrectedLlhds] {' '.join(args)}" )
+
+    def runOneSetup ( self ):
+        """ run with the given setup """
+        doNLL = self.setup["doNLL"]
+        db = Database ( self.setup["dbpath"] )
+        retrieveValidationFile ( self.setup["slhafile"] )
+        combined = self.setup["combined"]
+        mus = self.setup["mus"]
+        anaid, slhafile, mus = self.setup["anaid"], self.setup["slhafile"], \
+                               self.setup["mus"]
+        anaidUL = anaid.replace("-agg","").replace("-adl","")
+
+        er = db.getExpResults ( analysisIDs = [ anaidUL ], dataTypes = [ "upperLimit" ] )
+        if er == []:
+            print ( f"could not find an upperLimit result for {anaid}" )
+            sys.exit()
+        erUL = er[0]
+        er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "efficiencyMap" ] )
+        if er == []:
+            print ( f"could not find an efficiencyMap result for {anaid}" )
+            sys.exit()
+        erEff = er[0]
+        model = Model(BSMparticles=BSMList, SMparticles=SMList)
+        model.updateParticles(inputFile=slhafile)
+        toplist = decomposer.decompose(model, doCompress=True, doInvisible=True )
+        prUL = theoryPredictionsFor(erUL, toplist, combinedResults=False )
+        prEff = theoryPredictionsFor(erEff, toplist, combinedResults=combined )
+        uls, ul0s, effs = [], [], []
+        ulsE, ul0sE, effsE = [], [], []
+        computer = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
+        self.pprint ( f"the limits are observed {computer.ul}, expected {computer.eul}" )
+        ret = computer.get_five_values ( False )
+        self.pprint ( f"truncated gaussian returned {ret}" )
+        for mu in mus:
+            ul = prUL[0].likelihood ( mu=mu, return_nll=doNLL )
+            #self.pprint ( f"ul for {mu:.2f} is {ul}" )
+            if ul == None:
+                self.pprint ( f"warning: ul is None for mu={mu:.2f}. (do we have euls?)" )
+            uls.append ( ul )
+            ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
+            ul0s.append ( ul0 )
+            effN = prEff[0].likelihood ( mu=mu, return_nll=doNLL )
+            # self.pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN}" )
+            effs.append ( effN )
+            if self.setup["addExpectations"]:
+                ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
+                ulsE.append ( ulE )
+                ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
+                ul0sE.append ( ul0E )
+                effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
+                effsE.append ( effE )
+        for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE  ]:
+            if doNLL:
+                self.normalizeNLLs ( x )
+            else:
+                self.normalizeLlhds ( x )
+        self.wiggle ( uls )
+        from smodels_utils.plotting import mpkitty as plt
+        plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
+        plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
+        plt.plot ( mus, effs, label = "from efficiencies", c="k" )
+        if self.setup["addExpectations"]:
+            plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
+            plt.plot ( mus, ul0sE, label = "from limits, no corr, expected", c="g", ls="dotted" )
+            plt.plot ( mus, effsE, label = "from efficiencies, expected", ls="dotted", c="k" )
+        plt.xlabel ( r"$\mu$" )
+        plt.title ( f"comparison of likelihoods, {anaid}" )
+        plt.legend()
+        plt.savefig ( f"{anaid}.png" )
+        plt.show()
 
 def defaults ( ):
     """ define some default values """
@@ -125,75 +198,6 @@ def defaults ( ):
     ret["verbose"]=False
     return ret
 
-def runOneSetup ( setup : dict ):
-    """ run with the given setup """
-    doNLL = setup["doNLL"]
-    db = Database ( setup["dbpath"] )
-    retrieveValidationFile ( setup["slhafile"] )
-    combined = setup["combined"]
-    mus = setup["mus"]
-    anaid, slhafile, mus = setup["anaid"], setup["slhafile"], setup["mus"]
-    anaidUL = anaid.replace("-agg","").replace("-adl","")
-
-    er = db.getExpResults ( analysisIDs = [ anaidUL ], dataTypes = [ "upperLimit" ] )
-    if er == []:
-        print ( f"could not find an upperLimit result for {anaid}" )
-        sys.exit()
-    erUL = er[0]
-    er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "efficiencyMap" ] )
-    if er == []:
-        print ( f"could not find an efficiencyMap result for {anaid}" )
-        sys.exit()
-    erEff = er[0]
-    model = Model(BSMparticles=BSMList, SMparticles=SMList)
-    model.updateParticles(inputFile=slhafile)
-    toplist = decomposer.decompose(model, doCompress=True, doInvisible=True )
-    prUL = theoryPredictionsFor(erUL, toplist, combinedResults=False )
-    prEff = theoryPredictionsFor(erEff, toplist, combinedResults=combined )
-    # prEff = theoryPredictionsFor(erEff, toplist, useBestDataset = not combined, combinedResults=combined )
-    #pprint ( f"prEff is {prEff[0]} {prEff[0].dataset}, {len(prEff)} predictions" )
-    uls, ul0s, effs = [], [], []
-    ulsE, ul0sE, effsE = [], [], []
-    computer = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
-    ret = computer.get_five_values ( False )
-    # pprint ( f"truncated gaussian returned {ret}" )
-    for mu in mus:
-        ul = prUL[0].likelihood ( mu=mu, return_nll=doNLL )
-        pprint ( f"ul for {mu:.2f} is {ul}" )
-        if ul == None:
-            print ( f"warning: ul is None for mu={mu:.2f}. (do we have euls?)" )
-        uls.append ( ul )
-        ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
-        ul0s.append ( ul0 )
-        effN = prEff[0].likelihood ( mu=mu, return_nll=doNLL )
-        pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN}" )
-        effs.append ( effN )
-        if setup["addExpectations"]:
-            ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
-            ulsE.append ( ulE )
-            ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
-            ul0sE.append ( ul0E )
-            effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
-            effsE.append ( effE )
-    for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE  ]:
-        if doNLL:
-            normalizeNLLs ( x )
-        else:
-            normalizeLlhds ( x )
-    wiggle ( uls )
-    from smodels_utils.plotting import mpkitty as plt
-    plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
-    plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
-    plt.plot ( mus, effs, label = "from efficiencies", c="k" )
-    if setup["addExpectations"]:
-        plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
-        plt.plot ( mus, ul0sE, label = "from limits, no corr, expected", c="g", ls="dotted" )
-        plt.plot ( mus, effsE, label = "from efficiencies, expected", ls="dotted", c="k" )
-    plt.xlabel ( r"$\mu$" )
-    plt.title ( f"comparison of likelihoods, {anaid}" )
-    plt.legend()
-    plt.savefig ( f"{anaid}.png" )
-    plt.show()
 
 def run():
     import argparse
@@ -230,7 +234,8 @@ def run():
     # ret = setup16050()
     # ret = setup20004()
     # ret = setup21002()
-    runOneSetup ( setup )
+    runner = Runner ( setup )
+    runner.runOneSetup ( )
 
 if __name__ == "__main__":
     run()
