@@ -157,16 +157,24 @@ class Runner:
             uls.append ( ul )
             ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
             ul0s.append ( ul0 )
-            effN = prEff[0].likelihood ( mu=mu, return_nll=doNLL )
-            # self.pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN}" )
+            effN = prEff[0].likelihood ( mu=mu, return_nll=True )
+            # self.pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN},{eff}" )
             effs.append ( effN )
             if self.setup["addExpectations"]:
                 ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
                 ulsE.append ( ulE )
                 ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
                 ul0sE.append ( ul0E )
-                effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
+                effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=True )
                 effsE.append ( effE )
+        if not doNLL:
+            T = min(effs)
+            for i,x in enumerate(effs):
+                effs[i]=np.exp( T-x )
+            T = min(effsE)
+            for i,x in enumerate(effsE):
+                effsE[i]=np.exp( T-x )
+
         for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE  ]:
             if doNLL:
                 self.normalizeNLLs ( x )
