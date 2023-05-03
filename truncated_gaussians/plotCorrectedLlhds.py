@@ -10,6 +10,7 @@ from smodels.theory import decomposer
 from smodels.theory.model import Model
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
+from validation.validationHelpers import retrieveValidationFile
 import numpy as np
 import sys
 
@@ -22,9 +23,6 @@ def setup14021():
     # however we get oUL_mu = 9.73E-01 and eUL_mu = 8.51E-01
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus,
              "combined": False }
-
-def pprint ( *args ):
-    print ( * args )
 
 def setup16033():
     anaid = "CMS-SUS-16-033"
@@ -74,6 +72,18 @@ def setup20004():
     combined = True
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
 
+def setup21002():
+    anaid = "CMS-SUS-21-002"
+    slhafile = "TChiWZ_300_110_300_110.slha"
+    mus = np.arange ( -4, 4, .05 )
+    # the signal region is SR6_Njet2_Nb2_HT500_MHT500
+    # which has oUL = 2.46*fb, eUL = 1.85*fb  
+    # however, we get oUL_mu = .218, eUL_mu = .24
+    # we cannot combine
+    combined = True
+    return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
+
+
 def normalizeLlhds ( container : list ):
     T = np.nansum(container)
     if T == 0.:
@@ -99,18 +109,22 @@ def wiggle ( container : list , r : float = .03 ):
         container[i]=c*random.uniform(1-r,1+r)
     return container
 
-def run():
+def pprint ( *args ):
+    if True:
+        return
+    print ( f"[plotCorrectedLlhds] {' '.join(args)}" )
+
+def runOneSetup ( setup : dict ):
+    """ run with the given setup """
     dbpath = "debug" # "official"
     dbpath = "../../smodels-database" 
+    if "dbpath" in setup:
+        dbpath = setup["dbpath"]
     db = Database ( dbpath )
-    #ret = setup16033()
-    # ret = setup14021()
-    # ret = setup19006()
-    # ret = setup16050()
-    ret = setup20004()
-    combined = ret["combined"]
-    mus = ret["mus"]
-    anaid, slhafile, mus = ret["anaid"], ret["slhafile"], ret["mus"]
+    retrieveValidationFile ( setup["slhafile"] )
+    combined = setup["combined"]
+    mus = setup["mus"]
+    anaid, slhafile, mus = setup["anaid"], setup["slhafile"], setup["mus"]
     anaidUL = anaid.replace("-agg","").replace("-adl","")
 
     er = db.getExpResults ( analysisIDs = [ anaidUL ], dataTypes = [ "upperLimit" ] )
@@ -135,34 +149,37 @@ def run():
     computer = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
     ret = computer.get_five_values ( False )
     # pprint ( f"truncated gaussian returned {ret}" )
-    doEfficiencies = False
+    addExpectations = False
+    doNLL = False
     for mu in mus:
-        ul = prUL[0].likelihood ( mu=mu, return_nll=True )
-        print ( f"ul for {mu:.2f} is {ul}" )
+        ul = prUL[0].likelihood ( mu=mu, return_nll=doNLL )
+        pprint ( f"ul for {mu:.2f} is {ul}" )
         if ul == None:
             print ( f"warning: ul is None for mu={mu:.2f}. (do we have euls?)" )
         uls.append ( ul )
-        ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=True )
+        ul0 = computer.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
         ul0s.append ( ul0 )
-        effN = prEff[0].likelihood ( mu=mu, return_nll=True )
-        eff = prEff[0].likelihood ( mu=mu, return_nll=False )
-        print ( f"[plotCorrectedLlhds] llhd for {prEff[0].dataId()} {mu:.2f} is {effN},{eff}" )
+        effN = prEff[0].likelihood ( mu=mu, return_nll=doNLL )
+        pprint ( f"llhd for {prEff[0].dataId()} {mu:.2f} is {effN}" )
         effs.append ( effN )
-        if doEfficiencies:
-            ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=True )
+        if addExpectations:
+            ulE = prUL[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
             ulsE.append ( ulE )
-            ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=True )
+            ul0E = computer.likelihood ( poi_test=mu, expected=True, return_nll=doNLL )
             ul0sE.append ( ul0E )
-            effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=True )
+            effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=doNLL )
             effsE.append ( effE )
     for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE  ]:
-        normalizeNLLs ( x )
+        if doNLL:
+            normalizeNLLs ( x )
+        else:
+            normalizeLlhds ( x )
     wiggle ( uls )
     from smodels_utils.plotting import mpkitty as plt
     plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
     plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
     plt.plot ( mus, effs, label = "from efficiencies", c="k" )
-    if doEfficiencies:
+    if addExpectations:
         plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
         plt.plot ( mus, ul0sE, label = "from limits, no corr, expected", c="g", ls="dotted" )
         plt.plot ( mus, effsE, label = "from efficiencies, expected", ls="dotted", c="k" )
@@ -171,6 +188,29 @@ def run():
     plt.legend()
     plt.savefig ( f"{anaid}.png" )
     plt.show()
+
+def run():
+    import argparse
+    argparser = argparse.ArgumentParser(description=
+                  'a tool to compare likelihood plots')
+    argparser.add_argument ( '-a', '--analysis', nargs='?',
+                        help='analysis', type=str, default=None )
+    args=argparser.parse_args()
+    method = f"setup{args.analysis}"
+    if not method in globals():
+        print ( f"method {method} not found." )
+        for g in globals():
+            if "setup" in g:
+                print ( g )
+    func = globals()[method]
+    setup = func()
+    #ret = setup16033()
+    # ret = setup14021()
+    # ret = setup19006()
+    # ret = setup16050()
+    # ret = setup20004()
+    # ret = setup21002()
+    runOneSetup ( setup )
 
 if __name__ == "__main__":
     run()
