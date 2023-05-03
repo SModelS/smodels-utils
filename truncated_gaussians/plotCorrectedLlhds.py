@@ -21,8 +21,10 @@ def setup14021():
     # alright so this should use the SRSL1c signal region,
     # which has oUL = 5.787E-01*fb and eUL = 5.777E-01*fb
     # however we get oUL_mu = 9.73E-01 and eUL_mu = 8.51E-01
-    return { "anaid": anaid, "slhafile": slhafile, "mus": mus,
+    ret = { "anaid": anaid, "slhafile": slhafile, "mus": mus,
              "combined": False }
+    ret["dbpath"]="debug"
+    return ret
 
 def setup16033():
     anaid = "CMS-SUS-16-033"
@@ -33,8 +35,10 @@ def setup16033():
     # however, we get oUL_mu = .218, eUL_mu = .24
     # we cannot combine
     combined = False
-    return { "anaid": anaid, "slhafile": slhafile, "mus": mus,
+    ret = { "anaid": anaid, "slhafile": slhafile, "mus": mus,
              "combined": combined }
+    ret["dbpath"]="debug"
+    return ret
 
 def setup16050():
     anaid = "CMS-SUS-16-050"
@@ -145,7 +149,7 @@ class Runner:
         er = db.getExpResults ( analysisIDs = [ anaidUL ], dataTypes = [ "upperLimit" ] )
         if er == []:
             print ( f"could not find an upperLimit result for {anaid}" )
-            sys.exit()
+            return
         erUL = er[0]
         er = db.getExpResults ( analysisIDs = [ anaid ], dataTypes = [ "efficiencyMap" ] )
         if er == []:
@@ -160,7 +164,7 @@ class Runner:
         uls, ul0s, effs, ul20s = [], [], [], []
         ulsE, ul0sE, effsE = [], [], []
         computer0 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
-        computer20 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 2.0 )
+        computer20 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 1.0 )
         self.pprint ( f"the limits are observed {computer0.ul}, expected {computer0.eul}" )
         ret = computer0.get_five_values ( False )
         self.pprint ( f"truncated gaussian returned {ret}" )
@@ -201,7 +205,7 @@ class Runner:
         from smodels_utils.plotting import mpkitty as plt
         plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
         plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
-        plt.plot ( mus, ul20s, label = "from limits, corr=2.0", c="b" )
+        plt.plot ( mus, ul20s, label = "from limits, corr=1.0", c="b" )
         plt.plot ( mus, effs, label = "from efficiencies", c="k" )
         if self.setup["addExpectations"]:
             plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
@@ -224,6 +228,21 @@ def defaults ( ):
     ret["verbose"]=False
     return ret
 
+def override ( setup, args ):
+    if args.llhds:
+        setup["doNLL"]=False
+    if args.expectations:
+        setup["addExpectations"]=True
+    if args.verbose:
+        setup["verbose"]=True
+    return setup
+
+def allSetups():
+    ret = []
+    for g in globals():
+        if "setup" in g:
+            ret.append ( g )
+    return ret
 
 def run():
     import argparse
@@ -238,12 +257,23 @@ def run():
     argparser.add_argument ( '-v', '--verbose', help="be verbose",
                         action="store_true" )
     args=argparser.parse_args()
+    if args.analysis == "all":
+        for g in allSetups():
+            setup = defaults( )
+            func = globals()[g]
+            add = func()
+            setup.update ( add )
+            override ( setup, args )
+            print ( f"running {setup['anaid']}" )
+            runner = Runner ( setup )
+            runner.runOneSetup ( )
+
     method = f"setup{args.analysis}"
     if not method in globals():
-        print ( f"method {method} not found." )
+        print ( f"method {method} not found. we have " )
         for g in globals():
             if "setup" in g:
-                print ( g )
+                print ( "--", g )
     func = globals()[method]
     setup = defaults()
     add = func()
@@ -254,12 +284,7 @@ def run():
         setup["addExpectations"]=True
     if args.verbose:
         setup["verbose"]=True
-    #ret = setup16033()
-    # ret = setup14021()
-    # ret = setup19006()
-    # ret = setup16050()
-    # ret = setup20004()
-    # ret = setup21002()
+    override ( setup, args )
     runner = Runner ( setup )
     runner.runOneSetup ( )
 
