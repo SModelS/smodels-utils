@@ -62,6 +62,18 @@ def setup19006():
     combined = True
     return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
 
+def setup20004():
+    anaid = "CMS-SUS-20-004"
+    slhafile = "TChiHH_200_20_200_20.slha"
+    # anaid = "CMS-SUS-19-006-agg"
+    mus = np.arange ( -4, 4, .05 )
+    # the signal region is SR6_Njet2_Nb2_HT500_MHT500
+    # which has oUL = 2.46*fb, eUL = 1.85*fb  
+    # however, we get oUL_mu = .218, eUL_mu = .24
+    # we cannot combine
+    combined = True
+    return { "anaid": anaid, "slhafile": slhafile, "mus": mus, "combined": combined }
+
 def normalizeLlhds ( container : list ):
     T = np.nansum(container)
     if T == 0.:
@@ -93,8 +105,9 @@ def run():
     db = Database ( dbpath )
     #ret = setup16033()
     # ret = setup14021()
-    ret = setup19006()
+    # ret = setup19006()
     # ret = setup16050()
+    ret = setup20004()
     combined = ret["combined"]
     mus = ret["mus"]
     anaid, slhafile, mus = ret["anaid"], ret["slhafile"], ret["mus"]
