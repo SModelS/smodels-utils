@@ -7,6 +7,8 @@ from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.tools.statsTools import StatsComputer
 from smodels.experiment.databaseObj import Database
 from smodels.theory import decomposer
+from smodels.tools.truncatedGaussians import TruncatedGaussians
+# TruncatedGaussians.newCorrectionType = False
 from smodels.theory.model import Model
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
@@ -164,7 +166,8 @@ class Runner:
         uls, ul0s, effs, ul20s = [], [], [], []
         ulsE, ul0sE, effsE = [], [], []
         computer0 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
-        computer20 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 1.0 )
+        mcorr = 0.3
+        computer08 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = mcorr )
         # self.pprint ( f"the limits are observed {computer0.ul}, expected {computer0.eul}" )
         ret = computer0.get_five_values ( False )
         self.pprint ( f"truncated gaussian returned {ret}" )
@@ -175,7 +178,7 @@ class Runner:
                 self.pprint ( f"warning: ul is None for mu={mu:.2f}. (do we have euls?)" )
             uls.append ( ul )
             ul0 = computer0.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
-            ul20 = computer20.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
+            ul20 = computer08.likelihood ( poi_test=mu, expected=False, return_nll=doNLL )
             ul0s.append ( ul0 )
             ul20s.append ( ul20 )
             effN = prEff[0].likelihood ( mu=mu, return_nll=True )
@@ -189,12 +192,14 @@ class Runner:
                 effE = prEff[0].likelihood ( mu=mu, expected=True, return_nll=True )
                 effsE.append ( effE )
         if not doNLL:
-            T = min(effs)
-            for i,x in enumerate(effs):
-                effs[i]=np.exp( T-x )
-            T = min(effsE)
-            for i,x in enumerate(effsE):
-                effsE[i]=np.exp( T-x )
+            if len(effs)>0:
+                T = min(effs)
+                for i,x in enumerate(effs):
+                    effs[i]=np.exp( T-x )
+            if len(effsE)>0:
+                T = min(effsE)
+                for i,x in enumerate(effsE):
+                    effsE[i]=np.exp( T-x )
 
         for x in [ uls, ul0s, effs, ulsE, ul0sE, effsE, ul20s ]:
             if doNLL:
@@ -205,7 +210,7 @@ class Runner:
         from smodels_utils.plotting import mpkitty as plt
         plt.plot ( mus, uls, label = "from limits, corr=0.6", c="r" )
         plt.plot ( mus, ul0s, label = "from limits, no corr", c="g" )
-        plt.plot ( mus, ul20s, label = "from limits, corr=1.0", c="b" )
+        plt.plot ( mus, ul20s, label = f"from limits, corr={mcorr:.1f}", c="b" )
         plt.plot ( mus, effs, label = "from efficiencies", c="k", lw=2 )
         if self.setup["addExpectations"]:
             plt.plot ( mus, ulsE, label = "from limits, corr=0.6, expected", c="r", ls="dotted" )
@@ -270,12 +275,13 @@ def run():
             print ( f"running {setup['anaid']}" )
             runner = Runner ( setup )
             runner.runOneSetup ( )
+        return
 
     method = f"setup{args.analysis}"
     if not method in globals():
         print ( f"method {method} not found. we have " )
         for g in globals():
-            if "setup" in g:
+            if "setup" in g and not "all" in g:
                 print ( "--", g )
     func = globals()[method]
     setup = defaults()
