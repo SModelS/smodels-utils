@@ -165,7 +165,7 @@ class Runner:
         ulsE, ul0sE, effsE = [], [], []
         computer0 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 0. )
         computer20 = StatsComputer.forTruncatedGaussian ( prUL[0], corr = 1.0 )
-        self.pprint ( f"the limits are observed {computer0.ul}, expected {computer0.eul}" )
+        # self.pprint ( f"the limits are observed {computer0.ul}, expected {computer0.eul}" )
         ret = computer0.get_five_values ( False )
         self.pprint ( f"truncated gaussian returned {ret}" )
         for mu in mus:
@@ -257,6 +257,9 @@ def run():
     argparser.add_argument ( '-v', '--verbose', help="be verbose",
                         action="store_true" )
     args=argparser.parse_args()
+    if args.analysis is None:
+        print ( "specify an analysis" )
+        sys.exit()
     if args.analysis == "all":
         for g in allSetups():
             setup = defaults( )
