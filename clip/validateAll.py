@@ -9,7 +9,9 @@ class Validator:
     def __init__ ( self ):
         home = os.environ["HOME"]
         self.dbpath = f"{home}/git/smodels-database"
-        self.f = open ( "commands.sh", "wt" )
+        self.commandsfile = "commands.sh"
+        self.f = open ( self.commandsfile, "wt" )
+        self.f.write ( "#!/bin/sh\n\n" )
 
     def find( self ):
         res = []
@@ -47,6 +49,7 @@ class Validator:
 
     def close ( self ):
         self.f.close()
+        os.chmod ( self.commandsfile, 0o755 )
 
     def run( self ):
         anas = self.find()
