@@ -19,6 +19,12 @@ class Validator:
             for exp in glob.glob ( f"{tev}/*" ):
                 for result in glob.glob ( f"{exp}/*" ):
                     res.append ( result )
+        def sorter ( x ):
+            h = hash(x)
+            if x.endswith("-eff"):
+                h = -abs(h) -1e19
+            return h
+        res.sort ( key = sorter )
         return res
 
     def getTopos ( self, folder : str ) -> set:
