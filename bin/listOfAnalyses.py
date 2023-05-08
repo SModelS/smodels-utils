@@ -26,6 +26,7 @@ class Lister:
     def __init__ ( self ):
         self.n_homegrown = 0
         self.stats = set()
+        self.github_io = "../../smodels.github.io/"
 
     def metaStatisticsPlot ( self ):
         sys.path.insert(0,"../../protomodels/ptools")
@@ -52,7 +53,7 @@ class Lister:
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
         sigsplot = self.significancesPlotFileName()
-        cmd = f"mv tmp.png ../../smodels.github.io/{sigsplot}"
+        cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
         os.unlink ( "dbtemp.dict" )
@@ -144,8 +145,9 @@ class Lister:
         #pngname = f"pvalues{sinc}{self.dotlessv}.png"
         #pvaluesplot = f"images/{pngname}"
         directory = f"validation/{self.dotlessv}"
-        if not os.path.exists ( directory ):
-            os.mkdir ( directory )
+        fullname = f"{self.github_io}/{directory}"
+        if not os.path.exists ( fullname ):
+            os.mkdir ( fullname )
         pvaluesplot = f"{directory}/significances{sinc}.png"
         return pvaluesplot
 
@@ -242,8 +244,7 @@ class Lister:
     def moveToGithub( self ):
         """ move files to smodels.github.io """
         import os
-        cmd="mv %s ../../smodels.github.io/docs/%s.md" % \
-             ( self.filename, self.filename )
+        cmd=f"mv {self.filename} {self.github_io}/docs/{self.filename}.md"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
 
