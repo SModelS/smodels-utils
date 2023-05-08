@@ -266,12 +266,15 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         vmissing_x = pluginValues ( missing_x, xs )
         vmissing_y = pluginValues ( missing_y, ys )
 
-        interp_values = interpolate.griddata(
-            (vknown_x, vknown_y), known_v, (vmissing_x, vmissing_y),
-            method=method, fill_value=fill_value)
-
         interp_image = image.copy()
-        interp_image[missing_y, missing_x] = interp_values
+        try:
+            interp_values = interpolate.griddata(
+                (vknown_x, vknown_y), known_v, (vmissing_x, vmissing_y),
+                method=method, fill_value=fill_value)
+
+            interp_image[missing_y, missing_x] = interp_values
+        except Exception as e:
+            logger.error ( f"interpolation over missing failed: {e}" )
         return interp_image
 
     interpolation = options["interpolationType"]
