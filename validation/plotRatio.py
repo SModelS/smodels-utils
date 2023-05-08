@@ -223,7 +223,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     ranges = { "x": [ minx, maxx ], "y": [ miny, maxy ] }
     nx, ny = 250, 250
     if abs ( maxx - minx ) / ( maxx + minx ) < 1e-10:
-        logger.error ( f"the x range seems to be zero? x={x}" )
+        logger.error ( f"the x range seems to have zero length? x={x}" )
         return
     x_ = numpy.arange ( minx, maxx, ( maxx-minx) / nx )
     y_ = numpy.arange ( miny, maxy, ( maxy-miny) / ny )
