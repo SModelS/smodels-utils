@@ -160,8 +160,6 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if dashes > 3:
         pos = find_nth ( anaId, "-", 4 )
         anaId = anaId[:pos]
-    print ( "checking for ratio plots", opts["ratioPlots"], "combined", combine,
-            "check", anaId )
     ulres = db.getExpResults ( [ anaId ], [ None ], [ txname ],
                        dataTypes = [ "upperLimit" ] )
     if len(ulres)==0:
