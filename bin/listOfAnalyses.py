@@ -143,7 +143,10 @@ class Lister:
             sinc = "iss"
         #pngname = f"pvalues{sinc}{self.dotlessv}.png"
         #pvaluesplot = f"images/{pngname}"
-        pvaluesplot = f"validation/{self.dotlessv}/significances{sinc}.png"
+        directory = f"validation/{self.dotlessv}"
+        if not os.path.exists ( directory ):
+            os.mkdir ( directory )
+        pvaluesplot = f"{directory}/significances{sinc}.png"
         return pvaluesplot
 
     def footer ( self ):
