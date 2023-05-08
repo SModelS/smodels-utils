@@ -101,8 +101,6 @@ def main():
 
     if not A.no_pickle:
         gprint ( "\nCreate and publish database pickle" )
-        #exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
-        #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./nonaggregated.pcl" ], A.dry_run )
@@ -122,6 +120,18 @@ def main():
         exec ( cmd + [ "-s", "-f" ], A.dry_run )
         exec ( cmd + [ "--ugly" ], A.dry_run )
     gitPush( A.dry_run, A.commit )
+    print ( f"\n[updateAllWikiPages] all done!" )
+    print ( f"[updateAllWikiPages] now wait 15 minutes, then point your browser to:" )
+    base = f"https://smodels.github.io/docs"
+    url = f"{base}/ListOfAnalyses"
+    if not A.non_versioned:
+        ## simple hack for now, should actually be reported by
+        # one of the steps above
+        if os.path.exists ( db+"/version" ):
+            with open ( db+"/version","rt" ) as f:
+                ver = f.read().replace(".","").replace("v","")
+                url = f"{base}/ListOfAnalyses{ver}"
+    print ( f"xdg-open {url}" )
 
 if __name__ == "__main__":
     main()
