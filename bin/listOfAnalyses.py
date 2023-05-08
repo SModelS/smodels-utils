@@ -343,7 +343,7 @@ class Lister:
             homegrownd = {}
             for i in ana.getTxNames():
                 if not self.ignore and i.validated not in [ True, "n/a", "N/A" ]:
-                    print ( "Error: validated is %s in %s. Don't know how to handle. Use '-i' if you want me to skip this issue." % ( i.validated, ana.globalInfo.id ) )
+                    print ( f"Error: validated is {i.validated} in {ana.globalInfo.id}:{i}. Don't know how to handle. Use '-i' if you want me to skip this issue." )
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
