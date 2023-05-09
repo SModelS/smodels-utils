@@ -819,7 +819,10 @@ class ValidationPlot():
                     for bm,bw in zip(mass,width):
                         br=[]
                         for m,w in zip(bm,bw):
-                            br.append( (m,w) )
+                            if w == 'stable':
+                                br.append( (m,0.0) )
+                            else:
+                                br.append( (m,w) )
                         mnw.append(br)
                 massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():

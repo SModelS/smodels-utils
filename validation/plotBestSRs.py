@@ -239,6 +239,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         plt.plot ( line["x"], line["y"], linewidth=1, color="black" )
     plt.xlabel ( "x [GeV]" )
     plt.ylabel ( "y [GeV]" )
+    ax = plt.gca()
     if miny>1e-30 and maxy<1e-1:
         # the y axis seems to be widths
         ax.set_yscale('log')
