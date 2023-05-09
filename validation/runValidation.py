@@ -300,7 +300,6 @@ def run ( expResList, options : dict, keep, db ):
             else:
                 axes = txname.axes
             axis = options["axis"]
-            # logger.info ( "axis", axis )
             if axis in [ None, "None", "" ]:
                 for ax in axes:
                     hasCorrectAxis_ = hasCorrectAxis
@@ -314,8 +313,7 @@ def run ( expResList, options : dict, keep, db ):
                         if myaxis == ax:
                             hasCorrectAxis_ = True
                             tarfile = os.path.join(slhadir,fname_)
-                            break
-                    if type(namedTarball) == list:
+                    elif type(namedTarball) == list:
                         # looks like were given multiples
                         for nt in namedTarball:
                             if ":" in nt:
@@ -347,6 +345,7 @@ def run ( expResList, options : dict, keep, db ):
                         pnamedTarball = None
                         tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
 
+                    print ( "now run it!" )
                     for p in prettyorugly:
                         re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
                                 kfactor, p, combine, namedTarball = pnamedTarball,
