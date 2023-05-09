@@ -30,7 +30,7 @@ def gitPush( dry_run, commit ):
     """
     if commit == None:
         return
-    cmd = f"cd ../../smodels.github.io/; git pull; git commit -am '{commit}'; git push"
+    cmd = f"cd ../../smodels.github.io/; git pull; git add . ; git commit -am '{commit}'; git push"
     print ( "[updateAllWikiPages.py] %s" % cmd )
     if dry_run:
         return
