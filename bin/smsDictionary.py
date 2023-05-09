@@ -27,7 +27,7 @@ except:
 class SmsDictWriter:
     feynpath = "../../smodels.github.io/feyn/straight/"
 
-    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private,
+    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, 
                    dryrun, checkfirst, copy ):
         self.databasePath = database
         self.hasWarned=False
@@ -38,7 +38,6 @@ class SmsDictWriter:
         self.checkfirst = checkfirst
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
-        self.private = private
         # self.ver="v"+self.database.databaseVersion.replace(".","")
         if not addVer:
             self.ver=""
@@ -53,9 +52,6 @@ class SmsDictWriter:
         self.f.close()
 
     def header( self ):
-        protected = "+All:read"
-        if self.private:
-            protected = "-All:read"
         self.f.write (
 """# SMS dictionary
 This page intends to collect information about how we map the SModelS description of
@@ -297,7 +293,6 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-c', '--copy', help='copy Feynman graphs to ../../smodels.github.io/feyn/straight/ (implies -f)',
                              action='store_true' )
-    argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
                              action='store_false' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
@@ -309,8 +304,7 @@ if __name__ == '__main__':
         args.feynman = True
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.add_version,
-            private = args.private, dryrun = args.dry_run,
-            checkfirst = args.checkfirst, copy = args.copy )
+            dryrun = args.dry_run, checkfirst = args.checkfirst, copy = args.copy )
     print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
