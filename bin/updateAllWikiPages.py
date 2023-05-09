@@ -3,6 +3,7 @@
 ## a super simple script to update all wiki pages in a single go.
 
 import sys, subprocess, argparse, os, colorama
+from typing import Union, Text
 
 def execute(cmd):
     print ( "[cmd] %s" % " ".join ( cmd ) )
@@ -24,14 +25,22 @@ def exec(cmd, dry_run ):
 def gprint ( line ):
     print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
 
-def gitPush( dry_run, commit ):
+def gitPush( dry_run, commit, version : Union[None,Text] ):
     """ git commit and git push 
     :param commit: commit message. if None, then do not commit
     """
     if commit == None:
         return
-    cmd = f"cd ../../smodels.github.io/; git pull; git commit -am '{commit}'; git push"
-    print ( "[updateAllWikiPages.py] %s" % cmd )
+    cmd = "cd ../../smodels.github.io/; "
+    cmd += "git pull; "
+    if version != None:
+        cmd += f"git add validation/{version}; "
+        for i in  [ "Validation", "ValidationUgly", "SmsDictionary",
+                    "ListOfAnalyses" ]:
+            cmd += f"git add docs/{i}{version}.md; "
+        cmd += f"git add docs/ListOfAnalyses{version}WithSuperseded.md; "
+    cmd += f"git commit -am '{commit}'; git push"
+    gprint ( f"[updateAllWikiPages.py] {cmd}" )
     if dry_run:
         return
     o = subprocess.getoutput ( cmd )
@@ -73,6 +82,11 @@ def main():
     # ref_db = "~/git/smodels-database-release/"
     ref_db = A.reference_database
     ref_db = os.path.expanduser( ref_db )
+    ver = None ## version, if exists
+    if os.path.exists ( db+"/version" ):
+        with open ( db+"/version","rt" ) as f:
+            ver = f.read().replace(".","").replace("v","")
+            ver = ver.strip()
     ## list of analyses, with and without superseded
     gprint ( "\nCreate ListOfAnalyses" )
     cmd = [ "./listOfAnalyses.py", "-a", "-l", "-d", db ]
@@ -119,17 +133,14 @@ def main():
     if A.non_versioned:
         exec ( cmd + [ "-s", "-f" ], A.dry_run )
         exec ( cmd + [ "--ugly" ], A.dry_run )
-    gitPush( A.dry_run, A.commit )
+    gitPush( A.dry_run, A.commit, ver )
     print ( f"\n[updateAllWikiPages] all done!" )
     print ( f"[updateAllWikiPages] now wait 15 minutes, then point your browser to:" )
     base = f"https://smodels.github.io/docs"
     url = f"{base}/ListOfAnalyses"
-    if not A.non_versioned:
+    if not A.non_versioned and ver!= None:
         ## simple hack for now, should actually be reported by
         # one of the steps above
-        if os.path.exists ( db+"/version" ):
-            with open ( db+"/version","rt" ) as f:
-                ver = f.read().replace(".","").replace("v","")
                 url = f"{base}/ListOfAnalyses{ver}"
     print ( f"xdg-open {url}" )
 
