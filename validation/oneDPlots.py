@@ -31,7 +31,9 @@ def getMinGap ( xs ):
         return 0.
     dx_ = []
     for i in range(len(xs)-1):
-        dx_.append ( xs[i+1]-xs[i] )
+        d = xs[i+1]-xs[i]
+        if d > 0.:
+            dx_.append ( d )
     return min ( dx_ )
 
 def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = ":"):
@@ -170,8 +172,6 @@ def create1DPlot( validationPlot, silentMode=True,
             linestyle = ":"
         plot ( values[label]["ex"], values[label]["ey"], color=c, 
                 linestyle=linestyle, marker="." )
-        # plt.plot ( values[label]["x"], values[label]["y"], c=c )
-    # fname = "me.png"
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     pAxis = prettyAxes(validationPlot.txName, validationPlot.axes, outputtype="latex" )
     title = f"{validationPlot.expRes.globalInfo.id}: {pName} \n {pAxis}" 
