@@ -43,6 +43,7 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
     lines = []
     contents = []
     txnames = []
+    axisv = None
     for validationfile in vfiles:
         if not "_" in validationfile:
             validationfile = validationfile+"_2EqMassAx_EqMassBy.py"
@@ -52,11 +53,12 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
         topo = validationfile[:p1]
         txnames.append ( topo )
         content = getValidationFileContent ( ipath )
-        axisv = content["meta"]["axes"]
         contents.append ( content )
         eljson = os.path.join ( smspath, "exclusion_lines.json" )
-        if os.path.exists ( eljson ):
-            ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
+        if "meta" in content and type(content["meta"]) == dict and "axes" in content["meta"]:
+            axisv = content["meta"]["axes"]
+            if os.path.exists ( eljson ):
+                ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
             lines.append (  ll[topo] )
     content = mergeValidationData ( contents )
     data = content["data"]
