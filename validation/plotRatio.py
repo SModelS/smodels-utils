@@ -84,6 +84,27 @@ def addDefaults ( options ):
     defaults.update(options)
     return defaults
 
+def hasAxisInfo ( content ):
+    """ the content of a validation dict file has info about 
+        the axes? """
+    if not "meta" in content:
+        return False
+    if content["meta"] is None:
+        return False
+    meta = content["meta"]
+    if type(meta) == dict:
+        if not "axes" in meta:
+            return False
+        return meta["axes"]
+    if type(meta) == list:
+        if meta[0] is None:
+            return False
+        if not "axes" in meta[0]:
+            return False
+        return meta[0]["axes"]
+    print ( f"[plotRatio] when searching for axis info, what case is this: {meta}" )
+    return False
+
 def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
     :option zmin: the minimum z value, e.g. .5
@@ -110,7 +131,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
         content = getValidationFileContent ( ipath2 )
         axis2 = axis1
-        if "axes" in content["meta"]:
+        if "meta" in content and content["meta"] is not None and "axes" in content["meta"]:
             axis2 = content["meta"]["axes"]
         contents.append ( content )
     content2 = mergeValidationData ( contents )
@@ -335,10 +356,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     hasLegend = False
     axes = None
     for t in topos:
-        if content1["meta"]!=None and "axes" in content1["meta"][0]:
-            axes = content1["meta"][0]["axes"]
-        if content2["meta"]!=None and "axes" in content2["meta"][0]:
-            axes = content2["meta"][0]["axes"]
+        axes = hasAxisInfo ( content1 )
+        if axes in [ None, False ]: # search on
+            axes = hasAxisInfo ( content2 )
         from smodels_utils.helper import various
         el = various.getExclusionCurvesFor ( exclusionlines1, t, axes, ranges=ranges )
         el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes, ranges=ranges )
