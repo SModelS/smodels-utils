@@ -36,33 +36,39 @@ def getMinGap ( xs ):
             dx_.append ( d )
     return min ( dx_ )
 
+def ceilY ( y ):
+    """ put a ceiling to y values, above which we declare them as nan """
+    if y > 8.:
+        return float("nan")
+    return y
+
 def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = ":"):
-    """ plotting routine so we can split up 
+    """ plotting routine so we can split up
     """
     if len(xvalues)==0:
         return
     dxmax = getMinGap ( xvalues )
     from smodels_utils.plotting import mpkitty as plt
     chunks = []
-    chunk = { "x": [ xvalues[0] ], "y": [ yvalues[0] ] }
+    chunk = { "x": [ xvalues[0] ], "y": [ ceilY ( yvalues[0] ) ] }
     for i in range(len(xvalues)-1):
         dx_ = xvalues[i+1]-xvalues[i]
         if dx_ < dxmax*2.1:
             chunk["x"].append ( xvalues[i+1] )
-            chunk["y"].append ( yvalues[i+1] ) 
+            chunk["y"].append ( ceilY ( yvalues[i+1] ) )
         else:
             if len(chunk)>0:
                 chunks.append ( chunk )
-                chunk = { "x": [ xvalues[i+1] ], "y": [ yvalues[i+1] ] }
+                chunk = { "x": [ xvalues[i+1] ], "y": [ ceilY ( yvalues[i+1] ) ] }
     chunk["x"].append ( xvalues[-1] )
-    chunk["y"].append ( yvalues[-1] )
+    chunk["y"].append ( ceilY ( yvalues[-1] ) )
     chunks.append ( chunk )
     for chunk in chunks:
         plt.plot ( chunk["x"], chunk["y"], c=color, marker=marker, \
                    label=label, linestyle=linestyle )
         label = ""
 
-def create1DPlot( validationPlot, silentMode=True, 
+def create1DPlot( validationPlot, silentMode=True,
         looseness = 1.2, options : dict = {} ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
@@ -74,7 +80,7 @@ def create1DPlot( validationPlot, silentMode=True,
     """
     xrange = getAxisRange ( options, "xaxis" )
     logger.error ( "now create 1d plot for %s, %s: %s" % \
-       ( validationPlot.expRes.globalInfo.id, validationPlot.txName, 
+       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
          validationPlot.axes ) )
 
     if not validationPlot.data:
@@ -105,9 +111,9 @@ def create1DPlot( validationPlot, silentMode=True,
                 continue
             y, ey = float ( "nan" ), float ( "nan" )
             if "signal" in pt and "UL" in pt:
-                y = pt["signal"] / pt["UL"] 
+                y = pt["signal"] / pt["UL"]
                 if "eUL" in pt:
-                    ey = pt["signal"] / pt["eUL"] 
+                    ey = pt["signal"] / pt["eUL"]
             label = "error"
             values[label]["x"].append(x)
             values[label]["y"].append(y)
@@ -147,7 +153,7 @@ def create1DPlot( validationPlot, silentMode=True,
     plt.ylabel ( r"r = $\sigma_\mathrm{signal}$ / $\sigma_\mathrm{UL}$" )
     plt.xlabel ( r"m(mother) [GeV]", labelpad=-1., loc="right" )
     colors = { "excluded": "r",
-               "excluded_border": "orange", 
+               "excluded_border": "orange",
                "allowed_border": "g",
                "allowed": "lightgreen",
     }
@@ -170,12 +176,12 @@ def create1DPlot( validationPlot, silentMode=True,
         #if len(values[label]["ey"]) == len(values[label]["ex"]):
         if linestyle != "":
             linestyle = ":"
-        plot ( values[label]["ex"], values[label]["ey"], color=c, 
+        plot ( values[label]["ex"], values[label]["ey"], color=c,
                 linestyle=linestyle, marker="." )
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     pAxis = prettyAxes(validationPlot.txName, validationPlot.axes, outputtype="latex" )
-    title = f"{validationPlot.expRes.globalInfo.id}: {pName} \n {pAxis}" 
-#       ( validationPlot.expRes.globalInfo.id, validationPlot.txName, 
+    title = f"{validationPlot.expRes.globalInfo.id}: {pName} \n {pAxis}"
+#       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
 #         validationPlot.axes ) )
     plt.title ( title )
     official = validationPlot.officialCurves
@@ -183,21 +189,21 @@ def create1DPlot( validationPlot, silentMode=True,
     rmin, rmax = 0, 1
     for o in official:
         if o["name"].startswith ( "obsExclusion" ) and len( yvs ) > 0:
-            rmin, rmax = .7 * min ( yvs ), min ( 5., max ( yvs ) )
+            rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
             xvals = set(o["points"]["x"])
             ## we assume the exclusion lines to be "points", so
             ## we draw horizontal lines in each point
             label = "official observed exclusion"
             for xv in xvals:
-                plt.plot ( [xv]*2, [ rmin, rmax ], c="k", 
+                plt.plot ( [xv]*2, [ rmin, rmax ], c="k",
                            label=label )
                 label = ""
     for o in eofficial:
         # logger.info ( f"exclusion object: {o}" )
         if o["name"].startswith ( "expExclusion" ) and len ( yvs ) > 0:
-            rmin, rmax = .7 * min ( yvs ), min ( 5., max ( yvs ) )
+            rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
             xvals = set(o["points"]["x"])
-            label = "dashed lines are expected values" 
+            label = "dashed lines are expected values"
             for xv in xvals:
                 plt.plot ( [xv]*2, [ rmin, rmax ], c="k", linestyle = ":",
                            label=label )
@@ -216,6 +222,6 @@ def create1DPlot( validationPlot, silentMode=True,
     subtitle = getDatasetDescription ( validationPlot, maxLength = 60 )
     plt.text ( -.12, -.12, subtitle, transform = ax.transAxes, c="grey" )
     if figureUrl:
-        plt.text ( -.15, -.122, figureUrl, fontsize=7, c="b", 
+        plt.text ( -.15, -.122, figureUrl, fontsize=7, c="b",
                    transform = ax.transAxes )
     return ( plt.gcf(), plt )
