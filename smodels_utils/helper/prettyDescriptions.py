@@ -17,6 +17,7 @@ from smodels.tools.physicsUnits import TeV
 from inspect import currentframe, getframeinfo
 import sys
 x,y,z,w = var('x y z w')
+from typing import Union, Text
 
 # pretty name of particle:
 
@@ -776,7 +777,8 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
-def prettyAxes( txname, axes, outputtype="root" ):
+def prettyAxes( txname : str, axes : str, outputtype : str ="root" ) -> \
+        Union[None,str]:
     """
     Converts the axes string to the axes labels (plus additional constraints)
     in latex form (using ROOT conventions)
@@ -787,6 +789,8 @@ def prettyAxes( txname, axes, outputtype="root" ):
              ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
     """
 
+    if type(axes) == type(None):
+        return "axis unknown"
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'THSCPM2b':
