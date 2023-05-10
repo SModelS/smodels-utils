@@ -224,7 +224,8 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
     xs, ys = fetchAllOtherPoints ( bestSRs, regions )
     miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
-    plt.scatter ( xs, ys, s=25, c=[ "k" ]*len(xs), label="others" )
+    if len(xs)>0:
+        plt.scatter ( xs, ys, s=25, c=[ "k" ]*len(xs), label="others" )
     # plot also the no results
     xs, ys = fetchPoints ( bestSRs, None )
     plt.scatter ( xs, ys, s=2, c=[ "grey" ]*len(xs), label="no result" )
