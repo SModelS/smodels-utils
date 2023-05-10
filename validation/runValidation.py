@@ -303,7 +303,7 @@ def run ( expResList, options : dict, keep, db ):
             if axis in [ None, "None", "" ]:
                 for ax in axes:
                     hasCorrectAxis_ = hasCorrectAxis
-                    x,y,z = var("x y z")
+                    x,y,z,w = var("x y z w")
                     ax = str(eval(ax)) ## standardize the string
                     kfactor = gkfactor
                     fname_ = "none"
@@ -345,7 +345,6 @@ def run ( expResList, options : dict, keep, db ):
                         pnamedTarball = None
                         tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
 
-                    print ( "now run it!" )
                     for p in prettyorugly:
                         re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
                                 kfactor, p, combine, namedTarball = pnamedTarball,
