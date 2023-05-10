@@ -243,6 +243,10 @@ def run ( expResList, options : dict, keep, db ):
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
         pretty = options["prettyPlots"]
+        if pretty.lower() in [ "false", "no", "0" ]:
+            pretty = False
+        elif pretty.lower() in [ "true", "yes", "1" ]:
+            pretty = True
         prettyorugly = [ pretty ]
         if pretty=="both":
             prettyorugly = [ True, False ]
