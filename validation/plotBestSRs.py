@@ -15,7 +15,7 @@ from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName, getExclusionCurvesFor
 from smodels_utils.helper import prettyDescriptions
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
-       mergeExclusionLines, mergeValidationData
+       mergeExclusionLines, mergeValidationData, widthOfStableParticles
 from typing import Union
 
 __all__ = [ "plot" ]
@@ -172,7 +172,10 @@ def fetchPoints ( bestSRs : list, region : Union[str,None] ) -> tuple:
         if point["SR"]!=region:
             continue
         xs.append ( point["x"] )
-        ys.append ( point["y"] )
+        y = point["y"]
+        if type(y)==str and y=="stable":
+            y=widthOfStableParticles
+        ys.append ( y )
     return xs, ys
 
 def fetchAllOtherPoints ( bestSRs : list, regions : list ) -> tuple:

@@ -19,6 +19,7 @@ from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
          getDatasetDescription, getAxisRange, isWithinRange, \
          filterWithinRanges
+from validationHelpers import widthOfStableParticles
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -134,8 +135,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                     y = xvals['w']
         else:
             x,y = pt['axes']
-        if logY and y > 1e-8:
-            continue
+        if logY:
+            if type(y)==str and y=="stable":
+                y = widthOfStableParticles
+            if y > 1e-8:
+                continue
         if not isWithinRange ( xrange, x ):
             continue
         if not isWithinRange ( yrange, y ):
