@@ -8,8 +8,13 @@
 
 """
 
+## what do we set the width of stable particles to,
+## for plotting?
+widthOfStableParticles = 1e-25
+
+
 def retrieveValidationFile ( filename, tarballname = None ):
-    """ retrieve a certain validation file from the right tarball 
+    """ retrieve a certain validation file from the right tarball
     :param filename: name of slha file to extract
     :param tarballname: optionally supply name of tarball also
     """
@@ -38,7 +43,7 @@ def point_in_hull(point, hull, tolerance=1e-12):
     return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
 
 def getValidationFileContent ( validationfile : str ):
-    """ get the content of the validation file, as a dictionary of 
+    """ get the content of the validation file, as a dictionary of
         'data' and 'meta'
     :param validation file: filename
     :returns: dictionary with content of validation file
@@ -62,7 +67,7 @@ def getValidationFileContent ( validationfile : str ):
     return ret
 
 def shortTxName( txnames : list ):
-    """ get a short moniker for the txnames 
+    """ get a short moniker for the txnames
     :param txnames: list of strings of txnames
     """
     ret = ""
@@ -78,8 +83,8 @@ def shortTxName( txnames : list ):
     return ret
 
 def mergeExclusionLines ( lines : list ):
-    """ given a list of exclusion lines, merge them, 
-    return the merged line 
+    """ given a list of exclusion lines, merge them,
+    return the merged line
     :param lines: list of lines, one line is a dictionary with x and y as keys.
     """
     line = { "x": [], "y": [] }
