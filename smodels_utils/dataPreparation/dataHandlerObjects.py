@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: dataHandlerObjects
@@ -9,7 +9,8 @@
 
 """
 
-from __future__ import print_function
+__all__ = [ "ExclusionHandler", "DataHandler" ]
+
 import ctypes
 import sys
 import os
@@ -365,7 +366,7 @@ class DataHandler(object):
         return ptDict
 
     def setSource(self, path, fileType, objectName = None,
-                  index = None, unit = None, scale = None):
+                  index = None, unit = None, scale = None, **args ):
 
         """set path and type of data source
         :param path: path to data file as string
@@ -378,6 +379,7 @@ class DataHandler(object):
         :param unit: string defining unit. If None, it will use the default values.
         :param scale: float to re-scale the data.
         """
+        self.args = args
 
         if type(path) not in [ tuple, list ] and not os.path.isfile(path):
             logger.error("File %s not found" %path)
@@ -582,6 +584,26 @@ class DataHandler(object):
         for d in data:
             yield d
 
+    def extendDataToZero ( self, yields ):
+        """ if self.args['extended_to_massless_lsp'],
+            then extend the data to massless lsps """
+        if not "extend_to_massless_lsp" in self.args or \
+                self.args["extend_to_massless_lsp"] != True:
+            return
+        if self.name not in [ "expectedUpperLimits", "upperLimits" ]:
+            return
+        arr = np.array ( yields )[::,-2]
+        minLSP = min ( arr )
+        add = []
+        for y in yields:
+            if abs(y[-2]-minLSP)<1e-6:
+                tmp = y[:-2]+[0]+y[-1:]
+                add.append ( tmp )
+        for a in add:
+            yields.append ( a )
+        yields.sort()
+        return
+
     def csv(self):
         """
         iterable method
@@ -667,19 +689,27 @@ class DataHandler(object):
                     logger.error ( "the culprits might be %s in %s" % \
                                    ( culprits, self.path ) )
                     sys.exit()
-            for yr in yields:
-                yld = yr
-                if type ( self.index ) in [ list, tuple ]:
-                    ret = []
-                    for i in self.index:
-                        ret.append ( yr[i] )
-                    yld = ret
-                if type ( self.index ) in [ int ]:
-                    if self.index >= len(yr):
-                        print ( f"[dataHandlerObjects] too high index {self.index} for {yr} in {self.path}" )
-                        sys.exit()
-                    yld = yr[:self.dimensions] + [ yr[self.index] ]
-                yield yld
+            values = [] # compute the final return values from these containers
+            for y in yields:
+                values.append ( self.createEntryFromYield ( y ) )
+            self.extendDataToZero ( values )
+            for v in values:
+                yield v
+
+    def createEntryFromYield ( self, yld : list ) -> list:
+        """ create a return line from a yield line """
+        ret = yld
+        if type ( self.index ) in [ list, tuple ]:
+            ret = []
+            for i in self.index:
+                ret.append ( yld[i] )
+        if type ( self.index ) in [ int ]:
+            if self.index >= len(yld):
+                print ( f"[dataHandlerObjects] too high index {self.index} for {yr} in {self.path}" )
+                sys.exit()
+            ret = yld[:self.dimensions] + [ yld[self.index] ]
+        return ret
+
 
     def mcsv(self):
         """

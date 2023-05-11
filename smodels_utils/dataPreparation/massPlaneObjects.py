@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: massPlaneObjects
@@ -133,7 +133,8 @@ class MassPlane(object):
 
 
     def setSources(self,dataLabels,dataFiles,dataFormats,
-                   objectNames=None,indices=None,units=None,coordinates=None,scales=None):
+                   objectNames=None,indices=None,units=None,coordinates=None,
+                   scales=None, **args ):
         """
         Defines the data sources for the plane.
 
@@ -184,10 +185,10 @@ class MassPlane(object):
             coordinate = allInput["coordinates"][i]
             scale = allInput["scales"][i]
             self.addSource(dataLabel,dataFile, dataFormat,
-                           objectName, index, unit, coordinate, scale)
+                           objectName, index, unit, coordinate, scale, **args )
 
     def addSource(self,dataLabel,dataFile,dataFormat=None, objectName=None,index=None,
-                  unit=None,coordinateMap=None,scale=None):
+                  unit=None,coordinateMap=None,scale=None, **args ):
         """
         Defines a single data sources for the plane.
 
@@ -238,7 +239,7 @@ class MassPlane(object):
         dataObject.dataUrl = self.dataUrl
         #Set source of object
         dataObject.setSource(dataFile, dataFormat,
-                             objectName, index, unit, scale)
+                             objectName, index, unit, scale, **args )
         #Store it as a mass plane attribute:
         setattr(self,dataLabel,dataObject)
 
