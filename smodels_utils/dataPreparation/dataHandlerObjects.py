@@ -594,6 +594,9 @@ class DataHandler(object):
             return
         arr = np.array ( yields )[::,-2]
         minLSP = min ( arr )
+        if minLSP > 25.:
+            # only do it when its not big
+            return
         add = []
         for y in yields:
             if abs(y[-2]-minLSP)<1e-6:
