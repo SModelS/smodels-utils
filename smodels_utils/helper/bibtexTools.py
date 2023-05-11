@@ -91,6 +91,12 @@ class BibtexWriter:
         self.g=open ( "log.txt", "w" )
         self.mkdirs()
 
+    def cleanAnaId ( self, anaid : str ):
+        """ clean analysis id from some extensions """
+        for ext in [ "agg", "strong", "ewk", "eff" ]:
+            anaid = anaid.replace( f"-{ext}", "" )
+        return anaid
+
     def mkdirs ( self ):
         """ make the directories """
         if not os.path.exists ( self.cachedir ):
@@ -360,9 +366,7 @@ class BibtexWriter:
     def processExpRes ( self, expRes, write_cache ):
         """ process the given experimental result """
         self.npublications += 1
-        Id = expRes.globalInfo.id
-        for ext in [ "agg", "strong", "ewk" ]:
-            Id = Id.replace( f"-{ext}", "" )
+        Id = self.cleanAnaId ( expRes.globalInfo.id )
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
 
@@ -431,7 +435,7 @@ class BibtexWriter:
         self.res = filterSupersededFromList ( filterFastLimFromList ( res ) )
         ids = set()
         for expRes in self.res:
-            ID = expRes.globalInfo.id.replace("-eff","").replace("-agg","")
+            ID = self.cleanAnaId ( expRes.globalInfo.id )
             if ID in ids:
                 continue
             ids.add ( ID )
@@ -631,7 +635,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
     if args.query != None:
-        ret = writer.query( args.query, search = True )
+        ret = writer.query( args.query, search = False )
         print ( f"query for {args.query} resulted in: {ret}" )
         sys.exit()
     if args.copy:
