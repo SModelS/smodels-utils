@@ -1151,7 +1151,8 @@ class DataHandler(object):
                             errorcounts["trimzaxis"]=True
                             logger.warning ( f"'{self.name}' is too large a map (nbins={n_bins}). Will trim z-axis." )
                         n_bins = n_bins / len(zRange)
-                        zRange = range(1,len(zAxis) + 1, trimmingFactor[0] )
+                        # zRange = range(1,len(zAxis) + 1, trimmingFactor[0] )
+                        zRange = range(0,len(zAxis), trimmingFactor[0] )
                         n_bins = n_bins * len(zRange)
                     else:
                         if not errorcounts["trimzaxis"]:
@@ -1160,7 +1161,8 @@ class DataHandler(object):
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
-                    yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
+                    yRange = range(0,len(yAxis), trimmingFactor[0] )
+                    # yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
                     if not errorcounts["trimyaxis"]:
                         logger.warning ( f"'{self.name}' is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {len(yAxis)} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
@@ -1255,7 +1257,8 @@ class DataHandler(object):
                             errorcounts["trimzaxis"]=True
                             logger.warning ( f"'{self.name}' is too large a map (nbins={n_bins}). Will trim z-axis." )
                         n_bins = n_bins / len(zRange)
-                        zRange = range(1,len(zAxis) + 1, trimmingFactor[0] )
+                        zRange = range(0,len(zAxis), trimmingFactor[0] )
+                        # zRange = range(1,len(zAxis) + 1, trimmingFactor[0] )
                         n_bins = n_bins * len(zRange)
                     else:
                         if not errorcounts["trimzaxis"]:
@@ -1264,7 +1267,8 @@ class DataHandler(object):
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
-                    yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
+                    yRange = range(0,len(yAxis), trimmingFactor[0] )
+                    # yRange = range(1,len(yAxis) + 1, trimmingFactor[0] )
                     if not errorcounts["trimyaxis"]:
                         logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={n_bins} > {max_nbins}). Will trim y-axis from {len(yAxis)} to {len(yRange)} (turn this off via dataHandlerObjects.allowTrimming)." )
                         errorcounts["trimyaxis"]=True
