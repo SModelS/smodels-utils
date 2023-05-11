@@ -434,15 +434,13 @@ class BibtexWriter:
         f = open ( "latex.sh", "wt" )
         f.write ( "#!/bin/bash\n" )
         cmds = [ "pdflatex -interaction nonstopmode test.tex", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex" ]
-        cmds = [ "latexmk -pvs -ps test" ]
-        cmds = []
+        #cmds = [ "latexmk -pvs -ps test" ]
+        #cmds = []
         for cmd in cmds:
             f.write ( cmd + "\n" )
         f.close()
         os.chmod ( "latex.sh", 0o755 )
         print ( "Execute latex.sh if you want a test document" )
-        # subprocess.getoutput ( "./latex.sh" )
-        # os.system ( "./latex.sh" )
 
     def createSummaryCitation ( self, bibtex, experiment, commentOut=True ):
         """ create summary citation 
@@ -574,6 +572,11 @@ class BibtexWriter:
                 ivalues["anaid"]=ana
                 f.write ( "I['%s'] = %s\n" % ( bibtex, str(ivalues) ) )
         f.close()
+    def createPdf ( self ):
+        """ create the pdf file, i.e. execute latex.sh """
+        o = subprocess.getoutput ( "./latex.sh" )
+        self.pprint ( "test.pdf created." )
+        # os.system ( "./latex.sh" )
 
 if __name__ == "__main__":
     import argparse
@@ -593,6 +596,9 @@ if __name__ == "__main__":
     argparser.add_argument ( "-w", "--write_cache",
             help=f"cache the retrieved results in {BibtexWriter.cachedir}",
             action="store_true" )
+    argparser.add_argument ( "-p", "--pdf",
+            help=f"create pdf summary document",
+            action="store_true" )
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
     if args.query != None:
@@ -604,3 +610,5 @@ if __name__ == "__main__":
     else:
         writer.run( args.write_cache )
         writer.close()
+    if args.pdf:
+        writer.createPdf()
