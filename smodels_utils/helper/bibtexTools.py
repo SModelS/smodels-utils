@@ -38,8 +38,9 @@ except ImportError:
 
 def removeDoubleEntries ( anaids : dict ) -> dict:
     """ given two lists of analysis ids, remove all ids that appear in both 
-    :param anaids: should be a dictionary of two collections of anaids, e.g.
+    :param anaids: should be a dictionary of two collections of anaids, e.g. \
                    { "smodels230": {ana1, ana2}, "smodels220": {ana2, ana3} }
+    :returns: a dictionary that shows the ids of anaX that are not in anaY
     """
     new1, new2 = [], []
     def pprint ( *args ):
