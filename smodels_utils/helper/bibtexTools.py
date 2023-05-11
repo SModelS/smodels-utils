@@ -332,7 +332,8 @@ class BibtexWriter:
         """ process the given experimental result """
         self.npublications += 1
         Id = expRes.globalInfo.id
-        Id = Id.replace( "-agg", "" )
+        for ext in [ "agg", "strong", "ewk" ]:
+            Id = Id.replace( f"-{ext}", "" )
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
 
