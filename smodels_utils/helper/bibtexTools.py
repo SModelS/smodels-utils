@@ -195,11 +195,14 @@ class BibtexWriter:
     def fetchInspireUrl ( self, line : str, label : Union[None,str] ):
         """ from line in html page, extract the inspire url """
         self.log ( f" * fetching Inspire url: {label}" )
-        line = line.replace('id="inspire_link"','')
+        line = line.replace ( "net/literature", "net/api/literature" )
+        line = line.replace(' id="inspire_link"','')
         pos1 = line.find ( "HREF=" )
         pos2 = line.find ( "<B>" )
+        print  ( "pos", pos1, pos2 )
         if pos1 > 0 and pos2 > pos1:
-            return line[pos1+6:pos2-2]
+            ret = line[pos1+6:pos2-2]
+            return ret
         pos1 = line.find ( "href=" )
         pos2 = line.find ( "inSPIRE" )
         if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in line:
@@ -326,6 +329,7 @@ class BibtexWriter:
         return
 
     def processExpRes ( self, expRes, write_cache ):
+        """ process the given experimental result """
         self.npublications += 1
         Id = expRes.globalInfo.id
         Id = Id.replace( "-agg", "" )
@@ -392,7 +396,6 @@ class BibtexWriter:
         self.write_cache = write_cache
         self.openHandles()
         home = os.environ["HOME"]
-        # self.db = Database ( "%s/git/smodels-database" % home )
         self.db = Database ( self.databasepath )
         res = self.db.getExpResults ()
         self.res = filterSupersededFromList ( filterFastLimFromList ( res ) )
@@ -501,9 +504,10 @@ class BibtexWriter:
         labels.update ( reverse )
         return labels
 
-    def query ( self, anaid: str ):
+    def query ( self, anaid: str, search : bool = False ) -> str:
         """ get the bibtex name of anaid
         :param anaid: eg CMS-SUS-16-050
+        :param search: if true, then search for it if not available
         :returns: bibtex label, eg Aaboud:2017vwy
         """
         path = os.path.dirname ( __file__ )
@@ -516,7 +520,17 @@ class BibtexWriter:
             labels = self.getLabels ( bibtex )
             if anaid in labels:
                 return labels[anaid]
-        return "FIXME"
+        if search:
+            self.pprint ( f"not in cache: lets search for this!" )
+            self.db = Database ( self.databasepath )
+            expRes = self.db.getExpResults ( analysisIDs = [ anaid ] )
+            if len(expRes)>0:
+                self.write_cache = False
+                self.processExpRes ( expRes[0], write_cache=False )
+        return f"no entry for {anaid} in {refsfile} found"
+
+    def pprint ( self, *args ):
+        print ( f"[bibtexTools] {' '.join(map(str,args))}" )
 
     def interactive ( self ):
         """ start an interactive session """
@@ -581,8 +595,8 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
     if args.query != None:
-        ret = writer.query( args.query )
-        print ( "query for %s resulted in %s" % ( args.query, ret ) )
+        ret = writer.query( args.query, search = True )
+        print ( f"query for {args.query} resulted in: {ret}" )
         sys.exit()
     if args.copy:
         writer.copy()
