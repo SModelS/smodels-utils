@@ -596,6 +596,7 @@ class DataHandler(object):
         minLSP = min ( arr )
         if minLSP > 25.:
             # only do it when its not big
+            logger.warn ( f"will not extend to mlsp = 0 since minlsp = {minLSP}" )
             return
         add = []
         for y in yields:
