@@ -10,6 +10,8 @@
 
 """
 
+__all__ = [ "BibtexWriter", "removeDoubleEntries" ]
+
 from smodels.tools.smodelsLogging import setLogLevel
 import bibtexparser
 import urllib, colorama, subprocess
@@ -33,6 +35,32 @@ try:
     from urllib import urlopen
 except ImportError:
     from urllib.request import urlopen
+
+def removeDoubleEntries ( anaids : dict ) -> dict:
+    """ given two lists of analysis ids, remove all ids that appear in both 
+    :param anaids: should be a dictionary of two collections of anaids, e.g.
+                   { "smodels230": {ana1, ana2}, "smodels220": {ana2, ana3} }
+    """
+    new1, new2 = [], []
+    def pprint ( *args ):
+        return
+        print ( " ".join ( map(str,args) ) )
+    lists = list ( anaids.items() )
+    name1, list1 = lists[0]
+    name2, list2 = lists[1]
+    for l1 in list1:
+        if not l1 in list2:
+            new1.append ( l1 )
+        else:
+            pprint ( "removing", l1, "from list1" )
+    for l2 in list2:
+        if not l2 in list1:
+            new2.append ( l2 )
+        else:
+            pprint ( "removing", l2, "from list2" )
+    ret = { name1: new1, name2: new2 }
+        
+    return ret
 
 class BibtexWriter:
     # cachedir = "../bibtexs/"
