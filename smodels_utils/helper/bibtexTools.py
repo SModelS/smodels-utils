@@ -2,15 +2,13 @@
 
 """
 .. module:: bibtexTools
-        :synopsis: Collection of methods for bibtex.
-                   Currently contains only a dictionary for getting the
-                   bibtex names of analyses
+        :synopsis: Collection of methods for bibtex. The module is also
+        an executable that can be used to create a database.bib file for a 
+        given database.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-
-from __future__ import print_function
 
 from smodels.tools.smodelsLogging import setLogLevel
 import bibtexparser
@@ -21,6 +19,7 @@ from smodels_utils import SModelSUtils
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
          filterSupersededFromList
 from smodels_utils.helper.various import getSqrts, findCollaboration
+from typing import Union, Text
 
 if sys.version[0]=="2":
     reload(sys)
@@ -168,53 +167,10 @@ class BibtexWriter:
         source=source.replace ( "AlphaT", "$\\alpha_{T}$" )
         return source
 
-    def bibtexFromInspireOld ( self, url, label=None ):
+    def bibtexFromInspire ( self, url : str, label : Union[None,str] = None ):
         """ get the bibtex entry from an inspire record """
-        #if "record" in url:
         url = url.replace("record","api/literature" )
-        self.log ( " * fetching from Inspire: %s" % url )
-        ## hack for now, this solution wont work in the future
-        # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
-        # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
-        fullurl =  url # +"/export/hx"
-        # return fullurl
-        try:
-            f=urlopen (fullurl)
-            lines = f.readlines()
-            f.close()
-            ret = []
-            hasBegin = False
-            for line in lines:
-                print ( "line", line )
-                line=line.decode()
-                if "pagebodystripemiddle" in line:
-                    hasBegin=True
-                    continue
-                if not hasBegin:
-                    continue
-                if "</pre>" in line:
-                    hasBegin=False
-                    continue
-                ret.append ( line )
-                if "@article" in line and label != None:
-                    ret.append ( '      label          = "%s",\n' % label )
-                if "@techreport" in line and label != None:
-                    ret.append ( '      label          = "%s",\n' % label )
-            r =  str(self.replaceUnicodes ( "".join ( ret )  ))
-            sys.exit(-1)
-            return r
-        except urllib.error.HTTPError as e:
-            print ( f"[bibtexTools] Caught: {e}" )
-            sys.exit(-1)
-        except Exception as e:
-            print ( f"[bibtexTools] Caught: {e}" )
-            sys.exit(-1)
-
-    def bibtexFromInspire ( self, url, label=None ):
-        """ get the bibtex entry from an inspire record """
-        #if "record" in url:
-        url = url.replace("record","api/literature" )
-        self.log ( " * fetching from Inspire: %s" % url )
+        self.log ( f" * fetching from Inspire: {url}" )
         ## hack for now, this solution wont work in the future
         # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
         # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
@@ -228,7 +184,6 @@ class BibtexWriter:
             if label != None:
                 p1 = txt.rfind("}")
                 txt = txt[:p1-1] + ',\n    label = "%s"\n}\n' % label
-                print ( "txt", txt )
             return txt
         except urllib.error.HTTPError as e:
             print ( f"[bibtexTools] Caught: {e}" )
@@ -237,17 +192,18 @@ class BibtexWriter:
             print ( f"[bibtexTools] Caught: {e}" )
             sys.exit(-1)
 
-    def fetchInspireUrl ( self, l, label ):
+    def fetchInspireUrl ( self, line : str, label : Union[None,str] ):
         """ from line in html page, extract the inspire url """
-        self.log ( " * fetching Inspire url: %s" % label )
-        pos1 = l.find ( "HREF=" )
-        pos2 = l.find ( "<B>" )
+        self.log ( f" * fetching Inspire url: {label}" )
+        line = line.replace('id="inspire_link"','')
+        pos1 = line.find ( "HREF=" )
+        pos2 = line.find ( "<B>" )
         if pos1 > 0 and pos2 > pos1:
-            return l[pos1+6:pos2-2]
-        pos1 = l.find ( "href=" )
-        pos2 = l.find ( "inSPIRE" )
-        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in l:
-            ret=l[pos1+6:pos2-2]
+            return line[pos1+6:pos2-2]
+        pos1 = line.find ( "href=" )
+        pos2 = line.find ( "inSPIRE" )
+        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in line:
+            ret=line[pos1+6:pos2-2]
             return ret
         return "fetchInspireUrl failed"
 
@@ -270,9 +226,9 @@ class BibtexWriter:
         self.log ( " * CDS url: %s" % ret )
         return ret
 
-    def bibtexFromWikiUrl ( self, url, label=None ):
+    def bibtexFromWikiUrl ( self, url : str, label : Union[None,str]=None ):
         """ get the bibtex entry from the atlas wiki """
-        self.log ( " * fetching from wiki: %s" % url )
+        self.log ( f" * fetching from wiki: {url}" )
         try:
             f=urlopen ( url )
         except urllib.error.HTTPError as e:
