@@ -26,7 +26,7 @@ x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
 
-max_nbins = 10000
+max_nbins = 12000
 
 ## for debugging, if set to true, allow for the acceptance files
 ## to have multiple entries for the same mass point. that is obviously a bug,
@@ -587,6 +587,7 @@ class DataHandler(object):
     def extendDataToZero ( self, yields ):
         """ if self.args['extended_to_massless_lsp'],
             then extend the data to massless lsps """
+        # print ( "extend!", self.args )
         if not "extend_to_massless_lsp" in self.args or \
                 self.args["extend_to_massless_lsp"] != True:
             return
@@ -603,6 +604,7 @@ class DataHandler(object):
             if abs(y[-2]-minLSP)<1e-6:
                 tmp = y[:-2]+[0]+y[-1:]
                 add.append ( tmp )
+        logger.info ( f"adding {len(add)} points to extend to mlsp=0" )
         for a in add:
             yields.append ( a )
         yields.sort()
@@ -917,6 +919,7 @@ class DataHandler(object):
 
     def rootByList(self, namelist ):
         """ generator, but by list of names """
+        logger.error ( "FIXME needs porting to uproot!" )
         pts = {}
         import ROOT
         rootFile = ROOT.TFile(self.path)
@@ -956,7 +959,9 @@ class DataHandler(object):
             sys.exit()
         rootFile.close()
 
-        for point in self._getUpRootPoints(obj):
+        points = list ( self._getUpRootPoints(obj) )
+        self.extendDataToZero ( points )
+        for point in points:
             yield point
 
     def rootByName ( self, name ):
@@ -1287,7 +1292,7 @@ class DataHandler(object):
                 xRange = range(0,len(xAxis),  trimmingFactor[0] )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
+                    logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={int(n_bins)} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
                 n_bins = n_bins / len(xAxis)
                 n_bins = n_bins * len(xRange)
 
