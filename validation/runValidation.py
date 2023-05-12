@@ -623,6 +623,7 @@ if __name__ == "__main__":
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
                 "validationFolder": "validation", # you can change the folder that stores the validation files
+                "forceOneD": False, # force the plot to be interpreted as 1d
                 "tempdir": None, ## specify the name of the tempdir, if you wish
                 "timeOut": 5000, # change the timeout per point, in seconds
                 "pngPlots": True, ## also png plots?
