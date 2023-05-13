@@ -16,17 +16,18 @@ import sys
 import os
 import logging
 import math
+import numpy as np
+from typing import List
+
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-import numpy as np
 from sympy import var
 x,y,z = var('x y z')
+
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
-
-max_nbins = 10000
 
 ## for debugging, if set to true, allow for the acceptance files
 ## to have multiple entries for the same mass point. that is obviously a bug,
@@ -45,6 +46,9 @@ def _Hash ( lst ): ## simple hash function for our masses
         ret=100000*ret+l
     return ret
 
+# maximum number of entries before we trim
+# (given that allowTrimming is true, see below)
+max_nbins = 12000
 allowTrimming=True ## allow big grids to be trimmed down
 trimmingFactor = [ 2 ] ## the factor by which to trim
 
@@ -587,6 +591,7 @@ class DataHandler(object):
     def extendDataToZero ( self, yields ):
         """ if self.args['extended_to_massless_lsp'],
             then extend the data to massless lsps """
+        # print ( "extend!", self.args )
         if not "extend_to_massless_lsp" in self.args or \
                 self.args["extend_to_massless_lsp"] != True:
             return
@@ -603,6 +608,7 @@ class DataHandler(object):
             if abs(y[-2]-minLSP)<1e-6:
                 tmp = y[:-2]+[0]+y[-1:]
                 add.append ( tmp )
+        logger.info ( f"adding {len(add)} points to extend to mlsp=0" )
         for a in add:
             yields.append ( a )
         yields.sort()
@@ -900,14 +906,15 @@ class DataHandler(object):
             yield values
 
     def root(self):
-
         """
         preprocessing root-files containing root-objects
 
         :return: ROOT-object
         """
-        if isinstance(self.objectName, list):
-            return self.rootByList ( self.objectName )
+        if isinstance(self.objectName, (list,tuple) ):
+            # we can write tuples, list or <name>+<name>
+            name = "+".join ( self.objectName )
+            return self.rootByName ( name )
 
         if isinstance(self.objectName, str):
             return self.rootByName ( self.objectName )
@@ -915,38 +922,20 @@ class DataHandler(object):
         logger.error ( "objectName must be a string or a list" )
         sys.exit()
 
-    def rootByList(self, namelist ):
-        """ generator, but by list of names """
-        pts = {}
-        import ROOT
-        rootFile = ROOT.TFile(self.path)
-        hashes={}
-        for name in namelist:
-            obj = rootFile.Get(name)
-            if not obj:
-                logger.error("Object %s not found in %s" %(name,self.path))
-                sys.exit()
-            if not isinstance(obj,ROOT.TGraph):
-                obj.SetDirectory(0)
-
-            for point in self._getPyRootPoints(obj):
-                Hsh = _Hash(point[:-1])
-                if not Hsh in pts:
-                    pts[ Hsh ] = 0.
-                pts[ Hsh ] += point[-1]
-                hashes[ Hsh ] = point[:-1]
-        rootFile.Close()
-        ret = []
-        for k,v in hashes.items():
-            L = v
-            L.append ( pts[k] )
-            ret.append ( L )
-        for r in ret:
-            yield r
-
-    def uprootByName(self, name):
-        """ generator, but by name """
+    def uprootByName(self, name : str ) -> List:
+        """ generator of entries for UL and EM maps, 
+        retrieving from root files using uproot. we know the objects name
+        in the root file
+        :param name: the name of the object in the root file. if a "+" is in
+        this name, we assume it's two objects and we concatenate.
+        """
         import uproot
+        if "+" in name:
+            names = name.split("+")
+            for name in names:
+                ret = self.uprootByName ( name )
+                for i in ret:
+                    yield i
         # print ( "[dataHandlerObjects] using uproot on", self.path )
         rootFile = uproot.open(self.path)
         obj = rootFile.get(name)
@@ -956,7 +945,9 @@ class DataHandler(object):
             sys.exit()
         rootFile.close()
 
-        for point in self._getUpRootPoints(obj):
+        points = list ( self._getUpRootPoints(obj) )
+        self.extendDataToZero ( points )
+        for point in points:
             yield point
 
     def rootByName ( self, name ):
@@ -1287,7 +1278,7 @@ class DataHandler(object):
                 xRange = range(0,len(xAxis),  trimmingFactor[0] )
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={n_bins} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
+                    logger.warning ( f"'{self.name}' for {self.txName} is too large a map: (nbins={int(n_bins)} > {max_nbins}). Will trim x-axis from {len(xAxis)} to {len(xRange)} (turn this off via dataHandlerObjects.allowTrimming)" )
                 n_bins = n_bins / len(xAxis)
                 n_bins = n_bins * len(xRange)
 

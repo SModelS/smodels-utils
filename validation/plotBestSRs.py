@@ -59,7 +59,7 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
             axisv = content["meta"]["axes"]
             if os.path.exists ( eljson ):
                 ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
-            lines.append (  ll[topo] )
+                lines.append (  ll[topo] )
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )

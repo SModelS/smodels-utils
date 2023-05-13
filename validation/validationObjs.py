@@ -856,20 +856,28 @@ class ValidationPlot():
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor
 
-    def isOneDimensional ( self ):
-        """ are the data 1d? """
-        # is1D = False
+    def isOneDimensional ( self ) -> bool:
+        """ are the data one-dimensional """
+        if "forceOneD" in self.options and self.options["forceOneD"]:
+            # we force 1d plotting mode
+            return True
         if self.data in [ [], None ]:
             return None
+        ys = []
         for ctPoints,pt in enumerate(self.data):
             if pt == None:
                 continue
             if "axes" in pt and pt["axes"] != None and "x" in pt["axes"]:
                 if not "y" in pt["axes"]:
                     #is1D = True
+                    print ( "yes!" )
                     return True
+                ys.append ( pt["axes"]["y"] )
+        if len(ys)>0:
+            deltay = max(ys)-min(ys)
+            if deltay < 1e-14:
+               logger.warn ( f"the range in y values {deltay} is quite small. sure you dont want to make a 1d plot? if yes, say forceOneD = True, in the options section in the ini file." )
         return False
-        # return is1D
 
     def getUglyPlot(self,silentMode=True):
         """
@@ -904,6 +912,9 @@ class ValidationPlot():
         in self.officialCurves to generate a pretty exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
+        if self.isOneDimensional():
+            self.pretty = False
+            return
         backend = str ( self.options["backend"] ).lower().strip()
         if backend in [ "root" ]:
             try:
