@@ -16,9 +16,14 @@ class Progress:
     def parse( self ):
         dirs = glob.glob ( "_V*" )
         dirs += glob.glob ( "tmp*" )
-        if len(dirs)==0:
-            print ( f"[progress] could not find any usual directories. will terminate." )
-            sys.exit()
+        ctr = 0
+        while len(dirs)==0:
+            print ( f"[progress] could not find any usual directories. will wait a bit." )
+            ctr+=1
+            time.sleep ( (2.+ctr)**2 )
+            if ctr>10:
+                print ( f"[progress] waited enough, lets terminate." )
+                sys.exit()
         ret = {}
         for d in dirs:
             npoints = len ( glob.glob ( f"{d}/T*slha" ) )
