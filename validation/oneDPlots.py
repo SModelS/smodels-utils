@@ -123,24 +123,24 @@ def create1DPlot( validationPlot, silentMode=True,
                 yvs.append ( y )
                 xvs.append ( x )
             label = "excluded"
-            if y < float("inf"):
+            if 1.1 < y < float("inf"):
                 values[label]["x"].append(x)
                 values[label]["y"].append(y)
-            if ey < float("inf"):
+            if 1.1 < ey < float("inf"):
                 values[label]["ex"].append(x)
                 values[label]["ey"].append(ey)
             label = "excluded_border"
-            if y < 1.3:
+            if 0.8 < y < 1.3:
                 values[label]["x"].append(x)
                 values[label]["y"].append(y)
-            if ey < 1.3:
+            if 0.8 < ey < 1.3:
                 values[label]["ex"].append(x)
                 values[label]["ey"].append(ey)
             label = "allowed_border"
-            if y < 1:
+            if .3 < y < 1:
                 values[label]["x"].append(x)
                 values[label]["y"].append(y)
-            if ey < 1:
+            if .3 < ey < 1:
                 values[label]["ex"].append(x)
                 values[label]["ey"].append(ey)
             label = "allowed"
