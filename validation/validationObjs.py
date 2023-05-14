@@ -870,7 +870,6 @@ class ValidationPlot():
             if "axes" in pt and pt["axes"] != None and "x" in pt["axes"]:
                 if not "y" in pt["axes"]:
                     #is1D = True
-                    print ( "yes!" )
                     return True
                 ys.append ( pt["axes"]["y"] )
         if len(ys)>0:

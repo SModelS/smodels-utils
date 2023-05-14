@@ -192,6 +192,8 @@ def getAxisRange ( options : dict, label : str = "xaxis" ):
     for style in styles:
         if label in style:
             plabel = style.find(label)
+            if style.find ( ":", plabel ) > 0:
+                plabel = style.find(":", plabel)
             pstart = style.find("[",plabel)
             pend = style.find("]",pstart)
             try:
@@ -199,7 +201,7 @@ def getAxisRange ( options : dict, label : str = "xaxis" ):
                 return xrange
             except Exception as e:
                 logger.error ( f"when evaluating {label} range: {e}" )
-                logger.error ( f"  ´-- style {options['style']}" )
+                logger.error ( f"  ´-- style {options['style']}->{style[pstart:pend+1]}" )
     return None
 
 def getClosestValue ( x : float, y : float , graph : dict , dmax : float = 1. ):
