@@ -217,11 +217,12 @@ def create1DPlot( validationPlot, silentMode=True,
         dx = 0.
         if len(xvs)>0:
             dx = max(xvs)+( max(xvs)-min(xvs))*.07
-        plt.text ( dx, rs, t, c="grey", rotation="vertical" )
+        if False:
+            plt.text ( dx, rs, t, c="grey", rotation="vertical" )
     figureUrl = getFigureUrl(validationPlot)
     subtitle = getDatasetDescription ( validationPlot, maxLength = 60 )
-    plt.text ( -.12, -.12, subtitle, transform = ax.transAxes, c="grey" )
+    plt.text ( -.12, -.10, subtitle, transform = ax.transAxes, c="grey" )
     if figureUrl:
-        plt.text ( -.15, -.122, figureUrl, fontsize=7, c="b",
+        plt.text ( -.15, -.132, figureUrl, fontsize=7, c="b",
                    transform = ax.transAxes )
     return ( plt.gcf(), plt )
