@@ -6,7 +6,7 @@
 
 """
 
-import glob, time
+import glob, time, sys
 from tqdm import tqdm
 
 class Progress:
@@ -16,6 +16,9 @@ class Progress:
     def parse( self ):
         dirs = glob.glob ( "_V*" )
         dirs += glob.glob ( "tmp*" )
+        if len(dirs)==0:
+            print ( f"[progress] could not find any usual directories. will terminate." )
+            sys.exit()
         ret = {}
         for d in dirs:
             npoints = len ( glob.glob ( f"{d}/T*slha" ) )
