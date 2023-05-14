@@ -23,11 +23,11 @@ class Progress:
 
     def show( self ):
         self.parse()
-        self.pprint()
+        # self.pprint()
         self.tqdms = []
         for i,(k,v) in enumerate ( self.stats.items() ):
             n = tqdm ( desc=k, total = v["npoints"], position = i,
-                       unit = "pt", bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{remaining}] {postfix}", colour = "green" )
+                       unit = "pt", bar_format="{desc}: {percentage:3.0f}%|{bar:46}| {n_fmt}/{total_fmt} [{remaining}] {postfix}", colour = "green" )
             self.tqdms.append ( n )
         while True:
             time.sleep(.3)
