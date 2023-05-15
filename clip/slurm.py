@@ -93,7 +93,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s/smodels-utils/')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/smodels-utils/prototools')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/protomodels/ptools')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
@@ -850,7 +850,7 @@ def main():
             args.stopTeleportationAfter = -1
         if args.maxsteps == None:
             args.maxsteps = 1000
-        while True and args.bake!="":
+        while True and args.bake=="":
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, lines, args.dry_run,
                             args.keep, args.time, cheatcode, rundir, args.maxsteps,
