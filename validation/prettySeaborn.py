@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+import matplotlib.ticker as ticker
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
          getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
          importMatplot
@@ -119,16 +120,22 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
+                if logY:
+                    y = np.log ( y )
                 ylabel = "r = $\sigma_{signal}/\sigma_{UL}$"
             else:
                 x = xvals["x"]
                 if "y" in xvals:
                     y = xvals['y']
+                    if logY:
+                        y = np.log ( y )
                 elif "w" in xvals:
                     y = xvals['w']
 
         else:
             x,y = xvals
+            if logY:
+                y = np.log ( y )
         if not isWithinRange ( xrange, x ):
             continue
         if not isWithinRange ( yrange, y ):
@@ -279,7 +286,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
     interpolation = options["interpolationType"]
     #print ( "before" )
-    #pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
+    # pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
     T = interpolateOverMissing ( xs, ys, T, float("nan"), interpolation )
     vT = interpolateOverMissing ( xs, ys, T, -10., interpolation )
     eT = interpolateOverMissing ( xs, ys, eT, float("nan"), interpolation )
@@ -288,7 +295,12 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if logY:
         xlabel = "x [mass, GeV]"
         ylabel = "y [width, GeV]"
-        ax.set_yscale('log')
+        # labels = [item.get_text() for item in ax.get_yticklabels()]
+        # print ( "labels", labels )
+        # ax.set_yticklabels(labels)
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '{:.2g}'.format(np.exp(y))))
+        # import IPython ; IPython.embed()
+        # ax.set_yscale('log')
     from plottingFuncs import getColormap
     cm = getColormap()
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )
@@ -307,6 +319,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
         px, py = filterWithinRanges ( p["points"], xrange, yrange, True )
+        if logY:
+            py = [ np.log(y) for y in py ]
         plt.plot ( px, py, c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
@@ -314,6 +328,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
                 continue
             px, py = filterWithinRanges ( p["points"], xrange, yrange, True )
+            if logY:
+                py = [ np.log(y) for y in py ]
             plt.plot ( px, py, c="black", linestyle="dotted",
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )

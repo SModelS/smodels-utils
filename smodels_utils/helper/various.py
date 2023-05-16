@@ -226,7 +226,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     ipath = "%s/validation/%s" % ( folder, valfile )
     files = glob.glob ( ipath )
     if len(files)==0:
-        print ( "could not find validation file %s" % ipath )
+        print ( "[various] could not find validation file %s" % ipath )
         sys.exit()
     if len(files)>1:
         print ( "[helper/various] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
