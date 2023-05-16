@@ -121,21 +121,21 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if len(xvals) == 1:
                 x,y = xvals['x'],r
                 if logY:
-                    y = np.log ( y )
+                    y = np.log10 ( y )
                 ylabel = "r = $\sigma_{signal}/\sigma_{UL}$"
             else:
                 x = xvals["x"]
                 if "y" in xvals:
                     y = xvals['y']
                     if logY:
-                        y = np.log ( y )
+                        y = np.log10 ( y )
                 elif "w" in xvals:
                     y = xvals['w']
 
         else:
             x,y = xvals
             if logY:
-                y = np.log ( y )
+                y = np.log10 ( y )
         if not isWithinRange ( xrange, x ):
             continue
         if not isWithinRange ( yrange, y ):
@@ -295,10 +295,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if logY:
         xlabel = "x [mass, GeV]"
         ylabel = "y [width, GeV]"
-        # labels = [item.get_text() for item in ax.get_yticklabels()]
-        # print ( "labels", labels )
-        # ax.set_yticklabels(labels)
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '{:.2g}'.format(np.exp(y))))
+        ytick_loc = range( int(np.floor(min(ys))),int(np.ceil(max(ys)))+1 )
+        ax.set_yticks ( ytick_loc )
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '10e{:d}'.format(y)))
         # import IPython ; IPython.embed()
         # ax.set_yscale('log')
     from plottingFuncs import getColormap
@@ -320,7 +319,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             continue
         px, py = filterWithinRanges ( p["points"], xrange, yrange, True )
         if logY:
-            py = [ np.log(y) for y in py ]
+            py = [ np.log10(y) for y in py ]
         plt.plot ( px, py, c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
@@ -329,7 +328,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 continue
             px, py = filterWithinRanges ( p["points"], xrange, yrange, True )
             if logY:
-                py = [ np.log(y) for y in py ]
+                py = [ np.log10(y) for y in py ]
             plt.plot ( px, py, c="black", linestyle="dotted",
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
