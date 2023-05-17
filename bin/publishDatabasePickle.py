@@ -261,6 +261,7 @@ def main():
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
+
     if args.latest:
         latestfile = "latest"
         if not args.remove_fastlim:
@@ -279,7 +280,7 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update backup:", cmd, a )
-    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
+    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; git add database/{backupfile} "
     if args.latest:
         cmd += f"git add database/{latestfile}; "
     cmd += "git commit -m 'auto-commited by publishDatabasePickle.py'; git push"
