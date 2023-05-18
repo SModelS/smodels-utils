@@ -466,7 +466,7 @@ class BibtexWriter:
         f.close()
         f = open ( "latex.sh", "wt" )
         f.write ( "#!/bin/bash\n" )
-        cmds = [ "pdflatex -interaction nonstopmode test.tex", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex" ]
+        cmds = [ "pdflatex -interaction nonstopmode test.tex", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex" ]
         #cmds = [ "latexmk -pvs -ps test" ]
         #cmds = []
         for cmd in cmds:
