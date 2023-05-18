@@ -17,6 +17,20 @@ def compare ( file1 : str, file2 : str ):
     e2 = parse2.entries
     h1.close()
     h2.close()
+    d1, d2 = {}, {}
+    for e in e1:
+        if "label" in e:
+            if e["label"] in d1:
+                if e != d1[e["label"]]:
+                    print ( f'{e["label"]} a second time -- and different -- in first!' )
+            d1[ e["label"] ] = e
+        else:
+            print ( f'{e["ID"]} has no label in first!' )
+    for e in e2:
+        if "label" in e:
+            d2[ e["label"] ] = e
+        else:
+            print ( f'{e["ID"]} has no label in second!' )
     e1.sort ( key = lambda x : x["label"] if "label" in x else x["ID"] )
     e2.sort ( key = lambda x : x["label"] if "label" in x else x["ID"] )
     for i,(x1,x2) in enumerate(zip(e1,e2)):
