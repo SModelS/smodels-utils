@@ -271,6 +271,7 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
+    backupfile = None
     if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = "backup"+ver
         #if not args.remove_fastlim:
@@ -280,7 +281,9 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update backup:", cmd, a )
-    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; git add database/{backupfile} "
+    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
+    if backupfile != None:
+        cmd += f"git add database/{backupfile}; "
     if args.latest:
         cmd += f"git add database/{latestfile}; "
     cmd += "git commit -m 'auto-commited by publishDatabasePickle.py'; git push"
