@@ -315,9 +315,10 @@ def clarifyJsons ( path ):
             line = line.strip()
             if line == "":
                 continue
-            if not "jsonFiles:" in line:
+            if not "jsonFiles:" in line and not "jsonFiles_FullLikelihood:" in line:
                 continue
             txt = line.replace("jsonFiles:","")
+            txt = txt.replace("jsonFiles_FullLikelihood:","")
             j=i
             while "{" in txt and not "}" in txt and not j >= (len(lines)-1):
                 # seems like we need the next line
