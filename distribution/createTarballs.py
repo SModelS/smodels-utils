@@ -80,10 +80,11 @@ def removeNonAggregated( db, dirname, reuse ):
         pathmaker = Path ( newpath )
         pathmaker.mkdir ( parents=True, exist_ok=True )
         cmd = f"mv {path} {newpath}"
-        if os.path.exists ( newpath ):
-            cmd = f"rm -r {path}"
         o = subprocess.getoutput ( cmd )
         print ( f"(re)moving {cmd}: {o}" )
+        if os.path.exists ( path ):
+            # if we couldnt move, we delete
+            cmd = f"rm -r {path}"
     tarmaker = "tar czvf smodels-nonaggregated.tar.gz smodels-nonaggregated/*"
     o = subprocess.getoutput ( tarmaker )
 
@@ -113,8 +114,8 @@ def removeNonValidated(dirname, reuse ):
                 for txn in dataset.txnameList:
 #                    if txn.validated in [ None, False ]:
                     if txn.validated in [ False ]:
-                        comment( "%s/%s/%s is not validated. Delete it." % \
-                                 ( er, dataset, txn ) )
+                        #comment( "%s/%s/%s is not validated. Delete it." % \
+                        #         ( er, dataset, txn ) )
                         cmd="rm '%s'" % txn.path
                         run( cmd )
                     else:
@@ -532,6 +533,7 @@ def create(output,tag):
     clone(dirname) ## ... clone smodels into it ...
     fetchDatabase(tag,dirname) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
+    # sys.exit()
     splitDatabase(otuput,dirname) ## split database into official and optional
     removeNonValidated(dirname) ## remove all non-validated analyses
     clearTxtFiles(dirname) ## now clear up all txt files
