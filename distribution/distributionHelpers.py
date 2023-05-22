@@ -238,12 +238,13 @@ def cloneDatabase( tag : str = "2.3.0", dirname = "database/",
     """
     dbversion = tag
     comment( "git clone the database(this might take a while)" )
+    pathmaker = Path ( dirname )
+    pathmaker.mkdir ( parents=True, exist_ok=True )
     ## "v" is not part of semver
     #cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
     if False:
         dbversion = "develop"
-    cmd = "cd %s; git clone --depth 1 -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
-           (dirname, dbversion)
+    cmd = f"cd {dirname}; git clone --depth 1 -b {dbversion} git+ssh://git@github.com/SModelS/smodels-database.git"
 
     if pretend:
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
@@ -272,7 +273,7 @@ def clearGlobalInfos( path : str ):
 
 if __name__ == "__main__":
     # intended to be whatever it is you need right now
-    # cloneDatabase ( )
+    cloneDatabase ( )
     db = createDatabase ( )
     removeNonValidated ( db )
     moveNonAggregated ( db )
