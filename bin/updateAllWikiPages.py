@@ -58,8 +58,8 @@ def main():
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
             action='store_true' )
-    argparser.add_argument ( '--no_debug', 
-            help='Dont add the debug version of the pickle file',
+    argparser.add_argument ( '--debug', 
+            help='Add the debug version of the pickle file',
             action='store_true' )
     argparser.add_argument ( '-d', '--dry_run', 
             help='dry run, write commands, do not execute them',
@@ -120,7 +120,7 @@ def main():
         exec ( [ "./publishDatabasePickle.py", "-f", "./nonaggregated.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./full_llhds.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-F", "-f", "./fastlim.pcl" ], A.dry_run )
-        if not A.no_debug:
+        if A.debug:
             exec ( [ "./publishDatabasePickle.py", "--txnamevalues", "-b", "-f", db ], A.dry_run )
 
 
