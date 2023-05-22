@@ -272,7 +272,7 @@ def createDBRelease(output,tag,reuse):
         rmdir(dirname)
         mkdir(dirname) ## .. then create the temp dir
         cpMakefile() ## copy Makefile if doesnt exist, for convenience only
-        cloneDatabase(tag,dirname) ## git clone the database
+        cloneDatabase(tag,dirname,dummyRun) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
     clearTxtFiles(dirname) ## now clear up all txt files
     moveFastlim(output,dirname) ## split database into official and optional

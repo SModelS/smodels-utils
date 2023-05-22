@@ -226,7 +226,8 @@ def moveNonAggregated( db : Database, dirname : str = "database/",
     comment ( f"created {tarball}" )
     return db
 
-def cloneDatabase( tag : str = "2.3.0", dirname = "database/" ):
+def cloneDatabase( tag : str = "2.3.0", dirname = "database/",
+       pretend : bool = False ):
     """
     Execute 'git clone' to retrieve the database.
     """
@@ -239,7 +240,7 @@ def cloneDatabase( tag : str = "2.3.0", dirname = "database/" ):
     cmd = "cd %s; git clone --depth 1 -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
            (dirname, dbversion)
 
-    if dummyRun:
+    if pretend:
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
              ( dirname, dbversion )
     runCmd( cmd )
