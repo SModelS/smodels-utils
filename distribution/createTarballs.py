@@ -62,13 +62,6 @@ def clone( dirname : str ):
         if i in [".git", ".gitignore", "distribution", "test" ] or i.endswith ( ".pcl" ):
             runCmd( "rm -rf %s/%s" %(dirname,i) )
 
-def rmpyc(dirname):
-    """
-    Remove .pyc files.
-    """
-    comment( "Removing all pyc files ... " )
-    runCmd("cd %s; rm -f *.pyc */*.pyc */*/*.pyc" % dirname )
-
 def makeClean(dirname):
     """
     Execute 'make clean' in host directory.
@@ -127,10 +120,10 @@ def moveFastlim ( filename , dirname ):
     """
     Split up between the official database and fastlim database
     """
-    comment( "Now move all the non-official entries in the database." )
+    comment( "Now move all fastlim entries in the database." )
     cwd=os.getcwd()
-    comment( "debug cwd: %s" % cwd )
-    comment( "debug dirname: %s" % dirname )
+    comment( f"cwd: {cwd}", urgency = "debug" )
+    comment( f"debug dirname: {dirname}", urgency = "debug" )
     cmd = "cd %s/smodels-database/; %s/moveFastlimResults.py" % \
          ( dirname, cwd )
     runCmd( cmd )

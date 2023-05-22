@@ -26,12 +26,14 @@ except:
 
 def comment( text : str, urgency : str = "info" ):
     """ comment on what you are doing """
+    urgency = urgency.lower()
     col=YELLOW
     pre=""
-    if "err" in urgency.lower():
+    if "err" in urgency:
         pre="ERROR: "
         col=RED
-    print( f"{col}[{time.asctime()}] {pre}{text} {RESET}" )
+    if not "deb" in urgency:
+        print( f"{col}[{time.asctime()}] {pre}{text} {RESET}" )
     f=open("./create.log","at")
     f.write( f"[{time.asctime()}] {text}\n" )
     f.close()
@@ -42,7 +44,7 @@ def runCmd ( cmd : str, prtMsg : bool = True ):
     """ run a certain command """
     cmd=cmd.strip()
     if prtMsg:
-        print( "%s[distribution] cmd: %s%s" %(GREEN,cmd,RESET) )
+        print( f"{GREEN}[cmd] {cmd}{RESET}" )
     f=open("/tmp/create.log","a")
     f.write( "cmd: %s\n" %(cmd) )
     # print('CMD=',cmd)
@@ -115,18 +117,21 @@ def clearJsons ( path : str ):
         for k in D.keys():
             usedJsons.add ( k )
     jsons = glob.glob ( f"{path}/*.json" )
+    ctRemoved = 0
     for js in jsons:
         fname = os.path.basename ( js )
         remove = fname not in usedJsons
         if remove:
-            print ( f"[createTarballs] removing {fname}" )
+            #comment ( f"removing {fname}" )
+            ctRemoved += 1
             os.unlink ( js )
+    comment ( f"removed {ctRemoved} json files" )
 
-def removeNonValidated( db : Database, dirname : str ):
+def removeNonValidated( db : Database, dirname : str = "database/" ):
     """ remove all non-validated analyses from text database """
     comment( f"starting removeNonValidated" )
     comment( "Now remove non-validated results." )
-    ers = d.expResultList
+    ers = db.expResultList
     comment( "Loaded the database with %d results." %( len(ers) ) )
     for er in ers:
         if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
@@ -158,7 +163,7 @@ def removeNonValidated( db : Database, dirname : str ):
                          (er) )
                 cmd = "rm -rf %s" % er.path
                 runCmd( cmd )
-    base = d.subs[0].url
+    base = db.subs[0].url
     # comment( "base=%s" % base )
     for tev in os.listdir( base ):
         fullpath = os.path.join( base, tev )
@@ -179,7 +184,7 @@ def removeNonValidated( db : Database, dirname : str ):
             comment( "%s is empty. Delete it!" %( tev ) )
             cmd = "rm -rf %s" % fullpath
             runCmd( cmd )
-    return d
+    return db
 
 def createDatabase ( dirname : str = "database/", reuse : bool = True ):
     """ very simple convenience function to centrally load database """
@@ -267,5 +272,7 @@ def clearGlobalInfos( path : str ):
 
 if __name__ == "__main__":
     # intended to be whatever it is you need right now
+    # cloneDatabase ( )
     db = createDatabase ( )
+    removeNonValidated ( db )
     moveNonAggregated ( db )
