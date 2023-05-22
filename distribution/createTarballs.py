@@ -507,10 +507,10 @@ def createDBRelease(output,tag,reuse):
         cpMakefile() ## copy Makefile if doesnt exist, for convenience only
         fetchDatabase(tag,dirname) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
+    clearTxtFiles(dirname) ## now clear up all txt files
     splitDatabase(output,dirname) ## split database into official and optional
     db=removeNonValidated(dirname,reuse) ## remove all non-validated analyses
     removeNonAggregated(db,dirname,reuse) ## remove all non-validated analyses
-    clearTxtFiles(dirname) ## now clear up all txt files
     createDBTarball(output,dirname) ## here we go! create!
     isDummy()
 
