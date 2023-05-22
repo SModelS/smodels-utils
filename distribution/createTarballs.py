@@ -241,7 +241,7 @@ def cpMakefile ():
     o = subprocess.getoutput ( cmd )
 
 def clearGlobalInfo(filename):
-    print ( "[createTarballs] checking", filename )
+    # print ( "[createTarballs] checking", filename )
     f=open(filename)
     lines=f.readlines()
     f.close()
