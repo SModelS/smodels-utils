@@ -10,7 +10,8 @@
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
 from pathlib import Path
-from distributionHelpers import clearGlobalInfo, runCmd, RED, GREEN, YELLOW, RESET
+from distributionHelpers import clearGlobalInfo, runCmd, RED, GREEN, YELLOW, RESET, \
+         clearJsons
 from smodels.experiment.databaseObj import Database
 from typing import Union
 sys.path.insert(0,"../")
