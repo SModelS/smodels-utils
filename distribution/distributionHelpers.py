@@ -7,7 +7,10 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import colorama, subprocess
+import colorama, subprocess, os, glob, time
+from smodels.experiment.databaseObj import Database
+from pathlib import Path
+from typing import Union
 
 RED = "\033[31;11m"
 GREEN = "\033[32;11m"
@@ -20,6 +23,20 @@ try:
     RESET = colorama.Fore.RESET
 except:
     pass
+
+def comment( text : str, urgency : str = "info" ):
+    """ comment on what you are doing """
+    col=YELLOW
+    pre=""
+    if "err" in urgency.lower():
+        pre="ERROR: "
+        col=RED
+    print( f"{col}[{time.asctime()}] {pre}{text} {RESET}" )
+    f=open("./create.log","at")
+    f.write( f"[{time.asctime()}] {text}\n" )
+    f.close()
+    if col == RED:
+        sys.exit(-1)
 
 def runCmd ( cmd : str, prtMsg : bool = True ):
     """ run a certain command """
@@ -105,14 +122,149 @@ def clearJsons ( path : str ):
             print ( f"[createTarballs] removing {fname}" )
             os.unlink ( js )
 
+def removeNonValidated( db : Database, dirname : str ):
+    """ remove all non-validated analyses from text database """
+    comment( f"starting removeNonValidated" )
+    comment( "Now remove non-validated results." )
+    ers = d.expResultList
+    comment( "Loaded the database with %d results." %( len(ers) ) )
+    for er in ers:
+        if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
+            comment( "%s is private. delete!" %( er.globalInfo.id ) )
+            cmd = "rm -r %s" %( er.path )
+            runCmd( cmd )
+        else:
+            hasDataSets=False
+            for dataset in er.datasets:
+                hasTxNames=False
+                for txn in dataset.txnameList:
+#                    if txn.validated in [ None, False ]:
+                    if txn.validated in [ False ]:
+                        #comment( "%s/%s/%s is not validated. Delete it." % \
+                        #         ( er, dataset, txn ) )
+                        cmd="rm '%s'" % txn.path
+                        runCmd( cmd )
+                    else:
+                        hasTxNames=True
+                if not hasTxNames:
+                        comment( "%s/%s has no validated txnames. remove folder." %\
+                                 (er, dataset ) )
+                        cmd = "rm -r '%s'" % dataset.path
+                        runCmd( cmd )
+                if hasTxNames:
+                    hasDataSets=True
+            if not hasDataSets:
+                comment( "%s has no validated datasets. remove folder." % \
+                         (er) )
+                cmd = "rm -rf %s" % er.path
+                runCmd( cmd )
+    base = d.subs[0].url
+    # comment( "base=%s" % base )
+    for tev in os.listdir( base ):
+        fullpath = os.path.join( base, tev )
+        if not os.path.isdir( fullpath ):
+            continue
+        tevHasResults=False
+        for experiment in os.listdir( fullpath ):
+            exppath = os.path.join( fullpath, experiment )
+            if not os.path.isdir( exppath ):
+                continue
+            if os.listdir( exppath ) == []:
+                comment( "%s/%s is empty. Delete it!" %( tev, experiment ) )
+                cmd = "rm -rf %s" % exppath
+                runCmd( cmd )
+            else:
+                tevHasResults=True
+        if not tevHasResults:
+            comment( "%s is empty. Delete it!" %( tev ) )
+            cmd = "rm -rf %s" % fullpath
+            runCmd( cmd )
+    return d
+
+def createDatabase ( dirname : str = "database/", reuse : bool = True ):
+    """ very simple convenience function to centrally load database """
+    load = "txt"
+    if reuse:
+        load = None
+    comment( f"Now build the database pickle file: {dirname}" )
+    db = Database( f"{dirname}/smodels-database", force_load = load,
+                  progressbar=True )
+    return db
+
+def moveNonAggregated( db : Database, dirname : str = "database/", 
+                       destination : str = "smodels-nonaggregated/" ):
+    """ move all non-aggregated analyses from
+        database, and into smodels-nonaggregated """
+    comment( f"starting moveNonAggregated" )
+    if not os.path.exists ( destination ):
+        os.mkdir ( destination )
+    from smodels_utils.helper.databaseManipulations import filterNonAggregatedFromList
+    # print ( f"now i need to remove all non-aggregated from {str(db)} dirname is {dirname} reuse is {reuse}" )
+    ers = db.expResultList
+    nonaggregated = filterNonAggregatedFromList ( ers, invert=True )
+    comment( f"now filtering non aggregated: {len(nonaggregated)}/{len(ers)}" )
+    for na in nonaggregated:
+        path = na.globalInfo.path
+        sqrts = float ( na.globalInfo.sqrts.asNumber() )
+        if sqrts < 13.1:
+            sqrts = int ( sqrts )
+        from smodels_utils.helper.various import findCollaboration
+        collaboration = findCollaboration ( na.globalInfo.id )
+        path = path.replace ( "/globalInfo.txt", "" )
+        newpath = f"smodels-nonaggregated/{sqrts}TeV/{collaboration}/"
+        pathmaker = Path ( newpath )
+        pathmaker.mkdir ( parents=True, exist_ok=True )
+        cmd = f"mv {path} {newpath}"
+        o = subprocess.getoutput ( cmd )
+        print ( f"(re)moving {cmd}: {o}" )
+        if os.path.exists ( path ):
+            # if we couldnt move, we delete
+            cmd = f"rm -r {path}"
+    tarball = "../smodels-nonaggregated.tar.gz"
+    tarmaker = f"cd smodels-nonaggregated; tar czvf {tarball} ./"
+    o = subprocess.getoutput ( tarmaker )
+    comment ( f"created {tarball}" )
+    return db
+
+def cloneDatabase( tag : str = "2.3.0", dirname = "database/" ):
+    """
+    Execute 'git clone' to retrieve the database.
+    """
+    dbversion = tag
+    comment( "git clone the database(this might take a while)" )
+    ## "v" is not part of semver
+    #cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
+    if False:
+        dbversion = "develop"
+    cmd = "cd %s; git clone --depth 1 -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
+           (dirname, dbversion)
+
+    if dummyRun:
+        cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
+             ( dirname, dbversion )
+    runCmd( cmd )
+    ## remove cruft
+    rmcmd = "cd %s/smodels-database; " \
+            "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \
+            ( dirname )
+    runCmd( rmcmd )
+
+
+def clearGlobalInfos( path : str ):
+    """ clear all globalInfos.txt files under path """
+    walker = os.walk(path)
+    for record in walker:
+        File=record[0]
+        # print( "record=",record )
+        for i in record[2]:
+            if i[0]=="T" and i[-4:]==".txt":
+                fullpath = os.path.join( File, i )
+                clearGlobalInfo( fullpath )
+        gIpath = os.path.join( File, "globalInfo.txt" )
+        if os.path.exists( gIpath ):
+            clearGlobalInfo( gIpath )
 
 if __name__ == "__main__":
-    # FIXME maybe i find a better usage for this
-    """
-    ap = argparse.ArgumentParser( description="cleaner for individual files" )
-    defFile = "database/smodels-database/13TeV/CMS/CMS-PAS-SUS-16-052-eff/globalInfo.txt"
-    ap.add_argument('-c', '--clean', help=f'name of tarball filename [{defFile}]',
-                    type = str, default=defFile )
-    args = ap.parse_args()
-    clearGlobalInfo ( defFile )
-    """
+    # intended to be whatever it is you need right now
+    db = createDatabase ( )
+    moveNonAggregated ( db )

@@ -9,131 +9,17 @@
 """
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
-from pathlib import Path
-from distributionHelpers import clearGlobalInfo, runCmd, RED, GREEN, YELLOW, RESET, \
-         clearJsons
+from distributionHelpers import *
 from smodels.experiment.databaseObj import Database
 from typing import Union
 sys.path.insert(0,"../")
 
 dummyRun=False ## True
 
-def comment( text, urgency="info" ):
-    col=YELLOW
-    pre=""
-    if "err" in urgency.lower():
-        pre="ERROR: "
-        col=RED
-    print("%s[%s] %s%s %s" %( col, time.asctime(), pre, text, RESET ))
-    f=open("/tmp/create.log","a")
-    f.write(  "[%s] %s\n" %( time.asctime(),text ) )
-    f.close()
-    if col == RED:
-        sys.exit(-1)
-
 def isDummy( ):
     if dummyRun:
         comment( "DUMMY RUN!!!!" )
     return dummyRun
-
-def removeNonAggregated( db : Database, dirname : str, reuse : bool ):
-    """ remove all non-aggregated analyses from
-        database, and into smodels-nonaggregated """
-    comment( f"starting removeNonAggregated" )
-    if not os.path.exists ( "smodels-nonaggregated" ):
-        os.mkdir ( "smodels-nonaggregated" )
-    from smodels_utils.helper.databaseManipulations import filterNonAggregatedFromList
-    # print ( f"now i need to remove all non-aggregated from {str(db)} dirname is {dirname} reuse is {reuse}" )
-    ers = db.expResultList
-    print ( f"@@@ now filtering non aggregated! {len(ers)}" )
-    nonaggregated = filterNonAggregatedFromList ( ers, invert=True )
-    print ( f"@@@ now filtering non aggregated! filtered: {len(nonaggregated)}" )
-    for na in nonaggregated:
-        path = na.globalInfo.path
-        sqrts = float ( na.globalInfo.sqrts.asNumber() )
-        if sqrts < 13.1:
-            sqrts = int ( sqrts )
-        from smodels_utils.helper.various import findCollaboration
-        collaboration = findCollaboration ( na.globalInfo.id )
-        path = path.replace ( "/globalInfo.txt", "" )
-        newpath = f"smodels-nonaggregated/{sqrts}TeV/{collaboration}/"
-        pathmaker = Path ( newpath )
-        pathmaker.mkdir ( parents=True, exist_ok=True )
-        cmd = f"mv {path} {newpath}"
-        o = subprocess.getoutput ( cmd )
-        print ( f"(re)moving {cmd}: {o}" )
-        if os.path.exists ( path ):
-            # if we couldnt move, we delete
-            cmd = f"rm -r {path}"
-    tarmaker = "tar czvf smodels-nonaggregated.tar.gz smodels-nonaggregated/*"
-    o = subprocess.getoutput ( tarmaker )
-    return db
-
-def removeNonValidated( dirname : str, reuse : bool ):
-    """ remove all non-validated analyses from
-        database """
-    comment( f"starting removeNonValidated" )
-    load = "txt"
-    if reuse:
-        load = None
-    comment( f"Now build the database pickle file: {load}" )
-    d = Database( f"{dirname}/smodels-database", force_load = load,
-                  progressbar=True )
-    comment( "Now remove non-validated results." )
-    ers = d.expResultList
-    comment( "Loaded the database with %d results." %( len(ers) ) )
-    for er in ers:
-        if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
-            comment( "%s is private. delete!" %( er.globalInfo.id ) )
-            cmd = "rm -r %s" %( er.path )
-            runCmd( cmd )
-        else:
-            hasDataSets=False
-            for dataset in er.datasets:
-                hasTxNames=False
-                for txn in dataset.txnameList:
-#                    if txn.validated in [ None, False ]:
-                    if txn.validated in [ False ]:
-                        #comment( "%s/%s/%s is not validated. Delete it." % \
-                        #         ( er, dataset, txn ) )
-                        cmd="rm '%s'" % txn.path
-                        runCmd( cmd )
-                    else:
-                        hasTxNames=True
-                if not hasTxNames:
-                        comment( "%s/%s has no validated txnames. remove folder." %\
-                                 (er, dataset ) )
-                        cmd = "rm -r '%s'" % dataset.path
-                        runCmd( cmd )
-                if hasTxNames:
-                    hasDataSets=True
-            if not hasDataSets:
-                comment( "%s has no validated datasets. remove folder." % \
-                         (er) )
-                cmd = "rm -rf %s" % er.path
-                runCmd( cmd )
-    base = d.subs[0].url
-    # comment( "base=%s" % base )
-    for tev in os.listdir( base ):
-        fullpath = os.path.join( base, tev )
-        if not os.path.isdir( fullpath ):
-            continue
-        tevHasResults=False
-        for experiment in os.listdir( fullpath ):
-            exppath = os.path.join( fullpath, experiment )
-            if not os.path.isdir( exppath ):
-                continue
-            if os.listdir( exppath ) == []:
-                comment( "%s/%s is empty. Delete it!" %( tev, experiment ) )
-                cmd = "rm -rf %s" % exppath
-                runCmd( cmd )
-            else:
-                tevHasResults=True
-        if not tevHasResults:
-            comment( "%s is empty. Delete it!" %( tev ) )
-            cmd = "rm -rf %s" % fullpath
-            runCmd( cmd )
-    return d
 
 def rmlog(dirname):
     """ clear the log file """
@@ -161,7 +47,7 @@ def rmdir(dirname):
             comment( "Removing temporary directory %s" % i )
             runCmd("rm -rf %s" % i )
 
-def clone(dirname):
+def clone( dirname : str ):
     """
     Git clone smodels itself into dirname, then remove .git, .gitignore,
     distribution, and test.
@@ -189,29 +75,6 @@ def makeClean(dirname):
     """
     comment( "Make clean ...." )
     runCmd("cd ../lib/ ; make clean")
-
-def fetchDatabase(tag,dirname):
-    """
-    Execute 'git clone' to retrieve the database.
-    """
-    dbversion = tag
-    comment( "git clone the database(this might take a while)" )
-    ## "v" is not part of semver
-    #cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
-    if False:
-        dbversion = "develop"
-    cmd = "cd %s; git clone --depth 1 -b %s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
-           (dirname, dbversion)
-
-    if dummyRun:
-        cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
-             ( dirname, dbversion )
-    runCmd( cmd )
-    ## remove cruft
-    rmcmd = "cd %s/smodels-database; " \
-            "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \
-            ( dirname )
-    runCmd( rmcmd )
 
 def cpMakefile ():
     """ copy dmakefile to database folder """
@@ -243,6 +106,8 @@ def cleanDatabase(dirname : str ):
         globs += glob.glob ( f"{File}/*.pyc" )
         globs += glob.glob ( f"{File}/old*" )
         for g in globs:
+            if not os.path.exists ( g ):
+                continue
             if not "convert.py" in g and not "databaseParticles.py" in g:
                 if os.path.isdir ( g ):
                     shutil.rmtree ( g )
@@ -258,22 +123,9 @@ def cleanDatabase(dirname : str ):
                 os.unlink( fullpath )
         clearJsons ( File )
 
-def clearGlobalInfos(path):
-    walker = os.walk(path)
-    for record in walker:
-        File=record[0]
-        # print( "record=",record )
-        for i in record[2]:
-            if i[0]=="T" and i[-4:]==".txt":
-                fullpath = os.path.join( File, i )
-                clearGlobalInfo( fullpath )
-        gIpath = os.path.join( File, "globalInfo.txt" )
-        if os.path.exists( gIpath ):
-            clearGlobalInfo( gIpath )
-
-def splitDatabase(filename,dirname):
+def moveFastlim ( filename , dirname ):
     """
-    Split up between the official database and the optional database
+    Split up between the official database and fastlim database
     """
     comment( "Now move all the non-official entries in the database." )
     cwd=os.getcwd()
@@ -420,46 +272,14 @@ def createDBRelease(output,tag,reuse):
         rmdir(dirname)
         mkdir(dirname) ## .. then create the temp dir
         cpMakefile() ## copy Makefile if doesnt exist, for convenience only
-        fetchDatabase(tag,dirname) ## git clone the database
+        cloneDatabase(tag,dirname) ## git clone the database
     cleanDatabase(dirname) ## clean up database, remove orig, validated
     clearTxtFiles(dirname) ## now clear up all txt files
-    splitDatabase(output,dirname) ## split database into official and optional
-    db=removeNonValidated(dirname,reuse) ## remove all non-validated analyses
-    removeNonAggregated(db,dirname,reuse) ## remove all non-validated analyses
+    moveFastlim(output,dirname) ## split database into official and optional
+    db = createDatabase ( dirname, reuse ) ## load the database
+    removeNonValidated(db,dirname) ## remove all non-validated analyses
+    moveNonAggregated(db,dirname) ## move all non-aggregated analyses to separate folder
     createDBTarball(output,dirname) ## here we go! create!
-    isDummy()
-
-def create(output,tag):
-    """
-    Create a tarball for distribution.
-    """
-
-    dirname = output
-    if os.path.isdir(dirname):
-        comment('Folder %s already exists. Remove it before creating the tarball %s.tgz' %(output,output))
-        return False
-    isDummy()
-    rmlog() ## first remove the log file
-    comment( "Creating tarball for distribution, version %s" % version )
-    makeClean(dirname)
-    rmdir(dirname)
-    mkdir(dirname) ## .. then create the temp dir
-    clone(dirname) ## ... clone smodels into it ...
-    fetchDatabase(tag,dirname) ## git clone the database
-    cleanDatabase(dirname) ## clean up database, remove orig, validated
-    # sys.exit()
-    splitDatabase(otuput,dirname) ## split database into official and optional
-    removeNonValidated(dirname) ## remove all non-validated analyses
-    clearTxtFiles(dirname) ## now clear up all txt files
-    convertRecipes(dirname)
-    makeDocumentation(dirname)
-    rmExtraFiles(dirname) ## ... remove unneeded files ...
-    rmpyc(dirname) ## ...  remove the pyc files created by makeDocumentation ...
-    rmlog(dirname)  ##Make sure to remove log files
-    createTarball(output,dirname) ## here we go! create!
-    test(output,dirname)
-    # rmdir(dirname)
-    testDocumentation(dirname)
     isDummy()
 
 def main():
