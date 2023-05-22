@@ -12,10 +12,12 @@
 """
 
 from __future__ import print_function
-import pickle, os, sys, argparse, time, copy
+import pickle, os, sys, argparse, time, copy, glob
 import hashlib
 import pathlib
 import colorama
+import gzip, shutil
+
 if sys.version[0]=="2":
     import commands as CMD
 else:
@@ -120,6 +122,13 @@ def main():
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
+        tarballs = glob.glob ( f"{dbname}/*.tar.gz" )
+        tarballs += glob.glob ( f"{dbname}/*.tgz" )
+        if len(tarballs)>0:
+            t = [ x.replace(dbname+"/","").replace(dbname,"") for x in tarballs ]
+            print ( f"there are tarballs [{','.join(t)}] in {dbname}. Will explode them." )
+            for t in tarballs:
+                shutil.unpack_archive( filename=t, extract_dir=dbname)
         force_load = None
         if args.txnamevalues:
             print ( "[publishDatabasePickle] building with txname values!" )
@@ -294,7 +303,6 @@ def main():
         print ( a )
 
     home = os.environ["HOME"]
-    import shutil
     hasSSHpass = (shutil.which("sshpass")!=None)
     if ssh and not args.dry_run:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )

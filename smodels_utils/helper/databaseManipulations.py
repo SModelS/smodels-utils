@@ -64,8 +64,7 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     :param invert: if True, then invert the selection, keep *only* fastlim
     :param picklefile: picklefile to store fastlim-free database
     """
-    print ( "[databaseManipulations] before removal of fastlim",len(db.expResultList),\
-            "results" )
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of fastlim {len(db.expResultList)} results" )
     filtered = filterFastLimFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     # dbverold = dbverold.replace(".","")
@@ -73,8 +72,7 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     if invert:
         db.subs[0].txt_meta.databaseVersion = "fastlim" + dbverold
     db.subs = [ db.subs[0] ]
-    print ( "[databaseManipulations] after removal of fastlim",len(db.expResultList),
-            "results" )
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of fastlim {len(db.expResultList)} results" )
     if not invert:
         db.txt_meta.hasFastLim = False
         db.txt_meta.databaseVersion = "fastlim" + dbverold # FIXME why?
@@ -110,16 +108,14 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     :param invert: if True, then invert the selection, keep *only* nonaggregated
     :param picklefile: picklefile to store trimmed database
     """
-    print ( "[databaseManipulations] before removal of nonaggregated",\
-            len(db.expResultList), "results" )
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of nonaggregated {len(db.expResultList)} results" )
     filtered = filterNonAggregatedFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     db.subs[0].expResultList = filtered
     if invert:
         db.subs[0].txt_meta.databaseVersion = "nonaggregated" + dbverold
     db.subs = [ db.subs[0] ]
-    print ( "[databaseManipulations] after removal of nonaggregated",\
-            len(db.expResultList), "results" )
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of nonaggregated {len(db.expResultList)} results" )
     if not invert:
         db.txt_meta.hasFastLim = False
         db.txt_meta.databaseVersion = dbverold
@@ -220,9 +216,9 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
                 continue
         if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
             ctr+=1
-            if ctr < 4:
+            if ctr < 3:
                 print ( "[databaseManipulations] removing fastlim", gI.id )
-            if ctr == 4:
+            if ctr == 3:
                 print ( "                        .... (and a few more) ... " )
             fastlimList.append ( e )
         else:
@@ -293,13 +289,17 @@ def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
         ret.append ( ana )
     return ret
 
+def removalOrSelection ( invert : bool ):
+    if invert:
+        return "selection"
+    return "removal"
+
 def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     """ remove superseded results from database db
     :param invert: if true, then create superseded-only db
     :returns: database but stores it also in temp.pcl
     """
-    print ( "[databaseManipulations] before removal of superseded",len(db.expResultList),\
-            "results" )
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of superseded {len(db.expResultList)} results" )
     filteredList = []
     ctr = 0
     supers, newers = [], []
@@ -307,8 +307,7 @@ def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     supers = filterSupersededFromList ( olders, invert )
     db.subs[0].expResultList = supers
     db.subs = [ db.subs[0] ]
-    print ( "[databaseManipulations] after removal of superseded",len(db.expResultList),
-            "results" )
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of superseded {len(db.expResultList)} results" )
     if invert:
         db.subs[0].databaseVersion = "superseded" + db.databaseVersion
     db.createBinaryFile( outfile )
