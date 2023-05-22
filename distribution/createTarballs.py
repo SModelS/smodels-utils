@@ -65,7 +65,9 @@ def removeNonAggregated( db, dirname, reuse ):
     from smodels_utils.helper.databaseManipulations import filterNonAggregatedFromList
     # print ( f"now i need to remove all non-aggregated from {str(db)} dirname is {dirname} reuse is {reuse}" )
     ers = db.expResultList
+    print ( f"@@@ now filtering non aggregated! {len(ers)}" )
     nonaggregated = filterNonAggregatedFromList ( ers, invert=True )
+    print ( f"@@@ now filtering non aggregated! filtered: {len(nonaggregated)}" )
     for na in nonaggregated:
         path = na.globalInfo.path
         sqrts = float ( na.globalInfo.sqrts.asNumber() )
@@ -78,9 +80,10 @@ def removeNonAggregated( db, dirname, reuse ):
         pathmaker = Path ( newpath )
         pathmaker.mkdir ( parents=True, exist_ok=True )
         cmd = f"mv {path} {newpath}"
-        #print ( f"na", na.globalInfo.id, path, "sqrts", sqrts )
+        if os.path.exists ( newpath ):
+            cmd = f"rm -r {path}"
         o = subprocess.getoutput ( cmd )
-        #print ( f"o {o}" )
+        print ( f"(re)moving {cmd}: {o}" )
     tarmaker = "tar czvf smodels-nonaggregated.tar.gz smodels-nonaggregated/*"
     o = subprocess.getoutput ( tarmaker )
 
@@ -242,7 +245,9 @@ def clearGlobalInfo(filename):
     f=open(filename)
     lines=f.readlines()
     f.close()
-    g=open("/tmp/tmp.txt","w")
+    # fname = "/tmp/tmp.txt"
+    fname = "/dev/shm/tmp.txt"
+    g=open( fname,"wt")
     skip = [ "publishedData", "comment", "private", "checked", "xrange", \
              "prettyName", "susyProcess", "dataUrl", "validationTarball", "yrange" ]
     #skip.append( "validated" )
@@ -259,7 +264,7 @@ def clearGlobalInfo(filename):
         if not to_skip:
             g.write( line )
     g.close()
-    cmd = "cp /tmp/tmp.txt %s" % filename
+    cmd = f"cp {fname} {filename}"
     run( cmd, prtMsg=False )
 
 def cleanDatabase(dirname):
@@ -293,7 +298,7 @@ def cleanDatabase(dirname):
         for r in removals:
             if r in File:
                 cmd = "rm -rf %s" % File
-                run( cmd )
+                run( cmd, prtMsg = False )
         for rf in rmFiles:
             fullpath = os.path.join( File, rf )
             if os.path.exists( fullpath):
