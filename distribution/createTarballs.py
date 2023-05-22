@@ -10,19 +10,12 @@
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
 from pathlib import Path
+from distributionHelpers import clearGlobalInfo, runCmd, RED, GREEN, YELLOW, RESET
+from smodels.experiment.databaseObj import Database
+from typing import Union
 sys.path.insert(0,"../")
 
 dummyRun=False ## True
-try:
-    RED = colorama.Fore.RED
-    GREEN = colorama.Fore.GREEN
-    YELLOW = colorama.Fore.YELLOW
-    RESET = colorama.Fore.RESET
-except:
-    RED = "\033[31;11m"
-    GREEN = "\033[32;11m"
-    YELLOW = "\033[33;11m"
-    RESET = "\033[7;0m"
 
 def comment( text, urgency="info" ):
     col=YELLOW
@@ -42,23 +35,9 @@ def isDummy( ):
         comment( "DUMMY RUN!!!!" )
     return dummyRun
 
-def run( cmd, prtMsg = True ):
-    cmd=cmd.strip()
-    if prtMsg:
-        print( "%s[createTarballs] cmd: %s%s" %(GREEN,cmd,RESET) )
-    f=open("/tmp/create.log","a")
-    f.write( "cmd: %s\n" %(cmd) )
-    # print('CMD=',cmd)
-    o=subprocess.check_output( cmd, shell=True )
-    if len(o)>0:
-        print("[createTarballs] %.80s" % o )
-        f.write( str(o) + "\n" )
-    f.close()
-    return str(o)
-
-def removeNonAggregated( db, dirname, reuse ):
+def removeNonAggregated( db : Database, dirname : str, reuse : bool ):
     """ remove all non-aggregated analyses from
-        database """
+        database, and into smodels-nonaggregated """
     comment( f"starting removeNonAggregated" )
     if not os.path.exists ( "smodels-nonaggregated" ):
         os.mkdir ( "smodels-nonaggregated" )
@@ -87,17 +66,17 @@ def removeNonAggregated( db, dirname, reuse ):
             cmd = f"rm -r {path}"
     tarmaker = "tar czvf smodels-nonaggregated.tar.gz smodels-nonaggregated/*"
     o = subprocess.getoutput ( tarmaker )
+    return db
 
-def removeNonValidated(dirname, reuse ):
+def removeNonValidated( dirname : str, reuse : bool ):
     """ remove all non-validated analyses from
         database """
     comment( f"starting removeNonValidated" )
-    from smodels.experiment.databaseObj import Database
     load = "txt"
     if reuse:
         load = None
     comment( f"Now build the database pickle file: {load}" )
-    d = Database( "%s/smodels-database" % dirname, force_load = load,
+    d = Database( f"{dirname}/smodels-database", force_load = load,
                   progressbar=True )
     comment( "Now remove non-validated results." )
     ers = d.expResultList
@@ -106,7 +85,7 @@ def removeNonValidated(dirname, reuse ):
         if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
             comment( "%s is private. delete!" %( er.globalInfo.id ) )
             cmd = "rm -r %s" %( er.path )
-            run( cmd )
+            runCmd( cmd )
         else:
             hasDataSets=False
             for dataset in er.datasets:
@@ -117,21 +96,21 @@ def removeNonValidated(dirname, reuse ):
                         #comment( "%s/%s/%s is not validated. Delete it." % \
                         #         ( er, dataset, txn ) )
                         cmd="rm '%s'" % txn.path
-                        run( cmd )
+                        runCmd( cmd )
                     else:
                         hasTxNames=True
                 if not hasTxNames:
                         comment( "%s/%s has no validated txnames. remove folder." %\
                                  (er, dataset ) )
                         cmd = "rm -r '%s'" % dataset.path
-                        run( cmd )
+                        runCmd( cmd )
                 if hasTxNames:
                     hasDataSets=True
             if not hasDataSets:
                 comment( "%s has no validated datasets. remove folder." % \
                          (er) )
                 cmd = "rm -rf %s" % er.path
-                run( cmd )
+                runCmd( cmd )
     base = d.subs[0].url
     # comment( "base=%s" % base )
     for tev in os.listdir( base ):
@@ -146,13 +125,13 @@ def removeNonValidated(dirname, reuse ):
             if os.listdir( exppath ) == []:
                 comment( "%s/%s is empty. Delete it!" %( tev, experiment ) )
                 cmd = "rm -rf %s" % exppath
-                run( cmd )
+                runCmd( cmd )
             else:
                 tevHasResults=True
         if not tevHasResults:
             comment( "%s is empty. Delete it!" %( tev ) )
             cmd = "rm -rf %s" % fullpath
-            run( cmd )
+            runCmd( cmd )
     return d
 
 def rmlog(dirname):
@@ -170,7 +149,7 @@ def mkdir(dirname):
     ## for i in( dirname, fastlimdir ):
     for i in( [ dirname ] ): ## , fastlimdir ):
         comment("Creating temporary directory %s" % i )
-        run( "mkdir -p %s" % i )
+        runCmd( "mkdir -p %s" % i )
 
 def rmdir(dirname):
     """
@@ -179,7 +158,7 @@ def rmdir(dirname):
     for i in( dirname, ): ## fastlimdir ):
         if os.path.exists(i):
             comment( "Removing temporary directory %s" % i )
-            run("rm -rf %s" % i )
+            runCmd("rm -rf %s" % i )
 
 def clone(dirname):
     """
@@ -191,24 +170,24 @@ def clone(dirname):
 #     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
     if dummyRun:
         cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
-    run( cmd )
+    runCmd( cmd )
     for i in os.listdir( dirname ):
         if i in [".git", ".gitignore", "distribution", "test" ] or i.endswith ( ".pcl" ):
-            run( "rm -rf %s/%s" %(dirname,i) )
+            runCmd( "rm -rf %s/%s" %(dirname,i) )
 
 def rmpyc(dirname):
     """
     Remove .pyc files.
     """
     comment( "Removing all pyc files ... " )
-    run("cd %s; rm -f *.pyc */*.pyc */*/*.pyc" % dirname )
+    runCmd("cd %s; rm -f *.pyc */*.pyc */*/*.pyc" % dirname )
 
 def makeClean(dirname):
     """
     Execute 'make clean' in host directory.
     """
     comment( "Make clean ...." )
-    run("cd ../lib/ ; make clean")
+    runCmd("cd ../lib/ ; make clean")
 
 def fetchDatabase(tag,dirname):
     """
@@ -226,13 +205,12 @@ def fetchDatabase(tag,dirname):
     if dummyRun:
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
              ( dirname, dbversion )
-    run( cmd )
+    runCmd( cmd )
     ## remove cruft
     rmcmd = "cd %s/smodels-database; " \
             "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \
             ( dirname )
-    run( rmcmd )
-
+    runCmd( rmcmd )
 
 def cpMakefile ():
     """ copy dmakefile to database folder """
@@ -241,39 +219,12 @@ def cpMakefile ():
     cmd = "cp dmakefile database/Makefile"
     o = subprocess.getoutput ( cmd )
 
-def clearGlobalInfo(filename):
-    # print ( "[createTarballs] checking", filename )
-    f=open(filename)
-    lines=f.readlines()
-    f.close()
-    # fname = "/tmp/tmp.txt"
-    fname = "/dev/shm/tmp.txt"
-    g=open( fname,"wt")
-    skip = [ "publishedData", "comment", "private", "checked", "xrange", \
-             "prettyName", "susyProcess", "dataUrl", "validationTarball", "yrange" ]
-    #skip.append( "validated" )
-    # skip.append( "axes" )
-    # skip.append( "figureUrl" )
-    for line in lines:
-        to_skip = False
-        p1 = line.find("#")
-        if p1 == 0:
-            to_skip = True
-        for s in skip:
-            if line.find(s)==0:
-                to_skip = True
-        if not to_skip:
-            g.write( line )
-    g.close()
-    cmd = f"cp {fname} {filename}"
-    run( cmd, prtMsg=False )
-
-def cleanDatabase(dirname):
+def cleanDatabase(dirname : str ):
     """
     Clean up the database, e.g. remove orig and validation folders
     """
-    comment( "Now cleaning up database in %s/smodels-database" % dirname )
-    fullpath = "%s/smodels-database" % dirname
+    fullpath = f"{dirname}/smodels-database"
+    comment( f"Now cleaning up database in {fullpath}" )
 
     walker = os.walk( fullpath )
     for record in walker:
@@ -283,12 +234,12 @@ def cleanDatabase(dirname):
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
                     "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "exclusion_lines.json", "general.comment", "README", "convert.pyc", "unused_files.txt", "convertOld.py", "plotRatios.py", "plotRatios.sh", "ratios.txt" ]
         globs = glob.glob ( f"{File}/*log" )
-        globs = glob.glob ( f"{File}/__pycache__" )
-        globs = glob.glob ( f"{File}/*.py" )
-        globs = glob.glob ( f"{File}/*.sh" )
-        globs = glob.glob ( f"{File}/*.png" )
-        globs = glob.glob ( f"{File}/*.rst" )
-        globs = glob.glob ( f"{File}/*.pyc" )
+        globs += glob.glob ( f"{File}/__pycache__" )
+        globs += glob.glob ( f"{File}/*.py" )
+        globs += glob.glob ( f"{File}/*.sh" )
+        globs += glob.glob ( f"{File}/*.png" )
+        globs += glob.glob ( f"{File}/*.rst" )
+        globs += glob.glob ( f"{File}/*.pyc" )
         globs += glob.glob ( f"{File}/old*" )
         for g in globs:
             if not "convert.py" in g and not "databaseParticles.py" in g:
@@ -299,50 +250,12 @@ def cleanDatabase(dirname):
         for r in removals:
             if r in File:
                 cmd = "rm -rf %s" % File
-                run( cmd, prtMsg = False )
+                runCmd( cmd, prtMsg = False )
         for rf in rmFiles:
             fullpath = os.path.join( File, rf )
             if os.path.exists( fullpath):
                 os.unlink( fullpath )
-        clarifyJsons ( File )
-
-def clarifyJsons ( path ):
-        gI = f"{path}/globalInfo.txt"
-        if not os.path.exists ( gI ):
-            return
-        usedJsons = set()
-        f = open ( gI, "rt" )
-        lines = f.readlines()
-        f.close()
-        for i,line in enumerate(lines):
-            p1 = line.find("#")
-            if p1 >= 0:
-                line = line[:p1]
-            line = line.strip()
-            if line == "":
-                continue
-            if not "jsonFiles:" in line and not "jsonFiles_FullLikelihood:" in line:
-                continue
-            txt = line.replace("jsonFiles:","")
-            txt = txt.replace("jsonFiles_FullLikelihood:","")
-            j=i
-            while "{" in txt and not "}" in txt and not j >= (len(lines)-1):
-                # seems like we need the next line
-                j+=1
-                txt += lines[j]
-            try:
-                D = eval(txt)
-            except Exception as e:
-                D = {}
-            for k in D.keys():
-                usedJsons.add ( k )
-        jsons = glob.glob ( f"{path}/*.json" )
-        for js in jsons:
-            fname = os.path.basename ( js )
-            remove = fname not in usedJsons
-            if remove:
-                print ( f"[createTarballs] removing {fname}" )
-                os.unlink ( js )
+        clearJsons ( File )
 
 def clearGlobalInfos(path):
     walker = os.walk(path)
@@ -367,10 +280,10 @@ def splitDatabase(filename,dirname):
     comment( "debug dirname: %s" % dirname )
     cmd = "cd %s/smodels-database/; %s/moveFastlimResults.py" % \
          ( dirname, cwd )
-    run( cmd )
+    runCmd( cmd )
     cmd = "mv ./smodels-fastlim.tgz %s/%s-fastlim-1.0.tgz" % \
          (cwd, filename)
-    run( cmd )
+    runCmd( cmd )
 
 def clearTxtFiles(dirname):
     clearGlobalInfos( "%s/smodels-database/" % dirname )
@@ -400,7 +313,7 @@ def createTarball(filename,dirname):
     cmd = f"cp -r {dirname} {dirname}.backup"
     subprocess.getoutput ( cmd )
     removePickles ( dirname )
-    run("tar czvf %s.tgz %s" %(filename, dirname))
+    runCmd("tar czvf %s.tgz %s" %(filename, dirname))
 
 def createDBTarball(filename,dirname):
     """
@@ -408,7 +321,7 @@ def createDBTarball(filename,dirname):
     """
     comment( "Create tarball %s.tgz" %filename )
     removePickles ( dirname )
-    run("cd %s; tar czvf %s.tgz smodels-database" %(dirname, filename ))
+    runCmd("cd %s; tar czvf %s.tgz smodels-database" %(dirname, filename ))
 
 def rmExtraFiles(dirname):
     """
@@ -419,7 +332,7 @@ def rmExtraFiles(dirname):
                "docs/documentation/smodels.log", "inputFiles/slha/complicated.slha" ]
     for i in extras:
         cmd = "rm -rf %s/%s" %( dirname, i )
-        run( cmd )
+        runCmd( cmd )
 
 def convertRecipes(dirname):
     """
@@ -427,16 +340,16 @@ def convertRecipes(dirname):
     """
     comment( "Converting the recipes" )
     cmd = "cd %s/docs/manual/source/recipes/; make convert remove_ipynb" % dirname
-    run(cmd)
+    runCmd(cmd)
 
 def makeDocumentation(dirname):
     """
     create the documentation via sphinx """
     comment( "Creating the documentation" )
     cmd = "cd %s/docs/manual/; make clean html; rm -r make.bat Makefile source " % dirname
-    run(cmd)
+    runCmd(cmd)
     cmd = "cd %s/docs/documentation/; make clean html; rm -r make.bat  Makefile source update" % dirname
-    run(cmd)
+    runCmd(cmd)
 
 def explode(filename):
     """
@@ -444,7 +357,7 @@ def explode(filename):
     """
     comment( "Explode the tarball ..." )
     cmd = "tar xzvf %s" %filename
-    run(cmd)
+    runCmd(cmd)
 
 def make(dirname):
     """
@@ -452,7 +365,7 @@ def make(dirname):
     """
     comment( "Now run make in dirname/lib ..." )
     cmd = "cd %s/lib; make" % dirname
-    run(cmd)
+    runCmd(cmd)
 
 def runExample(dirname):
     """
@@ -460,10 +373,10 @@ def runExample(dirname):
     """
     comment( "Now run Example.py ..." )
     cmd = "cd %s/; ./Example.py 2>&1 | tee out.log" % dirname
-    run(cmd)
+    runCmd(cmd)
     comment( "Now check diff" )
     cmd = "diff -u default.log %s/out.log" % dirname
-    d = run( cmd )
+    d = runCmd( cmd )
     if len( d ) > 4:
         comment( "Example test failed!!", "error" )
     else:
@@ -486,7 +399,7 @@ def testDocumentation(dirname):
     """ Test the documentation """
     comment( "Test the documentation" )
     cmd="ls %s/docs/manual/build/html/index.html" % dirname
-    run(cmd)
+    runCmd(cmd)
 
 def createDBRelease(output,tag,reuse):
     """
