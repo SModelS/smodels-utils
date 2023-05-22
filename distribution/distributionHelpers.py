@@ -108,9 +108,11 @@ def clearJsons ( path : str ):
 
 if __name__ == "__main__":
     # FIXME maybe i find a better usage for this
+    """
     ap = argparse.ArgumentParser( description="cleaner for individual files" )
     defFile = "database/smodels-database/13TeV/CMS/CMS-PAS-SUS-16-052-eff/globalInfo.txt"
     ap.add_argument('-c', '--clean', help=f'name of tarball filename [{defFile}]',
                     type = str, default=defFile )
     args = ap.parse_args()
-    clearGlobalInfo ( args.clean )
+    clearGlobalInfo ( defFile )
+    """
