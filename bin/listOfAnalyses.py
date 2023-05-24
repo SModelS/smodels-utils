@@ -40,7 +40,7 @@ class Lister:
         modifier = expResModifier.ExpResModifier ( options )
         from protomodels.plotting import plotDBDict
         poptions = { "topologies": None, "roughviz": False }
-        poptions["dictfile"] = "./dbtemp.dict"
+        poptions["dictfile"] = "./temp.dict"
         poptions["show"] = True
         poptions["title"] = ""
         poptions["Zmax"] = 3.25
@@ -56,7 +56,8 @@ class Lister:
         cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
-        os.unlink ( "dbtemp.dict" )
+        if os.path.exists ( poptions["dictfile"] ):
+            os.unlink ( poptions["dictfile"] )
 
     def convert ( self, string ):
         ret = string.replace ( ">=", "&ge;" )
