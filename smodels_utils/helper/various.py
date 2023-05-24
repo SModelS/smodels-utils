@@ -10,6 +10,7 @@
 
 import os, sys
 import logging as logger
+from smodels.experiment.expResultObj import ExpResult
 
 def removeAnaIdSuffices ( anaId ):
     """ given  analysis id <anaId>, remove all kinds of suffices """
@@ -239,7 +240,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     ipath = files[0]
     return ipath
 
-def hasLLHD ( analysis ) :
+def hasLLHD ( analysis : ExpResult ) -> bool:
     """ can one create likelihoods from analyses?
         true for efficiency maps and upper limits with expected values. """
     if len ( analysis.datasets)>1:                                                            return True
