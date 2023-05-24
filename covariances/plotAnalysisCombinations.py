@@ -7,13 +7,13 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import sys,os,time,timeit
+import sys,os,timeit
 sys.path.insert(0, "../")
 sys.path.insert(0, os.path.expanduser("~/smodels"))
 from smodels.tools import modelTester
 from testAnalysisCombinations import createLlhds
 import numpy as np
-
+import pyslha
 import smodels_utils.plotting.mpkitty as plt
 # import matplotlib.pyplot as plt
 
@@ -22,8 +22,7 @@ def getCombination(inputFile, parameterFile):
     from smodels.tools.physicsUnits import fb, GeV, TeV, pb
     from smodels.theory.model import Model
     from smodels.share.models.SMparticles import SMList
-    from smodels.theory.theoryPrediction import theoryPredictionsFor
-    from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
+    from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
     from smodels.theory import decomposer
     from smodels.theory import theoryPrediction
 
@@ -77,7 +76,8 @@ def getCombination(inputFile, parameterFile):
     for expResult in listOfExpRes:
         theorypredictions = theoryPredictionsFor(expResult, smstoplist,
                                                  useBestDataset=useBest, combinedResults=combineResults,
-                                                 marginalize=False)
+                                                 #marginalize=False
+                                                 )
         if not theorypredictions:
             continue
         allPredictions += theorypredictions._theoryPredictions
@@ -104,7 +104,6 @@ def getLlhds(combiner,setup):
     muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
     expected = setup["expected"]
     normalize = setup["normalize"]
-
     llhds = {'combined' : np.ones(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
     tpreds = combiner.theoryPredictions
@@ -112,7 +111,7 @@ def getLlhds(combiner,setup):
         Id = t.analysisId()
         #t.computeStatistics( expected = expected )
         lsm = t.lsm()
-        l = np.array([t.likelihood(mu,expected=expected) for mu in muvals])
+        l = np.array([t.likelihood(mu,expected=expected,return_nll=False) for mu in muvals])
         # l_prev = np.array([t.likelihood(mu,expected=expected,useCached=False,previous=True) for mu in muvals])
         for i in range(len(muvals)):
             # If the fit did not converge, set the combined likelihood to nan
@@ -152,7 +151,7 @@ def getPlot(inputFile, parameterFile,options):
 
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
-    setup = {'expected' : False,'normalize' : True,
+    setup = {'expected' : True,'normalize' : True,
               'murange' : (options["mumin"],options["mumax"]), 'step_mu' : 0.1}
 
     if parser.has_section("setup"):
@@ -173,10 +172,11 @@ def getPlot(inputFile, parameterFile,options):
         tpDict[ana.dataset.globalInfo.id] = idDict
         tpDict
 
-    muhat = combiner.muhat()
-    lmax = combiner.lmax()
-    lsm = combiner.lsm()
-    lbsm = combiner.likelihood(mu=1.0)
+
+    muhat = combiner.muhat(expected = setup["expected"])
+    lmax = combiner.lmax(expected = setup["expected"])
+    lsm = combiner.lsm(expected = setup["expected"])
+    lbsm = combiner.likelihood(mu=1.0,expected = setup["expected"])
     ymin = 0.
 
     fig = plt.figure(figsize=plotOptions['figsize'])
@@ -201,7 +201,7 @@ def getPlot(inputFile, parameterFile,options):
             robs = combiner.getRValue(expected = False)
             rexp = combiner.getRValue(expected = True)
             #Draw vertical lines for muhat
-            if setup['murange'][0] <= muhat <= setup['murange'][1]:
+            if muvals[0] <= muhat <= muvals[-1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
             x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
         else:
@@ -219,14 +219,25 @@ def getPlot(inputFile, parameterFile,options):
             lbl=None
 
         #Draw vertical lines for ulmu
-        if setup['murange'][0] <= ulmu <= setup['murange'][1]:
+        if muvals[0] <= ulmu <= muvals[-1]:
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
 
     plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
-    if setup["normalize"]:
-        plt.ylabel('Normalized Likelihood', fontsize=18)
+    if setup["expected"] == "posteriori":
+        ylab = 'post-fit expected '
+        shortExpType = 'apost'
+    elif setup["expected"]:
+        ylab = 'pre-fit expected '
+        shortExpType = 'exp'
     else:
-        plt.ylabel('Likelihood', fontsize=18)
+        ylab = 'observed '
+        shortExpType = 'obs'
+    if setup["normalize"]:
+        ylab = ylab + 'normalized likelihood'
+        plt.ylabel(ylab, fontsize=18)
+    else:
+        ylab = ylab + 'likelihood'
+        plt.ylabel(ylab, fontsize=18)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
 
@@ -237,7 +248,15 @@ def getPlot(inputFile, parameterFile,options):
     if parser.has_option("options", "combineSRs"):
         if parser.getboolean("options", "combineSRs"):
             endFileName = 'combined'
-    plt.title( r'Wino-Higgsino, $M_2=500 GeV$, $\mu=200 GeV$' + ', ' + 'combined SRs'+ '\n' +
+            CSR = True
+
+    outputFile = outputFile.replace('.png','_'+endFileName+'_'+shortExpType+'.png')
+    data = pyslha.read(inputFile)
+    m1 = data.blocks['EXTPAR'][1]
+    m2 = data.blocks['EXTPAR'][2]
+    mu = data.blocks['EXTPAR'][23]
+
+    plt.title( rf'$M_1$ = {m1} GeV, $M_2$ = {m2} GeV, $\mu$ = {mu} GeV,' + f' combined SR = {CSR}'+ '\n' +
               r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm),fontsize=20)
 
     if plotOptions['xlog']:
@@ -275,6 +294,7 @@ def main():
     args = ap.parse_args()
     t0 = timeit.default_timer()
 
+    args.output = os.path.basename(args.filename).replace('.slha','_llhds.png')
     options = { "mumin": args.mumin, "mumax": args.mumax,
                 "output": args.output }
     fig = getPlot(args.filename, args.parameterFile, options)
