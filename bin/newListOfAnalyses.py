@@ -42,7 +42,7 @@ class Lister:
         modifier = expResModifier.ExpResModifier ( options )
         from protomodels.plotting import plotDBDict
         poptions = { "topologies": None, "roughviz": False }
-        poptions["dictfile"] = "./dbtemp.dict"
+        poptions["dictfile"] = "./temp.dict"
         poptions["show"] = True
         poptions["title"] = ""
         poptions["Zmax"] = 3.25
@@ -58,7 +58,8 @@ class Lister:
         cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
-        os.unlink ( "dbtemp.dict" )
+        if os.path.exists ( poptions["dictfile"] ):
+            os.unlink ( poptions["dictfile"] )
 
     def convert ( self, string ):
         ret = string.replace ( ">=", "&ge;" )
@@ -148,10 +149,10 @@ class Lister:
         return pvaluesplot
 
     def footer ( self ):
-        self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
-        self.f.write ( "<a name='A2'>(2)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n" )
+        self.f.write ( "<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n" )
+        self.f.write ( "\n\n<a name='A3'>(3)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
+        self.f.write ( "<a name='A4'>(4)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         if self.includeFastlim:
             self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
@@ -230,8 +231,8 @@ class Lister:
         ret.append ( "obs. ULs" )
         ret.append ( "EMs" )
         if self.likelihoods:
-            ret.append ( "exp. ULs [(3)](#A3)" )
-            ret.append ( "SR comb. [(4)](#A4)" )
+            ret.append ( "exp. ULs [(1)](#A1)" )
+            ret.append ( "SR comb. [(2)](#A2)" )
         return ret
 
     def moveToGithub( self ):
@@ -334,7 +335,7 @@ class Lister:
         fastlim = ( "created from fastlim" in comment )
         topos = list ( set ( map ( str, ana.getTxNames() ) ) )
         homegrownd = {}
-        has = { "oul": False, "eul": False, "em": False }
+        has = { "oul": False, "eul": False, "em": False, "agg": False }
         for cana in canas:
             for ds in cana.datasets:
                 if ds.getType() == "efficiencyMap":
@@ -344,15 +345,18 @@ class Lister:
                     for txn in ds.txnameList:
                         if hasattr ( txn, "txnameDataExp" ):
                             has["eul"] = True
+            if "-agg" in cana.globalInfo.id:
+                has [ "agg" ] = True
             for i in cana.getTxNames():
                 if not self.ignore and i.validated not in [ True, "n/a", "N/A" ]:
                     print ( f"Error: validated is {i.validated} in {ana.globalInfo.id}:{i}. Don't know how to handle. Use '-i' if you want me to skip this issue." )
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
-                    homegrownd[str(i)] = " [(1)](#A1)"
-                if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                    homegrownd[str(i)] = " [(2)](#A2)"
+                    homegrownd[str(i)] = " [(1)](#A3)"
+                if has["agg"]:
+                # if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
+                    homegrownd[str(i)] = " [(2)](#A4)"
 
         topos.sort()
         topos_s = ""
@@ -396,7 +400,7 @@ class Lister:
         self.f.write ( f" {hasEM} |" ) 
         if self.likelihoods:
             self.f.write ( f" {haseUL} |" )
-            llhd = "".join ( [ self.whatLlhdInfo ( x ) for x in canas ] )
+            llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
             self.f.write ( f" {llhd} |" )
         self.f.write ( "\n" )
 
@@ -478,6 +482,9 @@ class Lister:
         argparser.add_argument ( '-i', '--ignore', action='store_true',
                                   help='ignore the validation flags of analysis '\
                                   '(i.e. also add non-validated results)' )
+        argparser.add_argument ( '-s', '--no_pngs', action='store_true',
+                                  help='do not regenerate the significances plots'\
+                                  '(i.e. also add non-validated results)' )
         argparser.add_argument ( '-l', '--likelihoods', action='store_true',
                                  help='add info about likelihoods' )
         argparser.add_argument ( '-f', '--fastlim', action='store_true',
@@ -526,7 +533,8 @@ class Lister:
         print ( "[listOfAnalyses] %d home-grown now" % self.n_homegrown )
         self.footer ( )
         self.diff()
-        self.metaStatisticsPlot()
+        if not args.no_pngs:
+            self.metaStatisticsPlot()
         self.moveToGithub( )
         self.writeStatsFile()
 
