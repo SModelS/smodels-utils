@@ -54,7 +54,7 @@ def startServer ( rundir, dry_run, time ):
         a=subprocess.run ( cmd )
         print ( "returned: %s" % a )
 
-def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
+def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
                 cheatcode, rundir, maxsteps, select, do_combine, record_history,
                 seed, update_hiscores, stopTeleportationAfter ):
     """ prepare everything for a single job
@@ -63,7 +63,6 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param jmax: id of last walker
     :param cont: pickle file to start with, "" means start from SM
     :param dbpath: path to database
-    :param lines: lines of run_walker.sh
     :param dry_run: dont act, just tell us what you would do
     :param keep: keep temporary files, for debugging
     :param time: time in hours
@@ -103,16 +102,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                     maxsteps, seed, select, do_combine, record_history, update_hiscores, \
                     stopTeleportationAfter  ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
-    Dir = getDirname ( rundir )
-    # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    tf = "%s/RUN%s_%s.sh" % ( rundir, Dir, jmin )
-    with open(tf,"wt") as f:
-        for line in lines:
-            f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
-    os.chmod( tf, 0o755 )
-    # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    #remove ( tf, keep )
-    #remove ( runner, keep )
+    # Dir = getDirname ( rundir )
 
     ram = max ( 8000, 3500. * ( jmax - jmin ) )
     if "comb" in rundir: ## combinations need more RAM
@@ -138,7 +128,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
-    cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    cmd += [ "--mem", f"{ram}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( "/scratch-cbe/users/wolfgan.waltenberger", "$BASE" )
     if dry_run:
@@ -833,8 +823,8 @@ def main():
             runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
             continue
 
-        with open("run_walker.sh","rt") as f:
-            lines=f.readlines()
+        #with open("run_walker.sh","rt") as f:
+        #    lines=f.readlines()
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
         cheatcode = args.cheatcode
         if nmax == 0:
@@ -873,7 +863,7 @@ def main():
                     if seed != None: ## we count up
                         seed += (1+len(rundirs))*(1+nprocesses)
                     p = multiprocessing.Process ( target = runOneJob,
-                            args = ( i, imin, imax, cont, dbpath, lines, args.dry_run,
+                            args = ( i, imin, imax, cont, dbpath, args.dry_run,
                                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
                                      args.select, args.do_combine, args.record_history,
                                      seed, update_hiscores, args.stopTeleportationAfter ) )
