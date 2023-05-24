@@ -104,13 +104,14 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
-    ram = max ( 8000, 3500. * ( jmax - jmin ) )
+    ram = max ( 9000., 4500. * ( jmax - jmin ) )
     if "comb" in rundir: ## combinations need more RAM
         ram = ram * 1.2
     if "history" in rundir: ## history runs need more RAM
         ram = ram * 1.3
     if update_hiscores: ## make sure we have a bit more for that
         ram = ram * 1.2
+    ram=int(ram)
     proxies = glob.glob ( f"{rundir}/proxy*pcl" )
     if len(proxies)>0:
         ram = ram *.8
@@ -128,7 +129,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
-    cmd += [ "--mem", f"{ram}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
+    cmd += [ "--mem", f"{ram:d}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( "/scratch-cbe/users/wolfgan.waltenberger", "$BASE" )
     if dry_run:
