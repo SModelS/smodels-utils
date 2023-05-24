@@ -103,16 +103,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                     maxsteps, seed, select, do_combine, record_history, update_hiscores, \
                     stopTeleportationAfter  ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
-    Dir = getDirname ( rundir )
-    # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    tf = "%s/RUN%s_%s.sh" % ( rundir, Dir, jmin )
-    with open(tf,"wt") as f:
-        for line in lines:
-            f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
-    os.chmod( tf, 0o755 )
-    # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    #remove ( tf, keep )
-    #remove ( runner, keep )
+    # Dir = getDirname ( rundir )
 
     ram = max ( 8000, 3500. * ( jmax - jmin ) )
     if "comb" in rundir: ## combinations need more RAM
@@ -138,7 +129,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
-    cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    cmd += [ "--mem", f"{ram}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( "/scratch-cbe/users/wolfgan.waltenberger", "$BASE" )
     if dry_run:
