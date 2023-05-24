@@ -150,7 +150,7 @@ class Lister:
 
     def footer ( self ):
         self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
-        self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n" )
+        self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
         self.f.write ( "<a name='A3'>(3)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
         self.f.write ( "<a name='A4'>(4)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         if self.includeFastlim:
@@ -353,10 +353,10 @@ class Lister:
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
-                    homegrownd[str(i)] = " [(1)](#A3)"
+                    homegrownd[str(i)] = " [(3)](#A3)"
                 if has["agg"]:
                 # if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                    homegrownd[str(i)] = " [(2)](#A4)"
+                    homegrownd[str(i)] = " [(4)](#A4)"
 
         topos.sort()
         topos_s = ""
