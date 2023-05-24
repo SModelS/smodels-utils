@@ -336,7 +336,10 @@ class Lister:
         has = { "oul": False, "eul": False, "em": False }
         for cana in canas:
             for ds in cana.datasets:
-                print ( "type", ds.getType() )
+                if ds.getType() == "efficiencyMap":
+                    has["em"]=True
+                if ds.getType() == "upperLimit":
+                    has["oul"]=True
             for i in cana.getTxNames():
                 if not self.ignore and i.validated not in [ True, "n/a", "N/A" ]:
                     print ( f"Error: validated is {i.validated} in {ana.globalInfo.id}:{i}. Don't know how to handle. Use '-i' if you want me to skip this issue." )
@@ -382,10 +385,8 @@ class Lister:
         self.f.write ( f" | {short_desc} | {ana.globalInfo.lumi.asNumber()} | {topos_s} |" )
         if self.includeSuperseded:
             self.f.write ( f"{ssuperseded} |" )
-        hasul = False
-        for 
-        hasoUL = self.yesno ( True )
-        hasEM = self.yesno ( False )
+        hasoUL = self.yesno ( has["oul"] )
+        hasEM = self.yesno ( has["em"] )
         self.f.write ( f" {hasoUL} |" ) 
         self.f.write ( f" {hasEM} |" ) 
         if self.likelihoods:
