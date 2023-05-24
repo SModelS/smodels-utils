@@ -17,6 +17,7 @@ except:
     import commands as C
 import sys, os, time
 from smodels.experiment.databaseObj import Database
+from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD, removeAnaIdSuffices
@@ -72,7 +73,7 @@ class Lister:
         ret = ret.replace ( "_CT", "<sub>CT</sub>" )
         return ret
 
-    def whatLlhdInfo ( self, B ):
+    def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
         if hasattr ( B.globalInfo, "jsonFiles" ):
             return "json"
@@ -227,7 +228,7 @@ class Lister:
         if self.includeSuperseded:
             ret.append ( "superseded by" )
         ret.append ( "obs. ULs" )
-        ret.append ( "eff maps" )
+        ret.append ( "EMs" )
         if self.likelihoods:
             ret.append ( "exp. ULs [(3)](#A3)" )
             ret.append ( "SR comb. [(4)](#A4)" )
@@ -340,6 +341,9 @@ class Lister:
                     has["em"]=True
                 if ds.getType() == "upperLimit":
                     has["oul"]=True
+                    for txn in ds.txnameList:
+                        if hasattr ( txn, "txnameDataExp" ):
+                            has["eul"] = True
             for i in cana.getTxNames():
                 if not self.ignore and i.validated not in [ True, "n/a", "N/A" ]:
                     print ( f"Error: validated is {i.validated} in {ana.globalInfo.id}:{i}. Don't know how to handle. Use '-i' if you want me to skip this issue." )
@@ -386,14 +390,14 @@ class Lister:
         if self.includeSuperseded:
             self.f.write ( f"{ssuperseded} |" )
         hasoUL = self.yesno ( has["oul"] )
+        haseUL = self.yesno ( has["oul"] )
         hasEM = self.yesno ( has["em"] )
         self.f.write ( f" {hasoUL} |" ) 
         self.f.write ( f" {hasEM} |" ) 
         if self.likelihoods:
-            llhd = self.whatLlhdInfo ( ana )
-            self.f.write ( " %s |" % llhd )
-            llhd = self.yesno ( hasLLHD ( ana ) )
-            self.f.write ( " %s |" % llhd )
+            self.f.write ( f" {haseUL} |" )
+            llhd = "".join ( [ self.whatLlhdInfo ( x ) for x in canas ] )
+            self.f.write ( f" {llhd} |" )
         self.f.write ( "\n" )
 
     def yesno ( self, B ):
