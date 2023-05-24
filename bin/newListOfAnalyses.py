@@ -30,7 +30,7 @@ class Lister:
         self.github_io = "../../smodels.github.io/"
 
     def metaStatisticsPlot ( self ):
-        return ## FIXME remove
+        # return ## FIXME remove
         sys.path.insert(0,"../../protomodels/ptools")
         sys.path.insert(0,"../../protomodels")
         sys.path.insert(0,"../../")
@@ -239,7 +239,7 @@ class Lister:
         # return ## fixme remove
         import os
         # fixme move not copy!
-        cmd=f"cp {self.filename} {self.github_io}/docs/{self.filename}.md"
+        cmd=f"mv {self.filename} {self.github_io}/docs/{self.filename}.md"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
 
