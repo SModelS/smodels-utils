@@ -516,7 +516,7 @@ class Lister:
             ver = self.database.databaseVersion.replace(".","")
         if "+" in ver:
             ver = ver [ :ver.find("+") ]
-        filename = f"NewListOfAnalyses{ver}"
+        filename = f"ListOfAnalyses{ver}"
         if self.includeSuperseded:
             filename += "WithSuperseded"
         self.filename = filename
