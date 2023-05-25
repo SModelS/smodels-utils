@@ -499,7 +499,7 @@ def main():
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )
-    argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
+    argparser.add_argument ( '-f', '--cont', help='continue with saved states (path to pickle file, or empty) [""]',
                         type=str, default="" )
     argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
@@ -511,10 +511,6 @@ def main():
                         type=str, default="default" )
     args=argparser.parse_args()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
-    if args.pythia8:
-        a = subprocess.getoutput ( "ls /users/wolfgan.waltenberger/git/smodels/smodels/lib/pythia8/pythia8226/share/Pythia8/xmldoc" )
-        print ( a )
-        return
     args.rewrite = True
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
