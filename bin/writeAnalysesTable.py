@@ -448,7 +448,7 @@ if __name__ == "__main__":
                       'simple tool to generate a latex table with all analyses used')
         dbpath = os.path.abspath( '../../smodels-database/' )
         argparser.add_argument ( '-d', '--database', nargs='?',
-                            help='path to database [%s]' % dbpath, type=str,
+                            help=f'path to database [{dbpath}]', type=str,
                             default=dbpath )
         outfile = "tab.tex"
         argparser.add_argument ( '-o', '--output', nargs='?',
