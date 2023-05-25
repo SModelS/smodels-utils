@@ -17,7 +17,6 @@ except:
     import commands as C
 import sys, os, time
 from smodels.experiment.databaseObj import Database
-from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD, removeAnaIdSuffices
@@ -30,7 +29,6 @@ class Lister:
         self.github_io = "../../smodels.github.io/"
 
     def metaStatisticsPlot ( self ):
-        # return ## FIXME remove
         sys.path.insert(0,"../../protomodels/ptools")
         sys.path.insert(0,"../../protomodels")
         sys.path.insert(0,"../../")
@@ -74,7 +72,7 @@ class Lister:
         ret = ret.replace ( "_CT", "<sub>CT</sub>" )
         return ret
 
-    def whatLlhdInfo ( self, B : ExpResult ) -> str:
+    def whatLlhdInfo ( self, B ):
         """ what llhd info does that analysis have, if any? """
         if hasattr ( B.globalInfo, "jsonFiles" ):
             return "json"
@@ -92,16 +90,20 @@ class Lister:
         version = self.database.databaseVersion
         if "+" in version:
             version = version [ :version.find("+") ]
+        dotlessv = ""
+        if self.add_version:
+            dotlessv = version.replace(".","")
+        self.dotlessv = dotlessv
         titleplus = ""
-        referToOther = f"Link to list of results [including superseded and fastlim results](ListOfAnalyses{self.dotlessv}WithSuperseded)"
+        referToOther = "Link to list of results [including superseded and fastlim results](ListOfAnalyses%sWithSuperseded)" % dotlessv
         if self.includeSuperseded:
-            referToOther = f"Link to list of results [without superseded results](ListOfAnalyses{self.dotlessv})"
+            referToOther = "Link to list of results [without superseded results](ListOfAnalyses%s)" % dotlessv
             add=", including superseded results."
             titleplus = "(including superseded results)"
             if self.includeFastlim:
                 add=", including superseded and fastlim results"
                 titleplus = "(including superseded and fastlim results)"
-                referToOther = f"Link to list of results [without superseded and fastlim results](ListOfAnalyses{self.dotlessv})"
+                referToOther = "Link to list of results [without superseded and fastlim results](ListOfAnalyses%s)" % dotlessv
         n_maps = 0
         n_results = 0
         n_topos = set()
@@ -131,7 +133,7 @@ class Lister:
         self.f.write ( f"The list has been created from the database version `{version}.`\n")
         if self.includeFastlim:
             self.f.write ( "Results from FastLim are included. " )
-        self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{self.dotlessv}) and a [validation page](Validation{self.dotlessv}).\n" )
+        self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
         self.f.write ( referToOther + ".\n" )
         sigsplot = self.significancesPlotFileName()
         self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution ist expected if no new physics is in the data. New physics would manifest itself as an overabundance of large significances.</sub></p>\n" )
@@ -141,6 +143,8 @@ class Lister:
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
+        #pngname = f"pvalues{sinc}{self.dotlessv}.png"
+        #pvaluesplot = f"images/{pngname}"
         directory = f"validation/{self.dotlessv}"
         fullname = f"{self.github_io}/{directory}"
         if not os.path.exists ( fullname ):
@@ -149,10 +153,10 @@ class Lister:
         return pvaluesplot
 
     def footer ( self ):
-        self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
-        self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
+        self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
+        self.f.write ( "<a name='A2'>(2)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
+        self.f.write ( "<a name='A3'>(3)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n" )
         if self.includeFastlim:
             self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
@@ -220,40 +224,47 @@ class Lister:
                     self.f.write ( line )
 
 
-    def fields ( self ):
+    def fields ( self, isEffMap ):
         """ get list of all columns.
+        :param isEffMap: is efficiency map table? In which case we might add a column
+                         for the likelihoods.
         :returns: list
         """
         ret = [ "ID", "short description", "L [1/fb]", "Tx names" ]
         # fields = [ "ID", "short description", "&radic;s", "L", "Tx names" ]
         if self.includeSuperseded:
             ret.append ( "superseded by" )
-        ret.append ( "obs. ULs" )
-        ret.append ( "EMs" )
         if self.likelihoods:
-            ret.append ( "exp. ULs [(1)](#A1)" )
-            ret.append ( "SR comb. [(2)](#A2)" )
+            if isEffMap:
+                ret.append ( "SR comb. [(4)](#A4)" )
+            else:
+                ret.append ( "exp. ULs [(3)](#A3)" )
+            # ret.append ( "likeli- hoods" )
         return ret
 
     def moveToGithub( self ):
         """ move files to smodels.github.io """
-        # return ## fixme remove
         import os
-        # fixme move not copy!
         cmd=f"mv {self.filename} {self.github_io}/docs/{self.filename}.md"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
 
-    def experimentHeader ( self, experiment, sqrts, nr ):
+    def experimentHeader ( self, experiment, Type, sqrts, nr ):
         self.f.write ( "\n" )
-        self.f.write ( f'<a name="{experiment}{sqrts}"></a>\n' )
-        self.f.write ( f"## {experiment}, {sqrts} TeV ({nr} analyses)\n\n" )
+        stype = "efficiency maps"
+        isEffMap = True
+        if Type == "upperLimit":
+            isEffMap = False
+            stype = "upper limits"
+        self.f.write ( '<a name="%s%s%d"></a>\n' % \
+                  (experiment, stype.replace(" ",""), sqrts) )
+        self.f.write ( "## %s, %s, %d TeV (%d analyses)\n\n" % \
+                  (experiment,stype,sqrts,nr ) )
         lengths = []
-        for i in self.fields ( ):
+        for i in self.fields ( isEffMap  ):
             # f.write ( "||<#EEEEEE:> '''%s'''" % i )
-            self.f.write ( f"| **{i}** " )
-            # lengths.append ( len(i)+2 ) # for mdcat
-            lengths.append ( len(i)+6 ) # ideal for direct viewing
+            self.f.write ( "| **%s** " % i )
+            lengths.append ( len(i)+6 )
         self.f.write ( "|\n" )
         for l in lengths:
             self.f.write ( "|" +"-"*l )
@@ -269,33 +280,35 @@ class Lister:
             label = "Conf Notes"
         return label
 
-    def emptyLine( self ):
-        label = self.getLabel ( self.previous )
+    def emptyLine( self, ana_name, isEffMap ):
+        label = self.getLabel ( ana_name )
         self.f.write ( "| %s" % "**%s**" % label )
-        self.f.write ( " |"*( len(self.fields( ) ) ) )
+        self.f.write ( " |"*( len(self.fields( isEffMap ) ) ) )
         self.f.write ( "\n" )
 
-    def writeOneTable ( self, experiment, sqrts, anas ):
+    def writeOneTable ( self, experiment, Type, sqrts, anas ):
         version = self.database.databaseVersion
         dotlessv = ""
+        isEffMap = True
+        if Type == "upperLimit":
+            isEffMap = False
         if self.add_version:
             dotlessv = version.replace(".","")
         keys, anadict = [], {}
         for ana in anas:
             id = removeAnaIdSuffices ( ana.globalInfo.id )
             xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
+            # print ( "sqrts,xsqrts=", sqrts, xsqrts )
             if xsqrts != sqrts:
                 continue
             if not experiment in id:
                 continue
             keys.append ( id )
-            if not id in anadict:
-                anadict[id] = []
-            anadict[id].append ( ana )
+            anadict[id] = ana
         keys = list ( set ( keys ) )
         if len(keys) == 0:
             return
-        self.experimentHeader ( experiment, sqrts, len(keys) )
+        self.experimentHeader ( experiment, Type, sqrts, len(keys) )
         def sorter(key):
             tuples = key.split("-")
             ct=0
@@ -314,95 +327,86 @@ class Lister:
             return number
         ## now we need to sort the analysis ids
         keys.sort( key = sorter, reverse=True ) ## sorting purely by the numbers
-        self.previous = keys[0]
+        # keys.sort( reverse=True ) # sorting, but taking into account sus, exo, pas,
+        # print ( "xxxx keys", keys )
+        previous = keys[0]
 
-        self.emptyLine( )
+        self.emptyLine( previous, isEffMap )
 
         for ana_name in keys:
-            self.writeOneAnalysis ( ana_name, anadict )
-
-    def writeOneAnalysis ( self, ana_name : str, anadict : dict ):
-        """ one entry in the table, one line, one analysis """
-        if self.getLabel ( ana_name ) != self.getLabel ( self.previous ):
-            self.emptyLine( )
-        self.previous = ana_name
-        canas = anadict[ana_name]
-        ana = canas[0]
-        try:
-            comment = ana.globalInfo.comment
-        except Exception as e:
-            comment = ""
-        fastlim = ( "created from fastlim" in comment )
-        topos = list ( set ( map ( str, ana.getTxNames() ) ) )
-        homegrownd = {}
-        has = { "oul": False, "eul": False, "em": False, "agg": False }
-        for cana in canas:
-            for ds in cana.datasets:
-                if ds.getType() == "efficiencyMap":
-                    has["em"]=True
-                if ds.getType() == "upperLimit":
-                    has["oul"]=True
-                    for txn in ds.txnameList:
-                        if hasattr ( txn, "txnameDataExp" ):
-                            has["eul"] = True
-            if "-agg" in cana.globalInfo.id:
-                has [ "agg" ] = True
-            for i in cana.getTxNames():
+            #print ( "ana_name", ana_name, "previous", previous, len ( ana_name ) != len ( previous ) )
+            if self.getLabel ( ana_name ) != self.getLabel ( previous ):
+                self.emptyLine( ana_name, isEffMap )
+            previous = ana_name
+            ana = anadict[ana_name]
+            try:
+                comment = ana.globalInfo.comment
+            except Exception as e:
+                comment = ""
+            fastlim = ( "created from fastlim" in comment )
+            topos = list ( set ( map ( str, ana.getTxNames() ) ) )
+            homegrownd = {}
+            for i in ana.getTxNames():
                 if not self.ignore and i.validated not in [ True, "n/a", "N/A" ]:
                     print ( f"Error: validated is {i.validated} in {ana.globalInfo.id}:{i}. Don't know how to handle. Use '-i' if you want me to skip this issue." )
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
-                    homegrownd[str(i)] = " [(3)](#A3)"
-                if has["agg"]:
-                # if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                    homegrownd[str(i)] = " [(4)](#A4)"
+                    homegrownd[str(i)] = " [(1)](#A1)"
+                if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
+                    homegrownd[str(i)] = " [(2)](#A2)"
 
-        topos.sort()
-        topos_s = ""
-        topos_names = set()
-        for i in topos:
-            topos_names.add ( i )
-            homegrown = homegrownd[i]
+            topos.sort()
+            # print ( topos )
+            topos_s = ""
+            topos_names = set()
+            for i in topos:
+                topos_names.add ( i )
+                homegrown = homegrownd[i]
 
-            if homegrown !="" : self.n_homegrown+=1
-            topos_s += f", [{i}](SmsDictionary{self.dotlessv}#{i}){homegrown}"
-        topos_s = topos_s[2:]
-        if fastlim:
-            # topos_s += " (from FastLim (2))"
-            topos_s += " (from FastLim [(5)](#A5))"
-            pass
-        url = ana.globalInfo.url
-        if url.find ( " " ) > 0:
-            url = url[:url.find(" ") ]
-        Id = ana.globalInfo.id
-        ssuperseded = ""
-        if hasattr ( ana.globalInfo, "supersededBy" ):
-            s = ana.globalInfo.supersededBy
-            t = s
-            if t.find(" " ) > 0:
-                t=t[:t.find(" ")]
-            ssuperseded = f"[{s}](#{t})"
-        Id = removeAnaIdSuffices ( Id )
-        self.f.write ( f'| [{Id}]({url})<a name="{Id}"></a>' )
-        if not hasattr ( ana.globalInfo, "prettyName" ):
-            print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
-            print ( "Please add a pretty name and repeat." )
-            sys.exit()
-        short_desc = self.convert ( ana.globalInfo.prettyName )
-        self.f.write ( f" | {short_desc} | {ana.globalInfo.lumi.asNumber()} | {topos_s} |" )
-        if self.includeSuperseded:
-            self.f.write ( f"{ssuperseded} |" )
-        hasoUL = self.yesno ( has["oul"] )
-        haseUL = self.yesno ( has["oul"] )
-        hasEM = self.yesno ( has["em"] )
-        self.f.write ( f" {hasoUL} |" ) 
-        self.f.write ( f" {hasEM} |" ) 
-        if self.likelihoods:
-            self.f.write ( f" {haseUL} |" )
-            llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
-            self.f.write ( f" {llhd} |" )
-        self.f.write ( "\n" )
+                if homegrown !="" : self.n_homegrown+=1
+                # topos_s += ", [[SmsDictionary%s#%s|%s]]%s" % ( dotlessv, i, i, homegrown )
+                topos_s += ", [%s](SmsDictionary%s#%s)%s" % ( i, dotlessv, i, homegrown )
+            topos_s = topos_s[2:]
+            if fastlim:
+                # topos_s += " (from FastLim (2))"
+                topos_s += " (from FastLim [(5)](#A5))"
+                pass
+            url = ana.globalInfo.url
+            if url.find ( " " ) > 0:
+                url = url[:url.find(" ") ]
+            Id = ana.globalInfo.id
+            ssuperseded = ""
+            if hasattr ( ana.globalInfo, "supersededBy" ):
+                s = ana.globalInfo.supersededBy
+                t = s
+                if t.find(" " ) > 0:
+                    t=t[:t.find(" ")]
+                # ssuperseded = "[[#%s|%s]]" % ( t, s )
+                ssuperseded = "[%s](#%s)" % ( s, t )
+            sId = Id
+            if not sId.endswith ( "-eff" ) and not sId.endswith( "-ma5" ) and \
+               not sId.endswith ( "-agg" ):
+                   sId += "-eff"
+            Id = removeAnaIdSuffices ( Id )
+            self.f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, sId ) )
+            if not hasattr ( ana.globalInfo, "prettyName" ):
+                print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
+                print ( "Please add a pretty name and repeat." )
+                sys.exit()
+            short_desc = self.convert ( ana.globalInfo.prettyName )
+            self.f.write ( " | %s | %s | %s |" % ( short_desc,
+                   ana.globalInfo.lumi.asNumber(), topos_s ) )
+            if self.includeSuperseded:
+                self.f.write ( "%s |" % ssuperseded )
+            if self.likelihoods:
+                if isEffMap:
+                    llhd = self.whatLlhdInfo ( ana )
+                    self.f.write ( " %s |" % llhd )
+                else:
+                    llhd = self.yesno ( hasLLHD ( ana ) )
+                    self.f.write ( " %s |" % llhd )
+            self.f.write ( "\n" )
 
     def yesno ( self, B ):
         if B in [ True, "True" ]: return "&#10004;"
@@ -434,20 +438,21 @@ class Lister:
         return ret
 
     def writeExperiment ( self,  experiment, sqrts ):
-        print ( f"[listOfAnalyses] {experiment}, {sqrts} TeV" )
-        anas = []
-        for ana in self.expRes:
-            id = ana.globalInfo.id
-            xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
-            if sqrts != xsqrts:
-                continue
-            # print ( id )
-            ds0 = ana.datasets[0]
-            dt = ana.datasets[0].dataInfo.dataType
-            if not experiment in id:
-                continue
-            anas.append ( ana )
-        self.writeOneTable ( experiment, sqrts, anas )
+        print ( "[listOfAnalyses] Experiment:", experiment )
+        for Type in [ "upperLimit", "efficiencyMap" ]:
+            anas = []
+            for ana in self.expRes:
+                id = ana.globalInfo.id
+                xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
+                if sqrts != xsqrts:
+                    continue
+                # print ( id )
+                ds0 = ana.datasets[0]
+                dt = ana.datasets[0].dataInfo.dataType
+                if not experiment in id or not Type == dt:
+                    continue
+                anas.append ( ana )
+            self.writeOneTable ( experiment, Type, sqrts, anas )
 
     def backup( self ):
         if not os.path.exists ( self.filename ):
@@ -482,9 +487,6 @@ class Lister:
         argparser.add_argument ( '-i', '--ignore', action='store_true',
                                   help='ignore the validation flags of analysis '\
                                   '(i.e. also add non-validated results)' )
-        argparser.add_argument ( '-s', '--no_pngs', action='store_true',
-                                  help='do not regenerate the significances plots'\
-                                  '(i.e. also add non-validated results)' )
         argparser.add_argument ( '-l', '--likelihoods', action='store_true',
                                  help='add info about likelihoods' )
         argparser.add_argument ( '-f', '--fastlim', action='store_true',
@@ -506,14 +508,11 @@ class Lister:
             ver = self.database.databaseVersion.replace(".","")
         if "+" in ver:
             ver = ver [ :ver.find("+") ]
-        filename = f"NewListOfAnalyses{ver}"
+        filename = "ListOfAnalyses%s" % ver
         if self.includeSuperseded:
-            filename += "WithSuperseded"
+            filename = "ListOfAnalyses%sWithSuperseded" % ver
         self.filename = filename
         self.add_version = args.add_version ## add version number
-        self.dotlessv = ""
-        if self.add_version:
-            self.dotlessv = ver
         self.ignore = args.ignore ## ignore validation flags
         self.includeFastlim = args.fastlim
         self.expRes = self.database.getExpResults ( )
@@ -533,8 +532,7 @@ class Lister:
         print ( "[listOfAnalyses] %d home-grown now" % self.n_homegrown )
         self.footer ( )
         self.diff()
-        if not args.no_pngs:
-            self.metaStatisticsPlot()
+        self.metaStatisticsPlot()
         self.moveToGithub( )
         self.writeStatsFile()
 
