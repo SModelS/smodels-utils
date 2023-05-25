@@ -380,6 +380,10 @@ class Writer:
         self.pprint ( "now latexing smodels.tex" )
         o1 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         o2 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
+        o3 = C.getoutput ( "bibtex smodels" )
+        o4 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
+        o5 = C.getoutput ( "bibtex smodels" )
+        o6 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
         self.pprint ( "done latexing, see %s.pdf" % base )
@@ -391,16 +395,26 @@ class Writer:
             C.getoutput ( "mv smodels.pdf %s.pdf" % base )
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
         for i in [ "smodels.log", "smodels.out", "smodels.aux" ]:
-            os.unlink ( i )
+            if os.path.exists ( i ):
+                os.unlink ( i )
         if not self.keep:
             for i in [ "smodels.tex", "tab.tex" ]:
                 os.unlink ( i )
 
     def createLatexDocument ( self, texfile ):
         repl="@@@TEXFILE@@@"
-        cmd="cat ../share/AnalysesListTemplate.tex | sed -e 's/%s/%s/' > smodels.tex" % ( repl, texfile )
-        C.getoutput ( cmd )
-
+        bibtexrepl = "@@@BIBTEXSTUFF@@@"
+        bibtexstuff = ""
+        if self.bibtex != None:
+            bibtexfile = f"{args.database}/database.bib"
+            if not os.path.exists ( bibtexfile ):
+                print ( f"[writeAnalysesTable] cannot find bibtexfile {bibtexfile}. skip bibtex." )
+            else:
+                cmd = "cp {bibtexfile} ."
+                C.getoutput ( cmd )
+                bibtexstuff = r"\\renewcommand{\\text}{\\mathrm};\\bibliography{database};\\bibliographystyle{unsrt}"
+        cmd= f"cat ../share/AnalysesListTemplate.tex | sed -e 's/{repl}/{texfile}/' | sed -e 's/{bibtexrepl}/{bibtexstuff}/' | tr ';' '\n' > smodels.tex"
+        o = C.getoutput ( cmd )
 
     def createPngFile ( self ):
         base = "smodels"
