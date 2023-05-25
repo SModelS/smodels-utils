@@ -424,19 +424,20 @@ class Writer:
             base += str(self.sqrts)
         pngfile= base + ".png"
         pdffile= base + ".pdf"
-        self.pprint ( "now creating %s.png" % base )
+        self.pprint ( f"now creating {base}.png" )
         whiteBG = True
         swbg=""
         if whiteBG:
             swbg="-alpha off"
-        cmd = "convert %s -antialias -density 600 -trim %s %s" % ( swbg, pdffile, pngfile )
+        cmd = f"/usr/bin/convert {swbg} -antialias -density 600 -trim {pdffile} {pngfile}"
+        print ( cmd )
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
         if self.timg:
             a = shutil.which ( "timg" )
             if a:
-                cmd = f"timg -p kitty {pngfile}"
+                cmd = f"timg -p kitty {pngfile.replace('.png','*.png')}"
                 a = C.getoutput ( cmd )
                 print ( a )
 
