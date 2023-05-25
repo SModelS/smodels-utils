@@ -161,7 +161,12 @@ class Lister:
         self.f.close()
 
     def listTables ( self ):
-        self.f.write ( "\n## Individual tables\n" )
+        """ Example:
+        Run 1 - 8 TeV
+        In total, we have results from 15 ATLAS and 18 CMS 8 TeV searches.
+        ATLAS upper limits: 13 analyses, 34 results
+        """
+        self.f.write ( "\n## Stats, by run, experiment, type\n" )
         for sqrts in [ 13, 8 ]:
             run = 1
             if sqrts == 13: run = 2
@@ -218,7 +223,7 @@ class Lister:
                     if "efficiency" in tpe:
                         mapsCountS = ", %d individual maps" % nMaps
 
-                    line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n"
+                    line = f" * [{exp} {tpe}](#{exp}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n"
                     self.f.write ( line )
 
 
@@ -247,7 +252,10 @@ class Lister:
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
 
-    def experimentHeader ( self, experiment, sqrts, nr ):
+    def experimentHeader ( self, experiment : str, sqrts : int, nr : int ):
+        """ e.g.:
+        ATLAS, upper limits, 13 TeV (35 analyses)
+        """
         self.f.write ( "\n" )
         self.f.write ( f'<a name="{experiment}{sqrts}"></a>\n' )
         self.f.write ( f"## {experiment}, {sqrts} TeV ({nr} analyses)\n\n" )
@@ -284,7 +292,12 @@ class Lister:
         self.f.write ( " |"*( len(self.fields( ) ) ) )
         self.f.write ( "\n" )
 
-    def writeOneTable ( self, experiment, sqrts, anas ):
+    def writeOneTable ( self, experiment : str, sqrts : int, anas : list ):
+        """ e.g.:
+        ATLAS, upper limits, 13 TeV (35 analyses)
+
+        (table)
+        """
         version = self.database.databaseVersion
         dotlessv = ""
         if self.add_version:
@@ -443,7 +456,12 @@ class Lister:
             ret.append ( ana )
         return ret
 
-    def writeExperiment ( self,  experiment, sqrts ):
+    def writeExperiment ( self,  experiment : str, sqrts : int ):
+        """ e.g.:
+        ATLAS, upper limits, 13 TeV (35 analyses)
+
+        (table)
+        """
         print ( f"[listOfAnalyses] {experiment}, {sqrts} TeV" )
         anas = []
         for ana in self.expRes:
