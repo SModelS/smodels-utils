@@ -154,6 +154,28 @@ class Writer:
             #    comb = "Cov."
         return comb
 
+    def getHepData ( self, ana : ExpResult ) -> str:
+        """ obtain the hepdata for ana, currently unused """
+        # FIXME for now we try with hepdata
+        ret = ""
+        for d in ana.datasets:
+            for t in d.txnameList:
+                if hasattr (t, "dataUrl" ) and t.dataUrl is not None:
+                    url = t.dataUrl
+                    if type(url)==list:
+                        url = ",".join ( url )
+                    if "doi.org" in url and "hepdata" in url:
+                        if "/t" in url:
+                            p = url.find ( "/t" )
+                            url = url[:p]
+                        print ( "good:", url )
+                        ret = url
+                        return ret
+                    if "doi.org" in url:
+                        return url
+                    print ( "what do i do with", url )
+        return ret
+
     def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
         """ write the entry of a single analysis
         :param nextIsSame: true, if next is same
@@ -257,16 +279,16 @@ class Writer:
         if self.prettyNames:
             pn = prettyTexAnalysisName ( prettyName )
             # pn = self.addColor ( pn )
-            lines[0] += "%s &" % pn
+            lines[0] += f"{pn} &"
         if self.topos:
-            lines[0] += "%s &" % ( alltxes )
+            lines[0] += f"{alltxes} &"
         if not self.extended_likelihoods:
-            lines[0] += "%s &" % ( dt )
+            lines[0] += f"{dt} &"
         lumi = ana.globalInfo.lumi.asNumber(1/fb)
         # lumi = self.addColor ( lumi )
-        lines[0] += "%s " % lumi
+        lines[0] += f"{lumi} "
         if self.showsqrts:
-            lines[0] += "& %s " % ( self.addColor ( sqrts ) )
+            lines[0] += f"& {self.addColor ( sqrts )}"
         if self.likelihoods:
             lines[0] += f"& {llhds}"
         if self.extended_likelihoods:
@@ -444,7 +466,7 @@ class Writer:
         if whiteBG:
             swbg="-alpha off"
         cmd = f"rm {pngfile.replace('.png','*.png')}"
-        subprocess.getoutput ( cmd )
+        C.getoutput ( cmd )
         cmd = f"/usr/bin/convert {swbg} -antialias -density 600 -trim {pdffile} {pngfile}"
         print ( cmd )
         o = C.getoutput ( cmd )
@@ -532,3 +554,6 @@ if __name__ == "__main__":
                     writer.createPdfFile()
                 if args.png:
                     writer.createPngFile()
+                if args.keep:
+                    cmd = f"cp tab.tex {e}{s}.tex"
+                    C.getoutput ( cmd )
