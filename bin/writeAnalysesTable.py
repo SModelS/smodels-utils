@@ -18,6 +18,7 @@ try:
 except:
     import commands as C ## python2
 from smodels.tools.physicsUnits import fb, TeV
+from smodels.experiment.expResultObj import ExpResult
 from smodels_utils.helper.various import hasLLHD
 from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList
@@ -61,18 +62,18 @@ class Writer:
         :param bibtex: add bibtex references
         :param colors: use colors according to likelihood availability
         :param href: add href links
-        """
-        """
-        writer = Writer( db = args.database, experiment=args.experiment,
-                         sqrts = args.sqrts,
-                         keep = args.keep, caption = args.caption,
-                         numbers = args.enumerate, prettyNames=args.prettyNames,
-                         superseded = args.superseded, topos = args.topologies,
-                         showsqrts=args.show_sqrts, longtable = args.longtable,
-                         likelihoods = args.likelihoods,
-                         extended_llhds = args.extended_likelihoods,
-                         bibtex = args.bibtex, colors = args.colors,
-                         href = args.href )
+
+        .. code-block:: python3
+        >>> writer = Writer( db = args.database, experiment=args.experiment,
+        >>>                 sqrts = args.sqrts,
+        >>>                 keep = args.keep, caption = args.caption,
+        >>>                 numbers = args.enumerate, prettyNames=args.prettyNames,
+        >>>                 superseded = args.superseded, topos = args.topologies,
+        >>>                 showsqrts=args.show_sqrts, longtable = args.longtable,
+        >>>                 likelihoods = args.likelihoods,
+        >>>                 extended_llhds = args.extended_likelihoods,
+        >>>                 bibtex = args.bibtex, colors = args.colors,
+        >>>                 href = args.href )
         """
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
@@ -134,6 +135,23 @@ class Writer:
         if self.colors:
             text="\\colorbox{"+self.currentcolor+"}{"+str(text)+"}"
         return text
+
+    def getCombinationType ( self, ana : ExpResult ) -> str:
+        """ determine which type of SR combination we are dealing
+            with """
+        comb = " "
+        if hasattr ( ana.globalInfo, "jsonFiles" ):
+            comb = "JSON"
+        #if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
+        #    comb = "JSON"
+        if hasattr ( ana.globalInfo, "covariance" ):
+            comb = "SLv1"
+        if hasattr ( ana.datasets[0].dataInfo, "thirdMoment" ) and \
+                ana.datasets[0].dataInfo.thirdMoment != None:
+            comb = "SLv2"
+        #if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
+        #    comb = "Cov."
+        return comb
 
     def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
         """ write the entry of a single analysis
@@ -262,15 +280,7 @@ class Writer:
             #ulobs, ulexp, em, comb = "x", "x", "x", "JSON"
             lines[0] += f"& {ulobs} & {ulexp} & {em}"
         if self.addcombos:
-            comb = " "
-            if hasattr ( ana.globalInfo, "jsonFiles" ):
-                comb = "JSON"
-            if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
-                comb = "JSON"
-            if hasattr ( ana.globalInfo, "covariance" ):
-                comb = "Cov."
-            if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
-                comb = "Cov."
+            comb = self.getCombinationType ( ana )
             lines[0] += f"& {comb}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
@@ -412,7 +422,10 @@ class Writer:
             else:
                 cmd = "cp {bibtexfile} ."
                 C.getoutput ( cmd )
-                bibtexstuff = r"\\renewcommand{\\text}{\\mathrm};\\bibliography{database};\\bibliographystyle{unsrt}"
+                bibtexstuff = r"\\renewcommand{\\text}{\\mathrm};\\newpage;\\bibliography{database};\\bibliographystyle{unsrt}"
+                if False:
+                    ## lets comment out the bibliography
+                    bibtexstuff = bibtexstuff.replace(";",";%" )
         cmd= f"cat ../share/AnalysesListTemplate.tex | sed -e 's/{repl}/{texfile}/' | sed -e 's/{bibtexrepl}/{bibtexstuff}/' | tr ';' '\n' > smodels.tex"
         o = C.getoutput ( cmd )
 
@@ -504,11 +517,11 @@ if __name__ == "__main__":
             if args.png:
                 writer.createPngFile()
             sys.exit()
+        writer = Writer ( args )
         for s in [ 8, 13 ]:
-            args.sqrts = str(s)
+            writer.sqrts = str(s)
             for e in [ "CMS", "ATLAS" ]:
-                args.experiment = e
-                writer = Writer ( args )
+                writer.experiment = e
                 #Generate table:
                 writer.generateAnalysisTable( )
                 # create pdf
