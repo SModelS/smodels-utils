@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 # vim: fileencoding=latin1
 
-## todo in pretty names: ETmiss vs Etmiss vs MET. 0 or >=1 leptons? WTF?
-## same-sign versus same sign versus SS FIXME
-
 """
-.. module:: analysesTable
+.. module:: writeAnalysesTable
      :synopsis: generates a latex table with all analyses.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -136,21 +133,25 @@ class Writer:
             text="\\colorbox{"+self.currentcolor+"}{"+str(text)+"}"
         return text
 
-    def getCombinationType ( self, ana : ExpResult ) -> str:
+    def getCombinationType ( self, ana : ExpResult,
+           nextAna : ExpResult ) -> str:
         """ determine which type of SR combination we are dealing
             with """
         comb = " "
-        if hasattr ( ana.globalInfo, "jsonFiles" ):
-            comb = "JSON"
-        #if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
-        #    comb = "JSON"
-        if hasattr ( ana.globalInfo, "covariance" ):
-            comb = "SLv1"
-        if hasattr ( ana.datasets[0].dataInfo, "thirdMoment" ) and \
-                ana.datasets[0].dataInfo.thirdMoment != None:
-            comb = "SLv2"
-        #if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
-        #    comb = "Cov."
+        for x in [ ana, nextAna ]:
+            if x is None:
+                continue
+            if hasattr ( x.globalInfo, "jsonFiles" ):
+                comb = "JSON"
+            #if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
+            #    comb = "JSON"
+            if hasattr ( x.globalInfo, "covariance" ):
+                comb = "SLv1"
+            if hasattr ( x.datasets[0].dataInfo, "thirdMoment" ) and \
+                    x.datasets[0].dataInfo.thirdMoment != None:
+                comb = "SLv2"
+            #if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
+            #    comb = "Cov."
         return comb
 
     def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
@@ -280,7 +281,7 @@ class Writer:
             #ulobs, ulexp, em, comb = "x", "x", "x", "JSON"
             lines[0] += f"& {ulobs} & {ulexp} & {em}"
         if self.addcombos:
-            comb = self.getCombinationType ( ana )
+            comb = self.getCombinationType ( ana, nextAna )
             lines[0] += f"& {comb}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
@@ -442,6 +443,8 @@ class Writer:
         swbg=""
         if whiteBG:
             swbg="-alpha off"
+        cmd = f"rm {pngfile.replace('.png','*.png')}"
+        subprocess.getoutput ( cmd )
         cmd = f"/usr/bin/convert {swbg} -antialias -density 600 -trim {pdffile} {pngfile}"
         print ( cmd )
         o = C.getoutput ( cmd )
