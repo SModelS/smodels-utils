@@ -166,9 +166,7 @@ def getPlot(inputFile, parameterFile,options):
     tpDict = {}
     for ana in tPredsList:
         idDict = {}
-        print(f'ana: {ana}, ulxsec: {ana.upperLimit}, xsec: {ana.xsection.value}, ulmu: {float(ana.upperLimit/ana.xsection.value)}, r_obs:{ana.getRValue(expected = False)}, r_exp: {ana.getRValue(expected = True)}')
         idDict['ulmu'] = ana.getUpperLimitOnMu(expected = setup["expected"])
-        print(idDict['ulmu'])
         idDict['r_obs'] = ana.getRValue(expected = False)
         idDict['r_exp'] = ana.getRValue(expected = True)
         tpDict[ana.dataset.globalInfo.id] = idDict
