@@ -732,9 +732,12 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = prettyname.replace(">","$>$").replace("<","$<$")
     pn = pn.replace("0 or $>$=1 leptons +","" )
     pn = pn.replace("photon photon","$\gamma\gamma$" )
+    pn = pn.replace("diphoton","$\\to\gamma\gamma$" )
     pn = pn.replace("SF OS","SFOS" )
-    pn = pn.replace("jet multiplicity","n$_{jets}$" )
+    # pn = pn.replace("jet multiplicity","n$_{jets}$" )
+    pn = pn.replace("jet multiplicity","jets" )
     pn = pn.replace("Higgs","H" )
+    pn = pn.replace("H(bb)","H($\\to$bb)" )
     pn = pn.replace("searches in","to" )
     pn = pn.replace("same-sign","SS" )
     pn = pn.replace("Multilepton","multi-l" )
@@ -763,7 +766,7 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("MET","$\\not{\!\!E}_T$")
     pn = pn.replace("M_CT","M$_CT$" )
     pn = pn.replace("alpha_T","$\\alpha_T$" )
-    if len(pn)>0 and pn[-1]==")":
+    if len(pn)>0 and pn[-1]==")" and prettyname != "H(diphoton)":
         pos = pn.rfind ( "(" )
         pn = pn[:pos]
     pn = pn.strip()
