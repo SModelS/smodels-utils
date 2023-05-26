@@ -54,94 +54,6 @@ def startServer ( rundir, dry_run, time ):
         a=subprocess.run ( cmd )
         print ( "returned: %s" % a )
 
-def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
-                cheatcode, rundir, maxsteps, select, do_combine, record_history,
-                seed, update_hiscores, stopTeleportationAfter ):
-    """ prepare everything for a single job
-    :params pid: process id, integer that idenfies the process
-    :param jmin: id of first walker
-    :param jmax: id of last walker
-    :param cont: pickle file to start with, "" means start from SM
-    :param dbpath: path to database
-    :param dry_run: dont act, just tell us what you would do
-    :param keep: keep temporary files, for debugging
-    :param time: time in hours
-    :param cheatcode: in case we wish to start with a cheat model
-    :param rundir: the run directory
-    :param maxsteps: max number of steps
-    :param select: select for certain results, e.g. "all", "ul", "em",
-                   "txnames:T1,T2"
-    :param do_combine: if true, then also perform combinations, either via
-                        simplified likelihoods or via pyhf
-    :param record_history: if true, turn on the history recorder
-    :param seed: the random seed for the walker
-    :param update_hiscores: update the hiscores at the end
-    :param stopTeleportationAfter: stop teleportation after this step.
-           if -1, dont run teleportation at all.
-    """
-    if not "/" in dbpath: ## then assume its meant to be in rundir
-        dbpath = rundir + "/" + dbpath
-    line = "run walkers %d - %d" % ( jmin, jmax-1 )
-    if jmax == jmin + 1:
-        line = "run walker %d" % jmin
-    # print ( "[runOneJob:%d] %s" % ( pid, line ) )
-    # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
-    runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
-    dump_trainingdata = False
-    with open ( runner, "wt" ) as f:
-        f.write ( "#!/usr/bin/env python3\n\n" )
-        f.write ( "import os, sys\n" )
-        f.write ( "sys.path.insert(0,'%s/smodels-utils/')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/ptools')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
-        f.write ( "os.chdir('%s')\n" % rundir )
-        f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, \
-                    maxsteps, seed, select, do_combine, record_history, update_hiscores, \
-                    stopTeleportationAfter  ) )
-    os.chmod( runner, 0o755 ) # 1877 is 0o755
-    # Dir = getDirname ( rundir )
-
-    ram = max ( 10000., 5500. * ( jmax - jmin ) )
-    if "comb" in rundir: ## combinations need more RAM
-        ram = ram * 1.2
-    if "history" in rundir: ## history runs need more RAM
-        ram = ram * 1.3
-    if update_hiscores: ## make sure we have a bit more for that
-        ram = ram * 1.2
-    ram=int(ram)
-    proxies = glob.glob ( f"{rundir}/proxy*pcl" )
-    if len(proxies)>0:
-        ram = ram *.8
-    # cmd = [ "srun" ]
-    cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out" ]
-    qos = "c_short"
-    if time > 48:
-        qos = "c_long"
-    if 8 < time <= 48:
-        qos = "c_medium"
-    cmd += [ "--qos", qos ]
-    # cmd += [ "-n", str(jmax - jmin) ]
-    # cmd += [ "--threads-per-core", str(jmax - jmin) ]
-    # cmd += [ "-N", str(jmax - jmin) ]
-    # cmd += [ "-k" ]
-    cmd += [ "--mem", f"{ram:d}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
-    scmd =  " ".join ( cmd )
-    scmd = scmd.replace ( "/scratch-cbe/users/wolfgan.waltenberger", "$BASE" )
-    if dry_run:
-        print ( "[slurm.py] dry_running:", scmd )
-    else:
-        print ( "[slurm.py] running", scmd )
-        a=subprocess.run ( cmd )
-        if not "returncode=0" in str(a):
-            a = "%s%s%s" % ( colorama.Fore.RED, a, colorama.Fore.RESET )
-        print ( "returned: %s" % a )
-        # time.sleep( random.uniform ( 0., 1. ) )
-
 def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
     if force_rewrite or not os.path.exists ( fname ):
@@ -842,46 +754,7 @@ def main():
         if args.maxsteps == None:
             args.maxsteps = 1000
         while True and args.bake=="":
-            if nprocesses == 1:
-                runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
-                            args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select, args.do_combine, args.record_history, seed,
-                            update_hiscores, args.stopTeleportationAfter )
-                totjobs+=1
-            else:
-                import multiprocessing
-                ## nwalkers is the number of jobs per process
-                nwalkers = 0
-                if nprocesses > 0:
-                    nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
-                jobs = []
-                for i in range(nprocesses):
-                    update_hiscores = False
-                    if args.updater and i == nprocesses-1:
-                        update_hiscores = True
-                    imin = nmin + i*nwalkers
-                    imax = imin + nwalkers
-                    if seed != None: ## we count up
-                        seed += (1+len(rundirs))*(1+nprocesses)
-                    p = multiprocessing.Process ( target = runOneJob,
-                            args = ( i, imin, imax, cont, dbpath, args.dry_run,
-                                     args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                                     args.select, args.do_combine, args.record_history,
-                                     seed, update_hiscores, args.stopTeleportationAfter ) )
-                    jobs.append ( p )
-                    p.start()
-                    time.sleep ( random.uniform ( 0.006, .01 ) )
-
-                for j in jobs:
-                    j.join()
-                res = colorama.Fore.RESET
-                col = colorama.Fore.GREEN
-                totjobs+=len(jobs)
-                if len(jobs) in [ 48, 49, 51 ]:
-                    colo = colorama.Fore.RED
-                if len(jobs)>0:
-                    print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
-            break
+            print ( "use slurm_walk" )
         res = colorama.Fore.RESET
         col = colorama.Fore.GREEN
         if totjobs % 10 != 0 and (totjobs)>1:
