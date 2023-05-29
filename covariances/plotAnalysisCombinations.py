@@ -166,7 +166,7 @@ def getPlot(inputFile, parameterFile,options):
     tpDict = {}
     for ana in tPredsList:
         idDict = {}
-        idDict['ulmu'] = float(ana.upperLimit/ana.xsection.value)
+        idDict['ulmu'] = ana.getUpperLimitOnMu(expected = setup["expected"])
         idDict['r_obs'] = ana.getRValue(expected = False)
         idDict['r_exp'] = ana.getRValue(expected = True)
         tpDict[ana.dataset.globalInfo.id] = idDict
@@ -277,10 +277,10 @@ def main():
     ap = argparse.ArgumentParser( description=
             "Makes a simple likelihood plot for  a combination of analyses. For more options, try out the plotLikelihoods.ipynb notebook." )
     ap.add_argument('-f', '--filename',
-            help='name of SLHA input file', required=True)
+            help='name of SLHA input file', required=True);
     ap.add_argument('-o', '--output',
             help='name of output plot [likelihoods.png]',
-            default = "likelihoods.png" )
+            default = 'Likelihoods.png' )
     ap.add_argument('-p', '--parameterFile',
             help='name of parameter file, where most options are defined',
             required=True)
@@ -294,7 +294,9 @@ def main():
     args = ap.parse_args()
     t0 = timeit.default_timer()
 
-    args.output = os.path.basename(args.filename).replace('.slha','_llhds.png')
+    if args.output == 'Likelihoods.png':
+        args.output = os.path.basename(args.filename).replace('.slha','_llhds.png')
+
     options = { "mumin": args.mumin, "mumax": args.mumax,
                 "output": args.output }
     fig = getPlot(args.filename, args.parameterFile, options)
