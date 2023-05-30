@@ -13,7 +13,6 @@ __all__ = [ "BestCombinationFinder" ]
 import numpy as np
 import sys, os
 from smodels.tools import runtime
-# Define your model (list of BSM particles)
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction
 
 try:
@@ -25,20 +24,18 @@ except ImportError as e:
     from codes.Full_SR_Ranking.pathfinder.path_finder import PathFinder
 
 class BestCombinationFinder(object):
-    def __init__(self, combination_matrix : dict,
-            theoryPrediction : TheoryPrediction ):
-
+    def __init__(self, combination_matrix : dict, theoryPrediction : TheoryPrediction ):
+        """
+        combination_matrix = dictionary of allowed analyses combination
+        theoryPrediction = list of theory prediction objects for each expResult
+        """
         self.cM = combination_matrix
-        #self.weight_vector = []
-        #self.exclMatrix = []
         self.listoftp = theoryPrediction
-        print ( "yes" )
 
     def createExclusivityMatrix(self) -> np.array:
         """
-        create a n by n True matrix where n = number of analyses in the dict
+        create a N by N True/False matrix where N = number of analyses in the dict
         """
-
         eM = [[True for i in range(len(self.cM))] for i in range(len(self.cM))]
 
         listOfAna = [ana for ana in self.cM.keys()]
@@ -53,19 +50,14 @@ class BestCombinationFinder(object):
     def findBestCombination(self, expected : bool = True):
         """ the actual best combination finder """
 
-        #comb_matrix = dictionary of allowed analyses combination
-        #theoryPrediction = list of theory prediction objects for each expResult
-        #print ( "no" )
+
         weight_vector = []
-        #print ( "yes" )
         EMatrix = self.createExclusivityMatrix()
-        #print ( "no" )
+
         for tp in self.listoftp:
-            #print ( "type", type(tp) )
             if not tp:
                 weight_vector.append(None)
                 continue
-            #get expected llhd
             for preds in tp:
                 if expected:   #get expected llhd
                     lbsm = preds.likelihood(expected=True)
@@ -84,7 +76,7 @@ class BestCombinationFinder(object):
             if not weight_vector[i]:
                 indices.append(i)
 
-        #Remove analysis from exclMatrix and weight_vector for which theoryPrediction is None
+        #Remove analysis from EMatrix and weight_vector for which theoryPrediction is None
         weight = np.array(weight_vector)
         weight = np.delete(weight, indices)
 
