@@ -29,7 +29,7 @@ def addInstallDirectory():
 
 def version(astuple=False):
     """
-    Print version number of smodels-tools
+    Print version number of smodels-utils
 
     """
     f = open("%s/version" % installDirectory())
@@ -80,11 +80,11 @@ def addSModelSPath():
     return ""
 
 def printHelp():
-    print ("usage: smodels-tools-config [--help] [--installdir] [--smodelsdir]")
+    print ("usage: smodels-utils-config [--help] [--installdir] [--smodelsdir]")
     print ("")
     print ("optional arguments:")
     print ("  --help          show this help message and exit")
-    print ("  --installdir    print installation directory of smodels-tools")
+    print ("  --installdir    print installation directory of smodels-utils")
     print ("  --smodelsdir    print installation directory of smodels")
     import sys
     sys.exit(0)

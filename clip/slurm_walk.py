@@ -104,7 +104,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
-    ram = max ( 12000., 6500. * ( jmax - jmin ) )
+    ram = max ( 15000., 7000. * ( jmax - jmin ) )
     if "comb" in rundir: ## combinations need more RAM
         ram = ram * 1.2
     if "history" in rundir: ## history runs need more RAM
@@ -591,8 +591,8 @@ def main():
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
         cheatcode = args.cheatcode
         if nmax == 0:
-            nmax = nmin + 1
-        nworkers = args.nmax - args.nmin # + 1
+            nmax = nmin #+ 1
+        nworkers = args.nmax - args.nmin + 1
         nprocesses = min ( args.nprocesses, nworkers )
         if nprocesses == 0:
             nprocesses = nworkers
