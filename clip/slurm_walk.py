@@ -443,6 +443,20 @@ def logCall ():
     # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
 
+def cancelAllRunners():
+    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    lines = o.split("\n")
+    cancelled = []
+    for line in lines:
+        if not "RUNNER" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        cmd = f"scancel {nr}"
+        subprocess.getoutput ( cmd )
+        cancelled.append ( nr )
+    print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
@@ -453,6 +467,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-k','--keep',
             help='keep the shell scripts that are being run, do not remove them afters',
+            action="store_true" )
+    argparser.add_argument ( '--cancel_all', help='cancel all runners',
             action="store_true" )
     argparser.add_argument ( '--do_combine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
@@ -510,6 +526,9 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    if args.cancel_all:
+        cancelAllRunners()
+        return
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     args.rewrite = True
     if args.nmax > 0 and args.dbpath == "none":
