@@ -79,7 +79,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     :param stopTeleportationAfter: stop teleportation after this step.
            if -1, dont run teleportation at all.
     """
-    if not "/" in dbpath: ## then assume its meant to be in rundir
+    if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
     line = "run walkers %d - %d" % ( jmin, jmax-1 )
     if jmax == jmin + 1:
