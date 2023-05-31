@@ -21,6 +21,7 @@ from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList
 from smodels_utils.helper.various import removeAnaIdSuffices
 from smodels_utils.helper.bibtexTools import BibtexWriter
+from typing import Union
 import IPython
 
 try:
@@ -61,16 +62,10 @@ class Writer:
         :param href: add href links
 
         .. code-block:: python3
-        >>> writer = Writer( db = args.database, experiment=args.experiment,
-        >>>                 sqrts = args.sqrts,
-        >>>                 keep = args.keep, caption = args.caption,
-        >>>                 numbers = args.enumerate, prettyNames=args.prettyNames,
-        >>>                 superseded = args.superseded, topos = args.topologies,
-        >>>                 showsqrts=args.show_sqrts, longtable = args.longtable,
-        >>>                 likelihoods = args.likelihoods,
-        >>>                 extended_llhds = args.extended_likelihoods,
-        >>>                 bibtex = args.bibtex, colors = args.colors,
-        >>>                 href = args.href )
+
+        >>> writer = Writer( args )
+        >>> writer.generateAnalysisTable( )
+        >>> writer.createPngFile()
         """
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
@@ -79,6 +74,12 @@ class Writer:
         self.timg = args.timg
         if args.bibtex:
             self.bibtex = BibtexWriter ( args.database )
+        self.reference_results = None
+        if args.reference_database != None:
+            refdb = Database ( args.reference_database )
+            ers = refdb.expResultList
+            ids = set ( [ x.globalInfo.id for x in ers ] )
+            self.reference_results = ids
         self.getExpResults ( superseded = args.superseded )
         self.texfile = args.output
         self.href = args.href
@@ -176,12 +177,17 @@ class Writer:
                     print ( "what do i do with", url )
         return ret
 
-    def writeSingleAna ( self, ana, nextIsSame, nextAna = None ):
+    def writeSingleAna ( self, ana : ExpResult, nextIsSame : bool, 
+            nextAna : Union[None,ExpResult] = None ):
         """ write the entry of a single analysis
         :param nextIsSame: true, if next is same
         :param nextAna: the next analysis (if same)
         """
         lines= [ "" ]
+        isNew = False
+        if self.reference_results is not None:
+            if ana.globalInfo.id not in self.reference_results:
+                isNew = True
         sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) )
         if sqrts != self.lasts and self.lasts != None:
             lines[0] = "\\hline\n"
@@ -305,9 +311,12 @@ class Writer:
         if self.addcombos:
             comb = self.getCombinationType ( ana, nextAna )
             lines[0] += f"& {comb}"
+        if isNew:
+            lines[0] = "\\bf{" + lines[0]+"}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
+        print ( "result", lines, "isNew", isNew )
         return "\\n".join ( lines ), len(txnames)
 
     def sqrtsIsMet ( self, sqrts ):
@@ -488,6 +497,9 @@ if __name__ == "__main__":
         argparser.add_argument ( '-d', '--database', nargs='?',
                             help=f'path to database [{dbpath}]', type=str,
                             default=dbpath )
+        argparser.add_argument ( '-r', '--reference_database', nargs='?',
+                            help=f'path to reference database, if given make new entries bold [None]', type=str,
+                            default=None )
         outfile = "tab.tex"
         argparser.add_argument ( '-o', '--output', nargs='?',
             help='output file [%s]' % outfile, type=str, default=outfile )
