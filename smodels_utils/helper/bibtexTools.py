@@ -20,7 +20,7 @@ from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
          filterSupersededFromList
-from smodels_utils.helper.various import getSqrts, findCollaboration
+from smodels_utils.helper.various import getSqrts, getCollaboration
 from typing import Union, Text
 
 if sys.version[0]=="2":
@@ -339,7 +339,7 @@ class BibtexWriter:
         txt=f.read()
         f.close()
         sqrts = getSqrts ( Id )
-        coll = findCollaboration ( Id )
+        coll = getCollaboration ( Id )
         self.stats[coll][Id] = { "cached": 1 }
         return txt
 
@@ -355,7 +355,7 @@ class BibtexWriter:
         self.success += 1
         self.log ( "Success!" )
         sqrts = getSqrts ( Id )
-        coll = findCollaboration ( Id )
+        coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
         self.f.write ( bib )
         self.f.write ( "\n" )
@@ -390,7 +390,7 @@ class BibtexWriter:
 
         contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
         sqrts = getSqrts ( Id )
-        coll = findCollaboration ( Id )
+        coll = getCollaboration ( Id )
         if contact and "fastlim" in contact:
             # self.stats[coll][Id]={ "fastlim": 1 }
             self.fastlim += 1
@@ -482,7 +482,7 @@ class BibtexWriter:
         entries = bibtex.entries
         filtered = []
         for entry in entries:
-            collaboration = findCollaboration ( entry )
+            collaboration = getCollaboration ( entry )
             if not experiment == collaboration:
                 continue
             filtered.append ( entry )
@@ -498,7 +498,7 @@ class BibtexWriter:
             ID = entry["ID"]
             label = labels [ ID ]
             sqrts = getSqrts ( label )
-            coll = findCollaboration ( label )
+            coll = getCollaboration ( label )
             if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
             ret += "%s, " % ID

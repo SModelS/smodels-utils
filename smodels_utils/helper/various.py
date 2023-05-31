@@ -11,6 +11,7 @@
 import os, sys
 import logging as logger
 from smodels.experiment.expResultObj import ExpResult
+from typing import Union, Text, Dict
 
 def removeAnaIdSuffices ( anaId ):
     """ given  analysis id <anaId>, remove all kinds of suffices """
@@ -27,7 +28,7 @@ def round_to_n ( x, n ):
         return -round(-x, -int(math.floor(math.log10(-x))) + (n - 1))
     return round(x, -int(math.floor(math.log10(x))) + (n - 1))
 
-def findCollaboration ( anaid ):
+def getCollaboration ( anaid : Union[Text,Dict] ):
     """ from <anaid> retrieve the collaboration name
     :param anaid: analysis id, like CMS-SUS-17-001, or a dictionary with an "ID"
                   entry
@@ -54,7 +55,7 @@ def findCollaboration ( anaid ):
             collaboration = "CMS"
     return collaboration
 
-def getSqrts ( Id ):
+def getSqrts ( Id : str ):
     """ given analysis id <Id>, determine sqrts """
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
     year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")

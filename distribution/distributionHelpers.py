@@ -213,8 +213,8 @@ def moveNonAggregated( db : Database, dirname : str = "database/",
         sqrts = float ( na.globalInfo.sqrts.asNumber() )
         if sqrts < 13.1:
             sqrts = int ( sqrts )
-        from smodels_utils.helper.various import findCollaboration
-        collaboration = findCollaboration ( na.globalInfo.id )
+        from smodels_utils.helper.various import getCollaboration
+        collaboration = getCollaboration ( na.globalInfo.id )
         path = path.replace ( "/globalInfo.txt", "" )
         newpath = f"smodels-nonaggregated/{sqrts}TeV/{collaboration}/"
         pathmaker = Path ( newpath )
