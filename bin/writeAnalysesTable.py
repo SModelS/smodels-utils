@@ -312,7 +312,8 @@ class Writer:
             comb = self.getCombinationType ( ana, nextAna )
             lines[0] += f"& {comb}"
         if isNew:
-            lines[0] = "\\bf{" + lines[0]+"}"
+            for i,line in enumerate(lines):
+                lines[i] = "\\bf{" + line+"}"
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
