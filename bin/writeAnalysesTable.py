@@ -143,7 +143,7 @@ class Writer:
             if x is None:
                 continue
             if hasattr ( x.globalInfo, "jsonFiles" ):
-                comb = "JSON"
+                comb = "\\pyhf"
             #if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
             #    comb = "JSON"
             if hasattr ( x.globalInfo, "covariance" ):
@@ -316,7 +316,6 @@ class Writer:
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
-        print ( "result", lines, "isNew", isNew )
         return "\\n".join ( lines ), len(txnames)
 
     def sqrtsIsMet ( self, sqrts ):
