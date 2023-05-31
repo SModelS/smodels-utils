@@ -729,7 +729,8 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
             collaboration = "ATL"
     if prettyname == None:
         prettyname = "???"
-    pn = prettyname.replace(">","$>$").replace("<","$<$")
+    pn = prettyname.replace(">=","$\\ge$ " )
+    pn = pn.replace(">","$>$").replace("<","$<$")
     pn = pn.replace("MHT","M@H@T" )
     pn = pn.replace("HT","$\\mathrm{H}_{\\mathrm{T}}$" )
     pn = pn.replace("0 or $>$=1 leptons +","" )
@@ -742,10 +743,9 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("Higgs","$h$" )
     #pn = pn.replace("H(bb)","H($\\to$bb)" )
     pn = pn.replace("H(bb)","H(bb)" )
-    pn = pn.replace("h(bb)","$h(b b)$" )
-    pn = pn.replace("h(b b)","$h(b b)$" )
+    pn = pn.replace("h(bb)","$h(bb)$" )
+    pn = pn.replace("h(b b)","$h(bb)$" )
     pn = pn.replace("W ","$W$ " )
-    pn = pn.replace(">=","$\\ge$ " )
     pn = pn.replace(" h"," $h$" )
     pn = pn.replace("W-","$W$-" )
     pn = pn.replace(" W"," $W$" )
@@ -754,9 +754,9 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("b-jets", "$b$-jets" )
     pn = pn.replace("b-", "$b$-" )
     pn = pn.replace("c-jets", "$c$-jets" )
-    pn = pn.replace("tau", "$\\tau$" )
     pn = pn.replace("taus", "$\\tau$" )
     pn = pn.replace("tau's", "$\\tau$" )
+    pn = pn.replace("tau", "$\\tau$" )
     pn = pn.replace("searches in","to" )
     pn = pn.replace("same-sign","SS" )
     pn = pn.replace("Multilepton","multi-$\ell$" )
