@@ -13,8 +13,9 @@ __all__ = [ "BestCombinationFinder" ]
 import numpy as np
 import sys, os
 from smodels.tools import runtime
-from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction
+from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 
+'''
 try:
     from codes.Full_SR_Ranking.pathfinder.path_finder import PathFinder
 except ImportError as e:
@@ -22,8 +23,18 @@ except ImportError as e:
     sys.path.insert(0, os.path.expanduser("~/taco_code"))
     sys.path.insert(0, os.path.expanduser("~/git/taco_code"))
     from codes.Full_SR_Ranking.pathfinder.path_finder import PathFinder
+'''
+try:
+    import pathfinder as pf
+except ImportError as e:
+    # FIXME in the long run the line below should disappear
+    sys.path.insert(0, os.path.expanduser("~/PathFinder"))
+    sys.path.insert(0, os.path.expanduser("~/git/PathFinder"))
+    import pathfinder as pf
+
 
 class BestCombinationFinder(object):
+
     def __init__(self, combination_matrix : dict, theoryPrediction : TheoryPrediction ):
         """
         combination_matrix = dictionary of allowed analyses combination
@@ -44,55 +55,59 @@ class BestCombinationFinder(object):
             for notcombAna in listOfAna:
                 if notcombAna not in self.cM.get(ana):
                     eM[listOfAna.index(ana)][listOfAna.index(notcombAna)] = False
+        
+        exclMatrix = self.trimExclusivityMatrix(np.array(eM))
+        return exclMatrix
+        
+    def trimExclusivityMatrix(self, trimEM) -> np.array:
+        """
+        remove analysis from exclMatrix for which there is no theory prediction
+        """
+        all_ana = [ana for ana in self.cM.keys()]
+        ana_with_tp = [tp.analysisId() for tp in self.listoftp]
+        
+        indices = []
+        for ana in all_ana:
+            if ana not in ana_with_tp:
+                print("\n Indices = ", all_ana.index(ana))
+                indices.append(all_ana.index(ana))
+        
+        trimEM = np.delete(np.delete(trimEM, indices,0), indices,1)
+        return trimEM
 
-        return np.array(eM)
 
     def findBestCombination(self, expected : bool = True):
         """ the actual best combination finder """
 
-
         weight_vector = []
         EMatrix = self.createExclusivityMatrix()
-
-        for tp in self.listoftp:
-            if not tp:
-                weight_vector.append(None)
-                continue
-            for preds in tp:
-                if expected:   #get expected llhd
-                    lbsm = preds.likelihood(expected=True)
-                    lsm = preds.lsm(expected=True)
-                    weight = -np.log(lbsm/lsm)  #returning nll ratio
-                    weight_vector.append(weight)
-                else:          #get observed llhd
-                    lbsm = preds.likelihood()
-                    lsm = preds.lsm()
-                    weight = -np.log(lbsm/lsm)  #returning nll ratio
-                    weight_vector.append(weight)
-
-        #Get index of analyses for which theoryPrediction is None
-        indices = []
-        for i in range(len(weight_vector)):
-            if not weight_vector[i]:
-                indices.append(i)
-
-        #Remove analysis from EMatrix and weight_vector for which theoryPrediction is None
-        weight = np.array(weight_vector)
-        weight = np.delete(weight, indices)
-
-        EMatrix = np.delete(np.delete(EMatrix, indices,0), indices,1)
-
-        no_tp = [self.listoftp[i] for i in indices]
-        for tp in no_tp: self.listoftp.remove(tp)
-
+        
+        for preds in self.listoftp:
+            if expected:   #get expected llhd
+                lbsm = preds.likelihood(expected=True)
+                lsm = preds.lsm(expected=True)
+                weight = -np.log(lbsm/lsm)  #returning nll ratio
+                weight_vector.append(weight)
+            else:          #get observed llhd
+                lbsm = preds.likelihood()
+                lsm = preds.lsm()
+                weight = -np.log(lbsm/lsm)  #returning nll ratio
+                weight_vector.append(weight)
+        
+        #Create Binary Acceptance Matrix
+        bam = pf.BinaryAcceptance(EMatrix, weights=np.array(weight_vector))
+        
         #Get the allowed list of combinations with decreasing weights
-        pf = PathFinder(np.array(~EMatrix, dtype=int), weights=weight, ignore_subset=True)
-        top_paths = pf.find_path(top=5)   #how many top paths?
+        whdfs = pf.WHDFS(bam, top=5)
+        whdfs.find_paths()
+        
+        top_path = whdfs.get_paths[0]  #how many top paths?
 
         #return list of theory predictions for which the combination has max weight
-        best_comb = [self.listoftp[i] for i in top_paths[0]['path']]
-
-        return best_comb
+        best_comb = [self.listoftp[i] for i in top_path]
+        
+        combiner = TheoryPredictionsCombiner(best_comb)
+        return combiner
 
 if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
