@@ -78,6 +78,7 @@ class Writer:
         if args.reference_database != None:
             refdb = Database ( args.reference_database )
             ers = refdb.expResultList
+            self.reference_db = refdb
             ids = set ( [ x.globalInfo.id for x in ers ] )
             self.reference_results = ids
         self.getExpResults ( superseded = args.superseded )
@@ -177,6 +178,36 @@ class Writer:
                     print ( "what do i do with", url )
         return ret
 
+    def hasChanged ( self, ana : ExpResult, reportOnlyNew : bool = False ) -> bool:
+        """ has the analysis changed with respect to the reference database? 
+        :param reportOnlyNew: if true, then only entirely new results count
+        """
+        hasChanged = False
+        if self.reference_results is not None:
+            if ana.globalInfo.id not in self.reference_results:
+                hasChanged = True
+            lastUpdate = ana.globalInfo.lastUpdate
+            from datetime import datetime
+            dateformat = "%Y/%M/%d"
+            lastUpdate = datetime.strptime ( lastUpdate, dateformat )
+            if not reportOnlyNew:
+                dTs = { "upperLimit", "efficiencyMap" }
+                dTs = set()
+                for dt in ana.datasets:
+                    dTs.add ( dt.getType() )
+                dTs = list ( dTs )
+                refanas = self.reference_db.getExpResults ( ana.globalInfo.id,
+                       dataTypes = dTs, useSuperseded=True )
+                if len(refanas)==0:
+                    hasChanged = True
+                else:
+                    refana = refanas[0]
+                    refLastUpdate = refana.globalInfo.lastUpdate
+                    refLastUpdate = datetime.strptime ( refLastUpdate, dateformat )
+                    if refLastUpdate < lastUpdate:
+                        hasChanged = True
+        return hasChanged
+
     def writeSingleAna ( self, ana : ExpResult, nextIsSame : bool, 
             nextAna : Union[None,ExpResult] = None ):
         """ write the entry of a single analysis
@@ -184,10 +215,7 @@ class Writer:
         :param nextAna: the next analysis (if same)
         """
         lines= [ "" ]
-        isNew = False
-        if self.reference_results is not None:
-            if ana.globalInfo.id not in self.reference_results:
-                isNew = True
+        hasChanged = self.hasChanged ( ana, reportOnlyNew=True )
         sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) )
         if sqrts != self.lasts and self.lasts != None:
             lines[0] = "\\hline\n"
@@ -311,7 +339,7 @@ class Writer:
         if self.addcombos:
             comb = self.getCombinationType ( ana, nextAna )
             lines[0] += f"& {comb}"
-        if isNew:
+        if hasChanged:
             for i,line in enumerate(lines):
                 lines[i] = "\\bf{" + line+"}"
         lines[0] += " \\\\\n"
