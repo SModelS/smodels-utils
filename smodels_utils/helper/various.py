@@ -15,9 +15,9 @@ from typing import Union, Text, Dict
 
 def removeAnaIdSuffices ( anaId ):
     """ given  analysis id <anaId>, remove all kinds of suffices """
-    x = anaId.replace("-agg","")
-    x = x.replace("-strong","").replace("-ewk","")
-    return x
+    for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk" ]:
+        anaId = anaId.replace(i,"")
+    return anaId
 
 def round_to_n ( x, n ):
     """ round x to n significant digits """

@@ -325,7 +325,7 @@ class Writer:
             lines[0] += f"{dt} &"
         lumi = ana.globalInfo.lumi.asNumber(1/fb)
         # lumi = self.addColor ( lumi )
-        lines[0] += f"{lumi} "
+        lines[0] += f" {lumi} "
         if self.showsqrts:
             lines[0] += f"& {self.addColor ( sqrts )}"
         if self.likelihoods:
@@ -410,8 +410,11 @@ class Writer:
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
         for ctr,ana in enumerate(self.listOfAnalyses):
             if nextIsSame:
-                ## skip!
+                ## skip! but first check if the next to next is also the same
                 nextIsSame = False
+                if ctr+1 < len(self.listOfAnalyses):
+                    if self.sameAnaIds ( self.listOfAnalyses[ctr+1], ana ):
+                        nextIsSame = True
                 continue
             if ctr+1 < len(self.listOfAnalyses):
                 # if self.listOfAnalyses[ctr+1].globalInfo.id == ana.globalInfo.id:
