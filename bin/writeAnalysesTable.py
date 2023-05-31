@@ -254,6 +254,11 @@ class Writer:
 
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
+        if nextIsSame and type(nextAna) != type(None):
+            pname2 = nextAna.globalInfo.prettyName
+            ## if we have two and the second is the EM, we go with that
+            if dataType == "upperLimit":
+                prettyName = pname2
         dt = "eff" if dataType == "efficiencyMap" else "ul"
         self.currentcolor = "white" #  "red!65"
         llhds = "no"
