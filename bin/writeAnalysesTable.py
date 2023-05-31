@@ -325,7 +325,7 @@ class Writer:
             lines[0] += f"{dt} &"
         lumi = ana.globalInfo.lumi.asNumber(1/fb)
         # lumi = self.addColor ( lumi )
-        lines[0] += f"{lumi} "
+        lines[0] += f" {lumi} "
         if self.showsqrts:
             lines[0] += f"& {self.addColor ( sqrts )}"
         if self.likelihoods:
