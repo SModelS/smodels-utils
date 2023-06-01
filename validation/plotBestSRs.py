@@ -101,7 +101,7 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
         ds = point["dataset"]
         if rank > 1:
             if not "leadingDSes" in point:
-                print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you provide the combined dictionary (I need the effmap one)? Maybe rerun validation?")
+                print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
                 sys.exit()
             if len(point["leadingDSes"]) <= rank:
                 print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
