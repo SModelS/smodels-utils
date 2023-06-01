@@ -29,15 +29,29 @@ def changeInFile ( prettyName : str, filename : PathLike ):
     lines = f.readlines()
     f.close()
     hasPrettyName = False
+    oldPrettyName = ""
     for line in lines:
         if "prettyName" in line:
             hasPrettyName = True
+            p1 = line.find ( "=" )
+            if isGlobalInfo:
+                p1 = line.find(":" )
+            if p1 < 1:
+                print ( f"[changePrettyName] cannot find separator in {line}" )
+            oldPrettyName = f"{line[p1+1:]}"
+            oldPrettyName = oldPrettyName.strip()
+            if oldPrettyName.startswith ( "'" ) or oldPrettyName.startswith ( '"' ):
+                oldPrettyName = oldPrettyName[1:-1]
             break
     if not hasPrettyName:
         print ( f"[changePrettyName] no prettyName defined in {filename}" )
         return
+    if oldPrettyName == prettyName:
+        print ( f"[changePrettyName] old pretty name same as new: '{prettyName}'" )
+        return
+
     g = open ( filename, "wt" )
-    print ( f"[changePrettyName] changing {filename}" )
+    print ( f'[changePrettyName] changing {filename}: "{oldPrettyName}" -> "{prettyName}"' )
     for line in lines:
         if not "prettyName" in line:
             g.write ( line )
