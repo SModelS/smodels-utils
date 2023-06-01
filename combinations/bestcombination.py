@@ -132,9 +132,11 @@ if __name__ == "__main__":
     bC = BestCombinationFinder(combination_matrix = comb_dict, theoryPrediction = allPreds)
     bestThPred = bC.findBestCombination()
     
-    if type(bestThPred) == 'TheoryPredictionsCombiner':
-        print("\n Model Point : ", filename, " best combination: ", bestThPred.describe())
+    
+    if bestThPred is None : print("\n Model Point: ", filename, "  , No predictions")
     else:
-        if bestThPred is None : print("\n Model Point: ", filename, "  , No predictions")
-        else: print("\n Model Point: ", filename, "  , best theory prediction: ", bestThPred)
+        try:
+            print("\n Model Point : ", filename, " best combination: ", bestThPred.describe())
+        except AttributeError as e:
+            print("\n Model Point: ", filename, "  , best theory prediction: ", bestThPred)
     
