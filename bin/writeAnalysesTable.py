@@ -200,7 +200,7 @@ class Writer:
                     for dt in nextAna.datasets:
                         dTs.add ( dt.getType() )
                 dTs = list ( dTs )
-                refanas = self.reference_db.getExpResults ( ana.globalInfo.id )
+                refanas = self.reference_db.getExpResults ( [ ana.globalInfo.id+x for x in  [ "", "-agg", "-ma5", "-adl", "-eff" ] ] )
                 refdTs = set()
                 for refana in refanas:
                     for dt in refana.datasets:
@@ -215,6 +215,11 @@ class Writer:
                     refLastUpdate = datetime.strptime ( refLastUpdate, dateformat )
                     if refLastUpdate < lastUpdate:
                         hasChanged = True
+        if False:
+            print ( )
+            print ( f"has {ana.globalInfo.id} changed? {hasChanged}" )
+            print ( f"refanas {refanas}" )
+            print ( f"dTs {dTs} refdTs {refdTs}" )
         return hasChanged
 
     def writeSingleAna ( self, ana : ExpResult, nextIsSame : bool, 
