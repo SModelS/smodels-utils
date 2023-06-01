@@ -54,7 +54,12 @@ def changeInFile ( prettyName : str, filename : PathLike ):
         g.write ( newline+"\n" )
     g.close()
 
-if __name__ == "__main__":
+def commandline():
+    """
+    .. code-block:: bash
+
+    >>> changePrettyName.py -a CMS-SUS-16-035 -p "2 SS l"
+    """
     import argparse
     ap = argparse.ArgumentParser(description="Systematically change the pretty name of an analysis in a text database" )
     ap.add_argument('-a', '--analysis', type=str,
@@ -72,3 +77,6 @@ if __name__ == "__main__":
         print ( "[changePrettyName] need to specify a prettyName" )
         sys.exit()
     change ( args.analysis, args.prettyName, args.dbpath )
+
+if __name__ == "__main__":
+    commandline()
