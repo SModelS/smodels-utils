@@ -738,6 +738,7 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("M_CT","$M_{\mathrm{CT}}$" )
     pn = pn.replace("hadronic","@hadronic@" )
     pn = pn.replace("W h(gamma gamma)","$Wh(\gamma\gamma)$" )
+    pn = pn.replace("h(gamma gamma)","$h(\gamma\gamma)$" )
     pn = pn.replace("HTmiss","$\\not{\!\!H}_T$")
     pn = pn.replace("HT","$\\mathrm{H}_{\\mathrm{T}}$" )
     pn = pn.replace("0 or $>$=1 leptons +","" )
