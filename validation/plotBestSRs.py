@@ -99,6 +99,9 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
         if max_y != None and axes[0]>max_y:
             continue
         ds = point["dataset"]
+        if rank == 0:
+            print ( f"[plotBestSRs] your specified a rank of zero. The rank is one-indexed, did you mean rank=1?" )
+            sys.exit()
         if rank > 1:
             if not "leadingDSes" in point:
                 print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
@@ -106,7 +109,7 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
             if len(point["leadingDSes"]) <= rank:
                 print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
                 sys.exit()
-            ds = point["leadingDSes"][rank][1]
+            ds = point["leadingDSes"][rank-1][1]
         bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
         print ( "[plotBestSRs] skipped %d/%d points: %s" % \
@@ -347,7 +350,7 @@ if __name__ == "__main__":
             help="upper bound on y axis [None]",
             type=float, default=None )
     argparser.add_argument ( "-r", "--rank",
-            help="which rank to draw, e.g. leading signal region, or second, or ... [1]",
+            help="which rank (one-indexed) to draw, e.g. leading signal region, or second, or ... [1]",
             type=int, default=1 )
     argparser.add_argument ( "-n", "--nmax",
             help="maximum numbers of SRs [6]",
