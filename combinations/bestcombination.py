@@ -15,15 +15,6 @@ import sys, os
 from smodels.tools import runtime
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 
-'''
-try:
-    from codes.Full_SR_Ranking.pathfinder.path_finder import PathFinder
-except ImportError as e:
-    # FIXME in the long run the line below should disappear
-    sys.path.insert(0, os.path.expanduser("~/taco_code"))
-    sys.path.insert(0, os.path.expanduser("~/git/taco_code"))
-    from codes.Full_SR_Ranking.pathfinder.path_finder import PathFinder
-'''
 try:
     import pathfinder as pf
 except ImportError as e:
@@ -69,7 +60,6 @@ class BestCombinationFinder(object):
         indices = []
         for ana in all_ana:
             if ana not in ana_with_tp:
-                print("\n Indices = ", all_ana.index(ana))
                 indices.append(all_ana.index(ana))
         
         trimEM = np.delete(np.delete(trimEM, indices,0), indices,1)
@@ -78,7 +68,13 @@ class BestCombinationFinder(object):
 
     def findBestCombination(self, expected : bool = True):
         """ the actual best combination finder """
-
+        
+        if len(self.listoftp) == 0:     #no theory prediction
+            return None
+            
+        if len(self.listoftp) == 1:     #just 1 tp, no need for combining
+            return self.listoftp
+            
         weight_vector = []
         EMatrix = self.createExclusivityMatrix()
         
@@ -106,10 +102,39 @@ class BestCombinationFinder(object):
         #return list of theory predictions for which the combination has max weight
         best_comb = [self.listoftp[i] for i in top_path]
         
-        combiner = TheoryPredictionsCombiner(best_comb)
+        if len(best_comb) == 1:     #just 1 best tp, no need for combining
+            return best_comb
+            
+        combiner = TheoryPredictionsCombiner(best_comb)         #combine tp
         return combiner
 
 if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
+    from smodels.theory.model import Model
+    from smodels.share.models.mssm import BSMList
+    from smodels.share.models.SMparticles import SMList
+    from smodels.tools.physicsUnits import fb, GeV
+    from smodels.theory import decomposer
+    
+    filename = "gluino_squarks.slha"
+    
+    model = Model(BSMparticles = BSMList, SMparticles = SMList)
+    model.updateParticles(inputFile = filename)
+    toplist = decomposer.decompose(model, 0.005*fb, doCompress=True, doInvisible=True, minmassgap=5.*GeV)
+    
+    listOfAna = ['ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41','ATLAS-SUSY-2019-02']
+    comb_dict = {"ATLAS-SUSY-2018-32":['ATLAS-SUSY-2018-41'], "ATLAS-SUSY-2018-41":['ATLAS-SUSY-2018-32', 'ATLAS-SUSY-2019-02'], "ATLAS-SUSY-2019-02":['ATLAS-SUSY-2018-41']}
     db = Database ( "official" )
-    print ( db )
+    expresults = db.getExpResults(analysisIDs=listOfAna, dataTypes=['efficiencyMap','combined'])
+    
+    allPreds = theoryPredictionsFor(expresults, toplist, combinedResults=True)
+    
+    bC = BestCombinationFinder(combination_matrix = comb_dict, theoryPrediction = allPreds)
+    bestThPred = bC.findBestCombination()
+    
+    if type(bestThPred) == 'TheoryPredictionsCombiner':
+        print("\n Model Point : ", filename, " best combination: ", bestThPred.describe())
+    else:
+        if bestThPred is None : print("\n Model Point: ", filename, "  , No predictions")
+        else: print("\n Model Point: ", filename, "  , best theory prediction: ", bestThPred)
+    
