@@ -100,7 +100,7 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
             continue
         ds = point["dataset"]
         if rank == 0:
-            print ( f"[plotBestSRs] your specified a rank of zero. The rank is one-indexed, did you mean rank=1?" )
+            print ( f"[plotBestSRs] you specified a rank of zero. The rank is one-indexed, did you mean rank=1?" )
             sys.exit()
         if rank > 1:
             if not "leadingDSes" in point:
