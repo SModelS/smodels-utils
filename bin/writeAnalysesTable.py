@@ -178,7 +178,8 @@ class Writer:
                     print ( "what do i do with", url )
         return ret
 
-    def hasChanged ( self, ana : ExpResult, reportOnlyNew : bool = False ) -> bool:
+    def hasChanged ( self, ana : ExpResult, nextAna : None|ExpResult,
+                     reportOnlyNew : bool = False ) -> bool:
         """ has the analysis changed with respect to the reference database? 
         :param reportOnlyNew: if true, then only entirely new results count
         """
@@ -195,9 +196,17 @@ class Writer:
                 dTs = set()
                 for dt in ana.datasets:
                     dTs.add ( dt.getType() )
+                if nextAna is not None:
+                    for dt in nextAna.datasets:
+                        dTs.add ( dt.getType() )
                 dTs = list ( dTs )
-                refanas = self.reference_db.getExpResults ( ana.globalInfo.id,
-                       dataTypes = dTs, useSuperseded=True )
+                refanas = self.reference_db.getExpResults ( ana.globalInfo.id )
+                refdTs = set()
+                for refana in refanas:
+                    for dt in refana.datasets:
+                        refdTs.add ( dt.getType() )
+                if len(refdTs) < len(dTs):
+                    hasChanged = True
                 if len(refanas)==0:
                     hasChanged = True
                 else:
@@ -215,7 +224,7 @@ class Writer:
         :param nextAna: the next analysis (if same)
         """
         lines= [ "" ]
-        hasChanged = self.hasChanged ( ana, reportOnlyNew=True )
+        hasChanged = self.hasChanged ( ana, nextAna, reportOnlyNew=False )
         sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) )
         if sqrts != self.lasts and self.lasts != None:
             lines[0] = "\\hline\n"
