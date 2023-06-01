@@ -5,7 +5,7 @@ a full blown script """
 
 from smodels_utils.plotting import mpkitty as plt
 #import matplotlib.pyplot as plt
-import copy, os
+import copy, os, sys
 import numpy
 import importlib
 import warnings
@@ -101,8 +101,11 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
         ds = point["dataset"]
         if rank > 1:
             if not "leadingDSes" in point:
-                print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Maybe rerun validation?")
-                return
+                print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
+                sys.exit()
+            if len(point["leadingDSes"]) <= rank:
+                print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
+                sys.exit()
             ds = point["leadingDSes"][rank][1]
         bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
@@ -113,6 +116,8 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
 def countSignalRegions ( bestSRs : dict ) -> dict:
     """ count how often each signal region appears """
     counts = {}
+    if bestSRs is None:
+        return counts
     for bestSR in bestSRs:
         srname = bestSR["SR"]
         if not srname in counts:
@@ -168,6 +173,8 @@ def fetchPoints ( bestSRs : list, region : Union[str,None] ) -> tuple:
     :returns: tuple ( x_coordinates, y_coordinates )
     """
     xs, ys = [], [] # that will be the coordinates
+    if bestSRs is None:
+        return xs, ys
     for point in bestSRs:
         if point["SR"]!=region:
             continue
@@ -183,6 +190,8 @@ def fetchAllOtherPoints ( bestSRs : list, regions : list ) -> tuple:
     :returns: tuple ( x_coordinates, y_coordinates )
     """
     xs, ys = [], [] # that will be the coordinates
+    if bestSRs is None:
+        return xs, ys
     for point in bestSRs:
         if point["SR"] in regions or point["SR"] is None:
             continue
@@ -319,6 +328,12 @@ def writeBestSRs( push = False ):
     print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
 
 if __name__ == "__main__":
+    """
+    .. code-block::
+
+    >>> ./plotBestSRs.py -d ../../smodels-database -a CMS-SUS-21-002-eff -v TChiWZ_2EqMassAx_EqMassBy.py -r 2
+
+    """
     import argparse
     argparser = argparse.ArgumentParser(
             description = "plot of best (expected) signal region per point" )

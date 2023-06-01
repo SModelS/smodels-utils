@@ -29,15 +29,29 @@ def changeInFile ( prettyName : str, filename : PathLike ):
     lines = f.readlines()
     f.close()
     hasPrettyName = False
+    oldPrettyName = ""
     for line in lines:
         if "prettyName" in line:
             hasPrettyName = True
+            p1 = line.find ( "=" )
+            if isGlobalInfo:
+                p1 = line.find(":" )
+            if p1 < 1:
+                print ( f"[changePrettyName] cannot find separator in {line}" )
+            oldPrettyName = f"{line[p1+1:]}"
+            oldPrettyName = oldPrettyName.strip()
+            if oldPrettyName.startswith ( "'" ) or oldPrettyName.startswith ( '"' ):
+                oldPrettyName = oldPrettyName[1:-1]
             break
     if not hasPrettyName:
         print ( f"[changePrettyName] no prettyName defined in {filename}" )
         return
+    if oldPrettyName == prettyName:
+        print ( f"[changePrettyName] old pretty name same as new: '{prettyName}'" )
+        return
+
     g = open ( filename, "wt" )
-    print ( f"[changePrettyName] changing {filename}" )
+    print ( f'[changePrettyName] changing {filename}: "{oldPrettyName}" -> "{prettyName}"' )
     for line in lines:
         if not "prettyName" in line:
             g.write ( line )
@@ -54,7 +68,12 @@ def changeInFile ( prettyName : str, filename : PathLike ):
         g.write ( newline+"\n" )
     g.close()
 
-if __name__ == "__main__":
+def commandline():
+    """
+    .. code-block:: bash
+
+    >>> changePrettyName.py -a CMS-SUS-16-035 -p "2 SS l"
+    """
     import argparse
     ap = argparse.ArgumentParser(description="Systematically change the pretty name of an analysis in a text database" )
     ap.add_argument('-a', '--analysis', type=str,
@@ -72,3 +91,6 @@ if __name__ == "__main__":
         print ( "[changePrettyName] need to specify a prettyName" )
         sys.exit()
     change ( args.analysis, args.prettyName, args.dbpath )
+
+if __name__ == "__main__":
+    commandline()

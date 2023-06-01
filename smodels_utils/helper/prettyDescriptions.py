@@ -713,6 +713,7 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
                           anaid is given, then infer collaboration name from anaid
     :param anaid: analysis id. if given, then we also query a dictionary
     """
+    # yes, this is a big mess. wouldnt hurt to start this from scratch
 
     prettyNames = { "ATLAS-SUSY-2013-02": "ATL multijet, 8 TeV",
         "ATLAS-SUSY-2013-15": "ATL 1$\ell$ stop, 8 TeV",
@@ -731,10 +732,13 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         prettyname = "???"
     pn = prettyname.replace(">=","$\\ge$ " )
     pn = pn.replace(">","$>$").replace("<","$<$")
-    pn = pn.replace("MHT","M@H@T" )
-    pn = pn.replace("M_CT","$\mathrm{M}_{\mathrcm{CT}}$" )
+    pn = pn.replace( "(or 2 gamma)", "(or 2 gamma) " )
+    pn = pn.replace("MHT","$\\not{\!\!H}_T$")
+    pn = pn.replace("MCT","$M_{\mathrm{CT}}$" )
+    pn = pn.replace("M_CT","$M_{\mathrm{CT}}$" )
     pn = pn.replace("hadronic","@hadronic@" )
     pn = pn.replace("W h(gamma gamma)","$Wh(\gamma\gamma)$" )
+    pn = pn.replace("h(gamma gamma)","$h(\gamma\gamma)$" )
     pn = pn.replace("HTmiss","$\\not{\!\!H}_T$")
     pn = pn.replace("HT","$\\mathrm{H}_{\\mathrm{T}}$" )
     pn = pn.replace("0 or $>$=1 leptons +","" )
@@ -749,6 +753,7 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("H(bb)","H(bb)" )
     pn = pn.replace("h(bb)","$h(bb)$" )
     pn = pn.replace("h(b b)","$h(bb)$" )
+    pn = pn.replace("Z(l l)","$Z(\ell \ell)$" )
     pn = pn.replace("W ","$W$ " )
     # pn = pn.replace(" h"," $h$" )
     pn = pn.replace("W-","$W$-" )
@@ -757,8 +762,8 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace(" Z"," $Z$" )
     pn = pn.replace("b-jets", "$b$-jets" )
     pn = pn.replace("b-", "$b$-" )
-    pn = pn.replace("e,mu", "$e,\mu$" )
     pn = pn.replace("e,mu,tau", "$e,\\mu,\\tau$" )
+    pn = pn.replace("e,mu", "$e,\mu$" )
     pn = pn.replace("c-jets", "$c$-jets" )
     pn = pn.replace("c-jet", "$c$-jet" )
     pn = pn.replace("c-", "$c$-" )
@@ -807,15 +812,22 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("MET","$\\not{\!\!E}_T$")
     pn = pn.replace("met","$\\not{\!\!E}_T$")
     pn = pn.replace("2-3","2--3")
+    pn = pn.replace("1-2","1--2")
+    pn = pn.replace("7-10","7--10")
     pn = pn.replace("0-3","0--3")
     pn = pn.replace("2-6","2--6")
-    pn = pn.replace("M_CT","M$_CT$" )
+    pn = pn.replace("M_CT","$\\mathrm{M}_\\mathrm{CT}$" )
+    pn = pn.replace("M_T2","$M_\\mathrm{T2}$" )
+    pn = pn.replace("MT2","$M_\\mathrm{T2}$" )
     pn = pn.replace("alpha_T","$\\alpha_T$" )
-    pn = pn.replace( "M@H@T", "MHT" )
+    pn = pn.replace("alphaT","$\\alpha_T$" )
     pn = pn.replace( "@hadronic@", "hadronic" )
+    pn = pn.replace( "(+ jets)", "(+ jets) " )
     if len(pn)>0 and pn[-1]==")" and prettyname != "H(diphoton)":
         pos = pn.rfind ( "(" )
         pn = pn[:pos]
+    pn = pn.replace( "(+ jets) ", "(+ jets)" )
+    pn = pn.replace( "(or 2 gamma) ", "(or 2 $\\gamma$)" )
     pn = pn.strip()
     if sqrts != None:
         try:
