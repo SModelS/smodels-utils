@@ -35,7 +35,6 @@ def convertNewAxes ( newa ):
     print ( f"[plotBestSRs] cannot convert axis {newa}" )
     return None
 
-
 def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict: 
     """ fetch and merge the contents of validation files
     """
@@ -79,6 +78,7 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
     """
     bestSRs = [] # a list of dictioanries of x,y,SR
     skipped, err = 0, None # we also count the number of error points
+
     for point in data:
         if "error" in point:
             skipped += 1
@@ -104,11 +104,10 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
             sys.exit()
         if rank > 1:
             if not "leadingDSes" in point:
-                print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
-                sys.exit()
-            if len(point["leadingDSes"]) <= rank:
+                # print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
+                continue
+            if len(point["leadingDSes"]) < rank:
                 print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
-                sys.exit()
             ds = point["leadingDSes"][rank-1][1]
         bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
