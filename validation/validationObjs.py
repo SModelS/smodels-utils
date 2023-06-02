@@ -364,11 +364,22 @@ class ValidationPlot():
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
-            f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
-            f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
+            sigmacut = 0.000000001
+            minmassgap = 2.0
+            maxcond = 1.0
+            promptWidth=1.1
+            if "sigmacut" in self.options:
+                sigmacut = self.options["sigmacut"]
+            if "minmassgap" in self.options:
+                minmassgap = self.options["minmassgap"]
+            if "maxcond" in self.options:
+                maxcond = self.options["maxcond"]
+            if "promptWidth" in self.options:
+                promptWidth = self.options["promptWidth"]
+            f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
+            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
             f.write("[printer]\noutputType = python\n")
-            f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
-                     model )
+            f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
