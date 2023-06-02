@@ -479,6 +479,8 @@ def updateOptions ( options : dict, parser ):
                 options[option] = parser.getboolean("options",option)
             if otype == int:
                 options[option] = parser.getint("options",option)
+            if otype == float:
+                options[option] = parser.getfloat("options",option)
             if otype in [ type(None), str ]:
                 # if default is none, we assume its actually a string
                 options[option] = parser.get("options",option)
