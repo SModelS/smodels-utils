@@ -14,6 +14,7 @@ import numpy as np
 import sys, os
 from smodels.tools import runtime
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
+from smodels.experiment.databaseObj import Database
 
 try:
     import pathfinder as pf
@@ -33,21 +34,41 @@ class BestCombinationFinder(object):
         """
         self.cM = combination_matrix
         self.listoftp = theoryPrediction
+        
+    def checkCombinable(self, listOfAna, a1, a2):
+        
+        db = Database('official')
+        expResults = db.getExpResults(analysisIDs = listOfAna, dataTypes=['efficiencyMap','combined'])
+        root_s = [exp.globalInfo.sqrts for exp in expResults]
+    
+        i = 0
+        for key in self.cM.keys():
+            self.cM[key] += [str(root_s[i])]
+            i = i+1
+            
+        if ('CMS' in a1 and 'ATLAS' in a2) or ('ATLAS' in a1 and 'CMS' in a2): return True
+        elif ('8' in self.cM.get(a1)[-1] and '1.3' in self.cM.get(a2)[-1]) or ('1.3' in self.cM.get(a1)[-1] and '8' in self.cM.get(a2)[-1]): return True
+            
+        
 
     def createExclusivityMatrix(self) -> np.array:
         """
         create a N by N True/False matrix where N = number of analyses in the dict
         """
         eM = [[True for i in range(len(self.cM))] for i in range(len(self.cM))]
-
+        
         listOfAna = [ana for ana in self.cM.keys()]
-
+        
+            
         for ana in self.cM.keys():
             for notcombAna in listOfAna:
                 if notcombAna not in self.cM.get(ana):
+                    if self.checkCombinable(listOfAna, notcombAna, ana):continue
                     eM[listOfAna.index(ana)][listOfAna.index(notcombAna)] = False
         
+        #print(np.array(eM))
         exclMatrix = self.trimExclusivityMatrix(np.array(eM))
+        
         return exclMatrix
         
     def trimExclusivityMatrix(self, trimEM) -> np.array:
