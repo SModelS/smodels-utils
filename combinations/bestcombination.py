@@ -27,13 +27,13 @@ except ImportError as e:
 
 class BestCombinationFinder(object):
 
-    def __init__(self, combination_matrix : dict, theoryPrediction : TheoryPrediction ):
+    def __init__(self, combination_matrix : dict, theoryPredictionList : list[TheoryPrediction] ):
         """
         combination_matrix = dictionary of allowed analyses combination
-        theoryPrediction = list of theory prediction objects for each expResult
+        theoryPrediction = list of theory prediction objects 
         """
         self.cM = combination_matrix
-        self.listoftp = theoryPrediction
+        self.listoftp = theoryPredictionList
         
     def checkCombinable(self, listOfAna, a1, a2):
         
