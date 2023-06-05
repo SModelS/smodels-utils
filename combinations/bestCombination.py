@@ -62,7 +62,7 @@ class BestCombinationFinder(object):
             if str(sq_s).split('.')[0] == '8':
                 Ana_8.append(ana)
                 s_8.append('8')
-                print("\n", ana)
+                #print("\n", ana)
             else:
                 Ana_13.append(ana)
                 s_13.append('13')
@@ -72,7 +72,7 @@ class BestCombinationFinder(object):
         
         
         self.Ana = Ana_8 + Ana_13
-        print("\n", self.Ana)
+        #print("\n", self.Ana)
         self.root_s = s_8 + s_13
         
         for ana in self.Ana:
