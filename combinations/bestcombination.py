@@ -90,7 +90,9 @@ class BestCombinationFinder(object):
         
         for ana in self.Ana:
             for notcombAna in self.Ana:
-                if notcombAna not in self.cM.get(ana):
+                if not self.cM.get(ana):
+                    if self.checkCombinable(notcombAna, ana):continue
+                elif notcombAna not in self.cM.get(ana):
                     if self.checkCombinable(notcombAna, ana):continue
                     eM[self.Ana.index(ana)][self.Ana.index(notcombAna)] = False
         
