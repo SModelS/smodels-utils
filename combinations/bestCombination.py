@@ -59,9 +59,10 @@ class BestCombinationFinder(object):
         for tp in self.listoftp:
             ana = tp.dataset.globalInfo.id
             sq_s = tp.dataset.globalInfo.sqrts
-            if str(sq_s).split('.') == '8':
+            if str(sq_s).split('.')[0] == '8':
                 Ana_8.append(ana)
                 s_8.append('8')
+                print("\n", ana)
             else:
                 Ana_13.append(ana)
                 s_13.append('13')
@@ -69,7 +70,9 @@ class BestCombinationFinder(object):
         Ana_8.sort()
         Ana_13.sort()
         
+        
         self.Ana = Ana_8 + Ana_13
+        print("\n", self.Ana)
         self.root_s = s_8 + s_13
         
         for ana in self.Ana:
