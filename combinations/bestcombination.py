@@ -34,47 +34,76 @@ class BestCombinationFinder(object):
         """
         self.cM = combination_matrix
         self.listoftp = theoryPredictionList
+        self.Ana = []                                       #Analysis in tpred List
+        self.root_s = []                                    #root_s of analysis in tpred list
         
-    def checkCombinable(self, listOfAna, a1, a2):
-        
-        db = Database('official')
-        expResults = db.getExpResults(analysisIDs = listOfAna, dataTypes=['efficiencyMap','combined'])
-        root_s = [exp.globalInfo.sqrts for exp in expResults]
-    
-        i = 0
-        for key in self.cM.keys():
-            self.cM[key] += [str(root_s[i])]
-            i = i+1
+    def checkCombinable(self, a1, a2):
             
-        if ('CMS' in a1 and 'ATLAS' in a2) or ('ATLAS' in a1 and 'CMS' in a2): return True
-        elif ('8' in self.cM.get(a1)[-1] and '1.3' in self.cM.get(a2)[-1]) or ('1.3' in self.cM.get(a1)[-1] and '8' in self.cM.get(a2)[-1]): return True
-            
+        i1 = self.Ana.index(a1)
+        i2 = self.Ana.index(a2)
+        expt1 = a1.split('-')[0]                                      #split at - and get 'CMS'/'ATLAS'
+        expt2 = a2.split('-')[0]
+        if expt1 != expt2: return True                                      #if diff expts return True
+        elif str(self.root_s[i1]) != str(self.root_s[i2]) : return True     #if diff sqrts return True
+        else: return False
         
-
+        
+    def setOrder(self):
+        "order Analysis in EM and tpred list based on sqrt_s and analysisId"
+        
+        Ana_8 = []
+        Ana_13 = []
+        s_8 = []
+        s_13 = []
+        tp_8 = []
+        tp_13 = []
+        
+        for tp in self.listoftp:
+            ana = tp.dataset.globalInfo.id
+            sq_s = tp.dataset.globalInfo.sqrts
+            if str(sq_s).split('.') == '8':
+                Ana_8.append(ana)
+                s_8.append('8')
+                tp_8.append(tp)
+            else:
+                Ana_13.append(ana)
+                s_13.append('13')
+                tp_13.append(tp)
+            
+        Ana_8.sort()
+        Ana_13.sort()
+        self.listoftp = tp_8 + tp_13
+        self.Ana = Ana_8 + Ana_13
+        self.root_s = s_8 + s_13
+        #print(self.listoftp, self.Ana)
+        #return self
+        
     def createExclusivityMatrix(self) -> np.array:
         """
         create a N by N True/False matrix where N = number of analyses in the dict
         """
-        eM = [[True for i in range(len(self.cM))] for i in range(len(self.cM))]
-        
-        listOfAna = [ana for ana in self.cM.keys()]
-        
+        self.setOrder()
             
-        for ana in self.cM.keys():
-            for notcombAna in listOfAna:
+        eM = [[True for i in range(len(self.Ana))] for i in range(len(self.Ana))]  #em has dimensions of the lenght of list of theory predictions
+        
+        #listOfAna = [ana for ana in self.cM.keys()]   #list of Analysis in the combination dictionary
+        
+        for ana in self.Ana:
+            for notcombAna in self.Ana:
                 if notcombAna not in self.cM.get(ana):
-                    if self.checkCombinable(listOfAna, notcombAna, ana):continue
-                    eM[listOfAna.index(ana)][listOfAna.index(notcombAna)] = False
+                    if self.checkCombinable(notcombAna, ana):continue
+                    eM[self.Ana.index(ana)][self.Ana.index(notcombAna)] = False
         
         #print(np.array(eM))
-        exclMatrix = self.trimExclusivityMatrix(np.array(eM))
-        
+        exclMatrix = np.array(eM)
+        #print(exclMatrix)
         return exclMatrix
-        
+    
+    """
     def trimExclusivityMatrix(self, trimEM) -> np.array:
-        """
+        
         remove analysis from exclMatrix for which there is no theory prediction
-        """
+        
         all_ana = [ana for ana in self.cM.keys()]
         ana_with_tp = [tp.analysisId() for tp in self.listoftp]
         
@@ -85,7 +114,7 @@ class BestCombinationFinder(object):
         
         trimEM = np.delete(np.delete(trimEM, indices,0), indices,1)
         return trimEM
-
+    """
 
     def findBestCombination(self, expected : bool = True):
         """ the actual best combination finder """
