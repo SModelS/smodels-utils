@@ -93,17 +93,15 @@ class BestCombinationFinder(object):
         
         for ana in self.Ana:
             for combAna in self.Ana:
+                
                 if not self.cM.get(ana):
-                    if self.checkCombinable(combAna, ana):
-                        eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
-                        continue
+                    if self.checkCombinable(combAna, ana): eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                
                 elif combAna not in self.cM.get(ana):
-                    if self.checkCombinable(combAna, ana):
-                        eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
-                        continue
-                else:
-                    eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
-                    continue
+                    if self.checkCombinable(combAna, ana): eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                
+                else: eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                    
                     
                     
         
