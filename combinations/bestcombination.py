@@ -55,46 +55,57 @@ class BestCombinationFinder(object):
         Ana_13 = []
         s_8 = []
         s_13 = []
-        tp_8 = []
-        tp_13 = []
-        
+        tp_list = []
         for tp in self.listoftp:
             ana = tp.dataset.globalInfo.id
             sq_s = tp.dataset.globalInfo.sqrts
             if str(sq_s).split('.') == '8':
                 Ana_8.append(ana)
                 s_8.append('8')
-                tp_8.append(tp)
             else:
                 Ana_13.append(ana)
                 s_13.append('13')
-                tp_13.append(tp)
-            
+                
         Ana_8.sort()
         Ana_13.sort()
-        self.listoftp = tp_8 + tp_13
+        
         self.Ana = Ana_8 + Ana_13
         self.root_s = s_8 + s_13
+        
+        for ana in self.Ana:
+            for tp in self.listoftp:
+                if tp.dataset.globalInfo.id == ana:
+                    tp_list.append(tp)
+        
+        self.listoftp =tp_list
         #print(self.listoftp, self.Ana)
         #return self
         
     def createExclusivityMatrix(self) -> np.array:
         """
-        create a N by N True/False matrix where N = number of analyses in the dict
+        create a N by N True/False matrix where N = number of analyses in the tpred list
         """
         self.setOrder()
             
-        eM = [[True for i in range(len(self.Ana))] for i in range(len(self.Ana))]  #em has dimensions of the lenght of list of theory predictions
+        eM = [[False for i in range(len(self.Ana))] for i in range(len(self.Ana))]  #em has dimensions of the lenght of list of theory predictions
         
         #listOfAna = [ana for ana in self.cM.keys()]   #list of Analysis in the combination dictionary
         
         for ana in self.Ana:
-            for notcombAna in self.Ana:
+            for combAna in self.Ana:
                 if not self.cM.get(ana):
-                    if self.checkCombinable(notcombAna, ana):continue
-                elif notcombAna not in self.cM.get(ana):
-                    if self.checkCombinable(notcombAna, ana):continue
-                    eM[self.Ana.index(ana)][self.Ana.index(notcombAna)] = False
+                    if self.checkCombinable(combAna, ana):
+                        eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                        continue
+                elif combAna not in self.cM.get(ana):
+                    if self.checkCombinable(combAna, ana):
+                        eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                        continue
+                else:
+                    eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                    continue
+                    
+                    
         
         #print(np.array(eM))
         exclMatrix = np.array(eM)
