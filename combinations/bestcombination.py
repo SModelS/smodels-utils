@@ -179,7 +179,7 @@ if __name__ == "__main__":
     
     allPreds = theoryPredictionsFor(expresults, toplist, combinedResults=True)
     
-    bC = BestCombinationFinder(combination_matrix = comb_dict, theoryPrediction = allPreds)
+    bC = BestCombinationFinder(combination_matrix = comb_dict, theoryPredictionList = allPreds)
     bestThPred = bC.findBestCombination()
     
     
