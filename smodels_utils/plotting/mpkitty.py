@@ -34,6 +34,7 @@ def importBackend():
 
 importBackend()
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import *
 
 def timg( filename ):
     """ use timg to show filename in the terminal """
@@ -77,4 +78,3 @@ def kittyPlot( filename = None, show = True ):
     if deleteIt and os.path.exists ( filename ):
         os.unlink ( filename )
 
-from matplotlib.pyplot import *
