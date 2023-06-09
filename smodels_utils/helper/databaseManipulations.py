@@ -3,9 +3,13 @@
 """ module that contains a few methods to manipulate the database """
 
 from smodels.experiment.databaseObj import Database
+from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.physicsUnits import TeV, fb
+from smodels_utils.helper.various import getCollaboration
+from typing import Union, List, Dict
 
-def combineResults( database, anas_and_SRs : dict, debug=False ):
+def combineResults( database: Database, anas_and_SRs : Dict, 
+        debug : bool = False ) -> ExpResult:
     """ combine the <anas_and_SRs> results in <database>
         to a single result with a diagonal covariance matrix
     :param anas_and_SRs: dictionary with analysis Ids as keys and lists of signal regions
@@ -271,7 +275,26 @@ def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
     #    return filteredList
     return fullLLhds
 
-def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
+def filterCollaborationFromList ( expResultList : List[ExpResult],
+        collaboration = str, invert : bool = False ) -> List[ExpResult]:
+    """ filter list of exp results by collaboration name
+    :param collaboration: CMS, or ATLAS
+    :param invert: if True, then invert, discard the given collaboration
+    :returns: list of experimental results of certain collaboration
+    """
+    ret = []
+    for ana in expResultList:
+        contact = ""
+        coll = getCollaboration ( ana.globalInfo.id )
+        if invert and collaboration == coll:
+            continue
+        if not invert and collaboration != coll:
+            continue
+        ret.append ( ana )
+    return ret
+
+def filterSqrtsFromList ( expResultList, 
+        sqrts : int, invert : bool = False ) -> List[ExpResult]:
     """ filter list of exp results by sqrts
     :param sqrts: sqrts (int) to keep
     :param invert: if True, then invert, discard the given sqrts
