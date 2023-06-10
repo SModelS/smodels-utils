@@ -17,7 +17,10 @@ sys.path.append('../../')
 import logging
 import logging.config
 from smodels_utils import SModelSUtils
-from . import setPath
+try:
+    from . import setPath
+except ImportError as e:
+    pass
 from smodels_utils.plotting import decayPlots
 import os
 from ptools import sparticleNames
@@ -157,7 +160,6 @@ def draw( slhafile, outfile, options, offset=0.,
         drawer.addNode ( m, pid, \
                 options["masses"], color, reader.fermionic ( pid ) )
         decs=reader.getDecays ( pid, rmin=options["rmin"] )
-        # print ( "decays for", name, options["rmin"], decs )
         drawer.addEdges ( pid, decs, rmin=options["rmin"] )
 
     ## drawer.addMassScale ( )
