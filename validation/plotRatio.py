@@ -149,6 +149,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     nsr=""
     noaxes = 0
     data1 = content1["data"]
+    ul = "UL"
+    if "eul" in options and options["eul"]==True:
+        ul = "eUL"
     for ctr,point in enumerate( data1 ):
         if not "axes" in point:
             noaxes+=1
@@ -170,8 +173,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             continue
         if "y" in point["axes"] and point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
-        if "UL" in point and point["UL"] != None:
-            rs[ h ] = point["signal"] / point["UL" ]
+        if ul in point and point[ul] != None:
+            rs[ h ] = point["signal"] / point[ ul ]
         if "efficiency" in point and point["efficiency"] != None:
             effs[ h ] = point["efficiency"]
         # uls[ h ] = point["signal" ] / point["UL"]
@@ -433,7 +436,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             if "combined" in valfile1:
                 a1 = "combined"
         if anaId in anaId2:
-            a1 = "ul"
+            a1 = ul.lower()
         if a1.startswith("-"):
             a1 = a1[1:]
         print ( f"[plotRatio] have been asked to guess the label for {anaId}: {a1}" )
@@ -441,7 +444,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         a2 = "???"
         if anaId2 in anaId:
             a2 = "ul"
-        if anaId in anaId2:
+        if anaId in anaId2 and anaId != anaId2:
             a2 = anaId2.replace(anaId,"")
             if "combined" in valfile2:
                 a2 = "combined"
@@ -452,10 +455,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
-    #xpos = max(x)+.40*(max(x)-min(x))
     xpos = max(x)+.3*(max(x)-min(x))
-    # line = "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 )
-    line = "$f$ = $r$(%s) / $r$(%s)" % ( a1, a2 )
+    line = f"$f$ = $r$({a1}) / $r$({a2})"
     if options["ploteffs"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
     plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
@@ -573,8 +574,8 @@ def main():
     argparser.add_argument ( "-d", "--dbpath",
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
-    argparser.add_argument ( "-D", "--default", action="store_true",
-            help="default run on arguments. currently set to be the exo 13 006 plots" )
+    argparser.add_argument ( "-e1", "--eul", action="store_true",
+            help="for the first analysis, use expected, not observed, upper limits" )
     argparser.add_argument ( "-e", "--efficiencies", action="store_true",
             help="plot ratios of efficencies of best SRs, not ULs" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
@@ -594,8 +595,6 @@ def main():
         args.validationfile1 += ".py"
 
     valfiles = [ args.validationfile1 ]
-    if args.default:
-        valfiles = [ "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM1b_*.py", "THSCPM2b_*.py" ]
     for valfile1 in valfiles:
         valfile2 = args.validationfile2
         if valfile2 in [ "", "none", "None", None ]:
@@ -610,7 +609,8 @@ def main():
                     "copy": args.copy, "output": args.output, "title": args.title,
                     "label1": args.label1, "label2": args.label2,
                     "ploteffs": args.efficiencies, "xmin": args.xmin,
-                    "xmax": args.xmax, "ymin": args.ymin, "ymax": args.ymax }
+                    "xmax": args.xmax, "ymin": args.ymin, "ymax": args.ymax,
+                    "eul": args.eul }
 
         draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
                options )
