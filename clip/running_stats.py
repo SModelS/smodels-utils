@@ -10,7 +10,7 @@ def getRundir():
             ret = f.read()
     return ret.strip()
 
-def prettyPrint ( myset ):
+def prettyPrint ( myset : set ):
     """ a pretty string listing the elements in myset """
     curbeg = 0
     curctr = 0
@@ -26,8 +26,8 @@ def prettyPrint ( myset ):
         seqs.append ( (curbeg,curctr) )
         curbeg = el
         curctr = el
-    if curctr > curbeg:
-        seqs.append ( (curbeg, curctr) )
+    #if curctr > curbeg:
+    seqs.append ( (curbeg, curctr) )
     ret = ""
     seqs.sort()
     for tseq in seqs:
@@ -61,7 +61,7 @@ def running_stats():
         lognr =  int ( log[walkerp+6:-4] )
         if lognr > 1000:
             continue
-        if ds/60. > 120: ## in minutes
+        if ds/60. > 180: ## in minutes
             pending.add ( lognr )
         else:
             running.add ( lognr )
@@ -73,8 +73,8 @@ def running_stats():
     for i in all:
         if not i in running and not i in pending:
             notaccounted.add ( i )
-    print ( "    stuck (%d):" % len(pending), prettyPrint ( pending ) )
-    print ( "  running (%d):" % len(running), prettyPrint ( running ) )
+    print ( "  stuck (%d):" % len(pending), prettyPrint ( pending ) )
+    print ( "running (%d):" % len(running), prettyPrint ( running ) )
     if len(notaccounted)>0:
         print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
 

@@ -420,7 +420,8 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
 
-def queryStats ( maxsteps ):
+def queryStats ( maxsteps : int ):
+    """ just give us the statistics """
     import running_stats
     running_stats.count_jobs()
     running_stats.running_stats()
