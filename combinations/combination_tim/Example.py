@@ -105,7 +105,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
         combiner = TheoryPredictionsCombiner(combo)
         sideCombosDict[combostr]['r_exp'] = combiner.getRValue(expected=True)
         sideCombosDict[combostr]['eµUL'] = combiner.getUpperLimitOnMu(expected=True)
-    combosDict = dict(sorted(comboDict, key = lambda x: x[1]))
+    combosDict = dict(sorted(combosDict, key = lambda x: x[1]))
     for i,combo in enumerate(combosDict.keys()):
         retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
 
