@@ -8,14 +8,18 @@ from __future__ import print_function
 """
 """ Import basic functions (this file must be executed in the installation folder) """
 
-from smodels.tools import runtime
-# Define your model (list of BSM particles)
-runtime.modelFile = 'smodels.share.models.mssm'
-protomodelsPath = '/home/pascal/SModelS/protomodels/'
-slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
-outputFile = 'output.py'
-# runtime.modelFile = 'mssmQNumbers.slha'
 import sys,os,time,glob
+
+smodelsPath = '/theo/pascal/SModelS/smodels/'
+sys.path.append(smodelsPath)
+protomodelsPath = '/theo/pascal/SModelS/protomodels/'
+slhaFolder = '/theo/pascal/filter_slha/'
+outputFile = 'output.py'
+
+from smodels.tools import runtime
+# Define your model (list of BSM particles)                                                                                                                                                                                                  
+runtime.modelFile = 'smodels.share.models.mssm'
+# runtime.modelFile = 'mssmQNumbers.slha'
 from smodels.theory import decomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
