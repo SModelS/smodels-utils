@@ -16,7 +16,6 @@ from tester.combiner import Combiner
 
 slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
 outputFile = 'outputSpecificModels.py'
-database = 'official'
 
 smodelsPath = '/home/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
@@ -37,12 +36,28 @@ import numpy as np
 
 setLogLevel("info")
 
-def main(allPredictions):
+def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, database='official'):
     """
     Main program. Displays basic use case.
     """
 
     retList = []
+
+    # Set the path to the database
+    database = Database(database)
+
+    model = Model(BSMparticles=BSMList, SMparticles=SMList)
+    # Path to input file (either a SLHA or LHE file)
+    slhafile = inputFile
+    model.updateParticles(inputFile=slhafile)
+
+    # Decompose model
+    toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
+
+    # Load the experimental results to be used.
+    # In this case, all results are employed.
+    listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
+    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
 
     for theoryPrediction in allPredictions:
         if theoryPrediction.dataset.getType() not in ['efficiencyMap','combined'] :
@@ -62,22 +77,10 @@ def main(allPredictions):
 if __name__ == '__main__':
     outputDict = {}
 
-    sigmacut=0.005*fb
-    mingap = 5.*GeV
-
-    database = Database(database)
-    model = Model(BSMparticles=BSMList, SMparticles=SMList)
-
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
         print(f'Processing {i}/18557')
 
-        slhafile = fin
-        model.updateParticles(inputFile=slhafile)
-        toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
-        listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-        allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
-
-        retList = main(allPredictions)
+        retList = main(inputFile=fin)
 
         for ana in retList:
             if ana in outputDict.keys():

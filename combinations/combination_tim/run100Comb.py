@@ -77,7 +77,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
             allPredictions.append(theoryPrediction)
 
     retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
-    
+
     # Find best combination of analyses among the available theory predictions.
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
     # and/or in protomodels/tester/analysisCombiner.py to replace getTimothee() by getMatrix().
@@ -107,57 +107,6 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
 
         combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
         for i,combo in enumerate(combosDict.keys()):
-            retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
-
-
-    # Make sure each analysis appears only once:
-    # expIDs = [tp.analysisId() for tp in bestCombo]
-    # if len(expIDs) != len(set(expIDs)):
-    #     print(f"\nDuplicated results when trying to combine analyses. Combination will be skipped for file {inputFile}.")
-    # Only compute combination if at least two results were selected
-    # elif len(bestCombo) > 1:
-    #     combiner = TheoryPredictionsCombiner(bestCombo)
-    #     print("\n Best combination of analyses:", combiner.describe())
-    #     # combiner.computeStatistics()
-    #     # llhd = combiner.likelihood()
-    #     # lmax = combiner.lmax()
-    #     # lsm = combiner.lsm()
-    #     r_comb_obs = combiner.getRValue()
-    #     r_comb_exp = combiner.getRValue(expected=True)
-    #     print("\n Combined r value: %1.3E\n" % r_comb_obs)
-    #     print("\n Combined r value (expected): %1.3E" % r_comb_exp)
-        # print("Likelihoods: L, L_max, L_SM = %10.3E, %10.3E, %10.3E\n" % (llhd, lmax, lsm))
-
-    # print("\n Combination of analyses done in %1.2fs" %(time.time()-t0))
-    # t0 = time.time()
-    # # Find out missing topologies for sqrts=13*TeV:
-    # uncovered = coverage.Uncovered(toplist, sqrts=13.*TeV)
-    # print("\n Coverage done in %1.2fs" %(time.time()-t0))
-    # # First sort coverage groups by label
-    # groups = sorted(uncovered.groups[:], key=lambda g: g.label)
-    # # Print uncovered cross-sections:
-    # for group in groups:
-    #     print("\nTotal cross-section for %s (fb): %10.3E\n" % (group.description, group.getTotalXSec()))
-
-    # missingTopos = uncovered.getGroup('missing (prompt)')
-    # # Print some of the missing topologies:
-    # if missingTopos.generalElements:
-    #     print('Missing topologies (up to 3):')
-    #     for genEl in missingTopos.generalElements[:3]:
-    #         print('Element:', genEl)
-    #         print('\tcross-section (fb):', genEl.missingX)
-    # else:
-    #     print("No missing topologies found\n")
-    #
-    # missingDisplaced = uncovered.getGroup('missing (displaced)')
-    # # Print elements with displaced decays:
-    # if missingDisplaced.generalElements:
-    #     print('\nElements with displaced vertices (up to 2):')
-    #     for genEl in missingDisplaced.generalElements[:2]:
-    #         print('Element:', genEl)
-    #         print('\tcross-section (fb):', genEl.missingX)
-    # else:
-    #     print("\nNo displaced decays")
 
     return retDict, 'combo1' in retDict.keys()
 
