@@ -105,7 +105,8 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
         combiner = TheoryPredictionsCombiner(combo)
         sideCombosDict[combostr]['r_exp'] = combiner.getRValue(expected=True)
         sideCombosDict[combostr]['eµUL'] = combiner.getUpperLimitOnMu(expected=True)
-    combosDict = dict(sorted(combosDict, key = lambda x: x[1]))
+
+    combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
     for i,combo in enumerate(combosDict.keys()):
         retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
 
@@ -172,7 +173,9 @@ if __name__ == '__main__':
 
     outpoutDict = []
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
-        if i == 3:
+        if i < 1000:
+            continue
+        if i == 1101:
             break
         retDict = main(inputFile=fin)
         outpoutDict.append(retDict)
