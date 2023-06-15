@@ -7,11 +7,11 @@ import numpy as np
 outputFile = 'output.py'
 
 exec(open(outputFile).read())
-outputDict = copy.deepcopy(outpoutDict)
+outputList= copy.deepcopy(outpoutList)
 
 combNumberList = []
 
-for output in outputDict:
+for output in outputList:
     r_exp_max = 0
     combNumber = ''
 

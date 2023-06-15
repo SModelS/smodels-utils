@@ -17,7 +17,7 @@ slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'output.py'
 
 from smodels.tools import runtime
-# Define your model (list of BSM particles)                                                                                                                                                                                                  
+# Define your model (list of BSM particles)
 runtime.modelFile = 'smodels.share.models.mssm'
 # runtime.modelFile = 'mssmQNumbers.slha'
 from smodels.theory import decomposer
@@ -168,20 +168,20 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     # else:
     #     print("\nNo displaced decays")
 
-    return retDict
+    return retDict, 'combo1' in retDict.keys()
 
 
 if __name__ == '__main__':
     sys.path.append(protomodelsPath)
     from tester.combiner import Combiner
 
-    outpoutDict = []
-    for i,fin in enumerate(glob.glob(slhaFolder+'*')):
-        if i < 1000:
-            continue
-        if i == 1101:
+    outputList = []
+    for fin in glob.glob(slhaFolder+'*'):
+        print(f'{len(outputList)}/100')
+        if len(outputList) == 100:
             break
-        retDict = main(inputFile=fin)
-        outpoutDict.append(retDict)
-        with open(outputFile,'w') as fout:
-            fout.write('outputDict = ' + str(outpoutDict))
+        retDict,add = main(inputFile=fin)
+        if add:
+            outputList.append(retDict)
+            with open(outputFile,'w') as fout:
+                fout.write('outputList = ' + str(outputList))
