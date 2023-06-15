@@ -77,13 +77,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
             allPredictions.append(theoryPrediction)
 
     retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
-    # Print the most constraining experimental result
-    # print("\n ",allPredictions)
-    print("\n The most sensitive analysis is %s with an expected r-value of %1.3E" % (bestResult.dataset.globalInfo.id,r_exp_MSA))
-
-    print("\n Theory Predictions done in %1.2fs\n" %(time.time()-t0))
-    t0 = time.time()
-
+    
     # Find best combination of analyses among the available theory predictions.
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
     # and/or in protomodels/tester/analysisCombiner.py to replace getTimothee() by getMatrix().
@@ -92,32 +86,29 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     combinations = protoCombiner.sortOutSubsets ( combinables )
     combosDict = {}
     sideCombosDict = {}
-    for combo in combinations:
-        expIDs = [tp.analysisId() for tp in combo]
-        if len(expIDs) != len(set(expIDs)):
-            print(f"\nDuplicated results when trying to combine analyses. Combination of {expIDs} will be skipped for file {inputFile}.")
-        combostr = ''
-        for c in combo:
-            combostr += c.dataset.globalInfo.id + ','
-        combostr = combostr[:-1]
-        l0 = np.array ( [ c.likelihood(0.,expected=True, return_nll=True) for c in combo ], dtype=object )
-        LH0 = np.sum ( l0[l0!=None] )
-        l1 = np.array ( [ c.likelihood(1.,expected=True, return_nll=True) for c in combo ], dtype=object )
-        LH1 = np.sum ( l1[l1!=None] )
-        combosDict[combostr] = LH1 - LH0 # -ln(L_BSM/L_SM) -> Want to maximise that
-        sideCombosDict[combostr] = {'nllr': LH1 - LH0}
-        combiner = TheoryPredictionsCombiner(combo)
-        sideCombosDict[combostr]['r_exp'] = combiner.getRValue(expected=True)
-        sideCombosDict[combostr]['eµUL'] = combiner.getUpperLimitOnMu(expected=True)
+    if len(combinations) >= 2:
+        for combo in combinations:
+            expIDs = [tp.analysisId() for tp in combo]
+            if len(expIDs) != len(set(expIDs)):
+                print(f"\nDuplicated results when trying to combine analyses. Combination of {expIDs} will be skipped for file {inputFile}.")
+            combostr = ''
+            for c in combo:
+                combostr += c.dataset.globalInfo.id + ','
+            combostr = combostr[:-1]
+            l0 = np.array ( [ c.likelihood(0.,expected=True, return_nll=True) for c in combo ], dtype=object )
+            LH0 = np.sum ( l0[l0!=None] )
+            l1 = np.array ( [ c.likelihood(1.,expected=True, return_nll=True) for c in combo ], dtype=object )
+            LH1 = np.sum ( l1[l1!=None] )
+            combosDict[combostr] = LH1 - LH0 # -ln(L_BSM/L_SM) -> Want to maximise that
+            sideCombosDict[combostr] = {'nllr': LH1 - LH0}
+            combiner = TheoryPredictionsCombiner(combo)
+            sideCombosDict[combostr]['r_exp'] = combiner.getRValue(expected=True)
+            sideCombosDict[combostr]['eµUL'] = combiner.getUpperLimitOnMu(expected=True)
 
-    combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
-    for i,combo in enumerate(combosDict.keys()):
-        retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
+        combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
+        for i,combo in enumerate(combosDict.keys()):
+            retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
 
-    # bestCombo,ZCombo,llhdCombo,muhatCombo = protoCombiner.findHighestSignificance(allPredictions,strategy='',expected=True)
-
-    print("\n Best combination of analyses found in %1.2fs" %(time.time()-t0))
-    # t0 = time.time()
 
     # Make sure each analysis appears only once:
     # expIDs = [tp.analysisId() for tp in bestCombo]
