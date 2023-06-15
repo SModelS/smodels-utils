@@ -11,9 +11,16 @@ from __future__ import print_function
 import sys,os,time,glob
 
 smodelsPath = '/home/pascal/SModelS/smodels/'
+#smodelsPath = '/theo/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
-protomodelsPath = '/home/pascal/SModelS/protomodels/'
+
+protomodelsPath = '/home/pascal/SModelS/protomodels'
+# protomodelsPath = '/theo/pascal/SModelS/protomodels'
+sys.path.append(protomodelsPath)
+from tester.combiner import Combiner
+
 slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
+# slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'output100Comb.py'
 
 from smodels.tools import runtime
@@ -112,10 +119,8 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
 
 
 if __name__ == '__main__':
-    sys.path.append(protomodelsPath)
-    from tester.combiner import Combiner
-
     outputList = []
+
     for fin in glob.glob(slhaFolder+'*'):
         print(f'{len(outputList)}/100')
         if len(outputList) == 100:
