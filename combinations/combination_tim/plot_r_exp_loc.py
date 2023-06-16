@@ -4,10 +4,10 @@ import copy
 import matplotlib.pyplot as plt
 import numpy as np
 
-outputFile = 'output.py'
+outputFile = 'output100Comb.py'
 
 exec(open(outputFile).read())
-outputList= copy.deepcopy(outpoutList)
+outputList= copy.deepcopy(outputList)
 
 combNumberList = []
 
@@ -15,7 +15,7 @@ for output in outputList:
     r_exp_max = 0
     combNumber = ''
 
-    for key,value in ouput.items():
+    for key,value in output.items():
         if 'combo' in key:
             if value['r_exp'] > r_exp_max:
                 r_exp_max = value['r_exp']
