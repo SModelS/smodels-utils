@@ -10,17 +10,17 @@ from __future__ import print_function
 
 import sys,os,time,glob
 
-smodelsPath = '/home/pascal/SModelS/smodels/'
-#smodelsPath = '/theo/pascal/SModelS/smodels/'
+# smodelsPath = '/home/pascal/SModelS/smodels/'
+smodelsPath = '/theo/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
 
-protomodelsPath = '/home/pascal/SModelS/protomodels'
-# protomodelsPath = '/theo/pascal/SModelS/protomodels'
+# protomodelsPath = '/home/pascal/SModelS/protomodels'
+protomodelsPath = '/theo/pascal/SModelS/protomodels'
 sys.path.append(protomodelsPath)
 from tester.combiner import Combiner
 
-slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
-# slhaFolder = '/theo/pascal/filter_slha/'
+# slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
+slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'outputFullScan_6000.py'
 
 from smodels.tools import runtime
