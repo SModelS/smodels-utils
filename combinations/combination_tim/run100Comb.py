@@ -21,7 +21,7 @@ from tester.combiner import Combiner
 
 #slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
 slhaFolder = '/theo/pascal/filter_slha/'
-outputFile = 'output100Comb.py'
+outputFile = 'outputtest.py'
 
 from smodels.tools import runtime
 # Define your model (list of BSM particles)
@@ -117,6 +117,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
 
         combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
         for i,combo in enumerate(combosDict.keys()):
+            retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
 
     return retDict, 'combo1' in retDict.keys()
 
