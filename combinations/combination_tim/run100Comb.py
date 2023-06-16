@@ -10,17 +10,17 @@ from __future__ import print_function
 
 import sys,os,time,glob
 
-smodelsPath = '/home/pascal/SModelS/smodels/'
-#smodelsPath = '/theo/pascal/SModelS/smodels/'
+#smodelsPath = '/home/pascal/SModelS/smodels/'
+smodelsPath = '/theo/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
 
-protomodelsPath = '/home/pascal/SModelS/protomodels'
-# protomodelsPath = '/theo/pascal/SModelS/protomodels'
+#protomodelsPath = '/home/pascal/SModelS/protomodels'
+protomodelsPath = '/theo/pascal/SModelS/protomodels'
 sys.path.append(protomodelsPath)
 from tester.combiner import Combiner
 
-slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
-# slhaFolder = '/theo/pascal/filter_slha/'
+#slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
+slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'output100Comb.py'
 
 from smodels.tools import runtime
@@ -75,6 +75,9 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
         if not predictions:
             continue  # Skip if there are no constraints from this result
         for theoryPrediction in predictions:
+            if theoryPrediction is None:
+                print(f'theoryPrediction is None for {inputFile}')
+                return {}, False
             if theoryPrediction.dataset.getType() not in ['efficiencyMap','combined'] :
                 print(f'Wrong type for analysis {theoryPrediction.dataset.globalInfo.id}: {theoryPrediction.dataset.getType()}')
             r_exp = theoryPrediction.getRValue(expected = True)
