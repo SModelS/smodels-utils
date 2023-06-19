@@ -76,14 +76,14 @@ def main(allPredictions):
             r_comb_obs = combiner.getRValue()
             retDict['r_obs'] = r_comb_obs
         except:
-            print(f'r_comb_obs failed for file {os.path.basename(inputFile)} for combination of {combostr}')
+            print(f'r_comb_obs failed for combination of {combostr}')
             retDict['r_obs'] = None
 
         try:
             r_comb_exp = combiner.getRValue(expected=True)
             retDict['r_exp'] = r_comb_exp
         except:
-            print(f'r_comb_exp failed for file {os.path.basename(inputFile)} for combination of {combostr}')
+            print(f'r_comb_exp failed for combination of {combostr}')
             retDict['r_exp'] = None
 
 
@@ -102,7 +102,6 @@ if __name__ == '__main__':
     # Set the path to the database
     database = Database(database)
 
-    model = Model(BSMparticles=BSMList, SMparticles=SMList)
 
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
         if 6000 <= i < 6250:
@@ -111,12 +110,13 @@ if __name__ == '__main__':
 	        if filename in alreadyDone:
 	            continue
 	
+	        model = Model(BSMparticles=BSMList, SMparticles=SMList)
 	        model.updateParticles(inputFile=fin)
 	
 	        toplist = decomposer.decompose(model, sigmacut=sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
 	
 	        listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-	        allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
+	        allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
 	
 	        retDict = main(allPredictions=allPredictions)
 	        comboDict[filename] = retDict
