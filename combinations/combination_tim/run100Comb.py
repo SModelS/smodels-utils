@@ -21,7 +21,7 @@ from tester.combiner import Combiner
 
 # slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
 slhaFolder = '/theo/pascal/filter_slha/'
-outputFile = 'outputtest.py'
+outputFile = 'output100Comb.py'
 
 from smodels.tools import runtime
 # Define your model (list of BSM particles)
