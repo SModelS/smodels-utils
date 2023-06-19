@@ -87,8 +87,8 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
             r_comb_obs = combiner.getRValue()
             retDict['r_obs'] = r_comb_obs
         except:
-            # print(f'r_comb_obs failed for file {os.path.basename(inputFile)} for combination of {combostr}')
-            # retDict['r_obs'] = None
+            print(f'r_comb_obs failed for file {os.path.basename(inputFile)} for combination of {combostr}')
+            retDict['r_obs'] = None
 
         try:
             r_comb_exp = combiner.getRValue(expected=True)
