@@ -21,7 +21,7 @@ from tester.combiner import Combiner
 
 slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
 # slhaFolder = '/theo/pascal/filter_slha/'
-outputFile = 'outputFullScan_13500.py'
+outputFile = 'outputFullScan_13000.py'
 
 from smodels.tools import runtime
 # Define your model (list of BSM particles)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     alreadyDone = [filename for filename in comboDict.keys()]
 
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
-        if 13250 <= i < 13500:
+        if 12750 <= i < 13000:
 	        filename = os.path.basename(fin)
 	        print(f'Processing {i}/18557: {filename}')
 	        if filename in alreadyDone:

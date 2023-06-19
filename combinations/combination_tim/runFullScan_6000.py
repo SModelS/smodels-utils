@@ -111,7 +111,7 @@ if __name__ == '__main__':
     alreadyDone = [filename for filename in comboDict.keys()]
 
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
-        if 5700 <= i < 6000:
+        if 5750 <= i < 6000:
 	        filename = os.path.basename(fin)
 	        print(f'Processing {i}/18557: {filename}')
 	        if filename in alreadyDone:
