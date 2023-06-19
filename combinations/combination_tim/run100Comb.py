@@ -81,7 +81,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
         r_exp_MSA = 0.
         bestResult = None
         predictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
-        for pred in predicitons:
+        for pred in predictions:
             r_exp = pred.getRValue(expected = True)
             if r_exp > r_exp_MSA:
                 r_exp_MSA = r_exp
