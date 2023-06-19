@@ -10,18 +10,18 @@ from __future__ import print_function
 
 import sys,os,time,glob
 
-# smodelsPath = '/home/pascal/SModelS/smodels/'
-smodelsPath = '/theo/pascal/SModelS/smodels/'
+smodelsPath = '/home/pascal/SModelS/smodels/'
+# smodelsPath = '/theo/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
 
-# protomodelsPath = '/home/pascal/SModelS/protomodels'
-protomodelsPath = '/theo/pascal/SModelS/protomodels'
+protomodelsPath = '/home/pascal/SModelS/protomodels'
+# protomodelsPath = '/theo/pascal/SModelS/protomodels'
 sys.path.append(protomodelsPath)
 from tester.combiner import Combiner
 
-# slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
-slhaFolder = '/theo/pascal/filter_slha/'
-outputFile = 'outputFullScan_5000.py'
+slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
+# slhaFolder = '/theo/pascal/filter_slha/'
+outputFile = 'outputFullScan_3600.py'
 
 from smodels.tools import runtime
 # Define your model (list of BSM particles)
@@ -36,6 +36,7 @@ from smodels.tools.smodelsLogging import setLogLevel
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
+from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 import numpy as np
 
 setLogLevel("info")
@@ -61,7 +62,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     # Load the experimental results to be used.
     # In this case, all results are employed.
     listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
+    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
 
     # Find best combination of analyses among the available theory predictions.
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
@@ -76,31 +77,48 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     # Only compute combination if at least two results were selected
     elif len(bestCombo) > 1:
         combiner = TheoryPredictionsCombiner(bestCombo)
-        r_comb_obs = combiner.getRValue()
-        r_comb_exp = combiner.getRValue(expected=True)
-
         combostr = ''
         for c in bestCombo:
             combostr += c.dataset.globalInfo.id + ','
         combostr = combostr[:-1]
-
         retDict['bestCombo'] = combostr
-        retDict['r_obs'] = r_comb_obs
-        retDict['r_exp'] = r_comb_exp
+
+        try:
+            r_comb_obs = combiner.getRValue()
+            retDict['r_obs'] = r_comb_obs
+        except:
+            print(f'r_comb_obs failed for file {os.path.basename(inputFile)} for combination of {combostr}')
+            retDict['r_obs'] = None
+
+        try:
+            r_comb_exp = combiner.getRValue(expected=True)
+            retDict['r_exp'] = r_comb_exp
+        except:
+            print(f'r_comb_exp failed for file {os.path.basename(inputFile)} for combination of {combostr}')
+            retDict['r_exp'] = None
+
 
     return retDict
 
 
 if __name__ == '__main__':
     comboDict = {}
+    try:
+        exec(open(outputFile).read())
+        comboDict = comboDict
+    except:
+        pass
+    alreadyDone = [filename for filename in comboDict.keys()]
 
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
-        if 4000 <= i < 5000:
-            print(f'Processing {i}/18557')
-
-            retDict = main(inputFile=fin)
-            if retDict:
-                comboDict[os.path.basename(fin)] = retDict
-
-            with open(outputFile,'w') as fout:
-                fout.write('comboDict = ' + str(comboDict))
+        if 3300 <= i < 3600:
+	        filename = os.path.basename(fin)
+	        print(f'Processing {i}/18557: {filename}')
+	        if filename in alreadyDone:
+	            continue
+	
+	        retDict = main(inputFile=fin)
+	        comboDict[filename] = retDict
+	
+	        with open(outputFile,'w') as fout:
+	            fout.write('comboDict = ' + str(comboDict))
