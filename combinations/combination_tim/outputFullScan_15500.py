@@ -1,0 +1,1 @@
+comboDict = {'ew_tls2aq08.slha': {}, 'ew_tlz2a0av.slha': {}, 'ew_tlzfr2ui.slha': {'bestCombo': 'ATLAS-SUSY-2013-11,ATLAS-SUSY-2018-32,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002', 'r_obs': 0.4428481149868529, 'r_exp': 0.4676569021848178}, 'ew_tm02n1dj.slha': {}, 'ew_tm062d8v.slha': {}}
