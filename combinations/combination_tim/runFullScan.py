@@ -109,6 +109,8 @@ if __name__ == '__main__':
         if filename in alreadyDone:
             continue
 
+        retDict = {}
+
         model = Model(BSMparticles=BSMList, SMparticles=SMList)
         model.updateParticles(inputFile=fin)
 
@@ -117,7 +119,12 @@ if __name__ == '__main__':
         listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
         allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
 
-        retDict = main(allPredictions=allPredictions)
+        protoCombiner = Combiner()
+        bestCombo,ZCombo,llhdCombo,muhatCombo = protoCombiner.findHighestSignificance(allPredictions,strategy='',expected=True)
+        if len(bestCombo) > 1:
+            allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
+            retDict = main(allPredictions=allPredictions)
+
         comboDict[filename] = retDict
 
         with open(outputFile,'w') as fout:
