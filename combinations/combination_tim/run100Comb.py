@@ -8,18 +8,18 @@ from __future__ import print_function
 """
 """ Import basic functions (this file must be executed in the installation folder) """
 
-import sys,os,time,glob
+import sys,os,time,glob,copy
 
-#smodelsPath = '/home/pascal/SModelS/smodels/'
+# smodelsPath = '/home/pascal/SModelS/smodels/'
 smodelsPath = '/theo/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
 
-#protomodelsPath = '/home/pascal/SModelS/protomodels'
+# protomodelsPath = '/home/pascal/SModelS/protomodels'
 protomodelsPath = '/theo/pascal/SModelS/protomodels'
 sys.path.append(protomodelsPath)
 from tester.combiner import Combiner
 
-#slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
+# slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
 slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'outputtest.py'
 
@@ -86,6 +86,8 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
                 bestResult = theoryPrediction
             allPredictions.append(theoryPrediction)
 
+    if not allPredictions:
+        return {}, False
     retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
 
     # Find best combination of analyses among the available theory predictions.
@@ -124,8 +126,12 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
 
 if __name__ == '__main__':
     outputList = []
-
+    exec(open(outputFile).read())
+    outputList = copy.deepcopy(outputList)
+    alreadyDone = [output['slhafile'] for output in outputList]
     for fin in glob.glob(slhaFolder+'*'):
+        if os.path.basename(fin) in alreadyDone:
+            continue
         print(f'{len(outputList)}/100')
         if len(outputList) == 100:
             break
