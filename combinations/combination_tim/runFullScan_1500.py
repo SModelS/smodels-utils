@@ -62,7 +62,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     # Load the experimental results to be used.
     # In this case, all results are employed.
     listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
+    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
 
     # Find best combination of analyses among the available theory predictions.
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
