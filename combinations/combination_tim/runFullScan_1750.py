@@ -23,6 +23,7 @@ from tester.combiner import Combiner
 slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'outputFullScan_1750.py'
 
+
 from smodels.tools import runtime
 # Define your model (list of BSM particles)
 runtime.modelFile = 'smodels.share.models.mssm'
@@ -41,28 +42,16 @@ import numpy as np
 
 setLogLevel("info")
 
-def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, database='official'):
+sigmacut = 0.005*fb
+mingap = 5.*GeV
+database = 'official'
+
+def main(allPredictions):
     """
     Main program. Displays basic use case.
     """
 
     retDict = {}
-
-    # Set the path to the database
-    database = Database(database)
-
-    model = Model(BSMparticles=BSMList, SMparticles=SMList)
-    # Path to input file (either a SLHA or LHE file)
-    slhafile = inputFile
-    model.updateParticles(inputFile=slhafile)
-
-    # Decompose model
-    toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
-
-    # Load the experimental results to be used.
-    # In this case, all results are employed.
-    listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
 
     # Find best combination of analyses among the available theory predictions.
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
@@ -110,6 +99,11 @@ if __name__ == '__main__':
         pass
     alreadyDone = [filename for filename in comboDict.keys()]
 
+    # Set the path to the database
+    database = Database(database)
+
+    model = Model(BSMparticles=BSMList, SMparticles=SMList)
+
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
         if 1500 <= i < 1750:
 	        filename = os.path.basename(fin)
@@ -117,7 +111,14 @@ if __name__ == '__main__':
 	        if filename in alreadyDone:
 	            continue
 	
-	        retDict = main(inputFile=fin)
+	        model.updateParticles(inputFile=fin)
+	
+	        toplist = decomposer.decompose(model, sigmacut=sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
+	
+	        listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
+	        allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
+	
+	        retDict = main(allPredictions=allPredictions)
 	        comboDict[filename] = retDict
 	
 	        with open(outputFile,'w') as fout:

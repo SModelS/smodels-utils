@@ -64,41 +64,32 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     # In this case, all results are employed.
     listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
 
-    t0 = time.time()
-
     # Compute the theory predictions for each experimental result and print them:
-    r_exp_MSA = 0.
-    bestResult = None
-    allPredictions = TheoryPredictionList()
-    for expResult in listOfExpRes:
-        predictions = theoryPredictionsFor(expResult, toplist, combinedResults=True)
-        if not predictions:
-            continue  # Skip if there are no constraints from this result
-        for theoryPrediction in predictions:
-            if theoryPrediction is None:
-                print(f'theoryPrediction is None for {inputFile}')
-                return {}, False
-            if theoryPrediction.dataset.getType() not in ['efficiencyMap','combined'] :
-                print(f'Wrong type for analysis {theoryPrediction.dataset.globalInfo.id}: {theoryPrediction.dataset.getType()}')
-            r_exp = theoryPrediction.getRValue(expected = True)
-            if r_exp > r_exp_MSA:
-                r_exp_MSA = r_exp
-                bestResult = theoryPrediction
-            allPredictions.append(theoryPrediction)
-
-    if not allPredictions:
+    predictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
+    if not predictions:
         return {}, False
-    retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
 
     # Find best combination of analyses among the available theory predictions.
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
     # and/or in protomodels/tester/analysisCombiner.py to replace getTimothee() by getMatrix().
     protoCombiner = Combiner()
-    combinables = protoCombiner.findCombinations ( allPredictions, strategy='' )
+    combinables = protoCombiner.findCombinations ( predictions, strategy='' )
     combinations = protoCombiner.sortOutSubsets ( combinables )
     combosDict = {}
     sideCombosDict = {}
     if len(combinations) >= 2:
+        r_exp_MSA = 0.
+        bestResult = None
+        predictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=True)
+        for pred in predicitons:
+            r_exp = pred.getRValue(expected = True)
+            if r_exp > r_exp_MSA:
+                r_exp_MSA = r_exp
+                bestResult = theoryPrediction
+        retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
+        protoCombiner = Combiner()
+        combinables = protoCombiner.findCombinations ( predictions, strategy='' )
+        combinations = protoCombiner.sortOutSubsets ( combinables )
         for combo in combinations:
             expIDs = [tp.analysisId() for tp in combo]
             if len(expIDs) != len(set(expIDs)):
