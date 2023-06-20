@@ -8,6 +8,7 @@
 
 """
 
+#write check for most sensitive analysis
 __all__ = [ "BestCombinationFinder" ]
 
 import numpy as np
@@ -46,6 +47,7 @@ class BestCombinationFinder(object):
         self.Ana = []                                       #Analysis in tpred List
         self.root_s = []                                    #root_s of analysis in tpred list
         
+        self.combiner_list=[]
     
     def checkCombinable(self, a1, a2):
         "Check if two analyses are combinable if not specified in combination dictionary"
@@ -129,13 +131,26 @@ class BestCombinationFinder(object):
         """ the actual best combination finder """
         
         if len(self.listoftp) == 0:     #no theory prediction
-            return None
+            print("\n No theory Prediction")
+            return []
             
-        if len(self.listoftp) == 1:     #just 1 tp, no need for combining
-            return self.listoftp
+        if len(self.listoftp) == 1:
+            if self.listoftp[0].analysisId() in self.cM.keys():     #just 1 tp, no need for combining
+                #print("\n 1 theory Prediction ", self.listoftp[0].analysisId())
+                return self.listoftp
+            else:
+                return []
             
         weight_vector = []
         EMatrix = self.createExclusivityMatrix()
+        
+        if not EMatrix.size:              #EMatrix is empty
+            print("\n Theory Prediction available but none are present in combination dictionary.")
+            return []
+        
+        if len(self.listoftp) == 1:     #just 1 tp, no need for combining
+            print("\n >1 theory Prediction but only 1 present in the combination dictionary ", self.listoftp[0].analysisId())
+            return self.listoftp
         
         for preds in self.listoftp:
             if expected:   #get expected llhd
@@ -159,18 +174,71 @@ class BestCombinationFinder(object):
         if self.ntop > 1:
             top_path = [path for path in whdfs.get_paths]
             listofbestcomb = [[self.listoftp[i] for i in path] for path in top_path]
-            combiner_list = [TheoryPredictionsCombiner(best_comb) for best_comb in listofbestcomb]
-            return combiner_list
+            #print("\n List of best combinations = ", listofbestcomb)
+            self.combiner_list = []
+            for best_comb in listofbestcomb:
+                if best_comb == []: self.combiner_list.append(None)
+                else: self.combiner_list.append(TheoryPredictionsCombiner(best_comb))
+            for comb in self.combiner_list:
+                if comb: print("\n %i : " %(self.combiner_list.index(comb)+1), comb.analysisId())
+                else: print("\n %i : " %(self.combiner_list.index(comb)+1), comb)
+            return self.combiner_list
         
         #return list of theory predictions for which the combination has max weight
         top_path = whdfs.get_paths[0]  # gets indices of analyses which are best combinable
         best_comb = [self.listoftp[i] for i in top_path]
         
         if len(best_comb) == 1:     #just 1 best tp, no need for combining
+            #print("\n Best Combination ", best_comb[0].analysisId())
             return best_comb
             
-        combiner = TheoryPredictionsCombiner(best_comb)         #combine tp
-        return combiner
+        self.combiner_list = [TheoryPredictionsCombiner(best_comb)]                     #combine tp
+        #print("\n Best Combination ", self.combiner_list[0].analysisId())
+        return self.combiner_list
+        
+        
+    def checkSensitive(self):
+        
+        if self.combiner_list == []:
+            if len(self.listoftp) == 1 and self.listoftp[0].analysisId() in self.cM.keys():
+                r = self.listoftp[0].getRValue(expected = True)
+                print("\n R-value of analysis %s is "%(self.listoftp[0].analysisId()), r )
+                return r
+            else: return 0
+            
+        tp_rvalues = [tp.getRValue(expected=True) for tp in self.listoftp]
+        rmax = max(tp_rvalues)
+        bestResult = self.listoftp[tp_rvalues.index(rmax)].analysisId()
+        '''
+        for tp in self.listoftp:
+            if not tp: continue
+            r = tp.getRValue(expected = True)
+            if r>rmax:
+                rmax = r
+                bestResult = tp.analysisId()
+        '''
+        self.ntop = 3
+        #comb = self.findBestCombination()
+        comb_rvalues = []
+        for c in self.combiner_list:
+            if c: comb_rvalues.append(c.getRValue(expected = True))
+        print("\n R-Values of top combinations ", comb_rvalues, " and R-value of most sensitive analysis %s is " %(bestResult), rmax)
+        if comb_rvalues[0] >= rmax:
+            if comb_rvalues[0] == max(comb_rvalues):
+                if bestResult in self.combiner_list[0].analysisId(): return comb_rvalues[0]
+                else:
+                    logger.error("most sensitive analysis is not included in the best combination")
+                    return 0
+                    
+            else:
+                logger.error("sensitivity of best combination is lower than that of the combination ranked %i " %(comb_rvalues.index(max(comb_rvalues))+1))
+                return 0
+        else:
+            logger.error("sensitivity of best combination is lower than that of the most sensitive analysis: %s" %(bestResult))
+            return 0
+            
+        
+
 
 if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
