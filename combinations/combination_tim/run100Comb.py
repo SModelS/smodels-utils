@@ -85,7 +85,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
             r_exp = pred.getRValue(expected = True)
             if r_exp > r_exp_MSA:
                 r_exp_MSA = r_exp
-                bestResult = theoryPrediction
+                bestResult = pred
         retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
         protoCombiner = Combiner()
         combinables = protoCombiner.findCombinations ( predictions, strategy='' )
