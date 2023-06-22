@@ -72,7 +72,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
             retList.append('CMS-SUS-19-006')
         elif 'CMS-SUS-13-012' in theoryPrediction.dataset.globalInfo.id:
             retList.append('CMS-SUS-13-012')
-        elif 'CMS-PAS-SUS-19-052' in theoryPrediction.dataset.globalInfo.id:
+        elif 'CMS-PAS-SUS-16-052-agg' in theoryPrediction.dataset.globalInfo.id:
             retList.append('CMS-PAS-SUS-16-052')
 
     return retList
