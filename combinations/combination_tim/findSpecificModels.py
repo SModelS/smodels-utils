@@ -10,17 +10,17 @@ from __future__ import print_function
 
 import sys,os,time,glob
 
-smodelsPath = '/home/pascal/SModelS/smodels/'
-#smodelsPath = '/theo/pascal/SModelS/smodels/'
+# smodelsPath = '/home/pascal/SModelS/smodels/'
+smodelsPath = '/theo/pascal/SModelS/smodels/'
 sys.path.append(smodelsPath)
 
-protomodelsPath = '/home/pascal/SModelS/protomodels'
-# protomodelsPath = '/theo/pascal/SModelS/protomodels'
+# protomodelsPath = '/home/pascal/SModelS/protomodels'
+protomodelsPath = '/theo/pascal/SModelS/protomodels'
 sys.path.append(protomodelsPath)
 from tester.combiner import Combiner
 
-slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
-# slhaFolder = '/theo/pascal/filter_slha/'
+# slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
+slhaFolder = '/theo/pascal/filter_slha/'
 outputFile = 'outputSpecificModels.py'
 
 from smodels.tools import runtime
@@ -39,29 +39,15 @@ from smodels.theory.model import Model
 import numpy as np
 
 setLogLevel("info")
+sigmacut = 0.001*fb
+mingap = 5.*GeV
 
-def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, database='official'):
+def main(allPredictions):
     """
     Main program. Displays basic use case.
     """
 
     retList = []
-
-    # Set the path to the database
-    database = Database(database)
-
-    model = Model(BSMparticles=BSMList, SMparticles=SMList)
-    # Path to input file (either a SLHA or LHE file)
-    slhafile = inputFile
-    model.updateParticles(inputFile=slhafile)
-
-    # Decompose model
-    toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
-
-    # Load the experimental results to be used.
-    # In this case, all results are employed.
-    listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-    allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
 
     for theoryPrediction in allPredictions:
         if theoryPrediction.dataset.getType() not in ['efficiencyMap','combined'] :
@@ -81,10 +67,25 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
 if __name__ == '__main__':
     outputDict = {}
 
+    # Set the path to the database
+    database = Database('official')
+
     for i,fin in enumerate(glob.glob(slhaFolder+'*')):
         print(f'Processing {i}/18557')
 
-        retList = main(inputFile=fin)
+        model = Model(BSMparticles=BSMList, SMparticles=SMList)
+        # Path to input file (either a SLHA or LHE file)
+        model.updateParticles(inputFile=fin)
+
+        # Decompose model
+        toplist = decomposer.decompose(model, sigmacut=sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
+
+        # Load the experimental results to be used.
+        # In this case, all results are employed.
+        listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
+        allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
+
+        retList = main(allPredictions)
 
         for ana in retList:
             if ana in outputDict.keys():
