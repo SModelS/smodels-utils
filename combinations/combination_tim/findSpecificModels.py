@@ -47,25 +47,28 @@ def main(allPredictions):
     Main program. Displays basic use case.
     """
 
-    retList = []
+    retListAna, retListTopo = [], []
 
     for theoryPrediction in allPredictions:
         if theoryPrediction.dataset.getType() not in ['efficiencyMap','combined'] :
             print(f'Wrong type for analysis {theoryPrediction.dataset.globalInfo.id}: {theoryPrediction.dataset.getType()}')
-        if 'ATLAS-SUSY-2016-07' in theoryPrediction.dataset.globalInfo.id:
-            retList.append('ATLAS-SUSY-2016-07')
-        elif 'CMS-SUS-19-006' in theoryPrediction.dataset.globalInfo.id:
-            retList.append('CMS-SUS-19-006')
-        elif 'CMS-SUS-13-012' in theoryPrediction.dataset.globalInfo.id:
-            retList.append('CMS-SUS-13-012')
-        elif 'CMS-PAS-SUS-16-052-agg' in theoryPrediction.dataset.globalInfo.id:
-            retList.append('CMS-PAS-SUS-16-052')
+        retListAna.append(theoryPrediction.dataset.globalInfo.id)
+        retListTopo += [str(txname) for txname in theoryPrediction.txnames]
+        # if 'ATLAS-SUSY-2016-07' in theoryPrediction.dataset.globalInfo.id:
+        #     retList.append('ATLAS-SUSY-2016-07')
+        # elif 'CMS-SUS-19-006' in theoryPrediction.dataset.globalInfo.id:
+        #     retList.append('CMS-SUS-19-006')
+        # elif 'CMS-SUS-13-012' in theoryPrediction.dataset.globalInfo.id:
+        #     retList.append('CMS-SUS-13-012')
+        # elif 'CMS-PAS-SUS-16-052-agg' in theoryPrediction.dataset.globalInfo.id:
+        #     retList.append('CMS-PAS-SUS-16-052')
 
-    return retList
+    retListTopo = list(set(retListTopo))
+    return retListAna, retListTopo
 
 
 if __name__ == '__main__':
-    outputDict = {}
+    outputDictAna, outputDictTopo = {}, {}
 
     # Set the path to the database
     database = Database('official')
@@ -85,12 +88,19 @@ if __name__ == '__main__':
         listOfExpRes = database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
         allPredictions = theoryPredictionsFor(listOfExpRes, toplist, combinedResults=False)
 
-        retList = main(allPredictions)
+        retListAna, retListTopo = main(allPredictions)
 
-        for ana in retList:
-            if ana in outputDict.keys():
-                outputDict[ana].append(os.path.basename(fin))
+        for ana in retListAna:
+            if ana in outputDictAna.keys():
+                outputDictAna[ana].append(os.path.basename(fin))
             else:
-                outputDict[ana] = [os.path.basename(fin)]
+                outputDictAna[ana] = [os.path.basename(fin)]
+
+        for topo in retListTopo:
+            if topo in outputDictTopo.keys():
+                outputDictTopo[topo].append(os.path.basename(fin))
+            else:
+                outputDictTopo[topo] = [os.path.basename(fin)]
+
         with open(outputFile,'w') as fout:
-            fout.write('outputDict = ' + str(outputDict))
+            fout.write('outputDictAna = ' + str(outputDictAna) + '\noutputDictTopo = ' + str(outputDictTopo))
