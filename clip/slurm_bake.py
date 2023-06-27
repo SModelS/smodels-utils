@@ -40,10 +40,10 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
     print ( "[slurm.py] creating script at %s/%s" % ( Dir, filename ) )
-    nprc = int ( math.ceil ( nproc * .5  ) )
+    # nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
-            args = f'-a -n {nevents} --topo {topo} -p {nprc} -m "{mass}"'
+            args = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
             args += f' --analyses "{analyses}"'
             # args += ' -b'
             if cutlang:
@@ -62,7 +62,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
         f.write ( f"# this script will perform:\n" )
-        line = f'./bake.py -a -n {nevents} -t {topo} -m "{mass}" --analyses "{analyses}" -p {nprc}'
+        line = f'./bake.py -a -n {nevents} -t {topo} -m "{mass}" --analyses "{analyses}" -p {nproc}'
         if cutlang:
             line += ' --cutlang'
         f.write ( f"# {line}\n" )
