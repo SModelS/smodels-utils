@@ -8,12 +8,18 @@ from __future__ import print_function
 """
 """ Import basic functions (this file must be executed in the installation folder) """
 
+import sys,os,time
+
+protomodelsPath = '/home/pascal/SModelS/protomodels/'
+sys.path.append(protomodelsPath)
+from tester.combiner import Combiner
+
+smodelsPath = '/home/pascal/SModelS/smodels/'
+sys.path.append(smodelsPath)
 from smodels.tools import runtime
 # Define your model (list of BSM particles)
 runtime.modelFile = 'smodels.share.models.mssm'
-protomodelsPath = '/home/pascal/SModelS/protomodels/'
 # runtime.modelFile = 'mssmQNumbers.slha'
-import sys
 from smodels.theory import decomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
@@ -23,15 +29,18 @@ from smodels.tools.smodelsLogging import setLogLevel
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
-import time
+import numpy as np
+
 setLogLevel("info")
 
 def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, database='official'):
     """
     Main program. Displays basic use case.
     """
-    sys.path.append(protomodelsPath)
-    from tester.combiner import Combiner
+
+    print(f'Processing file {inputFile}')
+
+    retDict = {'slhafile': os.path.basename(inputFile)}
 
     # Set the path to the database
     database = Database(database)
@@ -67,8 +76,9 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
                 bestResult = theoryPrediction
             allPredictions.append(theoryPrediction)
 
+    retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
     # Print the most constraining experimental result
-    print("\n ",allPredictions)
+    # print("\n ",allPredictions)
     print("\n The most sensitive analysis is %s with an expected r-value of %1.3E" % (bestResult.dataset.globalInfo.id,r_exp_MSA))
 
     print("\n Theory Predictions done in %1.2fs\n" %(time.time()-t0))
@@ -78,15 +88,16 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     # Combination matrix is to change in getTimothee() in protomodels/tester/combinationsmatrix.py
     # and/or in protomodels/tester/analysisCombiner.py to replace getTimothee() by getMatrix().
     protoCombiner = Combiner()
+
     bestCombo,ZCombo,llhdCombo,muhatCombo = protoCombiner.findHighestSignificance(allPredictions,strategy='',expected=True)
 
     print("\n Best combination of analyses found in %1.2fs" %(time.time()-t0))
-    t0 = time.time()
+    # t0 = time.time()
 
     # Make sure each analysis appears only once:
     expIDs = [tp.analysisId() for tp in bestCombo]
     if len(expIDs) != len(set(expIDs)):
-        print("\nDuplicated results when trying to combine analyses. Combination will be skipped.")
+        print(f"\nDuplicated results when trying to combine analyses. Combination will be skipped for file {inputFile}.")
     # Only compute combination if at least two results were selected
     elif len(bestCombo) > 1:
         combiner = TheoryPredictionsCombiner(bestCombo)
@@ -95,8 +106,10 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
         # llhd = combiner.likelihood()
         # lmax = combiner.lmax()
         # lsm = combiner.lsm()
-        print("\n Combined r value: %1.3E\n" % combiner.getRValue())
-        print("\n Combined r value (expected): %1.3E" % combiner.getRValue(expected=True))
+        r_comb_obs = combiner.getRValue()
+        r_comb_exp = combiner.getRValue(expected=True)
+        print("\n Combined r value: %1.3E\n" % r_comb_obs)
+        print("\n Combined r value (expected): %1.3E" % r_comb_exp)
         # print("Likelihoods: L, L_max, L_SM = %10.3E, %10.3E, %10.3E\n" % (llhd, lmax, lsm))
 
     print("\n Combination of analyses done in %1.2fs" %(time.time()-t0))
@@ -130,7 +143,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     else:
         print("\nNo displaced decays")
 
-    return toplist, allPredictions
+    return retDict, 'combo1' in retDict.keys()
 
 
 if __name__ == '__main__':

@@ -1,0 +1,1 @@
+comboDict = {'ew_mh_z3sfo.slha': {'bestCombo': 'ATLAS-SUSY-2018-41,CMS-SUS-21-002', 'r_obs': 0.6326277580927835, 'r_exp': 0.8282856107680616}, 'ew_mhckwpxe.slha': {'bestCombo': 'ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,CMS-SUS-21-002', 'r_obs': 0.4009956501507663, 'r_exp': 0.4222060593626317}}

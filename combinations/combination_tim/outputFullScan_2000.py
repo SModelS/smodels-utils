@@ -1,0 +1,1 @@
+comboDict = {'ew_3hdfccls.slha': {}, 'ew_3hk8_ek8.slha': {}, 'ew_3hq3i14l.slha': {'bestCombo': 'ATLAS-SUSY-2013-11,ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002', 'r_obs': None, 'r_exp': None}}
