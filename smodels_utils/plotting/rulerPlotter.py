@@ -327,7 +327,7 @@ class RulerPlot:
                         if self.drawdecays:
                             dm1 = dm1 * 1.83 ## why though?
                         for cana,ana in enumerate(analyses):
-                            print ( "[rulerPlotter] write %s at x=%.1f" % ( ana, xavg ) )
+                            # print ( "[rulerPlotter] write %s at x=%.1f" % ( ana, xavg ) )
                             if xavg > .9:
                                 xavg = .73
                             plt.text ( xavg, m-dm1-dm*cana, ana.replace("201","1" ),
