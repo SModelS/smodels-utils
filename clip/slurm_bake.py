@@ -14,27 +14,13 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
-def getNEvents ( recipe ):
-    """ given a recipe, get the number of events pledged.
-        used for estimating resources """
-    try:
-        tokens = recipe.split(" ")
-        if "@n" in tokens:
-            idx = tokens.index ( "@n" )
-            if len(tokens)>idx+1:
-                ret = int ( tokens[idx+1] )
-                return ret
-    except Exception as e:
-        print ( f"[slurm] {e}" )
-    return 10000
-
-def bake ( recipe, analyses, mass, topo, dry_run, nproc, cutlang,
+def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
            time, doLog = True ):
     """ bake with the given recipe
-    :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
     :param topo: eg T3GQ
     :param mass: eg [(50,4500,200),(50,4500,200),(0.)]
+    :param nevents: number of events
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     :param cutlang: if true, then use cutlang
@@ -44,9 +30,9 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, cutlang,
     with open ( f"{codedir}/smodels-utils/clip/bake_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
-    if "cutlang" in recipe and not cutlang:
-        print ( f"[slurm.py] cutlang is mentioned in recipe but -l was not given. maybe use -l?" )
-        sys.exit()
+    #if "cutlang" in recipe and not cutlang:
+    #    print ( f"[slurm.py] cutlang is mentioned in recipe but -l was not given. maybe use -l?" )
+    #    sys.exit()
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
@@ -57,11 +43,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, cutlang,
     nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
-            args = recipe.replace("@","-")
-            args += ' -m "%s"' % mass
-            args += ' --analyses "%s"' % analyses
-            args += ' -t %s' % topo
-            args += ' -p %d' % nprc
+            args = f'-a -n {nevents} --topo {topo} -p {nprc} -m "{mass}"'
+            args += f' --analyses "{analyses}"'
             # args += ' -b'
             if cutlang:
                 args += ' --cutlang'
@@ -79,7 +62,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, cutlang,
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
         f.write ( f"# this script will perform:\n" )
-        line = f'./bake.py {recipe.replace("@","-")} -t {topo} -m "{mass}" --analyses "{analyses}" -p {nprc}'
+        line = f'./bake.py -a -n {nevents} -t {topo} -m "{mass}" --analyses "{analyses}" -p {nprc}'
         if cutlang:
             line += ' --cutlang'
         f.write ( f"# {line}\n" )
@@ -104,7 +87,6 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, cutlang,
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     # ma5 seems to not need much RAM
     ram = 2.5 * nproc
-    nevents = getNEvents ( recipe )
     if nevents > 50000:
         ram = 3. * nproc
     ncpus = int(nproc*1.5)
@@ -148,9 +130,9 @@ def main():
     argparser.add_argument ( '-B', '--nbakes', nargs="?",
                     help='launch n identical jobs',
                     type=int, default=1 )
-    argparser.add_argument ( '-b', '--bake', nargs="?",
-                    help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a @K"]',
-                    type=str, default="" )
+    argparser.add_argument ( '-n', '--nevents', nargs="?",
+                    help='number of events to be generated',
+                    type=int, default=1000 )
     argparser.add_argument ( '-m', '--mass', nargs="?",
                     help='bake EM maps, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]',
                     type=str, default="default" )
@@ -166,16 +148,14 @@ def main():
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
     args=argparser.parse_args()
-    if args.bake != "":
-        doLog = not args.dontlog
-        if args.bake == "default":
-            args.bake = '@n 10000 @a @K'
-        if args.mass == "default":
-            # args.mass = "[(300,1099,25),'half',(200,999,25)]"
-            args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
-        for i in range(args.nbakes):
-            bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-                   args.nprocesses, args.cutlang, args.time, doLog )
+    doLog = not args.dontlog
+    if args.mass == "default":
+        # args.mass = "[(300,1099,25),'half',(200,999,25)]"
+        args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
+    for i in range(args.nbakes):
+        bake ( args.analyses, args.mass, args.topo, args.nevents, args.dry_run,
+               args.nprocesses, args.cutlang, args.time, doLog )
+    logCall()
 
 if __name__ == "__main__":
     main()
