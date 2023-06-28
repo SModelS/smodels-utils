@@ -55,9 +55,12 @@ class SModelsOutput(object):
     
     def getMassFromSlhafile(self,file):
         d = pyslha.read(file)
-        self.m_lsp = abs(d.blocks['MASS'].get(1000022))             #neutralino_1
-        #self.m_nlsp = abs(d.blocks['MASS'].get(1000023))            #neutralino_2
-        self.m_nlsp = abs(d.blocks['MASS'].get(1000024))            #chargino_1
+        self.m_n1 = abs(d.blocks['MASS'].get(1000022))             #neutralino_1
+        self.m_n2 = abs(d.blocks['MASS'].get(1000023))            #neutralino_2
+        self.m_c1 = abs(d.blocks['MASS'].get(1000024))            #chargino_1
+        self.m_n3 = abs(d.blocks['MASS'].get(1000025))            #neutralino_3
+        self.m_n4 = abs(d.blocks['MASS'].get(1000035))            #neutralino_4
+        self.m_c2 = abs(d.blocks['MASS'].get(1000037))            #chargino_2
         '''
         if abs(self.m_nlsp - self.m_lsp) < 10.0:
             if abs(abs(d.blocks['MASS'].get(1000024)) - self.m_lsp) >= 10.0:
@@ -77,7 +80,7 @@ class SModelsOutput(object):
         
         name = 'summary.csv'
         with open('results/summary.csv','w') as out:
-            out.write('SLHA_file \t\t M_cha \t M_neu \t r_obs(comb) \t r_exp (comb) \t\t\t Combination \t\t  \t max_r_obs \t Analysis \t max_r_exp \t Analysis')
+            out.write('#SLHA_file \t\t M_N1 \t M_N2 \t M_C1 \t M_N3 \t M_N4 \t M_C2 \t r_obs(comb) \t r_exp(comb) \t\t\t Combination \t\t\t  \t max_r_obs \t Analysis \t max_r_exp \t Analysis')
     
             for file in self.files:
                 model = Model(BSMparticles = BSMList, SMparticles = SMList)
@@ -85,23 +88,25 @@ class SModelsOutput(object):
                 model.updateParticles(inputFile = slhafile)
                 toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
                 allPreds = theoryPredictionsFor(expresults, toplist, combinedResults=True)
-        #print("\n ", allPreds)
+                print("\n Theory Predictions computed, finding best combination of theory prediction")
         
                 bC = BestCombinationFinder(combination_matrix = self.allo, theoryPredictionList = allPreds, n_top=1)
                 bestThPred = bC.findBestCombination()
             
                 self.getMassFromSlhafile(file)
                 filename = file.split('/')[-1]
+                
+                #make python output too
                 if bestThPred == []:
-                    print("\n M_nlsp: ", self.m_nlsp, "\t M_lsp: ", self.m_lsp, "\t Combination: None")
-                    print("\n Not running smodels on file as no tp available")
-                    out.write('\n {}, {}, {}, \t N/A,  \t \t N/A, \t N/A, \t N/A, \t N/A, \t N/A, \t N/A'.format(filename, self.m_nlsp, self.m_lsp))
+                    print("\n M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: None")
+                    print("\n Not running SModelS on file as no tp available")
+                    out.write('\n {}, \t\t {}, \t {}, \t {}, \t {}, \t {}, \t {},  \t N/A, \t \t \t N/A, \t\t\t N/A, \t N/A, \t N/A, \t N/A, \t N/A'.format(filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2))
         
                 else:
-                    print("\n M_nlsp: ", self.m_nlsp, "\t M_lsp: ", self.m_lsp, "\t Combination: ", bestThPred[0].analysisId())
+                    print("\n M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: ", bestThPred[0].analysisId())
                     self.runSmodels(bestThPred, file)
                     self.readSModelSFile(file)
-                    out.write('\n {}, {}, {}, {}, {}, {}, {}, {}, {}, {}'.format(filename, self.m_nlsp, self.m_lsp, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1]))
+                    out.write('\n {}, \t\t {}, \t {}, \t {}, \t {}, \t {}, \t {}, \t {}, \t {}, \t\t\t {}, \t\t\t {}, \t {}, \t {}, \t {}'.format(filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1]))
                 
         
     def runSmodels(self, bestThPred, file):
@@ -116,10 +121,14 @@ class SModelsOutput(object):
         parser.set('options', 'combineAnas', bestThPred[0].analysisId())
         parser.set('database', 'analyses', bestThPred[0].analysisId())
         
+        print("\n Running SModelS on model point for the combination")
+        
         filename = file
         outputDir = '/Users/sahananarasimha/smodels-utils/combinations/results'
         #run SModelS with input file:
         output = modelTester.testPoint(filename, outputDir, parser, '2.3.0', listOfExpRes)
+        
+        print("\n Printing output")
         for x in output.values(): x.flush()
         
         

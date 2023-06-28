@@ -136,9 +136,10 @@ class BestCombinationFinder(object):
             
         if len(self.listoftp) == 1:
             if self.listoftp[0].analysisId() in self.cM.keys():     #just 1 tp, no need for combining
-                #print("\n 1 theory Prediction ", self.listoftp[0].analysisId())
+                print("\n 1 theory Prediction ", self.listoftp[0].analysisId())
                 return self.listoftp
             else:
+                print("\n 1 theory Prediction but not present in combination dictionary: ", self.listoftp[0].analysisId())
                 return []
             
         weight_vector = []
