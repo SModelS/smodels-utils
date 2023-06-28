@@ -1,0 +1,109 @@
+Input status: 1
+Decomposition output status: 1 #decomposition was successful
+# Input File: filter_slha/ew_0g4nt6ft.slha
+# checkinput = True
+# combineanas = ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002
+# combinesrs = True
+# computestatistics = True
+# docompress = True
+# doinvisible = True
+# experimentalfeatures = False
+# maxcond = 0.2
+# minmassgap = 5.
+# model = share.models.mssm
+# ncpus = 30
+# promptwidth = 1e-11
+# reportallsrs = False
+# sigmacut = 0.005
+# stablewidth = 1e-25
+# testcoverage = True
+# Database version: 2.3.0
+================================================================================
+#Analysis  Sqrts  Cond_Violation  Theory_Value(fb)  Exp_limit(fb)  r  r_expected
+
+ATLAS-SUSY-2018-05-ewk  1.30E+01    0.0  1.328E-02  6.208E-02  2.139E-01  1.529E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  6.052E-11,  9.107E-11,  9.107E-11
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2018-41  1.30E+01    0.0  7.169E-03  3.565E-02  2.011E-01  1.373E-01
+ Signal Region:  (combined)
+ Txnames:  TChiHH, TChiWH, TChiWW, TChiWZ, TChiZH, TChiZZ
+ Likelihoods: L, L_max, L_SM =  1.651E-03,  2.358E-03,  2.358E-03
+--------------------------------------------------------------------------------
+     CMS-SUS-21-002  1.30E+01    0.0  1.312E-01  7.631E-01  1.719E-01  2.042E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH, TChiWW, TChiWZ
+ Likelihoods: L, L_max, L_SM =  1.258E-81,  1.281E-81,  1.056E-81
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2019-09  1.30E+01    0.0  1.168E-02  1.151E-01  1.014E-01  1.068E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  1.248E-24,  1.248E-24,  1.207E-24
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2019-08  1.30E+01    0.0  1.368E-02  1.647E-01  8.301E-02  1.220E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH
+ Likelihoods: L, L_max, L_SM =  6.282E-45,  7.820E-45,  5.439E-45
+--------------------------------------------------------------------------------
+     CMS-SUS-20-004  1.30E+01    0.0  1.354E-02  2.369E-01  5.714E-02  1.130E-01
+ Signal Region:  (combined)
+ Txnames:  TChiHH
+ Likelihoods: L, L_max, L_SM =  2.884E-34,  2.326E-33,  1.614E-34
+
+ 
+================================================================================
+The highest r value is = 0.21389 from ATLAS-SUSY-2018-05-ewk (r_expected=0.15290)
+CMS analysis with highest available r_expected: CMS-SUS-21-002, r_expected=0.20424, r_obs=0.17191
+ATLAS analysis with highest available r_expected: ATLAS-SUSY-2018-05-ewk, r_expected=0.15290, r_obs=0.21389
+===================================================== 
+Combined Analyses: ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002
+Likelihoods: L, L_max, L_SM = 9.861E-163, 1.489E-162, 1.489E-162
+combined r-value:  3.735E-01
+combined r-value (expected):  3.553E-01
+===================================================== 
+
+
+Total cross-section for missing topologies (fb):  1.678E+02
+Total cross-section for missing topologies with displaced decays (fb):  0.000E+00
+Total cross-section for missing topologies with prompt decays (fb):  1.678E+02
+Total cross-section for topologies outside the grid (fb):  2.953E+00
+
+#Full information on unconstrained cross sections
+================================================================================
+missing topologies with the highest cross sections (up to 10):
+Sqrts (TeV)   Weight (fb)                  Element description
+ 13.0          1.056E+02    #                                    [[],[]]  (MET,MET)
+ 13.0          4.482E+01    #                           [[],[[jet,jet]]]  (MET,MET)
+ 13.0          3.689E+00    #                               [[],[[b,b]]]  (MET,MET)
+ 13.0          3.481E+00    #                              [[],[[l,nu]]]  (MET,MET)
+ 13.0          2.085E+00    #                             [[],[[ta,ta]]]  (MET,MET)
+ 13.0          1.717E+00    #                               [[],[[l,l]]]  (MET,MET)
+ 13.0          1.568E+00    #                             [[],[[nu,ta]]]  (MET,MET)
+ 13.0          1.161E+00    #                    [[[W]],[[W],[jet,jet]]]  (MET,MET)
+ 13.0          6.011E-01    #                                 [[],[[W]]]  (MET,MET)
+ 13.0          5.615E-01    #                [[[higgs]],[[W],[jet,jet]]]  (MET,MET)
+================================================================================
+No missing topologies with displaced decays found
+================================================================================
+missing topologies with prompt decays with the highest cross sections (up to 10):
+Sqrts (TeV)   Weight (fb)                  Element description
+ 13.0          1.056E+02    #                                    [[],[]]  (MET,MET)
+ 13.0          4.482E+01    #                           [[],[[jet,jet]]]  (MET,MET)
+ 13.0          3.689E+00    #                               [[],[[b,b]]]  (MET,MET)
+ 13.0          3.481E+00    #                              [[],[[l,nu]]]  (MET,MET)
+ 13.0          2.085E+00    #                             [[],[[ta,ta]]]  (MET,MET)
+ 13.0          1.717E+00    #                               [[],[[l,l]]]  (MET,MET)
+ 13.0          1.568E+00    #                             [[],[[nu,ta]]]  (MET,MET)
+ 13.0          1.161E+00    #                    [[[W]],[[W],[jet,jet]]]  (MET,MET)
+ 13.0          6.011E-01    #                                 [[],[[W]]]  (MET,MET)
+ 13.0          5.615E-01    #                [[[higgs]],[[W],[jet,jet]]]  (MET,MET)
+================================================================================
+topologies outside the grid with the highest cross sections (up to 10):
+Sqrts (TeV)   Weight (fb)                  Element description
+ 13.0          2.037E+00    #                      [[[jet,jet]],[[l,l]]]  (MET,MET)
+ 13.0          7.160E-01    #                         [[[l,l]],[[l,nu]]]  (MET,MET)
+ 13.0          7.837E-02    #                              [[[W]],[[W]]]  (MET,MET)
+ 13.0          6.531E-02    #                              [[[Z]],[[Z]]]  (MET,MET)
+ 13.0          5.585E-02    #                          [[[higgs]],[[Z]]]  (MET,MET)
+================================================================================

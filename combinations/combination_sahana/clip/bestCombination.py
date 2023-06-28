@@ -20,13 +20,13 @@ from smodels.tools import runtime
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database
 
-try:
-    import pathfinder as pf
-except ImportError as e:
+#try:
+#    import pathfinder as pf
+#except ImportError as e:
     # FIXME in the long run the line below should disappear
-    sys.path.insert(0, os.path.expanduser("~/PathFinder"))
-    sys.path.insert(0, os.path.expanduser("~/git/PathFinder"))
-    import pathfinder as pf
+  #  sys.path.insert(0, os.path.expanduser("~/PathFinder"))
+sys.path.insert(0, os.path.expanduser("~/git/PathFinder"))
+import pathfinder as pf
 
 
 class BestCombinationFinder(object):
@@ -131,25 +131,26 @@ class BestCombinationFinder(object):
         """ the actual best combination finder """
         
         if len(self.listoftp) == 0:     #no theory prediction
-            print("\n No theory Prediction")
+            print("No theory Prediction")
             return []
             
         if len(self.listoftp) == 1:
             if self.listoftp[0].analysisId() in self.cM.keys():     #just 1 tp, no need for combining
-                #print("\n 1 theory Prediction ", self.listoftp[0].analysisId())
+                print("1 theory Prediction ", self.listoftp[0].analysisId())
                 return self.listoftp
             else:
+                print("1 theory Prediction but not present in combination dictionary: ", self.listoftp[0].analysisId())
                 return []
             
         weight_vector = []
         EMatrix = self.createExclusivityMatrix()
         
         if not EMatrix.size:              #EMatrix is empty
-            print("\n Theory Prediction available but none are present in combination dictionary.")
+            print("Theory Prediction available but none are present in combination dictionary.")
             return []
         
         if len(self.listoftp) == 1:     #just 1 tp, no need for combining
-            print("\n >1 theory Prediction but only 1 present in the combination dictionary ", self.listoftp[0].analysisId())
+            print(">1 theory Prediction but only 1 present in the combination dictionary ", self.listoftp[0].analysisId())
             return self.listoftp
         
         for preds in self.listoftp:

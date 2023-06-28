@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys; 
+import os
+sys.path.insert(0, os.path.expanduser("~/git/smodels"))
 from smodels.tools import runtime
 runtime.modelFile = 'smodels.share.models.mssm'
 from smodels.tools.physicsUnits import GeV,fb
@@ -8,10 +11,10 @@ from smodels.experiment.databaseObj import Database
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
-from combinations.bestCombination import BestCombinationFinder
+from bestCombination import BestCombinationFinder
 import glob
 import pyslha
-import sys; sys.path.append('.')
+sys.path.append('.')
 from smodels.installation import installDirectory, version
 from smodels.tools import modelTester
 from smodels.tools import crashReport
@@ -75,6 +78,10 @@ class SModelsOutput(object):
         self.combinationMatrix()
         self.readSlhafile()
         
+        #name = '%s/smodels/./parameters.ini'%(os.path.expanduser('~/git'))
+        #with open(name, 'r') as f:
+        #    print('yes')
+        
         name = 'summary.csv'
         with open('results/summary.csv','w') as out:
             out.write('SLHA_file \t\t M_cha \t M_neu \t r_obs(comb) \t r_exp (comb) \t\t\t Combination \t\t  \t max_r_obs \t Analysis \t max_r_exp \t Analysis')
@@ -105,7 +112,7 @@ class SModelsOutput(object):
                 
         
     def runSmodels(self, bestThPred, file):
-        parameterFile="/Users/sahananarasimha/smodels/./parameters.ini"
+        parameterFile='%s/smodels/./parameters.ini'%(os.path.expanduser('~/git'))
         parser = modelTester.getParameters(parameterFile)
         
         #database, databaseVersion = modelTester.loadDatabase(parser,db=None)
@@ -117,7 +124,7 @@ class SModelsOutput(object):
         parser.set('database', 'analyses', bestThPred[0].analysisId())
         
         filename = file
-        outputDir = '/Users/sahananarasimha/smodels-utils/combinations/results'
+        outputDir = '%s/smodels-utils/combinations/results'%(os.path.expanduser('~/git'))
         #run SModelS with input file:
         output = modelTester.testPoint(filename, outputDir, parser, '2.3.0', listOfExpRes)
         for x in output.values(): x.flush()
