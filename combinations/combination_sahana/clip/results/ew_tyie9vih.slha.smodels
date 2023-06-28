@@ -1,0 +1,101 @@
+Input status: 1
+Decomposition output status: 1 #decomposition was successful
+# Input File: filter_slha/ew_tyie9vih.slha
+# checkinput = True
+# combineanas = ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2018-32,ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002
+# combinesrs = True
+# computestatistics = True
+# docompress = True
+# doinvisible = True
+# experimentalfeatures = False
+# maxcond = 0.2
+# minmassgap = 5.
+# model = share.models.mssm
+# ncpus = 30
+# promptwidth = 1e-11
+# reportallsrs = False
+# sigmacut = 0.005
+# stablewidth = 1e-25
+# testcoverage = True
+# Database version: 2.3.0
+================================================================================
+#Analysis  Sqrts  Cond_Violation  Theory_Value(fb)  Exp_limit(fb)  r  r_expected
+
+ATLAS-SUSY-2018-05-ewk  1.30E+01    0.0  5.305E-02  6.698E-02  7.921E-01  5.879E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  1.635E-11,  9.107E-11,  9.107E-11
+--------------------------------------------------------------------------------
+     CMS-SUS-21-002  1.30E+01    0.0  4.827E-01  7.427E-01  6.499E-01  7.681E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH, TChiWW, TChiWZ
+ Likelihoods: L, L_max, L_SM =  7.881E-82,  1.271E-81,  1.056E-81
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2019-09  1.30E+01    0.0  4.760E-02  1.213E-01  3.924E-01  4.131E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  9.937E-25,  1.248E-24,  1.207E-24
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2018-41  1.30E+01    0.0  1.133E-02  3.351E-02  3.381E-01  2.274E-01
+ Signal Region:  (combined)
+ Txnames:  TChiHH, TChiWH, TChiWW, TChiWZ, TChiZH, TChiZZ
+ Likelihoods: L, L_max, L_SM =  1.231E-03,  2.358E-03,  2.358E-03
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2019-08  1.30E+01    0.0  4.611E-02  1.791E-01  2.575E-01  3.947E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH
+ Likelihoods: L, L_max, L_SM =  8.018E-45,  8.231E-45,  5.439E-45
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2018-32  1.30E+01    0.0  3.922E-02  2.666E-01  1.471E-01  1.374E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWW
+ Likelihoods: L, L_max, L_SM =  1.563E-40,  1.716E-40,  1.716E-40
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2018-06  1.30E+01    0.0  1.146E-02  1.590E-01  7.210E-02  8.007E-02
+ Signal Region:  SR_low
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  4.116E-03,  4.450E-03,  3.757E-03
+--------------------------------------------------------------------------------
+     CMS-SUS-20-004  1.30E+01    0.0  1.543E-02  2.422E-01  6.369E-02  1.332E-01
+ Signal Region:  (combined)
+ Txnames:  TChiHH
+ Likelihoods: L, L_max, L_SM =  3.239E-34,  2.932E-33,  1.614E-34
+
+ 
+================================================================================
+The highest r value is = 0.79206 from ATLAS-SUSY-2018-05-ewk (r_expected=0.58787)
+CMS analysis with highest available r_expected: CMS-SUS-21-002, r_expected=0.76808, r_obs=0.64987
+ATLAS analysis with highest available r_expected: ATLAS-SUSY-2018-05-ewk, r_expected=0.58787, r_obs=0.79206
+===================================================== 
+Combined Analyses: ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2018-32,ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002
+Likelihoods: L, L_max, L_SM = 1.975E-203, 2.555E-202, 2.555E-202
+combined r-value:  1.195E+00
+combined r-value (expected):  1.231E+00
+===================================================== 
+
+
+Total cross-section for missing topologies (fb):  7.874E-01
+Total cross-section for missing topologies with displaced decays (fb):  0.000E+00
+Total cross-section for missing topologies with prompt decays (fb):  7.874E-01
+Total cross-section for topologies outside the grid (fb):  0.000E+00
+
+#Full information on unconstrained cross sections
+================================================================================
+missing topologies with the highest cross sections (up to 10):
+Sqrts (TeV)   Weight (fb)                  Element description
+ 13.0          4.892E-01    #                                 [[],[[W]]]  (MET,MET)
+ 13.0          1.933E-01    #                                 [[],[[Z]]]  (MET,MET)
+ 13.0          8.819E-02    #                             [[],[[higgs]]]  (MET,MET)
+ 13.0          1.675E-02    #                                    [[],[]]  (MET,MET)
+================================================================================
+No missing topologies with displaced decays found
+================================================================================
+missing topologies with prompt decays with the highest cross sections (up to 10):
+Sqrts (TeV)   Weight (fb)                  Element description
+ 13.0          4.892E-01    #                                 [[],[[W]]]  (MET,MET)
+ 13.0          1.933E-01    #                                 [[],[[Z]]]  (MET,MET)
+ 13.0          8.819E-02    #                             [[],[[higgs]]]  (MET,MET)
+ 13.0          1.675E-02    #                                    [[],[]]  (MET,MET)
+================================================================================
+No topologies outside the grid found
+================================================================================

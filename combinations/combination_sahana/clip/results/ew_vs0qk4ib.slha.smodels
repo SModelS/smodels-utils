@@ -1,0 +1,66 @@
+Input status: 1
+Decomposition output status: 1 #decomposition was successful
+# Input File: filter_slha/ew_vs0qk4ib.slha
+# checkinput = True
+# combineanas = ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,CMS-SUS-21-002
+# combinesrs = True
+# computestatistics = True
+# docompress = True
+# doinvisible = True
+# experimentalfeatures = False
+# maxcond = 0.2
+# minmassgap = 5.
+# model = share.models.mssm
+# ncpus = 30
+# promptwidth = 1e-11
+# reportallsrs = False
+# sigmacut = 0.005
+# stablewidth = 1e-25
+# testcoverage = True
+# Database version: 2.3.0
+================================================================================
+#Analysis  Sqrts  Cond_Violation  Theory_Value(fb)  Exp_limit(fb)  r  r_expected
+
+ ATLAS-SUSY-2018-41  1.30E+01    0.0  1.528E-02  3.617E-02  4.226E-01  2.959E-01
+ Signal Region:  (combined)
+ Txnames:  TChiHH, TChiWH, TChiWW, TChiWZ, TChiZH, TChiZZ
+ Likelihoods: L, L_max, L_SM =  1.064E-03,  2.358E-03,  2.358E-03
+--------------------------------------------------------------------------------
+     CMS-SUS-21-002  1.30E+01    0.0  5.296E-02  2.830E-01  1.871E-01  3.300E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH, TChiWW, TChiWZ
+ Likelihoods: L, L_max, L_SM =  2.451E-81,  3.323E-81,  1.056E-81
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2019-08  1.30E+01    0.0  2.950E-03  8.452E-02  3.490E-02  6.202E-02
+ Signal Region:  (combined)
+ Txnames:  TChiWH
+ Likelihoods: L, L_max, L_SM =  6.123E-45,  8.549E-45,  5.439E-45
+
+ 
+================================================================================
+The highest r value is = 0.42257 from ATLAS-SUSY-2018-41 (r_expected=0.29592)
+CMS analysis with highest available r_expected: CMS-SUS-21-002, r_expected=0.33005, r_obs=0.18713
+ATLAS analysis with highest available r_expected: ATLAS-SUSY-2018-41, r_expected=0.29592, r_obs=0.42257
+===================================================== 
+Combined Analyses: ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,CMS-SUS-21-002
+Likelihoods: L, L_max, L_SM = 1.597E-128, 1.676E-128, 1.355E-128
+combined r-value:  3.576E-01
+combined r-value (expected):  4.619E-01
+===================================================== 
+
+
+Total cross-section for missing topologies (fb):  0.000E+00
+Total cross-section for missing topologies with displaced decays (fb):  0.000E+00
+Total cross-section for missing topologies with prompt decays (fb):  0.000E+00
+Total cross-section for topologies outside the grid (fb):  0.000E+00
+
+#Full information on unconstrained cross sections
+================================================================================
+No missing topologies found
+================================================================================
+No missing topologies with displaced decays found
+================================================================================
+No missing topologies with prompt decays found
+================================================================================
+No topologies outside the grid found
+================================================================================
