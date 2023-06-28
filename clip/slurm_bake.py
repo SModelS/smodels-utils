@@ -62,7 +62,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
         f.write ( f"# this script will perform:\n" )
-        line = f'./bake.py -a -n {nevents} -t {topo} -m "{mass}" --analyses "{analyses}" -p {nproc}'
+        line = f'./bake.py -a -n {nevents} -T {topo} -m "{mass}" --analyses "{analyses}" -p {nproc}'
         if cutlang:
             line += ' --cutlang'
         f.write ( f"# {line}\n" )
@@ -87,8 +87,10 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     # ma5 seems to not need much RAM
     ram = 2.5 * nproc
-    if nevents > 50000:
+    if nevents >= 50000:
         ram = 3. * nproc
+    if nevents >= 100000:
+        ram = 4. * nproc
     ncpus = int(nproc*1.5)
     if cutlang:
         ram = 2.5 * nproc ## in GB
