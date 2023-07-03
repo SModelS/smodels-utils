@@ -1,1 +1,0 @@
-comboDict = {'ew_q2q9rt5v.slha': {}, 'ew_q2xa84nx.slha': {'bestCombo': 'ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2018-41,ATLAS-SUSY-2019-08,CMS-SUS-21-002', 'r_obs': 0.5651199899864723, 'r_exp': 0.6969507409862699}}

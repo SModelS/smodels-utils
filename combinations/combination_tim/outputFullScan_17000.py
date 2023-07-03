@@ -1,1 +1,0 @@
-comboDict = {'ew_wju__6yj.slha': {}, 'ew_wjuokz_v.slha': {'bestCombo': 'ATLAS-SUSY-2013-11,CMS-SUS-21-002', 'r_obs': 0.006194559926424032, 'r_exp': 0.006972170532886401}, 'ew_wjv0fpa8.slha': {}, 'ew_wjwerln2.slha': {}, 'ew_wk01oui8.slha': {}}
