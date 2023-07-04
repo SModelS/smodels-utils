@@ -4,7 +4,7 @@ import copy
 import matplotlib.pyplot as plt
 import numpy as np
 
-outputFile = 'output100Comb.py'
+outputFile = 'output100Comb_promptWidth_1e-11.py'
 
 exec(open(outputFile).read())
 outputList= copy.deepcopy(outputList)
@@ -13,6 +13,8 @@ combNumberList = []
 drDict = {}
 
 for output in outputList:
+    if not 'combo1' in output.keys():
+        continue
     r_exp_max = 0
     combNumber = ''
 
@@ -50,4 +52,4 @@ plt.bar(ticks,counts, align='center')
 plt.xticks(ticks, labels)
 plt.title('r_exp with respect to L_BSM/L_SM position')
 plt.tight_layout()
-plt.savefig('r_exp_loc.png', dpi=150)
+plt.savefig('r_exp_loc_promptWidth_1e-11.png', dpi=150)

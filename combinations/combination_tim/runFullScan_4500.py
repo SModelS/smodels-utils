@@ -20,7 +20,7 @@ sys.path.append(protomodelsPath)
 from tester.combiner import Combiner
 
 # slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
-slhaFolder = '/theo/pascal/filter_slha/'
+slhaFolder = '/theo/pascal/filter_slha_1e-8_1e-11/'
 outputFile = 'outputFullScan_4500.py'
 
 
@@ -42,7 +42,7 @@ import numpy as np
 
 setLogLevel("info")
 
-sigmacut = 0.001*fb
+sigmacut = 0.005*fb
 mingap = 5.*GeV
 database = 'official'
 
