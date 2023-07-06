@@ -31,19 +31,22 @@ import time
 
 class SModelsOutput(object):
     def __init__(self, inputfiles, queue):
-        '''inputfile: slha file for which an smodels output for the best combination is needed'''
+        '''inputfiles: slha files for which an smodels output for the best combination is needed'''
         
+        #list of inputfiles
         self.inputfiles = inputfiles
         self.database = Database('official')
         self.expresults = self.database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
-        self.combinationMatrix()
-        self.summary_output = []
         
+        #define combination matrix
+        self.combinationMatrix()
+       
+        
+        #loop over inputfiles
         for file in self.inputfiles:
             self.file = file
             self.getBestCombination(queue)
-            
-        #queue.put(self.summary_output)
+        
 
         
     def combinationMatrix(self):
@@ -91,15 +94,16 @@ class SModelsOutput(object):
     
         '''main function where you compute the theory pred for the model point and get best combination'''
         
+        #define start time
         process_st = time.process_time()
+        
         sigmacut = 0.005*fb
         mingap = 5.*GeV
-        
         model = Model(BSMparticles = BSMList, SMparticles = SMList)
         slhafile = self.file
         model.updateParticles(inputFile = slhafile)
         toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
-        allPreds = theoryPredictionsFor(self.expresults, toplist, combinedResults=True)
+        allPreds = theoryPredictionsFor(self.expresults, toplist, combinedResults=True)                         #TPred List object
         print("\n Theory Predictions computed, finding best combination of theory prediction")
         
         #get the best combination
@@ -116,7 +120,8 @@ class SModelsOutput(object):
             print("Not running SModelS on file as no tp available")
             process_et = time.process_time()
             time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
-            #self.summary_output.append([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2] + ['N/A']*7 + [time_process])
+            
+            #put values for columns according to summary ouptput
             queue.put([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2] + ['N/A']*7 + [time_process])
             #print("Queue worked!")
             #return out
@@ -124,14 +129,18 @@ class SModelsOutput(object):
         
         else:
             print("M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: ", bestThPred[0].analysisId())
+            
+            #run SModelS on best combination of tp
             self.runSmodels(bestThPred, self.file)
+            
+            '''depends which file you want to read'''
             #self.readSModelSFile(self.file)
             self.readPythonFile(self.file)
             
             process_et = time.process_time()
             time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
-            #self.summary_output.append([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1], time_process])
             
+            #put values for columns according to summary ouptput
             queue.put([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1], time_process])
             
             #print("Queue worked!")
@@ -140,23 +149,25 @@ class SModelsOutput(object):
                 
         
     def runSmodels(self, bestThPred, file):
-        '''run SModelS on the best combination'''
+        '''run SModelS on the best combination using parameter.ini '''
 
         parameterFile="%s/./parameters.ini"%(os.path.expanduser('~/smodels'))
         parser = modelTester.getParameters(parameterFile)
         
-        #database, databaseVersion = modelTester.loadDatabase(parser,db=None)
+        #list of analyses present in combination dictionary
         listOfAna = [ana for ana in self.allo.keys()]
         listOfExpRes = self.database.getExpResults(analysisIDs=listOfAna, dataTypes=['efficiencyMap','combined'])
         #listOfExpRes = modelTester.loadDatabaseResults(parser, self.database)
         
+        #set parser options for combineAnas
         parser.set('options', 'combineAnas', bestThPred[0].analysisId())
         parser.set('database', 'analyses', bestThPred[0].analysisId())
         
-        print("Running SModelS on model point for the combination")
+        print("Running SModelS on model point for the best combination of analyses")
         
         filename = file
         outputDir = '%s/combinations/combination_sahana/results'%(os.path.expanduser('~/smodels-utils'))
+        
         #run SModelS with input file:
         output = modelTester.testPoint(filename, outputDir, parser, '2.3.0', listOfExpRes)
         
@@ -170,27 +181,30 @@ class SModelsOutput(object):
         file = file.split('/')[-1]
         self.output_str = ['The highest r value is =', 'CMS analysis with highest available r_expected:', 'ATLAS analysis with highest available r_expected:', 'Combined Analyses:','combined r-value:','combined r-value (expected):']
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
+        
+        #r = [max_r_obs, max_r_exp, comb_r_obs, comb_r_exp]
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
+        
         with open('results/%s.smodels'%(file), 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
                 if row == []:continue
-                elif self.output_str[0] in row[0]:
+                elif self.output_str[0] in row[0]:                      #analysis with max r_obs
                     self.output_r[0] = row[0].split(' ')[6]
                     self.output_ana[0] = row[0].split(' ')[8]
-                elif self.output_str[1] in row[0]:
+                elif self.output_str[1] in row[0]:                      #cms analysis with max r_exp
                     expr = row[1].split('=')[-1]
-                    if float(expr) > float(self.output_r[1]):
+                    if float(expr) > float(self.output_r[1]):           #check whether r_exp is max_r_exp
                         self.output_r[1] = expr
                         self.output_ana[1] = row[0].split(' ')[-1]
-                elif self.output_str[2] in row[0]:
+                elif self.output_str[2] in row[0]:                      #atlas analysis with max r_exp
                     expr = row[1].split('=')[-1]
-                    if float(expr) > float(self.output_r[1]):
+                    if float(expr) > float(self.output_r[1]):           #check whether r_exp is max_r_exp
                         self.output_r[1] = expr
                         self.output_ana[1] = row[0].split(' ')[-1]
-                elif self.output_str[3] in row[0]: self.output_ana[2] = [row[0].split(' ')[-1]] + row[1:]
-                elif self.output_str[4] in row[0]: self.output_r[2] = row[0].split(' ')[-1]
-                elif self.output_str[5] in row[0]: self.output_r[3] = row[0].split(' ')[-1]
+                elif self.output_str[3] in row[0]: self.output_ana[2] = [row[0].split(' ')[-1]] + row[1:]           #Analyses in combination
+                elif self.output_str[4] in row[0]: self.output_r[2] = row[0].split(' ')[-1]                         #comb_r_obs
+                elif self.output_str[5] in row[0]: self.output_r[3] = row[0].split(' ')[-1]                         #comb_r_exp
                     
         print("\n Analysis : ", self.output_ana)
         print("\n R-values : ", self.output_r)
@@ -204,20 +218,23 @@ class SModelsOutput(object):
         f = open('results/%s.py'%(file), 'r')
         
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
+        
+        #r = [max_r_obs, max_r_exp, comb_r_obs, comb_r_exp]
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
         
         output_result = ast.literal_eval(f.readlines()[0].split('=')[-1])
-        self.output_r[0] = sorted(output_result['ExptRes'], key=lambda x:x['r'], reverse=True)[0]['r']
-        self.output_r[1] = sorted(output_result['ExptRes'], key=lambda x:x['r_expected'], reverse=True)[0]['r_expected']
-        self.output_r[2] = output_result['CombinedRes'][0]['r']
-        self.output_r[3] = output_result['CombinedRes'][0]['r_expected']
+        self.output_r[0] = sorted(output_result['ExptRes'], key=lambda x:x['r'], reverse=True)[0]['r']                      #get max_r_obs by sorting analysis acc to r_obs in decreasing order
+        self.output_r[1] = sorted(output_result['ExptRes'], key=lambda x:x['r_expected'], reverse=True)[0]['r_expected']    #get max_r_exp by sorting analysis acc to r_exp in decreasing order
+        self.output_r[2] = output_result['CombinedRes'][0]['r']                                                             #combined r_obs
+        self.output_r[3] = output_result['CombinedRes'][0]['r_expected']                                                    #combined r_exp
         
-        self.output_ana[0] = sorted(output_result['ExptRes'], key=lambda x:x['r'], reverse=True)[0]['AnalysisID']
-        self.output_ana[1] = sorted(output_result['ExptRes'], key=lambda x:x['r_expected'], reverse=True)[0]['AnalysisID']
-        self.output_ana[2] = output_result['CombinedRes'][0]['AnalysisID']
+        self.output_ana[0] = sorted(output_result['ExptRes'], key=lambda x:x['r'], reverse=True)[0]['AnalysisID']           #get ana with max r_obs
+        self.output_ana[1] = sorted(output_result['ExptRes'], key=lambda x:x['r_expected'], reverse=True)[0]['AnalysisID']  #get ana with max_r_exp
+        self.output_ana[2] = output_result['CombinedRes'][0]['AnalysisID']                                                  #get analysess in combination
         
         print("\n Analysis : ", self.output_ana)
         print("\n R-values : ", self.output_r)
+        
         #print("\n All obs r values: ", [ l['r'] for l in sorted(output_result['ExptRes'], key=lambda x:x['r'], reverse=True)] )
         #print("\n All exp r values: ", [ l['r_expected'] for l in sorted(output_result['ExptRes'], key=lambda x:x['r_expected'], reverse=True)] )
         #print("\n Expt result :" ,output_result['ExptRes'])
@@ -228,16 +245,26 @@ class SModelsOutput(object):
 
 if __name__ == "__main__":
 
+    #Input file
     files = glob.glob ( "filter_slha/ew*slha" )
+    
+    #Select input files
+    
+    #Here list of list of files if you want to use multiprocess; otherwise can write 'files = files[:10]'
     files = [files[:2],files[2:4],files[4:6],files[6:8],files[8:10]]
+    
+    #Multiprocessing queue
     queue = Queue()
 
-    #sms = SModelsOutput(files)
-    #$sms.readPythonFile('results/ew_yzyxds4m.slha')
+    #Without multiprocess you can run for single file or multiple files with
+    #   sms = SModelsOutput(files,queue)
+    #if running with single file, make sure to send the file as a list
+    #u can uncomment the process lines if you dont want
 
-    #SMS = [[SModelsOutput(file) for file in files[:10],[SModelsOutput(file) for file in files[10:20],[SModelsOutput(file) for file in files[20:30],[SModelsOutput(file) for file in files[30:]]
+
  
-   
+    #define number of processes -> for now processes = 5
+    #files contains list of multiple files to be sent to SModels
     processes = [Process(target=SModelsOutput, args=(file,queue)) for file in files]
     for process in processes:
         process.start()
@@ -252,15 +279,12 @@ if __name__ == "__main__":
     name = 'summary_2.csv'
     with open('results/summary.csv','w') as out:
         out.write('#SLHA_file\t M_N1\t M_N2\t M_C1\t M_N3\t M_N4\t M_C2\t r_obs(comb)\t r_exp(comb)\t Combination_of_Analyses\t max_r_obs\t Most_Constraining_Analysis\t max_r_exp\t Most_Senitive_Analysis\t Time Taken')
+        
+        #range -> total files in files/ queue size , here 10
         for i in range(10):
-            #process_item = queue.get()
-            
             item = queue.get()
             print(item)
             out.write('\n{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10],item[11],item[12],item[13], item[14]))
-        
-        
-            #sm.getBestCombination(file)
-    #sm.readSModelSFile('ew_yzyxds4m.slha')
+
 
     
