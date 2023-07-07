@@ -3,7 +3,7 @@
 source ~/.bashrc
 
 callmyprogram(){
-  python -i -c "import runFullScan;runFullScan.main('2ndFilter_slha_nlo_29',23)"
+  python -i -c "import runFullScan;runFullScan.main('2ndFilter_slha_nlo_29',23,'outputFullScan_nlo_2p3_mmg05_29')"
 }
 
 callmyprogram
