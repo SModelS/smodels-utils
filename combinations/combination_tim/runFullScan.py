@@ -20,8 +20,7 @@ from tester.combiner import Combiner
 
 # slhaFolder = '/home/pascal/SModelS/EWinoData/2ndFilter_slha_nlo/'
 # slhaFolder = '/theo/pascal/2ndFilter_slha_nlo/'
-outputDir = './outputFullScan_nlo_2p3_mmg05'
-if not os.path.isdir(outputDir): os.mkdir(outputDir)
+# outputDir = './outputFullScan_nlo_2p3_mmg05'
 
 from smodels.tools import runtime
 from smodels.theory import decomposer
@@ -33,9 +32,9 @@ from smodels.tools import coverage, ioObjects, timeOut #, crashReport
 from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
 from smodels.theory.model import Model
-# from smodels.theory.exceptions import SModelSTheoryError as SModelSError
+from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 from smodels.tools.printer import MPrinter, printScanSummary, PyPrinter, SummaryPrinter
-# from smodels.tools.smodelsLogging import logger
+from smodels.tools.smodelsLogging import logger
 from imp import reload
 from smodels import particlesLoader
 try:
@@ -347,12 +346,17 @@ def runSetOfFiles(inputFiles, outputDir, databaseVersion, listOfExpRes, timeout,
 
     return output
 
-def main(slhaFolder,nb_cpu_to_use):
+def main(slhaFolder,nb_cpu_to_use,output):
     t0 = time.time()
 
     global ncpus
     ncpus = nb_cpu_to_use
 
+    global outputDir
+    outputDir = output
+
+    if not os.path.isdir(outputDir): os.mkdir(outputDir)
+    
     if reportAllSRs or not combineSRs: print("\n***** RUNNING WITHOUT SR COMBINATION *****\n")
     else: print("\n***** RUNNING WITH SR COMBINATION *****\n")
 
@@ -385,6 +389,19 @@ def main(slhaFolder,nb_cpu_to_use):
         children.append(p)
     pool.close()
 
+    iprint, nprint = 0, 5  # Define when to start printing and the percentage step
+    # Check process progress until they are all finished
+    while True:
+        done = sum([p.ready() for p in children])
+        fracDone = 100*float(done)/len(children)
+        if fracDone >= iprint:
+            while fracDone >= iprint:
+                iprint += nprint
+            logger.info('%i%% of processes done in %1.2f min' %(iprint-nprint, (time.time()-t0)/60.))
+        if done == len(children):
+            break
+        time.sleep(2)
+    
     outputDict = {}
     for p in children:
         outputDict.update(p.get())
