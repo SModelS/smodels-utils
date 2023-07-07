@@ -301,7 +301,7 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
     printParameters = [('sigmacut', str(sigmacut)), ('minmassgap', str(minmassgap)), ('maxcond', str(maxcond)), ('ncpus', str(ncpus)), ('model', str(particles)), ('promptWidth', str(promptWidth)), ('stableWidth', str(stableWidth)), ('checkInput', str(checkInput)), ('doInvisible', str(doInvisible)), ('doCompress', str(doCompress)), ('computestatistics', str(computeStatistics)), ('testcoverage', str(testCoverage)), ('combineSRs', str(combineResults)), ('combineanas', ",".join([ana.dataset.globalInfo.id.strip() for ana in combineAnas])), ('reportallsrs', str(not useBest)), ('experimentalFeatures', str(experimentalFeatures)), ('useSuperseded', str(useSuperseded)), ('useNonValidated', str(useNonValidated))]
 
     printParameters = OrderedDict(printParameters)
-    outputStatus = ioObjects.OutputStatus(inputStatus.status, inputFile, printParameters, databaseVersion)
+    outputStatus.parameters = printParameters
     masterPrinter.addObj(outputStatus)
 
     return {os.path.basename(inputFile): masterPrinter}
@@ -356,7 +356,7 @@ def main(slhaFolder,nb_cpu_to_use,output):
     outputDir = output
 
     if not os.path.isdir(outputDir): os.mkdir(outputDir)
-    
+
     if reportAllSRs or not combineSRs: print("\n***** RUNNING WITHOUT SR COMBINATION *****\n")
     else: print("\n***** RUNNING WITH SR COMBINATION *****\n")
 
@@ -401,7 +401,7 @@ def main(slhaFolder,nb_cpu_to_use,output):
         if done == len(children):
             break
         time.sleep(2)
-    
+
     outputDict = {}
     for p in children:
         outputDict.update(p.get())
