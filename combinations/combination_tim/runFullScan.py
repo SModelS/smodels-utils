@@ -81,10 +81,10 @@ def findBestCombination(allPredictions):
     combinables = protoCombiner.findCombinations ( allPredictions, strategy='' )
     combinations = protoCombiner.sortOutSubsets ( combinables )
 
-    if len(combinations) == 0 or (len(combinations) == 1 and len(combinations[0]) == 1):
+    if len(combinations) == 0:
         return []
     elif len(combinations) == 1:
-        return combinations[0]
+        return combinables[0]
     else:
         bestCombo,ZCombo,llhdCombo,muhatCombo = protoCombiner.findHighestSignificance(allPredictions,strategy='',expected=True)
     return bestCombo
@@ -291,12 +291,16 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
     """ Combine analyses """
     combineAnas = findBestCombination(theoryPredictions)
 
+    if not combineAnas and len(theoryPredictions) == 1:
+        combineAnas = theoryPredictions
+
     if combineAnas:
         combiner = TheoryPredictionsCombiner.selectResultsFrom(combineAnas, [ana.dataset.globalInfo.id for ana in combineAnas])
         # Only compute combination if at least one result was selected
         if combiner is not None and computeStatistics:
             combiner.computeStatistics()
         masterPrinter.addObj(combiner)
+
 
     printParameters = [('sigmacut', str(sigmacut)), ('minmassgap', str(minmassgap)), ('maxcond', str(maxcond)), ('ncpus', str(ncpus)), ('model', str(particles)), ('promptWidth', str(promptWidth)), ('stableWidth', str(stableWidth)), ('checkInput', str(checkInput)), ('doInvisible', str(doInvisible)), ('doCompress', str(doCompress)), ('computestatistics', str(computeStatistics)), ('testcoverage', str(testCoverage)), ('combineSRs', str(combineResults)), ('combineanas', ",".join([ana.dataset.globalInfo.id.strip() for ana in combineAnas])), ('reportallsrs', str(not useBest)), ('experimentalFeatures', str(experimentalFeatures)), ('useSuperseded', str(useSuperseded)), ('useNonValidated', str(useNonValidated))]
 
@@ -413,3 +417,6 @@ def main(slhaFolder,nb_cpu_to_use,output):
 
     printScanSummary(outputDict, summaryFile)
     print("Done in %3.2f min" % ((time.time()-t0)/60.))
+
+# if __name__ == '__main__':
+#     main('./testDir/',2,'./outputFullScan/')
