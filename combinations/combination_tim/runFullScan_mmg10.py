@@ -61,7 +61,7 @@ promptWidth = 1e-11*GeV
 stableWidth = 1e-25*GeV
 
 sigmacut = 0.001*fb
-minmassgap = 5.*GeV
+minmassgap = 10.*GeV
 maxcond = 0.2
 # ncpus = 45
 
