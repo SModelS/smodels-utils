@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import sys;
 import os
+sys.path.insert(0, os.path.expanduser("~/git/smodels-utils"))
 sys.path.insert(0, os.path.expanduser("~/git/smodels"))
-from bestCombination import BestCombinationFinder
-
+from combinations.combination_sahana.bestCombination import BestCombinationFinder
 from smodels.tools import runtime
 runtime.modelFile = 'smodels.share.models.mssm'
 from smodels.tools.physicsUnits import GeV,fb
@@ -28,10 +28,10 @@ import time
 import multiprocessing
 from multiprocessing import Process
 from multiprocessing import Queue
-from smodels.tools.smodelsLogging import logger
+#rom smodels.tools.smodelsLogging import logger
 import logging
-#logger = logging.getLogger(__name__)
-
+logger = logging.getLogger(__name__)
+#logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 #clip program
 
 '''Note : Before running the program, make sure to enter the path of the parameter.ini file and the outputdir according to the local computer path (in runSmodels function). The program is configured for specific paths only'''
@@ -115,7 +115,7 @@ class SModelsOutput(object):
         model.updateParticles(inputFile = slhafile)
         toplist = decomposer.decompose(model, sigmacut, doCompress=True, doInvisible=True, minmassgap=mingap)
         allPreds = theoryPredictionsFor(self.expresults, toplist, combinedResults=True)
-        print("\n Theory Predictions computed, finding best combination of theory prediction")
+        #logging.INFO("Theory Predictions computed, finding best combination of theory prediction")
         
         bC = BestCombinationFinder(combination_matrix = self.allo, theoryPredictionList = allPreds, n_top=1)
         bestThPred = bC.findBestCombination()
@@ -123,11 +123,11 @@ class SModelsOutput(object):
         self.getMassFromSlhafile(self.file)
         filename = self.file.split('/')[-1]
                 
-                #make python output too
+                
         if bestThPred == []:
             print("M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: None")
             print("Not running SModelS on file as no tp available")
-            logger.info("Not running SModelS on %s as no tp available"%(filename))
+            logging.warning("Not running SModelS on %s as no tp available"%(filename))
             
             process_et = time.process_time()
             time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
@@ -165,7 +165,7 @@ class SModelsOutput(object):
         parser.set('database', 'analyses', bestThPred[0].analysisId())
         
         print("Running SModelS on model point for the best combination")
-        logger.info("Running SModelS on %s for the best combination"%(filename))
+        #logging.INFO("Running SModelS on %s for the best combination"%(filename))
         
         
         #enter path of output dir below
@@ -176,7 +176,7 @@ class SModelsOutput(object):
         output = modelTester.testPoint(file, outputDir, parser, '2.3.0', listOfExpRes)
         
         print("\n Printing output")
-        logger.info("Printing output for %s"%(filename))
+        #logging.INFO("Printing output for %s"%(filename))
         
         for x in output.values(): x.flush()
         
@@ -256,13 +256,13 @@ if __name__ == "__main__":
     files = glob.glob ( "2ndFilter_slha_nlo/ew*slha" )
     #iles = files[:50]
     fs = int(args.fileset) 
-    #files = files[fs*100:(fs+1)*100]
-    #files = [files[0:10],files[10:20],files[20:30],files[30:40],files[40:50],files[50:60],files[60:70],files[70:80],files[80:90],files[90:100]]
+    files = files[fs*100:(fs+1)*100]
+    files = [files[0:10],files[10:20],files[20:30],files[30:40],files[40:50],files[50:60],files[60:70],files[70:80],files[80:90],files[90:100]]
     
-    files = files[fs*10:(fs+1)*10]
-    files = [files[0:2],files[2:4],files[4:6],files[6:8],files[8:10]]
+    #files = files[fs*10:(fs+1)*10]
+    #files = [files[0:2],files[2:4],files[4:6],files[6:8],files[8:10]]
     
-    for file in files: print("\n",file)
+    #for file in files: print("\n",file)
     #output_name = args.summaryfilename + '.csv'
     #print(output_name)
     
@@ -298,7 +298,8 @@ if __name__ == "__main__":
             item = queue.get()
             print(item)
             out.write('\n{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10],item[11],item[12],item[13],item[14]))
-                      
+        
+        out.close()
                    
  
             #sm.getBestCombination(file)
