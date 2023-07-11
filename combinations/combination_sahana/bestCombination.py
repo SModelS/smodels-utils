@@ -131,7 +131,7 @@ class BestCombinationFinder(object):
         """ the actual best combination finder """
         
         if len(self.listoftp) == 0:     #no theory prediction
-            print("\n No theory Prediction")
+            logger.warning("\n No theory Prediction")
             return []
             
         if len(self.listoftp) == 1:
@@ -139,14 +139,14 @@ class BestCombinationFinder(object):
                 print("\n 1 theory Prediction ", self.listoftp[0].analysisId())
                 return self.listoftp
             else:
-                print("\n 1 theory Prediction but not present in combination dictionary: ", self.listoftp[0].analysisId())
+                logger.warning("\n 1 theory Prediction but not present in combination dictionary: ", self.listoftp[0].analysisId())
                 return []
             
         weight_vector = []
         EMatrix = self.createExclusivityMatrix()
         
         if not EMatrix.size:              #EMatrix is empty
-            print("\n Theory Prediction available but none are present in combination dictionary.")
+            logger.warning("\n Theory Prediction available but none are present in combination dictionary.", self.listoftp[0].analysisId())
             return []
         
         if len(self.listoftp) == 1:     #just 1 tp, no need for combining
