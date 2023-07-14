@@ -424,6 +424,8 @@ class DataSetInput(Locker):
                 ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                ul, ulExpected = round_list(( ul, ulExpected ), 4)
+                return ul, ulExpected
 
             except Exception as e:
                 print ( "Exception", e  )
@@ -432,8 +434,7 @@ class DataSetInput(Locker):
         # print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
         # print ( "SModelS ul", ul, "ule", ulExpected )
         # print ( "spey ul", ulspey, ulspeyE )
-        ul, ulExpected = round_list(( ul, ulExpected ), 4)
-        return ul, ulExpected
+        return None, None
 
     def computeStatistics(self):
         """Compute expected and observed limits and store them """
