@@ -15,7 +15,7 @@ def mkdir ( Dir ):
         subprocess.getoutput ( cmd )
 
 def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
-           time, doLog = True ):
+           time, doLog = True, adl_file = None, event_condition = None ):
     """ bake with the given recipe
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
     :param topo: eg T3GQ
@@ -26,6 +26,8 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     :param cutlang: if true, then use cutlang
     :param time: time in hours
     :param doLog: do write out bake-*.out log files
+    :param adl_file: specify path to adl file
+    :param event_condition: optionally specify an event condition
     """
     with open ( f"{codedir}/smodels-utils/clip/bake_template.sh", "rt" ) as f:
         lines = f.readlines()
@@ -48,7 +50,16 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
             # args += ' -b'
             if cutlang:
                 args += ' --cutlang'
-            f.write ( line.replace("@@ARGS@@", args ) )
+            if event_condition is not None:
+                event_condition = event_condition.replace("'",'"')
+                pids = { "gamma": 22, "Z": 23, "higgs": 25 }
+                for name,pid in pids.items():
+                    event_condition = event_condition.replace ( name, str(pid) )
+                args += f" --event_condition '{event_condition}'"
+            if adl_file is not None:
+                adl_file = adl_file.replace("'",'').replace('"','')
+                args += f" --adl_file '{adl_file}'"
+                f.write ( line.replace("@@ARGS@@", args ) )
         f.close()
     templatefile = f"{codedir}/smodels-utils/clip/run_bakery_template.sh"
     with open ( templatefile, "rt" ) as f:
@@ -63,6 +74,15 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
         f.write ( f"# this script will perform:\n" )
         line = f'./bake.py -a -n {nevents} -T {topo} -m "{mass}" --analyses "{analyses}" -p {nproc}'
+        if event_condition is not None:
+            event_condition = event_condition.replace("'",'"')
+            pids = { "gamma": 22, "Z": 23, "higgs": 25 }
+            for name,pid in pids.items():
+                event_condition = event_condition.replace ( name, str(pid) )
+            line += f" --event_condition '{event_condition}'"
+        if adl_file is not None:
+            adl_file = adl_file.replace("'",'').replace('"','')
+            line += f" --adl_file '{adl_file}'"
         if cutlang:
             line += ' --cutlang'
         f.write ( f"# {line}\n" )
@@ -140,6 +160,12 @@ def main():
                     type=str, default="default" )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
+    argparser.add_argument ( '--event_condition', nargs="?",
+                    help='optionally specify an event condition',
+                    type=str, default=None )
+    argparser.add_argument ( '--adl_file', nargs="?",
+                    help='optionally specify a path to the adl file',
+                    type=str, default=None )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )
@@ -156,7 +182,8 @@ def main():
         args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
     for i in range(args.nbakes):
         bake ( args.analyses, args.mass, args.topo, args.nevents, args.dry_run,
-               args.nprocesses, args.cutlang, args.time, doLog )
+               args.nprocesses, args.cutlang, args.time, doLog, args.adl_file,
+               args.event_condition )
     logCall()
 
 if __name__ == "__main__":

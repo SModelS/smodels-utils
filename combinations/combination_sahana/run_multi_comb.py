@@ -52,28 +52,44 @@ class SModelsOutput(object):
     def combinationMatrix(self):
         '''define combination matrix'''
         
+        #automatically combines with 8 TeV and 13 Tev CMS
         self.allo = {"ATLAS-SUSY-2018-05-ewk":['ATLAS-SUSY-2018-06', 'ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41',
                                   'ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08', 'ATLAS-SUSY-2019-09',
                                   'CMS-SUS-20-004', 'CMS-SUS-21-002']}
         self.allo["ATLAS-SUSY-2018-06"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41',
                               'ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','CMS-SUS-20-004', 'CMS-SUS-21-002']
-        self.allo["ATLAS-SUSY-2018-32"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-41',
+        self.allo["ATLAS-SUSY-2018-32"] = ['ATLAS-SUSY-2016-24', 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-41',
                               'ATLAS-SUSY-2019-08','ATLAS-SUSY-2019-09','CMS-SUS-20-004', 'CMS-SUS-21-002']
-        self.allo["ATLAS-SUSY-2018-41"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-32',
+        self.allo["ATLAS-SUSY-2018-41"] = ['ATLAS-SUSY-2016-24', 'ATLAS-SUSY-2017-03','ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-32',
                               'ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','ATLAS-SUSY-2019-09','CMS-SUS-20-004',
                               'CMS-SUS-21-002']
-        self.allo["ATLAS-SUSY-2019-02"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-41',
+        self.allo["ATLAS-SUSY-2019-02"] = ['ATLAS-SUSY-2016-24', 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-41',
                               'ATLAS-SUSY-2019-08','ATLAS-SUSY-2019-09','CMS-SUS-20-004', 'CMS-SUS-21-002']
-        self.allo["ATLAS-SUSY-2019-08"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-32',
+        self.allo["ATLAS-SUSY-2019-08"] = ['ATLAS-SUSY-2016-24', 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-06','ATLAS-SUSY-2018-32',
                               'ATLAS-SUSY-2018-41','ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-09','CMS-SUS-20-004',
                               'CMS-SUS-21-002']
         self.allo["ATLAS-SUSY-2019-09"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41',
                               'ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','CMS-SUS-20-004', 'CMS-SUS-21-002']
-
-        self.allo["CMS-SUS-20-004"] = []
-        self.allo["CMS-SUS-21-002"] = []
-        self.allo["ATLAS-SUSY-2013-12"] = []
-
+        
+        #automatically combines with 8 TeV and 13 Tev ATLAS
+        self.allo["CMS-SUS-20-004"] = ['CMS-SUS-16-039', 'CMS-SUS-16-048']
+        self.allo["CMS-SUS-21-002"] = ['CMS-SUS-16-039', 'CMS-SUS-16-048']
+        
+        #8 TeV
+        self.allo["ATLAS-SUSY-2013-12"] = ['ATLAS-SUSY-2013-11']            #automatically combines with 13 TeV and 8 Tev CMS
+        self.allo["ATLAS-SUSY-2013-11"] = ['ATLAS-SUSY-2013-12']
+        self.allo["CMS-SUS-13-012"] = []                                    #automatically combines with 13 TeV and 8 Tev ATLAS
+        
+        #new 13 TeV low lumi
+        #automatically combines with 8 TeV and 13 Tev CMS
+        self.allo["ATLAS-SUSY-2016-24"] = ['ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41','ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','CMS-SUS-20-004', 'CMS-SUS-21-002']
+        self.allo["ATLAS-SUSY-2017-03"] = ['ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41','ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','CMS-SUS-20-004', 'CMS-SUS-21-002']
+        
+        #automatically combines with 8 TeV and 13 Tev ATLAS
+        self.allo["CMS-SUS-16-039"] = ['CMS-SUS-16-048', 'CMS-SUS-20-004','CMS-SUS-21-002']
+        self.allo["CMS-SUS-16-048"] = ['CMS-SUS-16-039', 'CMS-SUS-20-004','CMS-SUS-21-002']
+        
+        
     
     def getMassFromSlhafile(self,file):
         d = pyslha.read(file)
@@ -260,11 +276,30 @@ if __name__ == "__main__":
     #   sms = SModelsOutput(files,queue)
     #if running with single file, make sure to send the file as a list
     #u can uncomment the process lines if you dont want
-
-
- 
+    '''
+    from multiprocessing import Pool
+    
+    pool_try = multiprocessing.Pool(processes = 5)
+    
+    pros = []
+    for file in files:
+        pro = pool_try.apply_async(SModelsOutput, args=(file,queue))
+        pros.append(pro)
+        
+    print("pool started")
+    pool_try.close()
+    
+    while True:
+        done = sum([p.ready() for p in pros])
+        if done == len(pros):break
+        time.sleep(2)
+    #pool_try.join()
+    '''
     #define number of processes -> for now processes = 5
     #files contains list of multiple files to be sent to SModels
+    
+    
+    
     processes = [Process(target=SModelsOutput, args=(file,queue)) for file in files]
     for process in processes:
         process.start()
@@ -276,7 +311,7 @@ if __name__ == "__main__":
     
     #size = queue.qsize()
     #print('\n qs ', size)
-    name = 'summary_2.csv'
+    name = 'summary.csv'
     with open('results/summary.csv','w') as out:
         out.write('#SLHA_file\t M_N1\t M_N2\t M_C1\t M_N3\t M_N4\t M_C2\t r_obs(comb)\t r_exp(comb)\t Combination_of_Analyses\t max_r_obs\t Most_Constraining_Analysis\t max_r_exp\t Most_Senitive_Analysis\t Time Taken')
         

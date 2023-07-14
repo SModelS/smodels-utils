@@ -15,7 +15,8 @@ import numpy as np
 import sys, os
 import logging
 logger = logging.getLogger(__name__)
-
+#logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+#sys.path.insert(0, os.path.expanduser("~/git/smodels"))
 from smodels.tools import runtime
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database
@@ -35,7 +36,8 @@ class BestCombinationFinder(object):
         """
         combination_matrix = dictionary of allowed analyses combination
         theoryPredictionList = list of theory prediction objects
-        useAnalysisFromDict = True : If False, allow tp for analyses which is not specified in the combination matrix dictionary
+        useAnalysisFromDict = True : If False, allow tp to enter best combination for analyses which is not specified in the combination matrix dictionary
+        n_top = number of best allowed combinations (in decreasing order)
         """
         self.cM = combination_matrix
         self.listoftp = theoryPredictionList
@@ -44,10 +46,9 @@ class BestCombinationFinder(object):
         if not useAnalysisFromDict: self.use_dict = False
         
         self.ntop = n_top
-        self.Ana = []                                       #Analysis in tpred List
-        self.root_s = []                                    #root_s of analysis in tpred list
+        self.Ana = []                                       #Analyses in combination matrix (Theory Prediction List) if useAnalysisFromDict=True(False)
+        self.root_s = []                                    #Root_s of analyses in combination matrix (Theory Prediction List) if useAnalysisFromDict=True(False)
         
-        self.combiner_list=[]
     
     def checkCombinable(self, a1, a2):
         "Check if two analyses are combinable if not specified in combination dictionary"
@@ -64,23 +65,25 @@ class BestCombinationFinder(object):
     def setOrder(self):
         "order Analysis in EM and tpred list based on sqrt_s and analysisId"
        
-        Ana_8 = []
+        Ana_8 = [] 
         Ana_13 = []
         s_8 = []
         s_13 = []
         tp_list = []
         notp_list = []
+        
         #split tp into 2 lists - 8 and 13 TeV
         for tp in self.listoftp:
             if not tp: continue                             #if tp = None
             ana = tp.dataset.globalInfo.id
-            if ana not in self.cM.keys():
+            if ana not in self.cM.keys():                  #tp not present in combination matrix dictionary
                 if self.use_dict:
-                    notp_list.append(tp)
+                    notp_list.append(tp)                   #remove tp from list if useAnalysisFromDict=True
                     #self.listoftp.pop(self.listoftp.index(tp))
                     continue
                 else: logger.error(' There is a theory prediction for an analysis not mentioned in combination matrix. Will proceed for now.')
-            sq_s = tp.dataset.globalInfo.sqrts
+            
+            sq_s = tp.dataset.globalInfo.sqrts                #get root_s of tp
             if str(sq_s).split('.')[0] == '8':
                 Ana_8.append(ana)
                 s_8.append('8')
@@ -94,6 +97,7 @@ class BestCombinationFinder(object):
         self.Ana = Ana_8 + Ana_13
         self.root_s = s_8 + s_13
         
+        #make final list of tp, order it according to analysis order in self.Ana
         tp_list = []
         for ana in self.Ana:
             for tp in self.listoftp:
@@ -101,29 +105,33 @@ class BestCombinationFinder(object):
                     tp_list.append(tp)
         
         self.listoftp = tp_list
-        
+        self.notp = notp_list
         
     def createExclusivityMatrix(self) -> np.array:
         """
-        create a N by N True/False matrix where N = number of analyses in the tpred list
+        create a N by N True/False matrix where N = number of analyses in the combination matrix dictionary (Theory Prediction List) if use_dict = True (False)
         """
-        self.setOrder()
         
-        eM = [[False for i in range(len(self.Ana))] for i in range(len(self.Ana))]  #em has dimensions of the length of list of analysis in comb_matrix (list of tp) for True(False)
+        #order combination matrix
+        self.setOrder()                     
+        
+        #eM has dimensions of the length of list of analysis in comb_matrix (list of tp) for useAnalysisFromDict=True(False)
+        eM = [[False for i in range(len(self.Ana))] for i in range(len(self.Ana))]  
         
         for ana in self.Ana:
             for combAna in self.Ana:
+                #if useAnalysisFromDict=False, check if ana is combinable with combAna if ana not present in combination dictionary
                 if not self.use_dict and ana not in self.cM.keys():
                     if self.checkCombinable(combAna, ana): eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
-                elif not self.cM.get(ana):
+                #if ana has no combinable analyses mentioned in the combination dictionary
+                elif self.cM.get(ana) == []:
                     if self.checkCombinable(combAna, ana): eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
+                #if combAna not present in the list of analyses combinable with ana
                 elif combAna not in self.cM.get(ana):
                     if self.checkCombinable(combAna, ana): eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
                 else: eM[self.Ana.index(ana)][self.Ana.index(combAna)] = True
 
         exclMatrix = np.array(eM)
-        #print(exclMatrix)
-        #print(self.Ana)
         return exclMatrix
     
 
@@ -131,25 +139,32 @@ class BestCombinationFinder(object):
         """ the actual best combination finder """
         
         if len(self.listoftp) == 0:     #no theory prediction
-            print("\n No theory Prediction")
+            logging.warning("No theory Prediction")
             return []
             
         if len(self.listoftp) == 1:
             if self.listoftp[0].analysisId() in self.cM.keys():     #just 1 tp, no need for combining
-                print("\n 1 theory Prediction ", self.listoftp[0].analysisId())
+                print("1 theory Prediction ", self.listoftp[0].analysisId())
                 return self.listoftp
             else:
-                print("\n 1 theory Prediction but not present in combination dictionary: ", self.listoftp[0].analysisId())
+                logging.warning("1 theory Prediction but not present in combination dictionary: %s"%(self.listoftp[0].analysisId()))               
+                if not self.use_dict: 
+                    logging.warning("Returning Theory Prediction List as useAnalysisFromDict=False")
+                    return self.listoftp
                 return []
             
         weight_vector = []
         EMatrix = self.createExclusivityMatrix()
         
-        if not EMatrix.size:              #EMatrix is empty
-            print("\n Theory Prediction available but none are present in combination dictionary.")
+        if not EMatrix.size:                        #EMatrix is empty despite >1 tp
+            notp_id = [notp.analysisId() for notp in self.notp]
+            logging.warning("Theory Prediction available but none are present in combination dictionary. %s"%(notp_id))
+            #if not self.use_dict: 
+            #        logging.warning("Returning Theory Prediction List as useAnalysisFromDict=False")
+            #        return self.notp
             return []
         
-        if len(self.listoftp) == 1:     #just 1 tp, no need for combining
+        if len(self.listoftp) == 1:     #just 1 tp after construction of EM, no need for combining
             print("\n >1 theory Prediction but only 1 present in the combination dictionary ", self.listoftp[0].analysisId())
             return self.listoftp
         
@@ -172,6 +187,7 @@ class BestCombinationFinder(object):
         whdfs = pf.WHDFS(bam, top=self.ntop)
         whdfs.find_paths()
         
+        #if user wants more than 1 best combinations
         if self.ntop > 1:
             top_path = [path for path in whdfs.get_paths]
             listofbestcomb = [[self.listoftp[i] for i in path] for path in top_path]
@@ -192,7 +208,8 @@ class BestCombinationFinder(object):
         if len(best_comb) == 1:     #just 1 best tp, no need for combining
             #print("\n Best Combination ", best_comb[0].analysisId())
             return best_comb
-            
+        
+        #return TheoryPredictionCombiner object
         self.combiner_list = [TheoryPredictionsCombiner(best_comb)]                     #combine tp
         #print("\n Best Combination ", self.combiner_list[0].analysisId())
         return self.combiner_list
@@ -267,16 +284,6 @@ if __name__ == "__main__":
     bestThPred = bC.findBestCombination()
     
     
-    if bestThPred is None : print("\n Model Point: ", filename, "  , No predictions")
-    elif type(bestThPred) is list:
-        i = 1
-        for tp in bestThPred:
-            try:print("\n Model Point : ", filename,  i, " rank combination: ", tp.describe())
-            except AttributeError as e: print("\n Model Point: ", filename, i , "   rank combination: ", tp)
-            i = i+1
-    else:
-        try:
-            print("\n Model Point : ", filename, " best combination: ", bestThPred.describe())
-        except AttributeError as e:
-            print("\n Model Point: ", filename, "  , best theory prediction: ", bestThPred)
+    if bestThPred ==[] : print("\n Model Point: ", filename, "  , No predictions")
+    else: print("\n Model Point: ", filename, " , Combination: ", bestThPred[0].analysisId())
     
