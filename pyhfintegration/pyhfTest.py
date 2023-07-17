@@ -9,7 +9,7 @@ from smodels.experiment.databaseObj import Database
 import smodels.experiment.txnameObj
 smodels.experiment.txnameObj.TxNameData._keep_values = True
 from smodels.tools.physicsUnits import pb, fb, GeV
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 logger.setLevel('DEBUG')
 
 # SUSY-2018-31

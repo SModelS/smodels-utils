@@ -3,7 +3,7 @@ import numpy as np
 from smodels.tools.stringTools import concatenateLines
 from smodels.tools.physicsUnits import GeV, fb
 from smodels.theory.auxiliaryFunctions import rescaleWidth
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 
 
 def loadInternalGridPoints(expres, txnameData, dataselector, signalRegion, singleLines = True, stripUnits = True):

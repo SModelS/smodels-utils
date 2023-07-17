@@ -4,7 +4,7 @@ from __future__ import print_function
 import sys, os, time
 sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
-from smodels.tools.smodelsLogging import setLogLevel
+from smodels.base.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.colors import colors
 import ROOT

@@ -16,7 +16,7 @@ anaid = "ATLAS-CONF-2013-007"
 topo = "T5tttt"
 
 def getData():
-    from smodels.tools.smodelsLogging import setLogLevel
+    from smodels.base.smodelsLogging import setLogLevel
     setLogLevel ( "debug" )
     from smodels.experiment.databaseObj import Database
     home=os.environ["HOME"]

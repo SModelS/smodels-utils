@@ -85,7 +85,7 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.coolwarm, data=None, plot_edg
 
 
 def getData():
-    from smodels.tools.smodelsLogging import setLogLevel
+    from smodels.base.smodelsLogging import setLogLevel
     setLogLevel ( "debug" )
     from smodels.experiment.databaseObj import Database
     from smodels.experiment.txnameObj import TxNameData

@@ -28,7 +28,7 @@ import time
 import multiprocessing
 from multiprocessing import Process
 from multiprocessing import Queue
-#rom smodels.tools.smodelsLogging import logger
+#rom smodels.base.smodelsLogging import logger
 import logging
 logger = logging.getLogger(__name__)
 #logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))

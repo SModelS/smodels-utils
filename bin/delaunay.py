@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from smodels.tools.physicsUnits import GeV, pb
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.txnameObj import TxNameData
-from smodels.tools.smodelsLogging import setLogLevel, logger
+from smodels.base.smodelsLogging import setLogLevel, logger
 from scipy.spatial import ConvexHull
 import pickle
 # setLogLevel ( "debug" )

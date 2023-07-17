@@ -17,7 +17,7 @@ from torch.utils.data import Dataset # better import?
 from sklearn.preprocessing import MinMaxScaler
 from smodels.theory.auxiliaryFunctions import rescaleWidth, removeUnits#, unscaleWidth
 from smodels.tools import physicsUnits
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 from smodels.tools.physicsUnits import GeV, fb, pb
 
 

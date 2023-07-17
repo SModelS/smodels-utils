@@ -16,7 +16,7 @@ import sys
 import re
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
 from smodels.tools.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput

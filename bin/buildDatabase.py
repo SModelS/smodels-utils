@@ -6,7 +6,7 @@ sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.experiment.exceptions import SModelSExperimentError
-from smodels.tools.smodelsLogging import setLogLevel
+from smodels.base.smodelsLogging import setLogLevel
 from smodels.tools.colors import colors
 from smodels.tools.physicsUnits import pb, fb, GeV
 from smodels.theory import slhaDecomposer

@@ -12,7 +12,7 @@
 
 __all__ = [ "BibtexWriter", "removeDoubleEntries" ]
 
-from smodels.tools.smodelsLogging import setLogLevel
+from smodels.base.smodelsLogging import setLogLevel
 import bibtexparser
 import urllib, colorama, subprocess
 import os, sys

@@ -18,8 +18,8 @@ from scipy.optimize import minimize
 from mlCore.dataset import Data
 from mlCore.network import createNet
 from mlCore.lossFunctionsAndOptimizers import loadLossFunction, loadOptimizer, getModelError
-from smodels.tools.smodelsLogging import logger
-from smodels.tools.smodelsLogging import getLogLevel
+from smodels.base.smodelsLogging import logger
+from smodels.base.smodelsLogging import getLogLevel
 
 
 class ModelTrainer():

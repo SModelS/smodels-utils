@@ -28,13 +28,13 @@ from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
 from smodels.experiment.databaseObj import Database, ExpResultList
 from smodels.tools import coverage, ioObjects, timeOut #, crashReport
-# from smodels.tools.smodelsLogging import setLogLevel
+# from smodels.base.smodelsLogging import setLogLevel
 from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
 from smodels.theory.model import Model
 from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 from smodels.tools.printer import MPrinter, printScanSummary, PyPrinter, SummaryPrinter
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 from imp import reload
 from smodels import particlesLoader
 try:

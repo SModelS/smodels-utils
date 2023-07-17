@@ -4,7 +4,7 @@ import torch.nn as nn
 import numpy as np
 import os
 from pathlib import Path
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 
 from scipy.special import inv_boxcox
 #from sklearn.preprocessing import MinMaxScaler
