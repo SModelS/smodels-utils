@@ -128,7 +128,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
         logger.debug("SLHA files for validation at %s" %slhaDir)
 
-        from smodels.tools import modelTester
+        from smodels.matching import modelTester
         #Get list of input files to be tested
         try:
             fileList, inDir = modelTester.getAllInputFiles(slhaDir)

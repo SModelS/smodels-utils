@@ -16,7 +16,7 @@ import glob
 import pyslha
 sys.path.append('.')
 from smodels.installation import installDirectory, version
-from smodels.tools import modelTester
+from smodels.matching import modelTester
 from smodels.tools import crashReport
 from smodels.tools import smodelsLogging
 from smodels.tools import runtime

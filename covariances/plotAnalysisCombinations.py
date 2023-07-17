@@ -10,7 +10,7 @@
 import sys,os,timeit
 sys.path.insert(0, "../")
 sys.path.insert(0, os.path.expanduser("~/smodels"))
-from smodels.tools import modelTester
+from smodels.matching import modelTester
 from testAnalysisCombinations import createLlhds
 import numpy as np
 import pyslha
