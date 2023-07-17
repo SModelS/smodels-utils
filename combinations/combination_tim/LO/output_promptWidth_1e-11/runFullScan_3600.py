@@ -29,7 +29,7 @@ from smodels.tools import runtime
 runtime.modelFile = 'smodels.share.models.mssm'
 # runtime.modelFile = 'mssmQNumbers.slha'
 from smodels.theory import decomposer
-from smodels.tools.physicsUnits import fb, GeV, TeV
+from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
 from smodels.experiment.databaseObj import Database
 from smodels.tools import coverage

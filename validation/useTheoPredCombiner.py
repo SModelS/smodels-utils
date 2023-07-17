@@ -18,7 +18,7 @@ from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
 from smodels.theory import model 
 model.logger.setLevel ( logging.WARNING )
-from smodels.tools.physicsUnits import GeV, fb
+from smodels.base.physicsUnits import GeV, fb
 from smodels.theory import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
 import multiprocessing

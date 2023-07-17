@@ -13,7 +13,7 @@ from __future__ import print_function
 import setPath
 import sys, colorama
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import TeV
+from smodels.base.physicsUnits import TeV
 from smodels.base.smodelsLogging import setLogLevel
 from smodels_utils.helper import databaseManipulations as manips
 from smodels_utils.helper.various import removeAnaIdSuffices

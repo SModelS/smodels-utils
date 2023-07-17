@@ -5,7 +5,7 @@ import numpy as np
 import IPython
 from matplotlib import rc
 import matplotlib.pyplot as plt
-from smodels.tools.physicsUnits import GeV, pb
+from smodels.base.physicsUnits import GeV, pb
 from mpl_toolkits.mplot3d import Axes3D
 
 anaid = "CMS-SUS-PAS-15-002"

@@ -18,7 +18,7 @@ from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import fb, GeV
+from smodels.base.physicsUnits import fb, GeV
 import unittest
 import numpy as np
 import os

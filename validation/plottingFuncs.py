@@ -14,7 +14,7 @@ sys.path.append('../')
 from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)
-from smodels.tools.physicsUnits import fb, GeV, pb
+from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 import numpy as np

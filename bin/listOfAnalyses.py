@@ -19,7 +19,7 @@ import sys, os, time
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.expResultObj import ExpResult
 from smodels.base.smodelsLogging import setLogLevel
-from smodels.tools.physicsUnits import TeV
+from smodels.base.physicsUnits import TeV
 from smodels_utils.helper.various import hasLLHD, removeAnaIdSuffices
 from smodels_utils.helper import databaseManipulations as manips
 from typing import Union

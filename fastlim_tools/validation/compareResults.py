@@ -15,7 +15,7 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 from auxiliaryObjs import compareFiles
 from collections import OrderedDict
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.base.physicsUnits import GeV, fb, TeV
 import argparse
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'

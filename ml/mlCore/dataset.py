@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 from smodels.theory.auxiliaryFunctions import rescaleWidth, removeUnits#, unscaleWidth
 from smodels.tools import physicsUnits
 from smodels.base.smodelsLogging import logger
-from smodels.tools.physicsUnits import GeV, fb, pb
+from smodels.base.physicsUnits import GeV, fb, pb
 
 
 class Data(Dataset):

@@ -10,7 +10,7 @@ import matplotlib.cm as cm
 import plotly.plotly as py
 import plotly.offline as offline
 import plotly.graph_objs as go
-from smodels.tools.physicsUnits import GeV, pb, fb
+from smodels.base.physicsUnits import GeV, pb, fb
 from mpl_toolkits.mplot3d import Axes3D
 import sys
 if sys.version[0]=="3":

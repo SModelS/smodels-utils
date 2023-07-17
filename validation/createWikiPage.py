@@ -13,7 +13,7 @@ import sys,os,glob,time,copy
 import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import TeV, fb
+from smodels.base.physicsUnits import TeV, fb
 from smodels.base.smodelsLogging import setLogLevel, logger
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList
 import subprocess

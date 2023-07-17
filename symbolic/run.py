@@ -15,7 +15,7 @@ from gplearn.functions import make_function
 import matplotlib.pyplot as plt
 import graphviz
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import GeV, fb
+from smodels.base.physicsUnits import GeV, fb
 from sympy import sympify, pprint, Add, Mul, Lambda, Symbol, exp, re, expand, simplify, log
 from sympy.abc import x, y
 from sympy.utilities.autowrap import autowrap

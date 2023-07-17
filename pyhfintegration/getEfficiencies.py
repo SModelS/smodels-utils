@@ -8,7 +8,7 @@ from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.experiment.exceptions import SModelSExperimentError
 from smodels.base.smodelsLogging import setLogLevel
 from smodels.tools.colors import colors
-from smodels.tools.physicsUnits import pb, fb, GeV
+from smodels.base.physicsUnits import pb, fb, GeV
 from smodels.theory import slhaDecomposer
 
 colors.on = True

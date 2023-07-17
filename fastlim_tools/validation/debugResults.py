@@ -16,7 +16,7 @@ sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-database'))
 from fastlimParser import fastlimParser
 from auxiliaryObjs import compareFiles,getSlhaFiles, formatOutput
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.base.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
 from gridSmodels import runSmodelS
 from smodels.theory import slhaDecomposer, crossSection, theoryPrediction

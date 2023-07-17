@@ -8,7 +8,7 @@ from pyhfInterface import PyhfUpperLimitComputer
 from smodels.experiment.databaseObj import Database
 import smodels.experiment.txnameObj
 smodels.experiment.txnameObj.TxNameData._keep_values = True
-from smodels.tools.physicsUnits import pb, fb, GeV
+from smodels.base.physicsUnits import pb, fb, GeV
 from smodels.base.smodelsLogging import logger
 logger.setLevel('DEBUG')
 

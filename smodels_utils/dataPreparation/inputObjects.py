@@ -21,7 +21,7 @@ from smodels_utils.dataPreparation.covarianceHandler import \
          UPROOTCovarianceHandler, CSVCovarianceHandler, PYROOTCovarianceHandler,\
          FakeCovarianceHandler
 from smodels_utils.dataPreparation import covarianceHandler
-from smodels.tools.physicsUnits import fb, pb, TeV, GeV
+from smodels.base.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.theory.element import Element
 from smodels.theory.auxiliaryFunctions import elementsInStr

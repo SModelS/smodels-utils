@@ -11,7 +11,7 @@
 
 from __future__ import print_function
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 import sys
 import IPython
 

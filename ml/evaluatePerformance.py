@@ -14,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 from mlCore.network import DatabaseNetwork
 from mlCore.dataset import DatasetBuilder
 from mlCore.lossFunctionsAndOptimizers import getModelError
-from smodels.tools.physicsUnits import GeV, fb
+from smodels.base.physicsUnits import GeV, fb
 from smodels.theory.auxiliaryFunctions import unscaleWidth
 from smodels.base.smodelsLogging import logger
 

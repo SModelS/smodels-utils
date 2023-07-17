@@ -19,7 +19,7 @@ import smodels_utils.plotting.mpkitty as plt
 
 def getCombination(inputFile, parameterFile):
 
-    from smodels.tools.physicsUnits import fb, GeV, TeV, pb
+    from smodels.base.physicsUnits import fb, GeV, TeV, pb
     from smodels.theory.model import Model
     from smodels.share.models.SMparticles import SMList
     from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner

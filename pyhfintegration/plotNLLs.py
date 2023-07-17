@@ -20,7 +20,7 @@ from smodels.theory import decomposer
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
-from smodels.tools.physicsUnits import GeV, pb, fb
+from smodels.base.physicsUnits import GeV, pb, fb
 from smodels.tools.statistics import likelihoodFromLimits
 from smodels_utils.helper import slhaManipulator
         

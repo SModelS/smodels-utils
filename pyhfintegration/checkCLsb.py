@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Import those parts of smodels that are needed for this exercise
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 from smodels.experiment.databaseObj import Database
 from smodels.tools.combinations import getCombinedUpperLimitFor
 from smodels.theory.theoryPrediction import theoryPredictionsFor

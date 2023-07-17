@@ -10,7 +10,7 @@ import sys,os
 sys.path.append('../fastlim_tools/runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
-from smodels.tools.physicsUnits import fb
+from smodels.base.physicsUnits import fb
 from gridFastlim import runFastlimFor
 from fastlimOutput import equalObjs
 import glob

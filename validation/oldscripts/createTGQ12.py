@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import glob, copy, subprocess, gzip, os, sys
-from smodels.tools.physicsUnits import GeV, TeV, pb
+from smodels.base.physicsUnits import GeV, TeV, pb
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model

@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.expanduser("~/git/smodels"))
 from smodels.tools import runtime
 runtime.modelFile = 'smodels.share.models.mssm'
-from smodels.tools.physicsUnits import GeV,fb
+from smodels.base.physicsUnits import GeV,fb
 from smodels.theory import decomposer
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database

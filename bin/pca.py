@@ -8,7 +8,7 @@ home=os.environ["HOME"]
 db = "%s/git/smodels/test/tinydb/" % home
 
 
-from smodels.tools.physicsUnits import GeV, pb
+from smodels.base.physicsUnits import GeV, pb
 from smodels.experiment.databaseObj import Database
 import numpy as np
 import IPython

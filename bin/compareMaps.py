@@ -4,7 +4,7 @@
 
 from __future__ import print_function
 
-from smodels.tools.physicsUnits import GeV, pb
+from smodels.base.physicsUnits import GeV, pb
 
 def extractMap ( filename ):
     f = open ( filename )

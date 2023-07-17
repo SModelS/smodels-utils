@@ -12,7 +12,7 @@
 import logging
 from sympy import var
 from math import floor, log10
-from smodels.tools.physicsUnits import TeV
+from smodels.base.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
 from inspect import currentframe, getframeinfo
 import sys

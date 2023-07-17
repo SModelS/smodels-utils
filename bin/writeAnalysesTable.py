@@ -14,7 +14,7 @@ try:
     import subprocess as C ## python3
 except:
     import commands as C ## python2
-from smodels.tools.physicsUnits import fb, TeV
+from smodels.base.physicsUnits import fb, TeV
 from smodels.experiment.expResultObj import ExpResult
 from smodels_utils.helper.various import hasLLHD
 from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName

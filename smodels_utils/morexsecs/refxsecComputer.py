@@ -14,7 +14,7 @@ from __future__ import print_function
 from smodels.tools.wrapperBase import WrapperBase
 from smodels.tools import wrapperBase
 from smodels.base.smodelsLogging import logger, setLogLevel
-from smodels.tools.physicsUnits import fb, pb, GeV, TeV, mb, unum
+from smodels.base.physicsUnits import fb, pb, GeV, TeV, mb, unum
 from smodels.theory.crossSection import LO, NLO, NLL, NNLL
 from smodels.theory import crossSection
 from smodels_utils.SModelSUtils import installDirectory

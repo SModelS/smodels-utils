@@ -9,7 +9,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.experiment.txnameObj import TxNameData
 from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.colors import colors
-from smodels.tools.physicsUnits import fb
+from smodels.base.physicsUnits import fb
 import os
 colors.on = True
 TxNameData._keep_values = True

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 home = os.path.expanduser("~")
 databaseDir = os.path.join(home,'smodels-database')
 sys.path.append(os.path.join(home,'smodels'))
-from smodels.tools.physicsUnits import fb, GeV, TeV
+from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.theory import slhaDecomposer, theoryPrediction
 import multiprocessing
 from smodels.tools import databaseBrowser

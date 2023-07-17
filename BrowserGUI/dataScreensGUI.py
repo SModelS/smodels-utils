@@ -26,7 +26,7 @@ from kivy.metrics import sp
 Window.clearcolor = [0.08627450980392157, 0.10196078431372549, 0.10588235294117647, 1.0]
 from dataObjectsGUI import ValItem, ExpResItem, PropItem, datasetItem, txnameItem
 sys.path.append(os.path.join(os.getenv("HOME"),'smodels'))
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 
 
 class MainScreen(BoxLayout):

@@ -15,7 +15,7 @@ sys.path.append('../../smodels/')
 
 from smodels.theory import crossSection
 from smodels.tools import xsecComputer
-from smodels.tools.physicsUnits import fb
+from smodels.base.physicsUnits import fb
 
 
 def reWriteFile(slhafile):

@@ -9,7 +9,7 @@ import sys
 sys.path.append("../../smodels/")
 from operator import attrgetter
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import TeV
+from smodels.base.physicsUnits import TeV
   
 Fields= [ "expResult", "sqrts", "lumi","type", "topologies", "constraints" ]
 nextLineFields = ["", "", "", "", "topologies", "constraints"]

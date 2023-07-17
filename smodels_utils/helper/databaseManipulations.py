@@ -4,7 +4,7 @@
 
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.expResultObj import ExpResult
-from smodels.tools.physicsUnits import TeV, fb
+from smodels.base.physicsUnits import TeV, fb
 from smodels_utils.helper.various import getCollaboration
 from typing import Union, List, Dict
 

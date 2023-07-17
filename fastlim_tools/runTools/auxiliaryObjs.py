@@ -15,7 +15,7 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 import tempfile,tarfile
 import pyslha, unum
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.base.physicsUnits import GeV, fb, TeV
 from collections import OrderedDict
 
 import signal

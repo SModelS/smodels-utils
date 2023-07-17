@@ -11,7 +11,7 @@
 import logging,os,sys,time,math,numpy,copy,random
 
 logger = logging.getLogger(__name__)
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 from smodels.tools import modelTester
 from smodels_utils.helper.various import round_to_n
 try:
