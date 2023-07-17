@@ -25,6 +25,7 @@ from validationHelpers import point_in_hull
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
+from smodels.experiment.databaseObj import Database
 from sympy import var
 import pyslha
 import string
@@ -50,15 +51,16 @@ class ValidationPlot():
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
-    def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-               options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
-               combine = False ):
+    def __init__( self, ExptRes, TxNameStr, Axes, db : Database, slhadir=None,
+            databasePath=None, options : dict = {}, kfactor = 1.,
+            namedTarball = None, keep = False, combine = False ):
         """
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
 
         self.expRes = copy.deepcopy(ExptRes)
+        self.db = db
         self.keep = keep
         self.t0 = time.time()
         self.options = options
@@ -655,8 +657,8 @@ class ValidationPlot():
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
-        modelTester.testPoints(fileList, inDir, outputDir, parser, validationFolder,
-                 listOfExpRes, timeOut, False, parameterFile)
+        modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
+                               timeOut, False, parameterFile )
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
@@ -741,12 +743,7 @@ class ValidationPlot():
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
-            """
-            width = copy.deepcopy ( roundmass )
-            for ib,br in enumerate(width):
-                for ic,w in enumerate(br):
-                    width[ib][ic]=None
-            """
+            # print ( "round mass is", roundmass )
             width = None
             if "Width (GeV)" in expRes:
                 width = expRes['Width (GeV)']
@@ -769,6 +766,12 @@ class ValidationPlot():
                 for im,m in enumerate(br):
                     for omass in origmasses:
                         if round(omass,1) == m:
+                            """
+                            print ( "mass", mass, type(mass) )
+                            print ( "i", i, type(i) )
+                            print ( "im", im, type(im) )
+                            print ( "omass", omass, type(omass) )
+                            """
                             mass[i][im] = omass
                             break
 
@@ -852,7 +855,7 @@ class ValidationPlot():
                 self.data.append(Dict)
 
         #Remove temporary folder
-        if self.currentSLHADir != self.slhaDir and not self.keep: 
+        if self.currentSLHADir != self.slhaDir and not self.keep:
             shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
@@ -1021,7 +1024,7 @@ class ValidationPlot():
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
             if self.options["pdfPlots"]:
-               cmd = f"convert {filename} {newfilename}" 
+               cmd = f"convert {filename} {newfilename}"
                import subprocess
                o = subprocess.getoutput ( cmd )
             """
@@ -1037,7 +1040,7 @@ class ValidationPlot():
         return True
 
     def getValidationDir ( self, validationDir ):
-        """ obtain the validation directory, usually, 
+        """ obtain the validation directory, usually,
             self.expRes.path + "/validation" """
         def mkdir ( mydir ):
             if not os.path.isdir(mydir):

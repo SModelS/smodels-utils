@@ -17,6 +17,7 @@ except:
 import logging
 import argparse,time
 from sympy import var
+from smodels.experiment.databaseObj import Database
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -30,8 +31,9 @@ logger = logging.getLogger(__name__)
 def starting( expRes, txnameStr, axes ):
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
 
-def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
-        pretty=False, combine=False, namedTarball = None, keep = False ):
+def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
+        db : Database, kfactor=1., pretty=False, combine=False, namedTarball = None, 
+        keep = False ):
     """
     Creates a validation plot and saves its output.
 
@@ -41,6 +43,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
                  (e.g.  2*[[x,y]])
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar.gz file containing the SLHA files.
+    :param db: the database object
     :param kfactor: optional global k-factor value to re-scale
                     all theory prediction values
     :param pretty: If True it will generate "pretty" plots, if "both", will
@@ -51,8 +54,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
     """
 
     starting( expRes, txnameStr, axes )
-    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,slhadir = None,
-                        options = options,kfactor=kfactor,
+    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,db,slhadir = None,
+                        options = options, kfactor=kfactor,
                         namedTarball = namedTarball, keep = keep, combine = combine )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
@@ -356,8 +359,8 @@ def run ( expResList, options : dict, keep, db ):
 
                     for p in prettyorugly:
                         re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
-                                kfactor, p, combine, namedTarball = pnamedTarball,
-                                keep = keep )
+                            db, kfactor, p, combine, namedTarball = pnamedTarball,
+                            keep = keep )
                         # if not ":" in namedTarball:
                         localopts["generateData"]=False
                         oldNamedTarball = pnamedTarball
@@ -397,7 +400,7 @@ def run ( expResList, options : dict, keep, db ):
                 if hasattr ( txname, "yrange" ):
                     localopts = addRange ( "y", localopts, txname.yrange, ax )
                 for p in prettyorugly:
-                    validatePlot( expRes,txnameStr,ax,tarfile, localopts,
+                    validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
                                   gkfactor, p, combine, namedTarball = pnamedTarball )
                     localopts["generateData"] = False
             logger.info( "------ %s %s validated in  %.1f min %s" % \
@@ -449,7 +452,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         sys.exit()
 
     logger.info('-- Running validation...')
-
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
