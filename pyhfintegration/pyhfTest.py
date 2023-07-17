@@ -24,7 +24,7 @@ logger.setLevel('DEBUG')
 # lumi = 139
 # # Fetching the efficiencies from the database
 # dir = "/home/alguero/Work/smodels-database"
-# d=Database( dir, discard_zeroes = True )
+# d=Database( dir )
 # # print(d)
 # results=d.getExpResults()
 # x, y = (1300, 530)
@@ -59,7 +59,7 @@ with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
     bestJsons.append(json.load(f))
 # Fetching the efficiencies from the database
 dir = "../../smodels-database"
-d=Database( dir, discard_zeroes = True)
+d=Database( dir )
 # print(d)
 results=d.getExpResults()
 massvec = 2*[[240*GeV,40*GeV]]

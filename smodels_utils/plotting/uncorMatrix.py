@@ -25,7 +25,7 @@ setLogLevel ( "debug" )
 
 #dir = "/home/walten/git/smodels/test/database/"
 dir = "/home/walten/git/smodels-database/"
-d=Database( dir, discard_zeroes = True )
+d=Database( dir )
 print(d)
 results = d.getExpResults()
 #results.sort()

@@ -21,7 +21,7 @@ with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
     bestJsons.append(json.load(f))
 # Fetching the efficiencies from the database
 dir = "../../smodels-database"
-db=Database( dir, discard_zeroes = True)
+db=Database( dir )
 results=db.getExpResults()
 massvec = 2*[[240*GeV,40*GeV]]
 print("Efficiencies were found for the following SRs :")

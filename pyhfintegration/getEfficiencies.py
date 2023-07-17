@@ -16,7 +16,7 @@ setLogLevel ( "debug" )
 
 # smstoplist = smstoplist = slhaDecomposer.decompose( "T6bbHH.slha" )
 dir = "/home/alguero/Work/smodels-database"
-d=Database( dir, discard_zeroes = True )
+d=Database( dir )
 # print(d)
 results=d.getExpResults()
 massvec = [[200*GeV,120*GeV], [200*GeV,120*GeV]]

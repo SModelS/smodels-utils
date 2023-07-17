@@ -8,5 +8,5 @@ setLogLevel ( "debug" )
 dbpath = "../../smodels-database"
 # dbpath = "https://smodels.github.io/database/official222pre1"
 # dbpath = "https://smodels.github.io/database/official222pre1+https://smodels.github.io/database/fastlim222pre1+https://smodels.github.io/database/superseded222pre1+https://smodels.github.io/database/nonaggregated222pre1"
-db = Database ( dbpath, discard_zeroes = False, subpickle = True )
+db = Database ( dbpath, subpickle = True )
 print ( db )

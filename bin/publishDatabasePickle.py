@@ -113,7 +113,7 @@ def main():
     fastlim = True
     picklefile = dbname
     if not args.build:
-        d = Database ( dbname, discard_zeroes=discard_zeroes )
+        d = Database ( dbname )
         dbver = d.databaseVersion
         picklefile = dbname
     else:
@@ -136,8 +136,7 @@ def main():
         import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
-        d = Database ( dbname, discard_zeroes=discard_zeroes, progressbar=True,
-                       force_load = force_load )
+        d = Database ( dbname, progressbar=True, force_load = force_load )
         if args.txnamevalues:
             txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
             if not hasattr ( txnd, "origdata" ):
@@ -178,8 +177,7 @@ def main():
             if hasattr ( txnd, "origdata" ):
                 print ( "[publishDatabasePickle] we have orig data! lets repickle with force_load = txt" )
                 force_load = "txt"
-                d = Database ( dbname, discard_zeroes=discard_zeroes,
-                               progressbar=True, force_load = force_load )
+                d = Database ( dbname, progressbar=True, force_load = force_load )
                 txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
                 if hasattr ( txnd, "origdata" ):
                     print ( "[publishDatabasePickle] FATAL: we still have orig data!" )
@@ -229,13 +227,13 @@ def main():
 
     if args.remove_superseded:
         # e = copy.deepcopy( d )
-        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        e = Database ( picklefile, progressbar=True )
         e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
         print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
         d = removeSupersededFromDB ( d )
     if args.remove_fastlim:
         # e = copy.deepcopy( d )
-        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        e = Database ( picklefile, progressbar=True )
         ## create fastlim only
         e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
         d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
@@ -245,7 +243,7 @@ def main():
         e.subs[0].databaseVersion="fastlim"+dbver
     if args.remove_nonaggregated:
         # e = copy.deepcopy( d )
-        e = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        e = Database ( picklefile, progressbar=True )
         ## create fastlim only
         e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
         d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
@@ -254,7 +252,7 @@ def main():
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion="nonaggregated"+dbver
     if args.full_llhds:
-        f = Database ( picklefile, discard_zeroes=discard_zeroes, progressbar=True )
+        f = Database ( picklefile, progressbar=True )
         f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
         f.subs[0].databaseVersion=dbver
         # print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )

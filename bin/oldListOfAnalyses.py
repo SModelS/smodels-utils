@@ -502,7 +502,7 @@ class Lister:
         dbpath = self.dbpath
         if self.includeSuperseded:
             dbpath += "+./superseded.pcl"
-        self.database = Database ( dbpath, discard_zeroes=True )
+        self.database = Database ( dbpath )
         ver = ""
         if args.add_version:
             ver = self.database.databaseVersion.replace(".","")

@@ -19,7 +19,7 @@ smstoplist = smstoplist = slhaDecomposer.decompose( "T2tt.slha" )
 # dir = "corrdb/"
 dir = "../../smodels-database"
 # dir = "database/"
-d=Database( dir, discard_zeroes = True )
+d=Database( dir )
 print(d)
 results=d.getExpResults()
 
