@@ -59,28 +59,19 @@ def discussExperiment ( anas, experiment, title, verbose ):
 
     print ()
 
-def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose, lumi ):
+def discuss ( db, update, sqrts, verbose, lumi ):
     print ()
     print ( "---------------" )
-    title = "Excluding superseded results, "
-    if superseded:
-        title = "Including superseded results, "
-    if sqrts != "13":
-        if filter_fastlim:
-                title += "without FastLim, " 
-        else:
-            title += "with FastLim, "
+    title = ""
     if lumi != None:
         title += f"lumi>{lumi}/fb, "
-    anas = db.getExpResults( useSuperseded=superseded )
+    anas = db.getExpResults( )
     if sqrts == "all":
         title += "all runs, "
     else:
         title += "%s TeV only, " % sqrts
     if sqrts not in [ "all", "both" ]:
         anas = manips.filterSqrtsFromList ( anas, sqrts )
-    anas = manips.filterFastLimFromList ( anas, invert=False, 
-                                          really=filter_fastlim, update=update )
     anas = manips.filterByLumi  ( anas, lumi, invert=False )
     cms,atlas=[],[]
     for expRes in anas:
@@ -108,12 +99,8 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser( description=
                                          'Count analyses in different ways' )
-    argparser.add_argument ( '-s', '--superseded', help='show superseded results (yes/no/both) [both]',
-              type=str, default="both" )
     argparser.add_argument ( '-u', '--update', help='consider entries only after this date (yyyy/mm/dd)',
               type=str, default="" )
-    argparser.add_argument ( '-f', '--fastlim', help='show fastlim results (yes/no/both) [both]',
-              type=str, default="both" )
     argparser.add_argument ( '-S', '--sqrts', help='select sqrts (8/13/all) [all]',
               type=str, default="all" )
     argparser.add_argument ( '-L', '--lumi', help='require a minimum lumi, in 1/fb [None]',
@@ -129,14 +116,8 @@ def main():
     sqrts = args.sqrts.lower()
     if sqrts in [ "*" ]:
         sqrts = "all"
-    if args.superseded.lower() in [ "yes", "true" ]: ss = [ True ]
-    if args.superseded.lower() in [ "no", "false" ]: ss = [ False ]
-    if args.fastlim.lower() in [ "yes", "true" ]: fl = [ False ]
-    if args.fastlim.lower() in [ "no", "false" ]: fl = [ True ]
-    for filter_fastlim in fl:
-        for superseded in ss:
-            discuss ( superseded, filter_fastlim, db, args.update, sqrts, args.verbose, args.lumi )
-            if args.topologies:
-                countTopos ( superseded, filter_fastlim, db, args.update, args.verbose )
+    discuss ( db, args.update, sqrts, args.verbose, args.lumi )
+    if args.topologies:
+        countTopos ( db, args.update, args.verbose )
 if __name__ == '__main__':
     main()
