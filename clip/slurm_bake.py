@@ -41,9 +41,10 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     Dir = "%s/smodels-utils/clip/temp/" % codedir
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
-    print ( "[slurm.py] creating script at %s/%s" % ( Dir, filename ) )
+    pathname = os.path.join ( Dir, filename )
+    print ( f"[slurm.py] creating script at {pathname}: {len(lines)} lines." )
     # nprc = int ( math.ceil ( nproc * .5  ) )
-    with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
+    with open ( pathname, "wt" ) as f:
         for line in lines:
             args = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
             args += f' --analyses "{analyses}"'
@@ -59,7 +60,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
             if adl_file is not None:
                 adl_file = adl_file.replace("'",'').replace('"','')
                 args += f" --adl_file '{adl_file}'"
-                f.write ( line.replace("@@ARGS@@", args ) )
+            f.write ( line.replace("@@ARGS@@", args ) )
         f.close()
     templatefile = f"{codedir}/smodels-utils/clip/run_bakery_template.sh"
     with open ( templatefile, "rt" ) as f:
