@@ -18,7 +18,7 @@ sys.path.append('.')
 from smodels.installation import installDirectory, version
 from smodels.matching import modelTester
 from smodels.tools import crashReport
-from smodels.tools import smodelsLogging
+from smodels.base import smodelsLogging
 from smodels.tools import runtime
 from smodels import particlesLoader
 from importlib import reload

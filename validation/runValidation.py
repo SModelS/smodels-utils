@@ -546,7 +546,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
-    from smodels.tools import smodelsLogging
+    from smodels.base import smodelsLogging
     smodelsLogging.setLogLevel( args.verbose )
 
     #Selected plots for validation:

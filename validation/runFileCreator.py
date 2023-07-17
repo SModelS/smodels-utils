@@ -242,7 +242,7 @@ if __name__ == "__main__":
     numeric_level = getattr(logging,args.verbose.upper(), None)
     logger.setLevel(level=numeric_level)
     plotRanges.logger.setLevel(level=numeric_level)
-    from smodels.tools import smodelsLogging, xsecComputer
+    from smodels.base import smodelsLogging, xsecComputer
     smodelsLogging.setLogLevel( args.verbose )
     
     #Options for cross-section calculation:
