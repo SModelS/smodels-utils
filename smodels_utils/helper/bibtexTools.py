@@ -388,7 +388,7 @@ class BibtexWriter:
             else:
                 self.log ( "Special treatment failed." )
 
-        contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
+        contact = expRes.globalInfo.contact ## globalInfo.contact
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         if contact and "fastlim" in contact:

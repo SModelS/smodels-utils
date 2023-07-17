@@ -24,8 +24,8 @@ txs = {}
 for expRes in browser:
     for dataset in expRes.datasets:
         for txname in dataset.txnameList: 
-            tname = txname.getInfo('txName')
-            const = txname.getInfo('constraint')
+            tname = txname.txName
+            const = txname.constraint
             if not tname in txs: txs[tname] = []
             if not const in txs[tname]: txs[tname].append(const)
 

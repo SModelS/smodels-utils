@@ -445,11 +445,11 @@ class TxnameScreen(BoxLayout):
             txnameInfoList = ListView(adapter=list_adapter)
             txnameInfoList.children[0].bar_width = sp(5)
             txnameInfoList.size_hint_y = 0.6
-            txnameLabel = Label(text='%s Info:' %self.txname.getInfo('txName'), font_size = sp(20))
+            txnameLabel = Label(text='%s Info:' %self.txname.txName, font_size = sp(20))
             txnameLabel.size_hint_y = 0.1
             
-            if os.path.isfile('./feyn/'+self.txname.getInfo('txName')+'_feyn.png'):
-                txImage = Image(source='./feyn/'+self.txname.getInfo('txName')+'_feyn.png')
+            if os.path.isfile('./feyn/'+self.txname.txName+'_feyn.png'):
+                txImage = Image(source='./feyn/'+self.txname.txName+'_feyn.png')
                 txImage.size_hint = (0.2,0.5)
                 with txImage.canvas.before:
                     Color(1.,1.,1.,1.)            

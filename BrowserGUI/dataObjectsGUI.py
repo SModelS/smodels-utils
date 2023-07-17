@@ -118,7 +118,7 @@ class txnameItem(SelectableDataItem):
         super(txnameItem, self).__init__(**kwargs)
                 
         self.txname = txname
-        self.name = txname.getInfo('txName')
+        self.name = txname.txName
         self.is_selected = False 
         self.popup = None
         self.txnameScreen = None

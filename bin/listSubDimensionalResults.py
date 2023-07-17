@@ -51,7 +51,7 @@ def tableHeader ( f ):
     f.write ( "||\n" )
 
 def writeEntry ( f, id, tx ):
-    axes = tx.getInfo("axes").strip()
+    axes = tx.axes.strip()
     inter = "m,,inter,,"
     mother = "m,,mother,,"
     lsp = "m,,lsp,,"
@@ -64,7 +64,7 @@ def writeEntry ( f, id, tx ):
                      "2*Eq(mother,1000.00000000000)_Eq(inter0,x)_Eq(lsp,y)": \
                             "%s = 1000 GeV" % ( mother )
     }
-    constraint = tx.getInfo("constraint").strip()
+    constraint = tx.constraint.strip()
     constraint = constraint.replace( " ", "" )
     constraint = constraint.replace ( "]+[", "]+`<<BR>>`[" )
 

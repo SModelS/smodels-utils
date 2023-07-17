@@ -305,10 +305,10 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
 def getFigureUrl( validationPlot ):
     """ get the URL of the figure, as a string """
     txname = validationPlot.expRes.datasets[0].txnameList[0]
-    txurl = txname.getInfo("figureUrl")
-    txaxes = txname.getInfo("axes")
+    txurl = txname.figureUrl
+    txaxes = txname.axes
     if isinstance(txurl,str):
-        return txname.getInfo("figureUrl" )
+        return txname.figureUrl
     if not txurl:
         return None
     if type(txurl) != type(txaxes):

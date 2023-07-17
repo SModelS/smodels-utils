@@ -200,7 +200,7 @@ CMS are for on- and off-shell at once.
                         hasTn,hasNewTn=False,False
                         txns, newtxns = [], []
                         for tn in expRes.getTxNames():
-                            validated = tn.getInfo('validated')
+                            validated = tn.validated
                             tname = tn.txName
                             if not self.ignore_validated and validated in [ "n/a" ]:
                                 continue
@@ -265,7 +265,7 @@ CMS are for on- and off-shell at once.
         txnames.sort()
         txns_discussed=set()
         for txname in txnames:
-            validated = txname.getInfo('validated')
+            validated = txname.validated
             if not self.ignore_validated and validated != True:
                 continue
             # if validated == "n/a": continue
@@ -292,7 +292,7 @@ CMS are for on- and off-shell at once.
             #    print ( ",", end="" )
             # print ( txn, flush=True, end= "" )
             txns_discussed.add ( txn )
-            validated = txname.getInfo('validated')
+            validated = txname.validated
             if not self.ignore_validated and validated != True:
                 continue
             #if validated == "n/a": continue
@@ -523,7 +523,7 @@ CMS are for on- and off-shell at once.
                 name = tn.txName
                 if name in txnames:
                     continue
-                validated = tn.getInfo('validated')
+                validated = tn.validated
                 if not self.ignore_validated and validated != True:
                     continue
                 # if validated in [ "n/a" ]: continue

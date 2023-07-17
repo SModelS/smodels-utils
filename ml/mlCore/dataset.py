@@ -110,7 +110,7 @@ class DatasetBuilder():
 		self.dataselector = parameter["dataselector"]
 		self.signalRegion = parameter["signalRegion"]
 		self.full_dim = self.txnameData.full_dimensionality
-		self.luminosity = parameter["txName"].globalInfo.getInfo("lumi").asNumber(1/fb)
+		self.luminosity = parameter["txName"].globalInfo.lumi.asNumber(1/fb)
 
 		self.sampleSize 		  = {"regression": parameter["sampleSize"][0], "classification": parameter["sampleSize"][1]}
 		self.sampleSplit 		  = parameter["sampleSplit"]
