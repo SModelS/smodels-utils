@@ -204,6 +204,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
+        print ( f"FIXME adapt!!!" )
+        ## print ( f"write topology with {constraint}" )
         # self.f.write ( "| %d | <:>" % nr )
         self.f.write ( "| %d | " % nr )
         ltxes = []
@@ -219,8 +221,9 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             ltxes.append ( '<a name="%s"></a>**%s**<br>' % ( txname, txnameabb ) )
             # ltxes.append ( '<a name="%s"><b>%s</b></a>' % ( txname, txname ) )
         self.f.write ( "<BR>".join ( ltxes ) )
-        constraint = constraint[constraint.find("["):]
-        constraint = constraint.replace( " ", "" )
+        # FIXME v3
+        # constraint = constraint[constraint.find("["):]
+        # constraint = constraint.replace( " ", "" )
         # constraint = constraint.replace ( "jet", "q" )
         if self.drawFeyn:
             for txname in txnames:
@@ -238,13 +241,13 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 self.createFeynGraph ( txname, constraint )
         constraint = constraint.replace ( "photon", "y" )
         constraint = constraint.replace ( "higgs", "h" )
-        constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
+        # constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
         constraint = constraint.replace ( ";",";`<BR>`" )
         constraint = "`" + constraint + "`"
         #if len(constraint)>20:
         #    print ( "constraint", constraint )
         #    constraint = constraint[:20]+"`<BR>`"+constraint[20:]
-        self.f.write ( " | %s" % constraint ) ## "Topology" column
+        self.f.write ( f" | {constraint}" ) ## "Topology" column
         style = "straight"
         if self.xkcd:
             style = "xkcd"
