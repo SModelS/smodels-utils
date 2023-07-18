@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 
-""" makes a database pickle file publically available.
-The script is deliberately run with python2. That way we get
-a pickle file that should work with both python2 and python3. """
+"""
+.. module:: publishDatabasePickle
+   :synposis: makes database pickle files publically available. FIXME this
+              script should be split in two: one script that prepares all pickles
+              (official, fastlim, nonaggregated, superseded, full_llhds),
+              another script that uploads them and writes the jsons
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
+"""
 
 from __future__ import print_function
-import pickle, os, sys, argparse, time, copy
+import pickle, os, sys, argparse, time, copy, glob
 import hashlib
 import pathlib
 import colorama
+import gzip, shutil
+
 if sys.version[0]=="2":
     import commands as CMD
 else:
     import subprocess as CMD
-
-# print ( f"[publishDatabasePickle] using scipy version {version('scipy')}" )
-# from importlib.metadata import version
-# if version("scipy")[:3] == "1.8":
-#     print ( "[publishDatabasePickle] you sure you want to pickle with scipy 1.8.x?" )
-#     sys.exit()
 
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
@@ -58,7 +61,7 @@ def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
     """
     has_nonValidated = False
-    expResults = database.expResultList
+    expResults = database.getExpResults( useNonValidated=True )
     has_nonValidated = False
     nonValidateds = set()
     for e in expResults:
@@ -83,6 +86,7 @@ def main():
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
     ap.add_argument('-a', '--remove_nonaggregated', help='build pickle file, remove nonaggregated results', action="store_true" )
+    ap.add_argument( '--full_llhds', help='create also full llhds pickle file', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
@@ -94,47 +98,73 @@ def main():
     dbname = args.filename
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
-        
-    from smodels.experiment.databaseObj import Database    
+
+    from smodels.experiment.databaseObj import Database
     try:
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB    
+        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB, selectFullLikelihoodsFromDB
     except ModuleNotFoundError:
         sys.path.append('../')
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB    
+        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
 
-        
+
     has_nonValidated = False
     nonValidated = []
     fastlim = True
     picklefile = dbname
     if not args.build:
-        d = Database(dbname)
+        d = Database ( dbname )
         dbver = d.databaseVersion
         picklefile = dbname
     else:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
+        tarballs = glob.glob ( f"{dbname}/*.tar.gz" )
+        tarballs += glob.glob ( f"{dbname}/*.tgz" )
+        if len(tarballs)>0:
+            t = [ x.replace(dbname+"/","").replace(dbname,"") for x in tarballs ]
+            print ( f"there are tarballs [{','.join(t)}] in {dbname}. Will explode them." )
+            for t in tarballs:
+                shutil.unpack_archive( filename=t, extract_dir=dbname)
+        force_load = None
         if args.txnamevalues:
             print ( "[publishDatabasePickle] building with txname values!" )
             import smodels.experiment.txnameObj
             smodels.experiment.txnameObj.TxNameData._keep_values = True
+            force_load = "txt"
         import smodels
         print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
                 (dbname, os.path.dirname ( smodels.__file__ ) ) )
-        d = Database(dbname, progressbar=True)
+        d = Database ( dbname, progressbar=True, force_load = force_load )
+        if args.txnamevalues:
+            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
+            if not hasattr ( txnd, "origdata" ):
+                print ( "[publishDatabasePickle] FATAL: why arent there origdata in tnamedata??" )
+                sys.exit()
+        else:
+            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
+            if hasattr ( txnd, "origdata" ):
+                print ( "[publishDatabasePickle] we have orig data! lets repickle with force_load = txt" )
+                force_load = "txt"
+                d = Database ( dbname, progressbar=True, force_load = force_load )
+                txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
+                if hasattr ( txnd, "origdata" ):
+                    print ( "[publishDatabasePickle] FATAL: we still have orig data!" )
+                    sys.exit()
+
+
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
-      
+
     if args.remove_superseded:
         # e = copy.deepcopy( d )
-        e = Database(dbname, progressbar=True)
+        e = Database ( picklefile, progressbar=True )
         e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
         print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
         d = removeSupersededFromDB ( d )
     if args.remove_fastlim:
         # e = copy.deepcopy( d )
-        e = Database ( dbname, progressbar=True )
+        e = Database ( picklefile, progressbar=True )
         ## create fastlim only
         e = removeFastLimFromDB ( e, invert = True, picklefile = "fastlim.pcl" )
         d = removeFastLimFromDB ( d, picklefile = "official.pcl" )
@@ -144,7 +174,7 @@ def main():
         e.subs[0].databaseVersion="fastlim"+dbver
     if args.remove_nonaggregated:
         # e = copy.deepcopy( d )
-        e = Database ( dbname, progressbar=True )
+        e = Database ( picklefile, progressbar=True )
         ## create fastlim only
         e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
         d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
@@ -152,6 +182,12 @@ def main():
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion="nonaggregated"+dbver
+    if args.full_llhds:
+        f = Database ( picklefile, progressbar=True )
+        f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
+        f.subs[0].databaseVersion=dbver
+        # print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )
+
     if not args.skipValidation:
         validated, which = checkNonValidated(d)
         has_nonValidated = validated
@@ -161,22 +197,35 @@ def main():
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
+    p.close()
     fastlim = meta.hasFastLim
     if args.remove_fastlim:
         fastlim = False
-    print ( meta )
+    print ( f"[publishDatabasePickle] {meta}" )
     ver = meta.databaseVersion.replace(".","")
-    p.close()
-    infofile = f"official{ver}"
-    pclfilename = f"official{ver}.pcl"
+    sfastlim=""
+    if fastlim:
+        sfastlim="_fastlim"
+
+    infofile = "official%s%s" % ( ver, sfastlim )
+    pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
+    if args.txnamevalues:
+        d.subs[0].databaseVersion="debug"+dbver
+        infofile = "debug%s" % ( ver.replace("debug","") )
+        pclfilename = "debug%s.pcl" % ( ver.replace("debug","") )
     if "nonaggregated" in ver:
-        infofile = "nonaggregated%s%s" % ( ver.replace("nonaggregated",""), sfastlim )
-        pclfilename = "nonaggregated%s%s.pcl" % ( ver.replace("nonaggregated",""), sfastlim )
+        infofile = "nonaggregated%s" % ( ver.replace("nonaggregated","") )
+        pclfilename = "nonaggregated%s.pcl" % ( ver.replace("nonaggregated","") )
+    if "full_llhds" in ver:
+        infofile = "full_llhds%s" % ( ver.replace("full_llhds","") )
+        pclfilename = "full_llhds%s.pcl" % ( ver.replace("full_llhds","") )
     if "superseded" in ver:
-        infofile = "superseded%s%s" % ( ver.replace("superseded",""), sfastlim )
-        pclfilename = "superseded%s%s.pcl" % ( ver.replace("superseded",""), sfastlim )
+        infofile = "superseded%s" % ( ver.replace("superseded","") )
+        pclfilename = "superseded%s.pcl" % ( ver.replace("superseded","") )
     if "fastlim" in ver:
-        infofile = f"{ver}"
+        # infofile = "fastlim%s" % ( ver.replace("fastlim","") )
+        #pclfilename = "fastlim%s.pcl" % ( ver.replace("fastlim","") )
+        infofile = ver
         pclfilename = f"{ver}.pcl"
 
     if ver == "unittest":
@@ -218,6 +267,7 @@ def main():
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
+
     if args.latest:
         latestfile = "latest"
         if not args.remove_fastlim:
@@ -227,7 +277,19 @@ def main():
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
             print ( "[publishDatabasePickle] update latest:", cmd, a )
-    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "  
+    backupfile = None
+    if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
+        backupfile = "backup"+ver
+        #if not args.remove_fastlim:
+        #    backupfile = "backup_fastlim"
+        cmd = "cp ../../smodels.github.io/database/%s ../../smodels.github.io/database/%s" %\
+               ( infofile, backupfile )
+        if not args.dry_run:
+            a=CMD.getoutput ( cmd )
+            print ( "[publishDatabasePickle] update backup:", cmd, a )
+    cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
+    if backupfile != None:
+        cmd += f"git add database/{backupfile}; "
     if args.latest:
         cmd += f"git add database/{latestfile}; "
     cmd += "git commit -m 'auto-commited by publishDatabasePickle.py'; git push"
@@ -236,9 +298,8 @@ def main():
     else:
         a=CMD.getoutput ( cmd )
         print ( a )
-        
+
     home = os.environ["HOME"]
-    import shutil
     hasSSHpass = (shutil.which("sshpass")!=None)
     if ssh and not args.dry_run:
         cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
