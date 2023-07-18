@@ -2,7 +2,7 @@
 from smodels.tools import runtime
 runtime.modelFile = 'smodels.share.models.mssm'
 from smodels.base.physicsUnits import GeV,fb
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database
 from smodels.particlesLoader import BSMList

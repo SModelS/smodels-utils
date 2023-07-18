@@ -20,7 +20,7 @@ from smodels.tools import runtime
 # Define your model (list of BSM particles)
 runtime.modelFile = 'smodels.share.models.mssm'
 # runtime.modelFile = 'mssmQNumbers.slha'
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
 from smodels.experiment.databaseObj import Database

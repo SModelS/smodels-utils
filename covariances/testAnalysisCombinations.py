@@ -13,7 +13,7 @@ sys.path.insert(0, "../")
 from smodels.tools import runtime
 runtime._experimental = True
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from smodels.theory.theoryPrediction import theoryPredictionsFor
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
 from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList

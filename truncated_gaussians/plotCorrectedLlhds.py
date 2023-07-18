@@ -6,7 +6,7 @@ runtime._experimental = True
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.tools.statsTools import StatsComputer
 from smodels.experiment.databaseObj import Database
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.tools.truncatedGaussians import TruncatedGaussians
 # TruncatedGaussians.newCorrectionType = False
 from smodels.theory.model import Model

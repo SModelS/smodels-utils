@@ -264,7 +264,7 @@ if __name__ == "__main__":
     from smodels.share.models.mssm import BSMList
     from smodels.share.models.SMparticles import SMList
     from smodels.base.physicsUnits import fb, GeV
-    from smodels.theory import decomposer
+    from smodels.decomposition import decomposer
     
     filename = "gluino_squarks.slha"
     

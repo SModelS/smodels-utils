@@ -23,7 +23,7 @@ import math, numpy, subprocess, time, sys, os
 try: ## smodels <= 122
     from smodels.theory import slhaDecomposer as decomposer
 except ImportError: ## smodels >= 200
-    from smodels.theory import decomposer
+    from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.tools import xsecComputer, runtime
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane

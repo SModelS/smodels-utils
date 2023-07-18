@@ -16,7 +16,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.experiment import txnameObj
 txnameObj.TxNameData._keep_values = True
 from smodels.theory.theoryPrediction import theoryPredictionsFor
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model

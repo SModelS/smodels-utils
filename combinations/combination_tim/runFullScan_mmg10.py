@@ -23,7 +23,7 @@ from tester.combiner import Combiner
 # outputDir = './outputFullScan_nlo_2p3_mmg05'
 
 from smodels.tools import runtime
-from smodels.theory import decomposer
+from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
 from smodels.experiment.databaseObj import Database, ExpResultList
