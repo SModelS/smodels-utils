@@ -126,7 +126,6 @@ def main():
         dbver = d.databaseVersion
         picklefile = os.path.join ( dbname, d.txt_meta.getPickleFileName() )
       
-    print('BBBBBLA',args.remove_superseded)
     if args.remove_superseded:
         # e = copy.deepcopy( d )
         e = Database(dbname, progressbar=True)
@@ -168,12 +167,8 @@ def main():
     print ( meta )
     ver = meta.databaseVersion.replace(".","")
     p.close()
-    sfastlim=""
-    if fastlim:
-        sfastlim="_fastlim"
-
-    infofile = "official%s%s" % ( ver, sfastlim )
-    pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
+    infofile = f"official{ver}"
+    pclfilename = f"official{ver}.pcl"
     if "nonaggregated" in ver:
         infofile = "nonaggregated%s%s" % ( ver.replace("nonaggregated",""), sfastlim )
         pclfilename = "nonaggregated%s%s.pcl" % ( ver.replace("nonaggregated",""), sfastlim )
@@ -181,8 +176,8 @@ def main():
         infofile = "superseded%s%s" % ( ver.replace("superseded",""), sfastlim )
         pclfilename = "superseded%s%s.pcl" % ( ver.replace("superseded",""), sfastlim )
     if "fastlim" in ver:
-        infofile = "fastlim%s%s" % ( ver.replace("fastlim",""), sfastlim )
-        pclfilename = "fastlim%s%s.pcl" % ( ver.replace("fastlim",""), sfastlim )
+        infofile = f"{ver}"
+        pclfilename = f"{ver}.pcl"
 
     if ver == "unittest":
         smodels_ver = "112"
