@@ -15,6 +15,7 @@ from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
+from smodels.experiment.txnameObj import TxNameData
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 import numpy as np
@@ -328,6 +329,18 @@ def getFigureUrl( validationPlot ):
         sys.exit()
     return txurl[pos[0]]
 
+def convertOrigData ( txnameData : TxNameData ):
+    """ convert the original data in txnameobj to lists """
+    ret = []
+    for t in txnameData.origdata:
+        ret.append ( list(t))
+    return ret
+    """
+    print ( "origdata", str(list(txNameObj.txnameData.origdata)))
+    origdata =eval( txnameData.origdata)
+    return origdata
+    """
+
 def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
@@ -348,7 +361,7 @@ def getGridPoints ( validationPlot ):
         if not hasattr ( txNameObj.txnameData, "origdata"):
             logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
             return []
-        origdata =eval( txNameObj.txnameData.origdata)
+        origdata = convertOrigData ( txNameObj.txnameData )
         for ctr,pt in enumerate(origdata):
             masses = removeUnits ( pt[0], standardUnits=GeV )
             coords = massPlane.getXYValues(masses)
