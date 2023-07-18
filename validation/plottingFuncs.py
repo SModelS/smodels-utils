@@ -336,7 +336,6 @@ def convertOrigData ( txnameData : TxNameData ):
         ret.append ( list(t))
     return ret
     """
-    print ( "origdata", str(list(txNameObj.txnameData.origdata)))
     origdata =eval( txnameData.origdata)
     return origdata
     """
@@ -363,11 +362,13 @@ def getGridPoints ( validationPlot ):
             return []
         origdata = convertOrigData ( txNameObj.txnameData )
         for ctr,pt in enumerate(origdata):
-            masses = removeUnits ( pt[0], standardUnits=GeV )
+            # masses = removeUnits ( pt[0], standardUnits=GeV )
+            n = int ( len(pt)/2 )
+            masses = [ pt[:n], pt[n:] ] ## silly hack for now
             coords = massPlane.getXYValues(masses)
             if not coords == None and not coords in ret:
                 ret.append ( coords )
-    logger.info ( "found %d gridpoints" % len(ret) )
+    logger.info ( f"found {len(ret)} gridpoints" )
     ## we will need this for .dataToCoordinates
     return ret
 

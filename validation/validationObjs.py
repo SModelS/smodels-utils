@@ -380,7 +380,7 @@ class ValidationPlot():
                 promptWidth = self.options["promptWidth"]
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
-            f.write("[printer]\noutputType = python\n")
+            f.write("[printer]\noutputFormat = version2\noutputType = python\n")
             f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"

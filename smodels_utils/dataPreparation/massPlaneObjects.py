@@ -10,6 +10,7 @@
 """
 
 import sys
+import numpy as np
 from sympy import var, Eq, lambdify, solve, N, And, sqrt
 from scipy.spatial import Delaunay
 from itertools import permutations
@@ -646,16 +647,19 @@ class Axes(object):
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
 
+        def isFloat ( x ):
+            return isinstance(x,(np.floating,float))
+
         def distance ( x, y ):
             ## the distance between x and y
             ## I dont fully understand why there cases where x has a width
             ## and y doesnt ....
             #assert ( type(x) == type(y) )
-            if type(x) in [ float, int ] and type(y)==tuple:
+            if isFloat(x) and type(y)==tuple:
                 return abs(x-y[0])
-            if type(y) in [ float, int ] and type(x)==tuple:
+            if isFloat(y) and type(x)==tuple:
                 return abs(x[0]-y)
-            if type(x) in [ float, int ] and type(y) in [ float, int ]:
+            if isFloat(x) and isFloat(y):
                 return abs(x-y)
             assert ( type(x) == tuple )
             d=0.
