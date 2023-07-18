@@ -96,7 +96,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
     def getTopos( self ):
         topos = {}
-        expresults = self.database.getExpResults( useSuperseded=True )
+        expresults = self.database.getExpResults( )
         #expresults = self.database.expResultList ## also non-validated
         expresults.sort()
         for expRes in expresults:
