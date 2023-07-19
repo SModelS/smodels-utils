@@ -308,19 +308,24 @@ def runForOneResult ( expRes : ExpResult, options : dict,
             gkfactor = float(kfactorDict[txnameStr.lower()])
 
         if hasattr ( txname, "axesMap" ):
-            logger.error ( "we have a new result, not yet implemented!" )
-            return
+            x,y,z,w = var("x y z w")
+            axes = txname.axesMap
+            #print ( "axesMap", axes, type(axes) )
+            axes = eval ( axes )
+            #print ( "eval", eval(axes) )
         #Loop over all axes:
-        if not isinstance(txname.axes,list):
-            axes = [txname.axes]
         else:
-            axes = txname.axes
+            if not isinstance(txname.axes,list):
+                axes = [txname.axes]
+            else:
+                axes = txname.axes
         axis = options["axis"]
         if axis in [ None, "None", "" ]:
             for ax in axes:
                 hasCorrectAxis_ = hasCorrectAxis
                 x,y,z,w = var("x y z w")
-                ax = str(eval(ax)) ## standardize the string
+                # print ( "ax", ax) 
+                ax = str(eval(str(ax))) ## standardize the string
                 kfactor = gkfactor
                 fname_ = "none"
                 if type(namedTarball) == str and ":" in namedTarball:

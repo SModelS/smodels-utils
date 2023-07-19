@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 """
-.. module:: massPlaneObjects
-   :synopsis: Holds object representing one mass plane
+.. module:: graphMassPlaneObjects
+   :synopsis: Holds object representing one mass plane,
+              for graphs
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
@@ -34,7 +35,7 @@ def _lambdify ( a, b, c, dummify ):
     f.expr = "%s: %s" % ( a, b )
     return f
 
-class MassPlane(object):
+class GraphMassPlane(object):
     """
     Holds all information related to one mass plane
     a mass plane is defined by their axes.
@@ -104,10 +105,7 @@ class MassPlane(object):
                 hasWarned["emptystring"]=True
             return None
         massArray = eval(string)
-        if type(massArray) == dict:
-            from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
-            return GraphMassPlane.fromString ( txname, string )
-        massPlane = MassPlane(txname,massArray)
+        massPlane = GraphMassPlane(txname,massArray)
 
         return massPlane
 
