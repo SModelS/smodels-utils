@@ -157,9 +157,6 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
     def createSmsGraph ( self, txname, constraint ):
         """ create the sms graphs, store them in ../smsgraphs/ """
-        #print ( "txname", txname, type(txname ) )
-        #print ( "constraint", constraint, type(constraint ) )
-        #print ( "txnameobj", self.constraintsToTxNames[txname][constraint] )
         pathbase = f"../smsgraphs/{txname}"
         smsMap = self.constraintsToTxNames[txname][constraint].smsMap
         for mp,name in smsMap.items():
@@ -213,12 +210,15 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     continue
                 self.createSmsGraph ( txname, constraint )
         shortnames = { "photon": "y", "higgs": "h" }
+        maps = self.constraintsToTxNames[txname][constraint].smsMap
         for k,v in shortnames.items():
             constraint = constraint.replace( k, v )
         constraint = "`" + constraint + "`"
         entries.append ( constraint ) # "Topology" column
-        ext = 1
-        entries.append ( f'<img alt="{txname}_{ext}" src="../smsgraphs/{txname}_{ext}.png" height="130">' ) # "Graph" column
+        images = ""
+        for i in range ( len(maps) ):
+            images += f'<img alt="{txname}_{i+1}" src="../smsgraphs/{txname}_{i+1}.png" height="130"><BR>'
+        entries.append ( images ) # "Graph" column
 
         if self.hasResultsColumn:
             results = self.database.getExpResults ( txnames = txnames )

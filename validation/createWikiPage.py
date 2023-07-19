@@ -242,7 +242,7 @@ CMS are for on- and off-shell at once.
             logger.error ( "we have neither an axes field nor an axesMap field?" )
             sys.exit(-1)
         maps = txname.axesMap
-        if "y" in m:
+        if "y" in maps:
             return False
         return True
 
