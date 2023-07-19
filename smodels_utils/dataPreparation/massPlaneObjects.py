@@ -111,6 +111,52 @@ class MassPlane(object):
 
         return massPlane
 
+    def getNiceAxes(self,axesStr):
+        """
+        Convert the axes definition format ('[[x,y],[x,y]]')
+        to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+
+        :param axesStr: string defining axes in the old format
+
+        :return: string with a nicer representation of the axes (more suitable for printing)
+        """
+
+        x,y,z,w = var('x y z w')
+        if axesStr == "":
+            logger.error ( "Axes field is empty: cannot validate." )
+            return None
+        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
+
+        eqList = []
+        for ib,br in enumerate(axes):
+            if ib == 0:
+                mStr,wStr = 'Mass','Width'
+            else:
+                mStr,wStr = 'mass','width'
+            mList = []
+            for im,eq in enumerate(br):
+                if type(eq)==tuple:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq[0]))
+                    mList.append('Eq(%s,%s)'
+                                   %(var(wStr+string.ascii_uppercase[im]),eq[1]))
+                else:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq))
+            mStr = "_".join(mList)
+            eqList.append(mStr)
+
+        #Simplify symmetric branches:
+        if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:
+            eqStr = "2*%s"%eqList[0]
+        else:
+            eqStr = "__".join(eqList)
+
+        eqStr = eqStr.replace(" ","")
+
+        return eqStr
+
+
     def __str__(self):
         return "%s" % ( self.axes )
 

@@ -81,7 +81,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         tmp = []
         for c in constraints:
             tmp.append ( c.replace(", (",",`<BR> &rarr;`(" ) )
-        constr = "`<BR>`".join ( tmp )
+        constr = "`<BR><BR>`".join ( tmp )
         txn = txname.txName
         if not txn in self.constraintsToTxNames:
             self.constraintsToTxNames[txn]={}
@@ -209,7 +209,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                         print ( "[smsDictionary] (it exists already and you specified to skip existing graphs. if that is not what you want, do not use -s)." )
                     continue
                 self.createSmsGraph ( txname, constraint )
-        shortnames = { "photon": "y", "higgs": "h" }
+        # shortnames = { "photon": "y", "higgs": "h" }
+        shortnames = { } #
         maps = self.constraintsToTxNames[txname][constraint].smsMap
         for k,v in shortnames.items():
             constraint = constraint.replace( k, v )
