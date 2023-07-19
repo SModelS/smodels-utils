@@ -18,6 +18,7 @@ import logging
 import argparse,time
 from sympy import var
 from smodels.experiment.databaseObj import Database
+from smodels.experiment.expResultObj import ExpResult
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -226,7 +227,193 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"] )
 
-def run ( expResList, options : dict, keep, db ):
+def runForOneResult ( expRes : ExpResult, options : dict, 
+                      keep : bool, db : Database ) -> None:
+    """
+    Run for one experimental result
+    :param options: all flags in the "options" part of the ini file
+    :param keep: keep temporary directories
+    :param db: database, so we can check if ratio plots are desirable
+    """
+    expt0 = time.time()
+    logger.info( f"--- {GREEN} validating {expRes.globalInfo.id} {RESET}" )
+    #Loop over pre-selected txnames:
+    txnamesStr = []
+    txnames = []
+    for tx in expRes.getTxNames():
+        if 'assigned' in tx.constraint:
+            continue  #Skip not assigned constraints
+        if tx.txName in txnamesStr:
+            continue #Do not include a txname twice (if it appears in more than one dataset)
+        txnames.append(tx)
+        txnamesStr.append(tx.txName)
+
+    if not txnames:
+        logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
+        return
+    pretty = str(options["prettyPlots"]).lower()
+    if pretty in [ "false", "no", "0" ]:
+        pretty = False
+    elif pretty in [ "true", "yes", "1" ]:
+        pretty = True
+    prettyorugly = [ pretty ]
+    if pretty=="both":
+        prettyorugly = [ True, False ]
+    for itx,txname in enumerate(txnames):
+        txnameStr = txname.txName
+        txt0 = time.time()
+        stype=""
+        if combine:
+            stype=" (combine) "
+        logger.info( f"------ {GREEN} validating {txnameStr}{stype} {RESET}" )
+        namedTarball = None
+        if not tarfiles:
+            tarfile = txnameStr+".tar.gz"
+        else:
+            tarfile = os.path.basename(tarfiles[itx])
+        if hasattr ( txname, "validationTarball" ):
+            tarfile = txname.validationTarball
+            namedTarball = tarfile
+            if type(tarfile) == list:
+                l=f"Database entry specifies validation tarballs: {','.join(tarfile)}. Will use them."
+            else:
+                l=f"Database entry specifies a validation tarball: {tarfile}. Will use it."
+            logger.info( l )
+        # tarfile = os.path.join(slhadir,tarfile)
+
+        # flag needed to identify the case where axes are given
+        # for named tarballs, but current axis is different
+        hasCorrectAxis=False
+        if options["generateData"] != False:
+            tokens = tarfile
+            if type(tokens) == str:
+                tokens = [ tarfile ]
+            #tokens = tarfile.split(";")
+            for tf in tokens:
+                tf = tf.strip()
+                #  and not os.path.isfile(tarfile):
+                fname = tf
+                if ":" in tf:
+                    axis,fname = fname.split(":")[:2]
+                else:
+                    hasCorrectAxis = True
+                tarfile = os.path.join(slhadir,fname )
+                if not os.path.isfile ( tarfile ):
+                    logger.info( 'Missing %s file for %s.' % ( tarfile, txnameStr))
+            # continue
+
+        gkfactor = 1.
+        #Define k-factors
+        if txnameStr.lower() in kfactorDict:
+            gkfactor = float(kfactorDict[txnameStr.lower()])
+
+        if hasattr ( txname, "axesMap" ):
+            logger.error ( "we have a new result, not yet implemented!" )
+            return
+        #Loop over all axes:
+        if not isinstance(txname.axes,list):
+            axes = [txname.axes]
+        else:
+            axes = txname.axes
+        axis = options["axis"]
+        if axis in [ None, "None", "" ]:
+            for ax in axes:
+                hasCorrectAxis_ = hasCorrectAxis
+                x,y,z,w = var("x y z w")
+                ax = str(eval(ax)) ## standardize the string
+                kfactor = gkfactor
+                fname_ = "none"
+                if type(namedTarball) == str and ":" in namedTarball:
+                    myaxis,fname_= namedTarball.split(":")[:2]
+                    myaxis = str ( eval ( myaxis ) )
+                    if myaxis == ax:
+                        hasCorrectAxis_ = True
+                        tarfile = os.path.join(slhadir,fname_)
+                elif type(namedTarball) == list:
+                    # looks like were given multiples
+                    for nt in namedTarball:
+                        if ":" in nt:
+                            myaxis,fname_= nt.split(":")[:2]
+                            myaxis = str ( eval ( myaxis ) )
+                            if myaxis == ax:
+                                hasCorrectAxis_ = True
+                                pnamedTarball = fname_
+                                tarfile = os.path.join(slhadir,fname_)
+                                break
+                if fname_ in kfactorDict:
+                    # print ( "namedTarball", namedTarball, "ax", ax )
+                    if type(namedTarball) == str and ":" in namedTarball:
+                        myaxis,fname_= namedTarball.split(":")[:2]
+                        myaxis = str ( eval ( myaxis ) )
+                        if myaxis == ax:
+                            kfactor = float(kfactorDict[fname_])
+                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
+                    else:
+                        kfactor = float(kfactorDict[fname_])
+                        logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
+                localopts = copy.deepcopy ( options )
+                if hasattr ( txname, "xrange" ):
+                    localopts = addRange ( "x", localopts, txname.xrange, ax )
+                if hasattr ( txname, "yrange" ):
+                    localopts = addRange ( "y", localopts, txname.yrange, ax )
+                pnamedTarball = namedTarball
+                if not hasCorrectAxis_:
+                    pnamedTarball = None
+                    tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+
+                for p in prettyorugly:
+                    re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
+                        db, kfactor, p, combine, namedTarball = pnamedTarball,
+                        keep = keep )
+                    # if not ":" in namedTarball:
+                    localopts["generateData"]=False
+                    oldNamedTarball = pnamedTarball
+                    validationDir = re.getValidationDir ( None )
+                    datafile = re.getDataFile(validationDir)
+                checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
+                                     localopts, datafile, re.niceAxes )
+                checkForBestSRPlots ( expRes, txnameStr, ax, db, combine, 
+                                     localopts, datafile, re.niceAxes )
+        else: # axis is not None
+            x,y,z = var("x y z")
+            ax = str(eval(axis)) ## standardize the string
+            if type(namedTarball) == str and ":" in namedTarball:
+                myaxis,fname_= namedTarball.split(":")[:2]
+                myaxis = str ( eval ( myaxis ) )
+                if myaxis == ax:
+                    tarfile = os.path.join(slhadir,fname_)
+                    hasCorrectAxis = True
+            if type(namedTarball) == list:
+                # looks like were given multiples
+                for nt in namedTarball:
+                    if ":" in nt:
+                        myaxis,fname_= nt.split(":")[:2]
+                        myaxis = str ( eval ( myaxis ) )
+                        if myaxis == ax:
+                            tarfile = os.path.join(slhadir,fname_)
+                            hasCorrectAxis = True
+                            break
+            ## we need "local" options, since we switch one flag
+            pnamedTarball = namedTarball
+            if not hasCorrectAxis:
+                pnamedTarball = None
+                tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+            localopts = copy.deepcopy ( options )
+            if hasattr ( txname, "xrange" ):
+                localopts = addRange ( "x", localopts, txname.xrange, ax )
+            if hasattr ( txname, "yrange" ):
+                localopts = addRange ( "y", localopts, txname.yrange, ax )
+            for p in prettyorugly:
+                validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
+                              gkfactor, p, combine, namedTarball = pnamedTarball )
+                localopts["generateData"] = False
+        logger.info( "------ %s %s validated in  %.1f min %s" % \
+                     (RED, txnameStr,(time.time()-txt0)/60., RESET) )
+    logger.info( "--- %s %s validated in %.1f min %s" % \
+                 (RED, expRes.globalInfo.id,(time.time()-expt0)/60., RESET) )
+
+def run ( expResList : list[ExpResult], options : dict, 
+          keep : bool, db : Database ) -> None:
     """
     Loop over experimental results and validate plots
     :param options: all flags in the "options" part of the ini file
@@ -234,180 +421,7 @@ def run ( expResList, options : dict, keep, db ):
     :param db: database, so we can check if ratio plots are desirable
     """
     for expRes in expResList:
-        expt0 = time.time()
-        logger.info( f"--- {GREEN} validating {expRes.globalInfo.id} {RESET}" )
-        #Loop over pre-selected txnames:
-        txnamesStr = []
-        txnames = []
-        for tx in expRes.getTxNames():
-            if 'assigned' in tx.constraint:
-                continue  #Skip not assigned constraints
-            if tx.txName in txnamesStr:
-                continue #Do not include a txname twice (if it appears in more than one dataset)
-            txnames.append(tx)
-            txnamesStr.append(tx.txName)
-
-        if not txnames:
-            logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
-            continue
-        pretty = str(options["prettyPlots"]).lower()
-        if pretty in [ "false", "no", "0" ]:
-            pretty = False
-        elif pretty in [ "true", "yes", "1" ]:
-            pretty = True
-        prettyorugly = [ pretty ]
-        if pretty=="both":
-            prettyorugly = [ True, False ]
-        for itx,txname in enumerate(txnames):
-            txnameStr = txname.txName
-            txt0 = time.time()
-            stype=""
-            if combine:
-                stype=" (combine) "
-            logger.info( f"------ {GREEN} validating {txnameStr}{stype} {RESET}" )
-            namedTarball = None
-            if not tarfiles:
-                tarfile = txnameStr+".tar.gz"
-            else:
-                tarfile = os.path.basename(tarfiles[itx])
-            if hasattr ( txname, "validationTarball" ):
-                tarfile = txname.validationTarball
-                namedTarball = tarfile
-                if type(tarfile) == list:
-                    l=f"Database entry specifies validation tarballs: {','.join(tarfile)}. Will use them."
-                else:
-                    l=f"Database entry specifies a validation tarball: {tarfile}. Will use it."
-                logger.info( l )
-            # tarfile = os.path.join(slhadir,tarfile)
-
-            # flag needed to identify the case where axes are given
-            # for named tarballs, but current axis is different
-            hasCorrectAxis=False
-            if options["generateData"] != False:
-                tokens = tarfile
-                if type(tokens) == str:
-                    tokens = [ tarfile ]
-                #tokens = tarfile.split(";")
-                for tf in tokens:
-                    tf = tf.strip()
-                    #  and not os.path.isfile(tarfile):
-                    fname = tf
-                    if ":" in tf:
-                        axis,fname = fname.split(":")[:2]
-                    else:
-                        hasCorrectAxis = True
-                    tarfile = os.path.join(slhadir,fname )
-                    if not os.path.isfile ( tarfile ):
-                        logger.info( 'Missing %s file for %s.' % ( tarfile, txnameStr))
-                # continue
-
-            gkfactor = 1.
-            #Define k-factors
-            if txnameStr.lower() in kfactorDict:
-                gkfactor = float(kfactorDict[txnameStr.lower()])
-
-            #Loop over all axes:
-            if not isinstance(txname.axes,list):
-                axes = [txname.axes]
-            else:
-                axes = txname.axes
-            axis = options["axis"]
-            if axis in [ None, "None", "" ]:
-                for ax in axes:
-                    hasCorrectAxis_ = hasCorrectAxis
-                    x,y,z,w = var("x y z w")
-                    ax = str(eval(ax)) ## standardize the string
-                    kfactor = gkfactor
-                    fname_ = "none"
-                    if type(namedTarball) == str and ":" in namedTarball:
-                        myaxis,fname_= namedTarball.split(":")[:2]
-                        myaxis = str ( eval ( myaxis ) )
-                        if myaxis == ax:
-                            hasCorrectAxis_ = True
-                            tarfile = os.path.join(slhadir,fname_)
-                    elif type(namedTarball) == list:
-                        # looks like were given multiples
-                        for nt in namedTarball:
-                            if ":" in nt:
-                                myaxis,fname_= nt.split(":")[:2]
-                                myaxis = str ( eval ( myaxis ) )
-                                if myaxis == ax:
-                                    hasCorrectAxis_ = True
-                                    pnamedTarball = fname_
-                                    tarfile = os.path.join(slhadir,fname_)
-                                    break
-                    if fname_ in kfactorDict:
-                        # print ( "namedTarball", namedTarball, "ax", ax )
-                        if type(namedTarball) == str and ":" in namedTarball:
-                            myaxis,fname_= namedTarball.split(":")[:2]
-                            myaxis = str ( eval ( myaxis ) )
-                            if myaxis == ax:
-                                kfactor = float(kfactorDict[fname_])
-                                logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
-                        else:
-                            kfactor = float(kfactorDict[fname_])
-                            logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
-                    localopts = copy.deepcopy ( options )
-                    if hasattr ( txname, "xrange" ):
-                        localopts = addRange ( "x", localopts, txname.xrange, ax )
-                    if hasattr ( txname, "yrange" ):
-                        localopts = addRange ( "y", localopts, txname.yrange, ax )
-                    pnamedTarball = namedTarball
-                    if not hasCorrectAxis_:
-                        pnamedTarball = None
-                        tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
-
-                    for p in prettyorugly:
-                        re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
-                            db, kfactor, p, combine, namedTarball = pnamedTarball,
-                            keep = keep )
-                        # if not ":" in namedTarball:
-                        localopts["generateData"]=False
-                        oldNamedTarball = pnamedTarball
-                        validationDir = re.getValidationDir ( None )
-                        datafile = re.getDataFile(validationDir)
-                    checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
-                                         localopts, datafile, re.niceAxes )
-                    checkForBestSRPlots ( expRes, txnameStr, ax, db, combine, 
-                                         localopts, datafile, re.niceAxes )
-            else: # axis is not None
-                x,y,z = var("x y z")
-                ax = str(eval(axis)) ## standardize the string
-                if type(namedTarball) == str and ":" in namedTarball:
-                    myaxis,fname_= namedTarball.split(":")[:2]
-                    myaxis = str ( eval ( myaxis ) )
-                    if myaxis == ax:
-                        tarfile = os.path.join(slhadir,fname_)
-                        hasCorrectAxis = True
-                if type(namedTarball) == list:
-                    # looks like were given multiples
-                    for nt in namedTarball:
-                        if ":" in nt:
-                            myaxis,fname_= nt.split(":")[:2]
-                            myaxis = str ( eval ( myaxis ) )
-                            if myaxis == ax:
-                                tarfile = os.path.join(slhadir,fname_)
-                                hasCorrectAxis = True
-                                break
-                ## we need "local" options, since we switch one flag
-                pnamedTarball = namedTarball
-                if not hasCorrectAxis:
-                    pnamedTarball = None
-                    tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
-                localopts = copy.deepcopy ( options )
-                if hasattr ( txname, "xrange" ):
-                    localopts = addRange ( "x", localopts, txname.xrange, ax )
-                if hasattr ( txname, "yrange" ):
-                    localopts = addRange ( "y", localopts, txname.yrange, ax )
-                for p in prettyorugly:
-                    validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
-                                  gkfactor, p, combine, namedTarball = pnamedTarball )
-                    localopts["generateData"] = False
-            logger.info( "------ %s %s validated in  %.1f min %s" % \
-                         (RED, txnameStr,(time.time()-txt0)/60., RESET) )
-        logger.info( "--- %s %s validated in %.1f min %s" % \
-                     (RED, expRes.globalInfo.id,(time.time()-expt0)/60., RESET) )
-
+        runForOneResult ( expRes, options, keep, db )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          options : dict, tarfiles=None,verbosity='error', combine=False, force_load = None,
