@@ -16,6 +16,7 @@
 # from __future__ import print_function
 import setPath
 from smodels.experiment.databaseObj import Database
+from smodels.experiment.txnameObj import TxName
 from smodels_utils.helper.various import removeAnaIdSuffices
 import os, time
 
@@ -27,7 +28,7 @@ except:
 class SmsDictWriter:
     feynpath = "../../smodels.github.io/feyn/straight/"
 
-    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, 
+    def __init__ ( self, database, drawFeyn, xkcd, results, addVer,
                    dryrun, checkfirst, copy ):
         self.databasePath = database
         self.hasWarned=False
@@ -80,21 +81,21 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             self.f.write ( "| "+"-"*l+ " " )
         self.f.write ( "|\n" )
 
-
-    def cleanUp ( self, txname ):
-        constr = txname.constraint
+    def getConstraint ( self, txname : TxName ) -> str:
+        """ given a txname object, retrieve the constraint """
+        constr = ";".join ( map ( str, list ( txname.smsMap.keys() ) ) )
+        return constr
+        """
         pos = constr.find("*")
         pos2 = constr.find("[")
         if pos > 0 and pos2 > pos:
             constr = constr[pos+1:]
         constr=constr.replace("(","").replace(")","")
-        fs = [ "MET", "MET" ]
-        if hasattr ( txname, "finalState" ):
-            fs = txname.finalState
-        ret = "%s`<BR>`(%s)" % (constr, ", ".join ( fs ) )
-        return ret
+        return constr
+        """
 
-    def getTopos( self ):
+    def getAllTopologies( self ) -> dict:
+        """ get the txnames and their constraints """
         topos = {}
         expresults = self.database.getExpResults( )
         #expresults = self.database.expResultList ## also non-validated
@@ -106,26 +107,27 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 txnames = dataset.txnameList
                 txnames.sort()
                 for txname in txnames:
-                    stxname = str ( txname )
+                    tx = str ( txname ) # e.g. T1
+                    con = self.getConstraint ( txname )
                     if txname in topos:
-                        if txname.constraint != topos[stxname]:
-                            print ( "[smsDictionary] txnames for %s mismatch: %s != %s" %
-                                    ( txname, txname.constraint, topos[stxname] ) )
-                    if not stxname in topos.keys():
-                        topos[stxname]=set()
-                    con =  self.cleanUp ( txname )
-                    topos[stxname].add ( con )
+                        if con != topos[stxname]:
+                            print ( f"[smsDictionary] txnames for {txname} mismatch: {txname.constraint} != {topos[stxname]}" )
+                    if not con in topos.keys():
+                        topos[tx]=set()
+                    topos[tx].add ( con )
         keys = list(topos.keys())
         keys.sort()
         for k in keys:
             v = topos[k]
             topos[k]="; ".join ( v )
+        # import IPython ; IPython.embed ( colors="neutral" ) ; import sys; sys.exit()
         return topos
 
-    def writeTopos ( self ):
+    def writeAllTopologies ( self ):
+        """ write the table with all topologies (Tx names) """
         if not os.path.exists ( "../feyn/" ):
             C.getoutput ( "mkdir ../feyn" )
-        topos = writer.getTopos()
+        topos = writer.getAllTopologies()
         keys = list ( topos.keys() )
         keys.sort()
         multipleNames = {}
@@ -143,13 +145,13 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             txnames = multipleNames [ constraint ]
             if txname == list(txnames)[0]: ## only write if first in line
                 i+=1
-                self.writeTopo ( i, txnames, constraint, first )
+                self.writeOneTopology ( i, txnames, constraint, first )
                 first = False
 
     def run ( self ):
         self.header()
         self.tableHeader ()
-        self.writeTopos ( )
+        self.writeAllTopologies ( )
         self.footer()
         self.close()
         self.move()
@@ -202,12 +204,13 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             a = C.getoutput ( cmd )
             print ( "  `-",a )
 
-    def writeTopo ( self, nr, txnames, constraint, first ):
-        """ :param first: is this the first time I write a topo? """
-        print ( f"FIXME adapt!!!" )
-        ## print ( f"write topology with {constraint}" )
-        # self.f.write ( "| %d | <:>" % nr )
-        self.f.write ( "| %d | " % nr )
+    def createEntriesForTopology ( self, nr : int, txnames : set,
+            constraint : str ) -> list:
+        """ create a list corresponding to the elements in the entry
+            of the table for one topology """
+        #print ( f"FIXME adapt the topology names!!!" )
+        #print ( f"write topology with {constraint}" )
+        entries = [ nr ]
         ltxes = []
         for txname in txnames:
             txnameabb = txname
@@ -219,12 +222,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                         pos = txnameabb.find ( ua )
                 txnameabb=txnameabb[:pos]+"-<br>"+txnameabb[pos:]
             ltxes.append ( '<a name="%s"></a>**%s**<br>' % ( txname, txnameabb ) )
-            # ltxes.append ( '<a name="%s"><b>%s</b></a>' % ( txname, txname ) )
-        self.f.write ( "<BR>".join ( ltxes ) )
+        entries.append ( "<BR>".join ( ltxes ) )
         # FIXME v3
-        # constraint = constraint[constraint.find("["):]
-        # constraint = constraint.replace( " ", "" )
-        # constraint = constraint.replace ( "jet", "q" )
         if self.drawFeyn:
             for txname in txnames:
                 exists = os.path.exists ( f"{SmsDictWriter.feynpath}/{txname}.png" )
@@ -242,27 +241,27 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         constraint = constraint.replace ( "photon", "y" )
         constraint = constraint.replace ( "higgs", "h" )
         # constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
-        constraint = constraint.replace ( ";",";`<BR>`" )
+        p = constraint.find("`<BR>")
+        if p > 0:
+            constraint = constraint[:p]
+        #constraint = constraint.replace ( ";",";`<BR>`" )
         constraint = "`" + constraint + "`"
         #if len(constraint)>20:
         #    print ( "constraint", constraint )
         #    constraint = constraint[:20]+"`<BR>`"+constraint[20:]
-        self.f.write ( f" | {constraint}" ) ## "Topology" column
+        # print ( f"finally we end up with {constraint}\n" )
+        entries.append ( constraint )
         style = "straight"
         if self.xkcd:
             style = "xkcd"
         ## now "Graph" column
-        # self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
-        self.f.write ( ' | <img alt="%s" src="../feyn/%s/%s.png" height="130">' % ( txname, style, txname ) )
+        entries.append ( f'<img alt="{txname}" src="../feyn/{style}/{txname}.png" height="130">' )
         ## now "Appears in" column
+
         if self.hasResultsColumn:
-            self.f.write ( " | " )
             results = self.database.getExpResults ( txnames = txnames )
-            if first:
-                # self.f.write ( "<25%>" ) ## make sure the last column isnt too small
-                pass
             if len(results)>9:
-                self.f.write ( "[many (%d)](ListOfAnalyses%sWithSuperseded)" % (len(results),self.ver) )
+                entries.append ( f"[many ({len(results)})](ListOfAnalyses{self.ver}WithSuperseded)" )
             else:
                 l = []
                 hi = [] ## remove dupes
@@ -270,8 +269,6 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     ID = removeAnaIdSuffices ( res.globalInfo.id )
                     if ID in hi:
                         continue
-                    #ID = ID.replace("CMS-","**C**-" )
-                    #ID = ID.replace("ATLAS-","**A**-" )
                     hi.append ( ID )
                     supers = ""
                     if hasattr ( res.globalInfo, "supersededBy" ):
@@ -280,7 +277,15 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     l.append ( "[%s](%s)" % ( ID, res.globalInfo.url ) )
                     # before we had a link to the entry at ListOfAnalyses
                     # l.append ( "[%s](ListOfAnalyses%s%s#%s)" % ( ID, self.ver, supers, ID ) )
-                self.f.write ( "<BR>".join ( l ) )
+                entries.append ( "<BR>".join ( l ) )
+        return entries
+
+    def writeOneTopology ( self, nr : int, txnames : set, constraint : str,
+            first : bool ) -> None:
+        """ :param first: is this the first time I write a topo? """
+        elements = self.createEntriesForTopology ( nr, txnames, constraint )
+        for element in elements:
+            self.f.write ( f"| {element} " )
         self.f.write ( "|\n" )
 
 if __name__ == '__main__':
