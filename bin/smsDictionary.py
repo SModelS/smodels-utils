@@ -62,7 +62,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         return
 
     def tableHeader ( self ):
-        columns=[ "#", "Tx", "Topology", "Graph" ]
+        columns=[ "#", "Tx", "Process", "SMS Graph" ]
         if self.hasResultsColumn:
             columns.append ( "Appears in" )
         lengths=[]
@@ -157,13 +157,21 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
     def createSmsGraph ( self, txname, constraint ):
         """ create the sms graphs, store them in ../smsgraphs/ """
-        print ( "txname", txname, type(txname ) )
-        print ( "constraint", constraint, type(constraint ) )
-        print ( "txnameobj", self.constraintsToTxNames[txname][constraint] )
+        #print ( "txname", txname, type(txname ) )
+        #print ( "constraint", constraint, type(constraint ) )
+        #print ( "txnameobj", self.constraintsToTxNames[txname][constraint] )
         path = f"../smsgraphs/{txname}.png"
         smsMap = self.constraintsToTxNames[txname][constraint].smsMap
         for mp in smsMap.keys():
-            mp.draw(filename=path,view=False)
+            import shutil
+            if shutil.which ( "convert" ):
+                tmp = "/dev/shm/tmp.png"
+                mp.draw(filename=tmp,view=False)
+                cmd = f"convert {tmp} -transparent white {path}"
+                import subprocess
+                subprocess.getoutput ( cmd )
+            else:
+                mp.draw(filename=path,view=False)
         # import sys; sys.exit()
 
     def createEntriesForTopology ( self, nr : int, txnames : set[str],
