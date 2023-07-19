@@ -235,8 +235,17 @@ CMS are for on- and off-shell at once.
     def isOneDimensional( self, txname ):
         """ simple method that tells us if its a 1d map. In this case, we dont
             do "pretty", we use ugly plots for pretty. """
-        r = not ( "y" in str(txname.axes) )
-        return r
+        if hasattr ( txname, "axes" ):
+            r = not ( "y" in str(txname.axes) )
+            return r
+        if not hasattr ( txname, "axesMap" ):
+            logger.error ( "we have neither an axes field nor an axesMap field?" )
+            sys.exit(-1)
+        maps = txname.axesMap
+        if "y" in m:
+            return False
+        return True
+
 
     def writeExpRes( self, expRes, tpe ):
         """ write the experimental result expRes

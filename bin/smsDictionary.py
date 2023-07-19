@@ -81,7 +81,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         tmp = []
         for c in constraints:
             tmp.append ( c.replace(", (",",`<BR> &rarr;`(" ) )
-        constr = ";".join ( tmp )
+        constr = "`<BR>`".join ( tmp )
         txn = txname.txName
         if not txn in self.constraintsToTxNames:
             self.constraintsToTxNames[txn]={}
@@ -160,9 +160,11 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         #print ( "txname", txname, type(txname ) )
         #print ( "constraint", constraint, type(constraint ) )
         #print ( "txnameobj", self.constraintsToTxNames[txname][constraint] )
-        path = f"../smsgraphs/{txname}.png"
+        pathbase = f"../smsgraphs/{txname}"
         smsMap = self.constraintsToTxNames[txname][constraint].smsMap
-        for mp in smsMap.keys():
+        for mp,name in smsMap.items():
+            path = f"{pathbase}_{name.replace('sms_','')}.png"
+            # print ( f"plotting {txname} {constraint} to {path} {name}" )
             import shutil
             if shutil.which ( "convert" ):
                 tmp = "/dev/shm/tmp.png"
@@ -196,13 +198,15 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         # FIXME v3
         if self.drawSMSGraphs:
             for txname in txnames:
-                exists = os.path.exists ( f"{SmsDictWriter.smsgraphpath}/{txname}.png" )
+                ext = 1
+                pngpath = f"{SmsDictWriter.smsgraphpath}/{txname}_{ext}.png"
+                exists = os.path.exists ( pngpath )
                 if not self.checkfirst and self.copy and exists and not self.hasWarned:
                     print ( f"[smsDictionary] WARNING: will overwrite {SmsDictWriter.smsgraphpath}/{txname}.png" )
                     print ( "[smsDictionary] use -s if that is not what you wanted" )
                     self.hasWarned = True
                 if self.checkfirst and exists:
-                    print ( "[smsDictionary] skipping %s.png" % txname )
+                    print ( f"[smsDictionary] skipping {pngpath}" )
                     if self.hasWarned == False:
                         self.hasWarned=True
                         print ( "[smsDictionary] (it exists already and you specified to skip existing graphs. if that is not what you want, do not use -s)." )
@@ -213,7 +217,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             constraint = constraint.replace( k, v )
         constraint = "`" + constraint + "`"
         entries.append ( constraint ) # "Topology" column
-        entries.append ( f'<img alt="{txname}" src="../smsgraphs/{txname}.png" height="130">' ) # "Graph" column
+        ext = 1
+        entries.append ( f'<img alt="{txname}_{ext}" src="../smsgraphs/{txname}_{ext}.png" height="130">' ) # "Graph" column
 
         if self.hasResultsColumn:
             results = self.database.getExpResults ( txnames = txnames )
