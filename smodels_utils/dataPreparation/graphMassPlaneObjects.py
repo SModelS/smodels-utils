@@ -51,7 +51,7 @@ class GraphMassPlane(object):
 
     def getNiceAxes(self,axesStr):
         """
-        Convert the axes definition format ('[[x,y],[x,y]]')
+        Convert the axes definition format, e.g. {0 : x, 1 : y, 2 : x, 3 : y}
         to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
 
         :param axesStr: string defining axes in the old format
@@ -59,13 +59,15 @@ class GraphMassPlane(object):
         :return: string with a nicer representation of the axes (more suitable for printing)
         """
 
-        x,y,z,w = var('x y z w')
         if axesStr == "":
             logger.error ( "Axes field is empty: cannot validate." )
             return None
-        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
-        ret = str(axes).replace(" ","_").replace("{","")
-        ret = ret.replace("}","")
+        x,y,z,w = var('x y z w')
+        ret = str(eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w}))
+        ret = ret.replace(" ","")
+        ret = ret.replace(":","")
+        ret = ret.replace(",","_")
+        ret = ret.replace("{","").replace("}","")
         return ret
 
 
@@ -84,7 +86,6 @@ class GraphMassPlane(object):
                               variables 'x', 'y' and numbers as float
         """
 
-        self.branches = []
         self._txDecay = txDecay
         self.figureUrl = None
         self.dataUrl = None
@@ -258,11 +259,8 @@ class GraphMassPlane(object):
         :return: list containing two other lists. Each list contains floats, representing
         the masses of the particles of each branch in GeV
         """
-
-        if self.branches == None:
-            return []
-        massArray = [br.getParticleMasses(**xMass) for br in self.branches]
-        return massArray
+        print ( "FIXME implement, getParticleMasses", xMass )
+        sys.exit()
 
     def getXYValues(self,massArray,widthArray=None):
 
@@ -277,11 +275,15 @@ class GraphMassPlane(object):
         we assume a width-independent plane.
         :raise massArrayLenError: if length of mass array is unequal 2
         :raise unequalXYValuesError: if the branches return different values for x or y
-        :return: None if mass array do not met the conditions of one branch
+        :return: None if mass array do not meet the conditions of one branch
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         #print ( ">> widthArray", widthArray )
-        # print ( ">> massArray", massArray )
+        print ( "FIXME implement!!" )
+        print ( ">> massArray", massArray )
+        print ( ">> widthArray", widthArray )
+        raise Exception ( f"massArray {massArray} width {widthArray}" )
+        sys.exit()
 
         if len(massArray) != len(self.branches):
             logger.error("dimension of mass array (%d) inconsistent with branches length (%d)" % ( len(massArray), len(self.branches) ) )

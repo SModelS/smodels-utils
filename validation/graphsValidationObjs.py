@@ -23,7 +23,7 @@ except:
 from plottingFuncs import getExclusionCurvesFor
 from validationHelpers import point_in_hull
 import tempfile,tarfile,shutil,copy
-from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
 from smodels.experiment.databaseObj import Database
 from sympy import var
@@ -58,8 +58,6 @@ class ValidationPlot():
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
-        print ( "validationObjects init", Axes )
-
         self.expRes = copy.deepcopy(ExptRes)
         self.db = db
         self.keep = keep
@@ -68,10 +66,11 @@ class ValidationPlot():
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
-        self.massPlane = MassPlane.fromString(self.txName,self.axes)
+        self.massPlane = GraphMassPlane.fromString(self.txName,self.axes)
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.currentSLHADir = None
+        self.outputDir = None # define an output directory
         self.data = []
         self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
@@ -381,7 +380,7 @@ class ValidationPlot():
                 promptWidth = self.options["promptWidth"]
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
-            f.write("[printer]\noutputFormat = version2\noutputType = python\n")
+            f.write("[printer]\noutputFormat = version3\noutputType = python\n")
             f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"
@@ -507,86 +506,7 @@ class ValidationPlot():
         """ is this a topology with a width-dependency? """
         return "(" in self.axes
 
-
-    def getXYFromSLHAFileName ( self, filename, asDict=False ):
-        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
-        Meant as fallback for when no ExptRes is available.
-        :param asDict: if True, return { "x": x, "y": y } dict, else list
-        """
-        from filenameCoords import coords
-        if not self.txName in coords:
-            return self.getXYFromSLHAFileNameOld ( filename, asDict )
-        oldc = coords[self.txName]
-        tname = filename.replace(".slha","")
-        tokens = tname.split("_")
-        replacedc = copy.deepcopy ( oldc )
-        for ib,b in enumerate(oldc["masses"]):
-            for iv,v in enumerate(b):
-                if v >= len(tokens):
-                    logger.error ( f"filename {filename} does not have {v} labels. Can you please check filenameCoords.py, entry for {self.txName}? It currently reads: {oldc}." )
-                    sys.exit(-1)
-
-                try:
-                    replacedc["masses"][ib][iv]=float(tokens[v])
-                except ValueError as e:
-                    print ( f"[validationObjs] caught ValueError {e}" )
-                    if v == 0:
-                        print ( "[validationObj] seems like you used index 0 in filenameCoords.py, which points to the tx name" )
-                    sys.exit(-1)
-                except IndexError as e:
-                    print ( "[validationObjs] tokens {tokens} v {v}" )
-                    print ( "[validationObjs] replacedc {replacedc['masses']}, ib {ib} iv {iv}" )
-                    print ( f"[validationObjs] caught IndexError {e}" )
-                    sys.exit(-1)
-        if type(oldc["widths"]) == list:
-            for ib,b in enumerate(oldc["widths"]):
-                for iv,v in enumerate(b):
-                    replacedc["widths"][ib][iv]=float(tokens[v])
-        massPlane = MassPlane.fromString(self.txName,self.axes)
-        varsDict = massPlane.getXYValues(replacedc["masses"],replacedc["widths"])
-        if varsDict == None or asDict:
-            return varsDict
-        return (varsDict["x"],varsDict["y"])
-
-    def getXYFromSLHAFileNameOld ( self, filename, asDict=False ):
-        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
-        Meant as fallback for when no ExptRes is available.
-        :param asDict: if True, return { "x": x, "y": y } dict, else list
-        """
-        masses = self.getMassesFromSLHAFileName ( filename )
-        widths = self.getWidthsFromSLHAFileName ( filename )
-        if ".5" in self.axes:
-            if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.1:
-                masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
-            if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.1:
-                masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
-        if len(masses[0])>1:
-            ret = [ masses[0][0], masses[0][1] ]
-        else:
-            ret = [ masses[0][0], masses[1][0] ]
-
-        varsDict = self.massPlane.getXYValues(masses,None)
-        if varsDict == None: ## not on this plane!!!
-            ret = None
-        if varsDict != None and "y" in varsDict:
-            ret = [ varsDict["x"], varsDict["y"] ]
-        if "T3GQ" in filename: ## fixme we sure?
-            ret = [ masses[1][0], masses[1][1] ]
-        if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
-            ret = [ masses[0][0], masses[0][1] ]
-        if "THSCPM6" in filename:
-            ret = [ masses[0][0], masses[0][2] ]
-        if asDict and ret !=None:
-            ret = { "x": ret[0], "y": ret[1] }
-        # now remove y values
-        if not "y" in self.axes:
-            if type(ret) == dict:
-                ret.pop("y")
-            if type(ret) == list:
-                ret = [ ret[0] ]
-        return ret
-
-    def slhafileInData ( self, slhafile ):
+    def slhafileInData ( self, slhafile : str ) -> bool:
         """ is slhafile already in the data? """
         for d in self.data:
             slhashort = os.path.basename ( slhafile )
@@ -594,20 +514,10 @@ class ValidationPlot():
                 return True
         return False
 
-    def getDataFromPlanes(self):
-        """
-        Runs SModelS on the SLHA files from self.slhaDir and store
-        the relevant data in self.data.
-        Uses runSModelS.main.
-        Result is stored in self.data
-        """
-
-        #Get list of SLHA files:
-        if not self.slhaDir:
-            logger.warning("SLHA folder not defined")
-            return False
+    def runSModelS ( self ) -> list:
+        """ run SModelS proper """
         self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.debug("SLHA files for validation at %s" %self.currentSLHADir)
+        logger.debug( f"SLHA files for validation at {self.currentSLHADir}" )
 
         #Get list of input files to be tested
         try:
@@ -638,12 +548,12 @@ class ValidationPlot():
             outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
         else:
             os.mkdir ( outputDir )
+        self.outputDir = outputDir
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
-        logger.info("SLHA dir %s" % self.slhaDir )
-        logger.info("Parameter file: %s" %parameterFile)
-        # print ("Parameter file: %s" %parameterFile)
+        logger.info( f"SLHA dir {self.slhaDir}" )
+        logger.info( f"Parameter file: {parameterFile}" )
 
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
@@ -660,9 +570,25 @@ class ValidationPlot():
             timeOut = self.options["timeOut"]
         modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
+        return fileList
+
+    def getDataFromPlanes(self):
+        """
+        Runs SModelS on the SLHA files from self.slhaDir and store
+        the relevant data in self.data.
+        Uses runSModelS.main.
+        Result is stored in self.data
+        """
+        #Get list of SLHA files:
+        if not self.slhaDir:
+            logger.warning("SLHA folder not defined")
+            return False
+
+        # first, run SModelS
+        fileList = self.runSModelS()
 
         #Define original plot
-        massPlane = MassPlane.fromString(self.txName,self.axes)
+        massPlane = GraphMassPlane.fromString(self.txName,self.axes)
         if massPlane == None:
             logger.error ( "no mass plane!" )
             return False
@@ -680,7 +606,7 @@ class ValidationPlot():
                 continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
-            fout = os.path.join(outputDir,slhafile + '.py')
+            fout = os.path.join(self.outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
                     ## suppress subsequently same error messages
@@ -698,12 +624,7 @@ class ValidationPlot():
             exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.debug("No results for %s " %slhafile)
-                ## still get the masses from the slhafile name
-                axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
-                ## log also the errors in the py file
-                Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
-                self.data.append ( Dict )
+                logger.error( f"No results for {slhafile} FIXME implement sth" )
                 continue
             dt = None
             if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
@@ -741,6 +662,8 @@ class ValidationPlot():
                 logger.error("Something went wrong. Obtained results for the wrong txname")
                 return False
 
+            print ( "@@graphsValidationObjs", expRes["Mass (GeV)"] )
+            sys.exit()
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
@@ -748,18 +671,6 @@ class ValidationPlot():
             width = None
             if "Width (GeV)" in expRes:
                 width = expRes['Width (GeV)']
-            #print ( "roundmass", slhafile, roundmass )
-            #print ( "expRes", expRes )
-            if roundmass is None or "TGQ12" in slhafile:
-                ## FIXME, for TGQ12 why cant i use exptres?
-                import inspect
-                frame = inspect.currentframe()
-                line = frame.f_lineno
-                #print ( "roundmass is not given in validationObjs.py:%s" % line )
-                #print ( "we try to extract the info from the slha file name %s" % \
-                #        slhafile )
-                roundmass = self.getMassesFromSLHAFileName ( slhafile )
-            # print ( "after", slhafile, roundmass )
             mass = [br[:] for br in roundmass]
             slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
@@ -770,7 +681,7 @@ class ValidationPlot():
                             mass[i][im] = omass
                             break
 
-            #print ( "get xy", mass, width )
+            print ( "graphsValidationObjs mass", mass, "width", width, "roundmass", roundmass )
             varsDict = massPlane.getXYValues(mass,width)
             #print ( "varsdict", varsDict )
             if varsDict is None:

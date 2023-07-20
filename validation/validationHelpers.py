@@ -8,10 +8,32 @@
 
 """
 
+from typing import Union, List, Dict, Text
+
 ## what do we set the width of stable particles to,
 ## for plotting?
 widthOfStableParticles = 1e-25
 
+def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
+    """ determine whether a given axis is v2-type ([[x,y],[x,y]]) or v3-type
+    { 0: x, 1: y }. FIXME shouldnt be needed once we completed migrated to v3.
+    :returns: v2 or v3 or None
+    """
+    if type(axis)==str:
+        from sympy import var
+        x,y,z,w = var('x y z w')
+        axis = eval(axis)
+    if type(axis)==dict:
+        return "v3"
+    if type(axis)==list:
+        if len(axis)==0:
+            return None
+        if type(axis[0])==list:
+            return "v2"
+        if type(axis[0])==dict:
+            return "v3"
+        return None
+    return None
 
 def retrieveValidationFile ( filename, tarballname = None ):
     """ retrieve a certain validation file from the right tarball

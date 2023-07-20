@@ -19,6 +19,7 @@ import argparse,time
 from sympy import var
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.expResultObj import ExpResult
+from validationHelpers import getAxisType
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -55,9 +56,15 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     """
 
     starting( expRes, txnameStr, axes )
-    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,db,slhadir = None,
-                        options = options, kfactor=kfactor,
-                        namedTarball = namedTarball, keep = keep, combine = combine )
+    axisType = getAxisType(axes)
+    if axisType=="v3":
+        valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
+                slhadir = None, options = options, kfactor=kfactor,
+                namedTarball = namedTarball, keep = keep, combine = combine )
+    else:
+        valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,db,
+                slhadir = None, options = options, kfactor=kfactor,
+                namedTarball = namedTarball, keep = keep, combine = combine )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -559,7 +566,7 @@ if __name__ == "__main__":
     utilsPath = parser.get("path", "utilsPath")
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
-    from validation import plottingFuncs, validationObjs
+    from validation import plottingFuncs, validationObjs, graphsValidationObjs
     from smodels.experiment.databaseObj import Database
 
     #Control output level:
@@ -567,6 +574,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
+    graphsValidationObjs.logger.setLevel(level=numeric_level)
     from smodels.base import smodelsLogging
     smodelsLogging.setLogLevel( args.verbose )
 
