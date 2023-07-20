@@ -50,7 +50,8 @@ class GraphMassPlane(object):
                         'obsExclusion','obsExclusionP1','obsExclusionM1',
                         'expExclusion','expExclusionP1','expExclusionM1']
 
-    def getNiceAxes(self,axesStr):
+    @classmethod
+    def getNiceAxes(cls,axesStr):
         """
         Convert the axes definition format, e.g. {0 : x, 1 : y, 2 : x, 3 : y}
         to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
@@ -268,11 +269,13 @@ class GraphMassPlane(object):
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         # print ( ">> parameters", parameters )
+        # print ( ">> parametersMap", self.parametersMap )
         ret = {}
         for index,param in self.parametersMap.items():
             ## FIXME when is it widths instead??
             # print ( f"parameters are {parameters}" )
             ret[str(param)] = float ( parameters[index][1] )
+        # print ( ">> ret", ret )
         return ret
 
 class Axes(object):
@@ -497,7 +500,7 @@ class Axes(object):
         if self.hasWarned[line]<2:
             logger.error ( line )
 
-    def getXYValues(self,parametersMap,widthArray=None):
+    def getXYValues(self,parametersMap):
 
         """
         translate a mass array (for single branch) to a point of the plot

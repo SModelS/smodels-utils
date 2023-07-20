@@ -207,9 +207,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     nleg = 5
     from sympy import var
     xvar_,yvar_,zvar_,wvar_ = var( "xvar_ yvar_ zvar_ wvar_" )
-    print ( "uglySeaborn axes", validationPlot.axes, type(validationPlot.axes) )
+    # print ( "uglySeaborn axes", validationPlot.axes, type(validationPlot.axes) )
     g=eval(validationPlot.axes.replace("x","xvar_").replace("y","yvar_").replace("z","zvar_").replace("w","wvar_" ) )
-    print ( "g is", g, type(g) )
+    # print ( "g is", g, type(g) )
     if type(g) == dict:
         reverse = False
     else:

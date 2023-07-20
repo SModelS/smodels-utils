@@ -582,12 +582,17 @@ class ValidationPlot():
                 return txn.dataMap
         return None
 
-    def constructParameterVector ( self, masses, widths ):
+    def constructParameterVector ( self, masses : list, widths : list ) -> list:
+        """ given the knowledge of the dataMap, construct the 
+        container of parameters to be fed into the graphs map """
         dataMap = self.getDataMap()
-        ret=copy.deepcopy ( masses )
+        ret=[float("nan")]*len(masses)
         for index,info in dataMap.items():
+            ## info is, e.g.: (1,'mass',GeV)
             if info[1]=="width":
-                ret[index] = widths[index]
+                ret[index] = widths[info[0]-1]
+            if info[1]=="mass":
+                ret[index] = masses[info[0]-1]
         return ret
 
     def getDataFromPlanes(self):

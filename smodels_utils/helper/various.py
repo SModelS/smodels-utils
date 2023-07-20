@@ -111,7 +111,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     :param jsonfile: path to exclusion_lines.json file
     :param txname: the TxName in string format (i.e. T1tttt)
     :param axes: the axes definition in string format,
-                 e.g. [x, y, 60.0], [x, y, 60.0]]
+                 e.g. [x, y, 60.0], [x, y, 60.0]] or {0:x,1:y,...}
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
     :param ranges: if dict, then cut exclusion lines, e.g. 
@@ -139,6 +139,9 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     from sympy import var
     x,y,z,w = var('x y z w')
     caxes = eval ( maxes )
+    if type(caxes)==dict:
+        from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
+        maxes = GraphMassPlane.getNiceAxes ( maxes )
     exp = "obs"
     if expected:
         exp = "exp"
@@ -156,7 +159,13 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                 points = cutPoints ( points, ranges )
                 p1 = axis.find("_")
                 constr = axis[p1+1:]
-                caxis = eval(constr)
+                caxis = constr # eval(constr)
+                try:
+                    caxis = eval(constr) # for SModelS v2 axes
+                except SyntaxError as e:
+                    # for SModelS v3 axes
+                    caxes = GraphMassPlane.getNiceAxes ( axes )
+                # print ( f"comparing caxis {caxis},{type(caxis)} with {caxes},{type(caxes)}" )
                 if maxes != None and caxis != caxes: # cname != axis:
                     continue
                 # tgraph = exclusionCurveToTGraph ( points, cname )
