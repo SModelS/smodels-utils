@@ -847,6 +847,19 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
+def prettyAxesV3( validationPlot ) -> Union[None,str]:
+    """
+    get a description of the axes of validation plot
+    :param validationPlot: the validationPlot
+    :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
+
+    :return: list of constraints as latex, e.g.:
+             ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
+    """
+    # print ( f"here: {type(validationPlot)}" )
+    # print ( f"we have dataMap {validationPlot.getDataMap()}" )
+    return "mX = C1/N2, mY = N1"
+
 def prettyAxes( txname : str, axes : str, outputtype : str ="root" ) -> \
         Union[None,str]:
     """

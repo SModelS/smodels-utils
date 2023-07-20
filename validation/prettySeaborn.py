@@ -32,6 +32,7 @@ except:
 
 from scipy import interpolate
 import numpy as np
+from validationHelpers import getAxisType
 
 def pprint ( xs, ys, values, xrange = None, yrange = None ):
     """ pretty print the values, for debugging """
