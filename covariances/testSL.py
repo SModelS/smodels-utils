@@ -7,7 +7,7 @@ import array
 import time
 import random
 from smodels.tools.simplifiedLikelihoods import Data,UpperLimitComputer
-from smodels.tools.physicsUnits import fb
+from smodels.base.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
 import binned_model
 import os

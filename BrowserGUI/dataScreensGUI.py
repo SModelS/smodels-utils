@@ -26,7 +26,7 @@ from kivy.metrics import sp
 Window.clearcolor = [0.08627450980392157, 0.10196078431372549, 0.10588235294117647, 1.0]
 from dataObjectsGUI import ValItem, ExpResItem, PropItem, datasetItem, txnameItem
 sys.path.append(os.path.join(os.getenv("HOME"),'smodels'))
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 
 
 class MainScreen(BoxLayout):
@@ -445,11 +445,11 @@ class TxnameScreen(BoxLayout):
             txnameInfoList = ListView(adapter=list_adapter)
             txnameInfoList.children[0].bar_width = sp(5)
             txnameInfoList.size_hint_y = 0.6
-            txnameLabel = Label(text='%s Info:' %self.txname.getInfo('txName'), font_size = sp(20))
+            txnameLabel = Label(text='%s Info:' %self.txname.txName, font_size = sp(20))
             txnameLabel.size_hint_y = 0.1
             
-            if os.path.isfile('./feyn/'+self.txname.getInfo('txName')+'_feyn.png'):
-                txImage = Image(source='./feyn/'+self.txname.getInfo('txName')+'_feyn.png')
+            if os.path.isfile('./feyn/'+self.txname.txName+'_feyn.png'):
+                txImage = Image(source='./feyn/'+self.txname.txName+'_feyn.png')
                 txImage.size_hint = (0.2,0.5)
                 with txImage.canvas.before:
                     Color(1.,1.,1.,1.)            

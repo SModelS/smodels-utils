@@ -13,9 +13,17 @@ def printIndicator ( i ):
     if i % 10 == 0:
         print ( ".", flush=True, end="" )
 
+def getChi2 ( l, doIt = True ):
+    if not doIt:
+        return l
+    ret = - 2 * math.log ( l )
+    if ret > 200.:
+        ret = 200.
+    return ret
+
 def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
        equidistant = True, verbose = False, normalize = True,
-       expected = False ):
+       expected = False, useChi2 = False ):
     """ compute the likelhoods for theory prediction
     :param tpred: a theory prediction
     :param xmin: minimum mu
@@ -23,8 +31,11 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
     :param nbins: the number of bins
     :param equidistant: if False, allow for denser binning at center
     :param normalize: if true, normalize histogram
+    :param useChi2: chi2 values instead of likelihoods
     :returns dictionary of normalized likelihoods and normalization constant
     """
+    if useChi2: # they are mutually exclusive
+        normalize = False
 
     import numpy as np
     dx = ( xmax - xmin ) / nbins
@@ -59,6 +70,7 @@ def computeLlhdHisto ( tpred, xmin, xmax, nbins = 10,
             if verbose:
                 print ( f"[cov_helpers] {tpred.dataset.globalInfo.id} mu={mu:.3f} l={l:.3g}" )
         if l not in [ None ] and math.isfinite( l ):
+            l = getChi2 ( l, useChi2 )
             S+=l
             ret[mu]=l
     print ( "" )

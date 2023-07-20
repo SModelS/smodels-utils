@@ -8,8 +8,8 @@ from pyhfInterface import PyhfUpperLimitComputer
 from smodels.experiment.databaseObj import Database
 import smodels.experiment.txnameObj
 smodels.experiment.txnameObj.TxNameData._keep_values = True
-from smodels.tools.physicsUnits import pb, fb, GeV
-from smodels.tools.smodelsLogging import logger
+from smodels.base.physicsUnits import pb, fb, GeV
+from smodels.base.smodelsLogging import logger
 logger.setLevel('DEBUG')
 
 # SUSY-2018-31
@@ -24,7 +24,7 @@ logger.setLevel('DEBUG')
 # lumi = 139
 # # Fetching the efficiencies from the database
 # dir = "/home/alguero/Work/smodels-database"
-# d=Database( dir, discard_zeroes = True )
+# d=Database( dir )
 # # print(d)
 # results=d.getExpResults()
 # x, y = (1300, 530)
@@ -59,7 +59,7 @@ with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
     bestJsons.append(json.load(f))
 # Fetching the efficiencies from the database
 dir = "../../smodels-database"
-d=Database( dir, discard_zeroes = True)
+d=Database( dir )
 # print(d)
 results=d.getExpResults()
 massvec = 2*[[240*GeV,40*GeV]]

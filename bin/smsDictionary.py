@@ -11,11 +11,10 @@
 
 """
 
-## python2 needed because of pyfeyn!
-
-from __future__ import print_function
 import setPath
 from smodels.experiment.databaseObj import Database
+from smodels.experiment.txnameObj import TxName
+from smodels_utils.helper.various import removeAnaIdSuffices
 import os, time
 
 try:
@@ -24,20 +23,19 @@ except:
     import subprocess as C
 
 class SmsDictWriter:
-    feynpath = "../../smodels.github.io/feyn/straight/"
+    smsgraphpath = "../../smodels.github.io/smsgraphs/"
 
-    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private,
+    def __init__ ( self, database, drawSMSGraphs, results, addVer,
                    dryrun, checkfirst, copy ):
         self.databasePath = database
+        self.constraintsToTxNames = {}
         self.hasWarned=False
-        self.drawFeyn = drawFeyn
+        self.drawSMSGraphs = drawSMSGraphs
         self.dryrun =  dryrun
         self.copy = copy
-        self.xkcd = xkcd
         self.checkfirst = checkfirst
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
-        self.private = private
         # self.ver="v"+self.database.databaseVersion.replace(".","")
         if not addVer:
             self.ver=""
@@ -45,20 +43,12 @@ class SmsDictWriter:
         self.fname = "SmsDictionary%s" % self.ver
         self.f=open(self.fname,"w" )
 
-    def straight( self ):
-        return (not self.xkcd)
-
     def close ( self ):
         self.f.close()
 
     def header( self ):
-        protected = "+All:read"
-        if self.private:
-            protected = "-All:read"
         self.f.write (
-"""
-
-# SMS dictionary
+"""# SMS dictionary
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
@@ -72,7 +62,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         return
 
     def tableHeader ( self ):
-        columns=[ "#", "Tx", "Topology", "Graph" ]
+        columns=[ "#", "Tx", "Process", "SMS Graph" ]
         if self.hasResultsColumn:
             columns.append ( "Appears in" )
         lengths=[]
@@ -85,23 +75,23 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             self.f.write ( "| "+"-"*l+ " " )
         self.f.write ( "|\n" )
 
+    def getConstraint ( self, txname : TxName ) -> str:
+        """ given a txname object, retrieve the constraint """
+        constraints = list ( map ( str, list ( txname.smsMap.keys() ) ) )
+        tmp = []
+        for c in constraints:
+            tmp.append ( c.replace(", (",",`<BR> &rarr;`(" ) )
+        constr = "`<BR><BR>`".join ( tmp )
+        txn = txname.txName
+        if not txn in self.constraintsToTxNames:
+            self.constraintsToTxNames[txn]={}
+        self.constraintsToTxNames[txn][constr]=txname
+        return constr
 
-    def cleanUp ( self, txname ):
-        constr = txname.constraint
-        pos = constr.find("*")
-        pos2 = constr.find("[")
-        if pos > 0 and pos2 > pos:
-            constr = constr[pos+1:]
-        constr=constr.replace("(","").replace(")","")
-        fs = [ "MET", "MET" ]
-        if hasattr ( txname, "finalState" ):
-            fs = txname.finalState
-        ret = "%s`<BR>`(%s)" % (constr, ", ".join ( fs ) )
-        return ret
-
-    def getTopos( self ):
+    def getAllTopologies( self ) -> dict:
+        """ get the txnames and their constraints """
         topos = {}
-        expresults = self.database.getExpResults( useSuperseded=True )
+        expresults = self.database.getExpResults( )
         #expresults = self.database.expResultList ## also non-validated
         expresults.sort()
         for expRes in expresults:
@@ -111,26 +101,27 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 txnames = dataset.txnameList
                 txnames.sort()
                 for txname in txnames:
-                    stxname = str ( txname )
+                    tx = str ( txname ) # e.g. T1
+                    con = self.getConstraint ( txname )
                     if txname in topos:
-                        if txname.constraint != topos[stxname]:
-                            print ( "[smsDictionary] txnames for %s mismatch: %s != %s" %
-                                    ( txname, txname.constraint, topos[stxname] ) )
-                    if not stxname in topos.keys():
-                        topos[stxname]=set()
-                    con =  self.cleanUp ( txname )
-                    topos[stxname].add ( con )
+                        if con != topos[stxname]:
+                            print ( f"[smsDictionary] txnames for {txname} mismatch: {txname.constraint} != {topos[stxname]}" )
+                    if not con in topos.keys():
+                        topos[tx]=set()
+                    topos[tx].add ( con )
         keys = list(topos.keys())
         keys.sort()
         for k in keys:
             v = topos[k]
             topos[k]="; ".join ( v )
+        # import IPython ; IPython.embed ( colors="neutral" ) ; import sys; sys.exit()
         return topos
 
-    def writeTopos ( self ):
-        if not os.path.exists ( "../feyn/" ):
-            C.getoutput ( "mkdir ../feyn" )
-        topos = writer.getTopos()
+    def writeAllTopologies ( self ):
+        """ write the table with all topologies (Tx names) """
+        if not os.path.exists ( "../smsgraphs/" ):
+            C.getoutput ( "mkdir ../smsgraphs" )
+        topos = writer.getAllTopologies()
         keys = list ( topos.keys() )
         keys.sort()
         multipleNames = {}
@@ -148,13 +139,13 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             txnames = multipleNames [ constraint ]
             if txname == list(txnames)[0]: ## only write if first in line
                 i+=1
-                self.writeTopo ( i, txnames, constraint, first )
+                self.writeOneTopology ( i, txnames, constraint, first )
                 first = False
 
     def run ( self ):
         self.header()
         self.tableHeader ()
-        self.writeTopos ( )
+        self.writeAllTopologies ( )
         self.footer()
         self.close()
         self.move()
@@ -164,53 +155,31 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         os.system ( cmd )
         print ( cmd )
 
+    def createSmsGraph ( self, txname, constraint ):
+        """ create the sms graphs, store them in ../smsgraphs/ """
+        pathbase = f"../smsgraphs/{txname}"
+        smsMap = self.constraintsToTxNames[txname][constraint].smsMap
+        for mp,name in smsMap.items():
+            path = f"{pathbase}_{name.replace('sms_','')}.png"
+            # print ( f"plotting {txname} {constraint} to {path} {name}" )
+            import shutil
+            if shutil.which ( "convert" ):
+                tmp = "/dev/shm/tmp.png"
+                mp.draw(filename=tmp,view=False)
+                cmd = f"convert {tmp} -transparent white {path}"
+                import subprocess
+                subprocess.getoutput ( cmd )
+            else:
+                mp.draw(filename=path,view=False)
+        # import sys; sys.exit()
 
-    def createFeynGraph ( self, txname, constraint ):
-        fcon = constraint
-        constrs = fcon.split ( ";" )
-        fstate=["MET","MET"]
-        print ( "[smsDictionary] createFeynGraph", txname, fstate, constraint )
-        c = constrs[0]
-        for i in constrs:
-            if len(i)<len(c):
-                c=i
-        # print ( "[smsDictionary] shortest constraint for",txname,"is",c )
-        p=constraint.find("<<BR>>" )
-        p7=p+7
-        if p == -1:
-            p=constraint.find("<BR>" )
-            p7 = p + 5
-        if p>-1:
-            c=c[:p]
-            lastc = len(constraint)
-            if ";" in constraint:
-                lastc=constraint.find(";")
-            # print ( "constraint %s " % constraint, "p7", p7, "lastc", lastc, "p", p )
-            # print ( "fs",constraint[p7:lastc] )
-            fstate = eval ( constraint[p7:lastc].replace("(","['").replace(")","']").replace(",","','") )
-        feynfile="../feyn/"+txname+".png"
-        sfstate = str(fstate).replace(" ","").replace("'","")
-        print ( "[smsDictionary] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
-        exe = "../smodels_utils/plotting/feynmanGraph.py -i "
-        cmd = exe
-        if writer.straight():
-            cmd += " -s"
-        br = c.find("<BR")
-        constr = c[:br].replace("`","")
-        cmd += ' -c "%s"' % constr
-        #if txname == "T5Disp":
-        #    cmd += ' -L "[[0],[0]]"'
-        cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
-        cmd += " -o %s" % feynfile
-        print ( "[smsDictionary]", cmd )
-        if not self.dryrun:
-            a = C.getoutput ( cmd )
-            print ( "  `-",a )
-
-    def writeTopo ( self, nr, txnames, constraint, first ):
-        """ :param first: is this the first time I write a topo? """
-        # self.f.write ( "| %d | <:>" % nr )
-        self.f.write ( "| %d | " % nr )
+    def createEntriesForTopology ( self, nr : int, txnames : set[str],
+            constraint : str ) -> list:
+        """ create a list corresponding to the elements in the entry
+            of the table for one topology """
+        #print ( f"FIXME adapt the topology names!!!" )
+        #print ( f"write topology with {constraint}" )
+        entries = [ nr ]
         ltxes = []
         for txname in txnames:
             txnameabb = txname
@@ -222,59 +191,47 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                         pos = txnameabb.find ( ua )
                 txnameabb=txnameabb[:pos]+"-<br>"+txnameabb[pos:]
             ltxes.append ( '<a name="%s"></a>**%s**<br>' % ( txname, txnameabb ) )
-            # ltxes.append ( '<a name="%s"><b>%s</b></a>' % ( txname, txname ) )
-        self.f.write ( "<BR>".join ( ltxes ) )
-        constraint = constraint[constraint.find("["):]
-        constraint = constraint.replace( " ", "" )
-        # constraint = constraint.replace ( "jet", "q" )
-        if self.drawFeyn:
+        entries.append ( "<BR>".join ( ltxes ) )
+        # FIXME v3
+        if self.drawSMSGraphs:
             for txname in txnames:
-                exists = os.path.exists ( f"{SmsDictWriter.feynpath}/{txname}.png" )
+                ext = 1
+                pngpath = f"{SmsDictWriter.smsgraphpath}/{txname}_{ext}.png"
+                exists = os.path.exists ( pngpath )
                 if not self.checkfirst and self.copy and exists and not self.hasWarned:
-                    print ( f"[smsDictionary] WARNING: will overwrite {SmsDictWriter.feynpath}/{txname}.png" )
+                    print ( f"[smsDictionary] WARNING: will overwrite {SmsDictWriter.smsgraphpath}/{txname}.png" )
                     print ( "[smsDictionary] use -s if that is not what you wanted" )
                     self.hasWarned = True
                 if self.checkfirst and exists:
-                    print ( "[smsDictionary] skipping %s.png" % txname )
+                    print ( f"[smsDictionary] skipping {pngpath}" )
                     if self.hasWarned == False:
                         self.hasWarned=True
                         print ( "[smsDictionary] (it exists already and you specified to skip existing graphs. if that is not what you want, do not use -s)." )
                     continue
-                self.createFeynGraph ( txname, constraint )
-        constraint = constraint.replace ( "photon", "y" )
-        constraint = constraint.replace ( "higgs", "h" )
-        constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
-        constraint = constraint.replace ( ";",";`<BR>`" )
+                self.createSmsGraph ( txname, constraint )
+        # shortnames = { "photon": "y", "higgs": "h" }
+        shortnames = { } #
+        maps = self.constraintsToTxNames[txname][constraint].smsMap
+        for k,v in shortnames.items():
+            constraint = constraint.replace( k, v )
         constraint = "`" + constraint + "`"
-        #if len(constraint)>20:
-        #    print ( "constraint", constraint )
-        #    constraint = constraint[:20]+"`<BR>`"+constraint[20:]
-        self.f.write ( " | %s" % constraint ) ## "Topology" column
-        style = "straight"
-        if self.xkcd:
-            style = "xkcd"
-        ## now "Graph" column
-        # self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
-        self.f.write ( ' | <img alt="%s" src="../feyn/%s/%s.png" height="130">' % ( txname, style, txname ) )
-        ## now "Appears in" column
+        entries.append ( constraint ) # "Topology" column
+        images = ""
+        for i in range ( len(maps) ):
+            images += f'<img alt="{txname}_{i+1}" src="../smsgraphs/{txname}_{i+1}.png" height="130"><BR>'
+        entries.append ( images ) # "Graph" column
+
         if self.hasResultsColumn:
-            self.f.write ( " | " )
             results = self.database.getExpResults ( txnames = txnames )
-            if first:
-                # self.f.write ( "<25%>" ) ## make sure the last column isnt too small
-                pass
             if len(results)>9:
-                self.f.write ( "[many (%d)](ListOfAnalyses%sWithSuperseded)" % (len(results),self.ver) )
+                entries.append ( f"[many ({len(results)})](ListOfAnalyses{self.ver}WithSuperseded)" )
             else:
                 l = []
                 hi = [] ## remove dupes
                 for res in results:
-                    ID = res.globalInfo.id
-                    ID = ID.replace("-agg","" )
+                    ID = removeAnaIdSuffices ( res.globalInfo.id )
                     if ID in hi:
                         continue
-                    #ID = ID.replace("CMS-","**C**-" )
-                    #ID = ID.replace("ATLAS-","**A**-" )
                     hi.append ( ID )
                     supers = ""
                     if hasattr ( res.globalInfo, "supersededBy" ):
@@ -283,23 +240,28 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     l.append ( "[%s](%s)" % ( ID, res.globalInfo.url ) )
                     # before we had a link to the entry at ListOfAnalyses
                     # l.append ( "[%s](ListOfAnalyses%s%s#%s)" % ( ID, self.ver, supers, ID ) )
-                self.f.write ( "<BR>".join ( l ) )
+                entries.append ( "<BR>".join ( l ) ) ## "Appears in" column
+        return entries
+
+    def writeOneTopology ( self, nr : int, txnames : set[str], constraint : str,
+            first : bool ) -> None:
+        """ :param first: is this the first time I write a topo? """
+        elements = self.createEntriesForTopology ( nr, txnames, constraint )
+        for element in elements:
+            self.f.write ( f"| {element} " )
         self.f.write ( "|\n" )
 
 if __name__ == '__main__':
     import argparse
-    argparser = argparse.ArgumentParser(description='Write Wiki page that lists all SMSes, their constraints, and draws a Feynman graph, see http://smodels.hephy.at/wiki/SmsDictionary')
-    argparser.add_argument ( '-f', '--feynman', help='also create Feynman Graphs',
+    argparser = argparse.ArgumentParser(description='Write Wiki page that lists all SMSes, their constraints, and draws a SMS graph, see http://smodels.hephy.at/wiki/SmsDictionary')
+    argparser.add_argument ( '-g', '--smsgraphs', help='also create SMS Graphs',
                              action='store_true' )
-    argparser.add_argument ( '-s', '--checkfirst', help=f'create only Feynman Graphs that do not exist in {SmsDictWriter.feynpath}',
-                             action='store_true' )
-    argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
+    argparser.add_argument ( '-s', '--checkfirst', help=f'create only SMS Graphs that do not exist in {SmsDictWriter.smsgraphpath}',
                              action='store_true' )
     argparser.add_argument ( '-D', '--dry_run', help='dry run, dont actually draw',
                              action='store_true' )
-    argparser.add_argument ( '-c', '--copy', help='copy Feynman graphs to ../../smodels.github.io/feyn/straight/ (implies -f)',
+    argparser.add_argument ( '-c', '--copy', help='copy SMS graphs to ../../smodels.github.io/smsgraphs/ (implies -g)',
                              action='store_true' )
-    argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
                              action='store_false' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
@@ -307,19 +269,13 @@ if __name__ == '__main__':
     argparser.add_argument ( '-a', '--add_version',
             help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
-    if args.xkcd:
-        args.feynman = True
-    writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
-            xkcd = args.xkcd, results = args.results, addVer = args.add_version,
-            private = args.private, dryrun = args.dry_run,
-            checkfirst = args.checkfirst, copy = args.copy )
+    writer = SmsDictWriter( database=args.database, drawSMSGraphs = args.smsgraphs,
+            results = args.results, addVer = args.add_version,
+            dryrun = args.dry_run, checkfirst = args.checkfirst, copy = args.copy )
     print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
-        dest="straight"
-        if args.xkcd:
-            dest="xkcd"
-        cmd = f"cp ../feyn/T*.p* {SmsDictWriter.feynpath}"
+        cmd = f"cp ../smsgraphs/T*.p* {SmsDictWriter.smsgraphpath}"
         import subprocess
         print ( "[smsDictionary] %s" % cmd )
         a = subprocess.getoutput ( cmd )

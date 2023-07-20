@@ -13,21 +13,22 @@
 from __future__ import print_function
 from smodels.tools.wrapperBase import WrapperBase
 from smodels.tools import wrapperBase
-from smodels.tools.smodelsLogging import logger, setLogLevel
-from smodels.tools.physicsUnits import fb, pb, GeV, TeV, mb, unum
+from smodels.base.smodelsLogging import logger, setLogLevel
+from smodels.base.physicsUnits import fb, pb, GeV, TeV, mb, unum
 from smodels.theory.crossSection import LO, NLO, NLL, NNLL
 from smodels.theory import crossSection
 from smodels_utils.SModelSUtils import installDirectory
 from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 from smodels import installation as smodelsinstallation
 import os, sys, io, shutil, pyslha
-
+        
 class RefXSecComputer:
     """
     The xsec computer that simply looks up reference cross sections,
     and interpolates them.
     """
     version = "1.0" ## make sure we can trace changes in the tables
+    hasWarned = { "omitted": 0 }
 
     def __init__( self, verbose = False ):
         """
@@ -38,6 +39,17 @@ class RefXSecComputer:
             setLogLevel ( "info" )
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
                                        "morexsecs", "tables" )
+    def warn ( self, *txt ):
+        stxt=str(*txt)
+        if not stxt in self.hasWarned:
+            self.hasWarned[stxt]=0
+        self.hasWarned[stxt]+=1
+        if self.hasWarned[stxt]<3:
+            logger.warning ( *txt )
+        if self.hasWarned[stxt]==3:
+            self.hasWarned["omitted"]+=1
+            if self.hasWarned["omitted"]<2:
+                logger.warning ( "(omitted similar msgs)" )
 
     def checkFileExists(self, inputFile):
         """
@@ -105,7 +117,7 @@ class RefXSecComputer:
             xseccomment = f"reference xsecs v{self.version} [pb]"
             writeXsec = True
             # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
-            if hasattr ( xsec, "comment" ):
+            if hasattr ( xsec, "comment" ) and xsec.comment not in [ None, "", "None", " (None)" ]:
                 xseccomment += " " + xsec.comment
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
@@ -154,7 +166,7 @@ class RefXSecComputer:
 
     def computeForOneFile ( self, sqrtses, inputFile,
                  tofile, ssmultipliers = None, comment = None,
-                 ignore_pids = None, ewk = "wino" ):
+                 ignore_pids = None, ewk = None ):
         """
         Compute the cross sections for one file.
 
@@ -286,7 +298,7 @@ class RefXSecComputer:
     def isIn ( self, pids, ignores ):
         """ are pids in the ignores? """
         anyTuples = False
-        if type(ignores)==tuple:
+        if type(ignores) in [ tuple, list ]:
             for i in ignores:
                 if type(i)==tuple:
                     anyTuples = True
@@ -390,7 +402,8 @@ class RefXSecComputer:
             xsecs.add ( a )
         # print ( "xdding", xsecs, hasattr ( xsecs[0], "comment" ) )
         self.xsecs = xsecs
-        self.xsecs[0].comment = comment
+        if len(self.xsecs)>0:
+            self.xsecs[0].comment = comment
         # print ( "xdding", self.xsecs, hasattr ( self.xsecs[0], "comment" ) )
 
     def findOpenChannels ( self, slhafile ):
@@ -399,12 +412,12 @@ class RefXSecComputer:
         # print ( "findOpenChannels" )
         channels = []
         # productions of same-sign-pid pairs when the particle is within reach
-        samesignmodes = ( 1000021, 1000023 )
+        samesignmodes = ( 1000021, 1000023, 1000025 )
         # production of opposite-sign-pid pairs when the particle is within reach
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ), ( 1000023, 1000025 ) )
+        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ), ( 1000023, 1000025 ), ( 1000024, 1000025 ), ( -1000024, 1000025 ) )
         ## production modes to add that needs two different particles
         ## to be unfrozen
         # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
@@ -412,6 +425,9 @@ class RefXSecComputer:
         for pid,mass in masses.items():
             if pid < 999999:
                 continue
+            if type(mass) not in [ float, int ]:
+                logger.error ( f"I found a mass of {mass} in {slhafile}, do not know what to do with it." )
+                sys.exit(-1)
             if mass > 5000:
                 continue
 
@@ -468,22 +484,29 @@ class RefXSecComputer:
             else:
                 xi = [ x[i] for x in xsecs ]
             if mi < min(xi):
-                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mi, min(xi) ) )
+                logger.info ( f"{i}st mass {mi}<{min(xi)} too low to interpolate, leave it as is." )
             if mi > max(xi):
-                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mi, max(xi) ) )
+                logger.info ( f"{i}st mass {mi}>{max(xi)} too high to interpolate, leave it as is." )
                 return True
         return False
 
     def collapse ( self, mass ):
+        """ ??? """
         if type(mass) in [ int, float ]:
             return mass
+        if type(mass) in [ str ]:
+            return float(mass)
         for i in range(len(mass)-1):
-            if abs (mass[i]-mass[i+1]) / (mass[i]+mass[i+1]) > 1e-3:
+            smass = mass[i]+mass[i+1]
+            if smass > 1e-6 and abs (mass[i]-mass[i+1]) / smass > 1e-3:
                 return mass
         return mass[0]
 
     def interpolate ( self, mass, xsecs ):
         """ interpolate between masses """
+        if len ( xsecs ) == 0:
+            logger.error ( f"cannot interpolate empty set" )
+            return None
         mass =self.collapse(mass )
         if mass in xsecs:
             return xsecs[mass]
@@ -534,7 +557,7 @@ class RefXSecComputer:
 
     def getXSecsFor ( self, pid1, pid2, sqrts, ewk, masses ):
         """ get the xsec dictionary for pid1/pid2, sqrts
-        :param ewk: specify the ewkino process (hino, or wino)
+        :param ewk: specify the ewkino process (hino, or wino, or None)
         """
         logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
         filename=None
@@ -542,7 +565,8 @@ class RefXSecComputer:
         pb = True
         columns = { "mass": 0, "xsec": 1 }
         isEWK=False
-        comment="refxsec [pb]"
+        comment = ""
+        # comment="refxsec [pb]"
         if pid1 in [ 1000021 ] and pid2 == pid1:
             filename = "xsecgluino%d.txt" % sqrts
             columns["xsec"]=2
@@ -553,7 +577,10 @@ class RefXSecComputer:
             order = NLL
             isEWK=True
             pb = False
-            if type(masses) == tuple and abs(masses[1]-masses[0])/(masses[1]+masses[0]) > 1e-3:
+            if sqrts == 8:
+                pb = True
+            smass = masses[0]+masses[1]
+            if type(masses) == tuple and smass > 1e-6 and abs(masses[1]-masses[0])/smass > 1e-3:
                 filename = "xsecN2C1mnondegenp%d.txt" % sqrts
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
@@ -562,8 +589,11 @@ class RefXSecComputer:
             filename = "xsecN2C1p%d.txt" % sqrts
             order = NLL
             pb = False
+            if sqrts == 8:
+                pb = True
             isEWK=True
-            if type(masses) == tuple and abs(masses[1]-masses[0])/(masses[1]+masses[0]) > 1e-3:
+            smasses = masses[1]+masses[0]
+            if type(masses) == tuple and smasses > 1e-6 and abs(masses[1]-masses[0])/smasses > 1e-3:
                 filename = "xsecN2C1pnondegenp%d.txt" % sqrts
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
@@ -585,16 +615,16 @@ class RefXSecComputer:
             isEWK=True
         if pid1 in [ 1000023, 1000025 ] and pid2 in [ 1000023, 1000025 ]:
             if sqrts == 8:
-                print ( "[refxsecComputer] asking for N2 N1 production for 8 TeV. we only have 13 tev" )
+                print ( f"[refxsecComputer] asking for N2 N1 {(pid1,pid2)} production for 8 TeV. we only have 13 tev" )
                 return None, None, None
             s1, s2 = "N2", "N2"
             if pid1 == 1000025:
                 s1 = "N3"
             if pid2 == 1000025:
                 s2 = "N3"
-            logger.warning ( f"asked to compute {s1} {s2} production xsecs, will recycle the N2 N1 ones!" )
+            self.warn ( f"asked to compute {s1,pid1} {s2,pid2} production xsecs, will recycle the N2 N1 ones!" )
             filename = "xsecN2N1p%d.txt" % sqrts
-            if False:
+            if ewk == "degenerate":
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
@@ -642,8 +672,8 @@ class RefXSecComputer:
         if self.verbose:
             print ( f"[refxsecComputer] will query {filename}" )
         if not os.path.exists ( path ):
-            logger.info ( "%s missing" % path )
-            sys.exit()
+            logger.error ( "%s missing" % path )
+            sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
         return xsecs,order,comment
 
@@ -663,12 +693,12 @@ if __name__ == "__main__":
     if sqrts == None:
         sqrts = [ 8, 13 ]
     setLogLevel ( "debug" )
-    tool = RefXSecComputer()
+    tool = RefXSecComputer( args.verbose )
     slhapaths = args.inputfile
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None
-    # ignores= eval ( args.ignore_pids )
     ignores= args.ignore_pids
+    ignores= eval ( args.ignore_pids )
     for slhapath in slhapaths:
         tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
                       ssmultipliers = ssmultipliers, ignore_pids = ignores )

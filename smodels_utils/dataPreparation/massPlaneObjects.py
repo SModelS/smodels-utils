@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: massPlaneObjects
@@ -10,6 +10,7 @@
 """
 
 import sys
+import numpy as np
 from sympy import var, Eq, lambdify, solve, N, And, sqrt
 from scipy.spatial import Delaunay
 from itertools import permutations
@@ -69,7 +70,7 @@ class MassPlane(object):
         self.allInputFiles = []
         for i,brMasses in enumerate(massArray):
             if not isinstance(brMasses,list):
-                logger.error("Mass array must be in the format [[m1,m2,..],[m3,m4,..]]")
+                logger.error( f"Mass array must be in the format [[m1,m2,..],[m3,m4,..]], was {massArray}")
                 sys.exit()
             self.setBranch(branchNumber=i,branchMasses=brMasses)
 
@@ -103,9 +104,58 @@ class MassPlane(object):
                 hasWarned["emptystring"]=True
             return None
         massArray = eval(string)
+        if type(massArray) == dict:
+            from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
+            return GraphMassPlane.fromString ( txname, string )
         massPlane = MassPlane(txname,massArray)
 
         return massPlane
+
+    def getNiceAxes(self,axesStr):
+        """
+        Convert the axes definition format ('[[x,y],[x,y]]')
+        to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+
+        :param axesStr: string defining axes in the old format
+
+        :return: string with a nicer representation of the axes (more suitable for printing)
+        """
+
+        x,y,z,w = var('x y z w')
+        if axesStr == "":
+            logger.error ( "Axes field is empty: cannot validate." )
+            return None
+        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
+
+        eqList = []
+        for ib,br in enumerate(axes):
+            if ib == 0:
+                mStr,wStr = 'Mass','Width'
+            else:
+                mStr,wStr = 'mass','width'
+            mList = []
+            for im,eq in enumerate(br):
+                if type(eq)==tuple:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq[0]))
+                    mList.append('Eq(%s,%s)'
+                                   %(var(wStr+string.ascii_uppercase[im]),eq[1]))
+                else:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq))
+            mStr = "_".join(mList)
+            eqList.append(mStr)
+
+        #Simplify symmetric branches:
+        if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:
+            eqStr = "2*%s"%eqList[0]
+        else:
+            eqStr = "__".join(eqList)
+
+        eqStr = eqStr.replace(" ","")
+
+        return eqStr
+
 
     def __str__(self):
         return "%s" % ( self.axes )
@@ -133,7 +183,8 @@ class MassPlane(object):
 
 
     def setSources(self,dataLabels,dataFiles,dataFormats,
-                   objectNames=None,indices=None,units=None,coordinates=None,scales=None):
+                   objectNames=None,indices=None,units=None,coordinates=None,
+                   scales=None, **args ):
         """
         Defines the data sources for the plane.
 
@@ -184,10 +235,10 @@ class MassPlane(object):
             coordinate = allInput["coordinates"][i]
             scale = allInput["scales"][i]
             self.addSource(dataLabel,dataFile, dataFormat,
-                           objectName, index, unit, coordinate, scale)
+                           objectName, index, unit, coordinate, scale, **args )
 
     def addSource(self,dataLabel,dataFile,dataFormat=None, objectName=None,index=None,
-                  unit=None,coordinateMap=None,scale=None):
+                  unit=None,coordinateMap=None,scale=None, **args ):
         """
         Defines a single data sources for the plane.
 
@@ -224,7 +275,8 @@ class MassPlane(object):
                 coordinateMap = dict([[xv,i] for i,xv in enumerate(allvars[:dimensions])])
                 coordinateMap['value'] = dimensions
             #Initialize a data handler
-            dataObject = DataHandler(dataLabel,coordinateMap,self.xvars)
+            dataObject = DataHandler(dataLabel,coordinateMap,self.xvars,
+                                     str(self._txDecay) )
         else:
             #Define the default 1D coordinate mapping for exclusion curves
             if not coordinateMap:
@@ -237,7 +289,7 @@ class MassPlane(object):
         dataObject.dataUrl = self.dataUrl
         #Set source of object
         dataObject.setSource(dataFile, dataFormat,
-                             objectName, index, unit, scale)
+                             objectName, index, unit, scale, **args )
         #Store it as a mass plane attribute:
         setattr(self,dataLabel,dataObject)
 
@@ -338,6 +390,8 @@ class Axes(object):
     Holds the axes information for one branch of a singe mass plane.
     No units supported!
     """
+
+    hasWarned = {}
 
     def __init__(self, massEqs,massVars,widthVars=None ):
 
@@ -454,9 +508,13 @@ class Axes(object):
         xValues = {}
         for xv in self._xvars:
             if not str(xv) in xMass:  #Missing a variable
-                logger.error("Input variable %s missing for computing mass" %xv)
-                return None
-            xValues[str(xv)] = xMass[str(xv)]
+                self.error("Input variable %s missing for computing mass" %xv)
+                return []
+            value = xMass[str(xv)]
+            if type(value) in [ str ]:
+                self.warn(f"Input variable ''{xv}'' has a string value of ''{value}''. Will skip entry." )
+                return []
+            xValues[str(xv)] = value
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
         widthArray = [mfunc(**xValues) for mfunc in self._widthFunctions]
@@ -529,6 +587,26 @@ class Axes(object):
             self._xyFunction[xv] = _lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
+    def tuplesInMassContainer ( self, massArray ):
+        for im,mass in enumerate(massArray):
+            if type(mass)==tuple: ## the old way
+                return True
+        return False
+
+    def warn ( self, line ):
+        if not line in self.hasWarned:
+            self.hasWarned[line]=0
+        self.hasWarned[line]+=1
+        if self.hasWarned[line]<2:
+            logger.warning ( line )
+
+    def error ( self, line ):
+        if not line in self.hasWarned:
+            self.hasWarned[line]=0
+        self.hasWarned[line]+=1
+        if self.hasWarned[line]<2:
+            logger.error ( line )
+
     def getXYValues(self,massArray,widthArray=None):
 
         """
@@ -558,11 +636,16 @@ class Axes(object):
             ## it seems the widths ended up in the mass array
             widthArray = massArray[1::2]
             massArray = massArray[0::2]
-        for im,mass in enumerate(massArray):
-            if type(mass)==tuple: ## the old way
-                massInput[ str(self._massVars[im]) ] = mass[0]
-                massInput[ str(self._widthVars[im]) ] = mass[1]
-            else:
+        if self.tuplesInMassContainer ( massArray ):
+            ## there are tuples, do it the old way
+            for im,mass in enumerate(massArray):
+                if type(mass) in [ tuple ]:
+                    massInput[ str(self._massVars[im]) ] = mass[0]
+                    massInput[ str(self._widthVars[im]) ] = mass[1]
+                else:
+                    massInput[ str(self._massVars[im]) ] = mass
+        else:
+            for im,mass in enumerate(massArray):
                 if False:
                     print ( "----------------" )
                     print ( "mass", mass )
@@ -571,7 +654,8 @@ class Axes(object):
                     print ( "im", im )
                     print ( "massVars", self._massVars )
                     print ( "widthVars", self._widthVars )
-                massInput[ str(self._massVars[im]) ] = mass
+                if im < len(self._massVars):
+                    massInput[ str(self._massVars[im]) ] = mass
         if widthArray is None:
             wv = str(self._widthVars[im])
             if not wv in massInput:
@@ -580,7 +664,8 @@ class Axes(object):
             #    massInput[ str(self._widthVars[im]) ] = None
         else:
             for im,width in enumerate(widthArray):
-                massInput[ str(self._widthVars[im]) ] = width
+                if im < len(self._widthVars):
+                    massInput[ str(self._widthVars[im]) ] = width
         #Define dictionary with mass variables and values
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
         xValues = {}
@@ -594,23 +679,36 @@ class Axes(object):
         #print ( "[getXYValues] massInput", massInput )
         #print ( "[getXYValues] xyFunc", self._xyFunction, str(self._xyFunction) )
         #print ( "massArray", massArray )
+        """import IPython
+        IPython.embed()
+        sys.exit()"""
         for xv,xfunc in self._xyFunction.items():
-            #print ( ". xv", xv, "func", xfunc.expr )
-            xValues[str(xv)] = xfunc(**massInput)
+            fexpr = str ( xfunc.expr )
+            cleanedInput = {}
+            for k,v in massInput.items():
+                if not k in fexpr:
+                    line = f"key {k} is not in func {fexpr}!!"
+                    self.warn ( line )
+                else:
+                    cleanedInput[k]=v
+            xValues[str(xv)] = xfunc(**cleanedInput)
 
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
+
+        def isFloat ( x ):
+            return isinstance(x,(np.floating,float))
 
         def distance ( x, y ):
             ## the distance between x and y
             ## I dont fully understand why there cases where x has a width
             ## and y doesnt ....
             #assert ( type(x) == type(y) )
-            if type(x) in [ float, int ] and type(y)==tuple:
+            if isFloat(x) and type(y)==tuple:
                 return abs(x-y[0])
-            if type(y) in [ float, int ] and type(x)==tuple:
+            if isFloat(y) and type(x)==tuple:
                 return abs(x[0]-y)
-            if type(x) in [ float, int ] and type(y) in [ float, int ]:
+            if isFloat(x) and isFloat(y):
                 return abs(x-y)
             assert ( type(x) == tuple )
             d=0.

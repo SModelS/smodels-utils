@@ -3,6 +3,7 @@
 ## a super simple script to update all wiki pages in a single go.
 
 import sys, subprocess, argparse, os, colorama
+from typing import Union, Text
 
 def execute(cmd):
     print ( "[cmd] %s" % " ".join ( cmd ) )
@@ -24,9 +25,22 @@ def exec(cmd, dry_run ):
 def gprint ( line ):
     print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
 
-def gitPush( dry_run ):
-    cmd = "cd ../../smodels.github.io/; git pull; git commit -am 'automated update'; git push"
-    print ( "[updateAllWikiPages.py] %s" % cmd )
+def gitPush( dry_run, commit, version : Union[None,Text] ):
+    """ git commit and git push 
+    :param commit: commit message. if None, then do not commit
+    """
+    if commit == None:
+        return
+    cmd = "cd ../../smodels.github.io/; "
+    cmd += "git pull; "
+    if version != None:
+        cmd += f"git add validation/{version}; "
+        for i in  [ "Validation", "ValidationUgly", "SmsDictionary",
+                    "ListOfAnalyses" ]:
+            cmd += f"git add docs/{i}{version}.md; "
+        cmd += f"git add docs/ListOfAnalyses{version}WithSuperseded.md; "
+    cmd += f"git commit -am '{commit}'; git push"
+    gprint ( f"[updateAllWikiPages.py] {cmd}" )
     if dry_run:
         return
     o = subprocess.getoutput ( cmd )
@@ -44,6 +58,9 @@ def main():
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
             action='store_true' )
+    argparser.add_argument ( '--debug', 
+            help='Add the debug version of the pickle file',
+            action='store_true' )
     argparser.add_argument ( '-d', '--dry_run', 
             help='dry run, write commands, do not execute them',
             action='store_true' )
@@ -52,8 +69,8 @@ def main():
     argparser.add_argument('-R', '--reference_database', help='path to reference database  [../../smodels-database-release]', 
                     type=str, default="../../smodels-database-release" )
     argparser.add_argument ( '-c', '--commit', 
-            help='git-commit and git-push to smodels.github.io',
-            action='store_true' )
+            help='git-commit and git-push to smodels.github.io (specify commit msg)',
+            type=str, default = None )
     argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     A = argparser.parse_args()
     #db = "~/git/smodels-database/"
@@ -65,6 +82,11 @@ def main():
     # ref_db = "~/git/smodels-database-release/"
     ref_db = A.reference_database
     ref_db = os.path.expanduser( ref_db )
+    ver = None ## version, if exists
+    if os.path.exists ( db+"/version" ):
+        with open ( db+"/version","rt" ) as f:
+            ver = f.read().replace(".","").replace("v","")
+            ver = ver.strip()
     ## list of analyses, with and without superseded
     gprint ( "\nCreate ListOfAnalyses" )
     cmd = [ "./listOfAnalyses.py", "-a", "-l", "-d", db ]
@@ -86,19 +108,20 @@ def main():
     gprint ( "\nCreate SmsDictionary" )
     cmd = [ "./smsDictionary.py", "-a", "-d", db ]
     if A.feynman:
-        cmd += [ "-f", "-c" ]
+        cmd += [ "-g", "-c" ]
     exec ( cmd, A.dry_run )
     if A.non_versioned:
         exec ( [ "./smsDictionary.py", "-d", db ], A.dry_run )
 
     if not A.no_pickle:
         gprint ( "\nCreate and publish database pickle" )
-        #exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ], A.dry_run )
-        #exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-a", "-p", "-s", "-r", "-b", "-f", db ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-f", "./nonaggregated.pcl" ], A.dry_run )
+        exec ( [ "./publishDatabasePickle.py", "-f", "./full_llhds.pcl" ], A.dry_run )
         exec ( [ "./publishDatabasePickle.py", "-F", "-f", "./fastlim.pcl" ], A.dry_run )
+        if A.debug:
+            exec ( [ "./publishDatabasePickle.py", "--txnamevalues", "-b", "-f", db ], A.dry_run )
 
 
     gprint ( "\nCreate Validation" )
@@ -110,8 +133,16 @@ def main():
     if A.non_versioned:
         exec ( cmd + [ "-s", "-f" ], A.dry_run )
         exec ( cmd + [ "--ugly" ], A.dry_run )
-    if A.commit:
-        gitPush( A.dry_run )
+    gitPush( A.dry_run, A.commit, ver )
+    print ( f"\n[updateAllWikiPages] all done!" )
+    print ( f"[updateAllWikiPages] now wait 15 minutes, then point your browser to:" )
+    base = f"https://smodels.github.io/docs"
+    url = f"{base}/ListOfAnalyses"
+    if not A.non_versioned and ver!= None:
+        ## simple hack for now, should actually be reported by
+        # one of the steps above
+                url = f"{base}/ListOfAnalyses{ver}"
+    print ( f"xdg-open {url}" )
 
 if __name__ == "__main__":
     main()

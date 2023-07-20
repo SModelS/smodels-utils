@@ -4,8 +4,8 @@ from __future__ import print_function
 import sys, os, time
 sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
-from smodels.tools.smodelsLogging import setLogLevel
-from smodels.tools.physicsUnits import TeV
+from smodels.base.smodelsLogging import setLogLevel
+from smodels.base.physicsUnits import TeV
 from smodels.tools.colors import colors
 import ROOT
 import IPython
@@ -25,7 +25,7 @@ setLogLevel ( "debug" )
 
 #dir = "/home/walten/git/smodels/test/database/"
 dir = "/home/walten/git/smodels-database/"
-d=Database( dir, discard_zeroes = True )
+d=Database( dir )
 print(d)
 results = d.getExpResults()
 #results.sort()

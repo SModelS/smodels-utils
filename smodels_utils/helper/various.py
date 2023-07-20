@@ -10,6 +10,14 @@
 
 import os, sys
 import logging as logger
+from smodels.experiment.expResultObj import ExpResult
+from typing import Union, Text, Dict
+
+def removeAnaIdSuffices ( anaId ):
+    """ given  analysis id <anaId>, remove all kinds of suffices """
+    for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk" ]:
+        anaId = anaId.replace(i,"")
+    return anaId
 
 def round_to_n ( x, n ):
     """ round x to n significant digits """
@@ -20,7 +28,7 @@ def round_to_n ( x, n ):
         return -round(-x, -int(math.floor(math.log10(-x))) + (n - 1))
     return round(x, -int(math.floor(math.log10(x))) + (n - 1))
 
-def findCollaboration ( anaid ):
+def getCollaboration ( anaid : Union[Text,Dict] ):
     """ from <anaid> retrieve the collaboration name
     :param anaid: analysis id, like CMS-SUS-17-001, or a dictionary with an "ID"
                   entry
@@ -47,7 +55,7 @@ def findCollaboration ( anaid ):
             collaboration = "CMS"
     return collaboration
 
-def getSqrts ( Id ):
+def getSqrts ( Id : str ):
     """ given analysis id <Id>, determine sqrts """
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
     year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
@@ -64,7 +72,7 @@ def getSqrts ( Id ):
         return 8
     return 13
 
-def cutPoints ( points, ranges ):
+def cutPoints ( points, ranges ) -> dict:
     """ cut the points at ranges 
     :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
     :returns: filtered points
@@ -75,6 +83,13 @@ def cutPoints ( points, ranges ):
         ranges["y"]=[ float("-inf"), float("inf") ]
     if not "x" in ranges:
         ranges["x"]=[ float("-inf"), float("inf") ]
+    if not "y" in points:
+        ret = { "x": [] }
+        for kx in points["x"]:
+            if ranges["x"][0] < kx < ranges["x"][1]:
+                    ret["x"].append ( kx )
+        return ret
+
     ret = { "x": [], "y": [] }
     for kx, ky in zip ( points["x"], points["y"] ):
         if ranges["x"][0] < kx < ranges["x"][1] and \
@@ -83,11 +98,12 @@ def cutPoints ( points, ranges ):
                 ret["y"].append ( ky )
     return ret
 
-def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
+def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
                           expected=False, dicts=False, ranges=None ):
     """
     Reads exclusion_lines.json and returns the dictionary objects for the
-    exclusion curves. If txname is defined, returns only the curves
+    exclusion curves, for axes being in SModelS v2 format. 
+    If txname is defined, returns only the curves
     corresponding to the respective txname. If axes is defined, only
     returns the curves for that axis.
     If root objects are needed, convert via
@@ -96,7 +112,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     :param jsonfile: path to exclusion_lines.json file
     :param txname: the TxName in string format (i.e. T1tttt)
     :param axes: the axes definition in string format,
-                 e.g. [x, y, 60.0], [x, y, 60.0]]
+                 e.g. [x, y, 60.0], [x, y, 60.0]] or {0:x,1:y,...}
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
     :param ranges: if dict, then cut exclusion lines, e.g. 
@@ -124,6 +140,9 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     from sympy import var
     x,y,z,w = var('x y z w')
     caxes = eval ( maxes )
+    if type(caxes)==dict:
+        from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
+        maxes = GraphMassPlane.getNiceAxes ( maxes )
     exp = "obs"
     if expected:
         exp = "exp"
@@ -141,7 +160,13 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                 points = cutPoints ( points, ranges )
                 p1 = axis.find("_")
                 constr = axis[p1+1:]
-                caxis = eval(constr)
+                caxis = constr # eval(constr)
+                try:
+                    caxis = eval(constr) # for SModelS v2 axes
+                except SyntaxError as e:
+                    # for SModelS v3 axes
+                    caxes = GraphMassPlane.getNiceAxes ( axes )
+                # print ( f"comparing caxis {caxis},{type(caxis)} with {caxes},{type(caxes)}" )
                 if maxes != None and caxis != caxes: # cname != axis:
                     continue
                 # tgraph = exclusionCurveToTGraph ( points, cname )
@@ -155,6 +180,99 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                         ret[txn][cname]= points
                     else:
                         ret[txn].append( { "points": points, "name": cname } )
+        return ret
+
+
+def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
+                          expected=False, dicts=False, ranges=None ):
+    """
+    Reads exclusion_lines.json and returns the dictionary objects for the
+    exclusion curves. If txname is defined, returns only the curves
+    corresponding to the respective txname. If axes is defined, only
+    returns the curves for that axis.
+    If root objects are needed, convert via
+    smodels_utils.helper.rootTools.exclusionCurveToTGraph
+
+    :param jsonfile: path to exclusion_lines.json file
+    :param txname: the TxName in string format (i.e. T1tttt)
+    :param axes: the axes definition in string format,
+                 e.g. [x, y, 60.0], [x, y, 60.0]] or {0:x,1:y,...}
+    :param get_all: Get also the +-1 sigma curves?
+    :param expected: if true, get expected, not observed
+    :param ranges: if dict, then cut exclusion lines, e.g. 
+                   { "x": [ 100, 200 ] }
+    :param dicts: if true, then do not return lists of lines,
+                  but dictionaries instead
+
+    :return: a dictionary, where the keys are the TxName strings
+            and the values are the respective dictionaries of coordinates.
+    """
+    from validationHelpers import getAxisType
+    axisType = getAxisType ( axes )
+    if axisType == "v2":
+        return getExclusionCurvesForV2 ( jsonfile, txname, axes, get_all, expected,
+                dicts, ranges )
+
+    import json
+    if not os.path.isfile(jsonfile):
+        logger.error( f"json file {jsonfile} not found" )
+        return None
+
+    with open ( jsonfile, "rt" ) as handle:
+        content = json.load ( handle )
+        handle.close()
+
+    ret = {}
+    maxes = axes
+    if maxes != None:
+        maxes = axes.replace(" ","").strip()
+    from sympy import var
+    x,y,z,w = var('x y z w')
+    caxes = eval ( maxes )
+    from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
+    maxes = GraphMassPlane.getNiceAxes ( maxes )
+
+    def match ( name : str ) -> bool:
+        """ do we want an exclusion line with this name? 
+        :param name: e.g. obsExclusionP1_0
+        """
+        if expected and name.startswith ( "obs" ):
+            return False
+        if not expected and name.startswith ( "exp" ):
+            return False
+        if not get_all and "ExclusionP1" in name:
+            return False
+        if not get_all and "ExclusionM1" in name:
+            return False
+        return True
+
+    def axisMatch ( jsonDict : dict ) -> bool:
+        """ see if the axes match """
+        convertedDict = {}
+        for k,v in jsonDict.items():
+            convertedDict[int(k)]=v
+        #print ( "do they match? jsonDict", convertedDict == caxes )
+        # print ( "caxes", caxes, type(caxes) )
+        return convertedDict == caxes
+
+    for txn,content in content.items():
+        if txname != None and txn != txname:
+            continue
+        for name,line in content.items():
+            if not match ( name ):
+                continue
+            if not axisMatch ( line["axisMap"] ):
+                continue
+            points = cutPoints ( line, ranges )
+            # print ( "@@2 txn", txn, "name", name, "x", str(points["x"])[:50] )
+            if not txn in ret:
+                ret[txn]=[]
+                if dicts:
+                    ret[txn]={}
+            if dicts:
+                ret[txn][cname]= points
+            else:
+                ret[txn].append( { "points": points, "name": name } )
         return ret
 
 def mergeExclusionLines ( lines : list ):
@@ -213,7 +331,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     ipath = "%s/validation/%s" % ( folder, valfile )
     files = glob.glob ( ipath )
     if len(files)==0:
-        print ( "could not find validation file %s" % ipath )
+        print ( "[various] could not find validation file %s" % ipath )
         sys.exit()
     if len(files)>1:
         print ( "[helper/various] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
@@ -226,7 +344,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     ipath = files[0]
     return ipath
 
-def hasLLHD ( analysis ) :
+def hasLLHD ( analysis : ExpResult ) -> bool:
     """ can one create likelihoods from analyses?
         true for efficiency maps and upper limits with expected values. """
     if len ( analysis.datasets)>1:                                                            return True

@@ -18,8 +18,8 @@ from smodels.share.models.SMparticles import SMList
 from smodels.theory.model import Model
 from smodels.theory import model 
 model.logger.setLevel ( logging.WARNING )
-from smodels.tools.physicsUnits import GeV, fb
-from smodels.theory import decomposer
+from smodels.base.physicsUnits import GeV, fb
+from smodels.decomposition import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
 import multiprocessing
 
@@ -39,7 +39,7 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
     model.updateParticles(inputFile=fullpath )
     smstopos = decompose ( model )
     tpreds = theoryPredictionsFor ( expRes, smstopos,
-           combinedResults=False, useBestDataset=False, marginalize=False )
+           combinedResults=False, useBestDataset=False ) # , marginalize=False )
     rdicts[slhafile]["success"] = False
     rdicts[slhafile]["reason"] = "unknown"
     if tpreds == None:
@@ -128,7 +128,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
         logger.debug("SLHA files for validation at %s" %slhaDir)
 
-        from smodels.tools import modelTester
+        from smodels.matching import modelTester
         #Get list of input files to be tested
         try:
             fileList, inDir = modelTester.getAllInputFiles(slhaDir)

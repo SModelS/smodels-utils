@@ -2,17 +2,17 @@
 
 """
 .. module:: bibtexTools
-        :synopsis: Collection of methods for bibtex.
-                   Currently contains only a dictionary for getting the
-                   bibtex names of analyses
+        :synopsis: Collection of methods for bibtex. The module is also
+        an executable that can be used to create a database.bib file for a 
+        given database.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
 
-from __future__ import print_function
+__all__ = [ "BibtexWriter", "removeDoubleEntries" ]
 
-from smodels.tools.smodelsLogging import setLogLevel
+from smodels.base.smodelsLogging import setLogLevel
 import bibtexparser
 import urllib, colorama, subprocess
 import os, sys
@@ -20,7 +20,8 @@ from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
          filterSupersededFromList
-from smodels_utils.helper.various import getSqrts, findCollaboration
+from smodels_utils.helper.various import getSqrts, getCollaboration
+from typing import Union, Text
 
 if sys.version[0]=="2":
     reload(sys)
@@ -34,6 +35,33 @@ try:
     from urllib import urlopen
 except ImportError:
     from urllib.request import urlopen
+
+def removeDoubleEntries ( anaids : dict ) -> dict:
+    """ given two lists of analysis ids, remove all ids that appear in both 
+    :param anaids: should be a dictionary of two collections of anaids, e.g. \
+                   { "smodels230": {ana1, ana2}, "smodels220": {ana2, ana3} }
+    :returns: a dictionary that shows the ids of anaX that are not in anaY
+    """
+    new1, new2 = [], []
+    def pprint ( *args ):
+        return
+        print ( " ".join ( map(str,args) ) )
+    lists = list ( anaids.items() )
+    name1, list1 = lists[0]
+    name2, list2 = lists[1]
+    for l1 in list1:
+        if not l1 in list2:
+            new1.append ( l1 )
+        else:
+            pprint ( "removing", l1, "from list1" )
+    for l2 in list2:
+        if not l2 in list1:
+            new2.append ( l2 )
+        else:
+            pprint ( "removing", l2, "from list2" )
+    ret = { name1: new1, name2: new2 }
+        
+    return ret
 
 class BibtexWriter:
     # cachedir = "../bibtexs/"
@@ -62,6 +90,12 @@ class BibtexWriter:
         }
         self.g=open ( "log.txt", "w" )
         self.mkdirs()
+
+    def cleanAnaId ( self, anaid : str ):
+        """ clean analysis id from some extensions """
+        for ext in [ "agg", "strong", "ewk", "eff" ]:
+            anaid = anaid.replace( f"-{ext}", "" )
+        return anaid
 
     def mkdirs ( self ):
         """ make the directories """
@@ -168,53 +202,10 @@ class BibtexWriter:
         source=source.replace ( "AlphaT", "$\\alpha_{T}$" )
         return source
 
-    def bibtexFromInspireOld ( self, url, label=None ):
+    def bibtexFromInspire ( self, url : str, label : Union[None,str] = None ):
         """ get the bibtex entry from an inspire record """
-        #if "record" in url:
         url = url.replace("record","api/literature" )
-        self.log ( " * fetching from Inspire: %s" % url )
-        ## hack for now, this solution wont work in the future
-        # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
-        # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
-        fullurl =  url # +"/export/hx"
-        # return fullurl
-        try:
-            f=urlopen (fullurl)
-            lines = f.readlines()
-            f.close()
-            ret = []
-            hasBegin = False
-            for line in lines:
-                print ( "line", line )
-                line=line.decode()
-                if "pagebodystripemiddle" in line:
-                    hasBegin=True
-                    continue
-                if not hasBegin:
-                    continue
-                if "</pre>" in line:
-                    hasBegin=False
-                    continue
-                ret.append ( line )
-                if "@article" in line and label != None:
-                    ret.append ( '      label          = "%s",\n' % label )
-                if "@techreport" in line and label != None:
-                    ret.append ( '      label          = "%s",\n' % label )
-            r =  str(self.replaceUnicodes ( "".join ( ret )  ))
-            sys.exit(-1)
-            return r
-        except urllib.error.HTTPError as e:
-            print ( f"[bibtexTools] Caught: {e}" )
-            sys.exit(-1)
-        except Exception as e:
-            print ( f"[bibtexTools] Caught: {e}" )
-            sys.exit(-1)
-
-    def bibtexFromInspire ( self, url, label=None ):
-        """ get the bibtex entry from an inspire record """
-        #if "record" in url:
-        url = url.replace("record","api/literature" )
-        self.log ( " * fetching from Inspire: %s" % url )
+        self.log ( f" * fetching from Inspire: {url}" )
         ## hack for now, this solution wont work in the future
         # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
         # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
@@ -228,7 +219,6 @@ class BibtexWriter:
             if label != None:
                 p1 = txt.rfind("}")
                 txt = txt[:p1-1] + ',\n    label = "%s"\n}\n' % label
-                print ( "txt", txt )
             return txt
         except urllib.error.HTTPError as e:
             print ( f"[bibtexTools] Caught: {e}" )
@@ -237,17 +227,21 @@ class BibtexWriter:
             print ( f"[bibtexTools] Caught: {e}" )
             sys.exit(-1)
 
-    def fetchInspireUrl ( self, l, label ):
+    def fetchInspireUrl ( self, line : str, label : Union[None,str] ):
         """ from line in html page, extract the inspire url """
-        self.log ( " * fetching Inspire url: %s" % label )
-        pos1 = l.find ( "HREF=" )
-        pos2 = l.find ( "<B>" )
+        self.log ( f" * fetching Inspire url: {label}" )
+        line = line.replace ( "net/literature", "net/api/literature" )
+        line = line.replace(' id="inspire_link"','')
+        pos1 = line.find ( "HREF=" )
+        pos2 = line.find ( "<B>" )
+        print  ( "pos", pos1, pos2 )
         if pos1 > 0 and pos2 > pos1:
-            return l[pos1+6:pos2-2]
-        pos1 = l.find ( "href=" )
-        pos2 = l.find ( "inSPIRE" )
-        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in l:
-            ret=l[pos1+6:pos2-2]
+            ret = line[pos1+6:pos2-2]
+            return ret
+        pos1 = line.find ( "href=" )
+        pos2 = line.find ( "inSPIRE" )
+        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in line:
+            ret=line[pos1+6:pos2-2]
             return ret
         return "fetchInspireUrl failed"
 
@@ -270,9 +264,9 @@ class BibtexWriter:
         self.log ( " * CDS url: %s" % ret )
         return ret
 
-    def bibtexFromWikiUrl ( self, url, label=None ):
+    def bibtexFromWikiUrl ( self, url : str, label : Union[None,str]=None ):
         """ get the bibtex entry from the atlas wiki """
-        self.log ( " * fetching from wiki: %s" % url )
+        self.log ( f" * fetching from wiki: {url}" )
         try:
             f=urlopen ( url )
         except urllib.error.HTTPError as e:
@@ -345,7 +339,7 @@ class BibtexWriter:
         txt=f.read()
         f.close()
         sqrts = getSqrts ( Id )
-        coll = findCollaboration ( Id )
+        coll = getCollaboration ( Id )
         self.stats[coll][Id] = { "cached": 1 }
         return txt
 
@@ -361,7 +355,7 @@ class BibtexWriter:
         self.success += 1
         self.log ( "Success!" )
         sqrts = getSqrts ( Id )
-        coll = findCollaboration ( Id )
+        coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
         self.f.write ( bib )
         self.f.write ( "\n" )
@@ -370,9 +364,9 @@ class BibtexWriter:
         return
 
     def processExpRes ( self, expRes, write_cache ):
+        """ process the given experimental result """
         self.npublications += 1
-        Id = expRes.globalInfo.id
-        Id = Id.replace( "-agg", "" )
+        Id = self.cleanAnaId ( expRes.globalInfo.id )
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
 
@@ -394,9 +388,9 @@ class BibtexWriter:
             else:
                 self.log ( "Special treatment failed." )
 
-        contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
+        contact = expRes.globalInfo.contact ## globalInfo.contact
         sqrts = getSqrts ( Id )
-        coll = findCollaboration ( Id )
+        coll = getCollaboration ( Id )
         if contact and "fastlim" in contact:
             # self.stats[coll][Id]={ "fastlim": 1 }
             self.fastlim += 1
@@ -436,13 +430,12 @@ class BibtexWriter:
         self.write_cache = write_cache
         self.openHandles()
         home = os.environ["HOME"]
-        # self.db = Database ( "%s/git/smodels-database" % home )
         self.db = Database ( self.databasepath )
         res = self.db.getExpResults ()
         self.res = filterSupersededFromList ( filterFastLimFromList ( res ) )
         ids = set()
         for expRes in self.res:
-            ID = expRes.globalInfo.id.replace("-eff","").replace("-agg","")
+            ID = self.cleanAnaId ( expRes.globalInfo.id )
             if ID in ids:
                 continue
             ids.add ( ID )
@@ -473,16 +466,14 @@ class BibtexWriter:
         f.close()
         f = open ( "latex.sh", "wt" )
         f.write ( "#!/bin/bash\n" )
-        cmds = [ "pdflatex -interaction nonstopmode test.tex", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex" ]
-        cmds = [ "latexmk -pvs -ps test" ]
-        cmds = []
+        cmds = [ "pdflatex -interaction nonstopmode test.tex", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex", "bibtex test.aux", "pdflatex -interaction nonstopmode test.tex" ]
+        #cmds = [ "latexmk -pvs -ps test" ]
+        #cmds = []
         for cmd in cmds:
             f.write ( cmd + "\n" )
         f.close()
         os.chmod ( "latex.sh", 0o755 )
         print ( "Execute latex.sh if you want a test document" )
-        # subprocess.getoutput ( "./latex.sh" )
-        # os.system ( "./latex.sh" )
 
     def createSummaryCitation ( self, bibtex, experiment, commentOut=True ):
         """ create summary citation 
@@ -491,7 +482,7 @@ class BibtexWriter:
         entries = bibtex.entries
         filtered = []
         for entry in entries:
-            collaboration = findCollaboration ( entry )
+            collaboration = getCollaboration ( entry )
             if not experiment == collaboration:
                 continue
             filtered.append ( entry )
@@ -507,7 +498,7 @@ class BibtexWriter:
             ID = entry["ID"]
             label = labels [ ID ]
             sqrts = getSqrts ( label )
-            coll = findCollaboration ( label )
+            coll = getCollaboration ( label )
             if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
             ret += "%s, " % ID
@@ -545,9 +536,10 @@ class BibtexWriter:
         labels.update ( reverse )
         return labels
 
-    def query ( self, anaid: str ):
+    def query ( self, anaid: str, search : bool = False ) -> str:
         """ get the bibtex name of anaid
         :param anaid: eg CMS-SUS-16-050
+        :param search: if true, then search for it if not available
         :returns: bibtex label, eg Aaboud:2017vwy
         """
         path = os.path.dirname ( __file__ )
@@ -560,7 +552,17 @@ class BibtexWriter:
             labels = self.getLabels ( bibtex )
             if anaid in labels:
                 return labels[anaid]
-        return "FIXME"
+        if search:
+            self.pprint ( f"not in cache: lets search for this!" )
+            self.db = Database ( self.databasepath )
+            expRes = self.db.getExpResults ( analysisIDs = [ anaid ] )
+            if len(expRes)>0:
+                self.write_cache = False
+                self.processExpRes ( expRes[0], write_cache=False )
+        return f"no entry for {anaid} in {refsfile} found"
+
+    def pprint ( self, *args ):
+        print ( f"[bibtexTools] {' '.join(map(str,args))}" )
 
     def interactive ( self ):
         """ start an interactive session """
@@ -603,6 +605,11 @@ class BibtexWriter:
                 ivalues["anaid"]=ana
                 f.write ( "I['%s'] = %s\n" % ( bibtex, str(ivalues) ) )
         f.close()
+    def createPdf ( self ):
+        """ create the pdf file, i.e. execute latex.sh """
+        o = subprocess.getoutput ( "./latex.sh" )
+        self.pprint ( "test.pdf created." )
+        # os.system ( "./latex.sh" )
 
 if __name__ == "__main__":
     import argparse
@@ -622,14 +629,19 @@ if __name__ == "__main__":
     argparser.add_argument ( "-w", "--write_cache",
             help=f"cache the retrieved results in {BibtexWriter.cachedir}",
             action="store_true" )
+    argparser.add_argument ( "-p", "--pdf",
+            help=f"create pdf summary document",
+            action="store_true" )
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
     if args.query != None:
-        ret = writer.query( args.query )
-        print ( "query for %s resulted in %s" % ( args.query, ret ) )
+        ret = writer.query( args.query, search = False )
+        print ( f"query for {args.query} resulted in: {ret}" )
         sys.exit()
     if args.copy:
         writer.copy()
     else:
         writer.run( args.write_cache )
         writer.close()
+    if args.pdf:
+        writer.createPdf()

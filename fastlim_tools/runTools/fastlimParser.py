@@ -14,7 +14,7 @@ sys.path.append(os.path.join(home,'smodels-utils/fastlim_tools/convertTools'))
 sys.path.append(os.path.join(home,'smodels-database'))
 
 from convertHelpers import smodels2fastlim
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.base.physicsUnits import GeV, fb, TeV
 from smodels.experiment import databaseObjects, datasetObject, infoObject
 from smodels.theory.theoryPrediction import TheoryPrediction, TheoryPredictionList
 from smodels.theory.theoryPrediction import _getBestResults

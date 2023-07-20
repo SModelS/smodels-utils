@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import subprocess, os, glob
+import subprocess, os, glob, sys
 
 def copy():
     files = [ ".bashrc", ".bash.aliases", ".vim", ".vimrc", ".tmux.conf", ".vim/ftplugin", ".vim/syntax", ".gitconfig", ".vim/colors", ".vim/colors/trinos.vim", ".local/bin/" ]
@@ -39,7 +39,8 @@ def mkTempDir():
 def copyContainers():
     destdir = "/scratch-cbe/users/wolfgan.waltenberger/container/"
     sourcedir = "/groups/hephy/pheno/ww/containers/"
-    simg = "ubuntu2110sing38b.simg"
+    # simg = "ubuntu2210sing310a.simg"
+    simg = "ubuntu2304sing310a.simg"
     if not os.path.exists ( destdir ):
         cmd = f"mkdir {destdir}" 
         subprocess.getoutput ( cmd )
@@ -58,9 +59,22 @@ def copyContainers():
         cmd = f"ln -s {destdir}{simg} {destdir}current.simg"
         subprocess.getoutput ( cmd )
 
+def storeDirectory():
+    """ if current directory is not home, then make sure we 
+        end up in it also within the container """
+    cwd = os.getcwd()
+    home= os.environ["HOME"]
+    #cmd = f"cp {home}/.containerrc {home}/.tempcontainerrc"
+    #subprocess.getoutput ( cmd )
+    if cwd == home:
+        return
+    cmd = f"echo 'cd {cwd}' >> {home}/.cd_rc"
+    subprocess.getoutput ( cmd )
+
 if __name__ == "__main__":
     copy()
     copySSH()
     copyContainers()
     gitClone()
     mkTempDir()
+    # storeDirectory()

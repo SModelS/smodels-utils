@@ -15,7 +15,7 @@ from smodels.theory.theoryPrediction import TheoryPredictionList, theoryPredicti
 from smodels.experiment.txnameObj import TxName
 from smodels.tools.ioObjects import OutputStatus, ResultList
 from smodels.tools.missingTopos import MissingTopoList
-from smodels.tools.physicsUnits import GeV, fb, TeV, pb
+from smodels.base.physicsUnits import GeV, fb, TeV, pb
 from smodels.experiment.databaseObjects import Database
 import ROOT
 

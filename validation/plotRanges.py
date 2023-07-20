@@ -18,7 +18,7 @@ import ctypes
 from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels.theory.auxiliaryFunctions import removeUnits, addUnit
 import itertools

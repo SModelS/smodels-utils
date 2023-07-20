@@ -14,16 +14,17 @@ import math
 import copy
 import sys
 import re
-import ROOT
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
-from smodels.tools.physicsUnits import fb, pb
+from smodels.base.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 
 errorcounts = { "errorsvary": 0, "moreconservative": 0 }
+
+minimumBackgroundEstimate = 1e-4
 
 def createAggregationList ( aggregationborders ):
     """
@@ -85,6 +86,9 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     if len(comments)>0:
         newds.comment = ";".join ( comments )
     newds.observedN = observedN
+    if expectedBG == 0.:
+        logger.warning ( f"background estimate for {newds._name} is at 0.0. Will put to {minimumBackgroundEstimate}" )
+        expectedBG=minimumBackgroundEstimate
     newds.expectedBG = round ( expectedBG, 5 )
     oldBgError = round ( math.sqrt ( bgError2 ), 5 )
     bgErr2 = covariance[aggidx][aggidx]
@@ -102,18 +106,31 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
     comp = UpperLimitComputer ( ntoys, 1. - alpha )
+    logger.error ( "FIXME need to replace with spey!" )
     m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
     try:
-        ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber(fb) 
-        #ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber ( fb )
+        ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber(fb)
     except Exception as e:
         print ( "Exception", e )
         print ( "observed:",newds.observedN )
         sys.exit()
+    if False: # the spey version
+        from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
+        nsig = 1.
+        statModel = get_uncorrelated_nbin_statistical_model(
+                data = float(newds.observedN),backgrounds=float(newds.expectedBG),
+                background_uncertainty = float(newds.bgError),
+                signal_yields = nsig, backend = "simplified_likelihoods",
+                analysis = "x", xsection = 1. ) # nsig/lumi )
+        # print ( "stat model is", str ( statModel ) )
+        # lumi = lumi.asNumber(1./fb)
+        ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
+        ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
     newds.upperLimit = str("%f*fb" % ul )
-    # ule = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected=True ).asNumber ( fb )
-    ule = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
+    ule = comp.getUpperLimitOnSigmaTimesEff ( m, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str("%f*fb" % ule )
+    # print ( f"@@@ UL {ul:.2f} {ulspey:.2f}" )
+    # print ( f"@@@ ULE {ule:.2f} {ulspeyE:.2f}" )
     newds.aggregated = aggregated[:-1]
     newds.originalSRs = originalSRs
     newds.dataId = "%s%d" % (aggprefix, aggidx+1) ## for now the dataset id is the agg region id
@@ -244,9 +261,14 @@ class DatasetsFromLatex:
             if not count_all in self.blinded_regions:
                 counter+=1
                 dataset = DataSetInput ( name )
+                if bg == 0.:
+                    logger.warning ( f"background estimate for {name} is at 0.0. Will put to {minimumBackgroundEstimate}" )
+                    bg=minimumBackgroundEstimate
+
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-                self.datasetOrder.append ( '"%s"' % dataId )
+                self.datasetOrder.append ( '%s' % dataId )
+                # self.datasetOrder.append ( '"%s"' % dataId )
                 self.datasets.append ( dataset )
         if self.aggregate != None:
             self.aggregateDSs()
@@ -292,6 +314,7 @@ class DatasetsFromRoot:
             filename and name of histo are separated with a ":".
         :param readDatasetNames: try to retrieve dataset names from histogram
         """
+        import ROOT
         fname_obs, hname_obs = observed_histo.split(":")
         fname_bg, hname_bg = bg_histo.split(":")
         self.file_obs = ROOT.TFile ( fname_obs )
@@ -337,6 +360,9 @@ class DatasetsFromRoot:
         bg = self.histo_bg.GetBinContent ( self.counter )
         bgerr = self.histo_bg.GetBinError ( self.counter )
         dataset = DataSetInput ( name )
+        if bg == 0.:
+            logger.warning ( f"background estimate for {name} is at 0.0. Will put to {minimumBackgroundEstimate}" )
+            bg=minimumBackgroundEstimate
         dataset.setInfo ( dataType="efficiencyMap", dataId = name, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
         return dataset
@@ -450,6 +476,9 @@ class DatasetsFromEmbaked:
                 if "comment" in values:
                     dataset.comment = values["comment"]
                 # print ( f"data: {nobs}, {bg}+-{bgerr}" )
+                if bg == 0.:
+                    logger.warning ( f"background estimate for {dataId} is at 0.0. Will put to {minimumBackgroundEstimate}" )
+                    bg=minimumBackgroundEstimate
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '"%s"' % dataId )

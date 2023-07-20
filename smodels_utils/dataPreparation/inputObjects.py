@@ -17,12 +17,14 @@ from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
-from smodels_utils.dataPreparation.covarianceHandler import CovarianceHandler
+from smodels_utils.dataPreparation.covarianceHandler import \
+         UPROOTCovarianceHandler, CSVCovarianceHandler, PYROOTCovarianceHandler,\
+         FakeCovarianceHandler
 from smodels_utils.dataPreparation import covarianceHandler
-from smodels.tools.physicsUnits import fb, pb, TeV, GeV
+from smodels.base.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.theory.element import Element
-from smodels.theory.auxiliaryFunctions import elementsInStr
+from smodels.experiment.expSMS import ExpSMS
+from smodels.experiment.expAuxiliaryFuncs import smsInStr
 from smodels.installation import version
 import copy
 import math
@@ -134,10 +136,11 @@ class MetaInfoInput(Locker):
     (publication means: physic summary note or conference note)
     """
 
-    infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
-    'publication', 'contact', 'supersededBy','supersedes', 'comment',
+    infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
+    'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type', 'includeCRs']
+    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type',
+    'includeCRs', 'onnxFiles' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
@@ -160,37 +163,66 @@ class MetaInfoInput(Locker):
         databaseCreator.metaInfo = metaInfo
         return metaInfo
 
-    def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
+    def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
                           max_datasets=None, aggregate = None, datasets = None,
-                          histoIsCorrelations=False, aggprefix="ar" ):
+                          matrixIsCorrelations=False, aggprefix="ar" ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
         a list of lists of signal region names, e.g.
         [ [ "sr1", "sr2" ], [ "sr3", "sr4" ] ] or as a list of lists of
         signal numbers, e.g.  [ [ 1, 2 ], [ 3, 4 ] ]
+        :param addOrder: False, True, or "overwrite". should a datasetOrder field
+                         be defined purely from the signal regions (overwrite),
+                         only if no datasetOrder is explicitly given (True),
+                         or the standard "SRx" names be used (False)
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
          matrix with the errors given per signal region
-        :param histoIsCorrelations: if true, then assume that we histoname
+        :param matrixIsCorrelations: if true, then assume that we histoname
         refers to a correlation matrix, not a covariance matrix, so multiply with
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         """
-        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate,
-                                      aggprefix )
-        if addOrder:
-            self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
+        if type(filename)==dict:
+            handler = FakeCovarianceHandler ( filename, max_datasets, aggregate,
+                    aggprefix )
+        elif filename.endswith ( ".csv" ):
+            handler = CSVCovarianceHandler ( filename,
+                    max_datasets, aggregate, aggprefix )
         else:
-            self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n-1 ) ] )
+            try:
+                import ROOT
+                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
+                    aggregate, aggprefix )
+            except ModuleNotFoundError as e:
+                logger.error ( "could not import pyroot, trying uproot now" )
+                handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
+                    aggregate, aggprefix )
+            """ reverse logic
+            try:
+                import uproot
+                handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
+                    aggregate, aggprefix )
+            except ModuleNotFoundError as e:
+                logger.error ( "could not import uproot, trying pyroot now" )
+                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
+                    aggregate, aggprefix )
+            """
+
+        if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
+            if addOrder:
+                self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
+            else:
+                self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n ) ] )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
             for rowctr,row in enumerate(handler.covariance):
                 self.covariance += "["
                 for colctr,x in enumerate(row):
-                    if histoIsCorrelations:
+                    if matrixIsCorrelations:
                         if datasets == None:
                             logger.error ( "you supplied correlations, now i need datasets" )
                             sys.exit()
@@ -203,8 +235,8 @@ class MetaInfoInput(Locker):
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
-                            if dsVar > 1.2 * x and not histoIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
-                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) at (%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
+                            if dsVar > 1.5 * x and not matrixIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
+                                logger.error ( "variance determined from table (%.2g) is more than 1.5*variance in covariance matrix (%.2g) at #(%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
                                 x = dsVar
                             logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
                             off = max ( dsVar,x ) / min ( dsVar,x)
@@ -306,7 +338,7 @@ class DataSetInput(Locker):
 
     infoAttr = ['dataId','dataType','observedN','expectedBG','bgError', 'comment',
                 'upperLimit', 'expectedUpperLimit', 'aggregated', 'jsonfile', 'lumi',
-                'originalSRs' ]
+                'originalSRs', 'thirdMoment' ]
     internalAttr = ['_name','_txnameList']
 
     requiredAttr = ['dataType', 'dataId']
@@ -356,6 +388,54 @@ class DataSetInput(Locker):
                 val = str(val.asNumber(fb))+"*fb"
             setattr(self,key,val)
 
+    def computeULs ( self ):
+        #First check if a luminosity has been defined for the dataset
+        if hasattr(self,"lumi"):
+            lumi = self.lumi
+        else:
+            lumi = getattr(databaseCreator.metaInfo,'lumi')
+        if isinstance(lumi,str):
+            lumi = eval(lumi,{'fb':fb,'pb': pb})
+        # lumi = lumi.asNumber(1./fb)
+        if False: ## the spey stuff
+            try:
+                import spey
+            except ImportError as e:
+                print ( f"[inputObjects] seems like you dont have spey. install it!" )
+                sys.exit()
+            from smodels.tools.speyTools import SpeyComputer, SimpleSpeyDataSet
+            dataset = SimpleSpeyDataSet ( float(self.observedN),
+                        float(self.expectedBG), float(self.bgError), lumi )
+            computer = SpeyComputer ( dataset, 1. )
+            ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
+            ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
+            #Round numbers:
+            ulspey, ulspeyE = round_list(( ulspey.asNumber(fb),ulspeyE.asNumber(fb)), 4)
+            return ulspey, ulspeyE
+        alpha = .05
+        try:
+            from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
+            comp = UpperLimitComputer ( 1. - alpha )
+            try:
+                # new API
+                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
+                           lumi = lumi )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                if type(ul) == type(None):
+                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                ul, ulExpected = round_list(( ul, ulExpected ), 4)
+                return ul, ulExpected
+
+            except Exception as e:
+                print ( "Exception", e  )
+        except Exception as e:
+            print ( "Exception", e  )
+        # print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
+        # print ( "SModelS ul", ul, "ule", ulExpected )
+        # print ( "spey ul", ulspey, ulspeyE )
+        return None, None
+
     def computeStatistics(self):
         """Compute expected and observed limits and store them """
 
@@ -375,54 +455,7 @@ class DataSetInput(Locker):
             logger.error('observedN, expectedBG and bgError must be defined before computing statistics')
             sys.exit()
 
-
-        #First check if a luminosity has been defined for the dataset
-        if hasattr(self,"lumi"):
-            lumi = self.lumi
-        else:
-            lumi = getattr(databaseCreator.metaInfo,'lumi')
-        if isinstance(lumi,str):
-            lumi = eval(lumi,{'fb':fb,'pb': pb})
-        alpha = .05
-        try:
-            from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
-            comp = UpperLimitComputer ( self.ntoys, 1. - alpha )
-            try:
-                # new API
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
-                       lumi = lumi )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=True ).asNumber ( fb )
-                if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=False ).asNumber ( fb )
-                if type(ulExpected) == type(None):
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, marginalize=True, expected=False ).asNumber ( fb )
-            except:
-                # old API
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
-                ul = comp.ulSigmaTimesEff ( m, marginalize=True ) # / lumi.asNumber ( 1. / fb )
-                ulExpected = comp.ulSigmaTimesEff ( m, marginalize=True, expected=True ) # / lumi.asNumber ( 1. / fb )
-                if type(ul) == type(None):
-                    ul = comp.ulSigmaTimesEff ( m, marginalize=False )
-                if type(ulExpected) == type(None):
-                    ulExpected = comp.ulSigmaTimesEff ( m, marginalize=False, expected=True )
-                # finally, divide by lumi
-                if type(ul) != type(None):
-                    ul = ul / lumi.asNumber ( 1. / fb )
-                if type(ulExpected) != type(None):
-                    ulExpected = ulExpected / lumi.asNumber ( 1. / fb )
-        except ModuleNotFoundError as e:
-            ## maybe smodels < 1.1.2?
-            logger.error ( "cannot import simplifiedLikelihoods module: %s. Maybe upgrade to smodels >= v1.1.3?" % e )
-            from smodels.tools import statistics
-            ul = statistics.upperLimit(self.observedN, self.expectedBG,
-                   self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
-            ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
-                   self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
-
-        #Round numbers:
-        ul = round_list(ul, 3)
-        ulExpected = round_list(ulExpected, 3)
+        ul, ulExpected = self.computeULs ( )
         self.upperLimit = str(ul)+'*fb'
         self.expectedUpperLimit = str(ulExpected)+'*fb'
 
@@ -484,12 +517,12 @@ class DataSetInput(Locker):
         #Check constraints (only for EM results):
         datasetElements = []
         for tx in self._txnameList:
-            for el in elementsInStr(tx.constraint):
+            for el in smsInStr(tx.constraint):
                 newEl = None
                 fs = tx.finalState
                 midState = tx.intermediateState
                 try:
-                    newEl = Element(el,finalState=fs,intermediateState=midState,model=tx._particles)
+                    newEl = ExpSMS(el,finalState=fs,intermediateState=midState,model=tx._particles)
                 except Exception as e:
                     logger.error(str(e))
                     logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
@@ -533,6 +566,8 @@ class TxNameInput(Locker):
     infoAttr.append ( 'finalState' )
     infoAttr.append ( 'intermediateState' )
     requiredAttr.append ( 'finalState' )
+    __hasWarned__ = { "omitted": 0 }
+    round_to = 7 ## number of digits to round to
 
     def addValidationTarballsFromPlanes ( self ):
         """ if a mass plane has a validation tarball defined,
@@ -545,6 +580,23 @@ class TxNameInput(Locker):
                 else:
                     self.validationTarball += ";" + line
 
+    def addXYRangesFromPlanes ( self ):
+        """ if a mass plane has xrange or yrange defined, add it to this
+            TxnameInput object, together with the axis name """
+        for p in self._planes:
+           if hasattr ( p, "xrange" ):
+                line = str(p).replace(" ","")+":"+p.xrange
+                if not hasattr ( self, "xrange" ) or self.xrange in [ "", None ]:
+                    self.xrange = line
+                else:
+                    self.xrange += ";" + line
+           if hasattr ( p, "yrange" ):
+                line = str(p).replace(" ","")+":"+p.yrange
+                if not hasattr ( self, "yrange" ) or self.yrange in [ "", None ]:
+                    self.yrange = line
+                else:
+                    self.yrange += ";" + line
+
     def __init__(self,txName):
 
         """initialize the txName related values an objects
@@ -556,7 +608,6 @@ class TxNameInput(Locker):
         the same decay chain
         """
 
-        self.round_to = 5 ## number of digits to round to
         self._name = txName
         self._smallerThanError = 0
         self.txName = txName
@@ -637,7 +688,7 @@ class TxNameInput(Locker):
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
         try:
-            element = Element(elementsInStr(self.constraint,removeQuotes=False)[0],
+            element = ExpSMS.from_string(smsInStr(self.constraint)[0],
                             intermediateState=self.intermediateState,
                             finalState=self.finalState,
                             model = self._particles)
@@ -740,7 +791,8 @@ class TxNameInput(Locker):
                 if hasNone and len(myInfoList)==0:
                     myInfoList = [ "None" ]
                 # myInfoList.sort()
-                infoStr = ";".join(set(myInfoList)) ## old version
+                infoStr = ";".join(myInfoList) ## old version
+                # infoStr = ";".join(set(myInfoList)) ## old version
                 setattr(self,infoAttr,infoStr)
 
         if not hasattr(self,'validated'):
@@ -821,6 +873,9 @@ class TxNameInput(Locker):
             skipMass = False
             #Check if the massArray is positive and value is positive:
             for br in massArray:
+                if br == None:
+                    skipMass = True
+                    continue
                 for M in br:
                     if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
                         skipMass = True
@@ -838,7 +893,7 @@ class TxNameInput(Locker):
                 continue
             #Check if mass array is consistent with the mass constraints given by the
             #txname constraint. If not, skip this mass.
-            if not self.checkMassConstraints(massArray):
+            if not self.checkMassConstraints(massArray,value):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
@@ -930,9 +985,9 @@ class TxNameInput(Locker):
 
         #Replace particles appearing in the vertices by their mass
         self.massConstraints = []
-        for el in elementsInStr(self.constraint,removeQuotes=False):
+        for el in smsInStr(self.constraint,removeQuotes=False):
             try:
-                element = Element(el,
+                element = ExpSMS(el,
                                 intermediateState=self.intermediateState,
                                 finalState=self.finalState,
                                 model = self._particles)
@@ -960,7 +1015,26 @@ class TxNameInput(Locker):
                 elConstraint.append(branchConstraint)
             self.massConstraints.append(elConstraint)
 
-    def checkMassConstraints(self,massArray):
+    def warn ( self, *txt ):
+        t=str(*txt)
+        if not t in self.__hasWarned__:
+            self.__hasWarned__[t] = 0
+        self.__hasWarned__[t]+=1
+        if self.__hasWarned__[t]<2:
+            logger.warn ( t )
+        if self.__hasWarned__[t]==2:
+            self.__hasWarned__["omitted"]+=1
+            if self.__hasWarned__["omitted"]<2:
+                logger.warn ( "(omitted more such msgs)" )
+
+    def error ( self, line ):
+        if not line in self.__hasWarned__:
+            self.__hasWarned__[line]=0
+        self.__hasWarned__[line]+=1
+        if self.__hasWarned__[line]<2:
+            logger.error ( line )
+
+    def checkMassConstraints(self,massArray, value = None ):
         """
         Check if massArray satisfies the mass constraints defined in massConstraints
 
@@ -969,6 +1043,7 @@ class TxNameInput(Locker):
 
         :param massArray: array with masses to be checked. It must be consistend with the
                           topology of the txname constraint.
+        :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
         """
         if hasattr(self,'massConstraint'):
             if not self.massConstraint:
@@ -992,28 +1067,33 @@ class TxNameInput(Locker):
             goodMasses = True
             for ib,br in enumerate(elMass):
                 if len(massArray)<=ib:
-                    logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
-                    return True
+                    if not massArray == [[], []]:
+                        self.error ( f"something is wrong with the mass array {massArray}, ib={ib}" )
+                    return False
                 for iv,vertex in enumerate(br):
                     if len(massArray[ib])<=iv:
-                        logger.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
-                        return True
+                        if not massArray == [[], []]:
+                            self.error ( f"something is wrong with the mass array {massArray}, ib={ib}, iv={iv}" )
+                        return False
                     m1 = massArray[ib][iv]
                     if type(m1) == tuple:
                         m1 = m1[0]
                     m2 = massArray[ib][iv+1]
                     if type(m2) == tuple:
                         m2 = m2[0]
-                    if type(m1)==str and type(m2)==str:
-                        logger.warn ( f"expected masses/floats, got strings: {m1},{m2}. skip it." )
+                    if type(m1)==str:
+                        self.warn ( f"expected masses/floats, got string: ''{m1}''. skip it." )
+                        continue
+                    if type(m2)==str:
+                        self.warn ( f"expected masses/floats, got string: ''{m2}''. skip it." )
                         continue
                     massDiff = m1-m2
-                    if massDiff < 0.:
+                    if massDiff < 0. and ( value is None or value > 0. ):
                         self._smallerThanError += 1
                         if not quenchNegativeMasses:
-                            if self._smallerThanError < 4:
-                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
-                            if self._smallerThanError == 4:
+                            if self._smallerThanError < 3:
+                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s value is %s" % (m1,m2,str(self),value))
+                            if self._smallerThanError == 3:
                                 logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:

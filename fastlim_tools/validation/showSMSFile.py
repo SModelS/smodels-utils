@@ -15,7 +15,7 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-database'))
 from fastlimOutput import compareFiles, fastlimParser
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.base.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
 from gridSmodels import runSmodelS
 from smodels.theory import slhaDecomposer, crossSection, theoryPrediction

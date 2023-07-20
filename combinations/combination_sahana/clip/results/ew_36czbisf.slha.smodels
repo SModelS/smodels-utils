@@ -1,0 +1,81 @@
+Input status: 1
+Decomposition output status: 1 #decomposition was successful
+# Input File: filter_slha/ew_36czbisf.slha
+# checkinput = True
+# combineanas = ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002
+# combinesrs = True
+# computestatistics = True
+# docompress = True
+# doinvisible = True
+# experimentalfeatures = False
+# maxcond = 0.2
+# minmassgap = 5.
+# model = share.models.mssm
+# ncpus = 30
+# promptwidth = 1e-11
+# reportallsrs = False
+# sigmacut = 0.005
+# stablewidth = 1e-25
+# testcoverage = True
+# Database version: 2.3.0
+================================================================================
+#Analysis  Sqrts  Cond_Violation  Theory_Value(fb)  Exp_limit(fb)  r  r_expected
+
+ ATLAS-SUSY-2019-08  1.30E+01    0.0  3.572E-02  2.188E-01  1.633E-01  1.754E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH
+ Likelihoods: L, L_max, L_SM =  5.053E-45,  5.439E-45,  5.439E-45
+--------------------------------------------------------------------------------
+     CMS-SUS-21-002  1.30E+01    0.0  1.538E-01  1.001E+00  1.536E-01  1.373E-01
+ Signal Region:  (combined)
+ Txnames:  TChiWH, TChiWW, TChiWZ
+ Likelihoods: L, L_max, L_SM =  9.926E-82,  1.056E-81,  1.056E-81
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2019-09  1.30E+01    0.0  1.478E-03  2.124E-01  6.961E-03  6.814E-03
+ Signal Region:  (combined)
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  1.207E-24,  1.207E-24,  1.207E-24
+--------------------------------------------------------------------------------
+ATLAS-SUSY-2018-05-ewk  1.30E+01    0.0  7.571E-04  1.751E-01  4.325E-03  5.580E-03
+ Signal Region:  (combined)
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  9.206E-11,  1.006E-10,  9.107E-11
+--------------------------------------------------------------------------------
+ ATLAS-SUSY-2018-06  1.30E+01    0.0  2.700E-04  1.590E-01  1.698E-03  1.886E-03
+ Signal Region:  SR_low
+ Txnames:  TChiWZ
+ Likelihoods: L, L_max, L_SM =  3.766E-03,  4.450E-03,  3.757E-03
+--------------------------------------------------------------------------------
+     CMS-SUS-20-004  1.30E+01    0.0  2.159E-05  2.565E-01  8.419E-05  1.294E-04
+ Signal Region:  (combined)
+ Txnames:  TChiHH
+ Likelihoods: L, L_max, L_SM =  1.615E-34,  3.111E-34,  1.614E-34
+
+ 
+================================================================================
+The highest r value is = 0.16327 from ATLAS-SUSY-2019-08 (r_expected=0.17544)
+CMS analysis with highest available r_expected: CMS-SUS-21-002, r_expected=0.13729, r_obs=0.15356
+ATLAS analysis with highest available r_expected: ATLAS-SUSY-2019-08, r_expected=0.17544, r_obs=0.16327
+===================================================== 
+Combined Analyses: ATLAS-SUSY-2018-05-ewk,ATLAS-SUSY-2019-08,ATLAS-SUSY-2019-09,CMS-SUS-21-002
+Likelihoods: L, L_max, L_SM = 5.572E-160, 6.314E-160, 6.314E-160
+combined r-value:  2.216E-01
+combined r-value (expected):  2.235E-01
+===================================================== 
+
+
+Total cross-section for missing topologies (fb):  0.000E+00
+Total cross-section for missing topologies with displaced decays (fb):  0.000E+00
+Total cross-section for missing topologies with prompt decays (fb):  0.000E+00
+Total cross-section for topologies outside the grid (fb):  0.000E+00
+
+#Full information on unconstrained cross sections
+================================================================================
+No missing topologies found
+================================================================================
+No missing topologies with displaced decays found
+================================================================================
+No missing topologies with prompt decays found
+================================================================================
+No topologies outside the grid found
+================================================================================

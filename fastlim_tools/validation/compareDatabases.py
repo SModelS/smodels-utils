@@ -14,7 +14,7 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-database'))
 from smodels.tools import databaseBrowser
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.base.physicsUnits import GeV, fb, TeV
 
 
 class simpleSR(object):

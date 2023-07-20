@@ -10,7 +10,7 @@
 import sys, os
 sys.path.append(os.path.abspath('./smodels'))
 from scipy import stats, optimize
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 from scipy.special import erf
 import numpy as np
 from smodels.tools import runtime

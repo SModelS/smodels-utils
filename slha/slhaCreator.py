@@ -23,8 +23,8 @@ import math, numpy, subprocess, time, sys, os
 try: ## smodels <= 122
     from smodels.theory import slhaDecomposer as decomposer
 except ImportError: ## smodels >= 200
-    from smodels.theory import decomposer
-from smodels.tools.physicsUnits import fb, GeV, TeV
+    from smodels.decomposition import decomposer
+from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.tools import xsecComputer, runtime
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
@@ -32,7 +32,7 @@ import signal
 
 __tempfiles__ = set()
 
-def removeTempFiles():
+def removeTempFiles( verbose : bool = False ):
     for l in __tempfiles__:
         if l == None:
             continue
@@ -40,7 +40,8 @@ def removeTempFiles():
             continue
         cmd = f"rm -rf {l}"
         subprocess.getoutput ( cmd )
-        # print ( f"[slhaCreator] {cmd}" )
+        if verbose:
+            print ( f"[slhaCreator] {cmd}" )
     __tempfiles__.clear()
 
 def signal_handler(sig, frame):
@@ -57,10 +58,10 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,template,axes,tempdir=None,pythiaVersion=6,
-                 keep=False):
+    def __init__(self,topology,axes,tempdir=None,pythiaVersion=6,
+                 keep=False, txName = None ):
         """
-        :param template: path to the template file
+        :param topology: the txname
         :param axes: string describing the axes for the template file
                     (i.e. 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,x-80.0))
         :param tempdir: Folder to store the SLHA files. If not set,
@@ -69,12 +70,18 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         :param keep: keep temporary files
         """
+        template="../slha/templates/%s.template" % topology
+        if not os.path.exists ( template ):
+            print ( "[slhaCreator] error: templatefile %s not found." %
+                    template )
+            sys.exit()
 
-        self.version = "1.1" ## slhaCreator version
+        self.version = "1.2" ## slhaCreator version
         self.verbose = False
         self.path = template
+        self.txName = topology
         self.slhaObj = None
-        self.ewk = "wino"
+        self.ewk = None
         self.nprocesses = -1
         self.tags = []
         self.axes = axes
@@ -111,6 +118,39 @@ class TemplateFile(object):
                 __tempfiles__.add ( self.pythiaCard )
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
+
+    def writeOutCoordinates ( self, directory ):
+        """ the entry in ../validation/filenameCoords.py """
+        fpath = f"{directory}/coordinates"
+        f = open ( fpath, "wt" )
+        f.write ( f"{self.coordDicts}\n" )
+        f.close()
+        fpath = "../validation/filenameCoords.py"
+        f = open ( fpath, "rt" )
+        lines = f.readlines()
+        f.close()
+        D={}
+        exec("\n".join(lines),D)
+        tempf = "../validation/filenameCoords2.py"
+        g = open ( tempf, "wt" )
+        for line in lines:
+            if not '"'+self.txName+'"' in line:
+                g.write ( line )
+        g.write ( f'coords["{self.txName}"]={self.coordDicts}\n' )
+        g.close()
+        f2 = open ( tempf, "rt" )
+        lines = f2.readlines()
+        f2.close()
+        D2={}
+        exec("\n".join(lines),D2)
+        if D==D2:
+            print ( f"[slhaCreator] {fpath} did not change." )
+        else:
+            cmd = f"cp {tempf} {fpath}"
+            subprocess.getoutput ( cmd )
+            print ( f"Updated {fpath}, please make sure you git-push." )
+        os.unlink ( tempf )
+
 
     def findWidthTags ( self, filename ):
         """ in a template file <template>, search for "width tags",
@@ -184,6 +224,7 @@ class TemplateFile(object):
             fdata = fdata.replace(tag+"-5",str(massDict[tag]-5))
             fdata = fdata.replace(tag,str(massDict[tag]))
 
+        self.coordDicts = { "masses": [], "widths": None }
         #Create SLHA filename (if not defined)
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
@@ -195,12 +236,23 @@ class TemplateFile(object):
                 slhaname = "%s" % (templateName)
                 if swapBranches:
                     masses = [ masses[1], masses[0] ]
+                ctr = 1
                 for br in masses:
+                    self.coordDicts["masses"].append([])
+                    if self.coordDicts["widths"]!=None:
+                        self.coordDicts["widths"].append([])
                     for m in br:
                         if type(m)==tuple:
+                            self.coordDicts["masses"][-1].append(ctr)
                             slhaname += "_%d_%.2g" % (m[0],m[1] )
+                            if self.coordDicts["widths"]==None:
+                                self.coordDicts["widths"]=[[]]
+                            self.coordDicts["widths"][-1].append(ctr+1)
+                            ctr+=2
                         else:
+                            self.coordDicts["masses"][-1].append(ctr)
                             slhaname += "_%d" % m
+                            ctr+=1
                 slhaname += ".slha"
                 slhaname = os.path.join(self.tempdir,slhaname)
 
@@ -246,7 +298,7 @@ class TemplateFile(object):
 
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
-                computer = RefXSecComputer()
+                computer = RefXSecComputer( self.verbose )
                 c = f"produced via slhaCreator v{self.version}"
                 if comment != None:
                     c+= f": {comment}"
@@ -379,7 +431,7 @@ def createMassRanges ( args ):
                     masses.append ( { "x": x, "y": y } )
                     y = y * args.dy
             else:
-                for y in numpy.arange(args.ymin,args.ymax+1,args.dy):
+                for y in numpy.arange(args.ymin,args.ymax+args.dy*.1,args.dy):
                     if excludeInvertedMasses and y > x:
                         break
                     if args.max_dxy != None and (x-y) > args.max_dxy:
@@ -444,8 +496,8 @@ if __name__ == "__main__":
         type=str, default='@@topo@@.tar.gz' )
     argparser.add_argument ( '-C', '--comment', nargs='?', help='add a comment to all files [None]',
         type=str, default=None )
-    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino or hino [wino]',
-        type=str, default="wino" )
+    argparser.add_argument ( '-e', '--ewk', help='type of ewk process, wino, hino, or degenerate [None]',
+        type=str, default=None )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y]]',
         type=str, default='2*[[x, y]]' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x [100]',
@@ -492,6 +544,8 @@ if __name__ == "__main__":
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
+    argparser.add_argument('-o', '--overwrite', action='store_true',
+        help="overwrite existing tarball")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
         help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'. Currently works only with reference_xsecs.")
     argparser.add_argument('--swapBranches', action='store_true',
@@ -510,14 +564,14 @@ if __name__ == "__main__":
     if args.pythia6:
         pythiaVersion = 6
     tarball = args.tarball.replace ( "@@topo@@", args.topology )
+    if args.overwrite and os.path.exists ( tarball ):
+        print ( f"[slhaCreator] overwriting existing {tarball}" )
+        os.unlink ( tarball )
+    if os.path.exists ( tarball ) and not args.overwrite:
+        print ( f"[slhaCreator] NOT overwriting existing results from {tarball}!" )
 
-    templatefile="../slha/templates/%s.template" % args.topology
-    if not os.path.exists ( templatefile ):
-        print ( "[slhaCreator] error: templatefile %s not found." %
-                templatefile )
-        sys.exit()
-    tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion,
-                         keep=args.keep)
+    tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
+                         keep=args.keep )
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
@@ -550,7 +604,9 @@ if __name__ == "__main__":
                    swapBranches = args.swapBranches, 
                    ignore_pids = args.ignore_pids, comment = args.comment )
     print ( "[slhaCreator] Produced %s slha files" % len(slhafiles ) )
-    newtemp = tempfile.mkdtemp(dir="./" )
+    # newtemp = tempfile.mkdtemp(dir="./" ) # FIXME now idea what that was for
+    newtemp = tempf.tempdir # FIXME anyways this does it correctly it seems
+    __tempfiles__.add ( newtemp )
     #oldtarball = f"{args.topology}.tar.gz"
     oldtarball = tarball
     if os.path.exists ( oldtarball ):
@@ -558,8 +614,7 @@ if __name__ == "__main__":
     print ( "[slhaCreator] Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
                            ( newtemp, tarball ) )
-    cmd = "cp %s/%s*.slha %s/recipe %s" % \
-            ( tempf.tempdir, args.topology, tempf.tempdir, newtemp )
+    cmd = "cp {tempf.tempdir}/{args.topology}*.slha {tempf.tempdir}/recipe {tempf.tempdir}/coordinates {newtemp}"
     # print ( "cmd", cmd )
     subprocess.getoutput ( cmd )
     argvs = sys.argv
@@ -567,10 +622,11 @@ if __name__ == "__main__":
         if "(" in a or "[" in a:
             argvs[i]=f'"{a}"'
     tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
-    subprocess.getoutput ( "cd %s; tar czvf ../%s %s*slha recipe" % \
-            ( newtemp, tarball, args.topology ) )
+    tempf.writeOutCoordinates ( newtemp )
+    cmd = f"cd {newtemp}; tar czvf ../{tarball} {args.topology}*slha recipe coordinates"
+    if False:
+        print ( f"[slhaCreator] {cmd}" )
+    o = subprocess.getoutput ( cmd )
     print ( f"[slhaCreator] New tarball {tarball}" )
     if not args.keep:
-        subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
-        subprocess.getoutput ( "rm -rf %s" % newtemp )
-
+        removeTempFiles()

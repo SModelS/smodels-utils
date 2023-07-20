@@ -6,8 +6,8 @@ import json
 from smodels.experiment.databaseObj import Database
 import smodels.experiment.txnameObj
 smodels.experiment.txnameObj.TxNameData._keep_values = True
-from smodels.tools.physicsUnits import pb, fb, GeV
-from smodels.tools.smodelsLogging import logger
+from smodels.base.physicsUnits import pb, fb, GeV
+from smodels.base.smodelsLogging import logger
 logger.setLevel('INFO')
 from smodels_utils.helper.memory_footprint import sizeof
 
@@ -21,7 +21,7 @@ with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
     bestJsons.append(json.load(f))
 # Fetching the efficiencies from the database
 dir = "../../smodels-database"
-db=Database( dir, discard_zeroes = True)
+db=Database( dir )
 results=db.getExpResults()
 massvec = 2*[[240*GeV,40*GeV]]
 print("Efficiencies were found for the following SRs :")

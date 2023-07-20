@@ -12,7 +12,7 @@
 
 import unum
 import numpy as np
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 
 def addUnit(obj,unit):
     """

@@ -1,7 +1,7 @@
 #Break down the total cross-section (AFTER compression) in tested and not tested components
 def getTestComposition(SMSTopList,ListOfAnalyses,maxcond):
   from smodels.theory import CrossSection, ClusterTools
-  from smodels.tools.physicsUnits import fb
+  from smodels.base.physicsUnits import fb
 
   zeroweight = {}
   for xsec in CrossSection.XSectionInfo.xsecs:

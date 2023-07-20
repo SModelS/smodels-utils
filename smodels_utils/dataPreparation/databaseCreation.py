@@ -54,6 +54,20 @@ class DatabaseCreator(list):
     -txName.txt (one for every txName and every kin. region,
     if the kin. region exist)
     """
+    __hasWarned__ = { "omitted": 0 }
+
+    def warn ( self, *txt ):
+        t=str(*txt)
+        if not t in self.__hasWarned__:
+            self.__hasWarned__[t] = 0
+        self.__hasWarned__[t]+=1
+        if self.__hasWarned__[t]<2:
+            logger.warn ( t )
+        if self.__hasWarned__[t]==2:
+            self.__hasWarned__["omitted"]+=1
+            if self.__hasWarned__["omitted"]<2:
+                logger.warn ( "(omitted more such msgs)" )
+
 
     def __init__(self):
 
@@ -87,7 +101,7 @@ class DatabaseCreator(list):
             self.ncpus =  multiprocessing.cpu_count()
         except:
             self.ncpus = 1
-
+	
         list.__init__(self)
 
     def removeOldDataSetDirs ( self ):
@@ -360,7 +374,7 @@ class DatabaseCreator(list):
 
         return dataset
 
-    def getExclusionCurves(self):
+    def getExclusionCurvesROOT(self):
         """
         Gets all exclusion curves defined. If there are multiple datasets,
         then it does not include duplicated exclusion curves.
@@ -410,8 +424,11 @@ class DatabaseCreator(list):
                                 except ValueError:
                                     logger.info ( "cannot convert to coordinates: %s" % point )
                                     continue
-                                if type(point["x"])==str or type(point["y"])==str:
-                                    logger.warn( f"trying to add strings as coordinates of points {point['x']},{point['y']}. skip it." )
+                                if type(point["x"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points ''{point['x']}''. skip it." )
+                                    continue
+                                if type(point["y"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points ''{point['y']}''. skip it." )
                                     continue
                                 stGraph.SetPoint(i,point['x'],point['y'])
                                 i+=1
@@ -423,7 +440,74 @@ class DatabaseCreator(list):
                                 stGraph.SetLineStyle(2)
                             curves.append(label)  #Store curves (to avoid duplicates)
                             allCurves.append(stGraph)
+        return allCurves
 
+    def getExclusionCurves(self):
+        """
+        Gets all exclusion curves defined. If there are multiple datasets,
+        then it does not include duplicated exclusion curves.
+
+        :return: list with exclusion curves (TGraph objects)
+        """
+        curves = []
+        allCurves = []
+        #Loop over datasets
+        for dataset in self:
+            #Loop over txnames
+            for txname in dataset._txnameList:
+                for plane in txname._goodPlanes:
+                    if plane == None:
+                        continue
+                    for axes in str(plane.axes).split(";"):
+                        if plane.branches == None:
+                            plane2 = MassPlane.fromString ( plane._txDecay, axes )
+                            if plane2 != None:
+                                plane.branches = plane2.branches
+                        for exclusion in plane._exclusionCurves:
+                            if not exclusion:
+                                continue  #Exclusion source has not been defined
+                            name = '%s_%s' %(exclusion.name, axes)
+                            label = [txname.txName,exclusion.name,axes]
+                            if label in curves: #Curve already appears in dict
+                                continue
+                            stGraph = { "title": name, "name": exclusion.name,
+                                        "txname": txname.txName, "points": [] }
+                            i=0
+                            for pointDict in exclusion:
+                                point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                                if not 'y' in point:
+                                    point['y'] = 0.0
+                                try:
+                                    masses = plane.getParticleMasses ( **point )
+
+                                    meetsConstraints = txname.checkMassConstraints ( masses )
+                                    if not meetsConstraints:
+                                        continue
+                                    # print ( "masses", masses, meetsConstraints )
+                                except ValueError:
+                                    logger.info ( "cannot convert to coordinates: %s" % point )
+                                    continue
+                                if type(point["x"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points {point['x']}. skip it." )
+                                    continue
+                                if type(point["y"])==str:
+                                    self.warn( f"trying to add strings as coordinates of points {point['y']}. skip it." )
+                                    continue
+                                # stGraph.SetPoint(i,point['x'],point['y'])
+                                stGraph["points"].append ( point )
+                                i+=1
+                            #stGraph.SetLineColor(ROOT.kBlack)
+                            stGraph["linecolor"]="black"
+                            if 'expected' in exclusion.name:
+                                stGraph["linecolor"]="red"
+                                # stGraph.SetLineColor(ROOT.kRed)
+                            #stGraph.SetLineStyle(1)
+                            stGraph["linestyle"]=1
+                            if 'P1' in exclusion.name or 'M1' in exclusion.name:
+                                # stGraph.SetLineStyle(2)
+                                stGraph["linestyle"]=2
+                            curves.append(label)  #Store curves (to avoid duplicates)
+                            allCurves.append(stGraph)
         return allCurves
 
     def _setLastUpdate(self):
@@ -599,7 +683,7 @@ class DatabaseCreator(list):
         mode="recreate"
         if update:
             mode="update"
-        import json, uproot
+        import json
         fname = os.path.join ( self.base, self.exclusionsJsonFile )
         content = {}
         if update and os.path.exists ( fname ):
@@ -607,17 +691,20 @@ class DatabaseCreator(list):
                 content = json.load ( f )
                 f.close()
         for exclusion in self.exclusions:
-            dirname = exclusion.txname
+            dirname = exclusion["txname"]
             if not dirname in content:
                 content[dirname] = {}
-            name = exclusion.GetName()
+            name = exclusion["title"]
             name = name.strip()
             name = name.replace(" ","")
             xv,yv=[],[]
             xandy = []
-            for i in range(exclusion.GetN() ):
-                x = round_to_n ( exclusion.GetPointX(i), 4 )
-                y = round_to_n ( exclusion.GetPointY(i), 4 )
+            # for i in range(exclusion.GetN() ):
+            for pt in exclusion["points"]:
+                x = round_to_n ( pt["x"], 4 )
+                y = round_to_n ( pt["y"], 4 )
+                #x = round_to_n ( exclusion.GetPointX(i), 4 )
+                #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
                 yv.append ( y )
                 xandy.append ( { "x": x, "y": y } )
@@ -713,6 +800,7 @@ class DatabaseCreator(list):
                 sys.exit()
 
         obj.addValidationTarballsFromPlanes()
+        obj.addXYRangesFromPlanes()
 
         for attr in obj.infoAttr:
             if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
@@ -727,7 +815,7 @@ class DatabaseCreator(list):
             if attr == "axes":
                 ## remove full 3d entries
                 if "z" in value:
-                    logger.warning ( "There is a 3d axis. Will try to remove it." )
+                    self.warn ( "There is a 3d axis. Will try to remove it." )
                     tokens = value.split(";")
                     value=""
                     for t in tokens:
@@ -748,7 +836,7 @@ class DatabaseCreator(list):
                         tokens.append ( t )
                     # tokens = [ x.strip() for x in tokens ]
 
-                    tokens.sort()
+                    # tokens.sort()
                     value = "; ".join( tokens )
                     while value.find("  ")>-1:
                         value = value.replace( "  ", " " )

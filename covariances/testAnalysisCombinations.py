@@ -12,14 +12,13 @@ sys.path.insert(0, "../")
 
 from smodels.tools import runtime
 runtime._experimental = True
-from smodels.theory.theoryPrediction import theoryPredictionsFor
-from smodels.theory import decomposer
-from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
+from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
+from smodels.decomposition import decomposer
 from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import fb, GeV
+from smodels.base.physicsUnits import fb, GeV
 import unittest
 import numpy as np
 import os
@@ -27,7 +26,7 @@ import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange, createLine
 from colorama import Fore, Cursor
-    
+
 dbpath = [ "../../smodels-database/" ]
 # dbpath = [ "official" ]
 dbpath = [ "official+fastlim+nonaggregated" ]
@@ -67,6 +66,26 @@ def getSetupRExp():
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-CONF-2013-037', 'CMS-SUS-13-012' ]
     dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "gluino_squarks.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": (-4., 6. ),
+            "dictname": "rexp.dict",
+            "output": "debug_rexp.png"
+    }
+    return ret
+
+def getSetupFilter():
+    database = Database( dbpath[0] )
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'ATLAS-SUSY-2019-09', 'ATLAS-SUSY-2018-12', "CMS-SUS-12-024" ]
+    dsids = [ 'SRATT', 'SRWZ_14', 'MET4_HT4_nb3' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
 
@@ -129,7 +148,7 @@ def getSetupSabine2():
             "output": "sabine2.png"
     }
     return ret
-    
+
 def getSetup19006():
     """ CMS-SUS-19-006 (sr combo) """
     database = Database( dbpath[0] )
@@ -166,7 +185,7 @@ def getSetupJamie():
     anaids = [ 'ATLAS-SUSY-2016-07', 'ATLAS-SUSY-2013-02', 'CMS-SUS-13-012' ]
     # anaids = [ 'ATLAS-SUSY-2016-07' ]
     # dsids = [ 'SRtN3', '3NJet6_1000HT1250_600MHTinf' ]
-    dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', '8NJetinf_1000HT1250_200MHTinf' ]
+    dsids = [ '2j_Meff_3600', 'SR2jt', 'SR_6NJet8_500HT800_450MHTinf', 'SR_8NJetinf_1000HT1250_200MHTinf', '6NJet8_500HT800_450MHTinf', ]# '8NJetinf_1000HT1250_200MHTinf' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
                                          datasetIDs=dsids, dataTypes=dTypes)
     # exp_results = []
@@ -189,7 +208,7 @@ def getSetupJamie():
     }
     if ret["expected"]==False:
         ret["murange"] = ( -15., 65. )
-    ret["addjitter"]=0.008
+    ret["addjitter"]=0. # 0.008
     return ret
 
 
@@ -253,10 +272,107 @@ def getSetupTimotheeSR():
             "output": "timsr.png"
     }
     if ret["expected"]==False:
-        ret["murange"] = ( -.8, .3 )
+        ret["murange"] = ( -.8, 1.3 )
     ret["addjitter"]=0.008
     ret["addjitter"]=0.008
     return ret
+
+def getSetupBill():
+    """ CMS-SUS-20-004 (UL), CMS-SUS-20-004 (combined) """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit" ]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ None ]
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids,
+            dataTypes=dTypes, useNonValidated = True )
+
+    exp_results = tmp
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    ret = { "slhafile": "TChiHH_300_0_300_0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -.8, 1.5 ),
+            "dictname": "20004.dict",
+            "expected": False,
+            "output": "20-004.png"
+    }
+    ret["addjitter"]=0.002
+    ret["addjitter"]=0.002
+    ret["rewrite"]=True
+    ret["plotproduct"]=False
+    return ret
+
+def getSetupBill2():
+    """ CMS-SUS-20-004 (UL), CMS-SUS-20-004 (combined) """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit" ]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ None ]
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids,
+            dataTypes=dTypes, useNonValidated = True )
+
+    exp_results = tmp
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    ret = { "slhafile": "TChiHH_750_0_750_0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -1., 4. ),
+            "dictname": "20004b.dict",
+            "expected": False,
+            "output": "20-004b.png"
+    }
+    ret["addjitter"]=0.002
+    ret["addjitter"]=0.002
+    ret["rewrite"]=True
+    ret["logy"]=False
+    ret["normalize"]=True
+    ret["plotproduct"]=False
+    return ret
+
+def getSetupBill3():
+    """ CMS-SUS-20-004 (UL), CMS-SUS-20-004 (combined) """
+    database = Database( dbpath[0] )
+    dTypes = ["upperLimit" ]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ None ]
+    tmp = database.getExpResults(analysisIDs=anaids, datasetIDs=dsids,
+            dataTypes=dTypes, useNonValidated = True )
+
+    exp_results = tmp
+    # exp_results = []
+
+    dTypes = ["efficiencyMap"]
+    anaids = [ 'CMS-SUS-20-004' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+            datasetIDs=dsids, dataTypes=dTypes, useNonValidated = True )
+    ret = { "slhafile": "TChiHH_450_0_450_0.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "murange": ( -1., 3. ),
+            "dictname": "20004c.dict",
+            "expected": False,
+            "output": "20-004c.png"
+    }
+    ret["addjitter"]=0.002
+    ret["addjitter"]=0.002
+    ret["rewrite"]=True
+    ret["logy"]=False
+    ret["normalize"]=True
+    ret["plotproduct"]=False
+    return ret
+
 
 def getSetupTimotheeCombined():
     """ CMS-SUS-20-001, ATLAS-SUSY-2019-09 """
@@ -285,7 +401,34 @@ def getSetupTimotheeCombined():
     if ret["expected"]==False:
         ret["murange"] = ( -.2, .5 )
     ret["addjitter"]=0.008
-    ret["addjitter"]=0.008
+    ret["addVerticalLabels"]=False
+    return ret
+
+def getSetupReinterpretationForum():
+    """ ATLAS-SUSY-2018-41 and ATLAS-SUSY-2019-09 (pyhf) """
+    database = Database( dbpath[0] )
+    dTypes = ["efficiencyMap"]
+    anaids = [  'ATLAS-SUSY-2018-41'  ]
+    dsids = [ 'all' ]
+    exp_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+
+    print ( "exp_Results", [ x.globalInfo.id for x in exp_results ] )
+    anaids = [ 'ATLAS-SUSY-2019-09' ]
+    dsids = [ 'all' ]
+    comb_results = database.getExpResults(analysisIDs=anaids,
+                                         datasetIDs=dsids, dataTypes=dTypes)
+    ret = { "slhafile": "TChiWZ_560_130_560_130.slha",
+            "SR": exp_results,
+            "comb": comb_results,
+            "dictname": "reinterpret.dict",
+            "output": "combo_rif.png",
+#"murange": (-4,5),
+            "murange": (-.5,.7),
+    }
+    ret["addjitter"]=0.
+    ret["title"]="likelihoods, TChiWZ model"
+    ret["addVerticalLabels"]=False
     return ret
 
 def getSetup16050():
@@ -424,7 +567,7 @@ def getSetupTChiWZ09():
     database = Database( dbpath[0] )
     dTypes = ["efficiencyMap"]
     anaids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2019-09'  ]
-    #anaids = [ 'ATLAS-SUSY-2019-09'  ]
+    #anaids = [ 'ATLAS-SUSY-2019-09'  ]naids = [ 'ATLAS-SUSY-2017-03', 'ATLAS-SUSY-2019-09'  ]
     dsids = [ 'SR2l_Int', 'SRWZ_10', 'SRWZ_20' ]
     #dsids = [ 'all' ]
     exp_results = database.getExpResults(analysisIDs=anaids,
@@ -442,6 +585,9 @@ def getSetupTChiWZ09():
 #"murange": (-4,5),
             "murange": (-1,2),
     }
+    ret["addjitter"]=0.
+    ret["title"]="likelihoods, TChiWZ model"
+    ret["addVerticalLabels"]=False
     return ret
 
 def getSetupTChiWH():
@@ -512,11 +658,14 @@ def plotLlhds ( llhds, fits, uls, setup ):
     """
     alllhds = []
     colors = {}
+    addVerticalLabels = True # add horizontal lines to legend
+    if "addVerticalLabels" in setup:
+        addVerticalLabels = setup["addVerticalLabels"]
     for Id,l in llhds.items():
         if Id == "combined":
             continue
         args = { "ls": "-" }
-        if "sr combo" in Id or "pyhf combo" in Id:
+        if "sr combo" in Id or "pyhf" in Id:
             args["linewidth"]=2
             args["c"]="r"
         alllhds += list( l.values() )
@@ -530,6 +679,8 @@ def plotLlhds ( llhds, fits, uls, setup ):
         colors[Id] = x[0].get_color()
     prodllhd=llhds["combined"]
     totS = sum(prodllhd.values())
+    if setup["normalize"]==False:
+        totS=1.
     for k,v in prodllhd.items():
         prodllhd[k]=prodllhd[k]/totS
     llmin, llmax = 0., 1.
@@ -540,7 +691,9 @@ def plotLlhds ( llhds, fits, uls, setup ):
     prody = list ( prodllhd.values() )
     if setup["addjitter"] and False:
         addJitter ( prody )
-    plt.plot ( prodllhd.keys(), prody, c="k", label=r"$\Pi_i l_i$ [tpc]" )
+    if setup["plotproduct"]:
+       label = r"$\Pi_i l_i$" # [tpc]"
+       plt.plot ( prodllhd.keys(), prody, c="k", label=label, linewidth=3 )
 
     if "mu_hat" in fits:
         mu_hat = fits["mu_hat"]
@@ -549,53 +702,92 @@ def plotLlhds ( llhds, fits, uls, setup ):
         r = fits["r"]
         rexp = fits["rexp"]
         lmax = max ( prodllhd.values() )
-        print ( f"[testAnalysisCombinations] muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
+        print ( f"[testAnalysisCombinations] product: muhat={mu_hat:.2g} sigma_mu={sigma_mu:.3g} lmax={lmax:.2g} ulmu={ulmu:.2f} r={r:.2f} rexp={rexp:.2f}" )
         # mu_hat = 1.
         ax = plt.gca()
-        if withinMuRange ( mu_hat, setup["murange"] ):
-            plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}]" )
-        else:
-            plt.text ( .6, -.11, rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
+        if setup["plotproduct"]:
+            if withinMuRange ( mu_hat, setup["murange"] ):
+                label = None
+                if addVerticalLabels:
+                    label = rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}]"
+                plt.plot ( [ mu_hat ]*2, [ llmin, .95 * lmax ], linestyle="-.", c="k", label=label )
+            else:
+                label = None
+                if addVerticalLabels:
+                    label = rf"$\hat\mu$ ($\Pi_i l_i$) [tpc:{mu_hat:.2f}] (off chart)",
+                plt.text ( .6, -.11, label, transform=ax.transAxes, fontsize=9, c="gray" )
         llhd_ulmu = getLlhdAt ( prodllhd, ulmu )
-        if withinMuRange ( ulmu, setup["murange"] ):
-            plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted", 
-                   c="k", label=rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]" )
-        else:
-            plt.text ( -.1, -.11, rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
+
+        if setup["plotproduct"]:
+            if withinMuRange ( ulmu, setup["murange"] ):
+                label = None
+                if addVerticalLabels:
+                    label = rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}]"
+                plt.plot ( [ ulmu ]*2, [ llmin, .95 * llhd_ulmu ], linestyle="dotted",
+                       c="k", label=label )
+            else:
+                plt.text ( -.1, -.11, rf"ul$_\mu$ ($\Pi_i l_i$) [tpc:{ulmu:.2f}] (off chart)", transform=ax.transAxes, fontsize=9, c="gray" )
 
     if True and "llhd_combo(ul)" in fits:
         # print ( f"[testAnalysisCombinations] combo ul_mu {ulmu:.2f}" )
-        llhdul = fits["llhd_combo(ul)"]  
+        llhdul = fits["llhd_combo(ul)"]
         # print ( "[testAnalysisCombinations] llhd at", fits["muhat_combo"], "(combo) is", llhdul )
         srcombo = " (sr combo)"
         if fits["llhdtype"]=="pyhf":
             srcombo = " (pyhf combo)"
         if withinMuRange ( fits["ul_combo"], setup["murange"] ):
             line = { "x": [ fits["ul_combo"] ] *2, "y": [ llmin, 1.05* llhdul ] }
-            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r", label=rf"ul$_\mu${srcombo}: {fits['ul_combo']:.2f}" )
+            label = None
+            if addVerticalLabels:
+                label=rf"ul$_\mu${srcombo}: {fits['ul_combo']:.2f}"
+            plt.plot ( line["x"], line["y"], linestyle="dotted", c="r",
+                       label=label )
         lmax = fits["lmax_combo"]
         # lmax = llmax
         if withinMuRange ( fits["muhat_combo"], setup["murange"] ):
             line = createLine ( fits["muhat_combo"], llmin, lmax, True )
-            # plt.plot ( [ fits["muhat_combo"] ]*2, [ llmin, .95*lmax], linestyle="-.", c="r", label=r"$\hat\mu$ (sr combo)" )
-            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=rf"$\hat\mu${srcombo}: {fits['muhat_combo']:.2f}" )
+            label = None
+            if addVerticalLabels:
+                label = rf"$\hat\mu${srcombo}: {fits['muhat_combo']:.2f}"
+
+            plt.plot ( line["x"], line["y"], linestyle="-.", c="r", label=label )
 
     if True and "llhd_ul" in fits:
         # print ( f"[testAnalysisCombinations] ul ul_mu {ulmu:.2f}" )
         llhdul = [ fits["llhd_ul"]]
         # print ( "llhd at", fits["ul_ul"], "is", llhdul )
-        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted", c="r", label=r"ul$_\mu$ (sr combo ul)" )
+        label = None
+        if addVerticalLabels:
+            label=r"ul$_\mu$ (sr combo ul)"
+        plt.plot ( [ fits["ul_ul"] ] *2, [ llmin, llhdul ], linestyle="dotted",
+                   c="r", label=label )
         lmax = llmax
-        plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.", c="r", label=r"$\hat\mu$ (ul)" )
+        label = None
+        if addVerticalLabels:
+            label = r"$\hat\mu$ (ul)"
+        plt.plot ( [ fits["muhat_ul"] ] *2 , [ llmin, .95 * lmax ], linestyle="-.",
+                   c="r", label=label )
 
     for Id,values in uls.items():
         ul = values [ "ulmu" ]
         if not withinMuRange ( ul, setup["murange"] ):
             continue
         l = values [ "lulmu" ]
-        label = r"ul$_\mu$ (%s)" % Id
         label = None
-        plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
+        if addVerticalLabels:
+            label = r"ul$_\mu$ (%s)" % Id
+        # label = None
+        if not "combo" in Id:
+            plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
+        muhat = values["muhat"]
+        lmax = values["lmax"]
+        # if muhat < 0.:
+        label = None
+        if addVerticalLabels:
+            label = f"$\hat\mu$ ({Id})"
+        if not "combo" in Id:
+            plt.plot ( [ muhat ] *2, [ llmin, lmax ], linestyle="-.", \
+                        c=colors[Id], label= label )
 
     slha = setup["slhafile"]
     p = slha.find("_")
@@ -604,8 +796,12 @@ def plotLlhds ( llhds, fits, uls, setup ):
     label = ""
     if "label" in setup:
         label = setup["label"]+" "
-    plt.title ( f"{label}likelihoods for {slha}" )
-    plt.legend()
+    title = f"{label}likelihoods for {slha}"
+    print  ("setup", setup )
+    if "title" in setup:
+        title = setup["title"]
+    plt.title ( title )
+    plt.legend( loc=(.53,.8))
     # plt.legend(bbox_to_anchor=(1.1, 1.05)) # place outside
     plt.xlabel ( r"$\mu$" )
     output = "combo.png"
@@ -633,13 +829,15 @@ def createLlhds ( tpreds, setup ):
     for t in tpreds:
         dId = "sr combo"
         if hasattr ( t.dataset.globalInfo, "jsonFiles" ):
-            dId = "pyhf combo"
+            dId = "pyhf"# combo"
         if hasattr ( t.dataset, "dataInfo" ):
             dId = t.dataset.dataInfo.dataId
-        #if dId.find("_")>-1:
-        #    dId = dId[:dId.find("_")]
         if dId == None:
             dId = "UL"
+        if len(dId)>20:
+            dId = dId[:10]+"..."
+        #if dId.find("_")>-1:
+        #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"
         r = t.getRValue()
         xsec = t.xsection.value
@@ -648,7 +846,9 @@ def createLlhds ( tpreds, setup ):
         ulmu = float ( ul / xsec )
         lulmu = t.likelihood ( mu = ulmu )
         eulmu = float ( eul / xsec )
-        muhat = t.muhat( allowNegativeSignals = True )
+        fmuhat = t.muhat( allowNegativeSignals = True )
+        muhat = fmuhat
+        lmax = t.likelihood ( mu = muhat )
         sigma_mu = t.sigma_mu( allowNegativeSignals = True )
         if type(muhat)==float:
             muhat = f"{muhat:.2g}"
@@ -662,10 +862,10 @@ def createLlhds ( tpreds, setup ):
         lsm = t.lsm()
         #thetahat_sm = t.dataset.theta_hat
         # print("er", Id, "lsm", lsm, "thetahat_sm", thetahat_sm, "lmax", t.lmax() )
-        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100, 
+        l, S = computeLlhdHisto ( t, xmin, xmax, nbins = 100,
                 normalize = normalize, equidistant=False, expected = expected )
         # print ( f">> ulmu({Id})={ulmu:.2f}, l={lulmu:.2g} S={S:.2f}" )
-        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu }
+        uls[Id] = { "ulmu": ulmu, "eulmu": eulmu, "lulmu": lulmu/S, "muhat": fmuhat, "lmax": lmax/S }
         llhds[Id]=l
         sums[Id] = S
         t1 = time.time()
@@ -701,7 +901,7 @@ def addCombinedLlhds ( d, combiner, expected ):
             totllhd+=llhd
     d["llhds"]["combined"]=combL
     return d
-    
+
 def testAnalysisCombo( setup ):
     """ this method should simply test if the fake result and the
         covariance matrix are constructed appropriately
@@ -756,10 +956,11 @@ def testAnalysisCombo( setup ):
     for er in comb_results:
         ts = theoryPredictionsFor(er, smstopos,
             combinedResults=True, useBestDataset=False, marginalize=False)
-        print ( f"   --- {er.id()}: {len(ts)} SR results, {len(ts)} comb results" )
-        for t in ts:
-            print ( f"   combined result {t.dataset.globalInfo.id}" )
-            combine.append(t)
+        if ts != None:
+            print ( f"   --- {er.id()}: {len(ts)} SR results, {len(ts)} comb results" )
+            for t in ts:
+                print ( f"   combined result {t.dataset.globalInfo.id}" )
+                combine.append(t)
         # ts = tsc
         if ts == None:
             continue
@@ -776,7 +977,7 @@ def testAnalysisCombo( setup ):
             llhd_ul = ts[0].likelihood (  ul, expected = expected )
             fits["llhd_combo(ul)"] = llhd_ul
         muhat = ts[0].muhat( allowNegativeSignals = True, expected = expected )
-        # print ( f"[testAnalysisCombinations] when writing {ul} {llhd_ul}" )
+        print ( f"[testAnalysisCombinations] ul:{ul:.2g} llhd_ul:{llhd_ul} muhat:{muhat}" )
         fits["muhat_combo"] = muhat
         fits["lmax_combo"] = ts[0].lmax( allowNegativeSignals = True, expected= expected )
     nplots = 0
@@ -806,7 +1007,7 @@ def testAnalysisCombo( setup ):
     if len(comb_results)>0 and len(ts)>0 and "llhd_combo(ul)" in fits:
         Id = f"{ts[0].dataset.globalInfo.id}:sr combo"
         if hasattr ( ts[0].dataset.globalInfo, "jsonFiles" ):
-            Id = f"{ts[0].dataset.globalInfo.id}:pyhf combo"
+            Id = f"{ts[0].dataset.globalInfo.id}:pyhf"
         if Id in sums:
             S=sums[Id]
             fits["llhd_combo(ul)"] = fits["llhd_combo(ul)"] / S
@@ -819,7 +1020,7 @@ def testAnalysisCombo( setup ):
     writeDictFile ( dictname, llhds, times, fits, uls, setup )
 
 def runSlew( rewrite = False ):
-    """ run them all 
+    """ run them all
     :param rewrite: if true, rewrite the dicts, rerun the computations
     """
     print ( "[testAnalysisCombinations] run all functions" )
@@ -837,12 +1038,13 @@ def runSlew( rewrite = False ):
     sys.exit()
 
 def addDefaults ( setup ):
-    default = {} 
+    default = {}
     default["rewrite"]=True
     default["expected"]=False
     default["addjitter"]=True
     default["normalize"]=True
     default["logy"]=False
+    default["plotproduct"]=True
     for k,v in default.items():
         if not k in setup:
             setup[k]=v
@@ -857,7 +1059,7 @@ def getSetup( which="TChiWZ09" ):
         setup = func()
         return addDefaults ( setup )
     except KeyError as e:
-        print ( f"[testAnalysisCombo] {name} not found" )
+        print ( f"[testAnalysisCombo] {name} not found: {e}" )
         listSetups()
         sys.exit()
 
@@ -897,10 +1099,10 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     dbpath[0] = args.dbpath
     if args.list:
-       listSetups() 
+       listSetups()
        sys.exit()
     if args.setup == "all":
-        ret = listSetups( printOut = False ) 
+        ret = listSetups( printOut = False )
         for r in ret:
             setup = getSetup ( r )
             if args.dont_rewrite:
@@ -908,7 +1110,7 @@ if __name__ == "__main__":
             print ( f"[testAnalysisCombo] now testing {r}" )
             testAnalysisCombo( setup )
         sys.exit()
-        
+
     setup = getSetup( args.setup )
     if args.dont_rewrite:
         setup["rewrite"]=False

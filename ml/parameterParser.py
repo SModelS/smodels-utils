@@ -220,9 +220,9 @@ class Parameter(dict):
 		from smodels.experiment.databaseObj import Database
 		self._parameter["smodels-db"] = Database(self["databasePath"])
 
-		import smodels.tools.smodelsLogging as log
+		import smodels.base.smodelsLogging as log
 		log.setLogLevel(logLevel)
-		from smodels.tools.smodelsLogging import logger
+		from smodels.base.smodelsLogging import logger
 
 		try: device = int(self["device"])
 		except: device = self["device"]

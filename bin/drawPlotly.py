@@ -10,7 +10,7 @@ import matplotlib.cm as cm
 import plotly.plotly as py
 import plotly.offline as offline
 import plotly.graph_objs as go
-from smodels.tools.physicsUnits import GeV, pb, fb
+from smodels.base.physicsUnits import GeV, pb, fb
 from mpl_toolkits.mplot3d import Axes3D
 import sys
 if sys.version[0]=="3":
@@ -85,7 +85,7 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.coolwarm, data=None, plot_edg
 
 
 def getData():
-    from smodels.tools.smodelsLogging import setLogLevel
+    from smodels.base.smodelsLogging import setLogLevel
     setLogLevel ( "debug" )
     from smodels.experiment.databaseObj import Database
     from smodels.experiment.txnameObj import TxNameData

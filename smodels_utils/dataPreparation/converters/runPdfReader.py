@@ -1,1 +1,0 @@
-/home/walten/git/smodels-database/13TeV/ATLAS/ATLAS-SUSY-2019-09-eff/orig/run.py

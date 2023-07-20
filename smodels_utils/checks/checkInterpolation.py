@@ -10,7 +10,7 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import GeV, fb, TeV, pb
+from smodels.base.physicsUnits import GeV, fb, TeV, pb
 import random
 from ROOT import TCanvas, TGraph2D, TLatex, gPad, gStyle, TH1F
 from AuxPlot import Default, set_palette

@@ -12,7 +12,7 @@
 import sys,os,glob,time
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
-from smodels.tools.physicsUnits import fb,pb,GeV,TeV
+from smodels.base.physicsUnits import fb,pb,GeV,TeV
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)

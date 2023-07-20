@@ -12,11 +12,12 @@
 import logging
 from sympy import var
 from math import floor, log10
-from smodels.tools.physicsUnits import TeV
+from smodels.base.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
 from inspect import currentframe, getframeinfo
 import sys
 x,y,z,w = var('x y z w')
+from typing import Union, Text
 
 # pretty name of particle:
 
@@ -147,6 +148,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5ttbbWW':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T5ttbbWWoff':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5WZ':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
+    'T5HG':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> H lsp, neutralino_2 --> gamma lsp',
+    'T5bbbbZG':'gluino  --> bottom antibottom neutralino_2, neutralino_2 --> Z lsp, neutralino_2 --> gamma lsp',
+    'T5ttttZG':'gluino  --> top antitop neutralino_2, neutralino_2 --> Z lsp, neutralino_2 --> gamma lsp',
+    'T6ttZG':'stop  --> top neutralino_2, neutralino_2 --> Z lsp, neutralino_2 --> gamma lsp',
     'T5WZoff':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W^{*} lsp, neutralino_2 --> Z^{*} lsp',
     'T5WZh':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
     'T5ZZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z lsp',
@@ -363,6 +368,9 @@ motherDict = {"T1" :  "gluino",
     "T5ttttoff" :  "gluino",
     "T5ttofftt" : "gluino",
     "T5WZ" :  "gluino",
+    "T5HG" :  "gluino",
+    "T5bbbbZG" :  "gluino",
+    "T5ttttZG" :  "gluino",
     "T5WZoff" :  "gluino",
     "T5WZh" :  "gluino",
     "T5ZGamma" :  "gluino",
@@ -380,6 +388,7 @@ motherDict = {"T1" :  "gluino",
     "T6ZZtt" :  "stop_2",
     "T6ZZofftt" :  "stop_2",
     "T6HHtt" :  "stop_2",
+    "T6ttZG" :  "stop",
     "T6bbWW" :  "stop",
     "T6bbHH" :  "sbottom",
     "T6bbHHoff" :  "sbottom",
@@ -642,16 +651,25 @@ def prettyDecay(txname,latex=True):
         decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
-def rootToLatex ( string, outputtype = "latex" ):
-    """ translate root string to latex """
+def rootToLatex ( string : str, outputtype : str = "latex",
+                  rectify = True ):
+    """ translate root string to latex 
+    :param rectify: silly feature that rectifies the backslashes
+    """
     if outputtype == "root":
+        return string
+    def rectifyCommands ( string : str ):
+        for i in [ "t", "p", "c", "g", "q", "b", "u", "d" ]:
+            string = string.replace(f"\\\\{i}",f"\\{i}")
         return string
     if type ( string ) in [ list, tuple ]:
         ret = []
         for x in string:
-            ret.append ( rootToLatex ( x, outputtype ) )
-        return ret
+            ret.append ( rootToLatex ( x, outputtype, False ) )
+        return rectifyCommands ( ", ".join ( ret ) )
     string = "$" + string.replace("#","\\") + "$"
+    if rectify:
+        string = rectifyCommands ( string )
     return string
 
 def prettyTxname(txname,outputtype="root",protons=True):
@@ -679,6 +697,12 @@ def prettyTxname(txname,outputtype="root",protons=True):
 
     prodString = prettyProduction(txname,latex,protons)
     decayString = prettyDecay(txname,latex)
+    if prodString is None:
+        logging.warn( f"production string for {txname} not defined" )
+        prodString = f"?{txname}?"
+    if decayString is None:
+        logging.warn( f"decay string for {txname} not defined" )
+        decayString = f"?{txname}?"
     if outputtype == "latex":
         prodString = "$" + prodString.replace("#","\\" ) + "$"
         decayString = "$" + decayString.replace("#","\\" ) + "$"
@@ -697,6 +721,7 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
                           anaid is given, then infer collaboration name from anaid
     :param anaid: analysis id. if given, then we also query a dictionary
     """
+    # yes, this is a big mess. wouldnt hurt to start this from scratch
 
     prettyNames = { "ATLAS-SUSY-2013-02": "ATL multijet, 8 TeV",
         "ATLAS-SUSY-2013-15": "ATL 1$\ell$ stop, 8 TeV",
@@ -713,25 +738,73 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
             collaboration = "ATL"
     if prettyname == None:
         prettyname = "???"
-    pn = prettyname.replace(">","$>$").replace("<","$<$")
+    pn = prettyname.replace(">=","$\\ge$ " )
+    pn = pn.replace(">","$>$").replace("<","$<$")
+    pn = pn.replace( "(or 2 gamma)", "(or 2 gamma) " )
+    pn = pn.replace("MHT","$\\not{\!\!H}_T$")
+    pn = pn.replace("MCT","$M_{\mathrm{CT}}$" )
+    pn = pn.replace("M_CT","$M_{\mathrm{CT}}$" )
+    pn = pn.replace("hadronic","@hadronic@" )
+    pn = pn.replace("W h(gamma gamma)","$Wh(\gamma\gamma)$" )
+    pn = pn.replace("h(gamma gamma)","$h(\gamma\gamma)$" )
+    pn = pn.replace("HTmiss","$\\not{\!\!H}_T$")
+    pn = pn.replace("HT","$\\mathrm{H}_{\\mathrm{T}}$" )
     pn = pn.replace("0 or $>$=1 leptons +","" )
     pn = pn.replace("photon photon","$\gamma\gamma$" )
+    pn = pn.replace("gamma gamma","$\gamma\gamma$" )
+    pn = pn.replace("diphoton","$\\to\gamma\gamma$" )
     pn = pn.replace("SF OS","SFOS" )
-    pn = pn.replace("jet multiplicity","n$_{jets}$" )
-    pn = pn.replace("Higgs","H" )
+    # pn = pn.replace("jet multiplicity","n$_{jets}$" )
+    pn = pn.replace("jet multiplicity","jets" )
+    pn = pn.replace("Higgs","$h$" )
+    #pn = pn.replace("H(bb)","H($\\to$bb)" )
+    pn = pn.replace("H(bb)","H(bb)" )
+    pn = pn.replace("h(bb)","$h(bb)$" )
+    pn = pn.replace("h(b b)","$h(bb)$" )
+    pn = pn.replace("Z(l l)","$Z(\ell \ell)$" )
+    pn = pn.replace("W ","$W$ " )
+    # pn = pn.replace(" h"," $h$" )
+    pn = pn.replace("W-","$W$-" )
+    pn = pn.replace(" W"," $W$" )
+    pn = pn.replace("Z ","$Z$ " )
+    pn = pn.replace(" Z"," $Z$" )
+    pn = pn.replace("b-jets", "$b$-jets" )
+    pn = pn.replace("b-", "$b$-" )
+    pn = pn.replace("e,mu,tau", "$e,\\mu,\\tau$" )
+    pn = pn.replace("e,mu", "$e,\mu$" )
+    pn = pn.replace("c-jets", "$c$-jets" )
+    pn = pn.replace("c-jet", "$c$-jet" )
+    pn = pn.replace("c-", "$c$-" )
+    pn = pn.replace("taus", "$\\tau$" )
+    pn = pn.replace("tau's", "$\\tau$" )
+    pn = pn.replace("tau ", "$\\tau$ " )
+    pn = pn.replace(" tau", " $\\tau$" )
     pn = pn.replace("searches in","to" )
     pn = pn.replace("same-sign","SS" )
-    pn = pn.replace("Multilepton","multi-l" )
-    pn = pn.replace("multilepton","multi-l" )
-    pn = pn.replace("leptons","l's" )
-    pn = pn.replace("lepton","l" )
+    pn = pn.replace("Multilepton","multi-$\ell$" )
+    pn = pn.replace("multilepton","multi-$\ell$" )
+    pn = pn.replace("leptons","$\ell$" )
+    pn = pn.replace("lepton","$\ell$" )
     pn = pn.replace("1L","1$\ell$" )
     pn = pn.replace("0L","0$\ell$" )
+    pn = pn.replace("0 l","0$\ell$" )
+    pn = pn.replace("OS l","OS $\ell$" )
+    pn = pn.replace("SS l","SS $\ell$" )
+    pn = pn.replace("p_T","$p_{T}$" )
+    pn = pn.replace("pT","$p_{T}$" )
+    pn = pn.replace("soft l","soft $\ell$" )
+    pn = pn.replace("OSSF l","SFOS $\ell$" )
+    pn = pn.replace("SFOS l","SFOS $\ell$" )
+    pn = pn.replace("multi-l","multi-$\ell$" )
     pn = pn.replace("1 l","1$\ell$" )
+    pn = pn.replace("2 l","2$\ell$" )
+    pn = pn.replace("3 l","3$\ell$" )
     pn = pn.replace("0 leptons","0$\ell$" )
     pn = pn.replace("dilepton","di\-l" )
     pn = pn.replace("productions with decays to","prod, to ")
     pn = pn.replace("photon","$\gamma$" )
+    pn = pn.replace(" gamma"," $\gamma$" )
+    pn = pn.replace("gamma ","$\gamma$ " )
     pn = pn.replace("Photon","$\gamma$" )
     pn = pn.replace("-$>$","$\\rightarrow$" )
     pn = pn.replace("final states","")
@@ -745,11 +818,24 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
     pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
     pn = pn.replace("MET","$\\not{\!\!E}_T$")
-    pn = pn.replace("M_CT","M$_CT$" )
+    pn = pn.replace("met","$\\not{\!\!E}_T$")
+    pn = pn.replace("2-3","2--3")
+    pn = pn.replace("1-2","1--2")
+    pn = pn.replace("7-10","7--10")
+    pn = pn.replace("0-3","0--3")
+    pn = pn.replace("2-6","2--6")
+    pn = pn.replace("M_CT","$\\mathrm{M}_\\mathrm{CT}$" )
+    pn = pn.replace("M_T2","$M_\\mathrm{T2}$" )
+    pn = pn.replace("MT2","$M_\\mathrm{T2}$" )
     pn = pn.replace("alpha_T","$\\alpha_T$" )
-    if len(pn)>0 and pn[-1]==")":
+    pn = pn.replace("alphaT","$\\alpha_T$" )
+    pn = pn.replace( "@hadronic@", "hadronic" )
+    pn = pn.replace( "(+ jets)", "(+ jets) " )
+    if len(pn)>0 and pn[-1]==")" and prettyname != "H(diphoton)":
         pos = pn.rfind ( "(" )
         pn = pn[:pos]
+    pn = pn.replace( "(+ jets) ", "(+ jets)" )
+    pn = pn.replace( "(or 2 gamma) ", "(or 2 $\\gamma$)" )
     pn = pn.strip()
     if sqrts != None:
         try:
@@ -761,7 +847,21 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
-def prettyAxes( txname, axes, outputtype="root" ):
+def prettyAxesV3( validationPlot ) -> Union[None,str]:
+    """
+    get a description of the axes of validation plot
+    :param validationPlot: the validationPlot
+    :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
+
+    :return: list of constraints as latex, e.g.:
+             ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
+    """
+    # print ( f"here: {type(validationPlot)}" )
+    # print ( f"we have dataMap {validationPlot.getDataMap()}" )
+    return "x=m(C1)=m(N2), y=m(N1)"
+
+def prettyAxes( txname : str, axes : str, outputtype : str ="root" ) -> \
+        Union[None,str]:
     """
     Converts the axes string to the axes labels (plus additional constraints)
     in latex form (using ROOT conventions)
@@ -772,6 +872,8 @@ def prettyAxes( txname, axes, outputtype="root" ):
              ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
     """
 
+    if type(axes) == type(None):
+        return "axis unknown"
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'THSCPM2b':

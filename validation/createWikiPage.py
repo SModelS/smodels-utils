@@ -13,8 +13,8 @@ import sys,os,glob,time,copy
 import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import TeV, fb
-from smodels.tools.smodelsLogging import setLogLevel, logger
+from smodels.base.physicsUnits import TeV, fb
+from smodels.base.smodelsLogging import setLogLevel, logger
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList
 import subprocess
 setLogLevel("debug" )
@@ -200,7 +200,7 @@ CMS are for on- and off-shell at once.
                         hasTn,hasNewTn=False,False
                         txns, newtxns = [], []
                         for tn in expRes.getTxNames():
-                            validated = tn.getInfo('validated')
+                            validated = tn.validated
                             tname = tn.txName
                             if not self.ignore_validated and validated in [ "n/a" ]:
                                 continue
@@ -235,8 +235,17 @@ CMS are for on- and off-shell at once.
     def isOneDimensional( self, txname ):
         """ simple method that tells us if its a 1d map. In this case, we dont
             do "pretty", we use ugly plots for pretty. """
-        r = not ( "y" in str(txname.axes) )
-        return r
+        if hasattr ( txname, "axes" ):
+            r = not ( "y" in str(txname.axes) )
+            return r
+        if not hasattr ( txname, "axesMap" ):
+            logger.error ( "we have neither an axes field nor an axesMap field?" )
+            sys.exit(-1)
+        maps = txname.axesMap
+        if "y" in maps:
+            return False
+        return True
+
 
     def writeExpRes( self, expRes, tpe ):
         """ write the experimental result expRes
@@ -265,7 +274,7 @@ CMS are for on- and off-shell at once.
         txnames.sort()
         txns_discussed=set()
         for txname in txnames:
-            validated = txname.getInfo('validated')
+            validated = txname.validated
             if not self.ignore_validated and validated != True:
                 continue
             # if validated == "n/a": continue
@@ -292,7 +301,7 @@ CMS are for on- and off-shell at once.
             #    print ( ",", end="" )
             # print ( txn, flush=True, end= "" )
             txns_discussed.add ( txn )
-            validated = txname.getInfo('validated')
+            validated = txname.validated
             if not self.ignore_validated and validated != True:
                 continue
             #if validated == "n/a": continue
@@ -514,7 +523,7 @@ CMS are for on- and off-shell at once.
         stype=tpe.replace(" ","")
         nres = 0
         nexpRes = 0
-        expResList.sort()
+        expResList.sort( reverse = True ) # start with most recent!
         for expRes in expResList:
             txnames=[]
             tnamess = expRes.getTxNames()
@@ -523,7 +532,7 @@ CMS are for on- and off-shell at once.
                 name = tn.txName
                 if name in txnames:
                     continue
-                validated = tn.getInfo('validated')
+                validated = tn.validated
                 if not self.ignore_validated and validated != True:
                     continue
                 # if validated in [ "n/a" ]: continue
@@ -537,7 +546,7 @@ CMS are for on- and off-shell at once.
                 return
         self.true_lines.append ( '\n\n<a name="%s%s%d"></a>\n' % ( exp,stype,sqrts ) )
         self.true_lines.append ( "## %s %s, %d TeV: %d analyses, %d results total\n\n" % (exp,tpe,sqrts, nexpRes, nres ) )
-        expResList.sort()
+        expResList.sort( reverse=True ) # start with most recent
         self.writeTableHeader ( tpe )
         for expRes in expResList:
             # print ( "id=",expRes.globalInfo.id )

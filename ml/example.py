@@ -4,7 +4,7 @@
 smodelsPath = ""
 databasePath = "../../smodels-database"
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import GeV, fb, pb
+from smodels.base.physicsUnits import GeV, fb, pb
 from mlCore.network import DatabaseNetwork
 
 import numpy as np

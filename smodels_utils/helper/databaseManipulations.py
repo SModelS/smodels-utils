@@ -3,8 +3,13 @@
 """ module that contains a few methods to manipulate the database """
 
 from smodels.experiment.databaseObj import Database
+from smodels.experiment.expResultObj import ExpResult
+from smodels.base.physicsUnits import TeV, fb
+from smodels_utils.helper.various import getCollaboration
+from typing import Union, List, Dict
 
-def combineResults( database, anas_and_SRs : dict, debug=False ):
+def combineResults( database: Database, anas_and_SRs : Dict, 
+        debug : bool = False ) -> ExpResult:
     """ combine the <anas_and_SRs> results in <database>
         to a single result with a diagonal covariance matrix
     :param anas_and_SRs: dictionary with analysis Ids as keys and lists of signal regions
@@ -13,8 +18,9 @@ def combineResults( database, anas_and_SRs : dict, debug=False ):
     """
     import copy
     anaids = anas_and_SRs.keys()
-    expResults = database.getExpResults( analysisIDs = anaids,
+    database.selectExpResults( analysisIDs = anaids,
                                          dataTypes = [ "efficiencyMap" ] )
+    expResults = database.expResultList
     datasets,datasetorder,covariance_matrix = [], [], []
     anaIds = []
     ctdses = 0
@@ -63,21 +69,41 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     :param invert: if True, then invert the selection, keep *only* fastlim
     :param picklefile: picklefile to store fastlim-free database
     """
-    print ( "[databaseManipulations] before removal of fastlim",len(db.expResultList),\
-            "results" )
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of fastlim {len(db.expResultList)} results" )
     filtered = filterFastLimFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     # dbverold = dbverold.replace(".","")
-    db.subs[0].expResultList = filtered
+    db.subs[0]._activeResults = filtered[:]    
+    db.subs[0]._allExpResults = filtered
     if invert:
         db.subs[0].txt_meta.databaseVersion = "fastlim" + dbverold
     db.subs = [ db.subs[0] ]
-    print ( "[databaseManipulations] after removal of fastlim",len(db.expResultList),
-            "results" )
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of fastlim {len(db.expResultList)} results" )
     if not invert:
         db.txt_meta.hasFastLim = False
         db.txt_meta.databaseVersion = "fastlim" + dbverold # FIXME why?
         db.subs[0].pcl_meta.hasFastLim = False
+    if picklefile not in [ None, "" ]:
+        db.createBinaryFile( picklefile )
+    return db
+
+def selectFullLikelihoodsFromDB ( db, picklefile = "temp.pcl" ):
+    """ select results with full likelihoods from database db
+    :param db: database object
+    :param picklefile: picklefile to store fastlim-free database
+    """
+    print ( f"[databaseManipulations] before selection of full likelihoods {len(db.expResultList)} results" )
+    filtered = filterFullLikelihoodsFromList ( db.expResultList )
+    dbverold = db.databaseVersion
+    # dbverold = dbverold.replace(".","")
+    db.subs[0].expResultList = filtered
+    dbver = dbverold
+    if not "full_llhds" in dbver:
+        dbver = "full_llhds" + dbverold
+    db.subs[0].txt_meta.databaseVersion = dbver
+    db.subs = [ db.subs[0] ]
+    #print ( f"[databaseManipulations] oldver {dbverold} newver {db.databaseVersion}" )
+    print ( f"[databaseManipulations] selected {len(db.expResultList)} results with full likelihoods" )
     if picklefile not in [ None, "" ]:
         db.createBinaryFile( picklefile )
     return db
@@ -88,16 +114,15 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     :param invert: if True, then invert the selection, keep *only* nonaggregated
     :param picklefile: picklefile to store trimmed database
     """
-    print ( "[databaseManipulations] before removal of nonaggregated",\
-            len(db.expResultList), "results" )
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of nonaggregated {len(db.expResultList)} results" )
     filtered = filterNonAggregatedFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
-    db.subs[0].expResultList = filtered
+    db.subs[0]._allExpResults = filtered
+    db.subs[0]._activeResults = filtered[:]    
     if invert:
         db.subs[0].txt_meta.databaseVersion = "nonaggregated" + dbverold
     db.subs = [ db.subs[0] ]
-    print ( "[databaseManipulations] after removal of nonaggregated",\
-            len(db.expResultList), "results" )
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of nonaggregated {len(db.expResultList)} results" )
     if not invert:
         db.txt_meta.hasFastLim = False
         db.txt_meta.databaseVersion = dbverold
@@ -198,9 +223,9 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
                 continue
         if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
             ctr+=1
-            if ctr < 4:
+            if ctr < 3:
                 print ( "[databaseManipulations] removing fastlim", gI.id )
-            if ctr == 4:
+            if ctr == 3:
                 print ( "                        .... (and a few more) ... " )
             fastlimList.append ( e )
         else:
@@ -209,7 +234,70 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
         return fastlimList
     return filteredList
 
-def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
+def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
+    """ filter out all results that have jsonFiles_FullLikelihood defined. 
+        replace jsonFiles with jsonFiles_FullLikelihood, return these results.
+    :param expResList: list of experiment results
+    :param really: if False, then do not actually filter
+    :param update: consider entries only after this date (yyyy/mm/dd)
+    """
+    if not really:
+        return expResList
+    fullLLhds,filteredList = [], []
+    ctr = 0
+    for e in expResList:
+        gI = e.globalInfo
+        if update not in [ "" , None ]:
+            lu = getattr ( e.globalInfo, "lastUpdate" )
+            if type(lu) != str:
+                print ( "[databaseManipulations] we have lastUpdate that reads %s in %s" % \
+                        (lu, e.globalInfo.id ) )
+                import sys
+                sys.exit(-1)
+            from datetime import datetime
+            after = datetime.strptime ( update, "%Y/%m/%d" )
+            this = datetime.strptime ( lu, "%Y/%m/%d" )
+            if this < after:
+                continue
+        if not hasattr ( gI, "jsonFiles_FullLikelihood" ):
+            filteredList.append ( e )
+            continue
+        ctr+=1
+        if ctr < 4:
+            print ( "[databaseManipulations] found a full likelihood", gI.id )
+        if ctr == 4:
+            print ( "                        .... (and a few more) ... " )
+
+        if hasattr ( gI, "jsons" ):
+            del gI.jsons
+        gI.jsonFiles = gI.jsonFiles_FullLikelihood
+        del gI.jsonFiles_FullLikelihood
+        gI.cacheJsons()
+        fullLLhds.append ( e )
+    #if invert:
+    #    return filteredList
+    return fullLLhds
+
+def filterCollaborationFromList ( expResultList : List[ExpResult],
+        collaboration = str, invert : bool = False ) -> List[ExpResult]:
+    """ filter list of exp results by collaboration name
+    :param collaboration: CMS, or ATLAS
+    :param invert: if True, then invert, discard the given collaboration
+    :returns: list of experimental results of certain collaboration
+    """
+    ret = []
+    for ana in expResultList:
+        contact = ""
+        coll = getCollaboration ( ana.globalInfo.id )
+        if invert and collaboration == coll:
+            continue
+        if not invert and collaboration != coll:
+            continue
+        ret.append ( ana )
+    return ret
+
+def filterSqrtsFromList ( expResultList, 
+        sqrts : int, invert : bool = False ) -> List[ExpResult]:
     """ filter list of exp results by sqrts
     :param sqrts: sqrts (int) to keep
     :param invert: if True, then invert, discard the given sqrts
@@ -227,26 +315,51 @@ def filterSqrtsFromList ( expResultList, sqrts, invert=False ):
         ret.append ( ana )
     return ret
 
+def removalOrSelection ( invert : bool ):
+    if invert:
+        return "selection"
+    return "removal"
+
 def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     """ remove superseded results from database db
     :param invert: if true, then create superseded-only db
     :returns: database but stores it also in temp.pcl
     """
-    print ( "[databaseManipulations] before removal of superseded",len(db.expResultList),\
-            "results" )
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of superseded {len(db.expResultList)} results" )
     filteredList = []
     ctr = 0
     supers, newers = [], []
     olders = db.expResultList
     supers = filterSupersededFromList ( olders, invert )
-    db.subs[0].expResultList = supers
+    print('Found %i non-superseded results' %len(supers))
+    db.subs[0]._allExpResults = supers
+    db.subs[0]._activeResults = supers[:]
     db.subs = [ db.subs[0] ]
-    print ( "[databaseManipulations] after removal of superseded",len(db.expResultList),
-            "results" )
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of superseded {len(db.expResultList)} results" )
     if invert:
         db.subs[0].databaseVersion = "superseded" + db.databaseVersion
     db.createBinaryFile( outfile )
     return db
+
+def filterByLumi ( expRes, minlumi, invert=False ):
+    """ filter out results with too low lumi, keep all with lumi >= minlumi
+    :param invert: if true, keep all with lumi < minlumi
+    :returns: list of results
+    """
+    if type(minlumi) == type(1./fb):
+        minlumi = minlumi.asNumber ( 1./fb)
+    if type(minlumi) == type(None):
+        return expRes
+    high, low = [], []
+    for er in expRes:
+        lumi = er.globalInfo.lumi.asNumber ( 1./fb)
+        if lumi > minlumi:
+            high.append ( er )
+        else:
+            low.append ( er )
+    if invert:
+        return low
+    return high
 
 def filterSupersededFromList ( expRes, invert=False ):
     """ filter out superseded results,

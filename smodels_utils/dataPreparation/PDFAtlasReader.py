@@ -5,6 +5,7 @@
 
 import minecart
 import sys
+import os
 
 class PDFAtlasReader(): 
     def __init__( self, config : dict ): 
@@ -115,7 +116,15 @@ class PDFAtlasReader():
             
 
     def ulValues( self ):
-        f = open ( "ul.csv", "wt" )
+        destname = "ul.csv"
+        print ( f"[PDFAtlasReader] writing {destname}" )
+        f = open ( destname, "wt" )
+        filename = os.path.basename ( self.config['name'] )
+        f.write ( f"# upper limit values, extracted from {filename}, using PDFAtlasReader\n" )
+        if "axes" in self.config:
+            f.write ( f"# axes are {self.config['axes']}\n" )
+        f.write ( f"# x range {self.config['x']}\n" )
+        f.write ( f"# y range {self.config['y']}\n" )
         for l,lettering in enumerate(self.page.letterings):
             x, y = self.computeXYLetter ( lettering )
             if False: # lettering.title() in [ "0.39", "0.079", "0.019" ]:

@@ -18,11 +18,11 @@ def setEnv ( args ):
         os.environ["SMODELS_NOUPDATE"]="1"
     if hasattr ( args, "resetValidation" ) and args.resetValidation==True:
         os.environ["SMODELS_RESETVALIDATION"]="1"
-    from smodels.tools.smodelsLogging import setLogLevel
+    from smodels.base.smodelsLogging import setLogLevel
     if hasattr ( args, "verbose" ):
         setLogLevel ( args.verbose )
     from smodels_utils.dataPreparation.inputObjects import DataSetInput
     if hasattr ( args, "ntoys" ):
-        from smodels.tools.smodelsLogging import logger
+        from smodels.base.smodelsLogging import logger
         logger.info ( "Set the number of toys to %d" % args.ntoys )
         DataSetInput.ntoys = args.ntoys

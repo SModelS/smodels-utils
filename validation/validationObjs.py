@@ -8,11 +8,11 @@
 
 """
 
-import logging,os,sys,time,math,numpy,copy,ctypes,random
+import logging,os,sys,time,math,numpy,copy,random
 
 logger = logging.getLogger(__name__)
-from smodels.tools.physicsUnits import GeV
-from smodels.tools import modelTester
+from smodels.base.physicsUnits import GeV
+from smodels.matching import modelTester
 from smodels_utils.helper.various import round_to_n
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
@@ -25,6 +25,7 @@ from validationHelpers import point_in_hull
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
+from smodels.experiment.databaseObj import Database
 from sympy import var
 import pyslha
 import string
@@ -50,23 +51,27 @@ class ValidationPlot():
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
-    def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None, 
-               options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
-               combine = False ):
+    def __init__( self, ExptRes, TxNameStr, Axes, db : Database, slhadir=None,
+            databasePath=None, options : dict = {}, kfactor = 1.,
+            namedTarball = None, keep = False, combine = False ):
         """
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
+        print ( "validationObjects init", Axes )
 
         self.expRes = copy.deepcopy(ExptRes)
+        self.db = db
         self.keep = keep
         self.t0 = time.time()
         self.options = options
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
+        self.massPlane = MassPlane.fromString(self.txName,self.axes)
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
+        self.currentSLHADir = None
         self.data = []
         self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
@@ -114,97 +119,6 @@ class ValidationPlot():
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.axes
         return vstr
-
-    def completeGraph ( self, curve ):
-        """ complete the given graph at the ends to cross the axes """
-        if type(curve) == dict:
-            from smodels_utils.helper.rootTools import exclusionCurveToTGraph
-            curve = exclusionCurveToTGraph ( curve )
-        if not ( curve.GetN() > 3 ):
-            print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
-        if curve.GetN() <= 3:
-            return
-        x1,y1=ctypes.c_double(),ctypes.c_double()
-        x2,y2=ctypes.c_double(),ctypes.c_double()
-        xl,yl=ctypes.c_double(),ctypes.c_double()
-        # first compute k of the first three points
-        curve.GetPoint ( 0, x1, y1 ) ## get first point
-        curve.GetPoint ( 2, x2, y2 ) ## get third point
-        curve.GetPoint ( curve.GetN()-1, xl, yl ) ## get last point
-        if (( x1.value - xl.value )**2 + ( y1.value - yl.value ) ** 2 ) < 50.:
-            ## need not completion
-            return
-        logY=False
-        ax1, ay1 = x1.value, y1.value
-        ax2, ay2 = x2.value, y2.value
-        tx1, ty1 = x1.value, y1.value
-        if max(abs(ay2),abs(ay1))<1e-6:
-            logY=True
-            ay2 = rescaleWidth(ay2)
-            ay1 = rescaleWidth(ay1)
-        if ax2 == ax1:
-            ax2 = ax1 + 1e-16
-        dx = ax2 - ax1
-        if dx == 0.:
-            dx=1e-6
-        k = (ay2 - ay1) / dx
-        if abs(k) > 1:
-            ## the curve is more vertical -- close with the x-axis (y=0)
-            self.addPointInFront ( curve, tx1, 0. )
-        else:
-            ## the curve is more horizontal -- close with the y-axis (x=0)
-            self.addPointInFront ( curve, 0., ty1 )
-
-        n = curve.GetN()
-        curve.GetPoint ( n-3, x1, y1 ) ## get third last point
-        curve.GetPoint ( n-1, x2, y2 ) ## get last point
-        #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        #tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
-        tx1, ty1 = x1.value, y1.value
-        tx2, ty2 = x2.value, y2.value
-        if logY:
-            ty2 = rescaleWidth(ty2)
-            ty1 = rescaleWidth(ty1)
-        if tx2 == tx1:
-            tx2 = tx1 + 1e-16
-        k = 99999.
-        if tx2 != tx1:
-            k = (ty2 - ty1) / ( tx2 - tx1 )
-        if k > 1 or k < -1:
-            ## the curve is more vertical -- close with the x-axis (y=0)
-            curve.SetPoint ( n, tx2, 0. )
-        elif k < 0:
-            ## the curve is more horizontal -- close with the y-axis (x=0)
-            curve.SetPoint ( n, tx2, 0. )
-        else:
-            ## the curve is more horizontal -- close with the y-axis (x=0)
-            curve.SetPoint ( n, 0., ty2 )
-        curve.SetPoint ( n+1, 0., 0. )
-
-    def addPointInFront ( self, curve, x, y ):
-        """ add a point at position 0 in tgraph """
-        #import ROOT
-        n=curve.GetN()+1
-        xt,yt=ctypes.c_double(),ctypes.c_double()
-        xtn,ytn=x,y
-        for i in range(n):
-            curve.GetPoint(i,xt,yt)
-            curve.SetPoint(i,xtn,ytn)
-            xtn,ytn=xt.value,yt.value
-
-    def printCurve ( self, curve ):
-        n=curve.GetN()
-        xt,yt=ctypes.c_double(),ctypes.c_double()
-        indices = list(range(3))+list(range(n-3,n))
-        for i in indices:
-            curve.GetPoint(i,xt,yt)
-            y = copy.deepcopy(yt)
-            if y < 0.:
-                y = unscaleWidth(y)
-            #if 0. < y < 1e-6:
-            #    y = unscaleWidth(y)
-            # print ( "%d: %f,%f" % ( i, xt, y ) )
-            # print ( "%d: %f,%g" % ( i, xt, y ) )
 
     def computeHulls ( self ):
         """ compute the convex hulls from the Voronoi
@@ -281,7 +195,8 @@ class ValidationPlot():
                     curve = c
                     break
 
-        self.completeGraph ( curve )
+        from smodels_utils.helper.rootTools import completeROOTGraph
+        completeROOTGraph ( curve )
 
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0,
                "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
@@ -359,12 +274,24 @@ class ValidationPlot():
         """
 
         if os.path.isdir(self.slhaDir):
+            self.currentSLHADir = self.slhaDir
             return self.slhaDir
         elif os.path.isfile(self.slhaDir):
             try:
                 tar = tarfile.open(self.slhaDir,'r:gz')
-                tempdir = tempfile.mkdtemp(dir=os.getcwd())
+                if "tempdir" in self.options and self.options["tempdir"]!=None:
+                    tdir =  self.options["tempdir"]
+                    if "/" in tdir or "." in tdir:
+                        logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
+                    tempdir = os.path.join ( os.getcwd(), tdir )
+                else:
+                    tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 members=tar.getmembers()
+                countm = 0
+                for m in members:
+                    if m.name.endswith ( ".slha" ):
+                        countm += 1
+                self.pointsInTarFile = countm
                 random.shuffle ( members )
                 limitPoints = self.options["limitPoints"]
                 if limitPoints != None and limitPoints > 0:
@@ -372,6 +299,7 @@ class ValidationPlot():
                 tar.extractall(path=tempdir,members=members)
                 tar.close()
                 logger.debug("SLHA files extracted to %s" %tempdir)
+                self.currentSLHADir = tempdir
                 return tempdir
             except Exception as e:
                 logger.error("Could not extract SLHA files from %s: %s" %\
@@ -421,7 +349,12 @@ class ValidationPlot():
                 self.ncpus = self.options["ncpus"]
 
         if tempdir is None: tempdir = os.getcwd()
-        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        parFile = os.path.join ( tempdir, "parameter.ini" )
+        if os.path.exists ( parFile ):
+            logger.warning ( f"weird, parameter file {parFile} already exists?" )
+            parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        pf = open ( parFile, "wt" )
+
         combine = "False"
         if self.combine:
             combine = "True"
@@ -434,26 +367,39 @@ class ValidationPlot():
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
-            f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
-            f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
-            f.write("[printer]\noutputType = python\n")
-            f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
-                     model )
+            sigmacut = 0.000000001
+            minmassgap = 2.0
+            maxcond = 1.0
+            promptWidth=1.1
+            if "sigmacut" in self.options:
+                sigmacut = self.options["sigmacut"]
+            if "minmassgap" in self.options:
+                minmassgap = self.options["minmassgap"]
+            if "maxcond" in self.options:
+                maxcond = self.options["maxcond"]
+            if "promptWidth" in self.options:
+                promptWidth = self.options["promptWidth"]
+            f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
+            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
+            f.write("[printer]\noutputFormat = version2\noutputType = python\n")
+            f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
             f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
             f.close()
-        os.close(pf)
+        # os.close(pf)
+        pf.close()
         return parFile
 
     def loadData(self, overwrite = True ):
         """
         Tries to load an already existing python output.
         :param overwrite:  if True, then overwrite any existing data
+        :returns: number of points added
         """
 
-        validationDir = os.path.join(self.expRes.path,'validation')
+        validationDir = self.getValidationDir ( None )
         datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
             if self.options["generateData"] == False:
@@ -478,17 +424,32 @@ class ValidationPlot():
                 continue
             ctadded+=1
             self.data.append ( d )
-        self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+        try:
+            self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+        except:
+            def getKey ( x ):
+                if x["axes"] is None:
+                    return -1e9
+                return x["axes"]["x"]
+            self.data.sort ( key = lambda x: getKey ( x ) )
         self.meta = content["meta"]
+        if self.meta is None:
+            self.meta = {}
+        addedpoints = len(self.data)
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
             if not "runs" in self.meta:
                 self.meta["runs"]=f"{len(self.data)}"
             else:
                 prev = eval ( self.meta["runs"] )
-                self.meta["runs"]=self.meta["runs"]+"+"+f"{len(self.data)-prev}"
+                addedpoints = len(self.data)-prev
+                self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
         # self.data = content["data"]
-        self.meta["npoints"] = len ( self.data )
+        ndata = 0
+        if self.data != None:
+            ndata = len ( self.data )
+        self.meta["npoints"] = ndata
+        return addedpoints
 
     def getWidthsFromSLHAFileName ( self, filename ):
         """ try to guess the mass vector from the SLHA file name """
@@ -496,7 +457,13 @@ class ValidationPlot():
         if not tokens[0].startswith ( "T" ):
             print ( "why does token 0 not start with a T??? %s" % tokens[0] )
             sys.exit(-1)
-        widths = list ( map ( float, tokens[1:] ) )
+        widths = []
+        for t in tokens[1:]:
+            try:
+                v = float(t)
+                widths.append ( v )
+            except ValueError as e:
+                pass
         ret = []
         for m in widths:
             if m>0. and m<1e-10:
@@ -509,7 +476,13 @@ class ValidationPlot():
         if not tokens[0].startswith ( "T" ):
             print ( "why does token 0 not start with a T??? %s" % tokens[0] )
             sys.exit(-1)
-        masses = list ( map ( float, tokens[1:] ) )
+        masses = []
+        for t in tokens[1:]:
+            try:
+                v = float(t)
+                masses.append ( v )
+            except ValueError as e:
+                pass
         for m in masses:
             if m>0. and m<1e-10:
                 continue
@@ -549,12 +522,21 @@ class ValidationPlot():
         replacedc = copy.deepcopy ( oldc )
         for ib,b in enumerate(oldc["masses"]):
             for iv,v in enumerate(b):
+                if v >= len(tokens):
+                    logger.error ( f"filename {filename} does not have {v} labels. Can you please check filenameCoords.py, entry for {self.txName}? It currently reads: {oldc}." )
+                    sys.exit(-1)
+
                 try:
                     replacedc["masses"][ib][iv]=float(tokens[v])
                 except ValueError as e:
                     print ( f"[validationObjs] caught ValueError {e}" )
                     if v == 0:
                         print ( "[validationObj] seems like you used index 0 in filenameCoords.py, which points to the tx name" )
+                    sys.exit(-1)
+                except IndexError as e:
+                    print ( "[validationObjs] tokens {tokens} v {v}" )
+                    print ( "[validationObjs] replacedc {replacedc['masses']}, ib {ib} iv {iv}" )
+                    print ( f"[validationObjs] caught IndexError {e}" )
                     sys.exit(-1)
         if type(oldc["widths"]) == list:
             for ib,b in enumerate(oldc["widths"]):
@@ -582,13 +564,12 @@ class ValidationPlot():
             ret = [ masses[0][0], masses[0][1] ]
         else:
             ret = [ masses[0][0], masses[1][0] ]
-        massPlane = MassPlane.fromString(self.txName,self.axes)
 
-        varsDict = massPlane.getXYValues(masses,None)
-        if varsDict != None and "y" in varsDict:
-            ret = [ varsDict["x"], varsDict["y"] ]
+        varsDict = self.massPlane.getXYValues(masses,None)
         if varsDict == None: ## not on this plane!!!
             ret = None
+        if varsDict != None and "y" in varsDict:
+            ret = [ varsDict["x"], varsDict["y"] ]
         if "T3GQ" in filename: ## fixme we sure?
             ret = [ masses[1][0], masses[1][1] ]
         if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
@@ -625,14 +606,14 @@ class ValidationPlot():
         if not self.slhaDir:
             logger.warning("SLHA folder not defined")
             return False
-        slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.debug("SLHA files for validation at %s" %slhaDir)
+        self.getSLHAdir()  #Path to the folder containing the SLHA files
+        logger.debug("SLHA files for validation at %s" %self.currentSLHADir)
 
         #Get list of input files to be tested
         try:
-            fileList, inDir = modelTester.getAllInputFiles(slhaDir)
+            fileList, inDir = modelTester.getAllInputFiles(self.currentSLHADir)
         except Exception: ## old version?
-            fileList = modelTester.getAllInputFiles(slhaDir)
+            fileList = modelTester.getAllInputFiles(self.currentSLHADir)
             inDir = slhaDir
         if self.options["generateData"]==None:
             self.loadData()
@@ -651,7 +632,12 @@ class ValidationPlot():
             self.data = []
 
         #Set temporary outputdir:
-        outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
+        outputDir = os.path.join ( self.currentSLHADir, "results" )
+        if os.path.exists ( outputDir ):
+            logger.warning ( f"weird, {outputDir} already exists?" )
+            outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+        else:
+            os.mkdir ( outputDir )
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
@@ -666,8 +652,14 @@ class ValidationPlot():
         listOfExpRes = [self.expRes]
 
         """ Test all input points """
-        modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
-                 listOfExpRes, 5000, False, parameterFile)
+        validationFolder = "validation"
+        if "validationFolder" in self.options:
+            validationFolder = self.options["validationFolder"]
+        timeOut = 5000
+        if "timeOut" in self.options:
+            timeOut = self.options["timeOut"]
+        modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
+                               timeOut, False, parameterFile )
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
@@ -675,7 +667,7 @@ class ValidationPlot():
             logger.error ( "no mass plane!" )
             return False
         #Now read the output and collect the necessary data
-        slhafiles= os.listdir(slhaDir)
+        slhafiles= os.listdir(self.currentSLHADir)
         ct_nooutput=0
         slhafiles.sort() ## make sure we also go in the same order
         myglobals = globals()
@@ -684,7 +676,9 @@ class ValidationPlot():
         for slhafile in fileList: # slhafiles:
             if "recipe" in slhafile:
                 continue
-            if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
+            if "coordinates" in slhafile:
+                continue
+            if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
             fout = os.path.join(outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
@@ -750,12 +744,7 @@ class ValidationPlot():
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
-            """
-            width = copy.deepcopy ( roundmass )
-            for ib,br in enumerate(width):
-                for ic,w in enumerate(br):
-                    width[ib][ic]=None
-            """
+            # print ( "round mass is", roundmass )
             width = None
             if "Width (GeV)" in expRes:
                 width = expRes['Width (GeV)']
@@ -772,7 +761,7 @@ class ValidationPlot():
                 roundmass = self.getMassesFromSLHAFileName ( slhafile )
             # print ( "after", slhafile, roundmass )
             mass = [br[:] for br in roundmass]
-            slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
+            slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
             for i,br in enumerate(mass):
                 for im,m in enumerate(br):
@@ -839,7 +828,10 @@ class ValidationPlot():
                     for bm,bw in zip(mass,width):
                         br=[]
                         for m,w in zip(bm,bw):
-                            br.append( (m,w) )
+                            if w == 'stable':
+                                br.append( (m,0.0) )
+                            else:
+                                br.append( (m,w) )
                         mnw.append(br)
                 massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():
@@ -858,7 +850,8 @@ class ValidationPlot():
                 self.data.append(Dict)
 
         #Remove temporary folder
-        if slhaDir != self.slhaDir and not self.keep: shutil.rmtree(slhaDir)
+        if self.currentSLHADir != self.slhaDir and not self.keep:
+            shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
             logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
@@ -872,11 +865,14 @@ class ValidationPlot():
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor
 
-    def isOneDimensional ( self ):
-        """ are the data 1d? """
-        # is1D = False
+    def isOneDimensional ( self ) -> bool:
+        """ are the data one-dimensional """
+        if "forceOneD" in self.options and self.options["forceOneD"]:
+            # we force 1d plotting mode
+            return True
         if self.data in [ [], None ]:
             return None
+        ys = []
         for ctPoints,pt in enumerate(self.data):
             if pt == None:
                 continue
@@ -884,8 +880,12 @@ class ValidationPlot():
                 if not "y" in pt["axes"]:
                     #is1D = True
                     return True
+                ys.append ( pt["axes"]["y"] )
+        if len(ys)>0:
+            deltay = max(ys)-min(ys)
+            if deltay < 1e-14:
+               logger.warn ( f"the range in y values {deltay} is quite small. sure you dont want to make a 1d plot? if yes, say forceOneD = True, in the options section in the ini file." )
         return False
-        # return is1D
 
     def getUglyPlot(self,silentMode=True):
         """
@@ -897,7 +897,19 @@ class ValidationPlot():
         if self.isOneDimensional():
             from oneDPlots import create1DPlot as createUglyPlot
         else:
-            from uglyPlots import createUglyPlot
+            backend = str ( self.options["backend"] ).lower().strip()
+            if backend in [ "root" ]:
+                try:
+                    import ROOT
+                    from uglyROOT import createUglyPlot
+                    logger.error ( f"using ROOT backend for ugly plot. consider switching to matplotlib backend!" )
+                except ImportError as e:
+                    from uglySeaborn import createUglyPlot
+            else:
+                if backend not in [ "native", "default", "none", "python" ]:
+                   logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
+                   sys.exit(-1)
+                from uglySeaborn import createUglyPlot
         self.plot, self.base = createUglyPlot( self,silentMode=silentMode,
                                           options = self.options )
         self.pretty = False
@@ -908,7 +920,22 @@ class ValidationPlot():
         in self.officialCurves to generate a pretty exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
-        from prettyPlots import createPrettyPlot
+        if self.isOneDimensional():
+            self.pretty = False
+            return
+        backend = str ( self.options["backend"] ).lower().strip()
+        if backend in [ "root" ]:
+            try:
+                import ROOT
+                from prettyROOT import createPrettyPlot
+                logger.error ( f"using ROOT backend for pretty plot. consider switching to matplotlib backend!" )
+            except ImportError as e:
+                from prettySeaborn import createPrettyPlot
+        else:
+            if backend not in [ "native", "default", "none", "python" ]:
+               logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
+               sys.exit(-1)
+            from prettySeaborn import createPrettyPlot
 
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
@@ -917,7 +944,7 @@ class ValidationPlot():
     def show ( self, filename ):
         """ we were asked to also show <filename> """
         term = os.environ["TERM"]
-        if not self.options["show"] and not term == "xterm-kitty":
+        if not self.options["show"] or not term == "xterm-kitty":
             return
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
@@ -928,6 +955,7 @@ class ValidationPlot():
                 v += " -pk"
             cmd = f"{v} {filename}"
             o = subprocess.getoutput ( cmd )
+            print ( f"{cmd}" )
             print ( f"{o}" )
             return
 
@@ -938,7 +966,19 @@ class ValidationPlot():
         if hasattr ( self.plot, "savefig" ):
             self.plot.savefig(filename)
 
-    def savePlot(self,validationDir=None,fformat='pdf'):
+    def toPdf ( self, validationDir=None ):
+        """ convert from png to pdf (new, for uproot) """
+        vDir = self.getValidationDir ( validationDir )
+        oldfilename = self.getPlotFileName(vDir,"png")
+        if self.pretty:
+            oldfilename = oldfilename.replace('.png','_pretty.png')
+        newfilename = oldfilename.replace(".png",".pdf")
+        command = f"convert {oldfilename} {newfilename}"
+        import subprocess
+        o = subprocess.getoutput ( command )
+        # print ( "toPdf", command, o )
+
+    def savePlot(self,validationDir=None,fformat='png'):
         """
         Saves the plot in the format specified in the validationDir folder.
         If the folder does not exist, it will be created.
@@ -953,19 +993,14 @@ class ValidationPlot():
             logger.warning("No plot found. Nothing will be saved")
             return False
 
-        if hasattr ( self.plot, "dontplot" ):
+        if hasattr ( self.plot, "dontplot" ) and self.plot.dontplot == True:
             logger.warning("Plotting got inhibited." )
             return False
 
-        if not validationDir:
-            vDir = os.path.join(self.expRes.path,'validation')
-        else: vDir = validationDir
-
-        if not os.path.isdir(vDir):
-            logger.debug("Creating validation folder "+vDir)
-            os.mkdir(vDir)
+        vDir = self.getValidationDir ( validationDir )
 
         filename = self.getPlotFileName(vDir,fformat)
+
 
         if not self.pretty:
             logger.info ( "saving plot in %s" % filename )
@@ -973,7 +1008,6 @@ class ValidationPlot():
             filename = filename.replace('.'+fformat,'.png')
             try:
                 self.savefig(filename)
-                self.show ( filename )
             except Exception as e:
                 # if fails because of missing dep, then just proceed
                 pass
@@ -981,18 +1015,41 @@ class ValidationPlot():
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            self.plot.Print(filename)
+            self.savefig ( filename )
             addLogo ( filename )
-            filename = filename.replace('.'+fformat,'.png')
+            newfilename = filename.replace('.'+fformat,'.pdf')
+            if self.options["pdfPlots"]:
+               cmd = f"convert {filename} {newfilename}"
+               import subprocess
+               o = subprocess.getoutput ( cmd )
+            """
             logger.debug ( "saving plot in %s (and pdf and root)" % filename )
-            self.plot.Print(filename)
-            self.show ( filename )
+            self.savefig ( filename )
             addLogo ( filename )
-            filename = filename.replace('.png','.root')
-            self.plot.Print(filename)
-            addLogo ( filename )
+            #filename = filename.replace('.png','.root')
+            #self.savefig ( filename )
+            # addLogo ( filename )
+            """
+        self.show ( filename )
 
         return True
+
+    def getValidationDir ( self, validationDir ):
+        """ obtain the validation directory, usually,
+            self.expRes.path + "/validation" """
+        def mkdir ( mydir ):
+            if not os.path.isdir(mydir):
+                logger.info( f"Creating validation folder {mydir}")
+                os.mkdir(mydir)
+        if validationDir:
+            mkdir ( validationDir )
+            return validationDir
+        validationFolder = "validation"
+        if "validationFolder" in self.options:
+            validationFolder = self.options["validationFolder"]
+        validationDir = os.path.join(self.expRes.path,validationFolder)
+        mkdir ( validationDir )
+        return validationDir
 
     def saveData(self,validationDir=None,datafile=None):
         """
@@ -1006,27 +1063,22 @@ class ValidationPlot():
         :param datafile: Name of the data file
         """
 
-        if not hasattr(self,'plot') or not self.plot:
-            logger.warning("No plot found. Nothing will be saved")
-            return False
         if not hasattr(self,'data') or not self.data:
             logger.warning("No data found. Nothing will be saved")
             return False
 
-        print ( "[validationObjs] generateData", self.options["generateData"] )
         if self.options["generateData"] in [ None, "ondemand" ]:
-            self.loadData ( overwrite = False )
+            nadded = self.loadData ( overwrite = False )
             print ( "[validationObjs] loaded", len(self.data) )
+            if nadded == 0:
+                logger.warning("No added points. Nothing will be saved")
+                return False
 
-        if not validationDir:
-            validationDir = os.path.join(self.expRes.path,'validation')
-
-        if not os.path.isdir(validationDir):
-            logger.info("Creating validation folder "+validationDir)
-            os.mkdir(validationDir)
+        validationDir = self.getValidationDir ( validationDir )
 
         if not datafile:
             datafile = self.getDataFile(validationDir)
+        self.datafile = datafile
         print ( f"[validationObjs] saving data to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
@@ -1049,6 +1101,8 @@ class ValidationPlot():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if hasattr ( self, "pointsInTarFile" ):
+            meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
         if hasattr ( self, "meta" ):
@@ -1062,7 +1116,8 @@ class ValidationPlot():
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
-            meta["tarball"]=self.namedTarball
+            meta["namedTarball"]=self.namedTarball
+        meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         f.write("meta = %s\n" % str(meta) )
         f.close()
 
@@ -1118,38 +1173,4 @@ class ValidationPlot():
 
         :return: string with a nicer representation of the axes (more suitable for printing)
         """
-
-        x,y,z,w = var('x y z w')
-        if axesStr == "":
-            logger.error ( "Axes field is empty: cannot validate." )
-            return None
-        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
-
-        eqList = []
-        for ib,br in enumerate(axes):
-            if ib == 0:
-                mStr,wStr = 'Mass','Width'
-            else:
-                mStr,wStr = 'mass','width'
-            mList = []
-            for im,eq in enumerate(br):
-                if type(eq)==tuple:
-                    mList.append('Eq(%s,%s)'
-                                   %(var(mStr+string.ascii_uppercase[im]),eq[0]))
-                    mList.append('Eq(%s,%s)'
-                                   %(var(wStr+string.ascii_uppercase[im]),eq[1]))
-                else:
-                    mList.append('Eq(%s,%s)'
-                                   %(var(mStr+string.ascii_uppercase[im]),eq))
-            mStr = "_".join(mList)
-            eqList.append(mStr)
-
-        #Simplify symmetric branches:
-        if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:
-            eqStr = "2*%s"%eqList[0]
-        else:
-            eqStr = "__".join(eqList)
-
-        eqStr = eqStr.replace(" ","")
-
-        return eqStr
+        return self.massPlane.getNiceAxes ( axesStr )

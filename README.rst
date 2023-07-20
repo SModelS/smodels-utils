@@ -20,4 +20,4 @@ Among the tools in this repository you will find:
 * experimental code for possible new features of smodels proper 
 * the artificial proto-modeller (combinations, see https://smodels.github.io/protomodels)
 
-* this current master branch is intended to work with SModelS 1.2.3+ and 2.x
+* this current main branch is intended to work with SModelS 1.2.3+ and 2.x

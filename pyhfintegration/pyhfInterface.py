@@ -16,7 +16,7 @@ import pyhf
 pyhf.set_backend(b"pytorch")
 from scipy import optimize
 import numpy as np
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 import time
 
 def getLogger():

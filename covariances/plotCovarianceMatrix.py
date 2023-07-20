@@ -45,7 +45,7 @@ def plot():
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     args = argparser.parse_args()
 
-    database = Database( args.dbpath, discard_zeroes = False)
+    database = Database( args.dbpath )
     res = database.getExpResults ( analysisIDs = [ args.analysis ] )
     er = res[0]
     n = len ( er.globalInfo.covariance)

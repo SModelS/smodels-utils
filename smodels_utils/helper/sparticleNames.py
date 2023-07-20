@@ -14,7 +14,7 @@ import sys, os
 sys.path.insert(0,"../../../" )
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/" )
 
-from protomodels.walker.sparticleNames import SParticleNames
+from protomodels.ptools.sparticleNames import SParticleNames
 
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """

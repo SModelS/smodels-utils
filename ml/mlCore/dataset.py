@@ -17,8 +17,8 @@ from torch.utils.data import Dataset # better import?
 from sklearn.preprocessing import MinMaxScaler
 from smodels.theory.auxiliaryFunctions import rescaleWidth, removeUnits#, unscaleWidth
 from smodels.tools import physicsUnits
-from smodels.tools.smodelsLogging import logger
-from smodels.tools.physicsUnits import GeV, fb, pb
+from smodels.base.smodelsLogging import logger
+from smodels.base.physicsUnits import GeV, fb, pb
 
 
 class Data(Dataset):
@@ -110,7 +110,7 @@ class DatasetBuilder():
 		self.dataselector = parameter["dataselector"]
 		self.signalRegion = parameter["signalRegion"]
 		self.full_dim = self.txnameData.full_dimensionality
-		self.luminosity = parameter["txName"].globalInfo.getInfo("lumi").asNumber(1/fb)
+		self.luminosity = parameter["txName"].globalInfo.lumi.asNumber(1/fb)
 
 		self.sampleSize 		  = {"regression": parameter["sampleSize"][0], "classification": parameter["sampleSize"][1]}
 		self.sampleSplit 		  = parameter["sampleSplit"]

@@ -1,9 +1,9 @@
 import os
 import numpy as np
 from smodels.tools.stringTools import concatenateLines
-from smodels.tools.physicsUnits import GeV, fb
+from smodels.base.physicsUnits import GeV, fb
 from smodels.theory.auxiliaryFunctions import rescaleWidth
-from smodels.tools.smodelsLogging import logger
+from smodels.base.smodelsLogging import logger
 
 
 def loadInternalGridPoints(expres, txnameData, dataselector, signalRegion, singleLines = True, stripUnits = True):
@@ -16,7 +16,7 @@ def loadInternalGridPoints(expres, txnameData, dataselector, signalRegion, singl
 	:param dataselector: Either "upperLimit" or "efficiencyMap" (string)
 	:param signalRegion: For efficiency maps select a signal region, for upperlimit maps select "None" (float/None)
 	:param singleLines: Return gridpoints as either single arrays for each mass point, or nested arrays for each decay branch (boolean) (optional)
-	:param stripUnits: Output will be either floats or floats*smodels.tools.physicsUnits (boolean) (optional)
+	:param stripUnits: Output will be either floats or floats*smodels.base.physicsUnits (boolean) (optional)
 	
 	"""
 

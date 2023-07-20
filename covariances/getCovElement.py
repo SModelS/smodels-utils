@@ -3,7 +3,7 @@
 """ get a certain element of a covariance matrix """
 
 from smodels.experiment.databaseObj import Database
-from smodels.tools.smodelsLogging import setLogLevel
+from smodels.base.smodelsLogging import setLogLevel
 import math
 
 def get():

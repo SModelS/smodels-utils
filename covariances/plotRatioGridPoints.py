@@ -9,7 +9,7 @@ import uproot
 from smodels_utils.helper import prettyDescriptions
 from smodels.experiment.databaseObj import Database
 from smodels.experiment import txnameObj
-from smodels.tools.physicsUnits import GeV, pb, fb
+from smodels.base.physicsUnits import GeV, pb, fb
 
 txnameObj.TxNameData._keep_values = True
 
