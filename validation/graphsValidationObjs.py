@@ -51,7 +51,7 @@ class ValidationPlot():
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
-    def __init__( self, ExptRes, TxNameStr, Axes, db : Database, slhadir=None,
+    def __init__( self, ExptRes, TxNameStr : str, Axes, db : Database, slhadir=None,
             databasePath=None, options : dict = {}, kfactor = 1.,
             namedTarball = None, keep = False, combine = False ):
         """
@@ -572,6 +572,24 @@ class ValidationPlot():
                                timeOut, False, parameterFile )
         return fileList
 
+    def getDataMap ( self ):
+        """ obtain the correct data map, i.e. the one corresponding to
+        our txname """
+        ds = self.expRes.datasets[0]
+        ## FIXME need to search
+        for txn in ds.txnameList:
+            if txn.txName == self.txName:
+                return txn.dataMap
+        return None
+
+    def constructParameterVector ( self, masses, widths ):
+        dataMap = self.getDataMap()
+        ret=copy.deepcopy ( masses )
+        for index,info in dataMap.items():
+            if info[1]=="width":
+                ret[index] = widths[index]
+        return ret
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -662,31 +680,14 @@ class ValidationPlot():
                 logger.error("Something went wrong. Obtained results for the wrong txname")
                 return False
 
-            print ( "@@graphsValidationObjs", expRes["Mass (GeV)"] )
-            sys.exit()
-            #Replaced rounded masses by original masses
-            #(skip rounding to check if mass is in the plane)
-            roundmass = expRes['Mass (GeV)']
-            # print ( "round mass is", roundmass )
-            width = None
-            if "Width (GeV)" in expRes:
-                width = expRes['Width (GeV)']
-            mass = [br[:] for br in roundmass]
-            slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
-            origmasses = list(set(slhadata.blocks['MASS'].values()))
-            for i,br in enumerate(mass):
-                for im,m in enumerate(br):
-                    for omass in origmasses:
-                        if round(omass,1) == m:
-                            mass[i][im] = omass
-                            break
-
-            print ( "graphsValidationObjs mass", mass, "width", width, "roundmass", roundmass )
-            varsDict = massPlane.getXYValues(mass,width)
-            #print ( "varsdict", varsDict )
+            masses = expRes["Mass (GeV)"]
+            widths = expRes["Width (GeV)"]
+            parameters = self.constructParameterVector ( masses, widths )
+            # print ( f"@@1 we feed {parameters}" )
+            varsDict = massPlane.getXYValues( parameters )
+            # print ( f"@@1 we get {varsDict}" )
             if varsDict is None:
-                logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
-                               (slhafile, massPlane ) )
+                logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {massPlane}." )
                 continue
             if type(dt) == str:
                 if dt.endswith("s"):

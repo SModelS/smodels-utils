@@ -307,7 +307,11 @@ def getFigureUrl( validationPlot ):
     """ get the URL of the figure, as a string """
     txname = validationPlot.expRes.datasets[0].txnameList[0]
     txurl = txname.figureUrl
-    txaxes = txname.axes
+    txaxes = "???"
+    if hasattr ( txname, "axes" ):
+        txaxes = txname.axes
+    else:
+        txaxes = txname.axesMap
     if isinstance(txurl,str):
         return txname.figureUrl
     if not txurl:
@@ -344,6 +348,8 @@ def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
     ret = []
+    print ( "FIXME getGridPoints!!!!" )
+    return ret
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
     for dataset in validationPlot.expRes.datasets:
         txNameObj = None

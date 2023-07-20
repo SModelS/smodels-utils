@@ -207,8 +207,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     nleg = 5
     from sympy import var
     xvar_,yvar_,zvar_,wvar_ = var( "xvar_ yvar_ zvar_ wvar_" )
+    print ( "uglySeaborn axes", validationPlot.axes, type(validationPlot.axes) )
     g=eval(validationPlot.axes.replace("x","xvar_").replace("y","yvar_").replace("z","zvar_").replace("w","wvar_" ) )
-    reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
+    print ( "g is", g, type(g) )
+    if type(g) == dict:
+        reverse = False
+    else:
+        reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
     if reverse: ## if it is an [x,*],[y,*] plot, put legend to right, not left
         dx = .53
     if len(allowed)>0:
