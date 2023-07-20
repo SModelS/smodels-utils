@@ -37,12 +37,19 @@ logger = logging.getLogger(__name__)
 '''Note : Before running the program, make sure to enter the path of the parameter.ini file and the outputdir according to the local computer path (in runSmodels function). The program is configured for specific paths only'''
 
 class SModelsOutput(object):
-    def __init__(self, inputfiles, queue):
-        '''inputfile: slha file for which an smodels output for the best combination is needed'''
+    def __init__(self, inputfiles, queue, clip, path_name):
+        '''inputfiles: list of slha files for which an smodels output for the best combination is needed'''
         self.inputfiles = inputfiles
         self.database = Database('official')
-        self.expresults = self.database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'])
+        self.expresults = self.database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'], txnames=['TChi*'])
         self.combinationMatrix()
+        
+        #if using clip cluster
+        if clip == 'y': self.clip = True
+        else: self.clip = False
+        
+        #path to output_dir
+        self.path_name = path_name
         
         for file in self.inputfiles:
             self.file = file
@@ -105,9 +112,9 @@ class SModelsOutput(object):
     def getBestCombination(self, queue):
         '''main function where you compute the theory pred for the model point and get best combination'''
     
-        process_st = time.process_time()
+       
         
-        sigmacut = 0.005*fb
+        sigmacut = 0.001*fb
         mingap = 5.*GeV
         
         model = Model(BSMparticles = BSMList, SMparticles = SMList)
@@ -129,21 +136,25 @@ class SModelsOutput(object):
             print("Not running SModelS on file as no tp available")
             logging.warning("Not running SModelS on %s as no tp available"%(filename))
             
-            process_et = time.process_time()
-            time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
-            queue.put([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2] + ['-1']*7 + [time_process])
+            #if tp present but not in combination, make a note
+            notp_id = [notp.analysisId() for notp in allPreds]
+            
+            #self.runSmodels(bestThPred, self.file)            
+            #self.readSModelSFile(self.file)
+            #self.readPythonFile(self.file)
+            
+            queue.put([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2] + ['-1']*7 + [self.M1, self.M2, self.mu, self.tanb,notp_id])
             
         
         else:
             print("M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: ", bestThPred[0].analysisId())
             self.runSmodels(bestThPred, self.file)
             
+            #choose if you want to read smodels or python file
             #self.readSModelSFile(self.file)
             self.readPythonFile(self.file)
             
-            process_et = time.process_time()
-            time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
-            queue.put([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1], time_process])
+            queue.put([filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1], self.M1, self.M2, self.mu, self.tanb]+['-1'])
             
             #print("Queue worked!")
             #return out
@@ -158,22 +169,24 @@ class SModelsOutput(object):
         parameterFile="%s/./parameters.ini"%(os.path.expanduser('~/git/smodels'))
         parser = modelTester.getParameters(parameterFile)
         
-        listOfAna = [ana for ana in self.allo.keys()]
-        listOfExpRes = self.database.getExpResults(analysisIDs=listOfAna, dataTypes=['efficiencyMap','combined'])
+        #listOfAna = [ana for ana in self.allo.keys()]
+        #listOfExpRes = self.database.getExpResults(analysisIDs=listOfAna, dataTypes=['efficiencyMap','combined'])
         
+        #if bestThPred == []: parser.set('options', 'combineAnas', 'False')
         parser.set('options', 'combineAnas', bestThPred[0].analysisId())
-        parser.set('database', 'analyses', bestThPred[0].analysisId())
         
         print("Running SModelS on model point for the best combination")
         #logging.INFO("Running SModelS on %s for the best combination"%(filename))
         
         
         #enter path of output dir below
-        outputDir = '/scratch-cbe/users/sahana.narasimha/git/smodels-utils/combinations/combination_sahana/clip/results_2'
+        if self.clip: outputDir = '/scratch-cbe/users/sahana.narasimha/git/smodels-utils/combinations/combination_sahana/clip/results_2'
+        elif '~' in path_name: outputDir = os.path.expanduser('~') + path_name.split('~')[-1] 
+        else: outputDir = path_name
         #outputDir = '/users/sahana.narasimha/git/smodels-utils/combinations/combination_sahana/clip/results_2'
         
         #run SModelS with input file:
-        output = modelTester.testPoint(file, outputDir, parser, '2.3.0', listOfExpRes)
+        output = modelTester.testPoint(file, outputDir, parser, '2.3.0', self.expresults)
         
         print("\n Printing output")
         #logging.INFO("Printing output for %s"%(filename))
@@ -240,69 +253,85 @@ class SModelsOutput(object):
 if __name__ == "__main__":
     
     
+    #can remove some parameters if you want, if you already have a list of inputfiles in mind
     import argparse
-    
-
-    """ Get the name of input SLHA file and parameter file """
     ap = argparse.ArgumentParser( description=
             "Run SModelS over SLHA/LHE input files." )
-    ap.add_argument('-f', '--fileset',
-            help='set of 100 SLHA files in 2ndFilter_slha_nlo; 0 -> 0-99, 1->100-199 and so on', required=True)
+    ap.add_argument('-n', '--num_of_files', help='number of SLHA files to run, number should be multiple of 10; default=100', default = 100, type = int)
+    ap.add_argument('-f', '--filebatch',
+            help='batch number of SLHA files in 2ndFilter_slha_nlo; If num_of_files=100, 0 -> 0-99, 1->100-199 and so on', required=True, type=int)
     ap.add_argument('-s', '--summaryfilename',
-            help='name of summary file', required=True)
+            help='name of output summary file; default=summary', default='summary', type=str)
+    ap.add_argument('-p', '--path_to_outputdir',
+            help='path to outputdir; default = ~/git/smodels-utils/combinations/combination_sahana/results', default='~/git/smodels-utils/combinations/combination_sahana/results', type=str)
+    ap.add_argument('-c', '--clip_cluster',
+            help='if using clip cluster, type \'y\'; default=n', default='n', type=str)
     
     args = ap.parse_args()
+    fs = args.filebatch 
+    numf = args.num_of_files
+    output_name = args.summaryfilename + '.csv'
+    path_name = args.path_to_outputdir
+    clip = args.clip_cluster
     
     files = glob.glob ( "2ndFilter_slha_nlo/ew*slha" )
-    #iles = files[:50]
-    fs = int(args.fileset) 
-    files = files[fs*100:(fs+1)*100]
-    files = [files[0:10],files[10:20],files[20:30],files[30:40],files[40:50],files[50:60],files[60:70],files[70:80],files[80:90],files[90:100]]
+
     
-    #files = files[fs*10:(fs+1)*10]
-    #files = [files[0:2],files[2:4],files[4:6],files[6:8],files[8:10]]
+    #files = files[fs*100:(fs+1)*100]
+    #files = [files[0:10],files[10:20],files[20:30],files[30:40],files[40:50],files[50:60],files[60:70],files[70:80],files[80:90],files[90:100]]
+    #files should be a list of files, can input the files that you want here
+    files = files[fs*numf:(fs+1)*numf]
     
-    #for file in files: print("\n",file)
-    #output_name = args.summaryfilename + '.csv'
-    #print(output_name)
+    #split list of files into 10 lists - 
+    #can modify this if you want. BE CAREFUL IF YOU ARE RUNNING WITH LESS THAN 10 FILES or number not a multiple of ten, change step acccordingly
+    step = int(numf/10)
+    files = [files[x:(x+step)] for x in range(0,numf,step)]
+    #Example: for 20 files: files = [files[0:2],files[2:4],files[4:6],files[6:8],files[8:10],files[10:12],files[12:14],files[14:16],files[16:18],files[18:20]
     
+    #queue to share info between diff processes
     queue = Queue()
 
-    #sms = [SModelsOutput(file) for file in files]
- 
-    processes = [Process(target=SModelsOutput, args=(file,queue)) for file in files]
+    #time taken for the whole program to run 
+    process_st = time.process_time()
+    
+    #num of processes = num of list of files in files
+    processes = [Process(target=SModelsOutput, args=(file,queue,clip,path_name)) for file in files]
     for process in processes:
         process.start()
         logger.info("Process started")
         
     for process in processes:
         process.join()
-        if process.exitcode !=0 : logger.error("Error for model point: ",files[processes.index(process)])
+        if process.exitcode !=0 : 
+            new_files = files[processes.index(process)]
+            new_process = [Process(target=SModelsOutput, args=([file],queue,clip,path_name)) for file in new_files]
+            for np in new_process: np.start()
+            for np in new_process:
+                np.join()
+                if np.exitcode !=0:
+                    logger.error("Error for model point: %s"%(new_files[new_process.index(np)]))
+                    queue.put([new_files[new_process.index(np)]]+['Error']*19)
+                    
+                
     
-  
-    #0-50 in results/ summary 50-100 in summary_2 , 100-150 in summary_3 150-200 in summary_4, 200-300 in summary_5
-    #0-100 in results_2/ summary
-    #summary_6 has the same input files but only python output files to see how long tje pinting process takes
-    #size = queue.qsize()
-    #print('\n qs ', size)
-    #ame = 'summary.csv'
     
-    #sm = SModelsOutput(files)
-    #output_name = 'summary_array2.csv'
-    output_name = args.summaryfilename + '.csv'
+    logger.warning("All Processes done")
+    
+    process_et = time.process_time()
+    time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
     
     with open('results_2/%s'%(output_name),'w') as out:
-        out.write('#Has files from %s to %s'%(fs*100,(fs+1)*100))
-        out.write('\n#SLHA_file\t M_N1\t M_N2\t M_C1\t M_N3\t M_N4\t M_C2\t r_obs(comb)\t r_exp(comb)\t Combination\t max_r_obs\t Most_Constraining_Analysis\t max_r_exp\t Most_sensitive_Analysis\t Time taken')
-        for i in range(100):
+        out.write('#SLHA_file\tm_N1\tm_N2\tm_C1\tm_N3\tm_N4\tm_C2\tr_obs(comb)\tr_exp(comb)\tCombination\tmax_r_obs\tMost_Constraining_Analysis\tmax_r_exp\tMost_sensitive_Analysis\tM1\tM2\tMu\tTan_Beta\tTp_not_included_in_combination')
+        for i in range(numf):
             item = queue.get()
             print(item)
-            out.write('\n{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10],item[11],item[12],item[13],item[14]))
+            out.write('\n{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10],item[11],item[12],item[13],item[14],item[15],item[16],item[17],item[18]))
         
+        out.write('\n#Has_files_from_%s_to_%s; Time taken %s'%(fs*numf,(fs+1)*numf,time_process))
         out.close()
-                   
+        
+    logger.warning("Summary file written")
  
-            #sm.getBestCombination(file)
-    #sm.readSModelSFile('ew_yzyxds4m.slha')
+           
     
     
