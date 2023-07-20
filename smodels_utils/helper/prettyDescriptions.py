@@ -858,7 +858,7 @@ def prettyAxesV3( validationPlot ) -> Union[None,str]:
     """
     # print ( f"here: {type(validationPlot)}" )
     # print ( f"we have dataMap {validationPlot.getDataMap()}" )
-    return "mX = C1/N2, mY = N1"
+    return "x=m(C1)=m(N2), y=m(N1)"
 
 def prettyAxes( txname : str, axes : str, outputtype : str ="root" ) -> \
         Union[None,str]:
