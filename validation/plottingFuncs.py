@@ -339,17 +339,11 @@ def convertOrigData ( txnameData : TxNameData ):
     for t in txnameData.origdata:
         ret.append ( list(t))
     return ret
-    """
-    origdata =eval( txnameData.origdata)
-    return origdata
-    """
 
-def getGridPoints ( validationPlot ):
-    """ retrieve the grid points of the upper limit / efficiency map.
-        currently only works for upper limit maps. """
+def getGridPointsV2 ( validationPlot ):
+    """ retrieve the grid points of the upper limit / efficiency map,
+    for axes of SModelS v2 type """
     ret = []
-    print ( "FIXME getGridPoints!!!!" )
-    return ret
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
     for dataset in validationPlot.expRes.datasets:
         txNameObj = None
@@ -367,10 +361,54 @@ def getGridPoints ( validationPlot ):
             logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
             return []
         origdata = convertOrigData ( txNameObj.txnameData )
-        for ctr,pt in enumerate(origdata):
-            # masses = removeUnits ( pt[0], standardUnits=GeV )
-            n = int ( len(pt)/2 )
-            masses = [ pt[:n], pt[n:] ] ## silly hack for now
+        if axisType == "v2":
+            for ctr,pt in enumerate(origdata):
+                # masses = removeUnits ( pt[0], standardUnits=GeV )
+                n = int ( len(pt)/2 )
+                masses = [ pt[:n], pt[n:] ] ## silly hack for now
+                coords = massPlane.getXYValues(masses)
+                if not coords == None and not coords in ret:
+                    ret.append ( coords )
+        else:
+            for ctr,masses in enumerate(origdata):
+                print ( "masses", masses)
+                coords = massPlane.getXYValues(masses)
+                if not coords == None and not coords in ret:
+                    ret.append ( coords )
+    logger.info ( f"found {len(ret)} gridpoints" )
+    ## we will need this for .dataToCoordinates
+    return ret
+
+def getGridPoints ( validationPlot ):
+    """ retrieve the grid points of the upper limit / efficiency map.
+        currently only works for upper limit maps. """
+    ret = []
+    from validationHelpers import getAxisType
+    axisType = getAxisType(validationPlot.axes)
+    if axisType == "v2":
+        return getGridPointsV2 ( validationPlot )
+    massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
+    for dataset in validationPlot.expRes.datasets:
+        txNameObj = None
+        for ctr,txn in enumerate(dataset.txnameList):
+            if txn.txName == validationPlot.txName:
+                txNameObj = dataset.txnameList[ctr]
+                break
+        if txNameObj == None:
+            logger.info ( "no grid points: did not find txName" )
+            return []
+        if not txNameObj.txnameData._keep_values:
+            logger.info ( "no grid points: _keep_values is set to False" )
+            return []
+        if not hasattr ( txNameObj.txnameData, "origdata"):
+            logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
+            return []
+        origdata = convertOrigData ( txNameObj.txnameData )
+        for ctr,masses in enumerate(origdata):
+            ## FIXME not sure if this works for widths
+            for i,mass in enumerate(masses):
+                # info is, e.g.: (1,'mass',GeV)
+                masses[i]=(i+1,mass)
             coords = massPlane.getXYValues(masses)
             if not coords == None and not coords in ret:
                 ret.append ( coords )

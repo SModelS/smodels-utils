@@ -317,8 +317,8 @@ def runForOneResult ( expRes : ExpResult, options : dict,
         if hasattr ( txname, "axesMap" ):
             x,y,z,w = var("x y z w")
             axes = txname.axesMap
-            #print ( "axesMap", axes, type(axes) )
-            axes = eval ( axes )
+            if type(axes)==str:
+                axes = eval ( axes )
             #print ( "eval", eval(axes) )
         #Loop over all axes:
         else:

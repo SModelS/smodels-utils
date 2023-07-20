@@ -53,7 +53,7 @@ class GraphMassPlane(object):
     @classmethod
     def getNiceAxes(cls,axesStr):
         """
-        Convert the axes definition format, e.g. {0 : x, 1 : y, 2 : x, 3 : y}
+        Convert the axes definition format, e.g. {0 : 'x', 1 : 'y', 2 : 'x', 3 : 'y'}
         to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
 
         :param axesStr: string defining axes in the old format
@@ -68,6 +68,7 @@ class GraphMassPlane(object):
         ret = str(eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w}))
         ret = ret.replace(" ","")
         ret = ret.replace(":","")
+        ret = ret.replace("'","")
         ret = ret.replace(",","_")
         ret = ret.replace("{","").replace("}","")
         return ret
