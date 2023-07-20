@@ -187,29 +187,26 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
+        print ( "p", p["name"] )
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
         plt.plot ( px, py, c="white", linewidth=4, zorder=7 ) 
-        plt.plot ( px, py, c="black", label="official exclusion", zorder=8 )
+        label = "official exclusion"
+        linestyle = "-"
+        if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
+            label = ""
+            linestyle = "dotted"
+        plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
     ax = plt.gca()
     if logY:
         ax.set_yscale('log')
     fig = plt.gcf()
-    #for p in validationPlot.expectedOfficialCurves:
-    #    if type(p) not in [ dict ]:
-    #        logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
-    #        continue
-    #    px, py = filterWithinRanges ( p["points"], xrange, yrange )
-    #    plt.plot ( px, py, c="black", linestyle="dotted", 
-    #               label="official exclusion (expected)" )
     
     base = []
     dx = .12 ## top, left
     nleg = 5
     from sympy import var
     xvar_,yvar_,zvar_,wvar_ = var( "xvar_ yvar_ zvar_ wvar_" )
-    # print ( "uglySeaborn axes", validationPlot.axes, type(validationPlot.axes) )
     g=eval(validationPlot.axes.replace("x","xvar_").replace("y","yvar_").replace("z","zvar_").replace("w","wvar_" ) )
-    # print ( "g is", g, type(g) )
     if type(g) == dict:
         reverse = False
     else:
