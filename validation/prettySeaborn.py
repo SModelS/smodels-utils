@@ -19,7 +19,7 @@ import math,ctypes
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes, prettyAxesV3
 import matplotlib.ticker as ticker
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
          getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
@@ -349,8 +349,12 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         pName = "define {validationPlot.txName} in prettyDescriptions"
     txStr = validationPlot.txName +': '+pName
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
-    axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
+    axisType = getAxisType ( validationPlot.axes )
+    if axisType == "v2":
+        axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
                        outputtype="latex")
+    else:
+        axStr = prettyAxesV3(validationPlot)
     plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
