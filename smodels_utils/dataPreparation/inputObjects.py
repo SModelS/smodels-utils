@@ -23,8 +23,8 @@ from smodels_utils.dataPreparation.covarianceHandler import \
 from smodels_utils.dataPreparation import covarianceHandler
 from smodels.base.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.theory.element import Element
-from smodels.theory.auxiliaryFunctions import elementsInStr
+from smodels.experiment.expSMS import ExpSMS
+from smodels.experiment.expAuxiliaryFuncs import smsInStr
 from smodels.installation import version
 import copy
 import math
@@ -517,12 +517,12 @@ class DataSetInput(Locker):
         #Check constraints (only for EM results):
         datasetElements = []
         for tx in self._txnameList:
-            for el in elementsInStr(tx.constraint):
+            for el in smsInStr(tx.constraint):
                 newEl = None
                 fs = tx.finalState
                 midState = tx.intermediateState
                 try:
-                    newEl = Element(el,finalState=fs,intermediateState=midState,model=tx._particles)
+                    newEl = ExpSMS(el,finalState=fs,intermediateState=midState,model=tx._particles)
                 except Exception as e:
                     logger.error(str(e))
                     logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
@@ -688,7 +688,7 @@ class TxNameInput(Locker):
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
         try:
-            element = Element(elementsInStr(self.constraint,removeQuotes=False)[0],
+            element = ExpSMS(smsInStr(self.constraint,removeQuotes=False)[0],
                             intermediateState=self.intermediateState,
                             finalState=self.finalState,
                             model = self._particles)
@@ -985,9 +985,9 @@ class TxNameInput(Locker):
 
         #Replace particles appearing in the vertices by their mass
         self.massConstraints = []
-        for el in elementsInStr(self.constraint,removeQuotes=False):
+        for el in smsInStr(self.constraint,removeQuotes=False):
             try:
-                element = Element(el,
+                element = ExpSMS(el,
                                 intermediateState=self.intermediateState,
                                 finalState=self.finalState,
                                 model = self._particles)
