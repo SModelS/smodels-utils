@@ -688,7 +688,7 @@ class TxNameInput(Locker):
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
         try:
-            element = ExpSMS(smsInStr(self.constraint,removeQuotes=False)[0],
+            element = ExpSMS.from_string(smsInStr(self.constraint)[0],
                             intermediateState=self.intermediateState,
                             finalState=self.finalState,
                             model = self._particles)
