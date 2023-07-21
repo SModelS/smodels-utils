@@ -147,7 +147,7 @@ def getStatsEMBaked ( ):
     """ retrieve the stats from an emBaked stats file """
     statsfile = "orig/statsEM.py"
     if not os.path.exists ( statsfile ):
-        print ( "ERROR: cannot find %s" % statsfile )
+        print ( f"ERROR: cannot find {statsfile}" )
         return None
     f=open( statsfile )
     g=eval(f.read())
@@ -1042,7 +1042,6 @@ class TxNameInput(Locker):
             txData += dataList
         else:
             setattr(self,dataLabel,dataList)
-        print ( f"@@4 we write {dataList} to {dataLabel}" )
         return True
 
 
@@ -1058,7 +1057,6 @@ class TxNameInput(Locker):
         """
         if type(plane)==MassPlane:
             return self.addDataFromV2 ( plane, dataLabel )
-        print ( f"inputObjects.addDataFrom {plane,type(plane),type(plane)==GraphMassPlane,dataLabel}" )
 
         #Get dimension of the plot:
         nvars = len(plane.xvars)
@@ -1085,7 +1083,6 @@ class TxNameInput(Locker):
                 logger.error( f"Number of free parameters in data ({ptDict}) and in axes ({plane.xvars}) do not match")
                 sys.exit()
 
-            print ( "inputObjects pointDict is", ptDict )
             #ptDic is of the form: {x : float, y : float, value-key : float}
             #where value-key is any key identifying the (upper limit,efficiency,..) value
             #Restrict the pt dictionary to only the variable values:
@@ -1095,7 +1092,6 @@ class TxNameInput(Locker):
             massArray = plane.getParticleMasses(**xDict)
             skipMass = False
             #Check if the massArray is positive and value is positive:
-            print ( "massArray is", massArray )
             for M in massArray:
                 if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
                     skipMass = True
@@ -1140,25 +1136,12 @@ class TxNameInput(Locker):
                     value = value * factor
                 else:
                     value = value*eval(unit, {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
-            if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
-                for j,M in enumerate(massArray):
-                    if isinstance(M,tuple):
-                        m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                        if self.widthsInNs(dataHandler.unit):
-                            m1 = hbar / M[1] * GeV
-                        else:
-                            m1 = M[1] * GeV ## width in GeV
-                        M = ( m0, m1 )
-                    if isinstance(M,(float,int)):
-                        M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                    massArray[j] = M
             dataList.append([massArray, value])
 
         if not dataList:
             logger.warning( f'Could not retrieve data for {self} (plane {plane})' )
             return False
         #Add data to txname. If dataLabel already exists, extend it
-        print ( f"@@5 we write {dataList} to {dataLabel}" )
         if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
             txData = getattr(self,dataLabel)
             txData += dataList

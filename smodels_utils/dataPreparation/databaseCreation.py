@@ -458,6 +458,7 @@ class DatabaseCreator(list):
                 for plane in txname._goodPlanes:
                     if plane == None:
                         continue
+                    print ( "plane", type(plane) )
                     for axes in str(plane.axes).split(";"):
                         if plane.branches == None:
                             plane2 = MassPlane.fromString ( plane._txDecay, axes )
