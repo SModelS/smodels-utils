@@ -660,8 +660,54 @@ class TxNameInput(Locker):
             modelFile.finalStates.label = os.path.basename(pFile)
             self._particles = modelFile.finalStates
 
-    def addMassPlane(self, plane):
+    def addMassPlaneV2(self, plane):
+        """
+        add a MassPlane object with given axes to self.planes, for axes v2 format
+        Add new attributes to the MassPlane.
+        :param txDecay: object of type TxDecay
+        :param plane: A MassPlane object or the full mass array containing
+                      equations which relate the physical masses and the plane
+                      coordinates, using the pre-defined 'x','y',.. symbols.
+        (e.g. [[x,y],[x,y]]).
+        :raise missingMassError: if one mass entry is missing
+        :raise onlyOnePlaneError: if a second mass plane is given and the related mass space
+        have only 2 dimensions
+        :raise interMediateParticleError: if a interMasses are given and the related
+                                          mass space
+        have only 2 dimensions
+        :return: MassPlane-object
+        """
 
+        if isinstance(plane,MassPlane):
+            self._planes.append(plane)
+            return plane
+        elif isinstance(plane,list):
+            massArray = plane
+        else:
+            logger.error("Input must be a MassPlane object or a mass array")
+            sys.exit()
+        try:
+            element = ExpSMS.from_string(smsInStr(self.constraint)[0],
+                            intermediateState=self.intermediateState,
+                            finalState=self.finalState,
+                            model = self._particles)
+        except Exception as e:
+            logger.error(str(e))
+            logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+            sys.exit()
+
+        for ibr,br in enumerate(element.branches):
+            if str(br) == '[*]':  #Ignore wildcard branches
+                continue
+            if len(massArray[ibr]) != br.vertnumb+1:
+                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim) in %s [%s]" % ( len(massArray[ibr]), br.vertnumb+1, self._txDecay, plane ))
+                sys.exit()
+        #Create mass plane for new input
+        massPlane = MassPlane(self._txDecay,massArray)
+        self._planes.append(massPlane)
+        return massPlane
+
+    def addMassPlane(self, plane):
         """
         add a MassPlane object with given axes to self.planes.
         Add new attributes to the MassPlane.
@@ -697,18 +743,6 @@ class TxNameInput(Locker):
             logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
             sys.exit()
 
-
-        #Checks for new input
-        if len(massArray) != len(element.branches):
-            logger.error("Mass array definition %s is not consistent with the txname constraint %s"
-                         %(str(massArray),str(element)))
-            sys.exit()
-        for ibr,br in enumerate(element.branches):
-            if str(br) == '[*]':  #Ignore wildcard branches
-                continue
-            if len(massArray[ibr]) != br.vertnumb+1:
-                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim) in %s [%s]" % ( len(massArray[ibr]), br.vertnumb+1, self._txDecay, plane ))
-                sys.exit()
         #Create mass plane for new input
         massPlane = MassPlane(self._txDecay,massArray)
         self._planes.append(massPlane)
@@ -970,8 +1004,47 @@ class TxNameInput(Locker):
 
         return True
 
-
-
+    def _setMassConstraintsV2(self):
+        """
+        Define the mass constraints for the txname, based
+        on its constraint, SModelS v2 version. 
+        The constraints on the mass differences of the BSM
+        particles are given as a nested array (according to the constraint format)
+        containing string inequalities to be satisfied by the BSM masses.
+        (e.g. for the constraint [[[t,t]],[[t,t]] we have the
+        mass constraint [['m > 169.+169.'],['m > 169.+169.']].
+        """
+        # Replace particles appearing in the vertices by their mass
+        self.massConstraints = []
+        for el in smsInStr(self.constraint):
+            try:
+                element = ExpSMS.from_string(el,
+                                intermediateState=self.intermediateState,
+                                finalState=self.finalState,
+                                model = self._particles)
+            except Exception as e:
+                logger.error(str(e))
+                logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+                sys.exit()
+            #Get even particles from vertices:
+            particles = element.getFinalStates()
+            #Compute minimum mass difference (sum over SM final state masses)
+            elConstraint = []
+            for branch in particles:
+                branchConstraint = []
+                for vertex in branch:
+                    vertexMasses = []
+                    for ptc in vertex:
+                        if not hasattr(ptc,'mass'):
+                            continue
+                        elif isinstance(ptc.mass,list):
+                            vertexMasses.append(max(ptc.mass).asNumber(GeV))
+                        else:
+                            vertexMasses.append(ptc.mass.asNumber(GeV))
+                    vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
+                    branchConstraint.append(vertexConstraint)
+                elConstraint.append(branchConstraint)
+            self.massConstraints.append(elConstraint)
     def _setMassConstraints(self):
         """
         Define the mass constraints for the txname, based
@@ -983,11 +1056,16 @@ class TxNameInput(Locker):
         """
 
 
-        #Replace particles appearing in the vertices by their mass
+        # Replace particles appearing in the vertices by their mass
         self.massConstraints = []
-        for el in smsInStr(self.constraint,removeQuotes=False):
+        if type(self.constraint)==list:
+            return setl._setMassConstraintsV2 ()
+        print ( f"set mass constraints for {self.constraint}" )
+        print ( f"[inputObjects._setMassConstraints] FIXME need to implement this!" )
+        return
+        for el in smsInStr(self.constraint):
             try:
-                element = ExpSMS(el,
+                element = ExpSMS.from_string(el,
                                 intermediateState=self.intermediateState,
                                 finalState=self.finalState,
                                 model = self._particles)
@@ -996,7 +1074,7 @@ class TxNameInput(Locker):
                 logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
                 sys.exit()
             #Get even particles from vertices:
-            particles = element.evenParticles
+            particles = element.getFinalStates()
             #Compute minimum mass difference (sum over SM final state masses)
             elConstraint = []
             for branch in particles:
