@@ -43,6 +43,66 @@ quenchNegativeMasses = False ## set to true, if you wish to
 
 errormsgs = {}
 
+def elementsInStr(instring,removeQuotes=True): ## from V2
+    """
+    Parse instring and return a list of elements appearing in instring.
+    instring can also be a list of strings.
+
+    :param instring: string containing elements (e.g. "[[['e+']],[['e-']]]+[[['mu+']],[['mu-']]]")
+    :param removeQuotes: If True, it will remove the quotes from the particle labels.
+                         Set to False, if one wants to run eval on the output.
+
+    :returns: list of elements appearing in instring in string format
+
+    """
+    outstr = ""
+    if isinstance(instring,str):
+        outstr = instring
+    elif isinstance(instring,list):
+        for st in instring:
+            if not isinstance(st,str):
+                logger.error("Input must be a string or a list of strings")
+                raise SModelSError()
+            # Combine list of strings in a single string
+            outstr += st
+    else:
+        raise SModelSError ( "syntax error in constraint/condition: ``%s''." \
+              "Check your constraints and conditions in your database." % str(instring) )
+
+    elements = []
+    outstr = outstr.replace(" ", "")
+    if removeQuotes:
+        outstr = outstr.replace("'", "")
+    elStr = ""
+    nc = 0
+    # Parse the string and looks for matching ['s and ]'s, when the matching is
+    # complete, store element
+    for c in outstr:
+        delta = 0
+        if c == '[':
+            delta = -1
+        elif c == ']':
+            delta = 1
+        nc += delta
+        if nc != 0:
+            elStr += c
+        if nc == 0 and delta != 0:
+            elements.append(elStr + c)
+            elStr = ""
+            # Syntax checks
+            ptclist = elements[-1].replace(']', ',').replace('[', ',').\
+                    split(',')
+            for ptc in ptclist:
+                ptc = ptc.replace("'","")
+                if not ptc:
+                    continue
+
+    # Check if there are not unmatched ['s and/or ]'s in the string
+    if nc != 0:
+        raise SModelSError("Wrong input (incomplete elements?) " + instring)
+
+    return elements
+
 def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
     """ from an emBaked file, retrieve the names of the signal regions
     :param filename: name of embaked file.
@@ -1007,27 +1067,20 @@ class TxNameInput(Locker):
     def _setMassConstraintsV2(self):
         """
         Define the mass constraints for the txname, based
-        on its constraint, SModelS v2 version. 
-        The constraints on the mass differences of the BSM
+        on its constraint. The constraints on the mass differences of the BSM
         particles are given as a nested array (according to the constraint format)
         containing string inequalities to be satisfied by the BSM masses.
         (e.g. for the constraint [[[t,t]],[[t,t]] we have the
         mass constraint [['m > 169.+169.'],['m > 169.+169.']].
         """
-        # Replace particles appearing in the vertices by their mass
+
+
+        #Replace particles appearing in the vertices by their mass
         self.massConstraints = []
-        for el in smsInStr(self.constraint):
-            try:
-                element = ExpSMS.from_string(el,
-                                intermediateState=self.intermediateState,
-                                finalState=self.finalState,
-                                model = self._particles)
-            except Exception as e:
-                logger.error(str(e))
-                logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
-                sys.exit()
-            #Get even particles from vertices:
-            particles = element.getFinalStates()
+        masses = { "higgs": 125.0, "t": 173.1, "Z": 91., "W": 80., "jet": 1.28,
+                   "ta": 1.777, "e": 0.0005, "mu": 0.106, "b": 4.7, "c": 1.28 }
+        for el in elementsInStr(self.constraint,removeQuotes=False):
+            particles = eval(el)
             #Compute minimum mass difference (sum over SM final state masses)
             elConstraint = []
             for branch in particles:
@@ -1035,16 +1088,13 @@ class TxNameInput(Locker):
                 for vertex in branch:
                     vertexMasses = []
                     for ptc in vertex:
-                        if not hasattr(ptc,'mass'):
-                            continue
-                        elif isinstance(ptc.mass,list):
-                            vertexMasses.append(max(ptc.mass).asNumber(GeV))
-                        else:
-                            vertexMasses.append(ptc.mass.asNumber(GeV))
+                        if ptc in masses:
+                            vertexMasses.append(masses[ptc])
                     vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
                     branchConstraint.append(vertexConstraint)
                 elConstraint.append(branchConstraint)
             self.massConstraints.append(elConstraint)
+
     def _setMassConstraints(self):
         """
         Define the mass constraints for the txname, based
@@ -1055,12 +1105,12 @@ class TxNameInput(Locker):
         mass constraint [['m > 169.+169.'],['m > 169.+169.']].
         """
 
-
         # Replace particles appearing in the vertices by their mass
         self.massConstraints = []
-        if type(self.constraint)==list:
-            return setl._setMassConstraintsV2 ()
-        print ( f"set mass constraints for {self.constraint}" )
+        c = eval(self.constraint)
+        if type(c)==list:
+            return self._setMassConstraintsV2 ()
+        print ( f"set mass constraints for {type(self.constraint)}" )
         print ( f"[inputObjects._setMassConstraints] FIXME need to implement this!" )
         return
         for el in smsInStr(self.constraint):
