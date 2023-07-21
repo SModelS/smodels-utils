@@ -613,7 +613,8 @@ class TxNameInput(Locker):
     infoAttr = ['txName','constraint', 'condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
                 'comment', 'validated','axes','upperLimits', 'validationTarball',
-                'efficiencyMap','expectedUpperLimits','xrange', 'yrange' ]
+                'efficiencyMap','expectedUpperLimits','xrange', 'yrange',
+                'axesMap', 'dataMap' ]
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
                     'condition', 'conditionDescription','massConstraint',
@@ -1107,10 +1108,9 @@ class TxNameInput(Locker):
 
         # Replace particles appearing in the vertices by their mass
         self.massConstraints = []
-        c = eval(self.constraint)
-        if type(c)==list:
+        if not "PV" in self.constraint:
             return self._setMassConstraintsV2 ()
-        print ( f"set mass constraints for {type(self.constraint)}" )
+        # print ( f"set mass constraints for {type(self.constraint)}" )
         print ( f"[inputObjects._setMassConstraints] FIXME need to implement this!" )
         return
         for el in smsInStr(self.constraint):
