@@ -265,6 +265,7 @@ class MassPlane(object):
             print ( f"[massPlaneObjects] setting format to '{dataFormat}'" )
         self.allInputFiles.append ( dataFile )
 
+        print ( "massPlaneObjects adding", dataLabel, dataFile, dataFormat, "dim", self.xvars )
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
             logger.error( f"Data label {dataLabel} is not allowed. Try one of: {', '.join(self.allowedDataLabels)}.")

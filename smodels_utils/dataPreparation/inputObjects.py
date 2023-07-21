@@ -23,6 +23,7 @@ from smodels_utils.dataPreparation.covarianceHandler import \
 from smodels_utils.dataPreparation import covarianceHandler
 from smodels.base.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.expSMS import ExpSMS
 from smodels.experiment.expAuxiliaryFuncs import smsInStr
 from smodels.installation import version
@@ -622,8 +623,7 @@ class TxNameInput(Locker):
                     'massConstraints', '_dataLabels', 'round_to',
                     '_databaseParticles', '_smallerThanError', '_particles' ]
 
-    requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
-                     'source' ]
+    requiredAttr = [ 'constraint','condition','txName','dataUrl', 'source' ]
     infoAttr.append ( 'finalState' )
     infoAttr.append ( 'intermediateState' )
     requiredAttr.append ( 'finalState' )
@@ -789,7 +789,7 @@ class TxNameInput(Locker):
         if isinstance(plane,MassPlane):
             self._planes.append(plane)
             return plane
-        elif isinstance(plane,list):
+        elif isinstance(plane,(list,dict)):
             massArray = plane
         else:
             logger.error("Input must be a MassPlane object or a mass array")
@@ -805,7 +805,10 @@ class TxNameInput(Locker):
             sys.exit()
 
         #Create mass plane for new input
-        massPlane = MassPlane(self._txDecay,massArray)
+        if type(plane)==dict:
+            massPlane = GraphMassPlane(self._txDecay,massArray)
+        else:
+            massPlane = MassPlane(self._txDecay,massArray)
         self._planes.append(massPlane)
         return massPlane
 
@@ -820,7 +823,7 @@ class TxNameInput(Locker):
 
 
         for plane in self._planes:
-            logger.info('Reading mass plane: %s, %s' % (self, plane))
+            logger.info( f'Reading mass plane: {self}, {plane}' )
 
             if dataType == 'upperLimit':
                 if not hasattr(plane,'upperLimits'):
@@ -919,8 +922,7 @@ class TxNameInput(Locker):
         logger.error ( f"cannot determine the unit of the values from {unit}" )
         return ""
 
-    def addDataFrom(self, plane, dataLabel):
-
+    def addDataFromV2(self, plane, dataLabel):
         """
         extend the given data list by the values related to this type of list
         examples for data lists are: upperLimits, efficiencyMaps, ....
@@ -929,9 +931,7 @@ class TxNameInput(Locker):
 
         :param plane: MassPlane-object
         :param dataLabel: label of the given data (efficiencyMap, upperLimits,..)
-
         """
-
         #Get dimension of the plot:
         nvars = len(plane.xvars)
         if nvars < 1 or nvars > 4:
@@ -1037,6 +1037,128 @@ class TxNameInput(Locker):
             logger.warning('Could not retrieve data for %s (plane %s)' %(self,plane))
             return False
         #Add data to txname. If dataLabel already exists, extend it
+        if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
+            txData = getattr(self,dataLabel)
+            txData += dataList
+        else:
+            setattr(self,dataLabel,dataList)
+        print ( f"@@4 we write {dataList} to {dataLabel}" )
+        return True
+
+
+    def addDataFrom(self, plane, dataLabel):
+        """
+        extend the given data list by the values related to this type of list
+        examples for data lists are: upperLimits, efficiencyMaps, ....
+        The values held by the given mass plane are extended to the data list.
+        If self does not contain the dataLabel, set this attribute.
+
+        :param plane: MassPlane-object
+        :param dataLabel: label of the given data (efficiencyMap, upperLimits,..)
+        """
+        if type(plane)==MassPlane:
+            return self.addDataFromV2 ( plane, dataLabel )
+        print ( f"inputObjects.addDataFrom {plane,type(plane),type(plane)==GraphMassPlane,dataLabel}" )
+
+        #Get dimension of the plot:
+        nvars = len(plane.xvars)
+        if nvars < 1 or nvars > 4:
+            logger.error(f'Can not deal with {nvars} variables' )
+            sys.exit()
+
+        #Check if plane has a dataLabel object holder:
+        if not hasattr(plane,dataLabel):
+            logger.error( f"Plane {plane} does not contain data holder for dataLabel {dataLabel}" )
+            sys.exit()
+
+        dataHandler = getattr(plane,dataLabel)
+
+        #Check if acceptances have been defined and reweight efficiencies by acceptance data:
+        if dataLabel == 'efficiencyMap':
+            if hasattr(plane, 'acceptanceMap'):
+                acceptanceData = getattr(plane,'acceptanceMap')
+                dataHandler.reweightBy(acceptanceData)
+
+        dataList = []
+        for ptDict in dataHandler:
+            if len(ptDict) != nvars+1:
+                logger.error( f"Number of free parameters in data ({ptDict}) and in axes ({plane.xvars}) do not match")
+                sys.exit()
+
+            print ( "inputObjects pointDict is", ptDict )
+            #ptDic is of the form: {x : float, y : float, value-key : float}
+            #where value-key is any key identifying the (upper limit,efficiency,..) value
+            #Restrict the pt dictionary to only the variable values:
+            xDict = dict([[str(xv),v] for xv,v in ptDict.items() if xv in plane.xvars])
+            #Get the (upper limit, efficiency,..) value:
+            value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
+            massArray = plane.getParticleMasses(**xDict)
+            skipMass = False
+            #Check if the massArray is positive and value is positive:
+            print ( "massArray is", massArray )
+            for M in massArray:
+                if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
+                    skipMass = True
+                    if not quenchNegativeMasses:
+                        logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
+                    continue
+                if type(M) == tuple and M[1]<0.:
+                    skipMass = True
+                    logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
+                    continue
+            if value < 0.:
+                skipMass = True
+                logger.warning("Negative value for %s found. Point %s will be ignored." %(self,str(massArray)))
+            if skipMass:
+                continue
+            #Check if mass array is consistent with the mass constraints given by the
+            #txname constraint. If not, skip this mass.
+            if not self.checkMassConstraints(massArray,value):
+                continue
+            #Add units
+            if hasattr(dataHandler, 'unit') and dataHandler.unit:
+                unit = self.getValueUnit ( dataHandler.unit )
+                if unit == "%":
+                    value = value / 100.
+                elif unit == "/10000":
+                    value = value / 10000.
+                elif self.widthsInNs(dataHandler.unit):
+                    pass #
+                elif type(unit) == str and unit.startswith ( "/" ):
+                    factor = unit[1:]
+                    try:
+                        factor = float ( factor )
+                    except ValueError as e:
+                        logger.error ( f"unit starting with / is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
+                    value = value / factor
+                elif type(unit) == str and unit.startswith ( "*" ):
+                    factor = unit[1:]
+                    try:
+                        factor = float ( factor )
+                    except ValueError as e:
+                        logger.error ( f"unit starting with * is meant as a factor. cannot cast {dataHandler.unit[1:]} to a float!" )
+                    value = value * factor
+                else:
+                    value = value*eval(unit, {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
+            if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
+                for j,M in enumerate(massArray):
+                    if isinstance(M,tuple):
+                        m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+                        if self.widthsInNs(dataHandler.unit):
+                            m1 = hbar / M[1] * GeV
+                        else:
+                            m1 = M[1] * GeV ## width in GeV
+                        M = ( m0, m1 )
+                    if isinstance(M,(float,int)):
+                        M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+                    massArray[j] = M
+            dataList.append([massArray, value])
+
+        if not dataList:
+            logger.warning( f'Could not retrieve data for {self} (plane {plane})' )
+            return False
+        #Add data to txname. If dataLabel already exists, extend it
+        print ( f"@@5 we write {dataList} to {dataLabel}" )
         if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
             txData = getattr(self,dataLabel)
             txData += dataList

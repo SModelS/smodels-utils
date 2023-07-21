@@ -796,7 +796,7 @@ class DatabaseCreator(list):
         #Check if all required attributes have been defined:
         for attr in obj.requiredAttr:
             if not hasattr(obj,attr):
-                logger.error("Attribute %s must be defined for object type %s: ``%s''" %(attr,type(obj),name))
+                logger.error( f"Attribute {attr} must be defined for object type {type(obj)}: ``{name}''" )
                 sys.exit()
 
         obj.addValidationTarballsFromPlanes()

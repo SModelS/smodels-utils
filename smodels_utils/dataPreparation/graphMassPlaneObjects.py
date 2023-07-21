@@ -12,7 +12,7 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, solve, N, And, sqrt
+from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
@@ -90,6 +90,10 @@ class GraphMassPlane(object):
 
         self.parametersMap = parametersMap
         self._exclusionCurves = []
+        xvars = set()
+        for k,v in parametersMap.items():
+            xvars.add ( Symbol(v) )
+        self.xvars = list(xvars)
 
     @classmethod
     def fromString(cls,txname,string):
@@ -114,7 +118,7 @@ class GraphMassPlane(object):
         return massPlane
 
     def __str__(self):
-        return "%s" % ( self.axes )
+        return f"{self.parametersMap}"
 
     def setSources(self,dataLabels,dataFiles,dataFormats,
                    objectNames=None,indices=None,units=None,coordinates=None,
@@ -199,6 +203,8 @@ class GraphMassPlane(object):
             print ( f"[massPlaneObjects] setting format to '{dataFormat}'" )
         self.allInputFiles.append ( dataFile )
 
+        # print ( "adding", dataLabel, dataFile, dataFormat )
+        # import IPython ; IPython.embed() ; sys.exit(-1)
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
             logger.error( f"Data label {dataLabel} is not allowed. Try one of: {', '.join(self.allowedDataLabels)}.")
@@ -256,8 +262,14 @@ class GraphMassPlane(object):
         :return: list containing two other lists. Each list contains floats, representing
         the masses of the particles of each branch in GeV
         """
-        print ( "FIXME implement, getParticleMasses", xMass )
-        sys.exit()
+        # print ( "FIXME implement, getParticleMasses", xMass, "parameterMap is", self.parametersMap )
+        ret = [0]*(1+max(self.parametersMap.keys()))
+        for k,v in self.parametersMap.items():
+            value = v
+            for variable,mass in xMass.items():
+                value = value.replace(variable,str(mass))
+            ret[k]=eval(value)
+        return ret
 
     def getXYValues(self, parameters : List ) -> Union[None,Dict]:
 
@@ -772,6 +784,8 @@ class WildAxes(Axes):
             dataFormat = dataFile[p1+1:]
             print ( f"[massPlaneObjects] setting format to '{dataFormat}'" )
         self.allInputFiles.append ( dataFile )
+
+        print ( "graphMassPlaneObjects adding", dataLabel, dataFile, dataFormat, "dim", self.xvars )
 
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
