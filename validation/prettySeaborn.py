@@ -263,7 +263,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         known_x = xx[~mask]
         if len(known_x) == 0:
-            logger.warning ( "we have no known_x values" )
+            logger.debug ( "we have no known_x values" )
             return image
         known_y = yy[~mask]
         known_v = image[~mask]
@@ -321,6 +321,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if logY:
             py = [ np.log10(y) for y in py ]
         plt.plot ( px, py, c="black", label="exclusion (official)" )
+    print ( "drawExpected", options["drawExpected"] )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
             if type(p) not in [ dict ]:
@@ -345,15 +346,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                           extent = xtnt, origin="image" )
         ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                         transform = fig.transFigure, linestyle="dotted" )
-    pName = prettyTxname(validationPlot.txName, outputtype="latex" )
+    pName = prettyTxname(validationPlot.txName)
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
     txStr = validationPlot.txName +': '+pName
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     axisType = getAxisType ( validationPlot.axes )
     if axisType == "v2":
-        axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
-                       outputtype="latex")
+        axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     else:
         axStr = prettyAxesV3(validationPlot)
     plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,

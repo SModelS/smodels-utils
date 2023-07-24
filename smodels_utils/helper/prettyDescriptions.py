@@ -672,7 +672,7 @@ def rootToLatex ( string : str, outputtype : str = "latex",
         string = rectifyCommands ( string )
     return string
 
-def prettyTxname(txname,outputtype="root",protons=True):
+def prettyTxname(txname,protons=True):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
@@ -686,13 +686,14 @@ def prettyTxname(txname,outputtype="root",protons=True):
              (e.g. pp #rightarrow #tilde{g} #tilde{g},
              #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
-    if not outputtype in [ "root", "latex", "text" ]:
-        logging.error ( "Unknown output type: %s. Known types: root, latex, text" % outputtype )
+    outputtype = "latex"
+    if not outputtype in [ "latex", "text" ]:
+        logging.error ( f"Unknown output type: {outputtype}. Known types: latex, text" )
         import sys
         sys.exit()
 
     latex=False
-    if outputtype in [ "root", "latex" ]:
+    if outputtype in [ "latex" ]:
         latex=True
 
     prodString = prettyProduction(txname,latex,protons)
@@ -850,27 +851,29 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
 def prettyAxesV3( validationPlot ) -> Union[None,str]:
     """
     get a description of the axes of validation plot
-    :param validationPlot: the validationPlot
-    :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
+    :param validationPlot: the validationPlot object
 
-    :return: list of constraints as latex, e.g.:
-             ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
+    :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
     # print ( f"here: {type(validationPlot)}" )
-    # print ( f"we have dataMap {validationPlot.getDataMap()}" )
-    return "x=m(C1)=m(N2), y=m(N1)"
+    dataMap = validationPlot.getDataMap()
+    # print ( f"we have dataMap {dataMap}" )
+    # import IPython ; IPython.embed()
+    if validationPlot.txName in [ "TChiWH" ]:
+        return "x=m(C1)=m(N2), y=m(N1)"
+    return "???"
 
-def prettyAxes( txname : str, axes : str, outputtype : str ="root" ) -> \
-        Union[None,str]:
+def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
     """
     Converts the axes string to the axes labels (plus additional constraints)
-    in latex form (using ROOT conventions)
+    in latex form
     :param txname: txname string  (e.g. 'T1')
     :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
 
     :return: list of constraints as latex, e.g.:
              ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
     """
+    outputtype = "latex" ## we phase out root
 
     if type(axes) == type(None):
         return "axis unknown"

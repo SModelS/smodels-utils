@@ -187,7 +187,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
-        print ( "p", p["name"] )
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
         plt.plot ( px, py, c="white", linewidth=4, zorder=7 ) 
         label = "official exclusion"

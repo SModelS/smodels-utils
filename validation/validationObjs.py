@@ -364,7 +364,7 @@ class ValidationPlot():
             ## FIXME here we could define different defaults for eg T5Gamma
             model = "mssm"
         with open ( parFile, "w" ) as f:
-            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
+            f.write( f"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = {combined}\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
             sigmacut = 0.000000001
@@ -897,19 +897,7 @@ class ValidationPlot():
         if self.isOneDimensional():
             from oneDPlots import create1DPlot as createUglyPlot
         else:
-            backend = str ( self.options["backend"] ).lower().strip()
-            if backend in [ "root" ]:
-                try:
-                    import ROOT
-                    from uglyROOT import createUglyPlot
-                    logger.error ( f"using ROOT backend for ugly plot. consider switching to matplotlib backend!" )
-                except ImportError as e:
-                    from uglySeaborn import createUglyPlot
-            else:
-                if backend not in [ "native", "default", "none", "python" ]:
-                   logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
-                   sys.exit(-1)
-                from uglySeaborn import createUglyPlot
+            from uglySeaborn import createUglyPlot
         self.plot, self.base = createUglyPlot( self,silentMode=silentMode,
                                           options = self.options )
         self.pretty = False
@@ -923,19 +911,7 @@ class ValidationPlot():
         if self.isOneDimensional():
             self.pretty = False
             return
-        backend = str ( self.options["backend"] ).lower().strip()
-        if backend in [ "root" ]:
-            try:
-                import ROOT
-                from prettyROOT import createPrettyPlot
-                logger.error ( f"using ROOT backend for pretty plot. consider switching to matplotlib backend!" )
-            except ImportError as e:
-                from prettySeaborn import createPrettyPlot
-        else:
-            if backend not in [ "native", "default", "none", "python" ]:
-               logger.error ( f"backend '{backend}' unknown. use one of: ROOT, native" )
-               sys.exit(-1)
-            from prettySeaborn import createPrettyPlot
+        from prettySeaborn import createPrettyPlot
 
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = self.options )
