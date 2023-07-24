@@ -851,20 +851,22 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
 def prettyAxesV3( validationPlot ) -> Union[None,str]:
     """
     get a description of the axes of validation plot
-    :param validationPlot: the validationPlot
-    :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
+    :param validationPlot: the validationPlot object
 
-    :return: list of constraints as latex, e.g.:
-             ['m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}',]
+    :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
     # print ( f"here: {type(validationPlot)}" )
-    # print ( f"we have dataMap {validationPlot.getDataMap()}" )
-    return "x=m(C1)=m(N2), y=m(N1)"
+    dataMap = validationPlot.getDataMap()
+    # print ( f"we have dataMap {dataMap}" )
+    # import IPython ; IPython.embed()
+    if validationPlot.txName in [ "TChiWH" ]:
+        return "x=m(C1)=m(N2), y=m(N1)"
+    return "???"
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
     """
     Converts the axes string to the axes labels (plus additional constraints)
-    in latex form (using ROOT conventions)
+    in latex form
     :param txname: txname string  (e.g. 'T1')
     :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
 

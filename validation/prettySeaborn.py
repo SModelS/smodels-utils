@@ -263,7 +263,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         known_x = xx[~mask]
         if len(known_x) == 0:
-            logger.warning ( "we have no known_x values" )
+            logger.debug ( "we have no known_x values" )
             return image
         known_y = yy[~mask]
         known_v = image[~mask]
@@ -321,6 +321,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if logY:
             py = [ np.log10(y) for y in py ]
         plt.plot ( px, py, c="black", label="exclusion (official)" )
+    print ( "drawExpected", options["drawExpected"] )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
             if type(p) not in [ dict ]:
