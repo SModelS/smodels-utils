@@ -91,9 +91,11 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
+    outputsdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs/"
+    mkdir ( outputsdir )
     if doLog:
-        cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
+        cmd += [ "--error", f"{outputsdir}/bake-%j.out",
+                 "--output", f"{outputsdir}/bake-%j.out" ]
     else:
         cmd += [ "--error",  "/dev/null",
                  "--output", "/dev/null" ]
