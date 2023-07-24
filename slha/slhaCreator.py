@@ -25,7 +25,8 @@ try: ## smodels <= 122
 except ImportError: ## smodels >= 200
     from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV, TeV
-from smodels.tools import xsecComputer, runtime
+from smodels.base import runtime
+from smodels.tools import xsecComputer
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
 import signal
