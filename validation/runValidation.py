@@ -93,8 +93,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
-    from smodels_utils.helper.rootTools import destroyRoot
-    destroyRoot()
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         if options["generateData"]:
@@ -102,7 +100,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"]:
             valPlot.toPdf()
-    destroyRoot()
     return valPlot
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
@@ -642,7 +639,7 @@ if __name__ == "__main__":
                 "keepTopNSRs": 0, ## keep an ordered list of <n> most sensitive signal regions, needed for trimming and aggregating
                 "drawChi2Line": False, # draw an exclusion line derived from chi2 values in green (only on pretty plot )
                 "limitPoints": -1, ## limit the number of points to run on
-                "axis": None, ## the axes to plot. If not given, take from sms.root
+                "axis": None, ## the axes to plot. If not given, take from exclusion_lines.json
                 "style": "", # specify a plotting style, currently only
                 "ratioPlots": True, ## create ratioplots if possible
                 "bestSRPlots": True, ## create best SR plots if meaningful
