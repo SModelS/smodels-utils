@@ -345,15 +345,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                           extent = xtnt, origin="image" )
         ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                         transform = fig.transFigure, linestyle="dotted" )
-    pName = prettyTxname(validationPlot.txName, outputtype="latex" )
+    pName = prettyTxname(validationPlot.txName)
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
     txStr = validationPlot.txName +': '+pName
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     axisType = getAxisType ( validationPlot.axes )
     if axisType == "v2":
-        axStr = prettyAxes(validationPlot.txName,validationPlot.axes,\
-                       outputtype="latex")
+        axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     else:
         axStr = prettyAxesV3(validationPlot)
     plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,
