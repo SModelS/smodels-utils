@@ -13,6 +13,7 @@ def listTopologyNames ( pattern ):
             for txn in ds.txnameList:
                 if fnmatch.filter ( [ str(txn) ], pattern ):
                     txnames.add ( str(txn) )
+                    # txnames.add ( f"'{str(txn)}'" )
     print ( f"{len(txnames)} names: {','.join(txnames)}" )
 
 if __name__ == "__main__":

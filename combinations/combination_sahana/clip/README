@@ -1,0 +1,23 @@
+#PROCEDURE:
+
+clip_comp.py is the program used for generating the results for 2ndFilter_slha_nlo points. The results are stored in "results_2" folder.
+
+#About the Program:
+clip_comp.py takes in number of files to run, the batchset of input slha files, whether you are using the clip cluster or not, path to the output dir and name for the summary file to be generated.
+By default, the number of files to run is 100, you can set the number to any multiple of 10
+Batchset of files refers to the starting point of the file list when you input all the model_points in 2ndFilter_slha_nlo in a list. Example, if number of files=100, batchset 0 will run files from indices 0-99 in the list of modelpoints, batchset 1 will run files from indices 100-199. You can remove this argument from the code if you already have a list if inputfiles in mind.
+If you are using the clip cluster , type 'y'
+Write the path to the output folder (results_2)
+The summary file is a table separated by '\t' containing information about the name of the modelpoint, masses of ewkinos and mass parameters in the modelppoint, the best combination of analyses, combined r_obs,r_exp, max r_obs,r_exp, most constraining and most sensitive analysis and if no best combination but tp is present but not included in combination. 
+
+clip_comp.py then splits the list of inputfiles into 10 processes. Each process takes in a set of files, finds the best combination using the BestCombinationFinder for a model_point and then runs SModelS using the parameter.ini file on the best combination for the model_point. It then reads the smodels/python output file to write to the summary file.
+
+#Parameters used in clip_comp.py:
+sigmacut = 0.001*fb
+mingap = 5.*GeV
+runtime.modelFile = 'smodels.share.models.mssm'
+database.getExpResults(analysisIDs='all', dataTypes=['efficiencyMap','combined'], txnames=['TChi*'])
+
+#I have put the parameter.ini file also in this folder
+#results folder are for filter_slha model points
+#BestCombinationFinder is in combination_sahana folder

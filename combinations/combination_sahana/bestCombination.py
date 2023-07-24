@@ -78,10 +78,11 @@ class BestCombinationFinder(object):
             ana = tp.dataset.globalInfo.id
             if ana not in self.cM.keys():                  #tp not present in combination matrix dictionary
                 if self.use_dict:
+                    logging.warning("Theory Prediction not present in combination dictionary: %s"%(ana))
                     notp_list.append(tp)                   #remove tp from list if useAnalysisFromDict=True
                     #self.listoftp.pop(self.listoftp.index(tp))
                     continue
-                else: logger.error(' There is a theory prediction for an analysis not mentioned in combination matrix. Will proceed for now.')
+                else: logger.error("Theory Prediction not present in combination dictionary but will include for bestCombination: %s"%(ana))
             
             sq_s = tp.dataset.globalInfo.sqrts                #get root_s of tp
             if str(sq_s).split('.')[0] == '8':
