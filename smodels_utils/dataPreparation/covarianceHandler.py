@@ -86,7 +86,7 @@ class CovarianceHandler:
 
     def checkCovarianceMatrix( self ):
         """ a quick check if the covariance matrix is invertible. """
-        from smodels.tools.simplifiedLikelihoods import Data
+        from smodels.statistics.simplifiedLikelihoods import Data
         import scipy.linalg
         n=len(self.covariance)
         m=Data( [0.]*n, [0.]*n, self.covariance )
