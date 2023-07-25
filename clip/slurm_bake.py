@@ -14,8 +14,7 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
-def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
-           time, doLog = True, adl_file = None, event_condition = None ):
+def bake ( args : dict ):
     """ bake with the given recipe
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
     :param topo: eg T3GQ
@@ -32,35 +31,53 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     with open ( f"{codedir}/smodels-utils/clip/bake_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
-    #if "cutlang" in recipe and not cutlang:
-    #    print ( f"[slurm.py] cutlang is mentioned in recipe but -l was not given. maybe use -l?" )
-    #    sys.exit()
+    nevents = args["nevents"]
+    topo = args["topo"]
+    nproc = args["nprocesses"]
+    mass = args["mass"]
+    dry_run = args["dry_run"]
+    cutlang = args["cutlang"]
+    time = args["time"]
+    doLog = not args["dontlog"]
+    analyses = args["analyses"]
+    event_condition = args["event_condition"]
+    adl_file = args["adl_file"]
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
-    Dir = "%s/smodels-utils/clip/temp/" % codedir
+    Dir = f"{codedir}/smodels-utils/clip/temp/"
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
     pathname = os.path.join ( Dir, filename )
     print ( f"[slurm.py] creating script at {pathname}: {len(lines)} lines." )
-    # nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( pathname, "wt" ) as f:
         for line in lines:
-            args = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
-            args += f' --analyses "{analyses}"'
-            # args += ' -b'
+            largs = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
+            largs += f' --analyses "{analyses}"'
             if cutlang:
-                args += ' --cutlang'
+                largs += ' --cutlang'
             if event_condition is not None:
                 event_condition = event_condition.replace("'",'"')
                 pids = { "gamma": 22, "Z": 23, "higgs": 25 }
                 for name,pid in pids.items():
                     event_condition = event_condition.replace ( name, str(pid) )
-                args += f" --event_condition '{event_condition}'"
+                largs += f" --event_condition '{event_condition}'"
             if adl_file is not None:
                 adl_file = adl_file.replace("'",'').replace('"','')
-                args += f" --adl_file '{adl_file}'"
-            f.write ( line.replace("@@ARGS@@", args ) )
+                largs += f" --adl_file '{adl_file}'"
+            if args["mingap1"] is not None:
+                largs += f" --mingap1 {args['mingap1']}"
+            if args["maxgap1"] is not None:
+                largs += f" --maxgap1 {args['maxgap1']}"
+            if args["mingap2"] is not None:
+                largs += f" --mingap2 {args['mingap2']}"
+            if args["maxgap2"] is not None:
+                largs += f" --maxgap2 {args['maxgap2']}"
+            if args["mingap13"] is not None:
+                largs += f" --mingap13 {args['mingap13']}"
+            if args["maxgap13"] is not None:
+                largs += f" --maxgap13 {args['maxgap13']}"
+            f.write ( line.replace("@@ARGS@@", largs ) )
         f.close()
     templatefile = f"{codedir}/smodels-utils/clip/run_bakery_template.sh"
     with open ( templatefile, "rt" ) as f:
@@ -74,18 +91,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
         for line in lines:
             f.write ( line.replace ( "@@SCRIPT@@", filename ) )
         f.write ( f"# this script will perform:\n" )
-        line = f'./bake.py -a -n {nevents} -T {topo} -m "{mass}" --analyses "{analyses}" -p {nproc}'
-        if event_condition is not None:
-            event_condition = event_condition.replace("'",'"')
-            pids = { "gamma": 22, "Z": 23, "higgs": 25 }
-            for name,pid in pids.items():
-                event_condition = event_condition.replace ( name, str(pid) )
-            line += f" --event_condition '{event_condition}'"
-        if adl_file is not None:
-            adl_file = adl_file.replace("'",'').replace('"','')
-            line += f" --adl_file '{adl_file}'"
-        if cutlang:
-            line += ' --cutlang'
+        line = f'./bake.py {args}'
         f.write ( f"# {line}\n" )
         f.close()
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
@@ -121,14 +127,10 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
     cmd += [ tmpfile ]
-    # cmd += [ "./run_bakery.sh" ]
-    print ("[slurm.py] baking %s" % " ".join ( cmd ) )
+    print ( f'[slurm.py] baking {" ".join ( cmd )}' )
     if not dry_run:
         a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
-    #cmd = "rm %s" % tmpfile
-    #o = subprocess.getoutput ( cmd )
-    #print ( "[slurm.py] %s %s" % ( cmd, o ) )
+        print ( f"[slurm.py] returned: {a}" )
 
 def logCall ():
     f=open("slurm.log","at")
@@ -172,6 +174,18 @@ def main():
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )
+    argparser.add_argument ( '--maxgap2', help='maximum mass gap between second and third, to force offshell [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--mingap1', help='minimum mass gap between first and second, to force onshell or a mass hierarchy [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--mingap2', help='minimum mass gap between second and third, to force onshell or a mass hierarchy [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--mingap13', help='minimum mass gap between first and third, to force onshell or a mass hierarchy [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--maxgap13', help='maximum mass gap between first and third, to force offshell [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--maxgap1', help='maximum mass gap between first and second, to force offshell [None]',
+                             type=float, default=None )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
@@ -184,9 +198,7 @@ def main():
         # args.mass = "[(300,1099,25),'half',(200,999,25)]"
         args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
     for i in range(args.nbakes):
-        bake ( args.analyses, args.mass, args.topo, args.nevents, args.dry_run,
-               args.nprocesses, args.cutlang, args.time, doLog, args.adl_file,
-               args.event_condition )
+        bake ( vars(args) )
     logCall()
 
 if __name__ == "__main__":
