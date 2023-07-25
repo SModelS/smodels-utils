@@ -583,7 +583,7 @@ class DataSetInput(Locker):
                 fs = tx.finalState
                 midState = tx.intermediateState
                 try:
-                    newEl = ExpSMS(el,finalState=fs,intermediateState=midState,model=tx._particles)
+                    newEl = ExpSMS.from_string(el,finalState=fs,intermediateState=midState,model=tx._particles)
                 except Exception as e:
                     logger.error(str(e))
                     logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
