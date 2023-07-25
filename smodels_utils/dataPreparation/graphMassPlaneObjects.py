@@ -795,7 +795,7 @@ class WildAxes(Axes):
             #Define the default coordinate mapping:
             if not coordinateMap:
                 coordinateMap = dict([[xv,i] for i,xv in enumerate(allvars[:dimensions])])
-                coordinateMap['value'] = dimensions
+                coordinateMap['value'] = -1 # dimensions
             #Initialize a data handler
             dataObject = DataHandler(dataLabel,coordinateMap,self.xvars,
                                      str(self._txDecay) )
@@ -807,7 +807,6 @@ class WildAxes(Axes):
                     coordinateMap = {x : 0, 'value' : None}
             dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars)
             self._exclusionCurves.append(dataObject)
-
         dataObject.dataUrl = self.dataUrl
         #Set source of object
         dataObject.setSource(dataFile, dataFormat,

@@ -273,7 +273,7 @@ class MassPlane(object):
             #Define the default coordinate mapping:
             if not coordinateMap:
                 coordinateMap = dict([[xv,i] for i,xv in enumerate(allvars[:dimensions])])
-                coordinateMap['value'] = dimensions
+                coordinateMap['value'] = -1 # dimensions
             #Initialize a data handler
             dataObject = DataHandler(dataLabel,coordinateMap,self.xvars,
                                      str(self._txDecay) )

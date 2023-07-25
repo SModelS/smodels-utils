@@ -361,9 +361,8 @@ class DataHandler(object):
             if i is None:
                 continue
             if i >= len(point):
-                logger.error( "asking for %dth element of %s in %s" % \
-                              (i, point, self.path ) )
-                logger.error( "coordinate map is %s" % self.coordinateMap )
+                logger.error( f"asking for {i}th element of {point} in {self.path}")
+                logger.error( f"coordinate map is {self.coordinateMap}" )
             ptDict[xvar] = point[i]
 
         return ptDict
