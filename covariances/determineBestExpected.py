@@ -6,7 +6,7 @@
 import sys, numpy, subprocess
 from smodels.experiment.databaseObj import Database
 from smodels.tools.xsecComputer import XSecComputer
-from smodels.theory.crossSection import NLL, LO
+from smodels.base.crossSection import NLL, LO
 from smodels.base.physicsUnits import TeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.theory.slhaDecomposer import decompose

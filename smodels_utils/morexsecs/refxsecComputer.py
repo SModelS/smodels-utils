@@ -15,10 +15,10 @@ from smodels.tools.wrapperBase import WrapperBase
 from smodels.tools import wrapperBase
 from smodels.base.smodelsLogging import logger, setLogLevel
 from smodels.base.physicsUnits import fb, pb, GeV, TeV, mb, unum
-from smodels.theory.crossSection import LO, NLO, NLL, NNLL
-from smodels.theory import crossSection
+from smodels.base.crossSection import LO, NLO, NLL, NNLL
+from smodels.base import crossSection
 from smodels_utils.SModelSUtils import installDirectory
-from smodels.theory.exceptions import SModelSTheoryError as SModelSError
+from smodels.base.exceptions import SModelSBaseError as SModelSError
 from smodels import installation as smodelsinstallation
 import os, sys, io, shutil, pyslha
         
