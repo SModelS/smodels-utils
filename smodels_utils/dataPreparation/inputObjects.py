@@ -475,7 +475,7 @@ class DataSetInput(Locker):
             return ulspey, ulspeyE
         alpha = .05
         try:
-            from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
+            from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
             comp = UpperLimitComputer ( 1. - alpha )
             try:
                 # new API
