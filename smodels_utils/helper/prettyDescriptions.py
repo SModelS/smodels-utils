@@ -672,7 +672,7 @@ def rootToLatex ( string : str, outputtype : str = "latex",
         string = rectifyCommands ( string )
     return string
 
-def prettyTxname(txname,protons=True):
+def prettyTxname(txname,protons=True,outputtype="latex"):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
@@ -686,7 +686,6 @@ def prettyTxname(txname,protons=True):
              (e.g. pp #rightarrow #tilde{g} #tilde{g},
              #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
-    outputtype = "latex"
     if not outputtype in [ "latex", "text" ]:
         logging.error ( f"Unknown output type: {outputtype}. Known types: latex, text" )
         import sys
