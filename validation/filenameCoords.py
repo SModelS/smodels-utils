@@ -31,3 +31,4 @@ coords["TChiWZ"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChi_HinoBino_BRN2Z100"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChi_HinoBino_BRN2Z50"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["T5HG"]={'masses': [[1, 2, 3], [4, 5, 6]], 'widths': None}
+coords["T5Hg"]={'masses': [[1, 2, 3], [4, 5, 6]], 'widths': None}
