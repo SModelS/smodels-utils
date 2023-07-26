@@ -660,11 +660,13 @@ class DatabaseCreator(list):
             name = name.replace(" ","")
             xv,yv=[],[]
             xandy = []
+            axisMap = None
             # for i in range(exclusion.GetN() ):
             for pt in exclusion["points"]:
                 x = round_to_n ( pt["x"], 4 )
                 y = round_to_n ( pt["y"], 4 )
-                axisMap = pt["axisMap"]
+                if "axisMap" in pt:
+                    axisMap = pt["axisMap"]
                 #x = round_to_n ( exclusion.GetPointX(i), 4 )
                 #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
@@ -674,9 +676,11 @@ class DatabaseCreator(list):
             if not name in content[dirname]:
                 # content[dirname][name]=xandy
                 if not "y" in name:
-                    content[dirname][name]={ "x": xv, "axisMap" : axisMap }
+                    content[dirname][name]={ "x": xv }
                 else:
-                   content[dirname][name]={ "x": xv, "y": yv, "axisMap" : axisMap }
+                   content[dirname][name]={ "x": xv, "y": yv }
+                if axisMap is not None:
+                    content[dirname][name]["axisMap"]=axisMap
         with open ( fname, "wt" ) as handle:
             json.dump ( content, handle, indent = 1 )
             handle.close()
