@@ -36,8 +36,8 @@ class PDFLimitReader():
         """
         def distance ( p1, p2 ):
             return (p1[0]-p2[0])**2 + (p1[1]-p2[1])**2
-        xmin, xmax = self.data['x']['limits']
-        ymin, ymax = self.data['y']['limits']
+        xmin, xmax, dx = self.data['x']['limits']
+        ymin, ymax, dy = self.data['y']['limits']
         points = []
         scol = (0,0,0)
         if expected:
@@ -46,6 +46,8 @@ class PDFLimitReader():
         for l in excllines:
             lw = l.stroke.linewidth ## central value has linewidth 3, 
             col = l.stroke.color.as_rgb()
+            #if lw > .8: # pm == 0 and expected:
+            #    print ( "i have a line with lw", lw, "color", col, "len", len(l.path) )
             if lw < 1.:
                 continue
             if len(l.path)==3: ## legend lines
@@ -53,7 +55,7 @@ class PDFLimitReader():
             # print ( "l", l, lw, col, len(l.path) )
             if col != scol:
                 continue
-            if pm == 0 and abs ( lw - 3.) > 1e-2:
+            if pm == 0 and lw > 2.3:
                 continue
             if abs(pm) == 1 and abs ( lw - 1.5 ) > 1e-2:
                 continue
@@ -98,8 +100,9 @@ class PDFLimitReader():
         excllines = []
         for shape in page.shapes:
             ## exclusion lines are red or black
-            if shape.fill == None and shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
-                excllines.append ( shape )
+            if shape.stroke is not None:
+                if shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
+                    excllines.append ( shape )
             # these colored boxes have identical stroke and fill color and are neither black or white
             if shape.fill and shape.stroke and hasattr(shape.stroke, 'color') and shape.stroke.color.as_rgb()==shape.fill.color.as_rgb():
                 if shape.fill.color.as_rgb() in [(1,1,1), (0,0,0)]: continue
@@ -160,14 +163,9 @@ class PDFLimitReader():
             for pm in [ -1, 0, 1 ]:
                 exc[name+exts[pm]] = self.processLines ( excllines, expected=expected, pm=pm )
         self.exclusions = exc
-        """
-        print ( "obs excl line", self.obsexcl[:3] )
-        print ( "exp excl line", self.expexcl[:3] )
-        print ( "obsp1 excl line", self.obsexclp1[:3] )
-        print ( "obsm1 excl line", self.obsexclm1[:3] )
-        print ( "expp1 excl line", self.expexclp1[:3] )
-        print ( "expm1 excl line", self.expexclm1[:3] )
-        """
+        if False:
+            for name, values in exc.items():
+                print ( "line:", name, values[:3] )
         # for debugging
         #for shape in self.main_shapes:
         #    ct = shape.fill.color.as_rgb()        
@@ -193,8 +191,8 @@ class PDFLimitReader():
     def get_limit( self, x, y ):
         ''' get limit in the coordinates of the original plot
         '''
-        xmin, xmax = self.data['x']['limits']
-        ymin, ymax = self.data['y']['limits']
+        xmin, xmax, dx = self.data['x']['limits']
+        ymin, ymax, dy = self.data['y']['limits']
         # normalise to unit interval
         r_x = (x - xmin)/(xmax-xmin)
         r_y = (y - ymin)/(ymax-ymin)
@@ -222,26 +220,27 @@ class PDFLimitReader():
         
     def __init__( self, limit_dict ): 
         self.data = limit_dict
-        self.exclusions = { "obsExclusion": [], "expExclusion": [], "obsExclusionP1": [],
-                            "obsExclusionM1": [], "expExclusionP1": [], "expExclusionM1": [] 
-        }
+        self.exclusions = { "obsExclusion": [], "expExclusion": [], 
+            "obsExclusionP1": [], "obsExclusionM1": [], "expExclusionP1": [], 
+            "expExclusionM1": [] }
         self.get_axis_dict()
  
 if __name__ == "__main__":
     data =  {
-        'name': 'CMS-SUS-19-007_Figure_010',
-        'x':{'limits': (800, 2600, 25) },
-        'y':{'limits': (0, 2000, 25) },
+        'name': 'CMS-PAS-SUS-21-009_Figure_009-b',
+        'x':{'limits': (1500, 2800, 25) },
+        'y':{'limits': (0, 3000, 25) },
         'z':{'limits': (10**-1, 80 ), 'log':True},
+        'topology': 'T5Hg'
         }
 
     r = PDFLimitReader( data )
     for i in [ "obsExclusion", "expExclusion", "obsExclusionP1", "obsExclusionM1",
                "expExclusionP1", "expExclusionM1" ]:
-        f=open ( f"T1tttt_{i}.csv", "wt" )
+        f=open ( f"{data['topology']}_{i}.csv", "wt" )
         pts = r.exclusions[i]
         for pt in pts:
             f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
         f.close()
     # get the limit at the bottom right
-    print (r.get_limit(2000,200) )
+    print ( "limit at 2000,200 is", r.get_limit(2000,200) )
