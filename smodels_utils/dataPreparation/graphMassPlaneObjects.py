@@ -281,13 +281,14 @@ class GraphMassPlane(object):
         :returns: None if an error occurs,
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        # print ( ">> parameters", parameters )
-        # print ( ">> parametersMap", self.parametersMap )
         ret = {}
         for index,param in self.parametersMap.items():
             ## FIXME when is it widths instead??
             # print ( f"parameters are {parameters}" )
-            ret[str(param)] = float ( parameters[index][1] )
+            if type(parameters[index]) in [ float ]:
+                ret[str(param)] = float ( parameters[index] )
+            else:
+                ret[str(param)] = float ( parameters[index][1] )
         # print ( ">> ret", ret )
         return ret
 

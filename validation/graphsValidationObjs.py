@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import GeV
 from smodels.matching import modelTester
 from smodels_utils.helper.various import round_to_n
+from typing import Union
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
          rescaleWidth, addUnit
@@ -385,7 +386,7 @@ class ValidationPlot():
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
-            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
+            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\naddNodesMap=True\n")
             f.close()
         # os.close(pf)
         pf.close()
@@ -582,17 +583,35 @@ class ValidationPlot():
                 return txn.dataMap
         return None
 
-    def constructParameterVector ( self, masses : list, widths : list ) -> list:
+    def constructParameterVector ( self, masses : list, widths : list,
+            nodesMap : dict ) -> list:
         """ given the knowledge of the dataMap, construct the 
         container of parameters to be fed into the graphs map """
         dataMap = self.getDataMap()
-        ret=[float("nan")]*len(masses)
+        ret=[float("nan")]*len(dataMap)
         for index,info in dataMap.items():
-            ## info is, e.g.: (1,'mass',GeV)
-            if info[1]=="width":
-                ret[index] = widths[info[0]-1]
-            if info[1]=="mass":
-                ret[index] = masses[info[0]-1]
+            ## index is the index in the final parameters vector
+            nodeIndex = info[0]
+            ## info in dataMap is, e.g.: (1,'mass',GeV)
+            nodeName = nodesMap[nodeIndex]
+            ret[index] = self.getNodeParameter ( nodeName, masses, widths, info[1] )
+        # import IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        return ret
+
+    def getNodeParameter ( self, nodeName : str, masses : list, widths : list,
+                           parameterType : str ) -> Union[float,None]:
+        """ get the parameter value for node "nodeName", given the masses, 
+        the widths, and knowledge about the parameterType """
+        if parameterType=="width":
+            for k,v in widths:
+                if k==nodeName:
+                    return v
+            return None
+        if parameterType=="mass":
+            for k,v in masses:
+                if k==nodeName:
+                    return v
+            return None
         return ret
 
     def getDataFromPlanes(self):
@@ -687,7 +706,8 @@ class ValidationPlot():
 
             masses = expRes["Mass (GeV)"]
             widths = expRes["Width (GeV)"]
-            parameters = self.constructParameterVector ( masses, widths )
+            nodesMap = expRes["Nodes Map"]
+            parameters = self.constructParameterVector ( masses, widths, nodesMap )
             # print ( f"@@1 we feed {parameters}" )
             varsDict = massPlane.getXYValues( parameters )
             # print ( f"@@1 we get {varsDict}" )
@@ -738,6 +758,7 @@ class ValidationPlot():
                     dataset = self.expRes.datasets[0]
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
+                """
                 mnw=[]
                 if width == None:
                     mnw = mass
@@ -750,14 +771,14 @@ class ValidationPlot():
                             else:
                                 br.append( (m,w) )
                         mnw.append(br)
-                massGeV = addUnit ( mnw, GeV )
+                """
                 if not "efficiency" in Dict.keys():
                     try:
-                        eff = txname.txnameData.getValueFor(massGeV)
+                        eff = txname.txnameData.getValueFor(parameters)
                         if eff != None:
                             Dict['efficiency'] = round ( eff, 8 )
                     except SModelSError as e:
-                        logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                        logger.error ( f"could not handle {slhafile}: {e}" )
                         Dict=None
             logger.debug('expres keys : {}'.format(expRes.keys()))
             if 'best combination' in expRes.keys():

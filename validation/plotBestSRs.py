@@ -58,7 +58,8 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
             axisv = content["meta"]["axes"]
             if os.path.exists ( eljson ):
                 ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
-                lines.append (  ll[topo] )
+                if ll is not None:
+                    lines.append (  ll[topo] )
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )
@@ -273,7 +274,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
-    axis = prettyDescriptions.prettyAxes ( topo, axisv, outputtype="latex" )
+    axis = prettyDescriptions.prettyAxes ( topo, axisv )
     fig = plt.gcf()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )
