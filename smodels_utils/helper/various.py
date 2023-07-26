@@ -261,7 +261,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
         for name,line in content.items():
             if not match ( name ):
                 continue
-            if not axisMatch ( line["axisMap"] ):
+            if "axisMap" in line and not axisMatch ( line["axisMap"] ):
                 continue
             points = cutPoints ( line, ranges )
             # print ( "@@2 txn", txn, "name", name, "x", str(points["x"])[:50] )
