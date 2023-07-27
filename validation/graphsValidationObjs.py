@@ -583,6 +583,26 @@ class ValidationPlot():
                 return txn.dataMap
         return None
 
+    def getSmsMap ( self ):
+        """ obtain the correct sms map, i.e. the one corresponding to
+        our txname """
+        ds = self.expRes.datasets[0]
+        ## FIXME need to search
+        for txn in ds.txnameList:
+            if txn.txName == self.txName:
+                return txn.smsMap
+        return None
+
+    def getTxname ( self ):
+        """ obtain the correct sms/axes/data maps, i.e. the ones corresponding to
+        our txname """
+        ds = self.expRes.datasets[0]
+        ## FIXME need to search
+        for txn in ds.txnameList:
+            if txn.txName == self.txName:
+                return txn
+        return None
+
     def constructParameterVector ( self, masses : list, widths : list,
             nodesMap : dict ) -> list:
         """ given the knowledge of the dataMap, construct the 

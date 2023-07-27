@@ -847,17 +847,21 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
-def prettyAxesV3( validationPlot = None ) -> Union[None,str]:
+def prettyAxesV3( validationPlot = None ) -> str:
     """
     get a description of the axes of validation plot
     :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    dataMap = validationPlot.getDataMap()
-    # print ( f"we have dataMap {dataMap}" )
+    #txn = validationPlot.getTxname()
+    #nodes = list(txn.smsMap.keys())[0]._nodesMapping
+    print ( "@@FIXME implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
+    #nodesDict = {nodeIndex : str(node) for nodeIndex,node in nodes.items()}
     # import IPython ; IPython.embed()
     if validationPlot.txName in [ "TChiWH" ]:
         return "x=m(C1)=m(N2), y=m(N1)"
+    if validationPlot.txName in [ "T5Hg" ]:
+        return "x=m(~g), y=m(N2), m(N1)=1"
     return "???"
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:

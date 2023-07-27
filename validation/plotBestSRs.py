@@ -275,7 +275,6 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
     axis = prettyDescriptions.prettyAxesV3 ( validationPlot )
-    print ( "pretty Axes for", axisv, "is", axis, "topo", topo)
     fig = plt.gcf()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )
