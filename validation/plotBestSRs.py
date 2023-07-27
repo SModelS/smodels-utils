@@ -205,7 +205,7 @@ def fetchAllOtherPoints ( bestSRs : list, regions : list ) -> tuple:
 def plot( dbpath : str, analysis : str, validationfiles : str, 
         max_x : Union[None,float], max_y : Union[None,float], 
         outputfile : str, defcolors : Union[None,list], rank : int, nmax : int,
-        show : bool = False ):
+        show : bool = False, validationPlot = None ):
     """ plot.
     :param dbpath: path to database
     :param analysis: analysis to consider
@@ -274,7 +274,8 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
-    axis = prettyDescriptions.prettyAxes ( topo, axisv )
+    axis = prettyDescriptions.prettyAxesV3 ( validationPlot )
+    print ( "pretty Axes for", axisv, "is", axis, "topo", topo)
     fig = plt.gcf()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )

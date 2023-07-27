@@ -847,14 +847,12 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
-def prettyAxesV3( validationPlot ) -> Union[None,str]:
+def prettyAxesV3( validationPlot = None ) -> Union[None,str]:
     """
     get a description of the axes of validation plot
-    :param validationPlot: the validationPlot object
-
+    :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    # print ( f"here: {type(validationPlot)}" )
     dataMap = validationPlot.getDataMap()
     # print ( f"we have dataMap {dataMap}" )
     # import IPython ; IPython.embed()

@@ -194,7 +194,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     return True
 
 def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
-       axis ):
+       validationPlot ):
     """ check if we should plot a best signal region plot
     :param expRes: the experimental result
     :param txname: the txname
@@ -203,6 +203,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     :param datafile: validation file
     :returns: True, if ratioplots were created, else False
     """
+    axis = validationPlot.niceAxes
     axis = axis.replace(",","").replace("(","").replace(")","").\
                     replace("/","d").replace("*","")
     if opts["bestSRPlots"]==False:
@@ -229,7 +230,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     defcolors = None
     from plotBestSRs import plot
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
-          options["show"] )
+          options["show"], validationPlot )
 
 def runForOneResult ( expRes : ExpResult, options : dict, 
                       keep : bool, db : Database ) -> None:
@@ -382,7 +383,7 @@ def runForOneResult ( expRes : ExpResult, options : dict,
                 checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
                                      localopts, datafile, re.niceAxes )
                 checkForBestSRPlots ( expRes, txnameStr, ax, db, combine, 
-                                     localopts, datafile, re.niceAxes )
+                                     localopts, datafile, re )
         else: # axis is not None
             x,y,z = var("x y z")
             ax = str(eval(axis)) ## standardize the string
