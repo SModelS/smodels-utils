@@ -55,7 +55,7 @@ class PDFLimitReader():
             # print ( "l", l, lw, col, len(l.path) )
             if col != scol:
                 continue
-            if pm == 0 and lw > 2.3:
+            if pm == 0 and lw < 2.1: ## this can vary though
                 continue
             if abs(pm) == 1 and abs ( lw - 1.5 ) > 1e-2:
                 continue
@@ -104,8 +104,12 @@ class PDFLimitReader():
         excllines = []
         for shape in page.shapes:
             ## exclusion lines are red or black
-            if shape.stroke is not None and shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
-                excllines.append ( shape )
+            if shape.stroke is not None and len(shape.path)>3:
+                lw = shape.stroke.linewidth
+                if False: # lw > 0.6:
+                    print ( "we have a", shape.stroke.color.as_rgb(), "lw", lw, "length", len(shape.path) )
+                if shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
+                    excllines.append ( shape )
             # these colored boxes have identical stroke and fill color and are neither black or white
             #if shape.stroke and hasattr(shape.stroke, 'color'):
                 #there are two 'h' objects at the end
@@ -269,7 +273,7 @@ class PDFLimitReader():
                 ul = r.get_limit(x,y)
                 if ul != None:
                     f.write ( f"{x},{y},{ul}\n" )
-        print ( f"[PDFCMSReader] wrote ul map to {fname}" )
+        print ( f"[PDFCMSReader] wrote UL map to {fname}" )
         f.close()
  
 if __name__ == "__main__":
