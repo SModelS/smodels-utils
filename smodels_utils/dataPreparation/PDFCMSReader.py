@@ -55,7 +55,7 @@ class PDFLimitReader():
             # print ( "l", l, lw, col, len(l.path) )
             if col != scol:
                 continue
-            if pm == 0 and abs ( lw - 3.) > 1e-2:
+            if pm == 0 and lw > 2.3:
                 continue
             if abs(pm) == 1 and abs ( lw - 1.5 ) > 1e-2:
                 continue
@@ -104,7 +104,7 @@ class PDFLimitReader():
         excllines = []
         for shape in page.shapes:
             ## exclusion lines are red or black
-            if shape.fill == None and shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
+            if shape.stroke is not None and shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
                 excllines.append ( shape )
             # these colored boxes have identical stroke and fill color and are neither black or white
             #if shape.stroke and hasattr(shape.stroke, 'color'):
@@ -269,28 +269,27 @@ class PDFLimitReader():
                 ul = r.get_limit(x,y)
                 if ul != None:
                     f.write ( f"{x},{y},{ul}\n" )
-        print ( f"[PDFCMSReader] wrote to {fname}" )
+        print ( f"[PDFCMSReader] wrote ul map to {fname}" )
         f.close()
  
 if __name__ == "__main__":
-    """
-    data =  {
-        'name': 'CMS-SUS-19-007_Figure_010',
-        'x':{'limits': (800, 2600, 50) },
-        'y':{'limits': (0, 2000, 50) },
-        'z':{'limits': (10**-1, 80 ), 'log':True},
-        }
-    """
-    with open ( "pdfconfigs/CMS-SUS-19-010-aux-018b.py" ) as f:
+    import argparse
+    ap = argparse.ArgumentParser(description="PDF Reader for CMS files")
+    ap.add_argument('-c', '--config',
+            help='config file to read [pdfconfigs/CMS-PAS-SUS-21-009_Figure_009-b.py]', default='pdfconfigs/CMS-PAS-SUS-21-009_Figure_009-b.py')
+    args = ap.parse_args()
+    print ( f"[PDFCMSReader] parsing {args.config}" )
+    with open ( args.config ) as f:
         txt = f.read()
         data = eval(txt)
 
     r = PDFLimitReader( data )
     for i in [ "obsExclusion", "expExclusion", "obsExclusionP1", "obsExclusionM1",
                "expExclusionP1", "expExclusionM1" ]:
-        f=open ( f"T1tttt_{i}.csv", "wt" )
+        f=open ( f"{data['topology']}_{i}.csv", "wt" )
         pts = r.exclusions[i]
         for pt in pts:
-            f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
+         #   f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
+            f.write ( f"{pt[0]},{pt[1]}\n" )
         f.close()
     r.createCsv ()

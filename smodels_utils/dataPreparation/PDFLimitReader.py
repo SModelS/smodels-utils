@@ -229,8 +229,9 @@ if __name__ == "__main__":
     data =  {
         'name': 'CMS-PAS-SUS-21-009_Figure_009-b',
         'x':{'limits': (1500, 2800, 25) },
-        'y':{'limits': (0, 3000, 25) },
-        'z':{'limits': (10**-1, 80 ), 'log':True},
+        # 'y':{'limits': (0, 3000, 25) },
+        'y':{'limits': (0, 2300, 25) },
+        'z':{'limits': (10**-1, 40 ), 'log':True},
         'topology': 'T5Hg'
         }
 
@@ -240,7 +241,8 @@ if __name__ == "__main__":
         f=open ( f"{data['topology']}_{i}.csv", "wt" )
         pts = r.exclusions[i]
         for pt in pts:
-            f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
+            f.write ( f"{pt[0]},{pt[1]}\n" )
+            # f.write ( "%f,%f\n" % ( pt[0],pt[0]-pt[1] ) )
         f.close()
     # get the limit at the bottom right
-    print ( "limit at 2000,200 is", r.get_limit(2000,200) )
+    print ( "limit at 2200,500 is", r.get_limit(2200,500) )
