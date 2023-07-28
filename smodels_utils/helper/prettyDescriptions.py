@@ -853,16 +853,33 @@ def prettyAxesV3( validationPlot = None ) -> str:
     :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    #txn = validationPlot.getTxname()
-    #nodes = list(txn.smsMap.keys())[0]._nodesMapping
     print ( "@@FIXME implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
-    #nodesDict = {nodeIndex : str(node) for nodeIndex,node in nodes.items()}
-    # import IPython ; IPython.embed()
-    if validationPlot.txName in [ "TChiWH" ]:
-        return "x=m(C1)=m(N2), y=m(N1)"
-    if validationPlot.txName in [ "T5Hg" ]:
-        return "x=m(~g), y=m(N2), m(N1)=1"
-    return "???"
+    txn = validationPlot.getTxname()
+    axisMap = txn.axesMap[0]
+    smsString = list(txn.smsMap.keys())[0].treeToString( removeSMIndices=True )
+    indices = {}
+    for k,v in txn.dataMap.items():
+        value = axisMap[k]
+        value = f"bsm({value} GeV)"
+        #if value not in [ "x", "y", "z" ]:
+        #    value = f"bsm({value} GeV)"
+        indices[ v[0] ] = value
+    for k,v in indices.items():
+        smsString = smsString.replace( f"anyBSM({k})", indices[k] )
+        smsString = smsString.replace( f"MET({k})", indices[k] )
+    if True:
+        ## shorten names
+        smsString = smsString.replace("photon",r"$\gamma$")
+        smsString = smsString.replace("higgs",r"h")
+        smsString = smsString.replace("jet",r"j")
+    if True:
+        ## replace extra brackets
+        smsString = smsString.replace("), ","}, ")
+        smsString = smsString.replace(", (",", {")
+        smsString = "{"+smsString[1:-1]+"}"
+    # print ( "smsString=", smsString )
+    # import IPython ; IPython.embed(); sys.exit()
+    return smsString
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
     """
