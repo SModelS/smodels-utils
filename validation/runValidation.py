@@ -42,7 +42,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     :param expRes: a ExpResult object containing the result to be validated
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
-                 (e.g.  2*[[x,y]])
+                 (e.g.  2*[[x,y]] or {0:'x',1:'y',2:'1',3:'x',4:'y',5:'1'})
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar.gz file containing the SLHA files.
     :param db: the database object
