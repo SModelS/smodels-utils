@@ -1223,7 +1223,7 @@ class TxNameInput(Locker):
         self.massConstraints = []
         if not "PV" in self.constraint:
             return self._setMassConstraintsV2 ()
-        print ( f"{RED}[inputObjects._setMassConstraints] FIXME need to implement this!{RESET}" )
+        print ( f"{RED}[inputObjects._setMassConstraints] FIXME need to implement this! the mass gaps have been determined, see below. now lets apply them{RESET}" )
         massGaps = {}
         masses = { "W": 80, "higgs": 125., "top": 173. }
         for el in smsInStr(self.constraint):
