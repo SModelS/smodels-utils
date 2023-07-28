@@ -1224,12 +1224,29 @@ class TxNameInput(Locker):
         if not "PV" in self.constraint:
             return self._setMassConstraintsV2 ()
         print ( f"{RED}[inputObjects._setMassConstraints] FIXME need to implement this!{RESET}" )
+        massGaps = {}
+        masses = { "W": 80, "higgs": 125., "top": 173. }
         for el in smsInStr(self.constraint):
             try:
                 element = ExpSMS.from_string(el,
                                 intermediateState=self.intermediateState,
                                 finalState=self.finalState,
                                 model = self._particles)
+                n_nodes = element.number_of_nodes()
+                for nodenr in range(1,n_nodes):
+                    daughterIndices = element.daughterIndices(nodenr)
+                    daughtersP = element.daughters(nodenr)
+                    totalmass = 0.
+                    bsmDaughter=None
+                    for d in daughterIndices:
+                        particle = element.nodes[d]
+                        particlename = str(particle)
+                        if str(particle) in [ "anyBSM", "MET" ]:
+                            bsmDaughter = d
+                        if particlename in masses:
+                            totalmass += masses[particlename]
+                    if bsmDaughter != None:
+                        massGaps[(nodenr,bsmDaughter)]=totalmass
             except Exception as e:
                 logger.error(str(e))
                 logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
@@ -1253,6 +1270,8 @@ class TxNameInput(Locker):
                 elConstraint.append(vertexConstraint)
             self.massConstraints.append(elConstraint)
             """
+        print ( f"the massGaps between node indices are", massGaps )
+        # self.massConstraints.append ( massGaps )
         # import IPython ; IPython.embed(colors="neutral");sys.exit()
 
     def warn ( self, *txt ):
