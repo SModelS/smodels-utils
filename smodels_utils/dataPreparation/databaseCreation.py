@@ -774,6 +774,8 @@ class DatabaseCreator(list):
             if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
                 continue
             value = getattr(obj,attr)
+            if attr == "dataMap":
+                value = str(value).replace("1.00E+00 [GeV]","GeV")
             if value=="":
                 continue
             #Leave data for last
