@@ -427,7 +427,9 @@ class DatabaseCreator(list):
                 allCurves.append(stGraph)
 
     def addExclusionLinesForPlane ( self, plane, txname, curves, allCurves ):
-        axesMap = eval ( txname.axesMap )
+        axesMap = txname.axesMap
+        if type ( axesMap ) == str:
+            axesMap = eval ( axesMap )
         for axes in axesMap:
             for exclusion in plane._exclusionCurves:
                 if not exclusion:
