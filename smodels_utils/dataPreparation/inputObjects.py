@@ -791,6 +791,8 @@ class TxNameInput(Locker):
             return plane
         elif isinstance(plane,(list,dict)):
             massArray = plane
+        elif isinstance(plane,str):
+            massArray = eval(plane)
         else:
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
@@ -805,7 +807,7 @@ class TxNameInput(Locker):
             sys.exit()
 
         #Create mass plane for new input
-        if type(plane)==dict:
+        if type(massArray)==dict:
             massPlane = GraphMassPlane(self._txDecay,massArray)
         else:
             massPlane = MassPlane(self._txDecay,massArray)
