@@ -33,6 +33,12 @@ import scipy
 
 import logging
 from smodels_utils.helper import prettyDescriptions
+RED,RESET="",""
+try:
+    from colorama import Fore
+    RED,RESET=Fore.RED,Fore.RESET
+except Exception as e:
+    pass
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -1217,9 +1223,7 @@ class TxNameInput(Locker):
         self.massConstraints = []
         if not "PV" in self.constraint:
             return self._setMassConstraintsV2 ()
-        # print ( f"set mass constraints for {type(self.constraint)}" )
-        print ( f"[inputObjects._setMassConstraints] FIXME need to implement this!" )
-        return
+        print ( f"{RED}[inputObjects._setMassConstraints] FIXME need to implement this!{RESET}" )
         for el in smsInStr(self.constraint):
             try:
                 element = ExpSMS.from_string(el,
@@ -1230,25 +1234,26 @@ class TxNameInput(Locker):
                 logger.error(str(e))
                 logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
                 sys.exit()
+            """
             #Get even particles from vertices:
             particles = element.getFinalStates()
             #Compute minimum mass difference (sum over SM final state masses)
             elConstraint = []
-            for branch in particles:
-                branchConstraint = []
-                for vertex in branch:
-                    vertexMasses = []
-                    for ptc in vertex:
-                        if not hasattr(ptc,'mass'):
-                            continue
-                        elif isinstance(ptc.mass,list):
-                            vertexMasses.append(max(ptc.mass).asNumber(GeV))
-                        else:
-                            vertexMasses.append(ptc.mass.asNumber(GeV))
-                    vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
-                    branchConstraint.append(vertexConstraint)
-                elConstraint.append(branchConstraint)
+            print ( "for el", el, "we have particles", particles, type(particles )
+            for vertex in particles:
+                vertexMasses = []
+                for ptc in vertex:
+                    if not hasattr(ptc,'mass'):
+                        continue
+                    elif isinstance(ptc.mass,list):
+                        vertexMasses.append(max(ptc.mass).asNumber(GeV))
+                    else:
+                        vertexMasses.append(ptc.mass.asNumber(GeV))
+                vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
+                elConstraint.append(vertexConstraint)
             self.massConstraints.append(elConstraint)
+            """
+        # import IPython ; IPython.embed(colors="neutral");sys.exit()
 
     def warn ( self, *txt ):
         t=str(*txt)
