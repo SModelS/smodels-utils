@@ -15,7 +15,8 @@ import math
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes, \
+         prettyAxesV3
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
          getDatasetDescription, getAxisRange, isWithinRange, \
          filterWithinRanges
@@ -26,7 +27,7 @@ try:
 except:
     pass
 
-def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, 
+def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         options : dict = {} ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
@@ -175,7 +176,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 continue
             if yrange != None and not ( yrange[0] < coords["y"] < yrange[1] ):
                 continue
-            gridpoints.append( { "i": len(gridpoints), "x": coords["x"], 
+            gridpoints.append( { "i": len(gridpoints), "x": coords["x"],
                                  "y": coords["y"] } )
 
     if countPts == 0:
@@ -188,7 +189,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
-        plt.plot ( px, py, c="white", linewidth=4, zorder=7 ) 
+        plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
         label = "official exclusion"
         linestyle = "-"
         if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
@@ -199,7 +200,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if logY:
         ax.set_yscale('log')
     fig = plt.gcf()
-    
+
     base = []
     dx = .12 ## top, left
     nleg = 5
@@ -237,17 +238,18 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
                    linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints), zorder = zorder )
         #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
-    title = validationPlot.expRes.globalInfo.id + "_" \
-            + validationPlot.txName\
-            + "_" + validationPlot.axes
-            #+ "_" + validationPlot.niceAxes
+    title = validationPlot.expRes.globalInfo.id + " " \
+            + validationPlot.txName \
+            + ": " + prettyAxesV3(validationPlot)
+#            + "_" + validationPlot.niceAxes
+            #+ "_" + validationPlot.axes
     subtitle = getDatasetDescription ( validationPlot, maxLength = 50 )
     figureUrl = getFigureUrl(validationPlot)
 
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "dataset: UL"
-        
+
     sns.set()
     plt.title(title)
     if logY: # y>1e-24 and y<1e-6:
@@ -274,7 +276,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     plt.text(.05,.95, subtitle,fontsize=10, transform = fig.transFigure )
     #if figureUrl:
     if False:
-        plt.text ( .05, .023, str(figureUrl), fontsize=10, 
+        plt.text ( .05, .023, str(figureUrl), fontsize=10,
                    transform=fig.transFigure )
 
     if kfactor != None and abs ( kfactor - 1. ) > 1e-2:
@@ -292,12 +294,12 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     l.set_zorder(20)
     if options["extraInfo"]: ## a timestamp, on the right border
         import time
-        plt.text ( .93, .65, time.strftime("%b %d, %Y, %H:%M"), c="gray", 
+        plt.text ( .93, .65, time.strftime("%b %d, %Y, %H:%M"), c="gray",
                    fontsize = 9, transform=fig.transFigure,
                    rotation = 90 )
     if options["preliminary"]:
         ## preliminary label, ugly plot
-        plt.text ( .3, .4, "SModelS preliminary", c="blue", 
+        plt.text ( .3, .4, "SModelS preliminary", c="blue",
                    fontsize = 18, transform=fig.transFigure,
                    rotation = -25, zorder=100 )
 

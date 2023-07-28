@@ -856,14 +856,22 @@ def prettyAxesV3( validationPlot = None ) -> str:
     print ( "@@FIXME implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
     txn = validationPlot.getTxname()
     axisMap = txn.axesMap[0]
-    smsString = list(txn.smsMap.keys())[0].treeToString( removeSMIndices=True )
+    smsString = list(txn.smsMap.keys())[0].treeToString( removeIndicesFrom="SM" )
     indices = {}
+    ret=[]
     for k,v in txn.dataMap.items():
         value = axisMap[k]
-        value = f"bsm({value} GeV)"
-        #if value not in [ "x", "y", "z" ]:
-        #    value = f"bsm({value} GeV)"
+        # value = f"bsm({value} GeV)"
+        if value in [ "x", "y", "z" ]:
+            value = f"m({value})"
+        else:
+            value = f"m({value} GeV)"
         indices[ v[0] ] = value
+        if not value in ret:
+            ret.append ( value )
+    # print ( "indices", indices, "ret", ret )
+    return ",".join( ret )
+    """
     for k,v in indices.items():
         smsString = smsString.replace( f"anyBSM({k})", indices[k] )
         smsString = smsString.replace( f"MET({k})", indices[k] )
@@ -878,8 +886,10 @@ def prettyAxesV3( validationPlot = None ) -> str:
         smsString = smsString.replace(", (",", {")
         smsString = "{"+smsString[1:-1]+"}"
     # print ( "smsString=", smsString )
-    # import IPython ; IPython.embed(); sys.exit()
+    if True:
+        import IPython ; IPython.embed(); sys.exit()
     return smsString
+    """
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
     """
