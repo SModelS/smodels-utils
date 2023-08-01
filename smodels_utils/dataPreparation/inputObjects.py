@@ -1225,8 +1225,8 @@ class TxNameInput(Locker):
             return self._setMassConstraintsV2 ()
         print ( f"{RED}[inputObjects._setMassConstraints] FIXME need to implement this! the mass gaps have been determined, see below. now lets apply them{RESET}" )
         massGaps = {}
-        masses = { "W": 80, "higgs": 125., "top": 173.1, "Z": 91, "b": 4.7,
-                   "c": 1.28, "mu": 0.106, "tau": 1.777, "e": 0.0005, "pi": 0.14 }
+        #masses = { "W": 80, "higgs": 125., "top": 173.1, "Z": 91, "b": 4.7,
+        #           "c": 1.28, "mu": 0.106, "tau": 1.777, "e": 0.0005, "pi": 0.14 }
         for el in smsInStr(self.constraint):
             try:
                 element = ExpSMS.from_string(el,
@@ -1241,13 +1241,16 @@ class TxNameInput(Locker):
                     bsmDaughter=None
                     for d in daughterIndices:
                         particle = element.nodes[d]
-                        particlename = str(particle).replace("+","").replace("-","")
+                        # particlename = str(particle).replace("+","").replace("-","")
                         if str(particle) in [ "anyBSM", "MET" ]:
                             bsmDaughter = d
-                        if particlename in masses:
-                            totalmass += masses[particlename]
+                        #if particlename in masses:
+                        #    totalmass += masses[particlename]
+                        if hasattr ( particle, "mass" ):
+                            totalmass += float ( particle.mass.asNumber(GeV) )
                     if bsmDaughter != None:
                         massGaps[(nodenr,bsmDaughter)]=totalmass
+                # import IPython ; IPython.embed ( colors="neutral" )
             except Exception as e:
                 logger.error(str(e))
                 logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
