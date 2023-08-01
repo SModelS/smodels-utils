@@ -400,7 +400,6 @@ class DatabaseCreator(list):
                         meetsConstraints = txname.checkMassConstraints ( masses )
                         if not meetsConstraints:
                             continue
-                        # print ( "masses", masses, meetsConstraints )
                     except ValueError:
                         logger.info ( "cannot convert to coordinates: %s" % point )
                         continue
@@ -468,12 +467,6 @@ class DatabaseCreator(list):
                         continue
                     stGraph["points"].append ( point )
                     i+=1
-                #stGraph["linecolor"]="black"
-                #if 'expected' in exclusion.name:
-                #    stGraph["linecolor"]="red"
-                #stGraph["linestyle"]=1
-                #if 'P1' in exclusion.name or 'M1' in exclusion.name:
-                #    stGraph["linestyle"]=2
                 curves.append(label)  #Store curves (to avoid duplicates)
                 allCurves.append(stGraph)
 
@@ -648,6 +641,7 @@ class DatabaseCreator(list):
             mode="update"
         import json
         fname = os.path.join ( self.base, self.exclusionsJsonFile )
+        self.timeStamp ( f"creating {self.exclusionsJsonFile}" )
         content = {}
         if update and os.path.exists ( fname ):
             with open ( fname, "rt" ) as f:
@@ -666,18 +660,20 @@ class DatabaseCreator(list):
             # for i in range(exclusion.GetN() ):
             for pt in exclusion["points"]:
                 x = round_to_n ( pt["x"], 4 )
-                y = round_to_n ( pt["y"], 4 )
                 if "axisMap" in pt:
                     axisMap = pt["axisMap"]
+                if "y" in pt:
+                    y = round_to_n ( pt["y"], 4 )
+                    yv.append ( y )
+                    xandy.append ( { "x": x, "y": y } )
+                else:
+                    xandy.append ( ( x, y ) )
                 #x = round_to_n ( exclusion.GetPointX(i), 4 )
                 #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
-                yv.append ( y )
-                xandy.append ( { "x": x, "y": y } )
-                # xandy.append ( ( x, y ) )
             if not name in content[dirname]:
                 # content[dirname][name]=xandy
-                if not "y" in name:
+                if len(yv)==0:
                     content[dirname][name]={ "x": xv }
                 else:
                    content[dirname][name]={ "x": xv, "y": yv }
