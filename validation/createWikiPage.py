@@ -341,7 +341,7 @@ CMS are for on- and off-shell at once.
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
-            print ( "@@@", txname, " ugly?", self.ugly, "files", files, "is1d", self.isOneDimensional ( txname ) )
+            # print ( "@@@", txname, " ugly?", self.ugly, "files", files, "is1d", self.isOneDimensional ( txname ) )
             if self.add_old:
                 files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
             if self.ugly or self.isOneDimensional ( txname ):
