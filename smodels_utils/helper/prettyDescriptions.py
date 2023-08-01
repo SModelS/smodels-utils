@@ -292,7 +292,9 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TSlepSlepAll':'slepton  --> lepton lsp ',
     'TChiChipmSlep':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
     'TChipChimSlepSlepAll': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
-    'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp'
+    'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
+    'TRV1': 'ZPrime --> 2*MET',
+    'TRS1': 'H0 --> 2*MET',
 }
 
 #Name of mother particles
@@ -494,7 +496,9 @@ motherDict = {"T1" :  "gluino",
     "TSlepSlepAll" : "slepton",
     "TChipChimSlepSlepAll" :  "chargino^pm_1",
     "TChipChimSlepSlep" :  "chargino^pm_1",
-    "TChiChipmSlep" :  "neutralino_2 chargino^pm_1"
+    "TChiChipmSlep" :  "neutralino_2 chargino^pm_1",
+    "TRS1": "H0",
+    "TRV1": "ZPrime",
 }
 
 
