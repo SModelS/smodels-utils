@@ -417,6 +417,8 @@ class DataSetInput(Locker):
         """initialize the dataset
         :param name: name of dataset (used as folder name)
         """
+        if name == None:
+            name = "data"
         if type(name)!=str or len(name)<1: ## or name[0] not in string.ascii_letters:
             logger.error ( "Illegal dataset name: ``%s''. Make sure it starts with a letter." % name )
             sys.exit()
