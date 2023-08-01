@@ -192,6 +192,7 @@ CMS are for on- and off-shell at once.
             print ( "[createWikiPage] results at %d TeV: %d CMS, %d ATLAS" % ( sqrts, len(nResults["CMS"]), len(nResults["ATLAS"]) ))
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
+                    print ( f"[createWikiPage] now {exp} {tpe}" )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     stpe = tpe.replace ( " ", "" )
 
@@ -235,13 +236,14 @@ CMS are for on- and off-shell at once.
     def isOneDimensional( self, txname ):
         """ simple method that tells us if its a 1d map. In this case, we dont
             do "pretty", we use ugly plots for pretty. """
+        # import IPython; IPython.embed ( colors = "neutral" ); sys.exit()
         if hasattr ( txname, "axes" ):
             r = not ( "y" in str(txname.axes) )
             return r
         if not hasattr ( txname, "axesMap" ):
             logger.error ( "we have neither an axes field nor an axesMap field?" )
             sys.exit(-1)
-        maps = txname.axesMap
+        maps = str ( txname.axesMap )
         if "y" in maps:
             return False
         return True
@@ -339,6 +341,7 @@ CMS are for on- and off-shell at once.
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
+            print ( "@@@", txname, " ugly?", self.ugly, "files", files, "is1d", self.isOneDimensional ( txname ) )
             if self.add_old:
                 files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
             if self.ugly or self.isOneDimensional ( txname ):
