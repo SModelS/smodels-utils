@@ -340,7 +340,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     cs = plt.contour( xs, ys, vT, colors="blue", levels=[1.], extent = xtnt, origin="image" )
     csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
-    if options["drawExpected"] == True:
+    if options["drawExpected"] in [ "auto", True ]:
         cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                           extent = xtnt, origin="image" )
         ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",

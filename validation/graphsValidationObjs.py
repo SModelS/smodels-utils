@@ -870,9 +870,12 @@ class ValidationPlot():
             self.pretty = False
             return
         from prettySeaborn import createPrettyPlot
+        options = copy.deepcopy ( self.options )
+        if options["drawExpected"] == "auto":
+            options["drawExpected"] = True
 
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
-                   looseness = 1.2, options = self.options )
+                   looseness = 1.2, options = options )
         self.pretty = True
 
     def show ( self, filename ):

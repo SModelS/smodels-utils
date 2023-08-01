@@ -678,6 +678,8 @@ if __name__ == "__main__":
             if drawExpected in [ "0", "false", "False", False, 0, "no" ]:
                 drawExpected = False
             options["drawExpected"] = drawExpected
+        else:
+            options["drawExpected"] = "auto"
         if parser.has_option("options","keepTopNSRs"):
             options["keepTopNSRs"] = parser.getint("options", "keepTopNSRs" )
             if dataselector in [ "combined", "upperLimit" ] and options["keepTopNSRs"]>0:
