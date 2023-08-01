@@ -1252,28 +1252,7 @@ class TxNameInput(Locker):
                 logger.error(str(e))
                 logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
                 sys.exit()
-            """
-            #Get even particles from vertices:
-            particles = element.getFinalStates()
-            #Compute minimum mass difference (sum over SM final state masses)
-            elConstraint = []
-            print ( "for el", el, "we have particles", particles, type(particles )
-            for vertex in particles:
-                vertexMasses = []
-                for ptc in vertex:
-                    if not hasattr(ptc,'mass'):
-                        continue
-                    elif isinstance(ptc.mass,list):
-                        vertexMasses.append(max(ptc.mass).asNumber(GeV))
-                    else:
-                        vertexMasses.append(ptc.mass.asNumber(GeV))
-                vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
-                elConstraint.append(vertexConstraint)
-            self.massConstraints.append(elConstraint)
-            """
-        print ( f"the massGaps between node indices are", massGaps )
-        # self.massConstraints.append ( massGaps )
-        # import IPython ; IPython.embed(colors="neutral");sys.exit()
+        self.massConstraints.append ( massGaps )
 
     def warn ( self, *txt ):
         t=str(*txt)
@@ -1294,24 +1273,8 @@ class TxNameInput(Locker):
         if self.__hasWarned__[line]<2:
             logger.error ( line )
 
-    def checkMassConstraints(self,massArray, value = None ):
-        """
-        Check if massArray satisfies the mass constraints defined in massConstraints
 
-        If the txname constraint contains several elements, require that massArray
-        satisfies the constaint for at least one of the elements.
-
-        :param massArray: array with masses to be checked. It must be consistend with the
-                          topology of the txname constraint.
-        :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
-        """
-        if hasattr(self,'massConstraint'):
-            if not self.massConstraint:
-                return True
-            self.massConstraints = [self.massConstraint]
-        if not hasattr(self, 'massConstraints'):
-            self._setMassConstraints()
-
+    def checkMassConstraintsV2(self,massArray, value = None ):
         #If massConstraints was pre-defined as None or empty list, return always True
         if not self.massConstraints:
             return True
@@ -1368,3 +1331,53 @@ class TxNameInput(Locker):
                 return True
 
         return False
+
+    def checkMassConstraints(self,massArray, value = None ):
+        """
+        Check if massArray satisfies the mass constraints defined in massConstraints
+
+        If the txname constraint contains several elements, require that massArray
+        satisfies the constaint for at least one of the elements.
+
+        :param massArray: array with masses to be checked. It must be consistend with the
+                          topology of the txname constraint.
+        :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
+        """
+        if hasattr(self,'massConstraint'): ## FIXME obsolete?
+            self.massConstraints = [self.massConstraint]
+        if not hasattr(self,'massConstraints'):
+            self._setMassConstraints()
+        if len(self.massConstraints)==0: ## no constraints
+            return True
+        if type(self.massConstraints[0])!=dict:
+            return self.checkMassConstraintsV2(massArray, value)
+        #If massConstraints was pre-defined as None or empty list, return always True
+        if len(massArray)==0:
+            line = f"empty mass array {massArray} for constraint {self.massConstraints}??"
+            if not line in errormsgs:
+                logger.error ( line )
+                errormsgs[line]=0
+            errormsgs[line]+=1
+            return True
+        # print ( f"[inputObjects] checkMassConstraints {self.massConstraints} :: {massArray}" )
+        for constraint in self.massConstraints:
+            # {(1, 3): 80.0, (2, 4): 125.0}
+            for parindices, massGap in constraint.items():
+                # now we need to translate from parameterindices to nodeindices
+                nodeindices = parindices[0]-1,parindices[1]-1 # wrong
+                invertedMap = {}
+                for k,v in self.dataMap.items():
+                    invertedMap[v[0]]=k
+                for x in parindices:
+                    if not x in invertedMap:
+                        logger.error ( f"could not found {x} in datamap {self.dataMap}" )
+                        sys.exit()
+                nodeindices = [ invertedMap[x] for x in parindices ]
+
+                dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
+                if dm <= massGap:
+                    print ( f"skipping {massArray}: does not meet mass constraints" )
+                    return False
+        return True
+        #import IPython ; IPython.embed ( colors="neutral" )
+        #sys.exit(-1)
