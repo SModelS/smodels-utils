@@ -853,7 +853,7 @@ def prettyAxesV3( validationPlot = None ) -> str:
     :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    print ( "@@FIXME implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
+    print ( "@@FIXME in prettyDescriptions.prettyAxesV3 implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
     txn = validationPlot.getTxname()
     axisMap = txn.axesMap[0]
     smsString = list(txn.smsMap.keys())[0].treeToString( removeIndicesFrom="SM" )
