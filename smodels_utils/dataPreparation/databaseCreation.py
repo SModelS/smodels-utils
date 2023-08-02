@@ -771,7 +771,9 @@ class DatabaseCreator(list):
                 continue
             value = getattr(obj,attr)
             if attr == "dataMap":
-                value = str(value).replace("1.00E+00 [GeV]","GeV")
+                value = str(value)
+                for i in [ "1.00", "1.000", "1.0000", "1.00000", "1.000000" ]:
+                    value = value.replace(i+"E+00 [GeV]","GeV")
             if value=="":
                 continue
             #Leave data for last
