@@ -1381,7 +1381,7 @@ class TxNameInput(Locker):
 
                 dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
                 if dm <= massGap:
-                    print ( f"skipping {massArray}: does not meet mass constraints" )
+                    print ( f"skipping {massArray}: does not meet mass constraint: {constraint}" )
                     return False
         return True
         #import IPython ; IPython.embed ( colors="neutral" )
