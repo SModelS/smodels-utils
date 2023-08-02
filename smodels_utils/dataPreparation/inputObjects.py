@@ -623,7 +623,7 @@ class TxNameInput(Locker):
                 'susyProcess','checked','figureUrl','dataUrl','source',
                 'comment', 'validated','axes','upperLimits', 'validationTarball',
                 'efficiencyMap','expectedUpperLimits','xrange', 'yrange',
-                'axesMap', 'dataMap' ]
+                'axesMap', 'dataMap', 'bsmProcess' ]
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
                     'condition', 'conditionDescription','massConstraint',
@@ -682,7 +682,7 @@ class TxNameInput(Locker):
         self.txName = txName
         self.finalState = ['MET','MET']
         self.intermediateState = None
-        self.susyProcess = prettyDescriptions.prettyTxname(txName,outputtype="text")
+        self.bsmProcess = prettyDescriptions.prettyTxname(txName,outputtype="text")
         self._txDecay = TxDecay(self._name)
         if not self._txDecay:
             logger.error("Unknown txname %s" %self._name)
