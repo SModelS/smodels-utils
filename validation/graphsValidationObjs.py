@@ -360,9 +360,15 @@ class ValidationPlot():
             combine = "True"
             self.validationType="combine"
         model = self.options["model"]
+        if model in [ "mssm", "idm", "nmssm", "dgmssm" ]:
+            model = f"share.models.{model}"
         if model == "default":
             ## FIXME here we could define different defaults for eg T5Gamma
-            model = "mssm"
+            model = "share.models.mssm"
+            slhapath = tempdir.replace("/results","")
+            files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
+            if len(files)>0: ## use slha file as model
+                model = files[0]
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
@@ -382,7 +388,7 @@ class ValidationPlot():
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
             f.write("[printer]\noutputFormat = version3\noutputType = python\n")
-            f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
+            f.write(f"[particles]\nmodel={model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
