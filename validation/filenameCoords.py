@@ -18,3 +18,7 @@ coords["TDTM1M2F"]={ "masses": [[1,1],[1,1]], "widths": [[2],[2]] }
 coords["TSelSelDisp"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
 coords["TSmuSmuDisp"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
 coords["TStauStauDisp"]={ "masses": [[1,3],[1,3]], "widths": [[2],[2]] }
+coords["TChiWffHcheck"]={'masses': [[1, 3, 4], [5, 6]], 'widths': None}
+coords["TChiWHffcheck"]={'masses': [[5, 6], [1,3,4]], 'widths': None}
+coords["TChiWH4fcheck"]={'masses': [[1, 3, 4], [5, 7, 8]], 'widths': None}
+coords["TChiQ"]={'masses': [[1, 2], [3]], 'widths': None}
