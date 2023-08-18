@@ -245,6 +245,7 @@ def getPlot(inputFile, parameterFile,options):
     endFileName = parser.get("database", "dataselector")
     if endFileName == 'all':
         endFileName = 'UL+EM'
+    CSR = False
     if parser.has_option("options", "combineSRs"):
         if parser.getboolean("options", "combineSRs"):
             endFileName = 'combined'
