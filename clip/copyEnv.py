@@ -4,13 +4,14 @@ import subprocess, os, glob, sys
 
 def copy():
     files = [ ".bashrc", ".bash.aliases", ".vim", ".vimrc", ".tmux.conf", ".vim/ftplugin", ".vim/syntax", ".gitconfig", ".vim/colors", ".vim/colors/trinos.vim", ".local/bin/" ]
+    source = "/users/wolfgan.waltenberger/"
+    dest = "/scratch-cbe/users/wolfgan.waltenberger/"
     for f in files:
-        source = "/users/wolfgan.waltenberger/"
-        dest = "/scratch-cbe/users/wolfgan.waltenberger/"
         if os.path.exists ( f"{dest}{f}" ):
             continue
         cmd = f"cp -rf {source}{f} {dest}{f}"
         subprocess.getoutput ( cmd )
+    cmd = f"cp {source}/.bashrc.singularity {dest}.bashrc"
 
 def gitClone():
     Dir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
