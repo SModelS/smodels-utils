@@ -151,8 +151,9 @@ def getPlot(inputFile, parameterFile,options):
 
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
+    step_mu = (options["mumax"] - options["mumin"] ) / 50.
     setup = {'expected' : True,'normalize' : True,
-              'murange' : (options["mumin"],options["mumax"]), 'step_mu' : 0.1}
+              'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
 
     if parser.has_section("setup"):
         setup = parser.get_section("setup").toDict()
