@@ -337,7 +337,7 @@ def runSingleFile(inputFile, outputDir, databaseVersion, listOfExpRes, timeout, 
                 res[fname] = mprinter.flush()
             return res
     except Exception as e:
-        print("\n\n\n ****** Computation failed for",inputFile," because:",e+'\n\n\n')
+        print("\n\n\n ****** Computation failed for",inputFile," because:",e,'\n\n\n')
         # crashReportFacility = crashReport.CrashReport()
         #
         # if development:
