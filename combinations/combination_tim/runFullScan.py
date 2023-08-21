@@ -9,8 +9,8 @@
 
 import sys, os, time, glob, multiprocessing, gc
 
-# smodelsPath = '/home/pascal/SModelS/smodels/'
-smodelsPath = '/theo/pascal/SModelS/smodels/'
+# smodelsPath = '/home/pascal/SModelS/smodels-2.3.1/'
+smodelsPath = '/theo/pascal/SModelS/smodels-2.3.1/'
 sys.path.append(smodelsPath)
 
 # protomodelsPath = '/home/pascal/SModelS/protomodels'
@@ -50,7 +50,7 @@ timeout = 0
 checkInput = True
 doInvisible = True
 doCompress = True
-computeStatistics = False # ??? Risque de prendre du temps pour rien pour mu_hat
+computeStatistics = False # ??? Ne change rien ?
 testCoverage = True
 combineSRs = True
 reportAllSRs = False # Must be False to combine SRs
@@ -261,12 +261,16 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
 
     if not useBest: print(f"\n\n!!!!!!! WILL NOT USE THE BEST SR RESULT, AND THE SR WILL NOT BE COMBINED FOR {inputFile} !!!!!!!!\n\n")
 
-    allPredictions = []
+    allPredictions, combinablePredictions = [], []
     for expResult in listOfExpRes:
         theorypredictions = theoryPredictionsFor(expResult, smstoplist, useBestDataset=useBest, combinedResults=combineResults )
 
         if not theorypredictions:
             continue
+        for tpred in theorypredictions._theoryPredictions:
+            r_exp = tpred.getRValue(expected = True)
+            if r_exp >= 0.1:
+                combinablePredictions.append(tpred)
         allPredictions += theorypredictions._theoryPredictions
 
     """Compute chi-square and likelihood"""
@@ -276,6 +280,7 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
 
     """ Define theory predictions list that collects all theoryPrediction objects which satisfy max condition."""
     theoryPredictions = TheoryPredictionList(allPredictions, maxcond)
+    combinablePredictions = TheoryPredictionList(combinablePredictions, maxcond)
 
     if len(theoryPredictions) != 0:
         outputStatus.updateStatus(1)
@@ -289,10 +294,10 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
         masterPrinter.addObj(uncovered)
 
     """ Combine analyses """
-    combineAnas = findBestCombination(theoryPredictions)
+    combineAnas = findBestCombination(combinablePredictions)
 
-    if not combineAnas and len(theoryPredictions) == 1:
-        combineAnas = theoryPredictions
+    if not combineAnas and len(combinablePredictions) == 1: # If only results for 1 analysis that has r_exp >= 0.1, the combination is this analysis.
+        combineAnas = combinablePredictions                 # If no analysis with r_exp >= 0.1, but analyses with r_exp <= 0.1, no combination (even when only result for 1 analysis with r_exp <= 0.1)
 
     if combineAnas:
         combiner = TheoryPredictionsCombiner.selectResultsFrom(combineAnas, [ana.dataset.globalInfo.id for ana in combineAnas])
@@ -393,19 +398,6 @@ def main(slhaFolder,nb_cpu_to_use,output):
         children.append(p)
     pool.close()
 
-    iprint, nprint = 0, 5  # Define when to start printing and the percentage step
-    # Check process progress until they are all finished
-    while True:
-        done = sum([p.ready() for p in children])
-        fracDone = 100*float(done)/len(children)
-        if fracDone >= iprint:
-            while fracDone >= iprint:
-                iprint += nprint
-            logger.info('%i%% of processes done in %1.2f min' %(iprint-nprint, (time.time()-t0)/60.))
-        if done == len(children):
-            break
-        time.sleep(2)
-
     outputDict = {}
     for p in children:
         outputDict.update(p.get())
@@ -418,5 +410,5 @@ def main(slhaFolder,nb_cpu_to_use,output):
     printScanSummary(outputDict, summaryFile)
     print("Done in %3.2f min" % ((time.time()-t0)/60.))
 
-# if __name__ == '__main__':
-#     main('./testDir/',2,'./outputFullScan/')
+if __name__ == '__main__':
+    main('./testDir/',2,'./outputFullScan/')

@@ -3,7 +3,7 @@
 source ~/.bashrc
 
 callmyprogram(){
-  python -i -c "import runFullScan;runFullScan.main('2ndFilter_slha_nlo/2ndFilter_slha_nlo_close_r/2ndFilter_slha_nlo_close_r_13',10,'outputFullScan_nlo_2p3_mmg05_close_r_13')"
+  python -i -c "import runFullScan;runFullScan.main('pointsToRerunWithoutUnsensitiveAna/pointsToRerunWithoutUnsensitiveAna_mmg05_split13',15,'pointsToRerunWithoutUnsensitiveAna/outputFullScan_nlo_2p3_mmg05_split13')"
 }
 
 callmyprogram
