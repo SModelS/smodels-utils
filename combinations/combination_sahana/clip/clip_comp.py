@@ -74,8 +74,8 @@ class SModelsOutput(object):
         self.allo["ATLAS-SUSY-2019-09"] = ['ATLAS-SUSY-2018-05-ewk', 'ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41',
                               'ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','CMS-SUS-20-004', 'CMS-SUS-21-002']
 
-        self.allo["CMS-SUS-20-004"] = ['CMS-SUS-16-039','CMS-SUS-16-048']
-        self.allo["CMS-SUS-21-002"] = ['CMS-SUS-16-039','CMS-SUS-16-048']
+        self.allo["CMS-SUS-20-004"] = ['CMS-SUS-16-039','CMS-SUS-16-039-agg', 'CMS-SUS-16-048']
+        self.allo["CMS-SUS-21-002"] = ['CMS-SUS-16-039','CMS-SUS-16-039-agg', 'CMS-SUS-16-048']
         
         #8 TeV
         self.allo["ATLAS-SUSY-2013-12"] = ['ATLAS-SUSY-2013-11']
@@ -88,7 +88,8 @@ class SModelsOutput(object):
         self.allo["ATLAS-SUSY-2017-03"] = ['ATLAS-SUSY-2018-32','ATLAS-SUSY-2018-41',
                               'ATLAS-SUSY-2019-02','ATLAS-SUSY-2019-08','CMS-SUS-20-004', 'CMS-SUS-21-002']
         self.allo["CMS-SUS-16-039"] = ['CMS-SUS-16-048','CMS-SUS-20-004','CMS-SUS-21-002']
-        self.allo["CMS-SUS-16-048"] = ['CMS-SUS-16-039','CMS-SUS-20-004','CMS-SUS-21-002']
+        self.allo["CMS-SUS-16-039-agg"] = ['CMS-SUS-16-048','CMS-SUS-20-004','CMS-SUS-21-002']
+        self.allo["CMS-SUS-16-048"] = ['CMS-SUS-16-039', 'CMS-SUS-16-039-agg','CMS-SUS-20-004','CMS-SUS-21-002']
         
 
     

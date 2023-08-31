@@ -209,11 +209,32 @@ class BestCombinationFinder(object):
         if len(best_comb) == 1:     #just 1 best tp, no need for combining
             #print("\n Best Combination ", best_comb[0].analysisId())
             return best_comb
+            
+        best_comb = removeAnalysis(best_comb)
         
         #return TheoryPredictionCombiner object
         self.combiner_list = [TheoryPredictionsCombiner(best_comb)]                     #combine tp
         #print("\n Best Combination ", self.combiner_list[0].analysisId())
         return self.combiner_list
+        
+    
+    def removeAnalysis(best_comb):
+        "Remove Analysis which have low sensitivity compared to the most sensitive from the combination"
+        tp_rvalues = [tp.getRValue(expected=True) for tp in best_comb]
+        rmax = max(tp_rvalues)
+        
+        index = []
+        
+        for r in tp_rvalues:
+            if r/rmax < 0.01: index.append(tp_rvalues.index(r))  #check 0.01??
+        
+        newlistoftp = []
+        for tp in best_comb:
+            if best_comb.index(tp) in index: continue
+            newlistoftp.append(tp)
+        
+        return newlistoftp
+        
         
         
     def checkSensitive(self):
