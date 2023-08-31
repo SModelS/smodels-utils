@@ -109,13 +109,15 @@ class SModelsOutput(object):
         self.mu = abs(d.blocks['EXTPAR'].get(23))                 #mu
         self.tanb = abs(d.blocks['EXTPAR'].get(25))               #tan_beta
         
+        #if (abs(self.m_c1 - self.m_n1) >=5 and abs(self.m_c1 - self.m_n1) <=10) or (abs(self.m_n2 - self.m_n1) >=5 and abs(self.m_c1 - self.m_n1) <=10)
+        
     def getBestCombination(self, queue):
         '''main function where you compute the theory pred for the model point and get best combination'''
     
        
         
         sigmacut = 0.001*fb
-        mingap = 5.*GeV
+        mingap = 10.*GeV
         
         model = Model(BSMparticles = BSMList, SMparticles = SMList)
         slhafile = self.file
@@ -180,7 +182,7 @@ class SModelsOutput(object):
         
         
         #enter path of output dir below
-        if self.clip: outputDir = '/scratch-cbe/users/sahana.narasimha/git/smodels-utils/combinations/combination_sahana/clip/results_2'
+        if self.clip: outputDir = '/scratch-cbe/users/sahana.narasimha/git/smodels-utils/combinations/combination_sahana/clip/results_3_10GeV'
         elif '~' in path_name: outputDir = os.path.expanduser('~') + path_name.split('~')[-1] 
         else: outputDir = path_name
         #outputDir = '/users/sahana.narasimha/git/smodels-utils/combinations/combination_sahana/clip/results_2'
@@ -201,7 +203,7 @@ class SModelsOutput(object):
         self.output_str = ['The highest r value is =', 'CMS analysis with highest available r_expected:', 'ATLAS analysis with highest available r_expected:', 'Combined Analyses:','combined r-value:','combined r-value (expected):']
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
-        with open('results_2/%s.smodels'%(file), 'r') as file:
+        with open('results_3_10GeV/%s.smodels'%(file), 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
                 if row == []:continue
@@ -232,7 +234,7 @@ class SModelsOutput(object):
         
         file = file.split('/')[-1]
         print('\n',file)
-        f = open('results_2/%s.py'%(file), 'r')
+        f = open('results_3_10GeV/%s.py'%(file), 'r')
         
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
@@ -249,6 +251,23 @@ class SModelsOutput(object):
         
         print("\n Analysis : ", self.output_ana)
         print("\n R-values : ", self.output_r)
+        
+        
+def getMassFromSlhafile(files):
+    
+    new_list = []
+    for file in files:
+        d = pyslha.read(file)
+        
+    #EWino Masses
+        m_n1 = abs(d.blocks['MASS'].get(1000022))            #neutralino_1
+        m_n2 = abs(d.blocks['MASS'].get(1000023))            #neutralino_2
+        m_c1 = abs(d.blocks['MASS'].get(1000024))            #chargino_1
+    
+        if ((m_c1 - m_n1) >=5. and (m_c1 - m_n1) <=10.) or ((m_n2 - m_n1) >=5. and (m_n2 - m_n1) <=10.):new_list.append(file)
+        
+    return new_list
+    
 
 if __name__ == "__main__":
     
@@ -275,7 +294,11 @@ if __name__ == "__main__":
     clip = args.clip_cluster
     
     files = glob.glob ( "2ndFilter_slha_nlo/ew*slha" )
-
+    #new_files = getMassFromSlhafile(files)
+    #files = new_files
+    #print(new_files)
+    #print(len(new_files))
+    
     
     #files = files[fs*100:(fs+1)*100]
     #files = [files[0:10],files[10:20],files[20:30],files[30:40],files[40:50],files[50:60],files[60:70],files[70:80],files[80:90],files[90:100]]
@@ -320,7 +343,7 @@ if __name__ == "__main__":
     process_et = time.process_time()
     time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
     
-    with open('results_2/%s'%(output_name),'w') as out:
+    with open('results_3_10GeV/%s'%(output_name),'w') as out:
         out.write('#SLHA_file\tm_N1\tm_N2\tm_C1\tm_N3\tm_N4\tm_C2\tr_obs(comb)\tr_exp(comb)\tCombination\tmax_r_obs\tMost_Constraining_Analysis\tmax_r_exp\tMost_sensitive_Analysis\tM1\tM2\tMu\tTan_Beta\tTp_not_included_in_combination')
         for i in range(numf):
             item = queue.get()
@@ -331,7 +354,7 @@ if __name__ == "__main__":
         out.close()
         
     logger.warning("Summary file written")
- 
+    
            
     
     
