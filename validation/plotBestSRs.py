@@ -199,7 +199,10 @@ def fetchAllOtherPoints ( bestSRs : list, regions : list ) -> tuple:
         if point["SR"] in regions or point["SR"] is None:
             continue
         xs.append ( point["x"] )
-        ys.append ( point["y"] )
+        y = point["y"]
+        if y == "stable": 
+            y=1e-26
+        ys.append ( y )
     return xs, ys
 
 def plot( dbpath : str, analysis : str, validationfiles : str, 
