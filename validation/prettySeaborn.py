@@ -127,7 +127,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 x = xvals["x"]
                 if "y" in xvals:
                     y = xvals['y']
-                    if logY:
+                    if y == "stable":
+                        y=1e-26
+                    if logY and type(y) not in [ str ]:
                         y = np.log10 ( y )
                 elif "w" in xvals:
                     y = xvals['w']

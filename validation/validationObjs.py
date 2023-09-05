@@ -882,7 +882,11 @@ class ValidationPlot():
                 if not "y" in pt["axes"]:
                     #is1D = True
                     return True
-                ys.append ( pt["axes"]["y"] )
+                yvalue = pt["axes"]["y"]
+                if yvalue == "stable":
+                    yvalue = 1e-26
+                if type(yvalue) not in [ str ]:
+                    ys.append ( yvalue )
         if len(ys)>0:
             deltay = max(ys)-min(ys)
             if deltay < 1e-14:
