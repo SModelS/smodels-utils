@@ -79,6 +79,8 @@ def bake ( args : dict ):
                 largs += f" --maxgap13 {args['maxgap13']}"
             f.write ( line.replace("@@ARGS@@", largs ) )
         f.close()
+    # the following is only needed with singularity containers! """
+    """
     templatefile = f"{codedir}/smodels-utils/clip/run_bakery_template.sh"
     with open ( templatefile, "rt" ) as f:
         lines = f.readlines()
@@ -95,6 +97,7 @@ def bake ( args : dict ):
         f.write ( f"# {line}\n" )
         f.close()
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
+    """
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
     outputsdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs/"
@@ -126,7 +129,8 @@ def bake ( args : dict ):
         ncpus = int(nproc*2)
     cmd += [ "--mem", "%dG" % ram ]
     cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
-    cmd += [ tmpfile ]
+    # cmd += [ tmpfile ]
+    cmd += [ Dir + filename ]
     print ( f'[slurm.py] baking {" ".join ( cmd )}' )
     if not dry_run:
         a=subprocess.run ( cmd )
