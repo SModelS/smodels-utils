@@ -209,5 +209,6 @@ DECAY   1000021     	  1.0   # ~gl decays
 #         PDG            Width
 DECAY   1000023     	  1.0   # N2 decays
 #            BR        NDA      ID1       ID2
-      		1.0    		2     1000022      25     # BR(N2 -> N1   H  )
+      		0.5    		2     1000022      25     # BR(N2 -> N1   H  )
+      		0.5    		2     1000022      22     # BR(N2 -> N1   gamma  )
 ###############################
