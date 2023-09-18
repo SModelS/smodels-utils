@@ -23,6 +23,7 @@ def bake ( args : dict ):
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     :param cutlang: if true, then use cutlang
+    :param checkmate: if true, then use checkmate
     :param time: time in hours
     :param doLog: do write out bake-*.out log files
     :param adl_file: specify path to adl file
@@ -37,6 +38,7 @@ def bake ( args : dict ):
     mass = args["mass"]
     dry_run = args["dry_run"]
     cutlang = args["cutlang"]
+    checkmate = args["checkmate"]
     time = args["time"]
     doLog = not args["dontlog"]
     analyses = args["analyses"]
@@ -56,6 +58,8 @@ def bake ( args : dict ):
             largs += f' --analyses "{analyses}"'
             if cutlang:
                 largs += ' --cutlang'
+            if checkmate:
+                largs += ' --checkmate'
             if event_condition is not None:
                 event_condition = event_condition.replace("'",'"')
                 pids = { "gamma": 22, "Z": 23, "higgs": 25 }
@@ -193,6 +197,8 @@ def main():
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
+                             action='store_true' )
+    argparser.add_argument ( '--checkmate', help='use checkmate for baking',
                              action='store_true' )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
