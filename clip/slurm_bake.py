@@ -24,6 +24,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     :param cutlang: if true, then use cutlang
+    :param checkmate: if true, then use checkmate
     :param time: time in hours
     :param doLog: do write out bake-*.out log files
     :param adl_file: specify path to adl file
@@ -32,9 +33,18 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     with open ( f"{codedir}/smodels-utils/clip/bake_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
-    #if "cutlang" in recipe and not cutlang:
-    #    print ( f"[slurm.py] cutlang is mentioned in recipe but -l was not given. maybe use -l?" )
-    #    sys.exit()
+    nevents = args["nevents"]
+    topo = args["topo"]
+    nproc = args["nprocesses"]
+    mass = args["mass"]
+    dry_run = args["dry_run"]
+    cutlang = args["cutlang"]
+    checkmate = args["checkmate"]
+    time = args["time"]
+    doLog = not args["dontlog"]
+    analyses = args["analyses"]
+    event_condition = args["event_condition"]
+    adl_file = args["adl_file"]
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
@@ -46,11 +56,13 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     # nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( pathname, "wt" ) as f:
         for line in lines:
-            args = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
-            args += f' --analyses "{analyses}"'
+            largs = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
+            largs += f' --analyses "{analyses}"'
             # args += ' -b'
             if cutlang:
-                args += ' --cutlang'
+                largs += ' --cutlang'
+            if checkmate:
+                largs += ' --checkmate'
             if event_condition is not None:
                 event_condition = event_condition.replace("'",'"')
                 pids = { "gamma": 22, "Z": 23, "higgs": 25 }
@@ -176,6 +188,8 @@ def main():
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
+                             action='store_true' )
+    argparser.add_argument ( '--checkmate', help='use checkmate for baking',
                              action='store_true' )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
