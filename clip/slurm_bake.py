@@ -202,6 +202,8 @@ def main():
                              type=float, default=None )
     argparser.add_argument ( '--maxgap1', help='maximum mass gap between first and second, to force offshell [None]',
                              type=float, default=None )
+    argparser.add_argument ( '-r', '--repeat', help='repeat the submission <r> times [1]',
+                             type=int, default=1 )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
@@ -215,8 +217,9 @@ def main():
     if args.mass == "default":
         # args.mass = "[(300,1099,25),'half',(200,999,25)]"
         args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
-    for i in range(args.nbakes):
-        bake ( vars(args) )
+    for r in range(args.repeat):
+        for i in range(args.nbakes):
+            bake ( vars(args) )
     logCall()
 
 if __name__ == "__main__":
