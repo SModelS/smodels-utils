@@ -141,14 +141,22 @@ def bake ( args : dict ):
         print ( f"[slurm.py] returned: {a}" )
 
 def logCall ():
-    f=open("slurm.log","at")
-    args = ""
+    line = ""
     for i in sys.argv:
         if " " in i or "," in i:
             i = '"%s"' % i
-        args += i + " "
-    f.write ("[slurm.py-%s] %s\n" % ( time.strftime("%H:%M:%S"), args.strip() ) )
-    # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
+        line += i + " "
+    line = line.strip()
+    f=open("slurm.log","rt")
+    lines = f.readlines()
+    f.close()
+    lastline = lines[-1].strip()
+    p = lastline.find("]")
+    lastline = lastline[p+2:]
+    if line == lastline: # skip duplicates
+        return
+    f=open("slurm.log","at")
+    f.write ( f"[slurm.py-{time.strftime('%H:%M:%S')}] {line}\n" )
     f.close()
 
 def main():
