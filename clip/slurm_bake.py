@@ -40,6 +40,8 @@ def bake ( args : dict ):
     cutlang = args["cutlang"]
     checkmate = args["checkmate"]
     time = args["time"]
+    keep = args["keep"]
+    keephepmc = args["keephepmc"]
     doLog = not args["dontlog"]
     analyses = args["analyses"]
     event_condition = args["event_condition"]
@@ -60,6 +62,10 @@ def bake ( args : dict ):
                 largs += ' --cutlang'
             if checkmate:
                 largs += ' --checkmate'
+            if keep:
+                largs += ' --keep'
+            if keephepmc:
+                largs += ' --keephepmc'
             if event_condition is not None:
                 event_condition = event_condition.replace("'",'"')
                 pids = { "gamma": 22, "Z": 23, "higgs": 25 }
@@ -169,6 +175,9 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-k','--keep',
             help='keep the shell scripts that are being run, do not remove them afters',
+            action="store_true" )
+    argparser.add_argument ( '-K','--keephepmc',
+            help='keep hepmc files',
             action="store_true" )
     argparser.add_argument ( '-B', '--nbakes', nargs="?",
                     help='launch n identical jobs',
