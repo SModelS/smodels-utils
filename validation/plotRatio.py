@@ -105,6 +105,26 @@ def hasAxisInfo ( content ):
     print ( f"[plotRatio] when searching for axis info, what case is this: {meta}" )
     return False
 
+def guessLabel ( label, anaId1, anaId2, valfile1 ):
+    if label != None:
+        return label
+    label = "???"
+    if anaId2 in anaId1:
+        label = anaId1.replace(anaId2,"")
+        if "combined" in valfile1:
+            label = "combined"
+    if anaId1 in anaId2:
+        label = ul.lower()
+    if label.startswith("-"):
+        label = label[1:]
+    if label == "???":
+        p1 = anaId1.rfind("-")
+        last = anaId1[p1+1:]
+        if not last.isdigit() and not last in [ "eff" ]:
+            label = last
+    print ( f"[plotRatio] have been asked to guess the label for {anaId1}: {label}" )
+    return label
+
 def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     """ plot.
     :option zmin: the minimum z value, e.g. .5
@@ -429,28 +449,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
     a1, a2 = options["label1"], options["label2"]
-    if a1 == None:
-        a1 = "???"
-        if anaId2 in anaId:
-            a1 = anaId.replace(anaId2,"")
-            if "combined" in valfile1:
-                a1 = "combined"
-        if anaId in anaId2:
-            a1 = ul.lower()
-        if a1.startswith("-"):
-            a1 = a1[1:]
-        print ( f"[plotRatio] have been asked to guess the label for {anaId}: {a1}" )
-    if a2 == None:
-        a2 = "???"
-        if anaId2 in anaId:
-            a2 = "ul"
-        if anaId in anaId2 and anaId != anaId2:
-            a2 = anaId2.replace(anaId,"")
-            if "combined" in valfile2:
-                a2 = "combined"
-        if a2.startswith("-"):
-            a2 = a2[1:]
-        print ( f"[plotRatio] have been asked to guess the label for {anaId2}: {a2}" )
+    a1 = guessLabel ( options["label1"], anaId, anaId2, valfile )
+    a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2 )
         
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
