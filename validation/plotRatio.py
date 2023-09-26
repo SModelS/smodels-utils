@@ -144,6 +144,9 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     for valfile in valfile1.split(","):
         ipath1 = getPathName ( dbpath, analysis1, valfile )
         content = getValidationFileContent ( ipath1 )
+        if not "meta" in content or content["meta"] is None:
+            print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
+            sys.exit()
         axis1 = content["meta"]["axes"]
         contents.append ( content )
         p1 = valfile.find("_")
@@ -153,6 +156,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     for valfile in valfile2.split(","):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
         content = getValidationFileContent ( ipath2 )
+        if not "meta" in content or content["meta"] is None:
+            print ( f"[plotRatio] meta info is missing in {ipath2}. Perhaps rerun validation?" )
         axis2 = axis1
         if "meta" in content and content["meta"] is not None and "axes" in content["meta"]:
             axis2 = content["meta"]["axes"]
@@ -200,11 +205,15 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             rs[ h ] = point["signal"] / point[ ul ]
         if "efficiency" in point and point["efficiency"] != None:
             effs[ h ] = point["efficiency"]
-            if options["SR"] != None and "leadingDSes" in point:
-                effs[h]=float("nan")
-                for val,nam in point["leadingDSes"]:
-                    if nam == options["SR"]:
-                        effs[h]=val
+            if options["SR"] != None:
+                if "leadingDSes" in point:
+                    effs[h]=float("nan")
+                    for val,nam in point["leadingDSes"]:
+                        if nam == options["SR"]:
+                            effs[h]=val
+                else:
+                    print ( f"[plotRatio.py] you specified SR {options['SR']} but no leadingDSes are in validation file {ipath1}. Perhaps rerun validation?" )
+                    sys.exit()
         # uls[ h ] = point["signal" ] / point["UL"]
 
     err_msgs = 0
@@ -245,17 +254,22 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
                 ratio = eff1 / eff2
             points.append ( (axes[0],axes[1],ratio ) )
             hasResult = True
-        if plotEfficiencies and eff1 and eff1>=0. and options["SR"] is not None and "leadingDSes" in point: ## best SR!!
-            sr = options["SR"]
-            eff2 = float("nan")
-            for val,nam in point["leadingDSes"]:
-                if nam == sr:
-                    eff2 = val
-            ratio = float ("nan" )
-            if eff2 > 0.:
-                ratio = eff1 / eff2
-            points.append ( (axes[0],axes[1],ratio ) )
-            hasResult = True
+        if plotEfficiencies and eff1 and eff1>=0. and options["SR"] is not None:
+            if not "leadingDSes" in point:
+                continue
+                #print ( f"[plotRatio.py] you specified SR {options['SR']} but no leadingDSes are in validation file {ipath2}. Perhaps rerun validation?" )
+                #sys.exit()
+            else:
+                sr = options["SR"]
+                eff2 = float("nan")
+                for val,nam in point["leadingDSes"]:
+                    if nam == sr:
+                        eff2 = val
+                ratio = float ("nan" )
+                if eff2 > 0.:
+                    ratio = eff1 / eff2
+                points.append ( (axes[0],axes[1],ratio ) )
+                hasResult = True
         if not hasResult:
             err_msgs += 1
             if err_msgs < 3:
