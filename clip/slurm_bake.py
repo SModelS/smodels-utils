@@ -137,8 +137,10 @@ def bake ( args : dict ):
     if cutlang:
         ram = 2.5 * nproc ## in GB
         ncpus = int(nproc*2)
-    cmd += [ "--mem", "%dG" % ram ]
-    cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
+    if checkmate:
+        ram = int(1.5 * ram)
+    cmd += [ "--mem", f"{ram}G" ]
+    cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     # cmd += [ tmpfile ]
     cmd += [ Dir + filename ]
     print ( f'[slurm.py] baking {" ".join ( cmd )}' )
