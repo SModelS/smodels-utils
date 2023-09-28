@@ -22,6 +22,7 @@ coords["TRHadGM1"]={'masses': [[1], [3]], 'widths': [[2], [4]]}
 coords["TDTM1M2F"]={'masses': [[1, 3], [4]], 'widths': [[2], []]}
 coords["T1Disp"]={'masses': [[1, 3], [4, 6]], 'widths': [[2], [5]]}
 coords["TChiZH"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TChiQ"]={'masses': [[1, 2], [3]], 'widths': None}
 coords["TChiWH"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChiWZoff"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChi_WinoBino_BRN2toZ50"]={'masses': [[1, 2], [3, 4]], 'widths': None}
