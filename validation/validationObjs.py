@@ -709,7 +709,7 @@ class ValidationPlot():
             expRes = res[0]
             #Double checks (to make sure SModelS ran as expected):
             leadingDSes = {}
-            if len(res) != 1:
+            if True: # len(res) != 1:
                 logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
                 found_combined=False
                 for eR in res:
@@ -789,7 +789,7 @@ class ValidationPlot():
                     'dataset': expRes['DataSetID'] }
             if type(dt)==float:
                 Dict["t"]=round(dt,3) ## in seconds
-            if len(leadingDSes)>1:
+            if len(leadingDSes)>0:
                 s = []
                 n = self.options["keepTopNSRs"]
                 for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
