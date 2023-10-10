@@ -8,6 +8,7 @@
 """
 
 import math, os, numpy, copy, sys, glob, ctypes
+from os import PathLike
 # import setPath
 from smodels_utils.plotting import mpkitty as plt
 import matplotlib
@@ -76,10 +77,10 @@ def getSModelSExclusionFromContent ( content ):
 
 def addDefaults ( options ):
     defaults = { "xmin": None, "xmax": None, "xlabel": None, "ylabel": None,
-                 "ploteffs": False, "ymin": None, "ymax": None, "zmin": None,
-                 "zmax": None, "title": None, "output": "ratios_@a_@t.png",
+                 "efficiencies": False, "ymin": None, "ymax": None, "zmin": None,
+                 "zmax": None, "title": None, "output": "ratios_@a_@t@sr.png",
                  "label1": None, "label2": None, "show": False, "meta": False,
-                 "copy": False
+                 "copy": False, "SR": None
                 }
     defaults.update(options)
     return defaults
@@ -105,8 +106,30 @@ def hasAxisInfo ( content ):
     print ( f"[plotRatio] when searching for axis info, what case is this: {meta}" )
     return False
 
-def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
-    """ plot.
+def guessLabel ( label, anaId1, anaId2, valfile1 ):
+    if label != None:
+        return label
+    label = "???"
+    if anaId2 in anaId1:
+        label = anaId1.replace(anaId2,"")
+        if "combined" in valfile1:
+            label = "combined"
+    if anaId1 in anaId2:
+        label = ul.lower()
+    if label.startswith("-"):
+        label = label[1:]
+    if label == "???":
+        p1 = anaId1.rfind("-")
+        last = anaId1[p1+1:]
+        if not last.isdigit() and not last in [ "eff" ]:
+            label = last
+    print ( f"[plotRatio] have been asked to guess the label for {anaId1}: {label}" )
+    return label
+
+def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike, 
+           analysis2 : str, valfile2 : PathLike, options : dict ):
+    """ plot. 
+    :param options: a dictionary of various options:
     :option zmin: the minimum z value, e.g. .5
     :option zmax: the maximum z value, e.g. 1.7
     :option xlabel: label on x axis, default: x [GeV]
@@ -121,6 +144,9 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     for valfile in valfile1.split(","):
         ipath1 = getPathName ( dbpath, analysis1, valfile )
         content = getValidationFileContent ( ipath1 )
+        if not "meta" in content or content["meta"] is None:
+            print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
+            sys.exit()
         axis1 = content["meta"]["axes"]
         contents.append ( content )
         p1 = valfile.find("_")
@@ -130,6 +156,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     for valfile in valfile2.split(","):
         ipath2 = getPathName ( dbpath, analysis2, valfile )
         content = getValidationFileContent ( ipath2 )
+        if not "meta" in content or content["meta"] is None:
+            print ( f"[plotRatio] meta info is missing in {ipath2}. Perhaps rerun validation?" )
         axis2 = axis1
         if "meta" in content and content["meta"] is not None and "axes" in content["meta"]:
             axis2 = content["meta"]["axes"]
@@ -177,13 +205,22 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             rs[ h ] = point["signal"] / point[ ul ]
         if "efficiency" in point and point["efficiency"] != None:
             effs[ h ] = point["efficiency"]
+            if options["SR"] != None:
+                if "leadingDSes" in point:
+                    effs[h]=float("nan")
+                    for val,nam in point["leadingDSes"]:
+                        if nam == options["SR"]:
+                            effs[h]=val
+                else:
+                    print ( f"[plotRatio.py] you specified SR {options['SR']} but no leadingDSes are in validation file {ipath1}. Perhaps rerun validation?" )
+                    sys.exit()
         # uls[ h ] = point["signal" ] / point["UL"]
 
     err_msgs = 0
 
     data2 = content2["data"]
     points = []
-    plotEfficiencies = options["ploteffs"]
+    plotEfficiencies = options["efficiencies"]
 
     for ctr,point in enumerate(data2):
         axes = convertNewAxes ( point["axes"] )
@@ -210,20 +247,36 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
                 tpl = (axes[0],axes[1],ratio )
             points.append ( tpl )
             hasResult = True
-        if plotEfficiencies and eff1 and eff1>0. and "efficiency" in point:
+        if plotEfficiencies and eff1 and eff1>=0. and "efficiency" in point and options["SR"] is None: ## best SR!!
             eff2 = point["efficiency"]
             ratio = float ("nan" )
             if eff2 > 0.:
                 ratio = eff1 / eff2
             points.append ( (axes[0],axes[1],ratio ) )
             hasResult = True
+        if plotEfficiencies and eff1 and eff1>=0. and options["SR"] is not None:
+            if not "leadingDSes" in point:
+                continue
+                #print ( f"[plotRatio.py] you specified SR {options['SR']} but no leadingDSes are in validation file {ipath2}. Perhaps rerun validation?" )
+                #sys.exit()
+            else:
+                sr = options["SR"]
+                eff2 = float("nan")
+                for val,nam in point["leadingDSes"]:
+                    if nam == sr:
+                        eff2 = val
+                ratio = float ("nan" )
+                if eff2 > 0.:
+                    ratio = eff1 / eff2
+                points.append ( (axes[0],axes[1],ratio ) )
+                hasResult = True
         if not hasResult:
             err_msgs += 1
             if err_msgs < 3:
                 errmsg = ""
                 if "error" in point:
                     errmsg = f': {point["error"]}'
-                print ( f"[plotRatio] cannot find data for point {point['slhafile']}{errmsg}" )
+                print ( f"[plotRatio] insufficient data to plot point {point['slhafile']}: {errmsg}" )
 
     if len(points) == 0:
         print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {ipath2}" )
@@ -334,8 +387,11 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             title = anaId2
         if anaId in anaId2:
             title = anaId
+
     plt.title ( title )
     txStr = stopo
+    if options["SR"] != None:
+        txStr+=f' [{options["SR"]}]'
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, outputtype="latex" )
     if axis1 != axis2:
@@ -428,36 +484,21 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
+    sr = ""
+    if options["SR"] != None:
+        sr="_"+options["SR"]
+
+    figname = figname.replace("@sr",sr)
     a1, a2 = options["label1"], options["label2"]
-    if a1 == None:
-        a1 = "???"
-        if anaId2 in anaId:
-            a1 = anaId.replace(anaId2,"")
-            if "combined" in valfile1:
-                a1 = "combined"
-        if anaId in anaId2:
-            a1 = ul.lower()
-        if a1.startswith("-"):
-            a1 = a1[1:]
-        print ( f"[plotRatio] have been asked to guess the label for {anaId}: {a1}" )
-    if a2 == None:
-        a2 = "???"
-        if anaId2 in anaId:
-            a2 = "ul"
-        if anaId in anaId2 and anaId != anaId2:
-            a2 = anaId2.replace(anaId,"")
-            if "combined" in valfile2:
-                a2 = "combined"
-        if a2.startswith("-"):
-            a2 = a2[1:]
-        print ( f"[plotRatio] have been asked to guess the label for {anaId2}: {a2}" )
+    a1 = guessLabel ( options["label1"], anaId, anaId2, valfile )
+    a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2 )
         
     ypos = min(y)+.2*(max(y)-min(y))
     if logScale:
         ypos = min(y)*30.
     xpos = max(x)+.3*(max(x)-min(x))
     line = f"$f$ = $r$({a1}) / $r$({a2})"
-    if options["ploteffs"]:
+    if options["efficiencies"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
     plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
 
@@ -481,7 +522,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             sys.exit()
     if options["show"]:
         plt.kittyPlot()
-        plt.show()
+#        plt.show()
     if options["copy"]:
       cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
       print ( "[plotRatio] %s" % cmd )
@@ -538,9 +579,12 @@ def main():
     argparser.add_argument ( "-l1", "--label1",
             help="label in the legend for analysis1, guess if None [None]",
             type=str, default=None )
+    argparser.add_argument ( "--SR",
+            help="if plotting efficiencies, plot ratio of efficiencies of this signal region. None = bestSR. [None]",
+            type=str, default=None )
     argparser.add_argument ( "-o", "--output",
-            help="outputfile, the @x's get replaced [ratios_@a_@t.png]",
-            type=str, default="ratios_@a_@t.png" )
+            help="outputfile, the @x's get replaced [ratios_@a_@t@sr.png]",
+            type=str, default="ratios_@a_@t@sr.png" )
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2, guess if None [None]",
             type=str, default=None )
@@ -604,16 +648,8 @@ def main():
         # imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
         # imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
 
-        options = { "meta": args.meta, "show": args.show, "xlabel": args.xlabel,
-                    "ylabel": args.ylabel, "zmax": args.zmax, "zmin": args.zmin,
-                    "copy": args.copy, "output": args.output, "title": args.title,
-                    "label1": args.label1, "label2": args.label2,
-                    "ploteffs": args.efficiencies, "xmin": args.xmin,
-                    "xmax": args.xmax, "ymin": args.ymin, "ymax": args.ymax,
-                    "eul": args.eul }
-
         draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
-               options )
+               vars(args ) )
 
     if args.meta:
         writeMDPage( args.copy )

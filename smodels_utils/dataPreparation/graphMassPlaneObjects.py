@@ -92,6 +92,8 @@ class GraphMassPlane(object):
         self._exclusionCurves = []
         xvars = set()
         for k,v in parametersMap.items():
+            if type(v) not in [ str ]:
+                v=str(v)
             xvars.add ( Symbol(v) )
         self.xvars = list(xvars)
 
