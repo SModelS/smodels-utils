@@ -179,7 +179,7 @@ def create1DPlot( validationPlot, silentMode=True,
         plot ( values[label]["ex"], values[label]["ey"], color=c,
                 linestyle=linestyle, marker="." )
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
-    pAxis = prettyAxes(validationPlot.txName, validationPlot.axes, outputtype="latex" )
+    pAxis = prettyAxes(validationPlot.txName, validationPlot.axes ) #, outputtype="latex" )
     title = f"{validationPlot.expRes.globalInfo.id}: {pName} \n {pAxis}"
 #       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
 #         validationPlot.axes ) )
