@@ -616,6 +616,7 @@ if __name__ == "__main__":
                 "limitPoints": -1, ## limit the number of points to run on
                 "axis": None, ## the axes to plot. If not given, take from sms.root
                 "style": "", # specify a plotting style, currently only
+                "plotInverse": False, # 1d plots only, plot ul(mu), not r
                 "ratioPlots": True, ## create ratioplots if possible
                 "bestSRPlots": True, ## create best SR plots if meaningful
                 # "" and "sabine" are known
