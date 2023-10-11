@@ -932,7 +932,7 @@ class ValidationPlot():
             if not v:
                 continue
             if viewer == "timg" and term == "xterm-kitty":
-                v += " -pk"
+                v += " -pkitty "
             cmd = f"{v} {filename}"
             o = subprocess.getoutput ( cmd )
             print ( f"{cmd}" )

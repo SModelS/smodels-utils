@@ -78,6 +78,9 @@ def create1DPlot( validationPlot, silentMode=True,
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
     """
+    inverse = False
+    if "plotInverse" in options and options["plotInverse"]==True:
+        inverse = True
     xrange = getAxisRange ( options, "xaxis" )
     logger.error ( "now create 1d plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
@@ -150,7 +153,10 @@ def create1DPlot( validationPlot, silentMode=True,
             if ey < 0.7:
                 values[label]["ex"].append(x)
                 values[label]["ey"].append(ey)
-    plt.ylabel ( r"r = $\sigma_\mathrm{signal}$ / $\sigma_\mathrm{UL}$" )
+    ylabel = r"r = $\sigma_\mathrm{signal}$ / $\sigma_\mathrm{UL}$"
+    if inverse:
+        ylabel = r"$\mathrm{UL}_\mu$"
+    plt.ylabel ( ylabel )
     plt.xlabel ( r"m(mother) [GeV]", labelpad=-1., loc="right" )
     colors = { "excluded": "r",
                "excluded_border": "orange",
@@ -172,6 +178,10 @@ def create1DPlot( validationPlot, silentMode=True,
         #if c != "r":
         #    linestyle = ""
         xs, ys = values[label]["x"], values[label]["y"]
+        if inverse:
+            ys = [ 1./y for y in ys ]
+            for i,e in enumerate ( values[label]["ey"] ):
+                values[label]["ey"][i]=1./e
         plot ( xs, ys, color=c, marker="o", label=lbl, linestyle=linestyle )
         #if len(values[label]["ey"]) == len(values[label]["ex"]):
         if linestyle != "":
@@ -225,4 +235,6 @@ def create1DPlot( validationPlot, silentMode=True,
     if figureUrl:
         plt.text ( -.15, -.132, figureUrl, fontsize=7, c="b",
                    transform = ax.transAxes )
+    if inverse:
+        plt.plot ( [min(xvs),max(xvs)], [ 1.0, 1.0 ], c="k" )
     return ( plt.gcf(), plt )
