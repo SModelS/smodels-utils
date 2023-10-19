@@ -115,7 +115,7 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
         if "combined" in valfile1:
             label = "combined"
     if anaId1 in anaId2:
-        label = ul.lower()
+        label = anaId2.lower()
     if label.startswith("-"):
         label = label[1:]
     if label == "???":
