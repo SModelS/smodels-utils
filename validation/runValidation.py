@@ -442,7 +442,10 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
 
     try:
-        db = Database( databasePath, force_load, discard_zeroes = False,
+        buPath = databasePath
+        if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
+            buPath = os.path.join ( databasePath, "validation.pcl" )
+        db = Database( buPath, force_load, discard_zeroes = False,
                        subpickle = True )
     except Exception as e:
         logger.error("Error loading database at %s" % ( databasePath ) )
