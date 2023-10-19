@@ -7,37 +7,12 @@ try:
 except:
     import subprocess
 
-def remove( fname, keep):
-    ## remove filename if exists
-    if not os.path.exists ( fname ):
-        return
-    if keep:
-        return
-    try:
-        if True:
-            os.unlink ( fname )
-    except:
-        pass
-
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
-
-def getDirname ( rundir ):
-    """ get the directory name of rundir, e.g.:
-        /scratch-cbe/users/wolfgan.waltenberger/rundir.fake1 -> fake1
-    """
-    ret = rundir
-    if ret.endswith("/"):
-         ret = ret[:-1]
-    p = ret.rfind("/")
-    if p>-1:
-         ret = ret[p+1:]
-    ret = ret.replace("rundir.","")
-    return ret
 
 def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     """ run validation with ini file 
@@ -121,32 +96,6 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
-def getNEvents ( recipe ):
-    """ given a recipe, get the number of events pledged.
-        used for estimating resources """
-    try:
-        tokens = recipe.split(" ")
-        if "@n" in tokens:
-            idx = tokens.index ( "@n" )
-            if len(tokens)>idx+1:
-                ret = int ( tokens[idx+1] )
-                return ret
-    except Exception as e:
-        print ( f"[slurm] {e}" )
-    return 10000
-
-def clean_dirs( rundir, clean_all = False, verbose=True ):
-    cmd = "rm slurm*out"
-    o = subprocess.getoutput ( cmd )
-    # cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
-    cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* xsec* llhdscanner*sh ~/git/smodels-utils/clip/temp ~/git/smodels-utils/validation/tmp* ~/git/smodels-utils/validation/_V* ~/git/smodels-utils/validation/*crash $OUTPUTS" % rundir
-    if clean_all:
-        # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
-        cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf" % rundir
-    if verbose:
-        print ( "[slurm.py] %s" % cmd )
-    o = subprocess.getoutput ( cmd )
-
 def logCall ():
     f=open("slurm.log","at")
     args = ""
@@ -158,10 +107,19 @@ def logCall ():
     # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
 
+def clean():
+    files = glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
+    # files += glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
+    for f in files:
+        if os.path.exists ( f ):
+            os.unlink ( f )
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run the validation process")
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
+                             action="store_true" )
+    argparser.add_argument ( '-c','--clean', help='clean out all temp files',
                              action="store_true" )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
@@ -174,17 +132,19 @@ def main():
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/',
-                        type=str, default=None )
+                        type=str, default = None, required=True )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
     args=argparser.parse_args()
+    if args.clean:
+        clean()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
-    if args.validate != None:
-        nproc = 20
-        if args.nprocesses > 0:
-            nproc = args.nprocesses
-        validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
-                   args.topo )
+    nproc = 20
+    if args.nprocesses > 0:
+        nproc = args.nprocesses
+    validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
+               args.topo )
+    logCall()
 
 if __name__ == "__main__":
     main()
