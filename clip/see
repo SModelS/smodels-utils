@@ -1,0 +1,15 @@
+#!/bin/sh
+
+HOSTNAME=$(hostname)
+
+echo "running on $HOSTNAME"
+
+#if [ $HOSTNAME == "clip-login-1.cbe.vbc.ac.at" ]; then
+
+if [[ $HOSTNAME != "clip-login-1.cbe.vbc.ac.at" && $HOSTNAME != "clip-login-0.cbe.vbc.ac.at" ]]; then
+	echo "need to be on the login node"
+	exit 1
+fi
+
+scp $1 sonic:/tmp/bla.png
+ssh sonic /usr/bin/timg -p kitty -g 80x160 /tmp/bla.png
