@@ -446,10 +446,14 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     try:
         buPath = databasePath
         if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
-            logger.info ( f"{YELLOW}found a validation.pcl file in {databasePath}! Will use it{RESET}" )
+            logger.info ( f"{YELLOW}found a validation.pcl file in {databasePath}! Will use it!{RESET}" )
             buPath = os.path.join ( databasePath, "validation.pcl" )
         db = Database( buPath, force_load, discard_zeroes = False,
                        subpickle = True )
+        if not "validation.pcl" in buPath: # ok so we create a new pickle
+            currentPickle = os.path.join ( buPath, "db30.pcl" )
+            if os.path.exists ( currentPickle ) and True:
+                shutil.copyfile ( currentPickle, os.path.join ( databasePath, "validation.pcl" ) )
     except Exception as e:
         logger.error("Error loading database at %s" % ( databasePath ) )
         logger.error("Error: %s" % str(e) )
