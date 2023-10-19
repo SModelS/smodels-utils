@@ -10,13 +10,14 @@ __all__ = [ "validatePlot" ]
 
 import sys,os,copy
 try:
-    import colorama as __c
-    GREEN, RED, RESET = __c.Fore.GREEN, __c.Fore.RED, __c.Fore.RESET
+    import colorama as _c
+    GREEN,YELLOW,RED,RESET = _c.Fore.GREEN,_c.Fore.YELLOW,_c.Fore.RED,_c.Fore.RESET
 except:
-    GREEN, RED, RESET = "","",""
+    GREEN,YELLOW,RED,RESET = "","","",""
 import logging
 import argparse,time
 from sympy import var
+import scipy # needed for some silly spey-scipy dependency problem (paths i guess)
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -206,6 +207,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if not "y" in axis: # dont make these plots for 1d cases
         return False
     dbpath = db.subs[0].base
+    dbpath = dbpath.replace( "validation.pcl","")
     ana = datafile.replace(dbpath,"")
     p1 = ana.find("validation")
     ana = ana[:p1-1]
@@ -444,6 +446,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     try:
         buPath = databasePath
         if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
+            logger.info ( f"{YELLOW}found a validation.pcl file in {databasePath}! Will use it{RESET}" )
             buPath = os.path.join ( databasePath, "validation.pcl" )
         db = Database( buPath, force_load, discard_zeroes = False,
                        subpickle = True )
