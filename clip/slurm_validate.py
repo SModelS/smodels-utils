@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
+import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
+"""
 try:
     import commands as subprocess
 except:
     import subprocess
+"""
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 
@@ -13,6 +14,25 @@ def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
+
+def getNProcesses ( nprocesses, inifile ):
+    if nprocesses > 0:
+        return nprocesses
+    inipath = f"{codedir}/smodels-utils/validation/inifiles/{inifile}"
+    if not os.path.exists ( inipath ):
+        print ( f"[slurm_validate] error: cannot find {inipath}" )
+        sys.exit()
+    f = open ( inipath, "rt" )
+    ncpus = 1
+    for line in f.readlines():
+        if not "ncpus" in line:
+            continue
+        p1 = line.find("=")
+        p2 = line.find(";")
+        token = line[p1+1:p2]
+        token = token.strip()
+        ncpus = int(token)*2
+    return ncpus
 
 def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     """ run validation with ini file 
@@ -31,8 +51,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     Dir = "%s/smodels-utils/clip/temp/" % codedir
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
-    with open ( "%s/smodels-utils/validation/inifiles/%s" % ( codedir, inifile ), 
-                "rt" ) as f:
+    with open ( f"{codedir}/smodels-utils/validation/inifiles/{inifile}", "rt" ) as f:
         lines = f.readlines()
         f.close()
     newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
@@ -109,10 +128,13 @@ def logCall ():
 
 def clean():
     files = glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
-    # files += glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
+    files += glob.glob ( f"{codedir}/smodels-utils/clip/temp/_V*" )
     for f in files:
         if os.path.exists ( f ):
-            os.unlink ( f )
+            if os.path.isdir ( f ):
+                shutil.rmtree ( f, ignore_errors=True )
+            else:
+                os.unlink ( f )
 
 def main():
     import argparse
@@ -127,21 +149,20 @@ def main():
             help='keep the shell scripts that are being run, do not remove them afters',
             action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
-            help='number of processes to split task up to, 0 means one per worker [0]',
+            help='number of processes to split task up to, 0 means as specified in inifile [0]',
             type=int, default=0 )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
-    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/',
-                        type=str, default = None, required=True )
+    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [combined.ini]',
+                        type=str, default = "combined.ini" )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
     args=argparser.parse_args()
     if args.clean:
         clean()
+        sys.exit()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
-    nproc = 20
-    if args.nprocesses > 0:
-        nproc = args.nprocesses
+    nproc = getNProcesses ( args.nprocesses, args.validate )
     validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
                args.topo )
     logCall()
