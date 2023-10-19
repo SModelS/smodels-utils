@@ -17,7 +17,7 @@ except:
 import logging
 import argparse,time
 from sympy import var
-import scipy # needed for some silly spey-scipy dependency problem (paths i guess)
+import sys
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError

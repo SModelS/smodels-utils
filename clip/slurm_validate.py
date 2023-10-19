@@ -129,6 +129,7 @@ def logCall ():
 def clean():
     files = glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
     files += glob.glob ( f"{codedir}/smodels-utils/clip/temp/_V*" )
+    files += glob.glob ( f"{os.environ['OUTPUTS']}/validate*out" )
     for f in files:
         if os.path.exists ( f ):
             if os.path.isdir ( f ):
