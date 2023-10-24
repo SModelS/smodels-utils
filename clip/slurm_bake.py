@@ -138,7 +138,8 @@ def bake ( args : dict ):
         ram = 2.5 * nproc ## in GB
         ncpus = int(nproc*2)
     if checkmate:
-        ram = int(1.5 * ram)
+        ram = 1.5 * ram
+    ram = int(ram)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     # cmd += [ tmpfile ]
