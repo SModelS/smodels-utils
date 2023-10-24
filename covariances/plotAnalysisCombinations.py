@@ -154,7 +154,7 @@ def getPlot(inputFile,parameterFile,options):
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     step_mu = .1
-    step_mu = 0.02 #(options["mumax"] - options["mumin"] ) / 100.
+    step_mu = 0.05 #(options["mumax"] - options["mumin"] ) / 100.
     setup = {'expected' : False, 'normalise' : True,
               'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
 
@@ -180,6 +180,8 @@ def getPlot(inputFile,parameterFile,options):
     r_exps = [(tpDict[ana]['r_exp'], ana) for ana in tpDict]
     r_exps.sort(reverse=True)
     llhdDict_ordered = {'combined': llhdDict['combined']}
+    print("mu values:",muvals)
+    print("Combined likelihood:",llhdDict['combined'])
     for r_exp,ana in r_exps:
         llhdDict_ordered[ana] = llhdDict[ana]
 
@@ -261,21 +263,21 @@ def getPlot(inputFile,parameterFile,options):
         if muvals[0] <= ulmu <= muvals[-1]:
             xulmu = ulmu
             if i == 1:
-                offset = 0.5
+                offset = 0.3
             elif i == 2:
-                offset = 0.7
+                offset = 0.2
             elif i == 3:
-                offset = 0.4
+                offset = 0.2
             elif i == 4:
-                offset = 0.5
+                offset = 0.2
             elif i == 5:
-                offset = 0.4
+                offset = 0.2
             elif i == 6:
-                offset = 0.6
+                offset = 0.2
             elif i == 8:
-                offset = 0.4
+                offset = 0.2
             else:
-                offset = 0.4
+                offset = 0.2
 
             # plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=None)
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu)+offset,linestyle='dotted',color=x[-1].get_color(),label=None,alpha=1,linewidth=2)
