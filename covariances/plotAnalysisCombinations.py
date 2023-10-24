@@ -15,7 +15,9 @@ from testAnalysisCombinations import createLlhds
 import numpy as np
 import pyslha
 import smodels_utils.plotting.mpkitty as plt
-# import matplotlib.pyplot as plt
+from labellines import *
+import seaborn as sns
+
 
 def getCombination(inputFile, parameterFile):
 
@@ -103,7 +105,7 @@ def getLlhds(combiner,setup):
 
     muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
     expected = setup["expected"]
-    normalize = setup["normalize"]
+    normalise = setup["normalise"]
     llhds = {'combined' : np.ones(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
     tpreds = combiner.theoryPredictions
@@ -129,15 +131,15 @@ def getLlhds(combiner,setup):
     # Replace the points that did not converge by None in the combined likelihood
     llhds['combined'] = np.array([llCombined if llCombined != 1 else None for llCombined in llhds['combined'].tolist()])
     # llhds['combined_prev'] = np.array([llCombined_prev if llCombined_prev!=1 and llCombined_prev!=0 else None for llCombined_prev in llhds['combined_prev'].tolist()])
-    if normalize:
+    if normalise:
         for Id,l in llhds.items():
             norm = 0
             # Compute the normalization factor
             for elem in l:
                 if elem != None and not isnan(elem):
-                    if elem > norm:
-                        norm = elem
-                    # norm += elem
+                    # if elem > norm:
+                    #     norm = elem
+                    norm += elem*setup['step_mu']
             for i,elem in enumerate(l):
                 if elem != None and not isnan(elem):
                     llhds[Id][i] = elem/norm
@@ -145,15 +147,15 @@ def getLlhds(combiner,setup):
 
     return muvals,llhds
 
-def getPlot(inputFile, parameterFile,options):
+def getPlot(inputFile,parameterFile,options):
     from scipy.interpolate import interp1d
     outputFile = options["output"]
 
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     step_mu = .1
-    step_mu = (options["mumax"] - options["mumin"] ) / 50.
-    setup = {'expected' : True,'normalize' : True,
+    step_mu = 0.02 #(options["mumax"] - options["mumin"] ) / 100.
+    setup = {'expected' : False, 'normalise' : True,
               'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
 
     if parser.has_section("setup"):
@@ -161,7 +163,7 @@ def getPlot(inputFile, parameterFile,options):
     muvals,llhdDict = getLlhds(combiner, setup)
 
     plotOptions = {'xlog' : False, 'ylog' : False, 'yrange' : None,
-                    'figsize' : (13,8),'legend' : True}
+                    'figsize' : (11.5,7),'legend' : True}
     if parser.has_section("plotoptions"):
         plotOptions = parser.get_section("plotoptions").toDict()
 
@@ -169,20 +171,48 @@ def getPlot(inputFile, parameterFile,options):
     for ana in tPredsList:
         idDict = {}
         idDict['ulmu'] = ana.getUpperLimitOnMu(expected = setup["expected"])
+        idDict['ulmu_obs'] = ana.getUpperLimitOnMu(expected = False)
+        idDict['ulmu_exp'] = ana.getUpperLimitOnMu(expected = True)
         idDict['r_obs'] = ana.getRValue(expected = False)
         idDict['r_exp'] = ana.getRValue(expected = True)
         tpDict[ana.dataset.globalInfo.id] = idDict
-        tpDict
 
+    r_exps = [(tpDict[ana]['r_exp'], ana) for ana in tpDict]
+    r_exps.sort(reverse=True)
+    llhdDict_ordered = {'combined': llhdDict['combined']}
+    for r_exp,ana in r_exps:
+        llhdDict_ordered[ana] = llhdDict[ana]
 
-    muhat = combiner.muhat(expected = setup["expected"])
-    lmax = combiner.lmax(expected = setup["expected"])
-    lsm = combiner.lsm(expected = setup["expected"])
-    lbsm = combiner.likelihood(mu=1.0,expected = setup["expected"])
+    colors = sns.color_palette("tab10")
+    colorsB = sns.color_palette("Paired",12)
+    colorsC = sns.color_palette("colorblind",9)
+    colorDict = {'ATLAS-SUSY-2018-41' : 'indianred',
+                 'ATLAS-SUSY-2019-08' : colors[2],
+                 'ATLAS-SUSY-2019-09' : '#ff7f0e',
+                 'ATLAS-SUSY-2018-05-ewk' : colors[4],
+                 'ATLAS-SUSY-2018-32' : colors[8],
+                 'ATLAS-SUSY-2017-03' : 'darkslategrey',
+                 'ATLAS-SUSY-2013-11' : colorsB[2],
+                 'ATLAS-SUSY-2013-12' : colorsB[8],
+                 'ATLAS-SUSY-2019-02' : colors[9],
+                 'ATLAS-SUSY-2018-06' : colors[1],
+                 'ATLAS-SUSY-2016-24' : 'gold',
+                 'CMS-SUS-16-039-agg' : colorsB[4],
+                 'CMS-SUS-21-002' : colorsB[1],
+                 'CMS-SUS-16-048' : 'darkred',
+                 'CMS-SUS-20-004' : colorsB[10],
+                 'CMS-SUS-13-012' : colors[6]
+                 }
+
+    # muhat = combiner.muhat(expected = setup["expected"])
+    # lmax = combiner.lmax(expected = setup["expected"])
+    # lsm = combiner.lsm(expected = setup["expected"])
+    # lbsm = combiner.likelihood(mu=1.0,expected = setup["expected"])
     ymin = 0.
+    i = 1
 
     fig = plt.figure(figsize=plotOptions['figsize'])
-    for anaID,l in llhdDict.items():
+    for anaID,l in llhdDict_ordered.items():
         likelihoodInterp = interp1d(muvals,l)
         if anaID == 'combined_prev':
             zorder = 100
@@ -198,14 +228,17 @@ def getPlot(inputFile, parameterFile,options):
             zorder = 99
             linestyle = '--'
             lbl=r'$\mu_{UL}$'
-            ulmu = combiner.getUpperLimitOnMu(expected = setup["expected"])
-            ulmu_comb = ulmu
+            ulmu_comb = combiner.getUpperLimitOnMu(expected = setup["expected"])
+            ulmu = ulmu_comb
+            ulmu_obs = combiner.getUpperLimitOnMu(expected = False)
+            ulmu_exp = combiner.getUpperLimitOnMu(expected = True)
             robs = combiner.getRValue(expected = False)
             rexp = combiner.getRValue(expected = True)
+            # x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
+            x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{\rm obs} = $ %1.2f, $r_{\rm exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=3,color='black')
             #Draw vertical lines for muhat
-            if muvals[0] <= muhat <= muvals[-1]:
-                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
+            # if muvals[0] <= muhat <= muvals[-1]:
+            #     plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$'+f' = {round(muhat,3)}',color='black',alpha=0.7)
         else:
             if 'prev' in anaID:
                 linestyle = ':'
@@ -214,32 +247,60 @@ def getPlot(inputFile, parameterFile,options):
             else:
                 linestyle = '-'
                 zorder = None
+                i += 1
                 ulmu = tpDict[anaID]['ulmu']
+                ulmu_obs = tpDict[anaID]['ulmu_obs']
+                ulmu_exp = tpDict[anaID]['ulmu_exp']
                 robs = tpDict[anaID]['r_obs']
                 rexp = tpDict[anaID]['r_exp']
-                x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
+                # x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
+                x = plt.plot(muvals,l,label=anaID.replace('-ewk','').replace('-agg','') + '\n' + r'$r_{\rm obs} = $ %1.2f, $r_{\rm exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=3,color=colorDict[anaID])
             lbl=None
 
         #Draw vertical lines for ulmu
         if muvals[0] <= ulmu <= muvals[-1]:
-            plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
+            xulmu = ulmu
+            if i == 1:
+                offset = 0.5
+            elif i == 2:
+                offset = 0.7
+            elif i == 3:
+                offset = 0.4
+            elif i == 4:
+                offset = 0.5
+            elif i == 5:
+                offset = 0.4
+            elif i == 6:
+                offset = 0.6
+            elif i == 8:
+                offset = 0.4
+            else:
+                offset = 0.4
 
-    plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
+            # plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=None)
+            plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu)+offset,linestyle='dotted',color=x[-1].get_color(),label=None,alpha=1,linewidth=2)
+            lines = plt.gca().get_lines()
+            l1=lines[-1]
+            # i#    xulmu = ulmu - 0.2
+            labelLine(l1,xulmu,yoffset=offset,label=r"$\mu_{UL}$="+"{:.2f}".format(ulmu).format(l1.get_label()),ha='left',va='bottom',align=False,fontsize=16.96,backgroundcolor="white")
+
+    plt.xlabel( r"signal strength $\mu$", fontsize=16.96)
     if setup["expected"] == "posteriori":
-        ylab = 'post-fit expected '
+        expType = 'Post-fit expected '
         shortExpType = 'apost'
     elif setup["expected"]:
-        ylab = 'pre-fit expected '
+        # expType = 'pre-fit expected '
+        expType = 'Expected'
         shortExpType = 'exp'
     else:
-        ylab = 'observed '
+        expType = 'Observed'
         shortExpType = 'obs'
-    if setup["normalize"]:
-        ylab = ylab + 'normalized likelihood'
-        plt.ylabel(ylab, fontsize=18)
+    if setup["normalise"]:
+        ylab = 'normalised likelihood'
+        plt.ylabel(ylab, fontsize=16.96)
     else:
-        ylab = ylab + 'likelihood'
-        plt.ylabel(ylab, fontsize=18)
+        ylab = 'likelihood'
+        plt.ylabel(ylab, fontsize=16.96)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
 
@@ -255,12 +316,30 @@ def getPlot(inputFile, parameterFile,options):
 
     outputFile = outputFile.replace('.png','_'+endFileName+'_'+shortExpType+'.png')
     data = pyslha.read(inputFile)
-    m1 = data.blocks['EXTPAR'][1]
-    m2 = data.blocks['EXTPAR'][2]
-    mu = data.blocks['EXTPAR'][23]
+    M1 = data.blocks['EXTPAR'][1]
+    M2 = data.blocks['EXTPAR'][2]
+    Mu = data.blocks['EXTPAR'][23]
+    tanB = data.blocks['EXTPAR'][25]
 
-    plt.title( rf'$M_1$ = {m1} GeV, $M_2$ = {m2} GeV, $\mu$ = {mu} GeV,' + f' combined SR = {CSR}'+ '\n' +
-              r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm),fontsize=20)
+    mN1 = abs(data.blocks['MASS'][1000022])
+    mN2 = abs(data.blocks['MASS'][1000023])
+    mN3 = abs(data.blocks['MASS'][1000025])
+    mN4 = abs(data.blocks['MASS'][1000035])
+    mC1 = abs(data.blocks['MASS'][1000024])
+    mC2 = abs(data.blocks['MASS'][1000037])
+
+
+    # plt.title( rf'$M_1$ = {round(m1)} GeV, $\; M_2$ = {round(m2)} GeV, $\; \mu$ = {round(mu)} GeV' + f' combined SR = {CSR}'+ '\n' +
+    #            r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm)
+    #           ,fontsize=20)
+
+    plt.gcf().text(0.069,1.02,'SModelS v2.3',va='top',ha='left',fontsize=16.96)
+    plt.gcf().text(0.668,1.02,os.path.basename(inputFile),va='top',ha='right',fontsize=16.96)
+
+    plt.tick_params(which="major", length=5, direction="in", bottom=True, top=True, left=True, right=True)
+    plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
+    plt.grid(alpha=0.6)
+    # plt.vlines(-1,ymin=-1,ymax=-0.5,linestyle='dotted',color='black',label=r'$\mu_{UL}$',linewidth=1.75)
 
     if plotOptions['xlog']:
         plt.xscale('log')
@@ -269,9 +348,41 @@ def getPlot(inputFile, parameterFile,options):
     if plotOptions['yrange']:
         plt.ylim(plotOptions['yrange'][0],plotOptions['yrange'][1])
     if plotOptions['legend']:
-        plt.legend(fontsize=14)
+        plt.legend(bbox_to_anchor=(1,1.023), loc="upper left", fontsize=16.96)
 
-    plt.savefig(outputFile)
+    plt.ylim(0)
+    plt.xlim(options["mumin"],options["mumax"]-step_mu)
+
+    # plt.gcf().text(0.997,0.475,rf'$M_1 \approx \!$ {round(M1)} GeV' + '\n'
+    #                         + rf'$M_2 \approx \!$ {round(M2)} GeV' + '\n'
+    #                         + rf'$\mu \approx \!$ {round(Mu)} GeV' + '\n'
+    #                         + rf'$\tan \beta \approx \!$ {round(tanB)}' + '\n\n'
+    #                         #+ rf'$m(\tilde\chi_4^0) \approx \!$ {round(mN4)} GeV' + '\n'
+    #                         #+ rf'$m(\tilde\chi_2^\pm) \approx \!$ {round(mC2)} GeV' + '\n'
+    #                         + rf'$m(\tilde\chi_3^0) \approx \!$ {round(mN3)} GeV' + '\n'
+    #                         + rf'$m(\tilde\chi_2^0) \approx \!$ {round(mN2)} GeV' + '\n'
+    #                         + rf'$m(\tilde\chi_1^\pm) \approx \!$ {round(mC1)} GeV' + '\n'
+    #                         + rf'$m(\tilde\chi_1^0) \approx \!$ {round(mN1)} GeV' + '\n\n'
+    #                         #+ r'$BR(\tilde\chi_4^0 \rightarrow h + \tilde\chi_1^0) \approx \!$ 0.26' + '\n'
+    #                         #+ r'$BR(\tilde\chi_4^0 \rightarrow Z + \tilde\chi_1^0) \approx \!$ 0.16' + '\n'
+    #                         #+ r'$BR(\tilde\chi_2^\pm \rightarrow W^\pm + \tilde\chi_1^0) \approx \!$ 0.39' + '\n'
+    #                         # + r'$BR(\tilde\chi_2^\pm \rightarrow Z + \tilde\chi_1^\pm) \approx \!$ 0.26' + '\n'
+    #                         # + r'$BR(\tilde\chi_2^\pm \rightarrow h + \tilde\chi_1^\pm) \approx \!$ 0.24' + '\n'
+    #                         # + r'$BR(\tilde\chi_3^0 \rightarrow W^\mp + \tilde\chi_1^\pm) \approx \!$ 0.51' + '\n'
+    #                         #+ r'$BR(\tilde\chi_3^0 \rightarrow h + \tilde\chi_1^0) \approx \!$ 0.16' + '\n'
+    #                         + r'$BR(\tilde\chi_3^0 \rightarrow Z + \tilde\chi_1^0) \approx \!$ 0.76' + '\n'
+    #                         #+ r'$BR(\tilde\chi_2^0 \rightarrow W^\mp + \tilde\chi_1^\pm) \approx \!$ 0.90'
+    #                         + r'$BR(\tilde\chi_2^0 \rightarrow h + \tilde\chi_1^0) \approx \!$ 0.78'
+    #                         #+ r'$BR(\tilde\chi_2^0 \rightarrow \ell \ell + \tilde\chi_1^0) \approx \!$ 0.07' + '\n'
+    #                         #+ r"$BR(\tilde\chi_1^\pm \rightarrow q \bar q^' + \tilde\chi_1^0) \approx \!$ 0.67" + '\n'
+    #                         #+ r"$BR(\tilde\chi_1^\pm \rightarrow \ell \nu_{\ell} + \tilde\chi_1^0) \approx \!$ 0.22" + '\n\n'
+    #                         #+ r"$\ell \in \{e,\mu\}$"
+    #                , fontsize=16.96)
+
+    plt.gcf().text(0.52,0.9,expType,fontsize = 17, weight='bold')
+
+    plt.tight_layout()
+    plt.savefig(outputFile,bbox_inches='tight',dpi=750)
     return fig
 
 def main():
