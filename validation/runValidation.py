@@ -468,6 +468,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         import smodels.experiment.datasetObj
         smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
 
+    import shutil # for transition to spey-ml
     # if it fails, we wanna know where, so no try ... except
     db = Database( databasePath, force_load, subpickle = True )
 
