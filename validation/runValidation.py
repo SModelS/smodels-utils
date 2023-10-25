@@ -157,7 +157,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         return False
     axis = axis.replace(",","").replace("(","").replace(")","").\
                     replace("/","d").replace("*","")
-    if not combine: # if it isnt a combination, we dont want 
+    if not combine: # if it isnt a combination, we dont want
         return False # a ratio plot
     anaId = expRes.globalInfo.id
     dashes = anaId.count ( "-" )
@@ -201,7 +201,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if opts["bestSRPlots"]==False:
         return False
     if combine: # for combined plots, we dont do best SR plots
-        return False 
+        return False
     if len ( expRes.datasets ) == 1:
         return False ## obviously not needed, whether it is effmap or UL
     if not "y" in axis: # dont make these plots for 1d cases
@@ -365,9 +365,9 @@ def run ( expResList, options : dict, keep, db ):
                         oldNamedTarball = pnamedTarball
                         validationDir = re.getValidationDir ( None )
                         datafile = re.getDataFile(validationDir)
-                    checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
+                    checkForRatioPlots ( expRes, txnameStr, ax, db, combine,
                                          localopts, datafile, re.niceAxes )
-                    checkForBestSRPlots ( expRes, txnameStr, ax, db, combine, 
+                    checkForBestSRPlots ( expRes, txnameStr, ax, db, combine,
                                          localopts, datafile, re.niceAxes )
             else: # axis is not None
                 x,y,z = var("x y z")
@@ -448,6 +448,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
             logger.info ( f"{YELLOW}found a validation.pcl file in {databasePath}! Will use it!{RESET}" )
             buPath = os.path.join ( databasePath, "validation.pcl" )
+        import shutil # should actually only be necessary for
+        # the transitional period to ml-spey
         db = Database( buPath, force_load, discard_zeroes = False,
                        subpickle = True )
         if not "validation.pcl" in buPath: # ok so we create a new pickle
