@@ -955,6 +955,9 @@ class ValidationPlot():
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
             v = distutils.spawn.find_executable( viewer )
+            if viewer == "timg" and os.path.exists ( "/bin/timg" ):
+                # override python install
+                v = "/bin/timg"
             if not v:
                 continue
             if viewer == "timg" and term == "xterm-kitty":

@@ -102,14 +102,32 @@ def create1DPlot( validationPlot, silentMode=True,
     values["error"]= { "x": [], "y": [],"ex": [],  "ey": [] }
     values["excluded_border"]= { "x": [], "y": [],"ex": [],  "ey": [] }
     values["allowed_border"]= { "x": [], "y": [],"ex": [],  "ey": [] }
+    kfactor = None
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
         if ctPoints == nmax:
             logger.error ( "emergency break" )
             break
+        if "kfactor" in pt:
+            kfactor = pt["kfactor"]
+            if kfactor != None and pt["kfactor"]!=kfactor:
+                logger.warn ( f"k-factor changed from one point {kfactor} to the other {pt['kfactor']}" )
         if "axes" in pt and pt["axes"] is not None and "x" in pt["axes"]:
-            x = pt["axes"]["x"]
+            axes = pt["axes"]
+            x = axes["x"]
+            numericalA = None
+            fulFillsNumericals = True
+            for k,v in axes.items():
+                try:
+                    numericalA = float(k)
+                    fulFillsNumericals = (numericalA == v)
+                    if not fulFillsNumericals:
+                        break
+                except ValueError as e:
+                    pass
+            if not fulFillsNumericals:
+                continue
             if not isWithinRange (xrange, x ):
                 continue
             y, ey = float ( "nan" ), float ( "nan" )
@@ -229,6 +247,9 @@ def create1DPlot( validationPlot, silentMode=True,
             dx = max(xvs)+( max(xvs)-min(xvs))*.07
         if False:
             plt.text ( dx, rs, t, c="grey", rotation="vertical" )
+    if kfactor != None and abs ( kfactor - 1. ) > 1e-4:
+        plt.text ( .93, .18, f"k-factor {kfactor:.2f}", c="gray",
+                   fontsize = 10, rotation=90, transform = fig.transFigure )
     figureUrl = getFigureUrl(validationPlot)
     subtitle = getDatasetDescription ( validationPlot, maxLength = 60 )
     plt.text ( -.12, -.10, subtitle, transform = ax.transAxes, c="grey" )
