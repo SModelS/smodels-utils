@@ -2,7 +2,7 @@
 
 """ compare the timing between the stats code and the spey code """
 
-import os, sys
+import os, sys, colorama
 import numpy as np
 
 def compare ( dbpath : os.PathLike, analysis : os.PathLike, 
@@ -35,9 +35,17 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 ratio = statsTimes[saxes]/pt["t"]
                 ratios[saxes]=ratio
                 vratios.append ( ratio )
+    validationFile = validationFile[:validationFile.find("_")]
     print ( f"[compareTiming] for {anaName}:{validationFile}" )
-    print ( f"[compareTiming] n: stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}" )
-    print ( f"[compareTiming] r(stat/spey)={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
+    pre,post="",""
+    if len(vratios)*2 < len(statsTimes)+len(speyTimes):
+        pre,post = colorama.Fore.RED, colorama.Fore.RESET
+    print ( f"[compareTiming]{pre} n: stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}{post}" )
+    if len(vratios)==0:
+        print ( f"[compareTiming] no ratios" )
+    else:
+        print ( f"[compareTiming] r(stat/spey)={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
+    print ()
                 
 def findAll ( dbpath : os.PathLike ):
     """ find all files to compare """
