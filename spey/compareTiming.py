@@ -36,7 +36,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 ratios[saxes]=ratio
                 vratios.append ( ratio )
     validationFile = validationFile[:validationFile.find("_")]
-    print ( f"[compareTiming] for {anaName}:{validationFile}" )
+    print ( f"[compareTiming] for {colorama.Fore.GREEN}{anaName}:{validationFile}{colorama.Fore.RESET}" )
     pre,post="",""
     if len(vratios)*2 < len(statsTimes)+len(speyTimes):
         pre,post = colorama.Fore.RED, colorama.Fore.RESET
