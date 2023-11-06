@@ -39,6 +39,25 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     print ( f"[compareTiming] n: stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}" )
     print ( f"[compareTiming] r(stat/spey)={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
                 
+def findAll ( dbpath : os.PathLike ):
+    """ find all files to compare """
+    import glob
+    wildcardpath = f"{dbpath}/*TeV/*/*/validationSpey"
+    paths = glob.glob ( wildcardpath )
+    for path in paths:
+        p = path.replace( dbpath, "" )
+        p = p.replace( "validationSpey", "" )
+        if p.startswith ( "/" ):
+            p = p[1:]
+        wildcardvals = os.path.join ( path, "T*_combined.py" )
+        validationfiles = glob.glob ( wildcardvals )
+        for validationfile in validationfiles:
+            statsversion = validationfile.replace("validationSpey","validation" )
+            filename = os.path.basename ( validationfile )
+            if os.path.exists ( statsversion ):
+                compare ( dbpath, p, filename )
+
+    sys.exit()
 
 if __name__ == "__main__":
     dbpath = os.path.join ( os.environ["HOME"], "git", "smodels-database" )
@@ -52,7 +71,11 @@ if __name__ == "__main__":
             help='analysis path [13TeV/CMS/CMS-SUS-21-002-eff/]', default=None)
     ap.add_argument('-v', '--validationpath',
             help='validation path [TChiWZ_2EqMassAx_EqMassBy_combined.py]', default=None)
+    ap.add_argument('-A', '--all', action="store_true",
+            help='compare all in database path' )
     args = ap.parse_args()
+    if args.all:
+        findAll ( dbpath )
     if args.dbpath != None:
         dbpath = args.dbpath
     if args.analysispath != None:
