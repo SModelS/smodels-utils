@@ -4,6 +4,7 @@
 
 import os, sys, colorama
 import numpy as np
+from datetime import datetime
 
 def compare ( dbpath : os.PathLike, analysis : os.PathLike, 
               validationFile : os.PathLike ):
@@ -12,7 +13,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     anaName = analysis.replace("13TeV/","").replace("8TeV/","").replace("CMS/","")
     anaName = anaName.replace("ATLAS/","").replace("/","")
     paths = { "stats": statspath, "spey": speypath }
-    dicts = {}
+    meta, dicts = {}, {}
     for name,path in paths.items():
         if not os.path.exists ( path ):
             print ( f"[compareTiming] {path} does not exist." )
@@ -20,6 +21,11 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
         with open ( path, "rt" ) as h:
             exec(h.read(), globals() )
             dicts[name]=globals()["validationData"]
+            meta[name]=globals()["meta"]
+            timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
+            dt = ( datetime.now() - timestamp ).days
+            if dt > 30:
+                print ( name, meta[name]["timestamp"] )
             h.close()
     statsTimes, speyTimes, ratios = {}, {}, {}
     vratios = []
