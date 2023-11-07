@@ -8,6 +8,8 @@ from typing import Tuple
 
 def statusOneValidation( directory : os.PathLike ) -> Tuple:
     slhas = glob.glob ( os.path.join ( directory, "*slha" ) )
+    if not os.path.exists ( os.path.join ( directory, "results" ) ):
+        return 0,0
     results = glob.glob ( os.path.join ( directory, "results", "T*py" ) )
     parfile = os.path.join ( directory, "results", "parameter.ini" )
     with open ( parfile, "rt" ) as h:
