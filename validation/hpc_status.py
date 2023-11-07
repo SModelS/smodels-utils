@@ -31,7 +31,8 @@ def globalStatus():
         results,slhas=statusOneValidation ( d )
         totslha+=slhas
         totresult+=results
-    print ( f"total: {totresult}/{totslha}" )
+    ratio = totresult/totslha
+    print ( f"total: {totresult}/{totslha} {ratio*100:.2f}%" )
 
 if __name__ == "__main__":
     globalStatus()
