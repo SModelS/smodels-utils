@@ -3,7 +3,7 @@
 """ print the overall status of a validation run, 
     mostly intended for running on HPC """
     
-import glob, os
+import glob, os, time
 from typing import Tuple
 
 def statusOneValidation( directory : os.PathLike ) -> Tuple:
@@ -32,7 +32,18 @@ def globalStatus():
         totslha+=slhas
         totresult+=results
     ratio = totresult/totslha
-    print ( f"total: {totresult}/{totslha} {ratio*100:.2f}%" )
+    print ()
+    if os.path.exists ( "previous.txt" ):
+        with open ( "previous.txt", "rt" ) as h:
+            print( h.read().strip() )
+    print ( f"                   total: {totresult}/{totslha} {ratio*100:.2f}%" )
+    previous ( totresult, totslha )
+
+def previous ( totresult : int, totslha : int ):
+    with open ( "previous.txt", "wt" ) as h:
+        ratio = totresult/totslha
+        h.write ( f"{time.asctime()}: {totresult}/{totslha} {ratio*100:.2f}%\n" )
+        h.close()
 
 if __name__ == "__main__":
     globalStatus()
