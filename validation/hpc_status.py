@@ -3,14 +3,10 @@
 """ print the overall status of a validation run, 
     mostly intended for running on HPC """
     
-import glob, os, time
+import glob, os, time, colorama
 from typing import Tuple
 
-def statusOneValidation( directory : os.PathLike ) -> Tuple:
-    slhas = glob.glob ( os.path.join ( directory, "*slha" ) )
-    if not os.path.exists ( os.path.join ( directory, "results" ) ):
-        return 0,0
-    results = glob.glob ( os.path.join ( directory, "results", "T*py" ) )
+def getAnalysisTxName ( directory : os.PathLike ):
     parfile = os.path.join ( directory, "results", "parameter.ini" )
     with open ( parfile, "rt" ) as h:
         lines = h.readlines()
@@ -22,12 +18,53 @@ def statusOneValidation( directory : os.PathLike ) -> Tuple:
                 analysis = line.replace("analyses","").replace("=","").strip()
             if "txnames" in line:
                 txname = line.replace("txnames","").replace("=","").strip()
-    print ( f"{directory}  {analysis+':'+txname:30s} {len(results)}/{len(slhas)}" )
+    return analysis,txname
+
+def statusOneValidation( directory : os.PathLike ) -> Tuple:
+    slhas = glob.glob ( os.path.join ( directory, "*slha" ) )
+    if not os.path.exists ( os.path.join ( directory, "results" ) ):
+        return 0,0
+    results = glob.glob ( os.path.join ( directory, "results", "T*py" ) )
+    analysis,txname = getAnalysisTxName ( directory )
+    pre,post="",""
+    if len(results)==0:
+        pre,post=colorama.Fore.RED,colorama.Fore.RESET
+    if len(results)==len(slhas):
+        pre,post=colorama.Fore.GREEN,colorama.Fore.RESET
+    print ( f"{directory}  {analysis+':'+txname:30s} {pre}{len(results)}/{len(slhas)}{post}" )
     return len(results),len(slhas)
+
+def sort ( dirs : list ) -> list:
+    tmp = {}
+    for d in dirs:
+        analysis,txname = getAnalysisTxName ( d )
+        tmp[analysis+txname]=d
+    keys = list ( tmp.keys() )
+    keys.sort()
+    ret=[]
+    for k in keys:
+        ret.append ( tmp[k] )
+    return ret
+
+def oldsort ( dirs : list ) -> list:
+    tmp = {}
+    for d in dirs:
+        timestamp = os.stat ( d ).st_mtime
+        while timestamp in tmp.keys():
+            timestamp += 1
+        tmp[timestamp]=d
+    keys = list ( tmp.keys() )
+    keys.sort()
+    ret=[]
+    for k in keys:
+        ret.append ( tmp[k] )
+    return ret
+
 
 def globalStatus():
     dirs = glob.glob ( "_V*" )
     dirs += glob.glob ( "tmp*" )
+    dirs = sort ( dirs )
     totslha,totresult=0,0
     for d in dirs:
         results,slhas=statusOneValidation ( d )
