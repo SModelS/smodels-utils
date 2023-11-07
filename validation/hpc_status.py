@@ -6,8 +6,10 @@
 import glob, os, time, colorama
 from typing import Tuple, Dict
 
-def getAnalysisTxName ( directory : os.PathLike ):
+def getAnalysisTxName ( directory : os.PathLike ) -> Tuple:
     parfile = os.path.join ( directory, "results", "parameter.ini" )
+    if not os.path.exists ( parfile ):
+        return "???","???"
     with open ( parfile, "rt" ) as h:
         lines = h.readlines()
         h.close()
@@ -41,7 +43,10 @@ def sort ( dirs : list ) -> list:
     tmp = {}
     for d in dirs:
         analysis,txname = getAnalysisTxName ( d )
-        tmp[analysis+txname]=d
+        name = analysis + txname
+        if name in tmp:
+            name += "."
+        tmp[name]=d
     keys = list ( tmp.keys() )
     keys.sort()
     ret=[]
