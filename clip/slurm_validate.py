@@ -86,8 +86,11 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
         os.mkdir ( tdir )
     os.chmod( newFile, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/validate-%j.out" ]
+    outdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs"
+    #cmd += [ "--error", f"{outdir}/validate-%j.out",
+    #         "--output", f"{outdir}/validate-%j.out" ]
+    cmd += [ "--error", f"{outdir}/{tempdir}.out",
+             "--output", f"{outdir}/{tempdir}.out" ]
     # cmd += [ "--ntasks-per-node", str(nproc) ]
     if True:
         # time = 48
@@ -100,7 +103,8 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
     ram = 4. + .2 * nproc
-    ncpus = nproc # int(nproc*1.5)
+    # ncpus = nproc # int(nproc*1.5)
+    ncpus = int(nproc*2)
     if "combined" in inifile or "spey" in inifile:
         ram = 2 * ram
     cmd += [ "--mem", "%dG" % ram ]
