@@ -36,13 +36,13 @@ def globalStatus():
     if os.path.exists ( "previous.txt" ):
         with open ( "previous.txt", "rt" ) as h:
             print( h.read().strip() )
-    print ( f"                   total: {totresult}/{totslha} {ratio*100:.2f}%" )
-    previous ( totresult, totslha )
+    print ( f"                   {len(dirs)} total: {totresult}/{totslha} {ratio*100:.2f}%" )
+    previous ( totresult, totslha, len(dirs) )
 
-def previous ( totresult : int, totslha : int ):
+def previous ( totresult : int, totslha : int, ndirs : int ):
     with open ( "previous.txt", "wt" ) as h:
         ratio = totresult/totslha
-        h.write ( f"{time.asctime()}: {totresult}/{totslha} {ratio*100:.2f}%\n" )
+        h.write ( f"{time.asctime()} {ndirs}: {totresult}/{totslha} {ratio*100:.2f}%\n" )
         h.close()
 
 if __name__ == "__main__":
