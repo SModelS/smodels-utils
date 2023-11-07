@@ -8,7 +8,7 @@ from typing import Tuple
 
 def statusOneValidation( directory : os.PathLike ) -> Tuple:
     slhas = glob.glob ( os.path.join ( directory, "*slha" ) )
-    results = glob.glob ( os.path.join ( directory, "results", "*py" ) )
+    results = glob.glob ( os.path.join ( directory, "results", "T*py" ) )
     parfile = os.path.join ( directory, "results", "parameter.ini" )
     with open ( parfile, "rt" ) as h:
         lines = h.readlines()
@@ -20,7 +20,7 @@ def statusOneValidation( directory : os.PathLike ) -> Tuple:
                 analysis = line.replace("analyses","").replace("=","").strip()
             if "txnames" in line:
                 txname = line.replace("txnames","").replace("=","").strip()
-    print ( f"{directory}:{analysis+':'+txname:30s} {len(results)}/{len(slhas)}" )
+    print ( f"{directory}  {analysis+':'+txname:30s} {len(results)}/{len(slhas)}" )
     return len(results),len(slhas)
 
 def globalStatus():
