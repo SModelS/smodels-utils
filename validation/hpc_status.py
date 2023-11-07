@@ -44,7 +44,7 @@ def sort ( dirs : list ) -> list:
     for d in dirs:
         analysis,txname = getAnalysisTxName ( d )
         name = analysis + txname
-        if name in tmp:
+        while name in tmp:
             name += "."
         tmp[name]=d
     keys = list ( tmp.keys() )
