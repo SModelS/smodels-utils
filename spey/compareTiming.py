@@ -2,8 +2,9 @@
 
 """ compare the timing between the stats code and the spey code """
 
-import os, sys
+import os, sys, colorama
 import numpy as np
+from datetime import datetime
 
 def compare ( dbpath : os.PathLike, analysis : os.PathLike, 
               validationFile : os.PathLike ):
@@ -12,7 +13,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     anaName = analysis.replace("13TeV/","").replace("8TeV/","").replace("CMS/","")
     anaName = anaName.replace("ATLAS/","").replace("/","")
     paths = { "stats": statspath, "spey": speypath }
-    dicts = {}
+    meta, dicts = {}, {}
     for name,path in paths.items():
         if not os.path.exists ( path ):
             print ( f"[compareTiming] {path} does not exist." )
@@ -20,6 +21,11 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
         with open ( path, "rt" ) as h:
             exec(h.read(), globals() )
             dicts[name]=globals()["validationData"]
+            meta[name]=globals()["meta"]
+            timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
+            dt = ( datetime.now() - timestamp ).days
+            if dt > 30:
+                print ( name, meta[name]["timestamp"] )
             h.close()
     statsTimes, speyTimes, ratios = {}, {}, {}
     vratios = []
@@ -35,10 +41,37 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 ratio = statsTimes[saxes]/pt["t"]
                 ratios[saxes]=ratio
                 vratios.append ( ratio )
-    print ( f"[compareTiming] for {anaName}:{validationFile}" )
-    print ( f"[compareTiming] n: stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}" )
-    print ( f"[compareTiming] r(stat/spey)={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
+    validationFile = validationFile[:validationFile.find("_")]
+    print ( f"[compareTiming] for {colorama.Fore.GREEN}{anaName}:{validationFile}{colorama.Fore.RESET}" )
+    pre,post="",""
+    if len(vratios)*2 < len(statsTimes)+len(speyTimes):
+        pre,post = colorama.Fore.RED, colorama.Fore.RESET
+    print ( f"[compareTiming]{pre} n: stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}{post}" )
+    if len(vratios)==0:
+        print ( f"[compareTiming] no ratios" )
+    else:
+        print ( f"[compareTiming] r(stat/spey)={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
+    print ()
                 
+def findAll ( dbpath : os.PathLike ):
+    """ find all files to compare """
+    import glob
+    wildcardpath = f"{dbpath}/*TeV/*/*/validationSpey"
+    paths = glob.glob ( wildcardpath )
+    for path in paths:
+        p = path.replace( dbpath, "" )
+        p = p.replace( "validationSpey", "" )
+        if p.startswith ( "/" ):
+            p = p[1:]
+        wildcardvals = os.path.join ( path, "T*_combined.py" )
+        validationfiles = glob.glob ( wildcardvals )
+        for validationfile in validationfiles:
+            statsversion = validationfile.replace("validationSpey","validation" )
+            filename = os.path.basename ( validationfile )
+            if os.path.exists ( statsversion ):
+                compare ( dbpath, p, filename )
+
+    sys.exit()
 
 if __name__ == "__main__":
     dbpath = os.path.join ( os.environ["HOME"], "git", "smodels-database" )
@@ -52,7 +85,11 @@ if __name__ == "__main__":
             help='analysis path [13TeV/CMS/CMS-SUS-21-002-eff/]', default=None)
     ap.add_argument('-v', '--validationpath',
             help='validation path [TChiWZ_2EqMassAx_EqMassBy_combined.py]', default=None)
+    ap.add_argument('-A', '--all', action="store_true",
+            help='compare all in database path' )
     args = ap.parse_args()
+    if args.all:
+        findAll ( dbpath )
     if args.dbpath != None:
         dbpath = args.dbpath
     if args.analysispath != None:
