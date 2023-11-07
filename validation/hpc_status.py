@@ -4,7 +4,7 @@
     mostly intended for running on HPC """
     
 import glob, os, time, colorama
-from typing import Tuple
+from typing import Tuple, Dict
 
 def getAnalysisTxName ( directory : os.PathLike ):
     parfile = os.path.join ( directory, "results", "parameter.ini" )
@@ -20,7 +20,7 @@ def getAnalysisTxName ( directory : os.PathLike ):
                 txname = line.replace("txnames","").replace("=","").strip()
     return analysis,txname
 
-def statusOneValidation( directory : os.PathLike ) -> Tuple:
+def statusOneValidation( directory : os.PathLike, D : Dict ) -> Tuple:
     slhas = glob.glob ( os.path.join ( directory, "*slha" ) )
     if not os.path.exists ( os.path.join ( directory, "results" ) ):
         return 0,0
@@ -31,7 +31,10 @@ def statusOneValidation( directory : os.PathLike ) -> Tuple:
         pre,post=colorama.Fore.RED,colorama.Fore.RESET
     if len(results)==len(slhas):
         pre,post=colorama.Fore.GREEN,colorama.Fore.RESET
-    print ( f"{directory}  {analysis+':'+txname:30s} {pre}{len(results)}/{len(slhas)}{post}" )
+    jobid="          "
+    if directory in D:
+        jobid=f"({D[directory]})"
+    print ( f"{directory}{jobid}  {analysis+':'+txname:30s} {pre}{len(results)}/{len(slhas)}{post}" )
     return len(results),len(slhas)
 
 def sort ( dirs : list ) -> list:
@@ -60,14 +63,26 @@ def oldsort ( dirs : list ) -> list:
         ret.append ( tmp[k] )
     return ret
 
+def getJobIds() -> Dict:
+    import subprocess
+    o = subprocess.getoutput ( "slurm q | grep _V" )
+    lines = o.split("\n")
+    D={}
+    for line in lines:
+        tokens = line.split()
+        jobid = int(tokens[0])
+        tmpf = tokens[2][:-3]
+        D[tmpf]=jobid
+    return D
 
 def globalStatus():
+    D=getJobIds()
     dirs = glob.glob ( "_V*" )
     dirs += glob.glob ( "tmp*" )
     dirs = sort ( dirs )
     totslha,totresult=0,0
     for d in dirs:
-        results,slhas=statusOneValidation ( d )
+        results,slhas=statusOneValidation ( d, D )
         totslha+=slhas
         totresult+=results
     ratio = totresult/totslha
