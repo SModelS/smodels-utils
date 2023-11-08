@@ -25,7 +25,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
             dt = ( datetime.now() - timestamp ).days
             if dt > 30:
-                print ( name, meta[name]["timestamp"] )
+                print ( colorama.Fore.YELLOW, name, meta[name]["timestamp"], colorama.Fore.RESET )
             h.close()
     statsTimes, speyTimes, ratios = {}, {}, {}
     vratios = []
