@@ -107,10 +107,10 @@ def findAll ( dbpath : os.PathLike ):
     wildcardpath = f"{dbpath}/*TeV/*/*/validationSpey"
     paths = glob.glob ( wildcardpath )
     for path in paths:
-        p = path.replace( dbpath, "" )
-        p = p.replace( "validationSpey", "" )
-        if p.startswith ( "/" ):
-            p = p[1:]
+        p = path.replace( "/validationSpey", "" )
+        #if p.startswith ( "/" ):
+        #    p = p[1:]
+        p = os.path.basename ( p )
         wildcardvals = os.path.join ( path, "T*_combined.py" )
         validationfiles = glob.glob ( wildcardvals )
         for validationfile in validationfiles:
@@ -123,7 +123,7 @@ def findAll ( dbpath : os.PathLike ):
 
 if __name__ == "__main__":
     dbpath = os.path.join ( os.environ["HOME"], "git", "smodels-database" )
-    ana = "13TeV/CMS/CMS-SUS-21-002-eff/"
+    ana = "CMS-SUS-21-002-eff"
     validationfile = "TChiWZ_2EqMassAx_EqMassBy_combined.py"
     import argparse
     ap = argparse.ArgumentParser(description="Compare timings between stats and spey" )
