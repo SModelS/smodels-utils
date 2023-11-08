@@ -54,10 +54,14 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 speyULs[saxes]=pt["UL"]
                 if saxes in statsULs:
                     ratioUL = statsULs[saxes]/pt["UL"]
+                    if ratioUL > 10. or ratioUL < .1:
+                        print ( f"weird value of {ratioUL} for {saxes}" )
                     ratioULs[saxes] = ratioUL 
                     ULratios.append ( ratioUL )
                 if saxes in statseULs:
                     ratioeUL = statseULs[saxes]/pt["eUL"]
+                    if ratioeUL > 10. or ratioeUL < .1:
+                        print ( f"weird value of {ratioUL} for {saxes}" )
                     ratioeULs[saxes] = ratioeUL 
                     eULratios.append ( ratioeUL )
             if "eUL" in pt:
