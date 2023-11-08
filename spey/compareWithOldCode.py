@@ -56,13 +56,15 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 if saxes in statsULs:
                     ratioUL = statsULs[saxes]/pt["UL"]
                     if ratioUL > 10. or ratioUL < .1:
-                        print ( f"weird value of {ratioUL} for {saxes}" )
+                        print ( f"[compare] weird value: r(UL)={ratioUL:.2g} for {saxes}" )
+                        print ( f"[compare] check {pt['slhafile']}" )
                     ratioULs[saxes] = ratioUL 
                     ULratios.append ( ratioUL )
                 if saxes in statseULs:
                     ratioeUL = statseULs[saxes]/pt["eUL"]
                     if ratioeUL > 10. or ratioeUL < .1:
-                        print ( f"weird value of {ratioUL} for {saxes}" )
+                        print ( f"[compare] weird value: r(eUL)={ratioeUL:.2g} for {saxes}" )
+                        print ( f"[compare] check {pt['slhafile']}" )
                     ratioeULs[saxes] = ratioeUL 
                     eULratios.append ( ratioeUL )
             if "eUL" in pt:
