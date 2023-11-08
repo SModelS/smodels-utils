@@ -195,6 +195,9 @@ def getPathName ( dbpath, analysis, valfile = None ):
     """
     import glob
     dbpath = os.path.expanduser ( dbpath )
+    if dbpath.endswith ( ".pcl" ):
+        p = dbpath.rfind("/")
+        dbpath = dbpath[:p]
     if type(valfile)==str and not valfile.endswith(".py"): valfile += ".py"
     # analysis = analysis.replace("agg"," (agg)" )
     experiment = "ATLAS"
