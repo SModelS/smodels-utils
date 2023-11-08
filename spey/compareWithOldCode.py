@@ -2,7 +2,8 @@
 
 """ compare the timing between the stats code and the spey code """
 
-import os, sys, colorama
+import os, sys
+from colorama import Fore
 import numpy as np
 from datetime import datetime
 
@@ -25,7 +26,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
             dt = ( datetime.now() - timestamp ).days
             if dt > 30:
-                print ( colorama.Fore.YELLOW, name, meta[name]["timestamp"], colorama.Fore.RESET )
+                print ( Fore.YELLOW, name, meta[name]["timestamp"], Fore.RESET )
             h.close()
     statsTimes, speyTimes, ratioTimes = {}, {}, {}
     vratios, ULratios, eULratios = [], [], []
@@ -62,24 +63,31 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             if "eUL" in pt:
                 speyeULs[saxes]=pt["eUL"]
     validationFile = validationFile[:validationFile.find("_")]
-    print ( f"[compare] for {colorama.Fore.GREEN}{anaName}:{validationFile}{colorama.Fore.RESET}" )
+    print ( f"[compare] for {Fore.GREEN}{anaName}:{validationFile}{Fore.RESET}" )
+    pre,post="",""
+    if len(vratios)*2 < len(statsTimes)+len(speyTimes):
+        pre,post = Fore.RED, Fore.RESET
+    print ( f"[n]{pre} stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}{post}" )
     if len(ULratios)>0:
         mean = np.mean(ULratios)
         std = np.std(ULratios)
-        print ( f"[UL] {mean:.2f}+-{std:.2f}" )
+        pre,post="",""
+        if abs(mean-1.0)>.3 or std>.3:
+            pre,post=Fore.RED,Fore.RESET
+        print ( f"[UL] {pre}{mean:.2f}+-{std:.2f} ({len(ratioULs)}){post}" )
     else:
-        print ( f"[UL] no upper limit values" )
+        print ( f"{Fore.RED}[UL] no upper limit values{Fore.RESET}" )
     if len(eULratios)>0:
         mean = np.mean(eULratios)
         std = np.std(eULratios)
-        print ( f"[eUL] {mean:.2f}+-{std:.2f}" )
+        pre,post="",""
+        if abs(mean-1.0)>.3 or std>.3:
+            pre,post=Fore.RED,Fore.RESET
+        pre,post="",""
+        print ( f"[eUL] {pre}{mean:.2f}+-{std:.2f} ({len(ratioeULs)}){post}" )
     else:
-        print ( f"[eUL] no expected upper limit values" )
+        print ( f"{Fore.RED}[eUL] no expected upper limit values{Fore.RESET}" )
 
-    pre,post="",""
-    if len(vratios)*2 < len(statsTimes)+len(speyTimes):
-        pre,post = colorama.Fore.RED, colorama.Fore.RESET
-    print ( f"[n]{pre} stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}{post}" )
     if len(vratios)==0:
         print ( f"[n] no ratios" )
     else:
