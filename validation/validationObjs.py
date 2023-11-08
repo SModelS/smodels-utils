@@ -1110,6 +1110,10 @@ class ValidationPlot():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        from smodels.theory import theoryPrediction
+        if "spey" in theoryPrediction.StatsComputer.__module__:
+            import spey
+            meta["spey"]=spey.__version__
         if hasattr ( self, "pointsInTarFile" ):
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
