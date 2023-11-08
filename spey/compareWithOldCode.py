@@ -6,11 +6,12 @@ import os, sys
 from colorama import Fore
 import numpy as np
 from datetime import datetime
+from smodels_utils.helper.various import getPathName
 
 def compare ( dbpath : os.PathLike, analysis : os.PathLike, 
               validationFile : os.PathLike ):
-    statspath = os.path.join ( dbpath, analysis, "validation", validationFile )
-    speypath = os.path.join ( dbpath, analysis, "validationSpey", validationFile )
+    statspath = getPathName ( dbpath, analysis, validationFile )
+    speypath = statspath.replace("validation","validationSpey")
     anaName = analysis.replace("13TeV/","").replace("8TeV/","").replace("CMS/","")
     anaName = anaName.replace("ATLAS/","").replace("/","")
     paths = { "stats": statspath, "spey": speypath }
@@ -126,9 +127,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Compare timings between stats and spey" )
     ap.add_argument('-d', '--dbpath',
             help='database path [<home>/git/smodels-database]', default=None)
-    ap.add_argument('-a', '--analysispath',
-            help='analysis path [13TeV/CMS/CMS-SUS-21-002-eff/]', default=None)
-    ap.add_argument('-v', '--validationpath',
+    ap.add_argument('-a', '--analysisname',
+            help='analysis path [CMS-SUS-21-002-eff]', default=None)
+    ap.add_argument('-v', '--validationfile',
             help='validation path [TChiWZ_2EqMassAx_EqMassBy_combined.py]', default=None)
     ap.add_argument('-A', '--all', action="store_true",
             help='compare all in database path' )
@@ -137,8 +138,8 @@ if __name__ == "__main__":
         findAll ( dbpath )
     if args.dbpath != None:
         dbpath = args.dbpath
-    if args.analysispath != None:
-        ana = args.analysispath
-    if args.validationpath != None:
-        validationfile = args.validationpath
+    if args.analysisname != None:
+        ana = args.analysisname
+    if args.validationfile != None:
+        validationfile = args.validationfile
     compare ( dbpath, ana, validationfile )
