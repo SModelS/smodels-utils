@@ -57,6 +57,8 @@ def sort ( dirs : list ) -> list:
 def getJobIds() -> Dict:
     import subprocess
     o = subprocess.getoutput ( "slurm q | grep _V" )
+    if "not found" in o:
+        return {}
     lines = o.split("\n")
     D={}
     for line in lines:
@@ -71,7 +73,7 @@ def getJobIds() -> Dict:
 def globalStatus():
     D=getJobIds()
     dirs = glob.glob ( "_V*" )
-    dirs += glob.glob ( "tmp*" )
+    dirs += glob.glob ( "tmp?*" )
     dirs = sort ( dirs )
     totslha,totresult=0,0
     for d in dirs:
