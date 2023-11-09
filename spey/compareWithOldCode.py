@@ -14,6 +14,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     speypath = statspath.replace("validation","validationSpey")
     anaName = analysis.replace("13TeV/","").replace("8TeV/","").replace("CMS/","")
     anaName = anaName.replace("ATLAS/","").replace("/","")
+    print ( f"[compare] for {Fore.GREEN}{anaName}:{validationFile}{Fore.RESET}" )
     paths = { "stats": statspath, "spey": speypath }
     meta, dicts = {}, {}
     for name,path in paths.items():
@@ -27,7 +28,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
             dt = ( datetime.now() - timestamp ).days
             if dt > 30:
-                print ( Fore.YELLOW, name, meta[name]["timestamp"], Fore.RESET )
+                print ( f"{Fore.YELLOW}{name} {meta[name]['timestamp']}{Fore.RESET}" )
             h.close()
     statsTimes, speyTimes, ratioTimes = {}, {}, {}
     vratios, ULratios, eULratios = [], [], []
@@ -70,7 +71,6 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             if "eUL" in pt:
                 speyeULs[saxes]=pt["eUL"]
     validationFile = validationFile[:validationFile.find("_")]
-    print ( f"[compare] for {Fore.GREEN}{anaName}:{validationFile}{Fore.RESET}" )
     pre,post="",""
     if len(vratios)*2 < len(statsTimes)+len(speyTimes):
         pre,post = Fore.RED, Fore.RESET
