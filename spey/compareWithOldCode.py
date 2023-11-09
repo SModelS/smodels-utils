@@ -6,11 +6,11 @@ import os, sys
 from colorama import Fore
 import numpy as np
 from datetime import datetime
-from smodels_utils.helper.various import getPathName
+from smodels_utils.helper.various import getValidationDataPathName
 
 def compare ( dbpath : os.PathLike, analysis : os.PathLike, 
               validationFile : os.PathLike ):
-    statspath = getPathName ( dbpath, analysis, validationFile )
+    statspath = getValidationDataPathName ( dbpath, analysis, validationFile )
     speypath = statspath.replace("validation","validationSpey")
     anaName = analysis.replace("13TeV/","").replace("8TeV/","").replace("CMS/","")
     anaName = anaName.replace("ATLAS/","").replace("/","")
