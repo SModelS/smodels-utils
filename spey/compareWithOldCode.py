@@ -27,7 +27,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             meta[name]=globals()["meta"]
             timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
             dt = ( datetime.now() - timestamp ).days
-            if dt > 30:
+            if dt > 10:
                 print ( f"{Fore.YELLOW}{name} {meta[name]['timestamp']}{Fore.RESET}" )
             h.close()
     statsTimes, speyTimes, ratioTimes = {}, {}, {}
