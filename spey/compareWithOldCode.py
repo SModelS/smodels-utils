@@ -115,7 +115,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     else:
         print ( f"[t] stat/spey={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
     if topoPasses:
-        print ( f"{Fore.GREEN}[compare] passed!{Fore.RED}" )
+        print ( f"{Fore.GREEN}[compare] passed!{Fore.RESET}" )
     print ()
                 
 def findAll ( dbpath : os.PathLike ):

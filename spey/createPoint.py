@@ -6,7 +6,7 @@ from typing import Dict
 from smodels.tools import speyTools
 from smodels_utils.helper.various import getValidationDataPathName, getValidationModuleFromPath
 speyTools._debug["writePoint"]=True
-import os
+import os, sys
 
 def runSModelS( args : Dict, slhafile : os.PathLike ):
     from smodels.theory import decomposer 
@@ -28,7 +28,8 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     listOfExpRes = db.getExpResults( analysisIDs = anaids )
     for expResult in listOfExpRes:                                             
         predictions = theoryPredictionsFor(expResult, toplist, combinedResults=True )
-    print ( "predictions", predictions )
+    npredictions=len(predictions)
+    print ( f"{npredictions} predictions" )
 
 def createSpeyCode():
     filename = "forjack.py"
@@ -63,6 +64,7 @@ def createSLHAFile ( args : Dict ) -> str:
                             args["validationfile" ], "validationSpey"  )
     module = getValidationModuleFromPath ( valfile, args["analysisname"] )
     ctSlhaFiles = 0
+    slhafile = None
     for pt in module.validationData:
         if not "axes" in pt:
             continue
@@ -76,6 +78,8 @@ def createSLHAFile ( args : Dict ) -> str:
             if dx > 1e-5:
                 isIn = False
         if isIn:
+            slhafile = pt["slhafile"]
+            # print ( f"we found {slhafile}" )
             ctSlhaFiles += 1
     if ctSlhaFiles > 1:
         print ( f"error we found too many matches for slhafiles" )
@@ -84,8 +88,9 @@ def createSLHAFile ( args : Dict ) -> str:
         print ( f"error we found no match for slhafile" )
         sys.exit()
     from validation.validationHelpers import retrieveValidationFile
-    retrieveValidationFile ( pt["slhafile"] )
-    return pt["slhafile"]
+    retrieveValidationFile ( slhafile )
+    print ( "created", slhafile )
+    return slhafile
     
             
 
