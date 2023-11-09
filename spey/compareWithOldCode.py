@@ -45,6 +45,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 statsULs[saxes]=pt["UL"]
             if "eUL" in pt:
                 statseULs[saxes]=pt["eUL"]
+    ctWeird = 0
     for pt in dicts["spey"]:
         if "axes" in pt: 
             saxes = str(pt["axes"])
@@ -59,24 +60,31 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                 if saxes in statsULs:
                     ratioUL = statsULs[saxes]/pt["UL"]
                     if ratioUL > 10. or ratioUL < .1:
-                        print ( f"[compare] weird value: r(UL)={ratioUL:.2g} for {saxes}" )
-                        print ( f"[compare] check {pt['slhafile']}" )
+                        ctWeird += 1
+                        if ctWeird < 3:
+                            print ( f"[compare] weird value: r(UL)={ratioUL:.2g} for {saxes}" )
+                            print ( f"[compare] check {pt['slhafile']}" )
                     ratioULs[saxes] = ratioUL 
                     ULratios.append ( ratioUL )
                 if saxes in statseULs:
                     ratioeUL = statseULs[saxes]/pt["eUL"]
                     if ratioeUL > 10. or ratioeUL < .1:
-                        print ( f"[compare] weird value: r(eUL)={ratioeUL:.2g} for {saxes}" )
-                        print ( f"[compare] check {pt['slhafile']}" )
+                        ctWeird += 1
+                        if ctWeird<3:
+                            print ( f"[compare] weird value: r(eUL)={ratioeUL:.2g} for {saxes}" )
+                            print ( f"[compare] check {pt['slhafile']}" )
                     ratioeULs[saxes] = ratioeUL 
                     eULratios.append ( ratioeUL )
             if "eUL" in pt:
                 speyeULs[saxes]=pt["eUL"]
     validationFile = validationFile[:validationFile.find("_")]
     pre,post="",""
+    topoPasses = True
     if len(vratios)*2 < len(statsTimes)+len(speyTimes):
         pre,post = Fore.RED, Fore.RESET
     print ( f"[n]{pre} stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}{post}" )
+    if len(vratios)!=len(speyTimes) or len(vratios)!=len(statsTimes):
+        topoPasses=False
     if len(ULratios)>0:
         mean = np.mean(ULratios)
         std = np.std(ULratios)
@@ -84,14 +92,19 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
         if abs(mean-1.0)>.3 or std>.3:
             pre,post=Fore.RED,Fore.RESET
         print ( f"[UL] {pre}{mean:.2f}+-{std:.2f} ({len(ratioULs)}){post}" )
+        if abs(mean-1.)>5e-2 or std>.1:
+            topoPasses=False
     else:
         print ( f"{Fore.RED}[UL] no upper limit values{Fore.RESET}" )
+        topoPasses=False
     if len(eULratios)>0:
         mean = np.mean(eULratios)
         std = np.std(eULratios)
         pre,post="",""
         if abs(mean-1.0)>.3 or std>.3:
             pre,post=Fore.RED,Fore.RESET
+        if abs(mean-1.)>5e-2 or std>.1:
+            topoPasses=False
         pre,post="",""
         print ( f"[eUL] {pre}{mean:.2f}+-{std:.2f} ({len(ratioeULs)}){post}" )
     else:
@@ -101,6 +114,8 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
         print ( f"[n] no ratios" )
     else:
         print ( f"[t] stat/spey={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
+    if topoPasses:
+        print ( f"{Fore.GREEN}[compare] passed!{Fore.RED}" )
     print ()
                 
 def findAll ( dbpath : os.PathLike ):
