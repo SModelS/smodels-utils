@@ -110,10 +110,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             if pt["UL"]!=None:
+                if type(pt["UL"])==str:
+                    # for float("inf"), float("nan")
+                    pt["UL"]=eval(pt["UL"])
                 r = pt['signal']/pt ['UL']
-            if "eUL" in pt and pt["eUL"] != None and pt["eUL"] > 0.:
-                hasExpected = True
-                rexp = pt['signal']/pt ['eUL']
+            if "eUL" in pt:
+                if type(pt["eUL"])==str:
+                    # for float("inf"), float("nan")
+                    pt["eUL"]=eval(pt["eUL"])
+                if pt["eUL"] != None and pt["eUL"] > 0.:
+                    hasExpected = True
+                    rexp = pt['signal']/pt ['eUL']
         if r > 3.:
             r=3.
         if rexp > 3.:
@@ -249,7 +256,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     def interpolateOverMissing ( xs, ys, T, fill_value = float("nan"),
            method = "linear" ):
         # idea copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
-        """ interpolate over missing values (nans) 
+        """ interpolate over missing values (nans)
         :param fill_value: what to fill outside of convex hull with
         :param method: one of: cubic, nearest, linear
         """
@@ -308,7 +315,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # print ( "after" )
     # pprint ( xs, ys, T ) # , xrange=(500,1000), yrange=(800,900) )
     # shading is one of: 'gouraud', 'nearest', 'flat', 'auto'
-    im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0., 
+    im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0.,
                           shading="nearest" )
     plt.title ( title )
     # plt.text ( .28, .85, title, transform = fig.transFigure )
@@ -376,7 +383,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     plt.text ( .97, .0222, subtitle, transform=fig.transFigure, fontsize=10,
                horizontalalignment="right" )
 
-        
+
     #if figureUrl:
     if False:
         plt.text( .13, .13, f"{figureUrl}",
