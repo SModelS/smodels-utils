@@ -10,24 +10,25 @@ nsig=[0.0, 0.0002892207, 0.0004011771, 0.005287607475, 0.000170267025, 0.0007463
 analysis='CMS-SUS-20-004'
 lumi=137.0
 
-import spey
-stat_wrapper = spey.get_backend("default_pdf.correlated_background")           
-import numpy as np
-
 def run( pid ):
+    import spey
+    stat_wrapper = spey.get_backend("default_pdf.correlated_background")
+    import numpy as np
+
     # np.random.seed(1)
     speyModel = stat_wrapper( data = obsN, background_yields = bg,
         covariance_matrix = cov, signal_yields = nsig,
         xsection = [ x / lumi for x in nsig ], analysis = analysis )
 
-    print ( f"spey({pid}) oUL(mu)={speyModel.poi_upper_limit( ):.4f}" ) 
-    print ( f"spey({pid}) eUL(mu)={speyModel.poi_upper_limit( expected = spey.ExpectationType.aposteriori ):.4f}" ) 
+    print ( f"spey({pid}) oUL(mu)={speyModel.poi_upper_limit( ):.4f}" )
+    print ( f"spey({pid}) eUL(mu)={speyModel.poi_upper_limit( expected = spey.ExpectationType.aposteriori ):.4f}" )
 
 if __name__ == "__main__":
-    pool = multiprocessing.Pool ( processes = 5 )
-    # pool.map ( run, range(5) )
+    # nproc = 5
+    nproc = 10
+    pool = multiprocessing.Pool ( processes = nproc )
     children= []
-    for i in range ( 5 ):
+    for i in range ( nproc ):
         p = pool.apply_async ( run, args = ( i, ) )
         children.append(p)
     pool.close()
