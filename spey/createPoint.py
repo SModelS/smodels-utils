@@ -102,7 +102,7 @@ def createSLHAFile ( args : Dict ) -> str:
     ulmu = oUL/signal
     ulmuexp = eUL/signal
     print ( "created", slhafile )
-    print ( f"in validationfile oUL(mu)={ulmu:.4f} eUL(mu)={ulmuexp:.4f}" )
+    print ( f"in {valfile}: oUL(mu)={ulmu:.4g} eUL(mu)={ulmuexp:.4f}" )
     return slhafile
     
             
