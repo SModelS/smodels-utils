@@ -6,7 +6,9 @@ from typing import Dict
 from smodels.tools import speyTools
 from smodels_utils.helper.various import getValidationDataPathName, getValidationModuleFromPath
 speyTools._debug["writePoint"]=True
-import os, sys
+import os, sys, subprocess
+    
+speyfilename = "forjack.py"
 
 def runSModelS( args : Dict, slhafile : os.PathLike ):
     from smodels.theory import decomposer 
@@ -31,9 +33,13 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     npredictions=len(predictions)
     print ( f"{npredictions} predictions" )
 
+def runSpeyCode():
+    cmd = f"./{speyfilename}"
+    o = subprocess.getoutput ( cmd )
+    print ( o )
+
 def createSpeyCode():
-    filename = "forjack.py"
-    f=open(filename,"wt")
+    f=open(speyfilename,"wt")
     f.write( "#!/usr/bin/env python3\n\n" )
     with open ( "data.txt", "rt" ) as g:
         f.write ( g.read() )
@@ -47,12 +53,13 @@ speyModel = stat_wrapper( data = obsN, background_yields = bg,
     covariance_matrix = cov, signal_yields = nsig,
     xsection = [ x / lumi for x in nsig ], analysis = analysis )
 
-print ( "ul", speyModel.poi_upper_limit( expected = spey.ExpectationType.apriori ) ) 
+print ( f"spey oUL(mu)={speyModel.poi_upper_limit( ):.4f}" ) 
+print ( f"spey eUL(mu)={speyModel.poi_upper_limit( expected = spey.ExpectationType.aposteriori ):.4f}" ) 
 
 """ )
     f.close()
-    os.chmod ( filename, 0o755 )
-
+    os.chmod ( speyfilename, 0o755 )
+    print ( "created", speyfilename )
 
 
 def createSLHAFile ( args : Dict ) -> str:
@@ -64,7 +71,7 @@ def createSLHAFile ( args : Dict ) -> str:
                             args["validationfile" ], "validationSpey"  )
     module = getValidationModuleFromPath ( valfile, args["analysisname"] )
     ctSlhaFiles = 0
-    slhafile = None
+    slhafile, oUL, eUL, signalxsec = None, None, None, None
     for pt in module.validationData:
         if not "axes" in pt:
             continue
@@ -79,6 +86,9 @@ def createSLHAFile ( args : Dict ) -> str:
                 isIn = False
         if isIn:
             slhafile = pt["slhafile"]
+            oUL = pt["UL"]
+            eUL = pt["eUL"]
+            signal = pt["signal"]
             # print ( f"we found {slhafile}" )
             ctSlhaFiles += 1
     if ctSlhaFiles > 1:
@@ -89,7 +99,10 @@ def createSLHAFile ( args : Dict ) -> str:
         sys.exit()
     from validation.validationHelpers import retrieveValidationFile
     retrieveValidationFile ( slhafile )
+    ulmu = oUL/signal
+    ulmuexp = eUL/signal
     print ( "created", slhafile )
+    print ( f"in validationfile oUL(mu)={ulmu:.4f} eUL(mu)={ulmuexp:.4f}" )
     return slhafile
     
             
@@ -98,12 +111,14 @@ def create ( args : Dict ):
     slhafile = createSLHAFile ( args )
     runSModelS ( args, slhafile )
     createSpeyCode()
+    runSpeyCode()
 
 def main():
     import argparse
     ap = argparse.ArgumentParser(description="create a specific point ready for jacks inspection" )
+    defdbpath = f"{os.environ['HOME']}/git/smodels-database/validation.pcl"
     ap.add_argument('-d', '--dbpath',
-            help='database path [<home>/git/smodels-database]', default=None)
+            help=f'database path [{defdbpath}]]', default=None)
     defaultananame = "CMS-SUS-20-004-eff"
     ap.add_argument('-a', '--analysisname',
             help=f'analysis path [{defaultananame}]', default=None)
@@ -116,7 +131,7 @@ def main():
             help='yvalue', default=None, type=float )
     args = ap.parse_args()
     if args.dbpath == None:
-        args.dbpath = f"{os.environ['HOME']}/git/smodels-database/validation.pcl"
+        args.dbpath = defdbpath
     if args.validationfile == None:
         args.validationfile=defaultvalfile
     if args.analysisname == None:
