@@ -124,8 +124,12 @@ def create ( args : Dict ):
 def createParallel ( args : Dict ):
     """ run smodels in parallel, see if this changes anything """
     slhafile = createSLHAFile ( args )
+    print ( "single process" )
+    runSModelS ( args, slhafile )
+    """
+    print ( "multi process" )
     import multiprocessing
-    nproc = 5
+    nproc = 1
     pool = multiprocessing.Pool ( processes = nproc )
     children= []
     for i in range ( nproc ):
@@ -134,6 +138,7 @@ def createParallel ( args : Dict ):
     pool.close()
     for c in children:
         p.get()
+    """
     createSpeyCode()
     runSpeyCode()
 
@@ -161,7 +166,7 @@ def main():
     if args.analysisname == None:
         args.analysisname = defaultananame
 
-    createParallel ( vars(args) )
+    create ( vars(args) )
 
 if __name__ == "__main__":
     main()
