@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
 """ create a spey point, ready for jacks inspection """
+import numpy
+print ( "numpy", numpy.__version__ )
+import scipy
+print ( "scipy", scipy.__version__ )
+
 
 def hackForPython39():
     # no idea why python3.9 doesnt respect PYTHONPATH, but well, it doesnt
