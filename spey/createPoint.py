@@ -31,7 +31,7 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     for expResult in listOfExpRes:                                             
         predictions = theoryPredictionsFor(expResult, toplist, combinedResults=True )
     npredictions=len(predictions)
-    print ( f"{npredictions} predictions" )
+    print ( f"{npredictions} predictions: {predictions[0].getUpperLimitOnMu():.4f}" )
 
 def runSpeyCode():
     cmd = f"./{speyfilename}"
@@ -105,11 +105,25 @@ def createSLHAFile ( args : Dict ) -> str:
     print ( f"in {valfile}: oUL(mu)={ulmu:.4g} eUL(mu)={ulmuexp:.4f}" )
     return slhafile
     
-            
-
 def create ( args : Dict ):
     slhafile = createSLHAFile ( args )
     runSModelS ( args, slhafile )
+    createSpeyCode()
+    runSpeyCode()
+
+def createParallel ( args : Dict ):
+    """ run smodels in parallel, see if this changes anything """
+    slhafile = createSLHAFile ( args )
+    import multiprocessing
+    nproc = 5
+    pool = multiprocessing.Pool ( processes = nproc )
+    children= []
+    for i in range ( nproc ):
+        p = pool.apply_async ( runSModelS, args = ( args, slhafile ) )
+        children.append(p)
+    pool.close()
+    for c in children:
+        p.get()
     createSpeyCode()
     runSpeyCode()
 
@@ -137,7 +151,7 @@ def main():
     if args.analysisname == None:
         args.analysisname = defaultananame
 
-    create ( vars(args) )
+    createParallel ( vars(args) )
 
 if __name__ == "__main__":
     main()
