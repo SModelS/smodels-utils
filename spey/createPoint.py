@@ -2,6 +2,14 @@
 
 """ create a spey point, ready for jacks inspection """
 
+def hackForPython39():
+    # no idea why python3.9 doesnt respect PYTHONPATH, but well, it doesnt
+    # here is my way around, to check if the problem occurs also with 
+    # python39 and anaconda3/2022.05 -- it does
+    import sys
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels")
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils")
+
 from typing import Dict
 from smodels.tools import speyTools
 from smodels_utils.helper.various import getValidationDataPathName, getValidationModuleFromPath
@@ -18,6 +26,8 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     from smodels.particlesLoader import BSMList                                    
     from smodels.share.models.SMparticles import SMList                            
     from smodels.theory.model import Model 
+    import numpy
+    numpy.random.seed(0)
     dbpath = args["dbpath"]
     db = Database ( dbpath )
     model = Model(BSMparticles=BSMList, SMparticles=SMList) 
@@ -31,7 +41,7 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     for expResult in listOfExpRes:                                             
         predictions = theoryPredictionsFor(expResult, toplist, combinedResults=True )
     npredictions=len(predictions)
-    print ( f"{npredictions} predictions: {predictions[0].getUpperLimitOnMu():.4f}" )
+    print ( f"{npredictions} predictions: {predictions[0].getUpperLimitOnMu():.4g}" )
 
 def runSpeyCode():
     cmd = f"./{speyfilename}"
