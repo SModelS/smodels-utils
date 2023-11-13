@@ -22,7 +22,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             print ( f"[compare] {path} does not exist." )
             sys.exit()
         with open ( path, "rt" ) as h:
-            txt=h.read().replace("inf","float('inf')" )
+            txt=h.read().replace("inf,","float('inf')," )
             txt=txt.replace("nan","float('nan')")
             exec(txt, globals() )
             dicts[name]=globals()["validationData"]
