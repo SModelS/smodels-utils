@@ -121,6 +121,13 @@ def main():
         args.validationfile=defaultvalfile
     if args.analysisname == None:
         args.analysisname = defaultananame
+    if args.p2:
+        args.validationfile="T2tt_2EqMassAx_EqMassBy_combined.py"
+        args.analysisname = "CMS-SUS-16-050-eff"
+        args.x = 1160.
+        args.y = 200.
+        #args.x = 880.
+        #args.y = 350.
 
     create ( vars(args) )
 
