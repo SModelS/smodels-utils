@@ -59,8 +59,8 @@ def getValidationFileContent ( validationfile : str ):
     # print ( "txt", txt )
     ret = {}
     txt = txt.replace("validationData = ","")
-    txt = txt.replace("inf","float('inf')")
-    txt = txt.replace("nan","float('nan')")
+    txt = txt.replace("inf,","float('inf'),")
+    txt = txt.replace("nan,","float('nan'),")
     data = eval(txt)
     ret["data"] = data
     meta = None
