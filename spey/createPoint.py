@@ -5,6 +5,7 @@ import numpy
 print ( "numpy", numpy.__version__ )
 import scipy
 print ( "scipy", scipy.__version__ )
+from colorama import Fore
 
 
 def hackForPython39():
@@ -46,7 +47,10 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     for expResult in listOfExpRes:                                             
         predictions = theoryPredictionsFor(expResult, toplist, combinedResults=True )
     npredictions=len(predictions)
-    print ( f"{npredictions} predictions: {predictions[0].getUpperLimitOnMu():.4g}" )
+    if npredictions!=1:
+        print ( f"{Fore.RED}{npredictions} predictions!{Fore.RESET}" )
+    else:
+        print ( f"{Fore.GREEN}prediction: oUL(mu)={predictions[0].getUpperLimitOnMu():.4g} eUL(mu)={predictions[0].getUpperLimitOnMu(expected=True):.4g}{Fore.RESET}" )
 
 def runSpeyCode():
     cmd = f"./{speyfilename}"
@@ -76,14 +80,9 @@ print ( f"spey eUL(mu)={speyModel.poi_upper_limit( expected = spey.ExpectationTy
     os.chmod ( speyfilename, 0o755 )
     print ( "created", speyfilename )
 
-
-def createSLHAFile ( args : Dict ) -> str:
-    """ create the SLHA file that we need, extract it from 
-        validation slha tarballs 
-    :returns: slha file name
-    """
-    valfile = getValidationDataPathName ( args["dbpath"], args["analysisname"], 
-                            args["validationfile" ], "validationSpey"  )
+def extractPoint ( valfile : str, args : Dict ) -> Dict:
+    """ given the validation file and the arguments
+    extract the relevant point """
     module = getValidationModuleFromPath ( valfile, args["analysisname"] )
     ctSlhaFiles = 0
     slhafile, oUL, eUL, signalxsec = None, None, None, None
@@ -112,13 +111,29 @@ def createSLHAFile ( args : Dict ) -> str:
     if ctSlhaFiles == 0:
         print ( f"error we found no match for slhafile" )
         sys.exit()
+    ret = { "slhafile": slhafile, "oUL": oUL, "eUL": eUL, "signal": signal }
+    ret["oULmu"] = oUL/signal
+    ret["eULmu"] = eUL/signal
     from validation.validationHelpers import retrieveValidationFile
     retrieveValidationFile ( slhafile )
-    ulmu = oUL/signal
-    ulmuexp = eUL/signal
-    print ( "created", slhafile )
-    print ( f"in {valfile}: oUL(mu)={ulmu:.4g} eUL(mu)={ulmuexp:.4f}" )
-    return slhafile
+    return ret
+
+def createSLHAFile ( args : Dict ) -> str:
+    """ create the SLHA file that we need, extract it from 
+        validation slha tarballs 
+    :returns: slha file name
+    """
+    valfile = getValidationDataPathName ( args["dbpath"], args["analysisname"], 
+                            args["validationfile" ], "validationSpey"  )
+    origvalfile = getValidationDataPathName ( args["dbpath"], args["analysisname"], 
+                            args["validationfile" ], "validation"  )
+    ret = extractPoint ( valfile, args )
+    origret = extractPoint ( origvalfile, args )
+    print ( "extracted", ret["slhafile"] )
+    print ( f"in {Fore.GREEN}{valfile}: oUL(mu)={ret['oULmu']:.4g} eUL(mu)={ret['eULmu']:.4f}{Fore.RESET}" )
+    print ( f"in {Fore.GREEN}{origvalfile}: oUL(mu)={origret['oULmu']:.4g} eUL(mu)={origret['eULmu']:.4f}{Fore.RESET}" )
+    # print ( f"in {origvalfile}: oUL(mu)={ulmu:.4g} eUL(mu)={ulmuexp:.4f}" )
+    return ret["slhafile"]
     
 def create ( args : Dict ):
     slhafile = createSLHAFile ( args )
@@ -174,8 +189,8 @@ def main():
     if args.p2:
         args.validationfile="T2tt_2EqMassAx_EqMassBy_combined.py"
         args.analysisname = "CMS-SUS-16-050-eff"
-        args.x = 1160.
-        args.y = 200.
+        args.x = 980.
+        args.y = 400.
         #args.x = 880.
         #args.y = 350.
 
