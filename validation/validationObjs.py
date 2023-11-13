@@ -732,8 +732,8 @@ class ValidationPlot():
                                 maxR = eR["r_expected"]
                                 expRes = eR
                 if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
-                    logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
-                    return False
+                    logger.warning("We have multiple dataset ids, but none is a combined one. Skipping this point." )
+                    continue
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
                 logger.error("Something went wrong. Obtained results for the wrong analyses")
                 return False
