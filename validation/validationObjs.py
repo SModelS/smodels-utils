@@ -1069,6 +1069,8 @@ class ValidationPlot():
         dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
         dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
         dataStr = dataStr.replace( "}, {" , "},\n{" )
+        if "inf" in dataStr:
+            dataStr = dataStr.replace("inf,","float('inf')," )
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
