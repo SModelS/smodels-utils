@@ -163,6 +163,7 @@ def main():
             help='xvalue', default=2075., type=float )
     ap.add_argument('-y', '--y',
             help='yvalue', default=None, type=float )
+    ap.add_argument('-2', '--p2', help="second point", action="store_true" )
     args = ap.parse_args()
     if args.dbpath == None:
         args.dbpath = defdbpath
@@ -170,6 +171,13 @@ def main():
         args.validationfile=defaultvalfile
     if args.analysisname == None:
         args.analysisname = defaultananame
+    if args.p2:
+        args.validationfile="T2tt_2EqMassAx_EqMassBy_combined.py"
+        args.analysisname = "CMS-SUS-16-050-eff"
+        args.x = 1040.
+        args.y = 200.
+        #args.x = 880.
+        #args.y = 350.
 
     create ( vars(args) )
 
