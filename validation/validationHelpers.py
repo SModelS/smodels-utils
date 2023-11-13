@@ -49,7 +49,7 @@ def retrieveValidationFile ( filename, tarballname = None ):
             tarballname = f"{tokens[0]}.tar.gz"
     tarball = f"{installDirectory()}/slha/{tarballname}"
     tarball = tarball.replace("//","/")
-    print ( "filename", filename, os.path.exists ( tarball ), tarball, os.getcwd() )
+    # print ( "filename", filename, os.path.exists ( tarball ), tarball, os.getcwd() )
     if os.path.exists ( tarball ):
         import tarfile
         f= tarfile.open ( tarball )
