@@ -108,11 +108,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             logger.warning ( f"No upper limit for {pt}" )
             continue
         countPts += 1
-        if kfactor == None:
+        if kfactor == None and "kfactor" in pt:
             kfactor = pt ['kfactor']
-        if abs(kfactor - pt['kfactor'])> 1e-5:
-            logger.error("kfactor not a constant throughout the plane!")
-            sys.exit()
+        else:
+            if "kfactor" in pt:
+                if abs(kfactor - pt['kfactor'])> 1e-5:
+                    logger.error("kfactor not a constant throughout the plane!")
+                    sys.exit()
 
         xvals = pt['axes']
         if xvals == None:

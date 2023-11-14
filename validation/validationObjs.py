@@ -729,8 +729,8 @@ class ValidationPlot():
                                 maxR = eR["r_expected"]
                                 expRes = eR
                 if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
-                    logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
-                    return False
+                    logger.warning("We have multiple dataset ids, but none is a combined one. Skipping this point." )
+                    continue
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
                 logger.error("Something went wrong. Obtained results for the wrong analyses")
                 return False
@@ -1095,6 +1095,8 @@ class ValidationPlot():
         dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
         dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
         dataStr = dataStr.replace( "}, {" , "},\n{" )
+        if "inf" in dataStr:
+            dataStr = dataStr.replace("inf,","float('inf')," )
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
@@ -1110,6 +1112,10 @@ class ValidationPlot():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        from smodels.theory import theoryPrediction
+        if "spey" in theoryPrediction.StatsComputer.__module__:
+            import spey
+            meta["spey"]=spey.__version__
         if hasattr ( self, "pointsInTarFile" ):
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname

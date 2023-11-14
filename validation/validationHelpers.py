@@ -27,7 +27,7 @@ def retrieveValidationFile ( filename, tarballname = None ):
             tarballname = f"{tokens[0]}.tar.gz"
     tarball = f"{installDirectory()}/slha/{tarballname}"
     tarball = tarball.replace("//","/")
-    print ( "filename", filename, os.path.exists ( tarball ), tarball, os.getcwd() )
+    # print ( "filename", filename, os.path.exists ( tarball ), tarball, os.getcwd() )
     if os.path.exists ( tarball ):
         import tarfile
         f= tarfile.open ( tarball )
@@ -58,7 +58,10 @@ def getValidationFileContent ( validationfile : str ):
         txt = "\n".join(lines[:])
     # print ( "txt", txt )
     ret = {}
-    data = eval(txt.replace("validationData = ",""))
+    txt = txt.replace("validationData = ","")
+    txt = txt.replace("inf,","float('inf'),")
+    txt = txt.replace("nan,","float('nan'),")
+    data = eval(txt)
     ret["data"] = data
     meta = None
     if len(lines)>1 and lines[-1].startswith ( "meta" ):

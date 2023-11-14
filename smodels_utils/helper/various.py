@@ -187,6 +187,11 @@ def mergeExclusionLines ( lines : list ):
     return ret
 
 def getPathName ( dbpath, analysis, valfile = None ):
+    # for backwards compatibility
+    return getValidationDataPathName ( dbpath, analysis, valfile)
+
+def getValidationDataPathName ( dbpath : os.PathLike, analysis : str , 
+        valfile : str, validationFolder : str = "validation" ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name
         potentially with wildcards
     :param dbpath: database path, e.g ~/git/smodels-database
@@ -195,6 +200,9 @@ def getPathName ( dbpath, analysis, valfile = None ):
     """
     import glob
     dbpath = os.path.expanduser ( dbpath )
+    if dbpath.endswith ( ".pcl" ):
+        p = dbpath.rfind("/")
+        dbpath = dbpath[:p]
     if type(valfile)==str and not valfile.endswith(".py"): valfile += ".py"
     # analysis = analysis.replace("agg"," (agg)" )
     experiment = "ATLAS"
@@ -225,7 +233,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     folder = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
     if valfile == None:
         return folder
-    ipath = "%s/validation/%s" % ( folder, valfile )
+    ipath = f"{folder}/{validationFolder}/{valfile}"
     files = glob.glob ( ipath )
     if len(files)==0:
         print ( "[various] could not find validation file %s" % ipath )
