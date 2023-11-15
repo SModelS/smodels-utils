@@ -21,7 +21,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull
+from validationHelpers import point_in_hull, getExpResPath
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -58,6 +58,22 @@ class ValidationPlot():
         :param keep: keep temporary directories
         """
 
+        self.databasePath = databasePath
+        if databasePath:
+            if os.path.isdir(databasePath):
+                self.databasePath = databasePath
+            else:
+                logger.error("Database folder "+databasePath+" does not exist")
+                sys.exit()
+        #Try to guess the path:
+        else:
+            anaID = ExptRes.globalInfo.id
+            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
+            if not os.path.isdir(self.databasePath):
+                logger.error("Could not define databasePath folder")
+                sys.exit()
         self.expRes = copy.deepcopy(ExptRes)
         self.keep = keep
         self.t0 = time.time()
@@ -85,21 +101,6 @@ class ValidationPlot():
         self.expRes.datasets = [dataset for dataset in self.expRes.datasets[:] if len(dataset.txnameList) > 0]
 
         if slhadir: self.setSLHAdir(slhadir)
-        if databasePath:
-            if os.path.isdir(databasePath):
-                self.databasePath = databasePath
-            else:
-                logger.error("Database folder "+databasePath+" does not exist")
-                sys.exit()
-        #Try to guess the path:
-        else:
-            anaID = ExptRes.globalInfo.id
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
-            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
-            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
-            if not os.path.isdir(self.databasePath):
-                logger.error("Could not define databasePath folder")
-                sys.exit()
 
         import plottingFuncs ## propagate logging level!
         plottingFuncs.logger.setLevel ( logger.level )
@@ -317,7 +318,8 @@ class ValidationPlot():
         :return: a container of root TGraph objects
         """
         tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
-                       axes=self.axes, get_all = get_all, expected=expected )
+                       axes=self.axes, get_all = get_all, expected=expected,
+                       dbpath = self.databasePath )
         if not tgraphDict:
             return []
         tgraph = tgraphDict[self.txName]
@@ -1046,6 +1048,7 @@ class ValidationPlot():
     def getValidationDir ( self, validationDir ):
         """ obtain the validation directory, usually, 
             self.expRes.path + "/validation" """
+        path = getExpResPath ( self.expRes, self.databasePath )
         def mkdir ( mydir ):
             if not os.path.isdir(mydir):
                 logger.info( f"Creating validation folder {mydir}")
@@ -1056,7 +1059,7 @@ class ValidationPlot():
         validationFolder = "validation"
         if "validationFolder" in self.options:
             validationFolder = self.options["validationFolder"]
-        validationDir = os.path.join(self.expRes.path,validationFolder)
+        validationDir = os.path.join(path,validationFolder)
         mkdir ( validationDir )
         return validationDir
 

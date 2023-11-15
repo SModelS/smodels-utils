@@ -32,7 +32,8 @@ def starting( expRes, txnameStr, axes ):
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
-        pretty=False, combine=False, namedTarball = None, keep = False ):
+        pretty=False, combine=False, namedTarball = None, keep = False,
+        dbpath = None ):
     """
     Creates a validation plot and saves its output.
 
@@ -48,13 +49,14 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
     :param combine: combine signal regions, or use best signal region
     :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :param keep: keep temporary directories
+    :param dbpath: the database path given in inifile
     :return: ValidationPlot object or False
     """
 
     starting( expRes, txnameStr, axes )
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,slhadir = None,
-                        options = options,kfactor=kfactor,
-                        namedTarball = namedTarball, keep = keep, combine = combine )
+            databasePath = dbpath, options = options,kfactor=kfactor,
+            namedTarball = namedTarball, keep = keep, combine = combine )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -225,7 +227,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"] )
 
-def run ( expResList, options : dict, keep, db ):
+def run ( expResList, options : dict, keep, db, dbpath : str ):
     """
     Loop over experimental results and validate plots
     :param options: all flags in the "options" part of the ini file
@@ -359,7 +361,7 @@ def run ( expResList, options : dict, keep, db ):
                     for p in prettyorugly:
                         re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
                                 kfactor, p, combine, namedTarball = pnamedTarball,
-                                keep = keep )
+                                keep = keep, dbpath = dbpath )
                         # if not ":" in namedTarball:
                         localopts["generateData"]=False
                         oldNamedTarball = pnamedTarball
@@ -400,7 +402,8 @@ def run ( expResList, options : dict, keep, db ):
                     localopts = addRange ( "y", localopts, txname.yrange, ax )
                 for p in prettyorugly:
                     validatePlot( expRes,txnameStr,ax,tarfile, localopts,
-                                  gkfactor, p, combine, namedTarball = pnamedTarball )
+                                  gkfactor, p, combine, namedTarball = pnamedTarball,
+                                  dbpath = dbpath )
                     localopts["generateData"] = False
             logger.info( "------ %s %s validated in  %.1f min %s" % \
                          (RED, txnameStr,(time.time()-txt0)/60., RESET) )
@@ -478,7 +481,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             options["ncpus"] = 1
 
     tval0 = time.time()
-    run ( expResList, options, keep, db )
+    run ( expResList, options, keep, db, databasePath )
     dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 

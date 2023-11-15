@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+from validationHelpers import getExpResPath
 import numpy as np
 
 try:
@@ -223,7 +224,7 @@ def getClosestValue ( x : float, y : float , graph : dict , dmax : float = 1. ):
 
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
-                          expected=False ):
+                          expected=False, dbpath = None ):
     """
     Reads exclusion_lines.json and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
@@ -243,14 +244,15 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     import json
     if type(expResult)==list:
         expResult=expResult[0]
-    jsonfile = os.path.join(expResult.path,'exclusions.json')
+    path = getExpResPath ( expResult, dbpath )
+    jsonfile = os.path.join(path,'exclusions.json')
     if not os.path.isfile(jsonfile):
-        jsonfile = os.path.join(expResult.path,'exclusion_lines.json')
+        jsonfile = os.path.join(path,'exclusion_lines.json')
         if not os.path.isfile(jsonfile):
             logger.error("json file %s not found" % jsonfile )
             from rootPlottingFuncs import getExclusionCurvesForFromSmsRoot
             return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes,
-                    get_all, expected )
+                    get_all, expected, dbpath )
     from smodels_utils.helper import various
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )

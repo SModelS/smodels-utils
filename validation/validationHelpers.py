@@ -12,6 +12,17 @@
 ## for plotting?
 widthOfStableParticles = 1e-25
 
+def getExpResPath ( expRes, databasePath ):
+    """ get the path to the experimental result folder.
+    Take into account that the pickle file could have been created
+    elsewhere! """
+    if databasePath == None:
+        return expRes.path
+    path = expRes.path
+    p1 = path.find("TeV")
+    p2 = path[:p1].rfind("/")
+    path = databasePath + path[p2:]
+    return path
 
 def retrieveValidationFile ( filename, tarballname = None ):
     """ retrieve a certain validation file from the right tarball

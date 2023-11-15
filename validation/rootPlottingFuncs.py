@@ -12,6 +12,7 @@ import logging,os,sys
 logger = logging.getLogger(__name__)
 
 from smodels_utils.helper.rootTools import setROOTColorPalette
+from validationHelpers import getExpResPath
 setROOTColorPalette()
 
 def setAxes ( h, style ):
@@ -59,7 +60,7 @@ def clean ( obj ):
     return ret
 
 def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
-        get_all=False, expected=False ):
+        get_all=False, expected=False, dbpath=None ):
     """
     Reads sms.root and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
@@ -79,7 +80,8 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
 
     if type(expResult)==list:
         expResult=expResult[0]
-    rootpath = os.path.join(expResult.path,'sms.root')
+    path = getExpResPath ( expResult, dbpath )
+    rootpath = os.path.join(path,'sms.root')
     if not os.path.isfile(rootpath):
         logger.error("Root file %s not found" %rootpath)
         return False
