@@ -26,7 +26,7 @@ try:
 except ImportError as e:
     # FIXME in the long run the line below should disappear
     sys.path.insert(0, os.path.expanduser("~/PathFinder"))
-    sys.path.insert(0, os.path.expanduser("~/git/PathFinder"))
+    #sys.path.insert(0, os.path.expanduser("~/git/PathFinder"))
     import pathfinder as pf
 
 
@@ -139,6 +139,7 @@ class BestCombinationFinder(object):
     def findBestCombination(self, expected : bool = True):
         """ the actual best combination finder """
         
+        self.checkSensitive() #filter out tp which have rexp < 0.1
         if len(self.listoftp) == 0:     #no theory prediction
             logging.warning("No theory Prediction")
             return []
@@ -210,7 +211,7 @@ class BestCombinationFinder(object):
             #print("\n Best Combination ", best_comb[0].analysisId())
             return best_comb
             
-        best_comb = removeAnalysis(best_comb)
+        #best_comb = self.removeAnalysis(best_comb)
         
         #return TheoryPredictionCombiner object
         self.combiner_list = [TheoryPredictionsCombiner(best_comb)]                     #combine tp
@@ -218,7 +219,7 @@ class BestCombinationFinder(object):
         return self.combiner_list
         
     
-    def removeAnalysis(best_comb):
+    def removeAnalysis(self, best_comb):
         "Remove Analysis which have low sensitivity compared to the most sensitive from the combination"
         tp_rvalues = [tp.getRValue(expected=True) for tp in best_comb]
         rmax = max(tp_rvalues)
@@ -226,11 +227,13 @@ class BestCombinationFinder(object):
         index = []
         
         for r in tp_rvalues:
-            if r/rmax < 0.01: index.append(tp_rvalues.index(r))  #check 0.01??
+            if r/rmax > 0.01: index.append(tp_rvalues.index(r))  #sigma_min/sigma < 0.01??
         
         newlistoftp = []
         for tp in best_comb:
-            if best_comb.index(tp) in index: continue
+            if best_comb.index(tp) in index: 
+                logging.warning("Removing theory Prediction from best combination as sensitivity is very low: %s with r value %s"%(tp.analysisId(), tp_rvalues[best_comb.index(tp)]))
+                continue
             newlistoftp.append(tp)
         
         return newlistoftp
@@ -239,24 +242,36 @@ class BestCombinationFinder(object):
         
     def checkSensitive(self):
         
-        if self.combiner_list == []:
-            if len(self.listoftp) == 1 and self.listoftp[0].analysisId() in self.cM.keys():
-                r = self.listoftp[0].getRValue(expected = True)
-                print("\n R-value of analysis %s is "%(self.listoftp[0].analysisId()), r )
-                return r
-            else: return 0
+        tp_list = []  #list of tp for which r_exp >= 0.1
+        
+        if len(self.listoftp) == 0: self.listoftp = []
+        elif len(self.listoftp) == 1 and self.listoftp[0].analysisId() in self.cM.keys():
+            rexp = self.listoftp[0].getRValue(expected = True)
+            if rexp < 0.1:
+                logging.warning("rexp value below 0.1 - %f for analysis: %s"%(rexp, self.listoftp[0].analysisId()))
+                self.listoftp = []
+                            
+        else:
+            tp_rexp = [tp.getRValue(expected=True) for tp in self.listoftp]
             
-        tp_rvalues = [tp.getRValue(expected=True) for tp in self.listoftp]
+            for r in tp_rexp:
+                if r>=0.1:tp_list.append(self.listoftp[tp_rexp.index(r)])
+                else: logging.warning("rexp value below 0.1 - %f for analysis: %s"%(r, self.listoftp[tp_rexp.index(r)].analysisId()))
+            
+            self.listoftp = tp_list
+
+        
+        '''
         rmax = max(tp_rvalues)
         bestResult = self.listoftp[tp_rvalues.index(rmax)].analysisId()
-        '''
+        
         for tp in self.listoftp:
             if not tp: continue
             r = tp.getRValue(expected = True)
             if r>rmax:
                 rmax = r
                 bestResult = tp.analysisId()
-        '''
+        
         self.ntop = 3
         #comb = self.findBestCombination()
         comb_rvalues = []
@@ -276,7 +291,7 @@ class BestCombinationFinder(object):
         else:
             logger.error("sensitivity of best combination is lower than that of the most sensitive analysis: %s" %(bestResult))
             return 0
-            
+        '''    
         
 
 
