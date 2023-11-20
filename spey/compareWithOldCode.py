@@ -42,8 +42,12 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             if "t" in pt:
                 statsTimes[saxes]=pt["t"]
             if "UL" in pt:
+                if type(pt["UL"])==str:
+                    pt["UL"]=eval(pt["UL"])
                 statsULs[saxes]=pt["UL"]
             if "eUL" in pt:
+                if type(pt["eUL"])==str:
+                    pt["eUL"]=eval(pt["eUL"])
                 statseULs[saxes]=pt["eUL"]
     ctWeird = 0
     for pt in dicts["spey"]:
@@ -56,6 +60,8 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
                     ratioTimes[saxes]=ratio
                     vratios.append ( ratio )
             if "UL" in pt:
+                if type(pt["UL"])==str:
+                    pt["UL"]=eval(pt["UL"])
                 speyULs[saxes]=pt["UL"]
                 if saxes in statsULs:
                     ratioUL = statsULs[saxes]/pt["UL"]
