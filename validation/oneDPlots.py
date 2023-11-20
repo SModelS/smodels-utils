@@ -134,6 +134,8 @@ def create1DPlot( validationPlot, silentMode=True,
             if "signal" in pt and "UL" in pt:
                 y = pt["signal"] / pt["UL"]
                 if "eUL" in pt:
+                    if type(pt["eUL"])==str:
+                        pt["eUL"]=eval(pt["eUL"])
                     ey = pt["signal"] / pt["eUL"]
             label = "error"
             values[label]["x"].append(x)
