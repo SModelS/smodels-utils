@@ -202,6 +202,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         if "y" in point["axes"] and point["axes"]["x"]<point["axes"]["y"]:
             print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
         if ul in point and point[ul] != None:
+            if type(point[ul])==str:
+                point[ul]=eval(point[ul])
             rs[ h ] = point["signal"] / point[ ul ]
         if "efficiency" in point and point["efficiency"] != None:
             effs[ h ] = point["efficiency"]
