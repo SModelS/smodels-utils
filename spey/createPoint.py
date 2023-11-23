@@ -57,9 +57,13 @@ def runSpeyCode():
     o = subprocess.getoutput ( cmd )
     print ( o )
 
-def createSpeyCode():
+def createSpeyCode( args, slhafile ):
     f=open(speyfilename,"wt")
     f.write( "#!/usr/bin/env python3\n\n" )
+    f.write( f"# validationfile: {args['validationfile']}\n" )
+    f.write( f"# slhafile: {slhafile}\n" )
+    f.write( f"# mother mass: {args['x']}\n" )
+    f.write( f"# daughter mass: {args['y']}\n" )
     with open ( "data.txt", "rt" ) as g:
         f.write ( g.read() )
     f.write (
@@ -138,7 +142,7 @@ def createSLHAFile ( args : Dict ) -> str:
 def create ( args : Dict ):
     slhafile = createSLHAFile ( args )
     runSModelS ( args, slhafile )
-    createSpeyCode()
+    createSpeyCode( args, slhafile )
     runSpeyCode()
 
 def createParallel ( args : Dict ):
@@ -159,7 +163,7 @@ def createParallel ( args : Dict ):
     for c in children:
         p.get()
     """
-    createSpeyCode()
+    createSpeyCode( args, slhafile )
     runSpeyCode()
 
 def main():
