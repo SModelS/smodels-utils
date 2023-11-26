@@ -1116,9 +1116,9 @@ class ValidationPlot():
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if os.path.exists ( f"{validationDir}/../validation_commentary.txt" ):
-            with open( f"{validationDir}/../validation_commentary.txt","rt") as f:
-                txt=f.read().strip()
-                f.close()
+            with open( f"{validationDir}/../validation_commentary.txt","rt") as f2:
+                txt=f2.read().strip()
+                f2.close()
                 meta["commentary"]=txt
         from smodels.theory import theoryPrediction
         if "spey" in theoryPrediction.StatsComputer.__module__:
