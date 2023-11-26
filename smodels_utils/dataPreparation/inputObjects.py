@@ -775,7 +775,13 @@ class TxNameInput(Locker):
             for i,plane in enumerate(self._goodPlanes):
                 if not infoAttr in plane.infoAttr:
                     continue
-                if hasattr(plane,infoAttr):
+                doValidateIt=True
+                if infoAttr in [ "axes", "validationTarball", "xrange", "yrange" ]:
+                    # plane.noValidation = True turns off this plane
+                    # as a validation target
+                    if hasattr(plane,"noValidation") and plane.noValidation:
+                        doValidateIt=False
+                if hasattr(plane,infoAttr) and doValidateIt:
                     planeHasInfo = True
                     infoList[i] = str(getattr(plane, infoAttr))
             if planeHasInfo:
