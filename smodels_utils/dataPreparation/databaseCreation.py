@@ -79,8 +79,8 @@ class DatabaseCreator(list):
         """
 
         self.t0 = time.time()
-        if os.path.exists ( "commentary.txt" ):
-            os.unlink ( "commentary.txt" )
+        if os.path.exists ( "validation_commentary.txt" ):
+            os.unlink ( "validation_commentary.txt" )
         self.exclusions = []
         self.metaInfo = None
         self.base = os.getcwd() + '/'
