@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from __future__ import print_function
 import sys
@@ -18,7 +18,8 @@ import copy
 def createBinnedModel(bins):
     """ create a sub-model with only <bins> (list of indices) """
     import model_90 as m9
-    m=Data( m9.data, m9.background, m9.covariance, m9.third_moment, m9.signal,"o90")
+    m=Data( m9.data, m9.background, m9.covariance, m9.third_moment, m9.signal,"o90",
+            lumi=1./fb )
     S=[]
     for i,s in enumerate ( m9.third_moment ):
         if i in bins:
@@ -47,7 +48,7 @@ def createBinnedModel(bins):
                 col.append ( e )
         C.append ( col )
     m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S,
-                efficiencies=sig, name="model%d" % n )
+               nsignal=sig, name="model%d" % n, lumi = 1. / fb )
     m._bins=bins
     return m
 
@@ -158,10 +159,10 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
     ret = { "#": nrun, "bins": bins, "nbins": len(bins) }
     mc=copy.deepcopy ( m )
     mc.skewness = None
-    mc.computeABC()
-    ulComp100 = UpperLimitComputer ( lumi = 1. / fb, ntoys=100, cl=.95 )
-    ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
-    ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
+    mc._computeABC()
+    ulComp100 = UpperLimitComputer ( cl=.95 )
+    ulComp = UpperLimitComputer ( cl=.95 )
+    ulComp10K = UpperLimitComputer ( cl=.95 )
     print ( "- Run #%d with %d bins:" % (nrun, len(bins)) )
 
     gul= [ None ]
@@ -170,7 +171,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         ul = None
         t0=time.time()
         try:
-            ul = ulComp.ulSigma ( mc, marginalize=False ).asNumber(fb)
+            ul = ulComp.getUpperLimitOnSigmaTimesEff ( mc ).asNumber(fb)
         except Exception as e:
             print ( "Exception at profiling: %s" % e )
             ul="%s %s" % (type(e), str(e) )
@@ -178,66 +179,12 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         ret["ul_profl"]=ul
         gul[0]=ul
 
-    if runAlgo("margl"):
-        print ( "- marginalizing linear" )
-        ul = None
-        t0=time.time()
-        try:
-            ul = ulComp.ulSigma ( mc, marginalize=True ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        ret["t_margl"]=time.time()-t0
-        ret["ul_margl"]=ul
-        gul[0]=ul
-
-    if runAlgo ( "marg100" ):
-        print ( "- marginalizing 100" )
-        ul = None
-        tm=time.time()
-        try:
-            ul = ulComp100.ulSigma ( m ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at marginalization 100: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        t0=time.time()
-        t_marg100 = t0-tm
-        ret["ul_marg100"]=ul
-        ret["t_marg100"]=t_marg100
-        gul[0]=ul
-
-    if runAlgo ( "marg" ):
-        print ( "- marginalizing" )
-        ul = None
-        t0=time.time()
-        try:
-            ul = ulComp.ulSigma ( m ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at marginalization: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        ret["ul_marg"]=ul
-        ret["t_marg"]=time.time()-t0
-        gul[0]=ul
-
-    if runAlgo ( "marg10" ):
-        ul=None
-        print ( "- marginalizing 10K" )
-        t0=time.time()
-        try:
-            ul = ulComp10K.ulSigma ( m ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at marginalization: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        ret["ul_marg10"]=ul
-        ret["t_marg10"]=time.time()-t0
-        gul[0]=ul
-
     if runAlgo("prof"):
         print ( "- profiling" )
         ul = None
         t0=time.time()
         try:
-            ul = ulComp.ulSigma ( m, marginalize=False ).asNumber(fb)
+            ul = ulComp.getUpperLimitOnSigmaTimesEff ( m ).asNumber(fb)
         except Exception as e:
             print ( "Exception at profiling: %s" % e )
             ul="%s %s" % (type(e), str(e) )
