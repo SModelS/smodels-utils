@@ -1120,6 +1120,8 @@ class ValidationPlot():
                 txt=f2.read().strip()
                 f2.close()
                 meta["commentary"]=txt
+        if hasattr ( self.expRes.globalInfo, "resultType" ):
+            meta["resultType"]=self.expRes.globalInfo.resultType
         from smodels.theory import theoryPrediction
         if "spey" in theoryPrediction.StatsComputer.__module__:
             import spey
