@@ -18,7 +18,7 @@ import copy
 def createBinnedModel(bins):
     """ create a sub-model with only <bins> (list of indices) """
     import model_90 as m9
-    m=Data( m9.data, m9.background, m9.covariance, m9.third_moment, m9.signal,"o90")
+    m=Data( m9.data, m9.background, m9.covariance, m9.third_moment, m9.signal,"o90", lumi = 1./fb)
     S=[]
     for i,s in enumerate ( m9.third_moment ):
         if i in bins:
