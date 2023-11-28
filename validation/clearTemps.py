@@ -10,13 +10,18 @@ def clear( hours : int, verbose : bool ):
     """
     files = glob.glob ( "tmp*" )
     files += glob.glob ( "_V*" )
+    files += glob.glob ( "../clip/temp/_V*" )
+    files += glob.glob ( f"{os.environ['OUTPUTS']}/_V*" )
     # files += glob.glob ( "pythia*" )
     t0=time.time()
     for f in files:
         timestamp = ( t0 - os.stat ( f ).st_mtime ) / 60 / 60.
         if timestamp > hours:
             print ( f"deleting {f}: {timestamp:.1f} hours old" )
-            shutil.rmtree ( f )
+            try:
+                shutil.rmtree ( f )
+            except NotADirectoryError as e:
+                os.unlink ( f )
         else:
             if verbose:
                 print ( f"keeping {f}: {timestamp:.1f} hours old" )
