@@ -649,7 +649,8 @@ if __name__ == "__main__":
                 "pngPlots": True, ## also png plots?
                 "recordPlotCreation": False, ## record the plot creation?
                 "pdfPlots": True, ## also pdf plots?
-                "expectationType": "posteriori",
+                # "expectationType": "posteriori",
+                "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
                 "maxcond": 1.0, ## maximum allowed condition violation in SModelS
