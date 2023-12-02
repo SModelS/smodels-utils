@@ -14,8 +14,9 @@ def getTriangulation ( picklefile : os.PathLike,
         outfile = hostname
     from smodels.experiment.databaseObj import Database
     obj = Database ( picklefile )
-    ers = obj.expResultList
     observed, expected = {}, {}
+    # ers = obj.expResultList
+    ers = obj.getExpResults() # we only do validated etc
     for er in ers:
         for ds in er.datasets:
             for txn in ds.txnameList:
