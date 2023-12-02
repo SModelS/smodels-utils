@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-""" simple script that compares two pickle files, see if there 
+""" simple script that compares two pickle files, see if there
     is any difference in the triangulation """
 
-import pickle, os
+import pickle, os, argparse
 
 def compareTriangulations ( o1, o2, label, tag ):
     hasDifference=False
@@ -21,7 +21,7 @@ def compareTriangulations ( o1, o2, label, tag ):
     return errors
 
 def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike ):
-    """ compare the two pickle files, look only at the intersection of 
+    """ compare the two pickle files, look only at the intersection of
         results """
     h1 = open ( pickle1, "rb" )
     meta1, observed1, expected1 = ( pickle.load ( h1 ) for x in range(3) )
@@ -48,4 +48,10 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike ):
 
 
 if __name__ == "__main__":
-    compare ( "two.pcl", "official.pcl" )
+    ap = argparse.ArgumentParser(description="compare two pickle files")
+    ap.add_argument('-1', '--file1', help='pickle file 1 [official.pcl]',
+            default='official.pcl')
+    ap.add_argument('-2', '--file2', help='pickle file 2 [two.pcl]',
+            default='two.pcl')
+    args = ap.parse_args()
+    compare ( args.file1, args.file2 )
