@@ -4,7 +4,7 @@
 So we can later compare the dictionaries.
 """
 
-import os, socket
+import os, socket, argparse
 
 def getTriangulation ( picklefile : os.PathLike ):
     from smodels.experiment.databaseObj import Database
@@ -32,4 +32,9 @@ def getTriangulation ( picklefile : os.PathLike ):
     # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
 if __name__ == "__main__":
-    getTriangulation ( "../../smodels-database/" )
+    ap = argparse.ArgumentParser(description="creates simplices dictionary file")
+    ap.add_argument('-d', '--dbpath',
+            help='path to database [../../smodels-database]', 
+            default='../../smodels-database')
+    args = ap.parse_args()
+    getTriangulation ( args.dbpath )
