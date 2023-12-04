@@ -5,20 +5,22 @@
 
 import pickle, os, argparse
 
-def compareTriangulations ( o1, o2, label, tag ):
+def compareTriangulations ( o1, o2, label, tag, errors ):
     hasDifference=False
-    errors=[]
     for i1,i2 in zip(o1,o2):
         if i1!=i2:
             hasDifference=True
             break
     if hasDifference:
-        print ( f"difference in {label}: {tag}" )
         errors.append ( tag )
+        if len(errors)<4:
+            print ( f"difference in {label}: {tag}" )
+        if len(errors)==4:
+            print ( f"(omitting more such errors)" )
     else:
         pass
         # print ( f"no difference in {otag}" )
-    return errors
+    # return errors
 
 def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike ):
     """ compare the two pickle files, look only at the intersection of
@@ -36,13 +38,13 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike ):
     for tag in otags:
         x1 = observed1[tag]
         x2 = observed2[tag]
-        errors += compareTriangulations ( x1, x2, "observed", tag )
+        compareTriangulations ( x1, x2, "observed", tag, errors )
     for tag in etags:
         x1 = expected1[tag]
         x2 = expected2[tag]
-        errors += compareTriangulations ( x1, x2, "expected", tag )
+        compareTriangulations ( x1, x2, "expected", tag, errors )
     if len(errors)>0:
-        print ( f"the following tags showed differences: {errors}" )
+        print ( f"the following tags showed {len(errors)} differences: {','.join(errors[:5])}" )
     else:
         print ( f"found no differences in triangulations" )
 
