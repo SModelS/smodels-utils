@@ -29,29 +29,31 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike,
     """ compare the two pickle files, look only at the intersection of
         results """
     h1 = open ( pickle1, "rb" )
-    meta1, observed1, expected1 = ( pickle.load ( h1 ) for x in range(3) )
+    dump1 = ( pickle.load ( h1 ) for x in range(3) )
     h1.close()
     h2 = open ( pickle2, "rb" )
-    meta2, observed2, expected2 = ( pickle.load ( h2 ) for x in range(3) )
+    dump2 = ( pickle.load ( h2 ) for x in range(3) )
     h2.close()
     ## get the intersections
-    otags = [ x for x in observed1.keys() if x in observed2.keys() ]
-    etags = [ x for x in expected1.keys() if x in expected2.keys() ]
+    osimplices1, osimplices2 = dump1["osimplices"], dump2["osimplices"]
+    esimplices1, esimplices2 = dump1["esimplices"], dump2["esimplices"]
+    otags = [ x for x in osimplices1.keys() if x in osimplices2.keys() ]
+    etags = [ x for x in esimplices1.keys() if x in esimplices2.keys() ]
     errors = []
     for tag in otags:
-        x1 = observed1[tag]
-        x2 = observed2[tag]
+        x1 = osimplices1[tag]
+        x2 = osimplices2[tag]
         compareTriangulations ( x1, x2, "observed", tag, errors )
     for tag in etags:
-        x1 = expected1[tag]
-        x2 = expected2[tag]
+        x1 = esimplices1[tag]
+        x2 = esimplices2[tag]
         compareTriangulations ( x1, x2, "expected", tag, errors )
     if len(errors)>0:
         print ( f"the following {len(errors)} tags showed differences: {','.join(errors[:5])}" )
     else:
         print ( f"found no differences in triangulations" )
     if interactive:
-        print ( "defined: otags, etags, observed1, observed2, expected1, expected2" )
+        print ( "defined: otags, etags, osimplices1, osimplices2, esimplices1, esimplices2" )
         import IPython; IPython.embed( colors = "neutral" )
 
 

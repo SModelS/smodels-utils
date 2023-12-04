@@ -13,13 +13,15 @@ def getTriangulation ( picklefile : os.PathLike,
     if outfile == None:
         outfile = hostname
     from smodels.experiment.databaseObj import Database
-    if not picklefile.endswith( ".pcl" ):
+    removeOldPickles = True
+    if removeOldPickles and not picklefile.endswith( ".pcl" ):
         cmd = f"rm -rf {picklefile}/**/.pcl {picklefile}/*.pcl" 
         print ( f"removing all old pickles: {cmd}" )
         subprocess.getoutput ( cmd )
         # sys.exit()
     obj = Database ( picklefile )
-    observed, expected = {}, {}
+    osimplices, esimplices = {}, {}
+    opoints, epoints = {}, {}
     # ers = obj.expResultList
     ers = obj.getExpResults() # we only do validated etc
     for er in ers:
@@ -27,27 +29,30 @@ def getTriangulation ( picklefile : os.PathLike,
             for txn in ds.txnameList:
                 stxn = f"{er.globalInfo.id}:{ds.dataInfo.dataId}:{txn}"
                 print ( stxn )
-                simplices = txn.txnameData.tri.simplices.tolist()
-                observed[stxn]=simplices
+                tri = txn.txnameData.tri
+                simplices = tri.simplices.tolist()
+                osimplices[stxn]=simplices
+                opoints[stxn] = tri.points.tolist()
                 if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
-                    simplices = txn.txnameDataExp.tri.simplices.tolist()
-                    expected[stxn]=simplices
+                    simplices = tri.simplices.tolist()
+                    esimplices[stxn]=simplices
+                    epoints[stxn] = tri.points.tolist()
     writePythonFile=False
     if writePythonFile:
         with open ( f"{outfile}.py", "wt" ) as f:
             f.write ( f"# hostname {hostname}\n" )
             f.write ( f"# database v{obj.databaseVersion}\n" )
             f.write ( f"# picklefile {picklefile}\n" )
-            f.write ( f"observed={observed}\n" )
-            f.write ( f"expected={observed}\n" )
+            f.write ( f"osimplices={osimplices}\n" )
+            f.write ( f"esimplices={esimplices}\n" )
             f.close()
     meta = { "hostname": hostname, "time": time.asctime(),
              "dbversion": obj.databaseVersion, "picklefile": picklefile }
     f = open ( f"{outfile}.pcl", "wb" )
     import pickle
-    pickle.dump ( meta, f )
-    pickle.dump ( observed, f )
-    pickle.dump ( expected, f )
+    dump = { "meta": meta, "osimplices": osimplices, "esimplices", esimplices, 
+             "opoints": opoints, "epoints": epoints }
+    pickle.dump ( dump, f )
     f.close()
                     
     # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
