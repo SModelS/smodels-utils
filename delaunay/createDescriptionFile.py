@@ -58,8 +58,10 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
     f = open ( f"{outfile}.pcl", "wb" )
     import pickle
     dump = { "meta": meta, "osimplices": osimplices, "esimplices": esimplices, 
-             "opoints": opoints, "epoints": epoints, "orot": orot, "erot": erot,
-             "odeltax": odltx, "edeltax": edltx }
+             "orot": orot, "erot": erot, "odeltax": odltx, "edeltax": edltx }
+    if False:
+        dump["opoints"]=opoints
+        dump["epoints"]=epoints
     pickle.dump ( dump, f )
     f.close()
     # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
