@@ -35,15 +35,15 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
                 simplices = tri.simplices.tolist()
                 osimplices[stxn]=simplices
                 opoints[stxn] = [ list(p) for p in tri.points ]
-                orot[stxn] = list ( txn.txnameData._V )
-                odltx[stxn] = list ( txn.txnameData.delta_x )
+                orot[stxn] = [ list(t) for t in txn.txnameData._V ]
+                odltx[stxn] = [ list(t) for t in  txn.txnameData.delta_x ]
                 if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
                     tri = txn.txnameDataExp.tri
                     simplices = tri.simplices.tolist()
                     esimplices[stxn]=simplices
                     epoints[stxn] = [ list(p) for p in tri.points ]
-                    erot[stxn] = list ( txn.txnameDataExp._V )
-                    edltx[stxn] = list ( txn.txnameDataExp.delta_x )
+                    erot[stxn] = [ list(t) for t in txn.txnameDataExp._V ]
+                    edltx[stxn] = [ list(t) for t in  txn.txnameDataExp.delta_x ]
     writePythonFile=False
     if writePythonFile:
         with open ( f"{outfile}.py", "wt" ) as f:
