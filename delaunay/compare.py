@@ -6,6 +6,8 @@
 import pickle, os, argparse
 
 def compareTriangulations ( o1, o2, label, tag, errors ):
+    o1.sort()
+    o2.sort()
     hasDifference=False
     for i1,i2 in zip(o1,o2):
         if i1!=i2:
@@ -22,7 +24,8 @@ def compareTriangulations ( o1, o2, label, tag, errors ):
         # print ( f"no difference in {otag}" )
     # return errors
 
-def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike ):
+def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike,
+              interactive : bool = False ):
     """ compare the two pickle files, look only at the intersection of
         results """
     h1 = open ( pickle1, "rb" )
@@ -44,9 +47,12 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike ):
         x2 = expected2[tag]
         compareTriangulations ( x1, x2, "expected", tag, errors )
     if len(errors)>0:
-        print ( f"the following tags showed {len(errors)} differences: {','.join(errors[:5])}" )
+        print ( f"the following {len(errors)} tags showed differences: {','.join(errors[:5])}" )
     else:
         print ( f"found no differences in triangulations" )
+    if interactive:
+        print ( "defined: otags, etags, observed1, observed2, expected1, expected2" )
+        import IPython; IPython.embed( colors = "neutral" )
 
 
 if __name__ == "__main__":
@@ -55,5 +61,7 @@ if __name__ == "__main__":
             default='official.pcl')
     ap.add_argument('-2', '--file2', help='pickle file 2 [two.pcl]',
             default='two.pcl')
+    ap.add_argument('-i', '--shell', help='start interactive shell at end',
+            action="store_true" )
     args = ap.parse_args()
-    compare ( args.file1, args.file2 )
+    compare ( args.file1, args.file2, args.shell )
