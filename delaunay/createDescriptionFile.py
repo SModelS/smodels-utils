@@ -8,7 +8,7 @@ import os, socket, argparse, time, subprocess, sys
 from typing import Union
 
 def getTriangulation ( picklefile : os.PathLike, 
-                       outfile : Union[None,os.PathLike] ):
+                       outfile : Union[None,os.PathLike] ) -> os.PathLike:
     hostname = socket.gethostname()
     if outfile == None:
         outfile = hostname
@@ -57,8 +57,8 @@ def getTriangulation ( picklefile : os.PathLike,
              "opoints": opoints, "epoints": epoints }
     pickle.dump ( dump, f )
     f.close()
-                    
     # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+    return f"{outfile}.pcl"
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="creates simplices dictionary file")
@@ -68,5 +68,10 @@ if __name__ == "__main__":
     ap.add_argument('-o', '--outfile',
             help='output file without extension. if none, then hostname [None]', 
             default=None )
+    ap.add_argument('-u', '--upload',
+            help='upload file to clip-login-1',  action="store_true" )
     args = ap.parse_args()
-    getTriangulation ( args.dbpath, args.outfile )
+    of = getTriangulation ( args.dbpath, args.outfile )
+    if args.upload:
+        cmd = f"scp {of} clip-login-1:git/smodels-utils/delaunay/"
+        subprocess.getoutput ( cmd )
