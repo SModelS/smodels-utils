@@ -36,7 +36,7 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
                 if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
                     simplices = tri.simplices.tolist()
                     esimplices[stxn]=simplices
-                    epoints[stxn] = list ( tri.points )
+                    epoints[stxn] = [ list(p) for p in tri.points ]
     writePythonFile=False
     if writePythonFile:
         with open ( f"{outfile}.py", "wt" ) as f:

@@ -29,14 +29,16 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike,
     """ compare the two pickle files, look only at the intersection of
         results """
     h1 = open ( pickle1, "rb" )
-    dump1 = ( pickle.load ( h1 ) for x in range(3) )
+    dump1 = pickle.load ( h1 )
     h1.close()
     h2 = open ( pickle2, "rb" )
-    dump2 = ( pickle.load ( h2 ) for x in range(3) )
+    dump2 = pickle.load ( h2 )
     h2.close()
     ## get the intersections
     osimplices1, osimplices2 = dump1["osimplices"], dump2["osimplices"]
     esimplices1, esimplices2 = dump1["esimplices"], dump2["esimplices"]
+    opoints1, opoints2 = dump1["opoints"], dump2["opoints"]
+    epoints1, epoints2 = dump1["epoints"], dump2["epoints"]
     otags = [ x for x in osimplices1.keys() if x in osimplices2.keys() ]
     etags = [ x for x in esimplices1.keys() if x in esimplices2.keys() ]
     errors = []
