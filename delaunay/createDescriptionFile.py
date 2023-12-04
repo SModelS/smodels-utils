@@ -32,7 +32,7 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
                 tri = txn.txnameData.tri
                 simplices = tri.simplices.tolist()
                 osimplices[stxn]=simplices
-                opoints[stxn] = list ( tri.points )
+                opoints[stxn] = [ list(p) for p in tri.points ]
                 if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
                     simplices = tri.simplices.tolist()
                     esimplices[stxn]=simplices
