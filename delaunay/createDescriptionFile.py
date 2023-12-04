@@ -23,7 +23,10 @@ def getTriangulation ( picklefile : os.PathLike,
     osimplices, esimplices = {}, {}
     opoints, epoints = {}, {}
     # ers = obj.expResultList
-    ers = obj.getExpResults() # we only do validated etc
+    anaIds = [ "all" ]
+    # for starters its sufficient to look only at a few
+    anaIds = [ "CMS-SUS-21-002" ]
+    ers = obj.getExpResults( analysisIDs = anaIds ) # we only do validated etc
     for er in ers:
         for ds in er.datasets:
             for txn in ds.txnameList:
