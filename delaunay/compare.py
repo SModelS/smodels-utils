@@ -6,9 +6,9 @@
 import pickle, os, argparse
 
 def compareTriangulations ( o1, o2, label, tag, errors ):
+    hasDifference=False
     o1.sort()
     o2.sort()
-    hasDifference=False
     for i1,i2 in zip(o1,o2):
         if i1!=i2:
             hasDifference=True
