@@ -15,9 +15,9 @@ from testAnalysisCombinations import createLlhds
 import numpy as np
 import pyslha
 import smodels_utils.plotting.mpkitty as plt
-from labellines import *
+# from labellines import *
 import seaborn as sns
-
+from typing import Tuple
 
 def getCombination(inputFile, parameterFile):
 
@@ -100,7 +100,7 @@ def getCombination(inputFile, parameterFile):
                                                                combineAnas)
     return combiner,theoryPredictions
 
-def getLlhds(combiner,setup):
+def getLlhds(combiner,setup) -> Tuple:
     from math import isnan
 
     muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
@@ -108,7 +108,13 @@ def getLlhds(combiner,setup):
     normalise = setup["normalise"]
     llhds = {'combined' : np.ones(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
+    if not hasattr ( combiner, "theoryPredictions" ):
+        print ( "[plotAnalysisCombinations] no theory preds. check input." )
+        return [],{}
     tpreds = combiner.theoryPredictions
+    if tpreds is None:
+        print ( "[plotAnalysisCombinations] no theory preds. check input." )
+        return [],{}
     for t in tpreds:
         Id = t.analysisId()
         #t.computeStatistics( expected = expected )
@@ -179,12 +185,6 @@ def getPlot(inputFile,parameterFile,options):
 
     r_exps = [(tpDict[ana]['r_exp'], ana) for ana in tpDict]
     r_exps.sort(reverse=True)
-    llhdDict_ordered = {'combined': llhdDict['combined']}
-    print("mu values:",muvals)
-    print("Combined likelihood:",llhdDict['combined'])
-    for r_exp,ana in r_exps:
-        llhdDict_ordered[ana] = llhdDict[ana]
-
     colors = sns.color_palette("tab10")
     colorsB = sns.color_palette("Paired",12)
     colorsC = sns.color_palette("colorblind",9)
@@ -206,14 +206,19 @@ def getPlot(inputFile,parameterFile,options):
                  'CMS-SUS-13-012' : colors[6]
                  }
 
-    # muhat = combiner.muhat(expected = setup["expected"])
-    # lmax = combiner.lmax(expected = setup["expected"])
-    # lsm = combiner.lsm(expected = setup["expected"])
-    # lbsm = combiner.likelihood(mu=1.0,expected = setup["expected"])
     ymin = 0.
     i = 1
 
     fig = plt.figure(figsize=plotOptions['figsize'])
+    llhdDict_ordered = {}
+    print ( "dict", llhdDict )
+    if "combined" in llhdDict:
+        llhdDict_ordered['combined'] = llhdDict['combined']
+        print("mu values:",muvals)
+        print("Combined likelihood:",llhdDict['combined'])
+    for r_exp,ana in r_exps:
+        llhdDict_ordered[ana] = llhdDict[ana]
+
     for anaID,l in llhdDict_ordered.items():
         likelihoodInterp = interp1d(muvals,l)
         if anaID == 'combined_prev':
