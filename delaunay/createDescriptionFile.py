@@ -4,7 +4,7 @@
 So we can later compare the dictionaries.
 """
 
-import os, socket, argparse, time
+import os, socket, argparse, time, subprocess, sys
 from typing import Union
 
 def getTriangulation ( picklefile : os.PathLike, 
@@ -13,6 +13,11 @@ def getTriangulation ( picklefile : os.PathLike,
     if outfile == None:
         outfile = hostname
     from smodels.experiment.databaseObj import Database
+    if not picklefile.endswith( ".pcl" ):
+        cmd = f"rm -rf {picklefile}/**/.pcl {picklefile}/*.pcl" 
+        print ( f"removing all old pickles: {cmd}" )
+        subprocess.getoutput ( cmd )
+        # sys.exit()
     obj = Database ( picklefile )
     observed, expected = {}, {}
     # ers = obj.expResultList
