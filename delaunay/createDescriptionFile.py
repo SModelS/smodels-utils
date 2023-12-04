@@ -32,11 +32,11 @@ def getTriangulation ( picklefile : os.PathLike,
                 tri = txn.txnameData.tri
                 simplices = tri.simplices.tolist()
                 osimplices[stxn]=simplices
-                opoints[stxn] = tri.points.tolist()
+                opoints[stxn] = list ( tri.points )
                 if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
                     simplices = tri.simplices.tolist()
                     esimplices[stxn]=simplices
-                    epoints[stxn] = tri.points.tolist()
+                    epoints[stxn] = list ( tri.points )
     writePythonFile=False
     if writePythonFile:
         with open ( f"{outfile}.py", "wt" ) as f:
@@ -50,7 +50,7 @@ def getTriangulation ( picklefile : os.PathLike,
              "dbversion": obj.databaseVersion, "picklefile": picklefile }
     f = open ( f"{outfile}.pcl", "wb" )
     import pickle
-    dump = { "meta": meta, "osimplices": osimplices, "esimplices", esimplices, 
+    dump = { "meta": meta, "osimplices": osimplices, "esimplices": esimplices, 
              "opoints": opoints, "epoints": epoints }
     pickle.dump ( dump, f )
     f.close()
