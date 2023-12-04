@@ -9,14 +9,14 @@ def compareTriangulations ( o1, o2, label, tag, errors ):
     hasDifference=False
     o1.sort()
     o2.sort()
-    for i1,i2 in zip(o1,o2):
+    for c,(i1,i2) in enumerate(zip(o1,o2)):
         if i1!=i2:
             hasDifference=True
             break
     if hasDifference:
         errors.append ( tag )
         if len(errors)<4:
-            print ( f"difference in {label}: {tag}" )
+            print ( f"difference in #{c} {label}: {tag}" )
         if len(errors)==4:
             print ( f"(omitting more such errors)" )
     else:
