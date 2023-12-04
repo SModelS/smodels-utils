@@ -23,6 +23,8 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
     obj = Database ( picklefile )
     osimplices, esimplices = {}, {}
     opoints, epoints = {}, {}
+    orot, erot = {}, {}
+    odltx, edltx = {}, {}
     ers = obj.getExpResults( analysisIDs = anaIds ) # we only do validated etc
     for er in ers:
         for ds in er.datasets:
@@ -33,10 +35,15 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
                 simplices = tri.simplices.tolist()
                 osimplices[stxn]=simplices
                 opoints[stxn] = [ list(p) for p in tri.points ]
+                orot = txn.txnameData._V
+                odltx = txn.txnameData.delta_x
                 if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
+                    tri = txn.txnameDataExp.tri
                     simplices = tri.simplices.tolist()
                     esimplices[stxn]=simplices
                     epoints[stxn] = [ list(p) for p in tri.points ]
+                    erot = txn.txnameDataExp._V
+                    edltx = txn.txnameDataExp.delta_x
     writePythonFile=False
     if writePythonFile:
         with open ( f"{outfile}.py", "wt" ) as f:
@@ -51,7 +58,8 @@ def getTriangulation ( picklefile : os.PathLike, anaIds : List,
     f = open ( f"{outfile}.pcl", "wb" )
     import pickle
     dump = { "meta": meta, "osimplices": osimplices, "esimplices": esimplices, 
-             "opoints": opoints, "epoints": epoints }
+             "opoints": opoints, "epoints": epoints, "orot": orot, "erot": erot,
+             "odeltax": odltx, "edeltax": edltx }
     pickle.dump ( dump, f )
     f.close()
     # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
