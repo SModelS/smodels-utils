@@ -9,7 +9,7 @@ from typing import Union, List
 
 def removePickles ( picklefile : os.PathLike, really : bool  ):
     if really and not picklefile.endswith( ".pcl" ):
-        cmd = f"rm -rf {picklefile}/**/.pcl {picklefile}/*.pcl" 
+        cmd = f"rm -rf {picklefile}/**/.*pcl {picklefile}/*.pcl" 
         print ( f"removing all old pickles: {cmd}" )
         subprocess.getoutput ( cmd )
         # sys.exit()
