@@ -55,7 +55,9 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike,
     else:
         print ( f"found no differences in triangulations" )
     if interactive:
-        print ( "defined: otags, etags, osimplices1, osimplices2, esimplices1, esimplices2" )
+        print ( "defined: otags, etags, osimplices1, osimplices2, esimplices1, esimplices2, label" )
+        if len(otags):
+            label = otags[0]
         import IPython; IPython.embed( colors = "neutral" )
 
 
