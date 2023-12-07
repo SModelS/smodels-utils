@@ -449,7 +449,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     try:
         buPath = databasePath
         if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
-            logger.info ( f"{YELLOW}found a validation.pcl file in {databasePath}! Will use it!{RESET}" )
+            logger.info ( f"{RED}found a validation.pcl file in {databasePath}! Will use it! Make sure it is not outdated!{RESET}" )
             buPath = os.path.join ( databasePath, "validation.pcl" )
         import shutil # should actually only be necessary for
         # the transitional period to ml-spey
