@@ -468,9 +468,24 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         import smodels.experiment.datasetObj
         smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
 
-    import shutil # for transition to spey-ml
-    # if it fails, we wanna know where, so no try ... except
-    db = Database( databasePath, force_load, subpickle = True )
+    try:
+        buPath = databasePath
+        if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
+            logger.info ( f"{YELLOW}found a validation.pcl file in {databasePath}! Will use it!{RESET}" )
+            buPath = os.path.join ( databasePath, "validation.pcl" )
+        import shutil # should actually only be necessary for
+        # the transitional period to ml-spey
+        db = Database( buPath, force_load, discard_zeroes = False,
+                       subpickle = True )
+        if not "validation.pcl" in buPath: # ok so we create a new pickle
+            currentPickle = os.path.join ( buPath, "db30.pcl" )
+            if os.path.exists ( currentPickle ) and False:
+                # per default we do not do this
+                shutil.copyfile ( currentPickle, os.path.join ( databasePath, "validation.pcl" ) )
+    except Exception as e:
+        logger.error("Error loading database at %s" % ( databasePath ) )
+        logger.error("Error: %s" % str(e) )
+        sys.exit()
 
     logger.info('-- Running validation...')
 
@@ -657,8 +672,8 @@ if __name__ == "__main__":
                 "pngPlots": True, ## also png plots?
                 "recordPlotCreation": False, ## record the plot creation?
                 "pdfPlots": True, ## also pdf plots?
-                # "expectationType": "posteriori",
-                "expectationType": "prior", # the expectation type used for eULs
+                "expectationType": "posteriori",
+                # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
                 "maxcond": 1.0, ## maximum allowed condition violation in SModelS
