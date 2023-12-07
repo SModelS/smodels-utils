@@ -37,8 +37,9 @@ def compare ( pickle1 : os.PathLike, pickle2 : os.PathLike,
     ## get the intersections
     osimplices1, osimplices2 = dump1["osimplices"], dump2["osimplices"]
     esimplices1, esimplices2 = dump1["esimplices"], dump2["esimplices"]
-    opoints1, opoints2 = dump1["opoints"], dump2["opoints"]
-    epoints1, epoints2 = dump1["epoints"], dump2["epoints"]
+    if "opoints" in dump1:
+        opoints1, opoints2 = dump1["opoints"], dump2["opoints"]
+        epoints1, epoints2 = dump1["epoints"], dump2["epoints"]
     otags = [ x for x in osimplices1.keys() if x in osimplices2.keys() ]
     etags = [ x for x in esimplices1.keys() if x in esimplices2.keys() ]
     errors = []
