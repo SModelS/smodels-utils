@@ -475,8 +475,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             buPath = os.path.join ( databasePath, "validation.pcl" )
         import shutil # should actually only be necessary for
         # the transitional period to ml-spey
-        db = Database( buPath, force_load, discard_zeroes = False,
-                       subpickle = True )
+        db = Database( buPath, force_load,subpickle = True )
         if not "validation.pcl" in buPath: # ok so we create a new pickle
             currentPickle = os.path.join ( buPath, "db30.pcl" )
             if os.path.exists ( currentPickle ) and False:
