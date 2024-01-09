@@ -210,35 +210,13 @@ class BestCombinationFinder(object):
         if len(best_comb) == 1:     #just 1 best tp, no need for combining
             #print("\n Best Combination ", best_comb[0].analysisId())
             return best_comb
-            
-        #best_comb = self.removeAnalysis(best_comb)
+
         
         #return TheoryPredictionCombiner object
         self.combiner_list = [TheoryPredictionsCombiner(best_comb)]                     #combine tp
         #print("\n Best Combination ", self.combiner_list[0].analysisId())
         return self.combiner_list
-        
-    
-    def removeAnalysis(self, best_comb):
-        "Remove Analysis which have low sensitivity compared to the most sensitive from the combination"
-        tp_rvalues = [tp.getRValue(expected=True) for tp in best_comb]
-        rmax = max(tp_rvalues)
-        
-        index = []
-        
-        for r in tp_rvalues:
-            if r/rmax > 0.01: index.append(tp_rvalues.index(r))  #sigma_min/sigma < 0.01??
-        
-        newlistoftp = []
-        for tp in best_comb:
-            if best_comb.index(tp) in index: 
-                logging.warning("Removing theory Prediction from best combination as sensitivity is very low: %s with r value %s"%(tp.analysisId(), tp_rvalues[best_comb.index(tp)]))
-                continue
-            newlistoftp.append(tp)
-        
-        return newlistoftp
-        
-        
+
         
     def checkSensitive(self):
         
@@ -260,38 +238,6 @@ class BestCombinationFinder(object):
             
             self.listoftp = tp_list
 
-        
-        '''
-        rmax = max(tp_rvalues)
-        bestResult = self.listoftp[tp_rvalues.index(rmax)].analysisId()
-        
-        for tp in self.listoftp:
-            if not tp: continue
-            r = tp.getRValue(expected = True)
-            if r>rmax:
-                rmax = r
-                bestResult = tp.analysisId()
-        
-        self.ntop = 3
-        #comb = self.findBestCombination()
-        comb_rvalues = []
-        for c in self.combiner_list:
-            if c: comb_rvalues.append(c.getRValue(expected = True))
-        print("\n R-Values of top combinations ", comb_rvalues, " and R-value of most sensitive analysis %s is " %(bestResult), rmax)
-        if comb_rvalues[0] >= rmax:
-            if comb_rvalues[0] == max(comb_rvalues):
-                if bestResult in self.combiner_list[0].analysisId(): return comb_rvalues[0]
-                else:
-                    logger.error("most sensitive analysis is not included in the best combination")
-                    return 0
-                    
-            else:
-                logger.error("sensitivity of best combination is lower than that of the combination ranked %i " %(comb_rvalues.index(max(comb_rvalues))+1))
-                return 0
-        else:
-            logger.error("sensitivity of best combination is lower than that of the most sensitive analysis: %s" %(bestResult))
-            return 0
-        '''    
         
 
 
