@@ -386,7 +386,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                   transform=fig.transFigure, c = "blue", fontsize = 6 )
 
     if kfactor is not None and abs ( kfactor - 1.) > .01:
-        plt.text( .65,.83, "k-factor = %.2f" % kfactor, fontsize=10,
+        plt.text( .13,.83, "k-factor = %.2f" % kfactor, fontsize=10,
                   c="gray", transform = fig.transFigure )
     if options["preliminary"]:
         ## preliminary label, pretty plot
