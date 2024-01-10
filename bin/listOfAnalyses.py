@@ -166,7 +166,7 @@ class Lister:
         In total, we have results from 15 ATLAS and 18 CMS 8 TeV searches.
         ATLAS upper limits: 13 analyses, 34 results
         """
-        self.f.write ( "\n## Stats, by run, experiment, type\n" )
+        self.f.write ( "\n## Stats by run, experiment, type\n" )
         for sqrts in [ 13, 8 ]:
             run = 1
             if sqrts == 13: run = 2
