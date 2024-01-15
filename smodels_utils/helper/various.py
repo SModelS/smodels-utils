@@ -57,7 +57,7 @@ def getCollaboration ( anaid : Union[Text,Dict] ):
 
 def getSqrts ( Id : str ):
     """ given analysis id <Id>, determine sqrts """
-    if Id in [ "CMS-EXO-16-057" ]:
+    if Id.startswith ( "CMS-EXO-16-057" ): # an exceptional case
         return 8
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
     year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
@@ -75,6 +75,8 @@ def getSqrts ( Id : str ):
     return 13
 
 def findCollaboration ( anaid : str ) -> str:
+    """ a trivial convenience function. tell the collaboration name
+    from the analysis name """
     if "cms" in anaid.lower():
         return "CMS"
     if "atlas" in anaid.lower():
