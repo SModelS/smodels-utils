@@ -57,6 +57,8 @@ def getCollaboration ( anaid : Union[Text,Dict] ):
 
 def getSqrts ( Id : str ):
     """ given analysis id <Id>, determine sqrts """
+    if Id in [ "CMS-EXO-16-057" ]:
+        return 8
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
     year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
     year = year.replace("CONF-","").replace("CERN-EP-","")
@@ -71,6 +73,13 @@ def getSqrts ( Id : str ):
     if year < 15:
         return 8
     return 13
+
+def findCollaboration ( anaid : str ) -> str:
+    if "cms" in anaid.lower():
+        return "CMS"
+    if "atlas" in anaid.lower():
+        return "ATLAS"
+    return "???"
 
 def cutPoints ( points, ranges ) -> dict:
     """ cut the points at ranges 
@@ -391,4 +400,6 @@ def getValidationModuleFromPath ( ipath, analysis ):
 
 
 if __name__ == "__main__":
-    print ( "This machine has %d CPUs" % nCPUs() )
+    #from smodels.base.runtime import nCPUs
+    #print ( "This machine has %d CPUs" % nCPUs() )
+    print ( "srqts", getSqrts ( "CMS-EXO-16-057" ) )
