@@ -248,10 +248,14 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     if not os.path.isfile(jsonfile):
         jsonfile = os.path.join(expResult.path,'exclusion_lines.json')
         if not os.path.isfile(jsonfile):
-            logger.error("json file %s not found" % jsonfile )
-            from rootPlottingFuncs import getExclusionCurvesForFromSmsRoot
-            return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes,
-                    get_all, expected )
+            logger.error( f"json file {jsonfile} not found" )
+            if os.path.exists ( os.path.join ( expResult.path, "sms.root" ) ):
+                logger.warning ( f"trying with sms.root, but please switch!" )
+                from rootPlottingFuncs import getExclusionCurvesForFromSmsRoot
+                return getExclusionCurvesForFromSmsRoot ( expResult, txname, axes,
+                        get_all, expected )
+            # no exclusion_lines as well as no sms.root
+            return None
     from smodels_utils.helper import various
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )

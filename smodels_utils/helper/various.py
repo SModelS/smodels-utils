@@ -216,7 +216,8 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                   but dictionaries instead
 
     :return: a dictionary, where the keys are the TxName strings
-            and the values are the respective dictionaries of coordinates.
+    and the values are the respective dictionaries of coordinates.
+    None, if no exclusion lines have been found.
     """
     from validationHelpers import getAxisType
     axisType = getAxisType ( axes )
