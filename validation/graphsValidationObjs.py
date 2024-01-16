@@ -113,11 +113,16 @@ class ValidationPlot():
         self.validationType = "unknown"
 
     def __str__(self):
-
+        axes = self.axes
+        axes = axes.replace(",","").replace("{","").replace("}","").\
+                    replace(":","").replace("'","").replace(" ","")
+        vstr = f"{self.expRes.globalInfo.id}:{self.txName}_{axes}"
+        """
         vstr = "Validation plot for\n"
         vstr += 'id: %s\n' % self.expRes.globalInfo.id
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.axes
+        """
         return vstr
 
     def computeHulls ( self ):
@@ -258,7 +263,7 @@ class ValidationPlot():
         """
 
         if not os.path.isdir(slhadir) and not os.path.isfile(slhadir):
-            logger.error("SLHA files not found in %s for %s" %(slhadir,str(self)))
+            logger.error( f"SLHA files not found in {slhadir} for {str(self)}" )
             sys.exit()
         else:
             self.slhaDir = slhadir
