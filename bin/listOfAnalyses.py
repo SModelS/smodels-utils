@@ -548,7 +548,7 @@ class Lister:
             self.dotlessv = ver
         self.ignore = args.ignore ## ignore validation flags
         self.includeFastlim = args.fastlim
-        self.expRes = self.database.getExpResults ( )
+        self.expRes = self.database.getExpResults ( useNonValidated = self.ignore  )
         if not self.includeSuperseded:
             self.expRes = manips.filterSupersededFromList ( self.expRes )
         if not self.includeFastlim:
