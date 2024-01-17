@@ -295,6 +295,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChipChimSlepSlepAll': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TRV1': 'ZPrime --> 2*MET',
+    'TRV1jj': 'ZPrime --> 2*MET',
     'TRS1': 'H0 --> 2*MET',
 }
 
@@ -501,6 +502,7 @@ motherDict = {"T1" :  "gluino",
     "TChiChipmSlep" :  "neutralino_2 chargino^pm_1",
     "TRS1": "H0",
     "TRV1": "ZPrime",
+    "TRV1jj": "ZPrime",
 }
 
 
@@ -949,7 +951,7 @@ def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
         ret = ['m_{#tilde{#chi}_{2}^{0}} = x, m_{#tilde{#chi}_{2}^{0}} - m_{#tilde{#chi}_{1}^{0}} = y',
                'm_{#tilde{#chi}^{#pm}_{1}} = .5 m_{#tilde{#chi}_{2}^{0}} + .5 m_{#tilde{#chi}_{1}^{0}}'  ]
         return rootToLatex ( ret, outputtype )
-    if axes[0] != axes[1]:
+    if len(axes)>1 and axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
         return "N/A"
 
