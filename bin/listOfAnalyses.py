@@ -32,6 +32,7 @@ class Lister:
 
     def metaStatisticsPlot ( self ):
         # return ## FIXME remove
+        import sys
         sys.path.insert(0,"../../protomodels/ptools")
         sys.path.insert(0,"../../protomodels")
         sys.path.insert(0,"../../")
@@ -59,7 +60,7 @@ class Lister:
         cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
         os.system ( cmd )
         print ( f"[listOfAnalyses] {cmd}" )
-        if os.path.exists ( poptions["dictfile"] ):
+        if os.path.exists ( poptions["dictfile"] ) and not self.keep:
             os.unlink ( poptions["dictfile"] )
 
     def convert ( self, string ):
@@ -517,10 +518,13 @@ class Lister:
                                  help='add info about likelihoods' )
         argparser.add_argument ( '-f', '--fastlim', action='store_true',
                                  help='add fastlim results' )
+        argparser.add_argument ( '-k', '--keep', action='store_true',
+                                 help='keep temporary files, like temp.dict' )
         argparser.add_argument ( '-a', '--add_version', action='store_true',
                                  help='add version labels to links' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
+        self.keep = args.keep
         self.includeSuperseded = not args.no_superseded
         self.likelihoods = args.likelihoods
         self.dbpath = args.database
