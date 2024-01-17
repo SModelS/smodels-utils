@@ -24,7 +24,7 @@ codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
         cmd = f"mkdir {Dir}"
-        subprocess.getoutput ( cmd )
+        o = subprocess.getoutput ( cmd )
 
 def startServer ( rundir, dry_run, time ):
     """ start the database server in <rundir> """
@@ -611,7 +611,7 @@ def main():
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
         cheatcode = args.cheatcode
         if nmax == 0:
-            nmax = nmin #+ 1
+            nmax = nmin + 1
         nworkers = args.nmax - args.nmin + 1
         nprocesses = min ( args.nprocesses, nworkers )
         if nprocesses == 0:
