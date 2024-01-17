@@ -718,6 +718,12 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
+            if name == "globalInfo":
+                if attr == "sqrts" and type(value)==int:
+                    # normalize inputs!
+                    value=f"{value}*TeV"
+                if attr == "lumi" and type(value) in [ int, float ]:
+                    value=f"{value}/fb"
             if name == "dataInfo" and attr == "jsonfile":
                 # we copy the jsonfile and rewrite the value field
                 sourcefile = "%s/%s" % ( self.base, value )
