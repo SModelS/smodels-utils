@@ -62,6 +62,32 @@ class Lister:
         print ( f"[listOfAnalyses] {cmd}" )
         if os.path.exists ( poptions["dictfile"] ) and not self.keep:
             os.unlink ( poptions["dictfile"] )
+        if self.fudged:
+            options["fudge"]=0.7
+            options["suffix"]="fudge"
+            del plotter
+            del modifier
+            modifier = expResModifier.ExpResModifier ( options )
+            from protomodels.plotting import plotDBDict
+            poptions = { "topologies": None, "roughviz": False }
+            poptions["dictfile"] = "./fudge.dict"
+            poptions["show"] = True
+            poptions["title"] = ""
+            poptions["Zmax"] = 3.25
+            poptions["nbins"] = 13
+            poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
+               'plotStats': False }
+            # poptions["roughviz"] = False
+            poptions["pvalues"] = False
+            poptions["outfile"] = "tmp.png"
+            plotter = plotDBDict.Plotter ( poptions )
+            #print ( "[listOfAnalyses] ending roughviz" )
+            sigsplot = self.significancesPlotFileName( "fudged" )
+            cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
+            os.system ( cmd )
+            print ( f"[listOfAnalyses] {cmd}" )
+            if os.path.exists ( poptions["dictfile"] ) and not self.keep:
+                os.unlink ( poptions["dictfile"] )
 
     def convert ( self, string ):
         ret = string.replace ( ">=", "&ge;" )
@@ -139,7 +165,11 @@ class Lister:
         self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large significances.</sub></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
-    def significancesPlotFileName ( self ):
+    def significancesPlotFileName ( self, postfix : str = "" ):
+        """ the name of the significances plot.
+
+        :param postfix: allows to specify a postfix to the name
+        """
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
@@ -147,7 +177,7 @@ class Lister:
         fullname = f"{self.github_io}/{directory}"
         if not os.path.exists ( fullname ):
             os.mkdir ( fullname )
-        pvaluesplot = f"{directory}/significances{sinc}.png"
+        pvaluesplot = f"{directory}/significances{sinc}{postfix}.png"
         return pvaluesplot
 
     def footer ( self ):
@@ -520,11 +550,14 @@ class Lister:
                                  help='add fastlim results' )
         argparser.add_argument ( '-k', '--keep', action='store_true',
                                  help='keep temporary files, like temp.dict' )
+        argparser.add_argument ( '--fudged', action='store_true',
+                                 help='create also fudged version of significance plot' )
         argparser.add_argument ( '-a', '--add_version', action='store_true',
                                  help='add version labels to links' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
         self.keep = args.keep
+        self.fudged = args.fudged
         self.includeSuperseded = not args.no_superseded
         self.likelihoods = args.likelihoods
         self.dbpath = args.database
