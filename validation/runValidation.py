@@ -17,8 +17,6 @@ except:
 import logging
 import argparse,time
 from sympy import var
-from smodels.experiment.databaseObj import Database
-from smodels.experiment.expResultObj import ExpResult
 from validationHelpers import getAxisType
 
 try:
@@ -34,7 +32,7 @@ def starting( expRes, txnameStr, axes ):
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
-        db : Database, kfactor=1., pretty=False, combine=False, namedTarball = None, 
+        db, kfactor=1., pretty=False, combine=False, namedTarball = None, 
         keep = False ):
     """
     Creates a validation plot and saves its output.
@@ -232,8 +230,8 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"], validationPlot )
 
-def runForOneResult ( expRes : ExpResult, options : dict, 
-                      keep : bool, db : Database ) -> None:
+def runForOneResult ( expRes, options : dict, 
+                      keep : bool, db ) -> None:
     """
     Run for one experimental result
     :param options: all flags in the "options" part of the ini file
@@ -422,8 +420,8 @@ def runForOneResult ( expRes : ExpResult, options : dict,
     logger.info( "--- %s %s validated in %.1f min %s" % \
                  (RED, expRes.globalInfo.id,(time.time()-expt0)/60., RESET) )
 
-def run ( expResList : list[ExpResult], options : dict, 
-          keep : bool, db : Database ) -> None:
+def run ( expResList : list, options : dict, 
+          keep : bool, db ) -> None:
     """
     Loop over experimental results and validate plots
     :param options: all flags in the "options" part of the ini file
@@ -575,8 +573,10 @@ if __name__ == "__main__":
     utilsPath = parser.get("path", "utilsPath")
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
+
     from validation import plottingFuncs, validationObjs, graphsValidationObjs
     from smodels.experiment.databaseObj import Database
+    from smodels.experiment.expResultObj import ExpResult    
 
     #Control output level:
     numeric_level = getattr(logging,args.verbose.upper(), None)
