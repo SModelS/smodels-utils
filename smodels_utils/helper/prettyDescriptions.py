@@ -297,6 +297,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TRV1': 'ZPrime --> 2*MET',
     'TRV1jj': 'ZPrime --> 2*MET',
     'TRS1': 'H0 --> 2*MET',
+    'TRPVM1jjj' : 'chargino^mp_1/neutralino_2/neutralino_1 --> q q q'
 }
 
 #Name of mother particles
@@ -503,6 +504,7 @@ motherDict = {"T1" :  "gluino",
     "TRS1": "H0",
     "TRV1": "ZPrime",
     "TRV1jj": "ZPrime",
+    "TRPVM1jjj" : "chargino^mp_1/neutralino_2/neutralino_1 chargino^mp_1/neutralino_2/neutralino_1"
 }
 
 
