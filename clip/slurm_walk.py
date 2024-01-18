@@ -6,6 +6,7 @@ protomodels walkers.
 
 import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
 import subprocess
+from typing import Union
 
 def remove( fname, keep):
     ## rmeove filename if exists
@@ -351,10 +352,14 @@ def getDirname ( rundir ):
     ret = ret.replace("rundir.","")
     return ret
 
-def runUpdater( dry_run, time, rundir, maxiterations ):
+def runUpdater( dry_run : bool, time : float, rundir : os.PathLike, 
+        maxiterations : Union[None,int] ):
     """ thats the hiscore updater
+    :param dry_run: create the scripts, dont start them
     :param time: time, given in minutes(?)
     :param maxiterations: maximum number of iterations to run the updater
+    """
+
     """
     with open ( "%s/smodels-utils/clip/hiscore_update_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
@@ -365,7 +370,8 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@", rundir ) )
     os.chmod( tf, 0o755 )
-    runner = "%s/upHi.py" % ( rundir )
+    """
+    runner = f"{rundir}/upHi.py"
     if maxiterations == None:
         maxiterations = 1000
     uploadTo="None"
@@ -389,9 +395,9 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
     if maxiterations > 5:
         cmd = [ "srun", "--mem", "25G" ]
         cmd += [ "--reservation", "interactive" ]
-    # cmd = [ "srun", "--mem", "50G" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/hi-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/hi-%j.out" ]
+    outputdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs"
+    cmd += [ "--error", f"{outputdir}/hi-%j.out",
+             "--output", f"{outputdir}/hi-%j.out" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     qos = "c_short"
     if time > 48:
@@ -402,7 +408,7 @@ def runUpdater( dry_run, time, rundir, maxiterations ):
         cmd += [ "--qos", qos ]
     if maxiterations > 5:
         cmd += [ "--pty", "bash" ]
-    cmd += [ tf ]
+    cmd += [ runner ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
         return
