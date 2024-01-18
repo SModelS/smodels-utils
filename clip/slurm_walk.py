@@ -21,6 +21,7 @@ def remove( fname, keep):
         pass
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
+outputdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs"
 
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
@@ -41,8 +42,8 @@ def startServer ( rundir, dry_run, time ):
     os.chmod( tf, 0o755 )
     ram = 3500 # max ( 2, 0.5 * ( jmax - jmin ) )
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/srv-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/srv-%j.out" ]
+    cmd += [ "--error", f"{outputdir}/srv-%j.out",
+             "--output", f"{outputdir}/srv-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -118,8 +119,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         ram = ram *.8
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/walk-%j.out" ]
+    cmd += [ "--error", f"{outputdir}/walk-%j.out",
+             "--output", f"{outputdir}/walk-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -255,8 +256,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/llhd-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/llhd-%j.out" ]
+    cmd += [ "--error", f"{outputdir}/llhd-%j.out",
+             "--output", f"{outputdir}/llhd-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "15G" ]
@@ -309,8 +310,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
-    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/scan-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/scan-%j.out" ]
+    cmd += [ "--error", f"{outputdir}/scan-%j.out",
+             "--output", f"{outputdir}/scan-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "30G" ]
@@ -353,24 +354,14 @@ def getDirname ( rundir ):
     return ret
 
 def runUpdater( dry_run : bool, time : float, rundir : os.PathLike, 
-        maxiterations : Union[None,int] ):
+        maxiterations : Union[None,int], dbpath : str ):
     """ thats the hiscore updater
     :param dry_run: create the scripts, dont start them
     :param time: time, given in minutes(?)
     :param maxiterations: maximum number of iterations to run the updater
+    :param dbpath: database path, @rundir@ will get replaced by rundir
     """
 
-    """
-    with open ( "%s/smodels-utils/clip/hiscore_update_template.sh" % codedir, "rt" ) as f:
-        lines = f.readlines()
-        f.close()
-    Dir = getDirname ( rundir )
-    tf = "%s/HI%s.sh" % ( rundir, Dir )
-    with open(tf,"wt") as f:
-        for line in lines:
-            f.write ( line.replace("@@RUNDIR@@", rundir ) )
-    os.chmod( tf, 0o755 )
-    """
     runner = f"{rundir}/upHi.py"
     if maxiterations == None:
         maxiterations = 1000
@@ -385,20 +376,19 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
-        f.write ( "sys.path.insert(0,'%s')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/ptools')\n" % codedir )
-        f.write ( "os.chdir('%s')\n" % rundir )
+        f.write ( f"sys.path.insert(0,'{codedir}')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/protomodels')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/protomodels/ptools')\n" )
+        f.write ( f"os.chdir('{rundir}')\n" )
         f.write ( "import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( "updateHiscores.main ( rundir='%s', maxruns=%d, doPlots=not batchjob, uploadTo='%s' )\n" % \
-                  ( rundir, maxiterations, uploadTo ) )
+        f.write ( f"updateHiscores.main ( rundir='{rundir}',\n" )
+        f.write ( f"    maxruns={maxiterations}, doPlots=not batchjob, uploadTo='{uploadTo}', dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
         cmd = [ "srun", "--mem", "25G" ]
         cmd += [ "--reservation", "interactive" ]
-    outputdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs"
     cmd += [ "--error", f"{outputdir}/hi-%j.out",
              "--output", f"{outputdir}/hi-%j.out" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
@@ -539,7 +529,7 @@ def main():
     if args.cancel_all:
         cancelAllRunners()
         return
-    mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
+    mkdir ( outputdir )
     args.rewrite = True
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
@@ -578,7 +568,8 @@ def main():
         if dbpath == "real":
             dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
         if args.dbpath == "default": ## make sure we always set from scratch
-            dbpath = rundir + "/default.pcl"
+            # dbpath = rundir + "/default.pcl"
+            dbpath = "official"
         if "fake" in dbpath and not dbpath.endswith(".pcl"):
             dbpath = dbpath + ".pcl"
 
@@ -605,7 +596,8 @@ def main():
             maxsteps = args.maxsteps
             if maxsteps == None:
                 maxsteps = 1
-                runUpdater( args.dry_run, args.time, rundir, maxsteps )
+                runUpdater( args.dry_run, args.time, rundir, maxsteps, 
+                            dbpath = dbpath )
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
