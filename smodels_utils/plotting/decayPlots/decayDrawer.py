@@ -45,8 +45,10 @@ class DecayDrawer:
         if prog.rfind("/")>0:
             prog=prog[prog.rfind("/")+1:]
         dprog='dot'
-        dargs='-n2 -Tpng:cairo'
-        wout=out+".png"
+        dargs='-n2 -Tsvg:svg:core'
+        wout=out+".svg"
+        # dargs='-n2 -Tpng:cairo'
+        #wout=out+".png"
         if self.options["neato"]:
             # wout=out+".neato.png"
             #wout=out+".png"
