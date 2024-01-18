@@ -375,10 +375,13 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
     if maxiterations == None:
         maxiterations = 1000
     uploadTo="None"
-    rd=rundir[rundir.find("rundir.")+7:]
-    if rd.endswith("/"):
+    rd=rundir[rundir.find("rundir")+7:]
+    # uploadTo=f"2020_PioneerStudy/{rd}"
+    while rd.endswith("/"):
         rd=rd[:-1]
-    uploadTo=f"2020_PioneerStudy/{rd}"
+    uploadTo=f"ewkinos_230"
+    if rd!="":
+        uploadTo = f"{uploadTo}/{rd}"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
