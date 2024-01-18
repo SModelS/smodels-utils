@@ -643,7 +643,7 @@ class ValidationPlot():
                 if k==nodeName:
                     return v
             return None
-        return ret
+        return None
 
     def getDataFromPlanes(self):
         """

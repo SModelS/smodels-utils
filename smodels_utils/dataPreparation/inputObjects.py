@@ -1255,7 +1255,12 @@ class TxNameInput(Locker):
                         #if particlename in masses:
                         #    totalmass += masses[particlename]
                         if hasattr ( particle, "mass" ):
-                            totalmass += float ( particle.mass.asNumber(GeV) )
+                            mass = particle.mass
+                            if isinstance(mass,list):
+                                mass = max(mass).asNumber(GeV)
+                            else:
+                                mass = mass.asNumber(GeV)
+                            totalmass += mass
                     if bsmDaughter != None:
                         massGaps[(nodenr,bsmDaughter)]=totalmass
                 # import IPython ; IPython.embed ( colors="neutral" )
