@@ -20,8 +20,10 @@ def remove( fname, keep):
     except:
         pass
 
-codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
-outputdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs"
+basedir = "/scratch-cbe/users/wolfgan.waltenberger"
+codedir = f"{basedir}/git"
+outputdir = f"{basedir}/outputs"
+defaultrundir = f"{basedir}/rundir"
 
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
@@ -30,7 +32,7 @@ def mkdir ( Dir ):
 
 def startServer ( rundir, dry_run, time ):
     """ start the database server in <rundir> """
-    with open ( "%s/smodels-utils/clip/server_template.sh" % codedir, "rt" ) as f:
+    with open ( f"{codedir}/smodels-utils/clip/server_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
     Dir = getDirname ( rundir )
@@ -133,7 +135,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     # cmd += [ "-k" ]
     cmd += [ "--mem", f"{ram:d}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
     scmd =  " ".join ( cmd )
-    scmd = scmd.replace ( "/scratch-cbe/users/wolfgan.waltenberger", "$BASE" )
+    scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
         print ( "[slurm.py] dry_running:", scmd )
     else:
@@ -342,7 +344,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
 
 def getDirname ( rundir ):
     """ get the directory name of rundir, e.g.:
-        /scratch-cbe/users/wolfgan.waltenberger/rundir.fake1 -> fake1
+        /{basedir}/rundir.fake1 -> fake1
     """
     ret = rundir
     if ret.endswith("/"):
@@ -501,8 +503,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
                              action="store_true" )
-    argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
-                        type=int, default=0 )
+    argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [1]',
+                        type=int, default=1 )
     argparser.add_argument ( '--seed', nargs='?', help='the random seed. 0 means random. None means, do not set. [None]',
                         type=int, default=None )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
@@ -534,15 +536,16 @@ def main():
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
         return
-    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
+    rundir = defaultrundir
     if args.rundir != None:
         rundir = args.rundir
         if not "/" in rundir:
-            rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + rundir + "/"
+            rundir = f"{basedir}/{rundir}/"
 
     rundirs = glob.glob ( rundir )
     if rundirs == []:
-        rundirs = [ "./" ]
+        # rundirs = [ "./" ]
+        rundirs = [ rundir ]
     rundirs.sort()
     if len(rundirs)>1:
         print ( "[slurm.py] rundirs ", ", ".join ( rundirs ) )
@@ -566,7 +569,7 @@ def main():
         time.sleep ( random.uniform ( .004, .009 ) )
         dbpath = args.dbpath
         if dbpath == "real":
-            dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
+            dbpath = f"{codedir}/smodels-database"
         if args.dbpath == "default": ## make sure we always set from scratch
             # dbpath = rundir + "/default.pcl"
             dbpath = "official"
