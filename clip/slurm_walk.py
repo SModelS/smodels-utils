@@ -91,7 +91,6 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     # print ( "[runOneJob:%d] %s" % ( pid, line ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
-    dump_trainingdata = False
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -101,8 +100,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, \
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, rundir, \
                     maxsteps, seed, select, do_combine, record_history, update_hiscores, \
                     stopTeleportationAfter  ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
