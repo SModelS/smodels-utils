@@ -58,61 +58,6 @@ class SPhenoReader:
         except Exception as e:
             logger.error ( "Exception in ``parseNamesAndMasses'': %s" % e )
 
-    def _parseNamesAndMassesOld( self ):
-        self.setIds()
-        massBlocks=False
-        f=open(self.filename)
-        inMassBlock=False
-        for line in f:
-          l=line.lower()
-          if l[0]=='#':
-            # comment only
-            continue
-          if l.find("block mass")>-1:
-            inMassBlock=True
-            massBlocks=True
-            continue
-          if l.find("block")==0 and l.find("block mass")==-1:
-            inMassBlock=False
-          if not inMassBlock:
-            continue
-          if l.find("pdg code")!=-1:
-            # title line
-            continue
-          parse=Word ( nums )+Word ( alphanums+"eE.+-" )+Optional("#")+\
-                Optional(Word ( alphanums+"~_+-" ))
-          try:
-            parsed=parse.parseString ( line )
-            pdgid=abs(int(parsed[0]))
-            name="pid%s" % ( pdgid) 
-            if len(parsed)>2:
-              name=str(parsed[3])
-            name=name.replace("-quark","")
-            name=name.replace("m_","")
-            mass=parsed[1]
-            try:
-              mass=float(parsed[1])
-              if mass > 100000:
-                if self.verbose:
-                  logger.debug ( "%s has a mass of %d, not considering!" \
-                    % ( name, mass ) )
-                continue
-            except:
-              pass
-            if self.integrateSquarks:
-              for i in [ "u", "d", "s", "c" ]:
-                name=name.replace("~%s_" % i ,"~q_")
-              for i in [ "L", "R", "1", "2" ]:
-                name=name.replace("~q_%s" % i,"~q");
-            if self.verbose:
-              logger.debug ( "adding %s pdg=%d m=%s" % ( name, pdgid, str(mass) ) )
-            self.masses[pdgid]=mass
-          except ParseException as e:
-            logger.error ( "exception caught with ``%s'': %s" % (line,e) )
-            logger.debug ( "tried to interpret it as a mass line" )
-
-        f.close()
-
     def fullName ( self, pdgid, integrated=False ):
         """ get the full name of pdgid """
         if type(pdgid)==type(1) and pdgid in self.ids.keys ( ):
@@ -137,8 +82,6 @@ class SPhenoReader:
         ret2={}
         ret2id={}
         for m in start:
-            # m=self.pdgId ( mother )
-            # print ( "[getRelevantParticles] pdgId", m )
             if len(self.getDecays(m,rmin))>0:
                 ret2[m]=1
             if not m in self.decays.keys ( ):
