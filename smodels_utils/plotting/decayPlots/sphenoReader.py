@@ -241,7 +241,7 @@ class SPhenoReader:
     def printDecay ( self, mother, rmin=0.0 ):
         m=self.pdgId ( mother )
         if not m in self.decays.keys ( ):
-          logger.error ( "[printDecay] no decays for %s" % self.name (m ) )
+          logger.error ( f"no decays for {self.name (m )}" )
           return
         rtotal=0.
         for (daughter,right) in self.decays[m].items():
