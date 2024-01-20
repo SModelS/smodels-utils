@@ -383,7 +383,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         f.write ( f"os.chdir('{rundir}')\n" )
         f.write ( "import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( f"updateHiscores.main ( rundir='{rundir}',\n" )
+        f.write ( f"updateHiscores.loop ( rundir='{rundir}',\n" )
         f.write ( f"    maxruns={maxiterations}, doPlots=not batchjob, uploadTo='{uploadTo}', dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
