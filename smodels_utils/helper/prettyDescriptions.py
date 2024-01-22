@@ -295,7 +295,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChipChimSlepSlepAll': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TRV1': 'ZPrime --> 2*MET',
-    'TRV1jj': 'ZPrime --> 2*MET',
+    'TRV1jj': 'ZPrime --> 2*jets',
+    'TRV1bb': 'ZPrime --> 2*bjets',
+    'TRV1tt': 'ZPrime --> 2*tops',
+    'TRV1qq': 'ZPrime --> 2*quarks',
     'TRS1': 'H0 --> 2*MET',
     'TRPVM1jjj' : 'chargino^mp_1/neutralino_2/neutralino_1 --> quark antiquark quark',
     'TRPVM2jjj' : 'gluino --> neutralino_1 quark antiquark, neutralino_1 --> quark antiquark quark'    
@@ -504,11 +507,13 @@ motherDict = {"T1" :  "gluino",
     "TChiChipmSlep" :  "neutralino_2 chargino^pm_1",
     "TRS1": "H0",
     "TRV1": "ZPrime",
-    "TRV1jj": "ZPrime",
+    "TRV1jj": "jet",
+    'TRV1bb': "bjet",
+    'TRV1tt': "top",
+    'TRV1qq': "quark",
     "TRPVM1jjj" : "chargino^mp_1/neutralino_2/neutralino_1 chargino^mp_1/neutralino_2/neutralino_1",
     "TRPVM2jjj" : "gluino"    
 }
-
 
 def latexfy(instr):
     """
