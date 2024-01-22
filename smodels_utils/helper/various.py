@@ -72,8 +72,17 @@ def getSqrts ( Id : str ):
         return 8
     return 13
 
+def findCollaboration ( anaid : str ) -> str:
+    """ a trivial convenience function. tell the collaboration name
+    from the analysis name """
+    if "cms" in anaid.lower():
+        return "CMS"
+    if "atlas" in anaid.lower():
+        return "ATLAS"
+    return "???"
+
 def cutPoints ( points, ranges ):
-    """ cut the points at ranges 
+    """ cut the points at ranges
     :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
     :returns: filtered points
     """
@@ -114,7 +123,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                  e.g. [x, y, 60.0], [x, y, 60.0]]
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
-    :param ranges: if dict, then cut exclusion lines, e.g. 
+    :param ranges: if dict, then cut exclusion lines, e.g.
                    { "x": [ 100, 200 ] }
     :param dicts: if true, then do not return lists of lines,
                   but dictionaries instead
@@ -190,7 +199,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     # for backwards compatibility
     return getValidationDataPathName ( dbpath, analysis, valfile)
 
-def getValidationDataPathName ( dbpath : os.PathLike, analysis : str , 
+def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
         valfile : str, validationFolder : str = "validation" ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name
         potentially with wildcards
