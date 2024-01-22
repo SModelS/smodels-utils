@@ -147,14 +147,21 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         print ( "returned: %s" % a )
         # time.sleep( random.uniform ( 0., 1. ) )
 
-def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
-    fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
+def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
+        rundir : str, nprocs : int ) -> str:
+    """
+    produces the llhdscanner<pid>.sh scripts
+
+    :returns: filename of script
+    """
+    fname = f"{rundir}/llhd{pid1}.sh"
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/protomodels/ptools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
+    return fname
 
 def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
     spid2=""
@@ -268,17 +275,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    with  open ( "run_llhd_scanner_template.sh", "rt" ) as f:
-        lines=f.readlines()
-        f.close()
-    script = "_L%s.sh" % pid
-    with open ( script, "wt" ) as f:
-        for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid)).replace("@@RUNDIR@@",rundir ) )
-        f.close()
-    # nprcs = 15
     nprcs = 10
-    produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
+    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
