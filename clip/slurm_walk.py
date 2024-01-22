@@ -85,12 +85,14 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     """
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
-    line = "run walkers %d - %d" % ( jmin, jmax-1 )
+    line = f"run walkers {jmin} - {jmax-1}"
+    if jmax == jmin:
+        jmax = jmin + 1
     if jmax == jmin + 1:
-        line = "run walker %d" % jmin
+        line = f"run walker {jmin}"
     # print ( "[runOneJob:%d] %s" % ( pid, line ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
-    runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
+    runner = f"{rundir}/RUNNER_{jmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -613,10 +615,11 @@ def main():
         #    lines=f.readlines()
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
         cheatcode = args.cheatcode
-        if nmax == 0:
-            nmax = nmin #+ 1
-        nworkers = args.nmax - args.nmin + 1
+        if nmax == 0 or nmax < nmin:
+            nmax = nmin
+        nworkers = nmax - nmin + 1
         nprocesses = min ( args.nprocesses, nworkers )
+        print ( "nmin, nmax", nmin, nmax, nprocesses )
         if nprocesses == 0:
             nprocesses = nworkers
 
