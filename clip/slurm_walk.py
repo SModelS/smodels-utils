@@ -30,34 +30,6 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
-def startServer ( rundir, dry_run, time ):
-    """ start the database server in <rundir> """
-    with open ( f"{codedir}/smodels-utils/clip/server_template.sh", "rt" ) as f:
-        lines = f.readlines()
-        f.close()
-    Dir = getDirname ( rundir )
-    print ( f"[slurm.py] start database server in {rundir}" )
-    tf = "%s/SRV%s.sh" % ( rundir, Dir )
-    with open(tf,"wt") as f:
-        for line in lines:
-            f.write ( line.replace("@@RUNDIR@@",rundir) )
-    os.chmod( tf, 0o755 )
-    ram = 3500 # max ( 2, 0.5 * ( jmax - jmin ) )
-    cmd = [ "sbatch" ]
-    cmd += [ "--error", f"{outputdir}/srv-%j.out",
-             "--output", f"{outputdir}/srv-%j.out" ]
-    qos = "c_short"
-    if time > 48:
-        qos = "c_long"
-    if 8 < time <= 48:
-        qos = "c_medium"
-    cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
-    print ( " ".join ( cmd ) )
-    if not dry_run:
-        a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
-
 def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
                 cheatcode, rundir, maxsteps, select, do_combine, record_history,
                 seed, update_hiscores, stopTeleportationAfter ):
@@ -85,13 +57,14 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     """
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
-    line = "run walkers %d - %d" % ( jmin, jmax-1 )
+    line = f"run walkers {jmin} - {jmax-1}"
+    if jmax == jmin:
+        jmax = jmin + 1
     if jmax == jmin + 1:
-        line = "run walker %d" % jmin
+        line = f"run walker {jmin}"
     # print ( "[runOneJob:%d] %s" % ( pid, line ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
-    runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
-    dump_trainingdata = False
+    runner = f"{rundir}/RUNNER_{jmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -101,8 +74,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir, \
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, rundir, \
                     maxsteps, seed, select, do_combine, record_history, update_hiscores, \
                     stopTeleportationAfter  ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
@@ -146,30 +119,42 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         print ( "returned: %s" % a )
         # time.sleep( random.uniform ( 0., 1. ) )
 
-def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
-    fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
+def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
+        rundir : str, nprocs : int ) -> str:
+    """
+    produces the llhdscanner<pid>.sh scripts
+
+    :returns: filename of script
+    """
+    fname = f"{rundir}/L{pid1}.sh"
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/protomodels/ptools/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
+    return fname
 
-def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
+def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int, 
+        rundir : str , nprocs : int, dbpath : str ) -> str:
+    """ produce the script to scan for Z 
+
+    :returns: filename of script
+    """
     spid2=""
     if pid2!=-1:
         spid2=str(pid2)
-    fname = "%s/scanner%d%s.sh" % ( rundir, pid, spid2 )
+    fname = f"{rundir}/S{pid}{spid2}.sh"
     if force_rewrite or not os.path.exists ( fname ):
         argpid2=""
         if pid2!=0:
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/protomodels/ptools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
-                     ( codedir, nprocs, rundir,pid,argpid2) )
+            f.write ( f"{codedir}/protomodels/ptools/scanner.py --nproc {nprocs} -R {rundir} -d -c -P -p {pid} {argpid2} --dbpath {dbpath}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
+    return fname
 
 def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     """ fetch pids of unfrozenparticles from dictionary
@@ -267,17 +252,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    with  open ( "run_llhd_scanner_template.sh", "rt" ) as f:
-        lines=f.readlines()
-        f.close()
-    script = "_L%s.sh" % pid
-    with open ( script, "wt" ) as f:
-        for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid)).replace("@@RUNDIR@@",rundir ) )
-        f.close()
-    # nprcs = 15
     nprcs = 10
-    produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
+    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -285,7 +261,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
+def runScanner( pid, dry_run, time, rewrite, pid2, rundir, dbpath ):
     """ run the Z scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
@@ -298,13 +274,14 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
         if pid2 == 0:
             pidpairs = fetchUnfrozenSSMsFromDict( rundir )
             for pidpair in pidpairs:
-                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir )
+                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir,
+                             dbpath )
             return
         pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006, 1000022 ]
         for i in pids:
-            runScanner ( i, dry_run, time, rewrite, pid2, rundir )
+            runScanner ( i, dry_run, time, rewrite, pid2, rundir, dbpath )
         return
     qos = "c_short"
     if time > 48:
@@ -321,21 +298,9 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    with  open ( "run_scanner_template.sh", "rt" ) as f:
-        lines=f.readlines()
-        f.close()
-    spid2 = ""
-    if pid2 != -1:
-        spid2 = "%d" % pid2
-    script = "_S%s%s.sh" % ( pid, spid2 )
-    with open ( script, "wt" ) as f:
-        for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2).replace("@@RUNDIR@@",rundir)  )
-        f.close()
-    os.chmod( script, 0o755 ) # 1877 is 0o755
-    cmd += [ script ]
     nprc = 15
-    produceScanScript ( pid, rewrite, pid2, rundir, nprc )
+    fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath )
+    cmd += [ fname ]
     print ( "[runScanner]", " ".join ( cmd ) )
     if dry_run:
         return
@@ -384,7 +349,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         f.write ( f"os.chdir('{rundir}')\n" )
         f.write ( "import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( f"updateHiscores.main ( rundir='{rundir}',\n" )
+        f.write ( f"updateHiscores.loop ( rundir='{rundir}',\n" )
         f.write ( f"    maxruns={maxiterations}, doPlots=not batchjob, uploadTo='{uploadTo}', dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
@@ -477,8 +442,6 @@ def main():
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
     argparser.add_argument ( '--record_history', help='turn on the history recorder',
-                             action="store_true" )
-    argparser.add_argument ( '-s','--server', help='start the database server for rundir',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
                     help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
@@ -576,9 +539,6 @@ def main():
         if "fake" in dbpath and not dbpath.endswith(".pcl"):
             dbpath = dbpath + ".pcl"
 
-        if args.server:
-            startServer ( rundir, args.dry_run, args.time )
-
         if args.allscans:
             subprocess.getoutput ( "./slurm.py -R %s -S 0" % rundir )
             subprocess.getoutput ( "./slurm.py -R %s -S 0 --pid2 0" % rundir )
@@ -604,7 +564,7 @@ def main():
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
-            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir )
+            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath )
             continue
         if args.llhdscan != -1:
             runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
@@ -614,10 +574,11 @@ def main():
         #    lines=f.readlines()
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
         cheatcode = args.cheatcode
-        if nmax == 0:
-            nmax = nmin #+ 1
-        nworkers = args.nmax - args.nmin + 1
+        if nmax == 0 or nmax < nmin:
+            nmax = nmin
+        nworkers = nmax - nmin + 1
         nprocesses = min ( args.nprocesses, nworkers )
+        print ( "nmin, nmax", nmin, nmax, nprocesses )
         if nprocesses == 0:
             nprocesses = nworkers
 

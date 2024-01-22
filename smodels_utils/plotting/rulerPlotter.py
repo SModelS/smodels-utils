@@ -117,8 +117,8 @@ class RulerPlot:
         minvalue = max ( [ 0, .95*minvalue ] )
         if minvalue > 480:
             minvalue = 480
-        if maxvalue < 1010:
-            maxvalue = 1010
+        if maxvalue < 620:
+            maxvalue = 620
         dm = maxvalue - minvalue
         if self.range[0] != None and self.range[0] >=0.:
             minvalue=self.range[0]

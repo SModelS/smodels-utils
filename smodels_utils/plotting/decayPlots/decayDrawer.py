@@ -150,22 +150,43 @@ class DecayDrawer:
     def addOneEdge ( self, name, daughter, rmin, labels ):
         """ add one edge with labels, etc """
         l=""
+        # print ( f"@@7 addOneEdge {labels}" )
         matrixMode = (len(labels)>2)
         if matrixMode: ## make a matrix
             l="$\\\\begin{matrix}"
         for ctr,L in enumerate(labels):
             percentage,label = L[0], L[1]
+            # print ( f"@@3 L='{L}'" )
             # print ( "perc", percentage, name, daughter, label, ctr, len(labels) )
             if percentage < rmin:
                 continue
             if ctr>0 and ctr % 2 != 0:
                 l+=",\\,"
-            if label == "mu":
-                label= "$\\mu$"
-            if label == "tau":
-                label= "$\\tau$"
+            splabels = label.split(" ")
+            newlabels = []
+            for label in splabels:
+                if label == "e":
+                    label= "$e$"
+                if label == "ee":
+                    label= "$e e$"
+                if label == "mu":
+                    label= "$\\mu$"
+                if label == "nu":
+                    label= "$v$"
+                if label == "nue":
+                    label= "$v_{e}$"
+                if label == "numu":
+                    label= "$v_{\\mu}$"
+                if label == "mumu":
+                    label= "$\\mu \\mu$"
+                if label == "tau":
+                    label= "$\\tau$"
+                newlabels.append ( label )
+            label = "".join(newlabels)
+            # print ( f"@@9 label {label}" )
             #if matrixMode:
             #    label="$"+label+"$"
+            # l+=self.texName(label,dollars=True)
             l+=label
             if (percentage < 0.9 or len(labels)>1) and not self.options["nopercentage"]:
                 if self.tex:
@@ -181,8 +202,10 @@ class DecayDrawer:
         self.addNode ( 0., d )
         t = self.G.add_edge ( tn, d )
         edge=self.G.get_edge ( tn, d )
-        if "l" == "mu":
-            l="$\\mu$"
+        # print ( f"addOneEdge: name='{name}' daughter='{daughter}'" )
+        # print ( f"addOneEdge: l='{l}' d='{d}' tn='{tn}'" )
+        #if l == "mu":
+        #    l="$\\mu$"
         edge.attr['label']=l
 
     def addEdges ( self, name, decs, rmin = 0.0 ):
@@ -192,7 +215,7 @@ class DecayDrawer:
                 if list (self.ps).count ( name ) and list(self.ps).count ( daughter ):
                     if r < rmin:
                         continue
-                    rname=self.prettyName(radiator).replace(" ","")
+                    rname=self.prettyName(radiator) # .replace(" ","")
                     if rname in self.extra.keys ( ):
                         rname += "->" + self.extra[rname]
                     labels.append ( (r,rname) )
