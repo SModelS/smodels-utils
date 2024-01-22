@@ -154,7 +154,7 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
 
     :returns: filename of script
     """
-    fname = f"{rundir}/llhd{pid1}.sh"
+    fname = f"{rundir}/L{pid1}.sh"
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
@@ -163,21 +163,26 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
         os.chmod ( fname, 0o775 )
     return fname
 
-def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
+def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int, 
+        rundir : str , nprocs : int, dbpath : str ) -> str:
+    """ produce the script to scan for Z 
+
+    :returns: filename of script
+    """
     spid2=""
     if pid2!=-1:
         spid2=str(pid2)
-    fname = "%s/scanner%d%s.sh" % ( rundir, pid, spid2 )
+    fname = f"{rundir}/S{pid}{spid2}.sh"
     if force_rewrite or not os.path.exists ( fname ):
         argpid2=""
         if pid2!=0:
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/protomodels/ptools/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
-                     ( codedir, nprocs, rundir,pid,argpid2) )
+            f.write ( f"{codedir}/protomodels/ptools/scanner.py --nproc {nprocs} -R {rundir} -d -c -P -p {pid} {argpid2} --dbpath {dbpath}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
+    return fname
 
 def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     """ fetch pids of unfrozenparticles from dictionary
@@ -284,7 +289,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
+def runScanner( pid, dry_run, time, rewrite, pid2, rundir, dbpath ):
     """ run the Z scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
@@ -297,13 +302,14 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
         if pid2 == 0:
             pidpairs = fetchUnfrozenSSMsFromDict( rundir )
             for pidpair in pidpairs:
-                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir )
+                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir,
+                             dbpath )
             return
         pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006, 1000022 ]
         for i in pids:
-            runScanner ( i, dry_run, time, rewrite, pid2, rundir )
+            runScanner ( i, dry_run, time, rewrite, pid2, rundir, dbpath )
         return
     qos = "c_short"
     if time > 48:
@@ -320,21 +326,9 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    with  open ( "run_scanner_template.sh", "rt" ) as f:
-        lines=f.readlines()
-        f.close()
-    spid2 = ""
-    if pid2 != -1:
-        spid2 = "%d" % pid2
-    script = "_S%s%s.sh" % ( pid, spid2 )
-    with open ( script, "wt" ) as f:
-        for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2).replace("@@RUNDIR@@",rundir)  )
-        f.close()
-    os.chmod( script, 0o755 ) # 1877 is 0o755
-    cmd += [ script ]
     nprc = 15
-    produceScanScript ( pid, rewrite, pid2, rundir, nprc )
+    fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath )
+    cmd += [ fname ]
     print ( "[runScanner]", " ".join ( cmd ) )
     if dry_run:
         return
@@ -603,7 +597,7 @@ def main():
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
-            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir )
+            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath )
             continue
         if args.llhdscan != -1:
             runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
