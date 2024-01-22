@@ -30,34 +30,6 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
-def startServer ( rundir, dry_run, time ):
-    """ start the database server in <rundir> """
-    with open ( f"{codedir}/smodels-utils/clip/server_template.sh", "rt" ) as f:
-        lines = f.readlines()
-        f.close()
-    Dir = getDirname ( rundir )
-    print ( f"[slurm.py] start database server in {rundir}" )
-    tf = "%s/SRV%s.sh" % ( rundir, Dir )
-    with open(tf,"wt") as f:
-        for line in lines:
-            f.write ( line.replace("@@RUNDIR@@",rundir) )
-    os.chmod( tf, 0o755 )
-    ram = 3500 # max ( 2, 0.5 * ( jmax - jmin ) )
-    cmd = [ "sbatch" ]
-    cmd += [ "--error", f"{outputdir}/srv-%j.out",
-             "--output", f"{outputdir}/srv-%j.out" ]
-    qos = "c_short"
-    if time > 48:
-        qos = "c_long"
-    if 8 < time <= 48:
-        qos = "c_medium"
-    cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "%dM" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
-    print ( " ".join ( cmd ) )
-    if not dry_run:
-        a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
-
 def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
                 cheatcode, rundir, maxsteps, select, do_combine, record_history,
                 seed, update_hiscores, stopTeleportationAfter ):
@@ -471,8 +443,6 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '--record_history', help='turn on the history recorder',
                              action="store_true" )
-    argparser.add_argument ( '-s','--server', help='start the database server for rundir',
-                             action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
                     help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
                     type=int, default=-1 )
@@ -568,9 +538,6 @@ def main():
             dbpath = "official"
         if "fake" in dbpath and not dbpath.endswith(".pcl"):
             dbpath = dbpath + ".pcl"
-
-        if args.server:
-            startServer ( rundir, args.dry_run, args.time )
 
         if args.allscans:
             subprocess.getoutput ( "./slurm.py -R %s -S 0" % rundir )
