@@ -69,12 +69,10 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s/smodels-utils/')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/ptools')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
-        f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
+        f.write ( "from walker import factoryOfWalkers\n" )
+        f.write ( "factoryOfWalkers.createWalkers ( %d, %d, '%s', dbpath='%s', cheatcode=%d, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
                   ( jmin, jmax, cont, dbpath, cheatcode, rundir, \
                     maxsteps, seed, select, do_combine, record_history, update_hiscores, \
                     stopTeleportationAfter  ) )
@@ -346,11 +344,13 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         f.write ( f"sys.path.insert(0,'{codedir}')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/protomodels')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/protomodels/ptools')\n" )
-        f.write ( f"os.chdir('{rundir}')\n" )
-        f.write ( "import updateHiscores\n" )
+        f.write ( f"rundir='{rundir}'\n" )
+        f.write ( f"os.chdir(rundir)\n" )
+        f.write ( "from ptools import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( f"updateHiscores.loop ( rundir='{rundir}',\n" )
-        f.write ( f"    maxruns={maxiterations}, doPlots=not batchjob, uploadTo='{uploadTo}', dbpath='{dbpath}' )\n" )
+        f.write ( f'did_combine=updateHiscores.didCombine ( rundir )\n' )
+        f.write ( f"updateHiscores.loop ( rundir=rundir,\n" )
+        f.write ( f"    maxruns={maxiterations}, doPlots=not batchjob, uploadTo='{uploadTo}', do_combine=did_combine, dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
@@ -381,7 +381,7 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
     cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS" % rundir
     if clean_all:
         # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
-        cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt" % rundir
+        cmd = f"cd {rundir}; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict $(OUTPUTS)/walk-*.out"
     if verbose:
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
