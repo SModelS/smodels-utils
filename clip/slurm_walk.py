@@ -319,25 +319,22 @@ def getDirname ( rundir ):
     return ret
 
 def runUpdater( dry_run : bool, time : float, rundir : os.PathLike, 
-        maxiterations : Union[None,int], dbpath : str ):
+        maxiterations : Union[None,int], dbpath : str, uploadTo : str ):
     """ thats the hiscore updater
     :param dry_run: create the scripts, dont start them
     :param time: time, given in minutes(?)
     :param maxiterations: maximum number of iterations to run the updater
     :param dbpath: database path, @rundir@ will get replaced by rundir
+    :param uploadTo: directory under smodels.github.io/protomodels to upload to
     """
 
     runner = f"{rundir}/upHi.py"
     if maxiterations == None:
         maxiterations = 1000
-    uploadTo="None"
-    rd=rundir[rundir.find("rundir")+7:]
+    #rd=rundir[rundir.find("rundir")+7:]
     # uploadTo=f"2020_PioneerStudy/{rd}"
-    while rd.endswith("/"):
-        rd=rd[:-1]
-    uploadTo=f"ewkinos_230"
-    if rd!="":
-        uploadTo = f"{uploadTo}/{rd}"
+    #while rd.endswith("/"):
+    #    rd=rd[:-1]
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -441,6 +438,7 @@ def main():
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
+    argparser.add_argument ( '--uploadTo', help='specify directoy under smodels.github.io/protomodels to upload to [latest]', type=str, default='latest' )
     argparser.add_argument ( '--record_history', help='turn on the history recorder',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
@@ -560,7 +558,7 @@ def main():
             if maxsteps == None:
                 maxsteps = 1
                 runUpdater( args.dry_run, args.time, rundir, maxsteps, 
-                            dbpath = dbpath )
+                            dbpath = dbpath, uploadTo = args.uploadTo )
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
