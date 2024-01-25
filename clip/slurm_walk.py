@@ -123,17 +123,22 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
-        rundir : str, nprocs : int ) -> str:
+        rundir : str, nprocs : int, select : str, do_combine : bool ) -> str:
     """
     produces the llhdscanner<pid>.sh scripts
 
     :returns: filename of script
     """
     fname = f"{rundir}/L{pid1}.sh"
+    sselect,sdo_combine = "",""
+    if select != "":
+        sselect = f" --select '{select}'"
+    if do_combine:
+        sdo_combine = f" --do_combine"
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}{sselect}{sdo_combine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -227,7 +232,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
+def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_combine ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -238,7 +243,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, dry_run, time, rewrite, rundir )
+            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_combine )
         return
     qos = "c_short"
     if time > 48:
@@ -256,7 +261,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprcs = 10
-    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
+    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_combine  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -573,7 +578,7 @@ def main():
             runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath )
             continue
         if args.llhdscan != -1:
-            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
+            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_combine )
             continue
 
         #with open("run_walker.sh","rt") as f:
