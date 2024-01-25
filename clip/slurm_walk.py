@@ -6,7 +6,7 @@ protomodels walkers.
 
 import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
 import subprocess
-from typing import Union
+from typing import Union, List
 
 def remove( fname, keep):
     ## rmeove filename if exists
@@ -30,9 +30,11 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
-def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
-                cheatcode, rundir, maxsteps, select, do_combine, record_history,
-                seed, update_hiscores, stopTeleportationAfter ):
+def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str, 
+    dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
+    maxsteps : int, select : str, do_combine : bool, record_history : bool,
+    seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int, 
+    forbidden : List[int] ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -54,6 +56,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     :param update_hiscores: update the hiscores at the end
     :param stopTeleportationAfter: stop teleportation after this step.
            if -1, dont run teleportation at all.
+    :param forbidden: any forbidden pids we dont touch
     """
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -72,10 +75,12 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "from walker import factoryOfWalkers\n" )
-        f.write ( "factoryOfWalkers.createWalkers ( %d, %d, '%s', dbpath='%s', cheatcode=%d, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, rundir, \
-                    maxsteps, seed, select, do_combine, record_history, update_hiscores, \
-                    stopTeleportationAfter  ) )
+        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
+        f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_combine={do_combine},\n" )
+        f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
+        f.write ( f"    forbiddenparticles={forbidden}\n" )
+        f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
@@ -450,6 +455,9 @@ def main():
     argparser.add_argument ( '--select', nargs="?",
                     help='filter analysis results, ("all", "em", "ul", "txnames:T1,T2", ... ["all"]',
                     type=str, default="all" )
+    argparser.add_argument ( '--forbidden', 
+                    help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' [None]",
+                    type=str, default="[]" )
     argparser.add_argument ( '--pid2', nargs="?",
                     help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
                     type=int, default=-1 )
@@ -589,9 +597,9 @@ def main():
         while True:
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
-                            args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select, args.do_combine, args.record_history, seed,
-                            update_hiscores, args.stopTeleportationAfter )
+                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
+                      args.select, args.do_combine, args.record_history, seed,
+                      update_hiscores, args.stopTeleportationAfter, args.forbidden )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -609,10 +617,10 @@ def main():
                     if seed != None: ## we count up
                         seed += (1+len(rundirs))*(1+nprocesses)
                     p = multiprocessing.Process ( target = runOneJob,
-                            args = ( i, imin, imax, cont, dbpath, args.dry_run,
-                                     args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                                     args.select, args.do_combine, args.record_history,
-                                     seed, update_hiscores, args.stopTeleportationAfter ) )
+                        args = ( i, imin, imax, cont, dbpath, args.dry_run,
+                        args.keep, args.time, cheatcode, rundir, args.maxsteps,
+                        args.select, args.do_combine, args.record_history, seed,
+                        update_hiscores, args.stopTeleportationAfter, args.forbidden ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
