@@ -166,7 +166,7 @@ def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int,
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/scanner.py --nproc {nprocs} -R {rundir} -d -c -P -p {pid} {argpid2} --dbpath {dbpath}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/teststatScanner.py --nproc {nprocs} -R {rundir} -d -c -P -p {pid} {argpid2} --dbpath {dbpath}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -502,7 +502,7 @@ def main():
     argparser.add_argument ( '--record_history', help='turn on the history recorder',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
-                    help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
+                    help='run the teststatScanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
                     type=int, default=-1 )
     argparser.add_argument ( '-M', '--maxsteps', nargs="?",
                     help='maximum number of steps in a walker, max number of iterations in the updater [None=1000]',
@@ -514,7 +514,7 @@ def main():
                     help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' [None]",
                     type=str, default="[]" )
     argparser.add_argument ( '--pid2', nargs="?",
-                    help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
+                    help='run the teststatScanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
                     type=int, default=-1 )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?",
                     help='run the llhd scanner on pid/1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore.',
