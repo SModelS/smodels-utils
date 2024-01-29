@@ -4,7 +4,8 @@
 protomodels walkers.
 """
 
-import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
+import tempfile, argparse, stat, os, math, sys, time, glob, random
+from colorama import Fore as ansi
 import subprocess
 from typing import Union, List
 
@@ -116,10 +117,16 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         print ( "[slurm.py] dry_running:", scmd )
     else:
         print ( "[slurm.py] running", scmd )
-        a=subprocess.run ( cmd )
-        if not "returncode=0" in str(a):
-            a = "%s%s%s" % ( colorama.Fore.RED, a, colorama.Fore.RESET )
-        print ( "returned: %s" % a )
+        a=subprocess.run ( cmd, capture_output=True )
+        sa = str(a)
+        sb = str ( a.stdout.decode().strip() )
+        if "Submitted batch job " in sb:
+            sb=sb.replace("Submitted batch job ",f"Submitted batch job {ansi.YELLOW}" )
+            sb+=ansi.RESET
+        print ( sb )
+        if not "returncode=0" in sa:
+            sa = f"{ansi.RED}{sa}{ansi.RESET}" 
+        print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
@@ -384,11 +391,16 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
 def clean_dirs( rundir, clean_all = False, verbose=True ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
-    cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscores.cache Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS" % rundir
+    # cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
+    cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi hiscore.cache Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS" % rundir
     if clean_all:
         cmd = "cd %s; rm -rf old*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf" % rundir
         # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
+<<<<<<< HEAD
         cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
+=======
+        cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi hiscore*cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
+>>>>>>> e6c102282 (colors)
     if verbose:
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
@@ -410,7 +422,7 @@ def logCall ():
     f=open("slurm.log","at")
     args = ""
     for i in sys.argv:
-        if " " in i or "," in i:
+        if " " in i or "," in i or "[" in i:
             i = '"%s"' % i
         args += i + " "
     f.write ("[slurm.py-%s] %s\n" % ( time.strftime("%H:%M:%S"), args.strip() ) )
@@ -563,13 +575,14 @@ def main():
         rundirs = [ rundir ]
     rundirs.sort()
     if len(rundirs)>1:
-        print ( "[slurm.py] rundirs ", ", ".join ( rundirs ) )
+        print ( f"[slurm.py] rundirs {ansi.YELLOW} {', '.join(rundirs)}{ansi.RESET}" )
+    else:
+        print ( f"[slurm.py] rundir {ansi.YELLOW} {rundirs[0]}{ansi.RESET}" )
 
     if not args.query:
         logCall ()
 
     totjobs = 0
-    print ( "[slurm.py] rundirs", rundirs )
 
     for rd,rundir in enumerate(rundirs):
         mkdir ( rundir )
@@ -630,7 +643,7 @@ def main():
             nmax = nmin
         nworkers = nmax - nmin + 1
         nprocesses = min ( args.nprocesses, nworkers )
-        print ( "nmin, nmax", nmin, nmax, nprocesses )
+        # print ( "nmin, nmax", nmin, nmax, nprocesses )
         if nprocesses == 0:
             nprocesses = nworkers
 
@@ -673,20 +686,20 @@ def main():
 
                 for j in jobs:
                     j.join()
-                res = colorama.Fore.RESET
-                col = colorama.Fore.GREEN
+                res = ansi.RESET
+                col = ansi.GREEN
                 totjobs+=len(jobs)
                 if len(jobs) in [ 48, 49, 51 ]:
-                    colo = colorama.Fore.RED
+                    colo = ansi.RED
                 if len(jobs)>0:
                     print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
             break
-        res = colorama.Fore.RESET
-        col = colorama.Fore.GREEN
+        res = ansi.RESET
+        col = ansi.GREEN
         if totjobs % 10 != 0 and (totjobs)>1:
-            col = colorama.Fore.RED
+            col = ansi.RED
         if totjobs == 0:
-            col = colorama.Fore.RED
+            col = ansi.RED
         print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
         if seed != None: ## count up
             seed += (1+len(rundirs))*(1+nprocesses)
