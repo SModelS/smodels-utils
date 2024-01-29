@@ -6,7 +6,7 @@ protomodels walkers.
 
 import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
 import subprocess
-from typing import Union
+from typing import Union, List
 
 def remove( fname, keep):
     ## rmeove filename if exists
@@ -30,9 +30,11 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         o = subprocess.getoutput ( cmd )
 
-def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
-                cheatcode, rundir, maxsteps, select, do_combine, record_history,
-                seed, update_hiscores, stopTeleportationAfter ):
+def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str, 
+    dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
+    maxsteps : int, select : str, do_combine : bool, record_history : bool,
+    seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int, 
+    forbidden : List[int] ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -54,6 +56,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
     :param update_hiscores: update the hiscores at the end
     :param stopTeleportationAfter: stop teleportation after this step.
            if -1, dont run teleportation at all.
+    :param forbidden: any forbidden pids we dont touch
     """
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
@@ -69,15 +72,15 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s/smodels-utils/')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/ptools')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels/walker')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
-        f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, rundir='%s', maxsteps=%d, seed=%s, select='%s', do_combine=%s, record_history=%s, update_hiscores=%s, stopTeleportationAfter=%d )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, rundir, \
-                    maxsteps, seed, select, do_combine, record_history, update_hiscores, \
-                    stopTeleportationAfter  ) )
+        f.write ( "from walker import factoryOfWalkers\n" )
+        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
+        f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_combine={do_combine},\n" )
+        f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
+        f.write ( f"    forbiddenparticles={forbidden}\n" )
+        f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
@@ -120,17 +123,22 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, dry_run, keep, time,
         # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
-        rundir : str, nprocs : int ) -> str:
+        rundir : str, nprocs : int, select : str, do_combine : bool ) -> str:
     """
     produces the llhdscanner<pid>.sh scripts
 
     :returns: filename of script
     """
     fname = f"{rundir}/L{pid1}.sh"
+    sselect,sdo_combine = "",""
+    if select != "":
+        sselect = f" --select '{select}'"
+    if do_combine:
+        sdo_combine = f" --do_combine"
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}{sselect}{sdo_combine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -224,7 +232,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
+def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_combine ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -235,7 +243,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, dry_run, time, rewrite, rundir )
+            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_combine )
         return
     qos = "c_short"
     if time > 48:
@@ -253,7 +261,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprcs = 10
-    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
+    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_combine  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -321,36 +329,35 @@ def getDirname ( rundir ):
     return ret
 
 def runUpdater( dry_run : bool, time : float, rundir : os.PathLike, 
-        maxiterations : Union[None,int], dbpath : str ):
+        maxiterations : Union[None,int], dbpath : str, uploadTo : str ):
     """ thats the hiscore updater
     :param dry_run: create the scripts, dont start them
     :param time: time, given in minutes(?)
     :param maxiterations: maximum number of iterations to run the updater
     :param dbpath: database path, @rundir@ will get replaced by rundir
+    :param uploadTo: directory under smodels.github.io/protomodels to upload to
     """
 
     runner = f"{rundir}/upHi.py"
     if maxiterations == None:
         maxiterations = 1000
-    uploadTo="None"
-    rd=rundir[rundir.find("rundir")+7:]
+    #rd=rundir[rundir.find("rundir")+7:]
     # uploadTo=f"2020_PioneerStudy/{rd}"
-    while rd.endswith("/"):
-        rd=rd[:-1]
-    uploadTo=f"ewkinos_230"
-    if rd!="":
-        uploadTo = f"{uploadTo}/{rd}"
+    #while rd.endswith("/"):
+    #    rd=rd[:-1]
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( f"sys.path.insert(0,'{codedir}')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/protomodels')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/protomodels/ptools')\n" )
-        f.write ( f"os.chdir('{rundir}')\n" )
-        f.write ( "import updateHiscores\n" )
+        f.write ( f"rundir='{rundir}'\n" )
+        f.write ( f"os.chdir(rundir)\n" )
+        f.write ( "from ptools import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( f"updateHiscores.loop ( rundir='{rundir}',\n" )
-        f.write ( f"    maxruns={maxiterations}, doPlots=not batchjob, uploadTo='{uploadTo}', dbpath='{dbpath}' )\n" )
+        f.write ( f'did_combine=updateHiscores.didCombine ( rundir )\n' )
+        f.write ( f"updateHiscores.loop ( rundir=rundir, maxruns={maxiterations}, createPlots=not batchjob,\n" )
+        f.write ( f"    uploadTo='{uploadTo}', do_combine=did_combine, dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
@@ -379,7 +386,12 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
     o = subprocess.getoutput ( cmd )
     cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore*hi Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS" % rundir
     if clean_all:
+<<<<<<< HEAD
         cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf" % rundir
+=======
+        # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
+        cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
+>>>>>>> d19582860a593476a88572d8b3fd115721a925fa
     if verbose:
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
@@ -422,6 +434,42 @@ def cancelAllRunners():
         cancelled.append ( nr )
     print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
 
+def cancelRangeOfRunners( jrange : str ):
+    """ cancel only the jrange of runners """
+    if not "-" in jrange: # single job
+        cmd = f"scancel {jrange}"
+        subprocess.getoutput ( cmd )
+        print ( f"[slurm_walk] cancelled {jrange}" )
+        return
+    cancelled = []
+    p1 = jrange.find("-")
+    if 0 < p1 < len(jrange)-1: 
+        # full range given
+        jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
+        for i in range(jmin,jmax+1):
+            cmd = f"scancel {i}"
+            subprocess.getoutput ( cmd )
+            cancelled.append ( i )
+        print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
+        return
+    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    lines = o.split("\n")
+    running = []
+    for line in lines:
+        if not "RUNNER" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        running.append ( int ( nr ) )
+    if p1 == 0:
+        cancelRangeOfRunners( f"{min(running)}-{jrange[p1+1:]}" )
+        return
+    if p1 == len(jrange)-1:
+        cancelRangeOfRunners( f"{jrange[:p1]}-{max(running)}" )
+        return
+    print ( "[slurm_walk] FIXME sth is wrong" )
+        
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
@@ -435,10 +483,13 @@ def main():
             action="store_true" )
     argparser.add_argument ( '--cancel_all', help='cancel all runners',
             action="store_true" )
+    argparser.add_argument ( '--cancel', help='cancel a certain range of runners, e.g "65461977-65461985"',
+            type=str, default = None )
     argparser.add_argument ( '--do_combine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
+    argparser.add_argument ( '--uploadTo', help='specify directoy under smodels.github.io/protomodels to upload to [latest]', type=str, default='latest' )
     argparser.add_argument ( '--record_history', help='turn on the history recorder',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
@@ -450,6 +501,9 @@ def main():
     argparser.add_argument ( '--select', nargs="?",
                     help='filter analysis results, ("all", "em", "ul", "txnames:T1,T2", ... ["all"]',
                     type=str, default="all" )
+    argparser.add_argument ( '--forbidden', 
+                    help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' [None]",
+                    type=str, default="[]" )
     argparser.add_argument ( '--pid2', nargs="?",
                     help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
                     type=int, default=-1 )
@@ -489,6 +543,9 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    if args.cancel:
+        cancelRangeOfRunners ( args.cancel )
+        return
     if args.cancel_all:
         cancelAllRunners()
         return
@@ -558,14 +615,14 @@ def main():
             if maxsteps == None:
                 maxsteps = 1
                 runUpdater( args.dry_run, args.time, rundir, maxsteps, 
-                            dbpath = dbpath )
+                            dbpath = dbpath, uploadTo = args.uploadTo )
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
             runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath )
             continue
         if args.llhdscan != -1:
-            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
+            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_combine )
             continue
 
         #with open("run_walker.sh","rt") as f:
@@ -589,9 +646,9 @@ def main():
         while True:
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
-                            args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                            args.select, args.do_combine, args.record_history, seed,
-                            update_hiscores, args.stopTeleportationAfter )
+                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
+                      args.select, args.do_combine, args.record_history, seed,
+                      update_hiscores, args.stopTeleportationAfter, args.forbidden )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -609,10 +666,10 @@ def main():
                     if seed != None: ## we count up
                         seed += (1+len(rundirs))*(1+nprocesses)
                     p = multiprocessing.Process ( target = runOneJob,
-                            args = ( i, imin, imax, cont, dbpath, args.dry_run,
-                                     args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                                     args.select, args.do_combine, args.record_history,
-                                     seed, update_hiscores, args.stopTeleportationAfter ) )
+                        args = ( i, imin, imax, cont, dbpath, args.dry_run,
+                        args.keep, args.time, cheatcode, rundir, args.maxsteps,
+                        args.select, args.do_combine, args.record_history, seed,
+                        update_hiscores, args.stopTeleportationAfter, args.forbidden ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
