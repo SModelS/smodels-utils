@@ -46,7 +46,7 @@ def main():
         if args.history:
             print ( "[fetchFromClip] did not supply a rundir but fetching history files, so choosing rundir.history" )
             args.rundir = "rundir.history"
-    # files= [ "hiscore.hi" ]
+    # files= [ "hiscore.cache" ]
     files = set()
     if args.file not in [ None, "", "None", "none" ]:
         files.add ( args.file )
@@ -62,7 +62,7 @@ def main():
               "pmodels": [ "pmodel?.dict" ],
               "history": [ "history*.list" ],
               "png": [ "*.png" ],
-              "hiscore": [ "hiscore.hi" ],
+              "hiscore": [ "hiscore.cache" ],
               "ssms": [ "ssm*.pcl" ]
     }
     for k,v in args.__dict__.items():
@@ -71,7 +71,7 @@ def main():
                 for f in store[k]:
                     files.add ( f )
     if len(files) == 0 or args.all: ## the default
-        files.add ( "hiscore.hi" )
+        files.add ( "hiscores.cache" )
     fetch ( files, args.rundir )
 
 if __name__ == "__main__":
