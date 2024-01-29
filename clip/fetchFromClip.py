@@ -59,7 +59,7 @@ def main():
               "copy": [ "hiscoreCopy.hi" ],
               "slha": [ "hiscore.slha" ],
               "dbdict": [ "d*.dict", "my.signal" ],
-              "pmodels": [ "pmodel?.py" ],
+              "pmodels": [ "pmodel?.dict" ],
               "history": [ "history*.list" ],
               "png": [ "*.png" ],
               "hiscore": [ "hiscore.hi" ],

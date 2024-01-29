@@ -388,7 +388,7 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
     cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS" % rundir
     if clean_all:
         # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
-        cmd = f"cd {rundir}; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh $(OUTPUTS)/walk-*.out"
+        cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
     if verbose:
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
@@ -431,6 +431,42 @@ def cancelAllRunners():
         cancelled.append ( nr )
     print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
 
+def cancelRangeOfRunners( jrange : str ):
+    """ cancel only the jrange of runners """
+    if not "-" in jrange: # single job
+        cmd = f"scancel {jrange}"
+        subprocess.getoutput ( cmd )
+        print ( f"[slurm_walk] cancelled {jrange}" )
+        return
+    cancelled = []
+    p1 = jrange.find("-")
+    if 0 < p1 < len(jrange)-1: 
+        # full range given
+        jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
+        for i in range(jmin,jmax+1):
+            cmd = f"scancel {i}"
+            subprocess.getoutput ( cmd )
+            cancelled.append ( i )
+        print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
+        return
+    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    lines = o.split("\n")
+    running = []
+    for line in lines:
+        if not "RUNNER" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        running.append ( int ( nr ) )
+    if p1 == 0:
+        cancelRangeOfRunners( f"{min(running)}-{jrange[p1+1:]}" )
+        return
+    if p1 == len(jrange)-1:
+        cancelRangeOfRunners( f"{jrange[:p1]}-{max(running)}" )
+        return
+    print ( "[slurm_walk] FIXME sth is wrong" )
+        
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
@@ -444,6 +480,8 @@ def main():
             action="store_true" )
     argparser.add_argument ( '--cancel_all', help='cancel all runners',
             action="store_true" )
+    argparser.add_argument ( '--cancel', help='cancel a certain range of runners, e.g "65461977-65461985"',
+            type=str, default = None )
     argparser.add_argument ( '--do_combine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
@@ -502,6 +540,9 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    if args.cancel:
+        cancelRangeOfRunners ( args.cancel )
+        return
     if args.cancel_all:
         cancelAllRunners()
         return
