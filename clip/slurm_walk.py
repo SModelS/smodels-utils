@@ -33,7 +33,7 @@ def mkdir ( Dir ):
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str, 
     dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
-    maxsteps : int, select : str, do_combine : bool, record_history : bool,
+    maxsteps : int, select : str, do_srcombine : bool, record_history : bool,
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int, 
     forbidden : List[int] ):
     """ prepare everything for a single job
@@ -50,7 +50,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     :param maxsteps: max number of steps
     :param select: select for certain results, e.g. "all", "ul", "em",
                    "txnames:T1,T2"
-    :param do_combine: if true, then also perform combinations, either via
+    :param do_srcombine: if true, then also perform combinations, either via
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
     :param seed: the random seed for the walker
@@ -78,7 +78,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         f.write ( "from walker import factoryOfWalkers\n" )
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_combine={do_combine},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden}\n" )
         f.write ( ")\n" )
@@ -130,22 +130,22 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
-        rundir : str, nprocs : int, select : str, do_combine : bool ) -> str:
+        rundir : str, nprocs : int, select : str, do_srcombine : bool ) -> str:
     """
     produces the llhdscanner<pid>.sh scripts
 
     :returns: filename of script
     """
     fname = f"{rundir}/L{pid1}.sh"
-    sselect,sdo_combine = "",""
+    sselect,sdo_srcombine = "",""
     if select != "":
         sselect = f" --select '{select}'"
-    if do_combine:
-        sdo_combine = f" --do_combine"
+    if do_srcombine:
+        sdo_srcombine = f" --do_srcombine"
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}{sselect}{sdo_combine}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -239,7 +239,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_combine ):
+def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -250,7 +250,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_combine ):
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_combine )
+            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_srcombine )
         return
     qos = "c_short"
     if time > 48:
@@ -268,7 +268,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_combine ):
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprcs = 10
-    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_combine  )
+    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_srcombine  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -362,9 +362,9 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         f.write ( f"os.chdir(rundir)\n" )
         f.write ( "from ptools import updateHiscores\n" )
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
-        f.write ( f'did_combine=updateHiscores.didCombine ( rundir )\n' )
+        f.write ( f'did_srcombine=updateHiscores.didSRCombine ( rundir )\n' )
         f.write ( f"updateHiscores.loop ( rundir=rundir, maxruns={maxiterations}, createPlots=not batchjob,\n" )
-        f.write ( f"    uploadTo='{uploadTo}', do_combine=did_combine, dbpath='{dbpath}' )\n" )
+        f.write ( f"    uploadTo='{uploadTo}', do_srcombine=did_srcombine, dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
@@ -494,7 +494,7 @@ def main():
             action="store_true" )
     argparser.add_argument ( '--cancel', help='cancel a certain range of runners, e.g "65461977-65461985"',
             type=str, default = None )
-    argparser.add_argument ( '--do_combine',
+    argparser.add_argument ( '--do_srcombine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
@@ -632,7 +632,7 @@ def main():
             runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath )
             continue
         if args.llhdscan != -1:
-            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_combine )
+            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine )
             continue
 
         #with open("run_walker.sh","rt") as f:
@@ -657,7 +657,7 @@ def main():
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_combine, args.record_history, seed,
+                      args.select, args.do_srcombine, args.record_history, seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden )
                 totjobs+=1
             else:
@@ -678,7 +678,7 @@ def main():
                     p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_combine, args.record_history, seed,
+                        args.select, args.do_srcombine, args.record_history, seed,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden ) )
                     jobs.append ( p )
                     p.start()
