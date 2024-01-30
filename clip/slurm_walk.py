@@ -130,7 +130,8 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
-        rundir : str, nprocs : int, select : str, do_srcombine : bool ) -> str:
+        rundir : str, nprocs : int, select : str, do_srcombine : bool,
+        uploadTo : str ) -> str:
     """
     produces the llhdscanner<pid>.sh scripts
 
@@ -145,14 +146,15 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
 
 def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int, 
-        rundir : str , nprocs : int, dbpath : str ) -> str:
-    """ produce the script to scan for Z 
+        rundir : str , nprocs : int, dbpath : str, select : str,
+        do_srcombine : bool, uploadTo : str ) -> str:
+    """ produce the script to scan for the test statistics
 
     :returns: filename of script
     """
@@ -166,7 +168,14 @@ def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int,
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/teststatScanner.py --nproc {nprocs} -R {rundir} -d -c -P -p {pid} {argpid2} --dbpath {dbpath}\n" )
+            cmd = f"{codedir}/protomodels/ptools/teststatScanner.py"
+            args = f"--nproc {nprocs} -R {rundir} -r -d -c -P -p {pid} {argpid2}"
+            args += f" --dbpath '{dbpath}'"
+            args += f" --select '{select}'"
+            args += f" --uploadTo '{uploadTo}'"
+            if do_srcombine:
+                args += " --do_srcombine"
+            f.write ( f"{cmd} {args}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -239,7 +248,8 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine ):
+def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine,
+       uploadTo : str ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -250,7 +260,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine ):
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_srcombine )
+            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_srcombine,
+                             uploadTo )
         return
     qos = "c_short"
     if time > 48:
@@ -268,7 +279,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine ):
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprcs = 10
-    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_srcombine  )
+    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_srcombine, uploadTo  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -276,8 +287,10 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine ):
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid, dry_run, time, rewrite, pid2, rundir, dbpath ):
-    """ run the Z scanner for pid, on the current hiscore
+def runScanner( pid : int, dry_run : bool, time : float, rewrite : bool, 
+        pid2 : int, rundir : str, dbpath : str, select : str, do_srcombine : bool,
+        uploadTo : str ):
+    """ run the teststat scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
@@ -290,13 +303,14 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir, dbpath ):
             pidpairs = fetchUnfrozenSSMsFromDict( rundir )
             for pidpair in pidpairs:
                 runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir,
-                             dbpath )
+                             dbpath, select, do_srcombine, uploadTo )
             return
         pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006, 1000022 ]
         for i in pids:
-            runScanner ( i, dry_run, time, rewrite, pid2, rundir, dbpath )
+            runScanner ( i, dry_run, time, rewrite, pid2, rundir, dbpath, select,
+                         do_srcombine, uploadTo )
         return
     qos = "c_short"
     if time > 48:
@@ -314,13 +328,22 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir, dbpath ):
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprc = 15
-    fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath )
+    fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath, select,
+                                do_srcombine, uploadTo )
     cmd += [ fname ]
     print ( "[runScanner]", " ".join ( cmd ) )
     if dry_run:
         return
-    a = subprocess.run ( cmd )
-    print ( "[runScanner] >>", a )
+    a=subprocess.run ( cmd, capture_output=True )
+    sa = str(a)
+    sb = str ( a.stdout.decode().strip() )
+    if "Submitted batch job " in sb:
+        sb=sb.replace("Submitted batch job ",f"Submitted batch job {ansi.YELLOW}" )
+        sb+=ansi.RESET
+    print ( sb )
+    if not "returncode=0" in sa:
+        sa = f"{ansi.RED}{sa}{ansi.RESET}" 
+    print ( f"returned: {sa}" )
 
 def getDirname ( rundir ):
     """ get the directory name of rundir, e.g.:
@@ -629,10 +652,10 @@ def main():
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
-            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath )
+            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath, args.select, args.do_srcombine, args.uploadTo )
             continue
         if args.llhdscan != -1:
-            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine )
+            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
             continue
 
         #with open("run_walker.sh","rt") as f:
