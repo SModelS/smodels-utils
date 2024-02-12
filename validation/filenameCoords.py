@@ -33,3 +33,13 @@ coords["TChi_HinoBino_BRN2Z100"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TChi_HinoBino_BRN2Z50"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["T5Hg"]={'masses': [[1, 2, 3], [4, 5, 6]], 'widths': None}
 coords["TChiHHN3"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+oords["TChiWHff"]={'masses': [[5, 6], [1, 3, 4]], 'widths': None}
+coords["TChiWH4f"]={'masses': [[1, 3, 4], [5, 7, 8]], 'widths': None}
+coords["TChiWH4q"]={'masses': [[1, 3, 4], [5, 7, 8]], 'widths': None}
+coords["TChiWHqq"]={'masses': [[5, 6], [1, 3, 4]], 'widths': None}
+coords["TChiWqqH"]={'masses': [[1, 3, 4], [5, 6]], 'widths': None}
+coords["TChiWffH"]={'masses': [[1, 3, 4], [5, 6]], 'widths': None}
+coords["TChiWffHcheck"]={'masses': [[1, 3, 4], [5, 6]], 'widths': None}
+coords["TChiWHffcheck"]={'masses': [[5, 6], [1,3,4]], 'widths': None}
+coords["TChiWH4fcheck"]={'masses': [[1, 3, 4], [5, 7, 8]], 'widths': None}
+
