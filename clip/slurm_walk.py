@@ -327,7 +327,7 @@ def runScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    nprc = 15
+    nprc = 5
     fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath, select,
                                 do_srcombine, uploadTo )
     cmd += [ fname ]
