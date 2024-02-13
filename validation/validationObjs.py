@@ -797,8 +797,8 @@ class ValidationPlot():
         """ add files listed in fileList to list of running  files 
         :returns: list you should actually run
         """
-        current = set()
-        fname = "running.list"
+        current = {}
+        fname = "running.dict"
         shouldRun = set()
         if os.path.exists ( fname ):
             with open ( fname, "rt" ) as f:
@@ -807,12 +807,18 @@ class ValidationPlot():
                 except Exception as e:
                     logger.info ( f"exception {e}" )
             f.close()
+        cleanedcurrent = []
+        for f,t in current.items():
+            dt = ( time.time() - t ) / 60. # minutes
+            if dt < 30.: # after 30 minutes we take it out!
+                cleanedcurrent[f]=t
+        current = cleanedcurrent
         for f in fileList:
             if f in [ "results", "coordinates" ]:
                 continue
             if not f in current:
                 if self.limitPoints == None or len(shouldRun)<self.limitPoints:
-                    current.add ( f )
+                    current[f]=time.time()
                     shouldRun.add ( f )
         with open ( fname, "wt" ) as f:
             f.write ( f"{current}\n" )
@@ -822,8 +828,8 @@ class ValidationPlot():
     def removeFromListOfRunningFiles ( self ):
         """ remove files listed in fileList to list of running  files """
         fileList = self.willRun
-        current = set()
-        fname = "running.list"
+        current = {}
+        fname = "running.dict"
         if os.path.exists ( fname ):
             with open ( fname, "rt" ) as f:
                 try:
@@ -834,7 +840,7 @@ class ValidationPlot():
         for f in fileList:
             if f in [ "results", "coordinates" ]:
                 continue
-            current.remove ( f )
+            current.pop ( f )
         with open ( fname, "wt" ) as f:
             f.write ( f"{current}\n" )
             f.close()
