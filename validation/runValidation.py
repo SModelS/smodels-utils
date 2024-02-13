@@ -62,13 +62,13 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
         return False
     if options["generateData"] != False:
         valPlot.setSLHAdir(slhadir)
-    if options["generateData"] != False:
         valPlot.getDataFromPlanes()
     else:
         valPlot.loadData()
     #print ( ">>>>> do we have data?", valPlot.data!=None )
     #if valPlot.data != None:
     #    print ( ">>>>>> len: ", len(valPlot.data) )
+    #sys.exit()
     if not valPlot.data:
         if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
