@@ -17,6 +17,19 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
+def queryStats ( maxsteps : Union[None,int] = None ):
+    """ just give us the statistics """
+    import running_stats
+    running_stats.count_jobs()
+    running_stats.running_stats()
+    if maxsteps != None:
+        for i in range(maxsteps):
+            time.sleep(30.)
+            print()
+            running_stats.count_jobs()
+            running_stats.running_stats()
+            print()
+
 def getNProcesses ( nprocesses, inifile ):
     if nprocesses > 0:
         return nprocesses
@@ -170,13 +183,18 @@ def main():
                         type=str, default=None )
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [combined.ini]',
                         type=str, default = "combined.ini" )
-    argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name [None]',
+    argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name. Use this for multi-cpu mode [None]',
                         type=str, default = None )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
+    argparser.add_argument ( '-q','--query',
+            help='query status, dont actually run', action="store_true" )
     args=argparser.parse_args()
     if args.clean:
         clean()
+        sys.exit()
+    if args.query:
+        queryStats ( )
         sys.exit()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     nproc = getNProcesses ( args.nprocesses, args.validate )

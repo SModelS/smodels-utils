@@ -30,6 +30,7 @@ from sympy import var
 import pyslha
 import string
 import glob
+from typing import List
 
 logger.setLevel(level=logging.ERROR)
 
@@ -62,9 +63,12 @@ class ValidationPlot():
 
         self.expRes = copy.deepcopy(ExptRes)
         self.db = db
+        self.ct_nooutput = 0
         self.keep = keep
         self.t0 = time.time()
         self.options = options
+        self.limitPoints = self.options["limitPoints"]
+        self.willRun = []
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
@@ -263,7 +267,7 @@ class ValidationPlot():
         else:
             self.slhaDir = slhadir
 
-    def getSLHAdir(self):
+    def getSLHAdir(self) -> str:
         """
         Returns path to the folders containing the SLHA files.
         If slhadir is a .tar.gz file, returns a temporary folder where the files
@@ -279,34 +283,43 @@ class ValidationPlot():
         elif os.path.isfile(self.slhaDir):
             try:
                 tar = tarfile.open(self.slhaDir,'r:gz')
+                nfiles = 0
                 if "tempdir" in self.options and self.options["tempdir"]!=None:
                     tdir =  self.options["tempdir"]
                     if "/" in tdir or "." in tdir:
                         logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
                     tempdir = os.path.join ( os.getcwd(), tdir )
+                    nfiles = len(glob.glob(tempdir+'/T*slha')) + 2
                 else:
                     tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 members=tar.getmembers()
+                nmembers = len(members)
+                # logger.debug ( f"nfiles {nfiles} nmembers {nmembers}" )
+                if nfiles >= nmembers:
+                    logger.debug ( f"the slha files seem to already be there, returning {tempdir}" )
+                    self.currentSLHADir = tempdir
+                    self.pointsInTarFile = nmembers-2
+                    return tempdir
+                if nfiles > 3:
+                    logger.warning ( f"we have {nfiles} files, should have {nmembers}. Lets explode the tarball!" )
                 countm = 0
                 for m in members:
                     if m.name.endswith ( ".slha" ):
                         countm += 1
                 self.pointsInTarFile = countm
                 random.shuffle ( members )
-                limitPoints = self.options["limitPoints"]
-                if limitPoints != None and limitPoints > 0:
-                    members=members[:limitPoints]
+                #if self.limitPoints != None and self.limitPoints > 0:
+                #    members=members[:self.limitPoints]
                 tar.extractall(path=tempdir,members=members)
                 tar.close()
-                logger.debug("SLHA files extracted to %s" %tempdir)
+                logger.debug(f"SLHA files extracted to {tempdir}" )
                 self.currentSLHADir = tempdir
                 return tempdir
             except Exception as e:
-                logger.error("Could not extract SLHA files from %s: %s" %\
-                              ( self.slhaDir, e ) )
+                logger.error(f"Could not extract SLHA files from {self.slhaDir}: {e}")
                 sys.exit()
         else:
-            logger.error("%s is not a file nor a folder" %self.slhaDir)
+            logger.error(f"{self.slhaDir} is not a file nor a folder" )
             sys.exit()
 
     def getOfficialCurves(self, get_all=True, expected = False ):
@@ -405,10 +418,11 @@ class ValidationPlot():
         validationDir = self.getValidationDir ( None )
         datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
+            line = f"Validation datafile {datafile} not found"
             if self.options["generateData"] == False:
-                logger.error("Validation datafile %s not found" %datafile)
+                logger.error( line )
             else:
-                logger.info("Validation datafile %s not found" %datafile)
+                logger.info( line )
             if overwrite:
                 self.data = []
             return
@@ -526,7 +540,7 @@ class ValidationPlot():
         for ib,b in enumerate(oldc["masses"]):
             for iv,v in enumerate(b):
                 if v >= len(tokens):
-                    logger.error ( f"filename {filename} does not have {v} labels. Can you please check filenameCoords.py, entry for {self.txName}? It currently reads: {oldc}." )
+                    logger.error ( f"filename {filename} does not have {v} labels, only {len(tokens)}. Can you please check filenameCoords.py, entry for {self.txName}? It currently reads: {oldc}." )
                     sys.exit(-1)
 
                 try:
@@ -545,8 +559,8 @@ class ValidationPlot():
             for ib,b in enumerate(oldc["widths"]):
                 for iv,v in enumerate(b):
                     replacedc["widths"][ib][iv]=float(tokens[v])
-        massPlane = MassPlane.fromString(self.txName,self.axes)
-        varsDict = massPlane.getXYValues(replacedc["masses"],replacedc["widths"])
+        # massPlane = MassPlane.fromString(self.txName,self.axes)
+        varsDict = self.massPlane.getXYValues(replacedc["masses"],replacedc["widths"])
         if varsDict == None or asDict:
             return varsDict
         return (varsDict["x"],varsDict["y"])
@@ -597,12 +611,236 @@ class ValidationPlot():
                 return True
         return False
 
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int: 
+        """ returns 1 if success else 0 """
+        fout = resultsfile
+        if not os.path.isfile(fout):
+            if self.ct_nooutput>4:
+                ## suppress subsequently same error messages
+                return
+            logger.error( f"No SModelS output found for {slhafile} (should be {fout})" )
+            self.ct_nooutput+=1
+            if self.ct_nooutput==5:
+                logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
+            return
+        logger.debug ( f"reading {fout}" )
+        ff = open(fout,'r')
+        txt = ff.read()
+        cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
+        myglobals = globals()
+        myglobals["inf"]=float("inf")
+        myglobals["nan"]=float("nan")
+        try:
+            exec( cmd, myglobals )
+        except SyntaxError as e:
+            logger.error ( f"when reading {fout}: {e}. will skip" ) 
+            os.unlink ( fout )
+            return 0
+        ff.close()
+        if not 'ExptRes' in smodelsOutput:
+            logger.debug( f"No results for {slhafile}" )
+            ## still get the masses from the slhafile name
+            axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
+            ## log also the errors in the py file
+            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
+            self.data.append ( Dict )
+            return 1
+        dt = None
+        if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
+            dt = smodelsOutput["OutputStatus"]["time spent"]
+        res = smodelsOutput['ExptRes']
+        expRes = res[0]
+        #Double checks (to make sure SModelS ran as expected):
+        leadingDSes = {}
+        if True: # len(res) != 1:
+            logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
+            found_combined=False
+            for eR in res:
+                if "combined" in eR["DataSetID"]:
+                    logger.debug ( "found a combined result. will use it." )
+                    found_combined=True
+                    expRes = eR
+            if self.options["keepTopNSRs"] not in [ None, 0 ]:
+                maxR, expRes = -1., None
+                for eR in res:
+                    if "r_expected" in eR:
+                        r = eR["r_expected"]
+                        while r in leadingDSes: # make sure it's unique
+                            r = r * .9999
+                        leadingDSes[r]=eR["DataSetID"]
+                        if r>maxR:
+                            maxR = eR["r_expected"]
+                            expRes = eR
+            if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
+                logger.warning("We have multiple dataset ids, but none is a combined one. Skipping this point." )
+                return 0
+        if expRes['AnalysisID'] != self.expRes.globalInfo.id:
+            logger.error("Something went wrong. Obtained results for the wrong analyses")
+            return 0
+        if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
+            logger.error("Something went wrong. Obtained results for the wrong txname")
+            return 0
+
+        #Replaced rounded masses by original masses
+        #(skip rounding to check if mass is in the plane)
+        roundmass = expRes['Mass (GeV)']
+        width = None
+        if "Width (GeV)" in expRes:
+            width = expRes['Width (GeV)']
+        #print ( "roundmass", slhafile, roundmass )
+        #print ( "expRes", expRes )
+        if roundmass is None or "TGQ12" in slhafile:
+            ## FIXME, for TGQ12 why cant i use exptres?
+            import inspect
+            frame = inspect.currentframe()
+            line = frame.f_lineno
+            #print ( "roundmass is not given in validationObjs.py:%s" % line )
+            #print ( "we try to extract the info from the slha file name %s" % \
+            #        slhafile )
+            roundmass = self.getMassesFromSLHAFileName ( slhafile )
+        # print ( "after", slhafile, roundmass )
+        mass = [br[:] for br in roundmass]
+        slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
+        origmasses = list(set(slhadata.blocks['MASS'].values()))
+        for i,br in enumerate(mass):
+            for im,m in enumerate(br):
+                for omass in origmasses:
+                    if round(omass,1) == m:
+                        mass[i][im] = omass
+                        break
+
+        varsDict = self.massPlane.getXYValues(mass,width)
+        if varsDict is None:
+            logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {self.massPlane}." )
+            return 0
+        if type(dt) == str:
+            if dt.endswith("s"):
+                dt=dt[:-1]
+            dt=float(dt)
+        Dict = {'slhafile' : slhafile, 'axes' : varsDict,
+                'signal': expRes['theory prediction (fb)'],
+                'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
+                'dataset': expRes['DataSetID'] }
+        if type(dt)==float:
+            Dict["t"]=round(dt,3) ## in seconds
+        if len(leadingDSes)>0:
+            s = []
+            n = self.options["keepTopNSRs"]
+            for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
+                s.append ( (k,v) )
+            Dict["leadingDSes"]= s
+        if "l_max" in expRes and "likelihood" in expRes:
+            Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
+            Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+            if not "chi2" in expRes:
+                try:
+                    from smodels.tools.statistics import chi2FromLmax
+                    Dict["chi2"] = round_to_n ( chi2FromLmax ( expRes["likelihood"], expRes["l_max"] ), 3 )
+                except Exception as e:
+                    pass # not strictly necessary
+        if "chi2" in expRes and expRes["chi2"] != None:
+            Dict["chi2"] = round_to_n ( expRes["chi2"], 3 )
+        if 'expected upper limit (fb)' in expRes:
+            Dict['eUL']=expRes["expected upper limit (fb)"]
+            drawExpected = self.options["drawExpected"]
+            if drawExpected == "auto":
+                drawExpected = True
+            self.options["drawExpected"]=drawExpected
+        if "efficiency" in expRes.keys():
+            Dict["efficiency"] = round ( expRes['efficiency'], 8 )
+        if expRes['dataType'] == 'efficiencyMap':
+            #Select the correct dataset (best SR):
+            dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
+            if len(dataset)==1:
+                dataset = dataset[0]
+            else: ## probably the combined case. we take any dataset.
+                dataset = self.expRes.datasets[0]
+
+            txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
+            mnw=[]
+            if width == None:
+                mnw = mass
+            else:
+                for bm,bw in zip(mass,width):
+                    br=[]
+                    for m,w in zip(bm,bw):
+                        if w == 'stable':
+                            br.append( (m,0.0) )
+                        else:
+                            br.append( (m,w) )
+                    mnw.append(br)
+            massGeV = addUnit ( mnw, GeV )
+            if not "efficiency" in Dict.keys():
+                try:
+                    eff = txname.txnameData.getValueFor(massGeV)
+                    if eff != None:
+                        Dict['efficiency'] = round ( eff, 8 )
+                except SModelSError as e:
+                    logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                    Dict=None
+        logger.debug('expres keys : {}'.format(expRes.keys()))
+        if 'best combination' in expRes.keys():
+            Dict['best combination'] = expRes['best combination']
+
+        if Dict:
+            self.data.append(Dict)
+            return 1
+        return 0
+
     def resultExistsAlready(self,slhafilename : str ) -> bool:
         """ does a result exist already for the given slha file """
         resultfile = f"{self.currentSLHADir}/results/{slhafilename}.py"
         if os.path.exists ( resultfile ):
             return True
         return False
+
+    def addToListOfRunningFiles ( self, fileList : List ) -> List:
+        """ add files listed in fileList to list of running  files 
+        :returns: list you should actually run
+        """
+        current = set()
+        fname = "running.list"
+        shouldRun = set()
+        if os.path.exists ( fname ):
+            with open ( fname, "rt" ) as f:
+                try:
+                    current = eval ( f.read() )
+                except Exception as e:
+                    logger.info ( f"exception {e}" )
+            f.close()
+        for f in fileList:
+            if f in [ "results", "coordinates" ]:
+                continue
+            if not f in current:
+                if self.limitPoints == None or len(shouldRun)<self.limitPoints:
+                    current.add ( f )
+                    shouldRun.add ( f )
+        with open ( fname, "wt" ) as f:
+            f.write ( f"{current}\n" )
+            f.close()
+        return shouldRun
+
+    def removeFromListOfRunningFiles ( self ):
+        """ remove files listed in fileList to list of running  files """
+        fileList = self.willRun
+        current = set()
+        fname = "running.list"
+        if os.path.exists ( fname ):
+            with open ( fname, "rt" ) as f:
+                try:
+                    current = eval ( f.read() )
+                except Exception as e:
+                    logger.info ( f"exception {e}" )
+            f.close()
+        for f in fileList:
+            if f in [ "results", "coordinates" ]:
+                continue
+            current.remove ( f )
+        with open ( fname, "wt" ) as f:
+            f.write ( f"{current}\n" )
+            f.close()
+        self.willRun = []
+        return
 
     def getDataFromPlanes(self):
         """
@@ -625,13 +863,31 @@ class ValidationPlot():
         except Exception: ## old version?
             fileList = modelTester.getAllInputFiles(self.currentSLHADir)
             inDir = slhaDir
+        #Set temporary outputdir:
+        outputDir = os.path.join ( self.currentSLHADir, "results" )
+        if os.path.exists ( outputDir ):
+            if self.options["generateData"] == None:
+                logger.info ( f"results folder exists already, but generateData is ondemand, so will use them" )
+            else:
+                outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+                logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
+        else:
+            os.mkdir ( outputDir )
+
         if self.options["generateData"]==None:
             self.loadData()
             tmp = []
             countSkipped = 0
             for f in fileList:
+                if "recipe" in f:
+                    continue
+                if "coordinates" in f:
+                    continue
                 bf = os.path.basename ( f )
-                if self.slhafileInData ( bf ) or self.resultExistsAlready ( bf ):
+                if self.slhafileInData ( bf ):
+                    countSkipped += 1
+                elif self.resultExistsAlready ( bf ):
+                    self.addResultToData ( bf, f"{outputDir}/{bf}.py" )
                     countSkipped += 1
                 else:
                     tmp.append ( f )
@@ -645,16 +901,6 @@ class ValidationPlot():
         else:
             self.data = []
 
-        #Set temporary outputdir:
-        outputDir = os.path.join ( self.currentSLHADir, "results" )
-        if os.path.exists ( outputDir ):
-            if self.options["generateData"] == None:
-                logger.info ( f"results folder exists already, but generateData is ondemand, so will use them" )
-            else:
-                outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
-                logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
-        else:
-            os.mkdir ( outputDir )
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
@@ -675,21 +921,21 @@ class ValidationPlot():
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
-        modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
-                               timeOut, False, parameterFile )
+        self.willRun = self.addToListOfRunningFiles ( fileList )
+        # print ( f"willRun {willRun}" )
+        modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
+                 listOfExpRes, timeOut, False, parameterFile)
+        self.removeFromListOfRunningFiles ( )
 
         #Define original plot
-        massPlane = MassPlane.fromString(self.txName,self.axes)
-        if massPlane == None:
+        # massPlane = MassPlane.fromString(self.txName,self.axes)
+        if self.massPlane == None:
             logger.error ( "no mass plane!" )
             return False
         #Now read the output and collect the necessary data
         slhafiles= os.listdir(self.currentSLHADir)
-        ct_nooutput=0
+        self.ct_nooutput=0
         slhafiles.sort() ## make sure we also go in the same order
-        myglobals = globals()
-        myglobals["inf"]=float("inf")
-        myglobals["nan"]=float("nan")
         for slhafile in fileList: # slhafiles:
             if "recipe" in slhafile:
                 continue
@@ -698,173 +944,7 @@ class ValidationPlot():
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
             fout = os.path.join(outputDir,slhafile + '.py')
-            if not os.path.isfile(fout):
-                if ct_nooutput>4:
-                    ## suppress subsequently same error messages
-                    continue
-                logger.error("No SModelS output found for %s (should be %s)" % \
-                              ( slhafile, fout ) )
-                ct_nooutput+=1
-                if ct_nooutput==5:
-                    logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
-                continue
-            # print ( "reading %s" % fout )
-            ff = open(fout,'r')
-            txt = ff.read()
-            cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
-            exec( cmd, myglobals )
-            ff.close()
-            if not 'ExptRes' in smodelsOutput:
-                logger.debug("No results for %s " %slhafile)
-                ## still get the masses from the slhafile name
-                axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
-                ## log also the errors in the py file
-                Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
-                self.data.append ( Dict )
-                continue
-            dt = None
-            if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
-                dt = smodelsOutput["OutputStatus"]["time spent"]
-            res = smodelsOutput['ExptRes']
-            expRes = res[0]
-            #Double checks (to make sure SModelS ran as expected):
-            leadingDSes = {}
-            if True: # len(res) != 1:
-                logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
-                found_combined=False
-                for eR in res:
-                    if "combined" in eR["DataSetID"]:
-                        logger.debug ( "found a combined result. will use it." )
-                        found_combined=True
-                        expRes = eR
-                if self.options["keepTopNSRs"] not in [ None, 0 ]:
-                    maxR, expRes = -1., None
-                    for eR in res:
-                        if "r_expected" in eR:
-                            r = eR["r_expected"]
-                            while r in leadingDSes: # make sure it's unique
-                                r = r * .9999
-                            leadingDSes[r]=eR["DataSetID"]
-                            if r>maxR:
-                                maxR = eR["r_expected"]
-                                expRes = eR
-                if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
-                    logger.warning("We have multiple dataset ids, but none is a combined one. Skipping this point." )
-                    continue
-            if expRes['AnalysisID'] != self.expRes.globalInfo.id:
-                logger.error("Something went wrong. Obtained results for the wrong analyses")
-                return False
-            if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
-                logger.error("Something went wrong. Obtained results for the wrong txname")
-                return False
-
-            #Replaced rounded masses by original masses
-            #(skip rounding to check if mass is in the plane)
-            roundmass = expRes['Mass (GeV)']
-            # print ( "round mass is", roundmass )
-            width = None
-            if "Width (GeV)" in expRes:
-                width = expRes['Width (GeV)']
-            #print ( "roundmass", slhafile, roundmass )
-            #print ( "expRes", expRes )
-            if roundmass is None or "TGQ12" in slhafile:
-                ## FIXME, for TGQ12 why cant i use exptres?
-                import inspect
-                frame = inspect.currentframe()
-                line = frame.f_lineno
-                #print ( "roundmass is not given in validationObjs.py:%s" % line )
-                #print ( "we try to extract the info from the slha file name %s" % \
-                #        slhafile )
-                roundmass = self.getMassesFromSLHAFileName ( slhafile )
-            # print ( "after", slhafile, roundmass )
-            mass = [br[:] for br in roundmass]
-            slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
-            origmasses = list(set(slhadata.blocks['MASS'].values()))
-            for i,br in enumerate(mass):
-                for im,m in enumerate(br):
-                    for omass in origmasses:
-                        if round(omass,1) == m:
-                            mass[i][im] = omass
-                            break
-
-            #print ( "get xy", mass, width )
-            varsDict = massPlane.getXYValues(mass,width)
-            #print ( "varsdict", varsDict )
-            if varsDict is None:
-                logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
-                               (slhafile, massPlane ) )
-                continue
-            if type(dt) == str:
-                if dt.endswith("s"):
-                    dt=dt[:-1]
-                dt=float(dt)
-            Dict = {'slhafile' : slhafile, 'axes' : varsDict,
-                    'signal': expRes['theory prediction (fb)'],
-                    'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
-                    'dataset': expRes['DataSetID'] }
-            if type(dt)==float:
-                Dict["t"]=round(dt,3) ## in seconds
-            if len(leadingDSes)>0:
-                s = []
-                n = self.options["keepTopNSRs"]
-                for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
-                    s.append ( (k,v) )
-                Dict["leadingDSes"]= s
-            if "l_max" in expRes and "likelihood" in expRes:
-                Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
-                Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
-                if not "chi2" in expRes:
-                    try:
-                        from smodels.tools.statistics import chi2FromLmax
-                        Dict["chi2"] = round_to_n ( chi2FromLmax ( expRes["likelihood"], expRes["l_max"] ), 3 )
-                    except Exception as e:
-                        pass # not strictly necessary
-            if "chi2" in expRes and expRes["chi2"] != None:
-                Dict["chi2"] = round_to_n ( expRes["chi2"], 3 )
-            if 'expected upper limit (fb)' in expRes:
-                Dict['eUL']=expRes["expected upper limit (fb)"]
-                drawExpected = self.options["drawExpected"]
-                if drawExpected == "auto":
-                    drawExpected = True
-                self.options["drawExpected"]=drawExpected
-            if "efficiency" in expRes.keys():
-                Dict["efficiency"] = round ( expRes['efficiency'], 8 )
-            if expRes['dataType'] == 'efficiencyMap':
-                #Select the correct dataset (best SR):
-                dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
-                if len(dataset)==1:
-                    dataset = dataset[0]
-                else: ## probably the combined case. we take any dataset.
-                    dataset = self.expRes.datasets[0]
-
-                txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                mnw=[]
-                if width == None:
-                    mnw = mass
-                else:
-                    for bm,bw in zip(mass,width):
-                        br=[]
-                        for m,w in zip(bm,bw):
-                            if w == 'stable':
-                                br.append( (m,0.0) )
-                            else:
-                                br.append( (m,w) )
-                        mnw.append(br)
-                massGeV = addUnit ( mnw, GeV )
-                if not "efficiency" in Dict.keys():
-                    try:
-                        eff = txname.txnameData.getValueFor(massGeV)
-                        if eff != None:
-                            Dict['efficiency'] = round ( eff, 8 )
-                    except SModelSError as e:
-                        logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
-                        Dict=None
-            logger.debug('expres keys : {}'.format(expRes.keys()))
-            if 'best combination' in expRes.keys():
-                Dict['best combination'] = expRes['best combination']
-
-            if Dict:
-                self.data.append(Dict)
+            self.addResultToData ( slhafile, fout )
 
         #Remove temporary folder
         if self.currentSLHADir != self.slhaDir and not self.keep:
