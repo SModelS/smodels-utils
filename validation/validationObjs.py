@@ -350,8 +350,11 @@ class ValidationPlot():
         if tempdir is None: tempdir = os.getcwd()
         parFile = os.path.join ( tempdir, "parameter.ini" )
         if os.path.exists ( parFile ):
-            logger.warning ( f"weird, parameter file {parFile} already exists?" )
-            parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+            if self.options['generateData']==None:
+                logger.warning ( f"parameter file {parFile} exists already, but generateData is ondemand. Will use." )
+            else:
+                logger.warning ( f"weird, parameter file {parFile} already exists?" )
+                parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini' ) # , text=True )
         pf = open ( parFile, "wt" )
 
         combine = "False"
@@ -593,6 +596,13 @@ class ValidationPlot():
                 return True
         return False
 
+    def resultExistsAlready(self,slhafilename : str ) -> bool:
+        """ does a result exist already for the given slha file """
+        resultfile = f"{self.currentSLHADir}/results/{slhafilename}.py"
+        if os.path.exists ( resultfile ):
+            return True
+        return False
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -606,7 +616,7 @@ class ValidationPlot():
             logger.warning("SLHA folder not defined")
             return False
         self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.debug("SLHA files for validation at %s" %self.currentSLHADir)
+        logger.debug( f"SLHA files for validation at {self.currentSLHADir}" )
 
         #Get list of input files to be tested
         try:
@@ -620,12 +630,16 @@ class ValidationPlot():
             countSkipped = 0
             for f in fileList:
                 bf = os.path.basename ( f )
-                if self.slhafileInData ( bf ):
+                if self.slhafileInData ( bf ) or self.resultExistsAlready ( bf ):
                     countSkipped += 1
                 else:
                     tmp.append ( f )
             if countSkipped > 0:
                 logger.info ( f"skipped a total of {countSkipped} points: generateData was set to 'ondemand'." )
+                # lets randomize in these cases, so we can somewhat parallelize
+                # FIXME it would be better if we locked individual slha files
+                import random
+                random.shuffle ( tmp )
             fileList = tmp
         else:
             self.data = []
@@ -633,15 +647,18 @@ class ValidationPlot():
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
-            logger.warning ( f"weird, {outputDir} already exists?" )
-            outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+            if self.options["generateData"] == None:
+                logger.info ( f"results folder exists already, but generateData is ondemand, so will use them" )
+            else:
+                outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+                logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
         else:
             os.mkdir ( outputDir )
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
-        logger.info("SLHA dir %s" % self.slhaDir )
-        logger.info("Parameter file: %s" %parameterFile)
+        logger.info( f"SLHA dir {self.slhaDir}" )
+        logger.info( f"Parameter file: {parameterFile}" )
         # print ("Parameter file: %s" %parameterFile)
 
         #Read and check parameter file, exit parameterFile does not exist

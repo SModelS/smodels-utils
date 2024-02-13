@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
 """
-try:
-    import commands as subprocess
-except:
-    import subprocess
+the script to start all results validation jobs with 
+
 """
 
+import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
+from typing import Union
+
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
+if "CODEDIR" in os.environ:
+    codedir = os.environ["CODEDIR"]
 
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
@@ -34,7 +36,8 @@ def getNProcesses ( nprocesses, inifile ):
         ncpus = int(token)*2
     return ncpus
 
-def validate ( inifile, dry_run, nproc, time, analyses, topo ):
+def validate ( inifile, dry_run, nproc, time, analyses, topo,
+               keep : bool, tempname : Union[None,str] ):
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
@@ -42,21 +45,29 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
     :param time: time in hours
     :param analyses: string that replaces @@ANALYSES@@ in inifile
     :param topo: string that replaces @@TOPOS@@ in inifile
+    :param keep: keep temporary files
+    :param tempname: if not None, use this for the temp files names
     """
     if topo in [ None, "all" ]:
         topo = "*"
     if analyses == None:
         analyses = "all"
     print ( f"[slurm.py] run validation with {inifile}" )
-    Dir = "%s/smodels-utils/clip/temp/" % codedir
+    Dir = f"{codedir}/smodels-utils/clip/temp/"
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
     with open ( f"{codedir}/smodels-utils/validation/inifiles/{inifile}", "rt" ) as f:
         lines = f.readlines()
         f.close()
-    newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
+    if tempname is None:
+        newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
+    else:
+        newini = f"{Dir}/{tempname}.ini"
     tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
     # if possible name the tempdir the same as the temp script and the temp ini file
+    skeep = ""
+    if keep:
+        skeep = "--keep"
     with open ( newini, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
@@ -65,20 +76,21 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
             f.write ( newline )
         f.close()
 
-    with open ( "%s/smodels-utils/clip/validate_template.sh" % codedir, "rt" ) as f:
+    with open ( f"{codedir}/smodels-utils/clip/validate_template.sh", "rt" ) as f:
         lines = f.readlines()
         f.close()
     # filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
     filename = os.path.basename ( newini ).replace(".ini",".sh")
-    print ( "[slurm.py] creating script at %s/%s" % ( Dir, filename ) )
-    nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     newFile = f"{Dir}/{filename}"
+    print ( f"[slurm.py] creating script at {newFile}" )
+    nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
             newline = newline.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@ORIGINIFILE@@", inifile  )
+            newline = newline.replace("@@KEEP@@", skeep )
             f.write ( newline )
         f.close()
     tdir = "./temp"
@@ -102,14 +114,14 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo ):
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
-    ram = 12. + .8 * nproc
+    ram = int ( 12. + .8 * nproc )
     # ncpus = nproc # int(nproc*1.5)
-    ncpus = int(nproc*2)
-    cmd += [ "--mem", "%dG" % ram ]
-    cmd += [ "-c", "%d" % ( ncpus ) ] # allow for 200% per process
+    ncpus = int(nproc*4)
+    cmd += [ "--mem", f"{ram}G" ]
+    cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     cmd += [ newFile ]
     # cmd += [ "./run_bakery.sh" ]
-    print ("[slurm.py] validating %s" % " ".join ( cmd ) )
+    print ( f"[slurm.py] validating {' '.join ( cmd )}" )
     if not dry_run:
         a=subprocess.run ( cmd )
         print ( "returned: %s" % a )
@@ -149,7 +161,7 @@ def main():
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-k','--keep',
-            help='keep the shell scripts that are being run, do not remove them afters',
+            help='keep the temporary files,do not remove them afterwards',
             action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means as specified in inifile [0]',
@@ -158,6 +170,8 @@ def main():
                         type=str, default=None )
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [combined.ini]',
                         type=str, default = "combined.ini" )
+    argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name [None]',
+                        type=str, default = None )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
     args=argparser.parse_args()
@@ -167,7 +181,7 @@ def main():
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     nproc = getNProcesses ( args.nprocesses, args.validate )
     validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
-               args.topo )
+               args.topo, args.keep, args.tempname )
     logCall()
 
 if __name__ == "__main__":
