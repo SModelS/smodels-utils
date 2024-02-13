@@ -19,7 +19,7 @@ class Progress:
         dirs += glob.glob ( "tmp*" )
         ndirs = []
         for d in dirs:
-            if d.endswith ( ".ini" ) or d.endswith ( ".py" ):
+            if d.endswith ( ".ini" ) or d.endswith ( ".py" ) or d.endswith(".png"):
                 continue
             ndirs.append ( d )
         dirs = ndirs

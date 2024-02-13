@@ -808,6 +808,12 @@ class ValidationPlot():
                 except Exception as e:
                     logger.info ( f"exception {e}" )
             f.close()
+        cleanedcurrent = {}
+        for f,t in current.items():
+            dt = ( time.time() - t ) / 60. # minutes
+            if dt < 30.: # after 30 minutes we take it out!
+                cleanedcurrent[f]=t
+        current = cleanedcurrent
         for f in fileList:
             if f in [ "results", "coordinates" ]:
                 continue
