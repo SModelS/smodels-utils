@@ -419,11 +419,7 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
     if clean_all:
         cmd = "cd %s; rm -rf old*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf" % rundir
         # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
-<<<<<<< HEAD
-        cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
-=======
         cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi hiscore*cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
->>>>>>> e6c102282 (colors)
     if verbose:
         print ( "[slurm.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
