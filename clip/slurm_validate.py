@@ -185,8 +185,8 @@ def main():
                         type=str, default = "combined.ini" )
     argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name. Use this for multi-cpu mode [None]',
                         type=str, default = None )
-    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
-                        type=int, default=48 )
+    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
+                        type=int, default=8 )
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run', action="store_true" )
     args=argparser.parse_args()

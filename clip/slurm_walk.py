@@ -464,6 +464,10 @@ def cancelAllRunners():
 
 def cancelRangeOfRunners( jrange : str ):
     """ cancel only the jrange of runners """
+    import re
+    if re.search('[a-zA-Z]', jrange) is not None:
+        from running_stats import cancelJobsByString
+        return cancelJobsByString ( jrange )
     if not "-" in jrange: # single job
         cmd = f"scancel {jrange}"
         subprocess.getoutput ( cmd )
@@ -555,8 +559,8 @@ def main():
     argparser.add_argument ( '-N', '--nmax', nargs='?',
                         help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
-    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
-                        type=int, default=48 )
+    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
+                        type=int, default=8 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )

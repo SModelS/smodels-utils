@@ -1,6 +1,31 @@
 #!/usr/bin/env python3
 
+""" FIXME should rename, contains all the helpers to interact efficiently with 
+slurm
+"""
+
 import glob, stat, os, time, subprocess, colorama
+
+def cancelJobsByString ( text : str ):
+    """ cancel jobs that have text in their job names """
+    print ( f"cancel all jobs that have {text} in their names." )
+    o = subprocess.getoutput ( f"slurm q | grep {text}" )
+    lines = o.split("\n")
+    jobids = []
+    for line in lines:
+        tokens = line.split()
+        if len(tokens)==0:
+            continue
+        try:
+            jobid = int(tokens[0])
+            jobids.append ( jobid )
+        except ValueError as e:
+            pass
+    cmd = f"scancel {' '.join(map(str,jobids))}"
+    print ( f"scancel {' '.join(map(str,jobids))}" )
+    o = subprocess.getoutput ( cmd )
+
+
 
 def getRundir():
     # ret="/scratch-cbe/users/wolfgan.waltenbergerrundir/"

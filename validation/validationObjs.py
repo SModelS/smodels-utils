@@ -65,6 +65,8 @@ class ValidationPlot():
         self.db = db
         self.ct_nooutput = 0
         self.keep = keep
+        self.runningDictFile = "running.dict"
+        self.runningDictLockFile = "running.lock"
         self.t0 = time.time()
         self.options = options
         self.limitPoints = self.options["limitPoints"]
@@ -794,15 +796,32 @@ class ValidationPlot():
             return True
         return False
 
+    def lockRunningDict ( self ):
+        ctr = 0
+        while os.path.exists ( self.runningDictLockFile ):
+            ctr+=1
+            time.sleep ( .1 * ctr )
+            if ctr > 10: # we dont wait forever
+                self.unlockRunningDict()
+                return
+        from pathlib import Path
+        Path ( self.runningDictLockFile ).touch()
+
+    def unlockRunningDict( self ):
+        if os.path.exists ( self.runningDictLockFile ):
+            try:
+                os.unlink ( self.runningDictLockFile )
+            except FileNotFoundError as e:
+                pass
+
     def addToListOfRunningFiles ( self, fileList : List ) -> List:
         """ add files listed in fileList to list of running  files 
         :returns: list you should actually run
         """
-        current = set()
-        fname = "running.list"
+        current = {}
         shouldRun = set()
-        if os.path.exists ( fname ):
-            with open ( fname, "rt" ) as f:
+        if os.path.exists ( self.runningDictFile ):
+            with open ( self.runningDictFile, "rt" ) as f:
                 try:
                     current = eval ( f.read() )
                 except Exception as e:
@@ -811,7 +830,9 @@ class ValidationPlot():
         cleanedcurrent = {}
         for f,t in current.items():
             dt = ( time.time() - t ) / 60. # minutes
-            if dt < 30.: # after 30 minutes we take it out!
+            ## FIXME we should actually only take out once 
+            ## we run out of "good" points
+            if dt < 15.: # after 15 minutes we take it out!
                 cleanedcurrent[f]=t
         current = cleanedcurrent
         for f in fileList:
@@ -821,18 +842,19 @@ class ValidationPlot():
                 if self.limitPoints == None or len(shouldRun)<self.limitPoints:
                     current.add ( f )
                     shouldRun.add ( f )
-        with open ( fname, "wt" ) as f:
+        self.lockRunningDict()
+        with open ( self.runningDictFile, "wt" ) as f:
             f.write ( f"{current}\n" )
             f.close()
+        self.unlockRunningDict()
         return shouldRun
 
     def removeFromListOfRunningFiles ( self ):
         """ remove files listed in fileList to list of running  files """
         fileList = self.willRun
-        current = set()
-        fname = "running.list"
-        if os.path.exists ( fname ):
-            with open ( fname, "rt" ) as f:
+        current = {}
+        if os.path.exists ( self.runningDictFile ):
+            with open ( self.runningDictFile, "rt" ) as f:
                 try:
                     current = eval ( f.read() )
                 except Exception as e:
@@ -841,10 +863,16 @@ class ValidationPlot():
         for f in fileList:
             if f in [ "results", "coordinates" ]:
                 continue
-            current.remove ( f )
-        with open ( fname, "wt" ) as f:
+            try:
+                current.pop ( f )
+            except KeyError as e: # it's not in, so nothing to take out
+                # we can ignore
+                pass
+        self.lockRunningDict()
+        with open ( self.runningDictFile, "wt" ) as f:
             f.write ( f"{current}\n" )
             f.close()
+        self.unlockRunningDict()
         self.willRun = []
         return
 
