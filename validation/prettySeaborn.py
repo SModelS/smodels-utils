@@ -65,6 +65,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     tgr, etgr, tgrchi2 = [], [], []
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"$r = \sigma_{signal}/\sigma_{UL}$"
+    if options["significances"]:
+        zlabel = "Z"
     logY = yIsLog ( validationPlot )
 
     if not validationPlot.data:
@@ -120,6 +122,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 if pt["eUL"] != None and pt["eUL"] > 0.:
                     hasExpected = True
                     rexp = pt['signal']/pt ['eUL']
+        if options["significances"]:
+            ### dont plot r, plot Z!
+            from validationHelpers import significanceFromLikelihoods
+            if "llhd" in pt and not "l_SM" in pt:
+                logger.error ( "asked for significances but no l_SM in data!" ) 
+                sys.exit()
+            if "l_SM" in pt:
+                Z = significanceFromLikelihoods ( pt["l_SM"], pt["llhd"] )
+                r = Z
+                # print ( f"Z({xvals['x']:.1f},{xvals['y']:.1f})={Z:.2f}, l_SM={pt['l_SM']:.2g} l_BSM={pt['llhd']:.2g}" )
         if r > 3.:
             r=3.
         if rexp > 3.:
@@ -130,6 +142,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 if logY:
                     y = np.log10 ( y )
                 ylabel = "r = $\sigma_{signal}/\sigma_{UL}$"
+                if options["significances"]:
+                    ylabel = "Z"
             else:
                 x = xvals["x"]
                 if "y" in xvals:
@@ -186,6 +200,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         return None, None
 
     title = validationPlot.expRes.globalInfo.id
+    if options["significances"]:
+        title = f"significances: {title}"
     types = []
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
@@ -314,7 +330,12 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # print ( "after" )
     # pprint ( xs, ys, T ) # , xrange=(500,1000), yrange=(800,900) )
     # shading is one of: 'gouraud', 'nearest', 'flat', 'auto'
-    im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=3., vmin = 0.,
+    vmin, vmax = 0., 3.
+    if options["significances"]:
+        vmin, vmax = -1., 4.
+        cm = getColormap( "Z" )
+        # cm = 'PiYG_r'
+    im = plt.pcolormesh ( xs, ys, T, cmap = cm, vmax=vmax, vmin = vmin,
                           shading="nearest" )
     plt.title ( title )
     # plt.text ( .28, .85, title, transform = fig.transFigure )

@@ -1141,7 +1141,7 @@ class ValidationPlot():
 
 
         if not self.pretty:
-            logger.info ( "saving plot in %s" % filename )
+            logger.info ( f"saving plot in {filename}" )
             self.savefig(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
@@ -1152,7 +1152,10 @@ class ValidationPlot():
         else:
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
-            filename = filename.replace('.'+fformat,'_pretty.'+fformat)
+            prettyExt = "_pretty."
+            if self.options["significances"]:
+                prettyExt = "_prettyZ."
+            filename = filename.replace('.'+fformat,prettyExt+fformat)
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
@@ -1160,14 +1163,6 @@ class ValidationPlot():
                cmd = f"convert {filename} {newfilename}" 
                import subprocess
                o = subprocess.getoutput ( cmd )
-            """
-            logger.debug ( "saving plot in %s (and pdf and root)" % filename )
-            self.savefig ( filename )
-            addLogo ( filename )
-            #filename = filename.replace('.png','.root')
-            #self.savefig ( filename )
-            # addLogo ( filename )
-            """
         self.show ( filename )
 
         return True
@@ -1311,6 +1306,8 @@ class ValidationPlot():
         filename += '.'+fformat
 
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
+        #if self.options["significances"] and fformat in [ "png", "pdf" ]:
+        #    filename = f"Z_{filename}"
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
 

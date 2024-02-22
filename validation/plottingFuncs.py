@@ -137,16 +137,17 @@ def importMatplot ( record : bool ):
     return plt
 
 
-def getColormap():
+def getColormap( palette : str = "default" ):
     """ our matplotlib colormap for pretty plots """
     # return plt.cm.RdYlBu_r
     # return plt.cm.RdYlGn_r
     from  matplotlib.colors import LinearSegmentedColormap
     # c = ["darkred","red","lightcoral","lightyellow", "palegreen","green","darkgreen"]
     c = ["darkgreen", "green", "palegreen", "lightgoldenrodyellow", "lightcoral", "red", (.9,0,0), (.7,0,0) ]
-    #v = [0,.15,.4,.5,0.6,.9,1.]
-    # v = [0,.1,.3,.67,0.8,.9,1.]
     v = [0,.11,.22,.33,0.52,.7,.85,1.]
+    if palette == "Z":
+        c = ["darkgreen", "palegreen", "lightgoldenrodyellow", "lightpink", (.9,0,.9), (.7,0.,.7), (.5,0,.5), "purple" ]
+        v = [0,.09,.19,.30,0.52,.7,.85,1.]
     l = list(zip(v,c))
     cmap=LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap

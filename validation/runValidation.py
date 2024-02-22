@@ -65,10 +65,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
         valPlot.getDataFromPlanes()
     else:
         valPlot.loadData()
-    #print ( ">>>>> do we have data?", valPlot.data!=None )
-    #if valPlot.data != None:
-    #    print ( ">>>>>> len: ", len(valPlot.data) )
-    #sys.exit()
     if not valPlot.data:
         if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
@@ -461,8 +457,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 # per default we do not do this
                 shutil.copyfile ( currentPickle, os.path.join ( databasePath, "validation.pcl" ) )
     except Exception as e:
-        logger.error("Error loading database at %s" % ( databasePath ) )
-        logger.error("Error: %s" % str(e) )
+        logger.error( f"Error loading database at {databasePath}" )
+        logger.error( f"Error: {str(e)}" )
         sys.exit()
 
     logger.info('-- Running validation...')
@@ -539,17 +535,17 @@ if __name__ == "__main__":
     args = ap.parse_args()
     rdictfile = "running.dict"
     if not args.cont and os.path.exists ( rdictfile ):
-        logger.warn ( f"Did not specify --continue, so removing {rdictfile}!" )
+        logger.warning ( f"Did not specify --continue, so removing {rdictfile}!" )
         try:
             os.unlink ( rdictfile )
         except FileNotFoundError as e:
             pass # I guess a parallel process has already removed it?
 
     if not os.path.isfile(args.parfile):
-        logger.error("Parameters file ''%s'' not found" %args.parfile)
+        logger.error( f"Parameters file ''{args.parfile}'' not found" )
         sys.exit(-1)
     else:
-        logger.info("Reading validation parameters from %s" %args.parfile)
+        logger.info( f"Reading validation parameters from {args.parfile}" )
 
     parser = None
     try:
@@ -658,6 +654,7 @@ if __name__ == "__main__":
                 "pngPlots": True, ## also png plots?
                 "recordPlotCreation": False, ## record the plot creation?
                 "pdfPlots": True, ## also pdf plots?
+                "significances": False, ## significance plot instead of ul plot?
                 "expectationType": "posteriori",
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
@@ -701,7 +698,7 @@ if __name__ == "__main__":
             if spretty in [ "dictonly" ]:
                 options["prettyPlots"] = "dictonly"
             if options["prettyPlots"] == False and spretty not in [ "false", "0", "no", "dictonly" ]:
-                logger.error ( "prettyPlots %s unknown" % spretty )
+                logger.error ( f"prettyPlots {spretty} unknown" )
                 sys.exit()
 
         if parser.has_option("options","legendplacement"):

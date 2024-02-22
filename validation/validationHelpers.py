@@ -24,7 +24,7 @@ def getExpResPath ( expRes, databasePath ):
     path = databasePath + path[p2:]
     return path
 
-def retrieveValidationFile ( filename, tarballname = None ):
+def retrieveValidationFile ( filename : str, tarballname : str = None ) -> bool:
     """ retrieve a certain validation file from the right tarball
     :param filename: name of slha file to extract
     :param tarballname: optionally supply name of tarball also
@@ -38,7 +38,6 @@ def retrieveValidationFile ( filename, tarballname = None ):
             tarballname = f"{tokens[0]}.tar.gz"
     tarball = f"{installDirectory()}/slha/{tarballname}"
     tarball = tarball.replace("//","/")
-    # print ( "filename", filename, os.path.exists ( tarball ), tarball, os.getcwd() )
     if os.path.exists ( tarball ):
         import tarfile
         f= tarfile.open ( tarball )
@@ -52,6 +51,26 @@ def point_in_hull(point, hull, tolerance=1e-12):
     import numpy
     """ return if a given point is within a given hull """
     return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
+
+def significanceFromLikelihoods ( l_SM : float, l_BSM : float, ndf : int = 2)->float:
+    """ compute the significance Z from the likelihood ratio,
+
+    :param ndf: number of degrees of freedom
+    :returns: Z
+    """
+    import scipy.stats
+    import numpy as np
+    if l_SM == 0.:
+        return float("nan")
+    if l_BSM == 0.:
+        return float("nan")
+    T = max ( 2 * ( np.log ( l_BSM ) - np.log ( l_SM ) ), 0. )
+    # Z = np.sqrt ( T )
+    p = scipy.stats.chi2.cdf ( T, df=ndf )
+    Z = scipy.stats.norm.ppf ( p )
+    if Z < -3.:
+        Z = -3.
+    return Z
 
 def getValidationFileContent ( validationfile : str ):
     """ get the content of the validation file, as a dictionary of
