@@ -248,8 +248,8 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine,
-       uploadTo : str ):
+def runLLHDScanner( pid : int, dry_run : bool, time : float, rewrite : bool, 
+        rundir : str, select : str, do_srcombine : bool, uploadTo : str ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -278,7 +278,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir, select, do_srcombine,
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    nprcs = 10
+    nprcs = 5 # was at 10
     script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_srcombine, uploadTo  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )

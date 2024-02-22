@@ -1207,7 +1207,7 @@ class ValidationPlot():
 
         if self.options["generateData"] in [ None, "ondemand" ]:
             nadded = self.loadData ( overwrite = False )
-            print ( "[validationObjs] loaded", len(self.data) )
+            logger.info ( f"loaded {len(self.data)} data points" )
             if nadded == 0:
                 logger.warning("No added points. Nothing will be saved")
                 return False
