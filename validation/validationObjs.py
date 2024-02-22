@@ -734,6 +734,7 @@ class ValidationPlot():
         if "l_max" in expRes and "likelihood" in expRes:
             Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
             Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+            Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
             if not "chi2" in expRes:
                 try:
                     from smodels.tools.statistics import chi2FromLmax
@@ -839,8 +840,8 @@ class ValidationPlot():
             if f in [ "results", "coordinates" ]:
                 continue
             if not f in current:
-                if self.limitPoints == None or len(shouldRun)<self.limitPoints:
-                    current.add ( f )
+                if self.limitPoints in [-1, None] or len(shouldRun)<self.limitPoints:
+                    current[f]=time.time()
                     shouldRun.add ( f )
         self.lockRunningDict()
         with open ( self.runningDictFile, "wt" ) as f:
@@ -956,7 +957,7 @@ class ValidationPlot():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        # print ( f"willRun {willRun}" )
+        # self.pprint ( f"willRun {self.willRun}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
                  listOfExpRes, timeOut, False, parameterFile)
         self.removeFromListOfRunningFiles ( )
