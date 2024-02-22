@@ -530,12 +530,20 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--force_build', action="store_true",
             help='force building of database pickle file (you may want to do this for the grid datapoints in the ugly plots)' )
     ap.add_argument('-k', '--keep', action="store_true", help='keep temp dir' )
+    ap.add_argument('-c', '--cont', action="store_true", help='continue a running production, i.e. dont remove running.dict file' )
     ap.add_argument('-s', '--show', action="store_true", help='show plots after producing them. tries a few viewers like timg, see, display.' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
 
     args = ap.parse_args()
+    rdictfile = "running.dict"
+    if not args.cont and os.path.exists ( rdictfile ):
+        logger.warn ( f"Did not specify --continue, so removing {rdictfile}!" )
+        try:
+            os.unlink ( rdictfile )
+        except FileNotFoundError as e:
+            pass # I guess a parallel process has already removed it?
 
     if not os.path.isfile(args.parfile):
         logger.error("Parameters file ''%s'' not found" %args.parfile)

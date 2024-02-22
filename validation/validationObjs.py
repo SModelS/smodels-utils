@@ -940,7 +940,7 @@ class ValidationPlot():
         parameterFile = self.getParameterFile(tempdir=outputDir)
         logger.info( f"SLHA dir {self.slhaDir}" )
         logger.info( f"Parameter file: {parameterFile}" )
-        # print ("Parameter file: %s" %parameterFile)
+        # print ( f"Parameter file: {parameterFile}" )
 
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
@@ -956,7 +956,7 @@ class ValidationPlot():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        # self.pprint ( f"willRun {self.willRun}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
+        # print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
                  listOfExpRes, timeOut, False, parameterFile)
         self.removeFromListOfRunningFiles ( )
