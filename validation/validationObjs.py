@@ -61,12 +61,39 @@ class ValidationPlot():
         """
         print ( "validationObjects init", Axes )
 
+        self.databasePath = databasePath
+        anaID = ExptRes.globalInfo.id
+        if databasePath:
+            if os.path.isdir(databasePath):
+                self.databasePath = databasePath
+            else:
+                logger.error("Database folder "+databasePath+" does not exist")
+                sys.exit()
+        #Try to guess the path:
+        else:
+            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
+            if not os.path.isdir(self.databasePath):
+                logger.error("Could not define databasePath folder")
+                sys.exit()
         self.expRes = copy.deepcopy(ExptRes)
         self.db = db
         self.ct_nooutput = 0
         self.keep = keep
-        self.runningDictFile = "running.dict"
-        self.runningDictLockFile = "running.lock"
+        self.runningDictFile = f"run_{anaID}.dict"
+        self.runningDictLockFile = f"run_{anaID}.lock"
+        if not options["continue"]:
+            if os.path.exists ( self.runningDictFile ):
+                try:
+                    os.unlink ( self.runningDictFile )
+                except FileNotFoundError as e:
+                    pass
+            if os.path.exists ( self.runningDictLockFile ):
+                try:
+                    os.unlink ( self.runningDictLockFile )
+                except FileNotFoundError as e:
+                    pass
         self.t0 = time.time()
         self.options = options
         self.limitPoints = self.options["limitPoints"]

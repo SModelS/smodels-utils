@@ -46,7 +46,7 @@ def getNProcesses ( nprocesses, inifile ):
         p2 = line.find(";")
         token = line[p1+1:p2]
         token = token.strip()
-        ncpus = int(token)*2
+        ncpus = int(token)/2# *2
     return ncpus
 
 def validate ( inifile, dry_run, nproc, time, analyses, topo,
