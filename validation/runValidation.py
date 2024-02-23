@@ -533,13 +533,6 @@ if __name__ == "__main__":
             default = 'info', type = str)
 
     args = ap.parse_args()
-    rdictfile = "running.dict"
-    if not args.cont and os.path.exists ( rdictfile ):
-        logger.warning ( f"Did not specify --continue, so removing {rdictfile}!" )
-        try:
-            os.unlink ( rdictfile )
-        except FileNotFoundError as e:
-            pass # I guess a parallel process has already removed it?
 
     if not os.path.isfile(args.parfile):
         logger.error( f"Parameters file ''{args.parfile}'' not found" )
@@ -655,6 +648,7 @@ if __name__ == "__main__":
                 "recordPlotCreation": False, ## record the plot creation?
                 "pdfPlots": True, ## also pdf plots?
                 "significances": False, ## significance plot instead of ul plot?
+                "continue": False, ## continue old productions
                 "expectationType": "posteriori",
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
@@ -669,6 +663,8 @@ if __name__ == "__main__":
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
     }
+
+    options["continue"]=args.cont
 
     # some options receive special treatment
     if parser.has_section("options"):
