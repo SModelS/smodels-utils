@@ -124,13 +124,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                     rexp = pt['signal']/pt ['eUL']
         if options["significances"]:
             ### dont plot r, plot Z!
-            # r = float("nan") ## better draw nothing than r instead of Z
+            r = float("nan") ## better draw nothing than r instead of Z
             from validationHelpers import significanceFromLikelihoods
             if not "llhd" in pt or not "l_SM" in pt:
-                logger.error ( "asked for significances but no l_SM/llhd in data!" ) 
-                sys.exit()
-            Z = significanceFromLikelihoods ( pt["l_SM"], pt["llhd"] )
-            r = Z
+                if not "l_SM" in pt:
+                    # its only weird if only l_SM is missing
+                    logger.error ( f"asked for significances but no l_SM in {pt['axes']}!" ) 
+                # sys.exit()
+            else:
+                Z = significanceFromLikelihoods ( pt["l_SM"], pt["llhd"] )
+                r = Z
             # print ( f"Z({xvals['x']:.1f},{xvals['y']:.1f})={Z:.2f}, l_SM={pt['l_SM']:.2g} l_BSM={pt['llhd']:.2g}" )
         if r > 3.:
             r=3.
@@ -366,14 +369,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         T = gaussian_filter( T, 1. )
     except:
         pass
-    cs = plt.contour( xs, ys, vT, colors="blue", levels=[1.], extent = xtnt, origin="image" )
-    csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
+    if not options["significances"]:
+        cs = plt.contour( xs, ys, vT, colors="blue", levels=[1.], extent = xtnt, origin="image" )
+        ## smodels exclusions dont make sense for the significances plot
+        csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
-    if options["drawExpected"] == True:
-        cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
-                          extent = xtnt, origin="image" )
-        ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
-                        transform = fig.transFigure, linestyle="dotted" )
+        if options["drawExpected"] == True:
+            cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
+                              extent = xtnt, origin="image" )
+            ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
+                            transform = fig.transFigure, linestyle="dotted" )
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"

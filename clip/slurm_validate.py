@@ -80,7 +80,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     # if possible name the tempdir the same as the temp script and the temp ini file
     skeep = ""
     if keep:
-        skeep = "--keep"
+        skeep = "--keep --cont"
     with open ( newini, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
