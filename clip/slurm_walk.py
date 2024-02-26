@@ -23,7 +23,7 @@ def remove( fname, keep):
 
 basedir = "/scratch-cbe/users/wolfgan.waltenberger"
 if "RUNDIR" in os.environ:
-    basedir = os.environ["RUNDIR"]
+    basedir = os.environ["RUNDIR"].replace("/rundir","")
 codedir = f"{basedir}/git"
 outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
