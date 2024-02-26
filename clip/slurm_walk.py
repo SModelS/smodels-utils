@@ -22,6 +22,8 @@ def remove( fname, keep):
         pass
 
 basedir = "/scratch-cbe/users/wolfgan.waltenberger"
+if "RUNDIR" in os.environ:
+    basedir = os.environ["RUNDIR"]
 codedir = f"{basedir}/git"
 outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
