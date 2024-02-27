@@ -9,6 +9,9 @@ from colorama import Fore as ansi
 import subprocess
 from typing import Union, List
 
+from protomodels.ptools.sparticleNames import SParticleNames
+namer = SParticleNames()
+
 def remove( fname, keep):
     ## rmeove filename if exists
     if not os.path.exists ( fname ):
@@ -28,10 +31,21 @@ codedir = f"{basedir}/git"
 outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
 
-def mkdir ( Dir ):
+def mkdir ( Dir : str ):
+    """ make a rundir directory. link typical tools """
     if not os.path.exists ( Dir ):
-        cmd = f"mkdir {Dir}"
-        o = subprocess.getoutput ( cmd )
+        o = os.mkdir ( Dir )
+        os.chdir ( Dir )
+        o = os.symlink ( f"{codedir}/protomodels", "./protomodels" )
+        o = os.symlink ( f"{codedir}/protomodels/ptools/hiscoreCLI.py", "./hiscoreCLI.py" )
+        o = os.symlink ( f"{codedir}/protomodels/snippets/printSimpleHiscoreList.py", "./printSimpleHiscoreList.py" )
+        o = os.symlink ( f"{codedir}/protomodels/snippets/mergeTwoModels.py", "./mergeTwoModels.py" )
+        o = os.symlink ( f"{codedir}/smodels-utils/clip/slurm_walk.py", "./slurm_walk.py" )
+        if Dir.endswith ( "/" ):
+            Dir = Dir[:-1]
+        o = os.symlink ( Dir, f'{os.environ["HOME"]}/{os.path.basename(Dir)}' )
+        #cmd = f"mkdir {Dir}"
+        #o = subprocess.getoutput ( cmd )
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str, 
     dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
@@ -139,7 +153,7 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
 
     :returns: filename of script
     """
-    fname = f"{rundir}/L{pid1}.sh"
+    fname = f"{rundir}/L{namer.asciiName(pid1)}.sh"
     sselect,sdo_srcombine = "",""
     if select != "":
         sselect = f" --select '{select}'"
@@ -541,8 +555,8 @@ def main():
                     help='run the teststatScanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
                     type=int, default=-1 )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?",
-                    help='run the llhd scanner on pid/1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore.',
-                    type=int, default=-1 )
+                    help="run the llhd scanner on <pid> / 1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore. can use names, e.g. 'Xt'",
+                    type=str, default=-1 )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
@@ -576,6 +590,18 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    if type(args.llhdscan) == str:
+        if "X" in args.llhdscan:
+            tmp = namer.pid ( args.llhdscan )
+            if tmp == None:
+                print ( f"[slurm_walk.py] error: cannot find pid for {args.llhdscan}" )
+                sys.exit()
+            else:
+                args.llhdscan = tmp
+        try:
+            args.llhdscan = int ( args.llhdscan )
+        except TypeError as e:
+            print ( f"[slurm_walk.py] error: {e}" )
     if args.cancel:
         cancelRangeOfRunners ( args.cancel )
         return
