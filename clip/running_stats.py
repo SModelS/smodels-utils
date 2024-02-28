@@ -76,7 +76,7 @@ def running_stats():
     print ( "walker*log info:" )
     print ( "================" )
     rundir = getRundir()
-    logs = glob.glob ( "%s/walker*log" % rundir )
+    logs = glob.glob ( f"{rundir}/walker*log" )
     running, pending = set(), set()
     t0 = time.time()
     for log in logs:
@@ -98,22 +98,26 @@ def running_stats():
     for i in all:
         if not i in running and not i in pending:
             notaccounted.add ( i )
-    print ( "  stuck (%d):" % len(pending), prettyPrint ( pending ) )
-    print ( "running (%d):" % len(running), prettyPrint ( running ) )
+    print ( f"  stuck ({len(pending)}):", prettyPrint ( pending ) )
+    print ( f"running ({len(running)}):", prettyPrint ( running ) )
     if len(notaccounted)>0:
-        print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
+        print ( f"not found ({len(notaccounted)}):", prettyPrint ( notaccounted ) )
 
-    a = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" )
+    lines = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" ).split("\n")
     print ( )
     print ( "most recent jobs:" )
     print ( "=====================" )
-    print ( a )
+    for line in lines:
+        tokens = list(filter(None,line.split(" ")))
+        print ( "   ".join ( tokens ) )
 
-    a = subprocess.getoutput ( "slurm q | tail -n 2" )
+    lines = subprocess.getoutput ( "slurm q | tail -n 2" ).split("\n")
     print ( )
     print ( "longest running jobs:" )
     print ( "=====================" )
-    print ( a )
+    for line in lines:
+        tokens = list(filter(None,line.split(" ")))
+        print ( "   ".join ( tokens ) )
 
 def count_jobs():
     #print ( "slurm q says:" )
