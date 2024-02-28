@@ -1,3 +1,4 @@
+# From https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections13TeVstopsbottom
 # Mass of stops / sbottoms	Cross section (pb) ± Uncertainty (NNLOapprox + NNLL)
 100. GeV	0.177E+04 ± 6.77 %
 105. GeV	0.145E+04 ± 6.74 %

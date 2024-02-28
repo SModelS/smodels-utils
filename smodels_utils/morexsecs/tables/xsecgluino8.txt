@@ -1,3 +1,4 @@
+# From https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections8TeVgluglu
 # NNLOapprox + NNLL gluino-gluino cross section, 8 TeV
 200 GeV 1010.1 ± 15.3749%
 205 GeV 888.038 ± 15.3143%
