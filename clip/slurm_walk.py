@@ -35,17 +35,21 @@ def mkdir ( Dir : str ):
     """ make a rundir directory. link typical tools """
     if not os.path.exists ( Dir ):
         o = os.mkdir ( Dir )
-        os.chdir ( Dir )
-        o = os.symlink ( f"{codedir}/protomodels", "./protomodels" )
-        o = os.symlink ( f"{codedir}/protomodels/ptools/hiscoreCLI.py", "./hiscoreCLI.py" )
-        o = os.symlink ( f"{codedir}/protomodels/snippets/printSimpleHiscoreList.py", "./printSimpleHiscoreList.py" )
-        o = os.symlink ( f"{codedir}/protomodels/snippets/mergeTwoModels.py", "./mergeTwoModels.py" )
-        o = os.symlink ( f"{codedir}/smodels-utils/clip/slurm_walk.py", "./slurm_walk.py" )
-        if Dir.endswith ( "/" ):
-            Dir = Dir[:-1]
-        o = os.symlink ( Dir, f'{os.environ["HOME"]}/{os.path.basename(Dir)}' )
-        #cmd = f"mkdir {Dir}"
-        #o = subprocess.getoutput ( cmd )
+    os.chdir ( Dir )
+    for k in [ "protomodels", "protomodels/ptools/hiscoreCLI.py", 
+        "protomodels/snippets/printSimpleHiscoreList.py",
+        "protomodels/snippets/printSimpleHiscoreList.py",
+        "protomodels/snippets/mergeTwoModels.py",
+        "smodels-utils/clip/slurm_walk.py" ]:
+        bname = os.path.basename ( k )
+        if not os.path.exists ( bname ):
+            o = os.symlink ( f"{codedir}/{k}", f"./{bname}" )
+            print ( "o", o )
+    if Dir.endswith ( "/" ):
+        Dir = Dir[:-1]
+    bDir = os.path.basename(Dir)
+    if not os.path.exists ( f'{os.environ["HOME"]}/{bDir}' ):
+        o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str, 
     dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
@@ -453,14 +457,14 @@ def queryStats ( maxsteps : int ):
             print()
 
 def logCall ():
-    f=open("slurm.log","at")
+    fname = f"{os.environ['HOME']}/slurm.log"
+    f=open( fname,"at")
     args = ""
     for i in sys.argv:
         if " " in i or "," in i or "[" in i:
-            i = '"%s"' % i
+            i = f'"{i}"'
         args += i + " "
-    f.write ("[slurm.py-%s] %s\n" % ( time.strftime("%H:%M:%S"), args.strip() ) )
-    # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
+    f.write ( f'[slurm.py-{time.strftime("%H:%M:%S")}] {args.strip()}\n' )
     f.close()
 
 def cancelAllRunners():
