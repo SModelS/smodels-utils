@@ -55,7 +55,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
     maxsteps : int, select : str, do_srcombine : bool, record_history : bool,
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int, 
-    forbidden : List[int] ):
+    forbidden : List[int], wallpids : bool ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -86,8 +86,6 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         jmax = jmin + 1
     if jmax == jmin + 1:
         line = f"run walker {jmin}"
-    # print ( "[runOneJob:%d] %s" % ( pid, line ) )
-    # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = f"{rundir}/RUNNER_{jmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
@@ -95,6 +93,10 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         f.write ( "sys.path.insert(0,'%s/smodels-utils/')\n" % codedir )
         f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
+        if not wallpids:
+            f.write ( "## offshell run below ATLAS-SUSY-2019-09 threshold!\n" )
+            f.write ( "from builder.manipulator import Manipulator\n" )
+            f.write ( "Manipulator.walledpids[1000024]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
@@ -180,12 +182,13 @@ def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int,
     """
     spid2=""
     if pid2!=-1:
-        spid2=str(pid2)
-    fname = f"{rundir}/S{pid}{spid2}.sh"
+        spid2=namer.asciiName(pid2)
+        #spid2=str(pid2)
+    fname = f"{rundir}/M{namer.asciiName(pid)}{spid2}.sh"
     if force_rewrite or not os.path.exists ( fname ):
         argpid2=""
         if pid2!=0:
-            argpid2 = " --pid2 %d" % pid2
+            argpid2 = f" --pid2 {pid2}"
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
             cmd = f"{codedir}/protomodels/ptools/teststatScanner.py"
@@ -307,9 +310,9 @@ def runLLHDScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid : int, dry_run : bool, time : float, rewrite : bool, 
-        pid2 : int, rundir : str, dbpath : str, select : str, do_srcombine : bool,
-        uploadTo : str ):
+def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bool, 
+        pid2 : Union[str,int], rundir : str, dbpath : str, select : str, 
+        do_srcombine : bool, uploadTo : str ):
     """ run the teststat scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
@@ -318,6 +321,8 @@ def runScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
                  if 0, scan all ss multipliers, if < 0, scan masses,
                  not ssm multipliers.
     """
+    pid = namer.pid ( pid )
+    pid2 = namer.pid ( pid2 )
     if pid == 0:
         if pid2 == 0:
             pidpairs = fetchUnfrozenSSMsFromDict( rundir )
@@ -342,8 +347,8 @@ def runScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
              "--output", f"{outputdir}/scan-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "30G" ]
-    cmd += [ "-c", "30" ]
+    cmd += [ "--mem", "20G" ]
+    cmd += [ "-c", f"20" ]
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
@@ -351,7 +356,7 @@ def runScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
     fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath, select,
                                 do_srcombine, uploadTo )
     cmd += [ fname ]
-    print ( "[runScanner]", " ".join ( cmd ) )
+    print ( f"[runScanner] {' '.join ( cmd )}" )
     if dry_run:
         return
     a=subprocess.run ( cmd, capture_output=True )
@@ -545,7 +550,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?",
                     help='run the teststatScanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
-                    type=int, default=-1 )
+                    type=str, default=-1 )
     argparser.add_argument ( '-M', '--maxsteps', nargs="?",
                     help='maximum number of steps in a walker, max number of iterations in the updater [None=1000]',
                     type=int, default=None )
@@ -564,6 +569,8 @@ def main():
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
+                             action="store_true" )
+    argparser.add_argument ( '--dont_wallpids', help='dont wall up the chargino',
                              action="store_true" )
     argparser.add_argument ( '--allscans', help='run all the scans: masses, llhds, and ssmses',
                              action="store_true" )
@@ -707,12 +714,14 @@ def main():
             args.stopTeleportationAfter = -1
         if args.maxsteps == None:
             args.maxsteps = 1000
+        wallpids = not args.dont_wallpids
         while True:
             if nprocesses == 1:
                 runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
                       args.select, args.do_srcombine, args.record_history, seed,
-                      update_hiscores, args.stopTeleportationAfter, args.forbidden )
+                      update_hiscores, args.stopTeleportationAfter, args.forbidden,
+                      wallpids )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -733,7 +742,8 @@ def main():
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
                         args.select, args.do_srcombine, args.record_history, seed,
-                        update_hiscores, args.stopTeleportationAfter, args.forbidden ) )
+                        update_hiscores, args.stopTeleportationAfter, args.forbidden,
+                        wallpids ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
