@@ -31,11 +31,16 @@ codedir = f"{basedir}/git"
 outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
 
-def mkdir ( Dir : str ):
-    """ make a rundir directory. link typical tools """
+def mkdir ( Dir : str, symlinks : bool = True ):
+    """ make a rundir directory. link typical tools 
+
+    :param symlink: create symlinks?
+    """
     if not os.path.exists ( Dir ):
         o = os.mkdir ( Dir )
     os.chdir ( Dir )
+    if not symlinks:
+        return
     for k in [ "protomodels", "protomodels/ptools/hiscoreCLI.py", 
         "protomodels/snippets/printSimpleHiscoreList.py",
         "protomodels/snippets/printSimpleHiscoreList.py",
@@ -44,7 +49,7 @@ def mkdir ( Dir : str ):
         bname = os.path.basename ( k )
         if not os.path.exists ( bname ):
             o = os.symlink ( f"{codedir}/{k}", f"./{bname}" )
-            print ( "o", o )
+            # print ( "o", o )
     if Dir.endswith ( "/" ):
         Dir = Dir[:-1]
     bDir = os.path.basename(Dir)
@@ -619,7 +624,7 @@ def main():
     if args.cancel_all:
         cancelAllRunners()
         return
-    mkdir ( outputdir )
+    mkdir ( outputdir, False )
     args.rewrite = True
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
