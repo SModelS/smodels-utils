@@ -2,17 +2,16 @@
 
 """ simple tool to fetch all sorts of files from clip """
 
-import subprocess, sys, copy, argparse, colorama
+import subprocess, sys, copy, argparse, colorama, os
 
 def fetch ( files, rundir ):
     """ fetch the files in list """
     print ( colorama.Fore.GREEN + "fetching:",", ".join ( files ) )
     print ( colorama.Fore.RESET )
     files = set ( files ) ## remove dupes
-    basedir = "/scratch-cbe/users/wolfgan.waltenberger/"
+    basedir = os.environ['CODEDIR']
     for i in files:
-        cmd="scp wolfgan.waltenberger@clip-login-1:%s%s/%s ." % \
-            ( basedir, rundir, i )
+        cmd=f"scp clip-login-1:{basedir}{rundir}/{i} ."
         print ( cmd )
         ret = subprocess.run(cmd.split(" "), stderr=sys.stderr, stdout=sys.stdout)
 
