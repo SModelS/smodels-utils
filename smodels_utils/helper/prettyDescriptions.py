@@ -755,7 +755,8 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
             collaboration = "ATL"
     if prettyname == None:
         prettyname = "???"
-    pn = prettyname.replace(">=","$\\ge$ " )
+    # pn = prettyname
+    pn = prettyname.replace(">=","$\\geq$ " )
     pn = pn.replace(">","$>$").replace("<","$<$")
     pn = pn.replace( "(or 2 gamma)", "(or 2 gamma) " )
     pn = pn.replace("MHT","$\\not{\!\!H}_T$")
@@ -888,25 +889,6 @@ def prettyAxesV3( validationPlot = None ) -> str:
             ret.append ( value )
     # print ( "indices", indices, "ret", ret )
     return ",".join( ret )
-    """
-    for k,v in indices.items():
-        smsString = smsString.replace( f"anyBSM({k})", indices[k] )
-        smsString = smsString.replace( f"MET({k})", indices[k] )
-    if True:
-        ## shorten names
-        smsString = smsString.replace("photon",r"$\gamma$")
-        smsString = smsString.replace("higgs",r"h")
-        smsString = smsString.replace("jet",r"j")
-    if True:
-        ## replace extra brackets
-        smsString = smsString.replace("), ","}, ")
-        smsString = smsString.replace(", (",", {")
-        smsString = "{"+smsString[1:-1]+"}"
-    # print ( "smsString=", smsString )
-    if True:
-        import IPython ; IPython.embed(); sys.exit()
-    return smsString
-    """
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
     """
