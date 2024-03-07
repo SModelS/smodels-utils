@@ -173,7 +173,7 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --pid1 {pid1} --pid2 {pid2} --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --xvariable {pid1} --yvariable {pid2} --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -352,7 +352,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
              "--output", f"{outputdir}/scan-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "20G" ]
+    cmd += [ "--mem", "30G" ]
     cmd += [ "-c", f"20" ]
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
