@@ -7,7 +7,7 @@ protomodels walkers.
 import tempfile, argparse, stat, os, math, sys, time, glob, random
 from colorama import Fore as ansi
 import subprocess
-from typing import Union, List
+from typing import Union, List, Tuple
 
 from protomodels.ptools.sparticleNames import SParticleNames
 namer = SParticleNames()
@@ -156,7 +156,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
-def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool, 
+def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewrite : bool, 
         rundir : str, nprocs : int, select : str, do_srcombine : bool,
         uploadTo : str ) -> str:
     """
@@ -165,6 +165,9 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
     :returns: filename of script
     """
     fname = f"{rundir}/L{namer.asciiName(pid1)}.sh"
+    if yvariable != 1000022:
+        yvn = namer.asciiName(yvariable).replace(" ","").replace(",","")
+        fname = f"{rundir}/L{namer.asciiName(pid1)}_{yvn}.sh"
     sselect,sdo_srcombine = "",""
     if select != "":
         sselect = f" --select '{select}'"
@@ -173,31 +176,31 @@ def produceLLHDScanScript ( pid1 : int, pid2 : int, force_rewrite : bool,
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --xvariable {pid1} --yvariable {pid2} --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --xvariable {pid1} --yvariable '{yvariable}' --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
 
-def produceScanScript ( pid : int, force_rewrite : bool, pid2 : int, 
+def produceScanScript ( pid : int, force_rewrite : bool, yvariable : int, 
         rundir : str , nprocs : int, dbpath : str, select : str,
         do_srcombine : bool, uploadTo : str ) -> str:
     """ produce the script to scan for the test statistics
 
     :returns: filename of script
     """
-    spid2=""
-    if pid2!=-1:
-        spid2=namer.asciiName(pid2)
-        #spid2=str(pid2)
-    fname = f"{rundir}/M{namer.asciiName(pid)}{spid2}.sh"
+    syvariable=""
+    if yvariable!=-1:
+        syvariable=namer.asciiName(yvariable)
+        #syvariable=str(yvariable)
+    fname = f"{rundir}/M{namer.asciiName(pid)}{syvariable}.sh"
     if force_rewrite or not os.path.exists ( fname ):
-        argpid2=""
-        if pid2!=0:
-            argpid2 = f" --pid2 {pid2}"
+        argyvariable=""
+        if yvariable!=0:
+            argyvariable = f" --yvariable {yvariable}"
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
             cmd = f"{codedir}/protomodels/ptools/teststatScanner.py"
-            args = f"--nproc {nprocs} -R {rundir} -r -d -c -P -p {pid} {argpid2}"
+            args = f"--nproc {nprocs} -R {rundir} -r -d -c -P -p {pid} {argyvariable}"
             args += f" --dbpath '{dbpath}'"
             args += f" --select '{select}'"
             args += f" --uploadTo '{uploadTo}'"
@@ -276,8 +279,9 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid : int, dry_run : bool, time : float, rewrite : bool, 
-        rundir : str, select : str, do_srcombine : bool, uploadTo : str ):
+def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool, 
+        time : float, rewrite : bool, rundir : str, select : str, 
+        do_srcombine : bool, uploadTo : str ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -288,8 +292,8 @@ def runLLHDScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, dry_run, time, rewrite, rundir, select, do_srcombine,
-                             uploadTo )
+            runLLHDScanner ( i, yvariable, dry_run, time, rewrite, rundir, select, 
+                             do_srcombine, uploadTo )
         return
     qos = "c_short"
     if time > 48:
@@ -301,13 +305,14 @@ def runLLHDScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
              "--output", f"{outputdir}/llhd-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "15G" ]
-    cmd += [ "-c", "30" ]
+    cmd += [ "--mem", "10G" ]
+    cmd += [ "-c", "10" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    nprcs = 5 # was at 10
-    script = produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs, select, do_srcombine, uploadTo  )
+    nprcs = 2 # was at 10
+    script = produceLLHDScanScript ( pid, yvariable, rewrite, rundir, nprcs, 
+            select, do_srcombine, uploadTo  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -316,20 +321,20 @@ def runLLHDScanner( pid : int, dry_run : bool, time : float, rewrite : bool,
     print ( ">>", a )
 
 def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bool, 
-        pid2 : Union[str,int], rundir : str, dbpath : str, select : str, 
+        yvariable : Union[str,int], rundir : str, dbpath : str, select : str, 
         do_srcombine : bool, uploadTo : str ):
     """ run the teststat scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
-    :param pid2: if >0, scan for ss multipliers (pid,pid2),
+    :param yvariable: if >0, scan for ss multipliers (pid,yvariable),
                  if 0, scan all ss multipliers, if < 0, scan masses,
                  not ssm multipliers.
     """
     pid = namer.pid ( pid )
-    pid2 = namer.pid ( pid2 )
+    yvariable = namer.pid ( yvariable )
     if pid == 0:
-        if pid2 == 0:
+        if yvariable == 0:
             pidpairs = fetchUnfrozenSSMsFromDict( rundir )
             for pidpair in pidpairs:
                 runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir,
@@ -339,7 +344,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
         if pids == None:
             pids = [ 1000001, 1000003, 1000006, 1000022 ]
         for i in pids:
-            runScanner ( i, dry_run, time, rewrite, pid2, rundir, dbpath, select,
+            runScanner ( i, dry_run, time, rewrite, yvariable, rundir, dbpath, select,
                          do_srcombine, uploadTo )
         return
     qos = "c_short"
@@ -358,7 +363,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprc = 15
-    fname = produceScanScript ( pid, rewrite, pid2, rundir, nprc, dbpath, select,
+    fname = produceScanScript ( pid, rewrite, yvariable, rundir, nprc, dbpath, select,
                                 do_srcombine, uploadTo )
     cmd += [ fname ]
     print ( f"[runScanner] {' '.join ( cmd )}" )
@@ -566,9 +571,9 @@ def main():
     argparser.add_argument ( '--forbidden', 
                     help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' [None]",
                     type=str, default="[]" )
-    argparser.add_argument ( '--pid2', nargs="?",
-                    help='run the teststatScanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
-                    type=int, default=-1 )
+    argparser.add_argument ( '--yvariable', nargs="?",
+                    help='run the teststatScanner for ss multipliers (pid,yvariable), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
+                    type=str, default="-1" )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?",
                     help="run the llhd scanner on <pid> / 1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore. can use names, e.g. 'Xt'",
                     type=str, default=-1 )
@@ -607,6 +612,7 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    args.yvariable = namer.pid ( args.yvariable )
     if type(args.llhdscan) == str:
         if "X" in args.llhdscan:
             tmp = namer.pid ( args.llhdscan )
@@ -673,7 +679,7 @@ def main():
 
         if args.allscans:
             subprocess.getoutput ( "./slurm.py -R %s -S 0" % rundir )
-            subprocess.getoutput ( "./slurm.py -R %s -S 0 --pid2 0" % rundir )
+            subprocess.getoutput ( "./slurm.py -R %s -S 0 --yvariable 0" % rundir )
             subprocess.getoutput ( "./slurm.py -R %s -L 0" % rundir )
             continue
 
@@ -696,10 +702,10 @@ def main():
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
-            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir, dbpath, args.select, args.do_srcombine, args.uploadTo )
+            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.yvariable, rundir, dbpath, args.select, args.do_srcombine, args.uploadTo )
             continue
         if args.llhdscan != -1:
-            runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
+            runLLHDScanner ( args.llhdscan, args.yvariable, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
             continue
 
         #with open("run_walker.sh","rt") as f:
@@ -710,7 +716,6 @@ def main():
             nmax = nmin
         nworkers = nmax - nmin + 1
         nprocesses = min ( args.nprocesses, nworkers )
-        # print ( "nmin, nmax", nmin, nmax, nprocesses )
         if nprocesses == 0:
             nprocesses = nworkers
 
