@@ -32,7 +32,7 @@ outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
 
 def mkdir ( Dir : str, symlinks : bool = True ):
-    """ make a rundir directory. link typical tools 
+    """ make a rundir directory. link typical tools
 
     :param symlink: create symlinks?
     """
@@ -41,11 +41,12 @@ def mkdir ( Dir : str, symlinks : bool = True ):
     os.chdir ( Dir )
     if not symlinks:
         return
-    for k in [ "protomodels", "protomodels/ptools/hiscoreCLI.py", 
+    for k in [ "protomodels", "protomodels/ptools/hiscoreCLI.py",
         "protomodels/snippets/printSimpleHiscoreList.py",
         "protomodels/snippets/printSimpleHiscoreList.py",
         "protomodels/snippets/mergeTwoModels.py",
-        "smodels-utils/clip/slurm_walk.py" ]:
+        "smodels-utils/clip/slurm_walk.py",
+        "smodels-utils/clip/progressScanners.py" ]:
         bname = os.path.basename ( k )
         if not os.path.exists ( bname ):
             o = os.symlink ( f"{codedir}/{k}", f"./{bname}" )
@@ -56,10 +57,10 @@ def mkdir ( Dir : str, symlinks : bool = True ):
     if not os.path.exists ( f'{os.environ["HOME"]}/{bDir}' ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
-def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str, 
-    dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str, 
+def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
+    dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str,
     maxsteps : int, select : str, do_srcombine : bool, record_history : bool,
-    seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int, 
+    seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
     forbidden : List[int], wallpids : bool ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
@@ -152,11 +153,11 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
             sb+=ansi.RESET
         print ( sb )
         if not "returncode=0" in sa:
-            sa = f"{ansi.RED}{sa}{ansi.RESET}" 
+            sa = f"{ansi.RED}{sa}{ansi.RESET}"
         print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
-def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewrite : bool, 
+def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewrite : bool,
         rundir : str, nprocs : int, select : str, do_srcombine : bool,
         uploadTo : str ) -> str:
     """
@@ -181,7 +182,7 @@ def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewr
         os.chmod ( fname, 0o775 )
     return fname
 
-def produceScanScript ( pid : int, force_rewrite : bool, yvariable : int, 
+def produceScanScript ( pid : int, force_rewrite : bool, yvariable : int,
         rundir : str , nprocs : int, dbpath : str, select : str,
         do_srcombine : bool, uploadTo : str ) -> str:
     """ produce the script to scan for the test statistics
@@ -196,7 +197,7 @@ def produceScanScript ( pid : int, force_rewrite : bool, yvariable : int,
     if force_rewrite or not os.path.exists ( fname ):
         argyvariable=""
         if yvariable!=0:
-            argyvariable = f" --yvariable {yvariable}"
+            argyvariable = f" --pid2 {yvariable}"
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
             cmd = f"{codedir}/protomodels/ptools/teststatScanner.py"
@@ -279,8 +280,8 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool, 
-        time : float, rewrite : bool, rundir : str, select : str, 
+def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
+        time : float, rewrite : bool, rundir : str, select : str,
         do_srcombine : bool, uploadTo : str ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
@@ -292,7 +293,7 @@ def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, yvariable, dry_run, time, rewrite, rundir, select, 
+            runLLHDScanner ( i, yvariable, dry_run, time, rewrite, rundir, select,
                              do_srcombine, uploadTo )
         return
     qos = "c_short"
@@ -305,13 +306,13 @@ def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
              "--output", f"{outputdir}/llhd-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "10G" ]
+    cmd += [ "--mem", "8G" ]
     cmd += [ "-c", "10" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     nprcs = 2 # was at 10
-    script = produceLLHDScanScript ( pid, yvariable, rewrite, rundir, nprcs, 
+    script = produceLLHDScanScript ( pid, yvariable, rewrite, rundir, nprcs,
             select, do_srcombine, uploadTo  )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
@@ -320,8 +321,8 @@ def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bool, 
-        yvariable : Union[str,int], rundir : str, dbpath : str, select : str, 
+def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bool,
+        yvariable : Union[str,int], rundir : str, dbpath : str, select : str,
         do_srcombine : bool, uploadTo : str ):
     """ run the teststat scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
@@ -357,12 +358,12 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
              "--output", f"{outputdir}/scan-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", "30G" ]
-    cmd += [ "-c", f"20" ]
+    cmd += [ "--mem", "10G" ]
+    cmd += [ "-c", f"8" ]
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    nprc = 15
+    nprc = 2
     fname = produceScanScript ( pid, rewrite, yvariable, rundir, nprc, dbpath, select,
                                 do_srcombine, uploadTo )
     cmd += [ fname ]
@@ -377,7 +378,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
         sb+=ansi.RESET
     print ( sb )
     if not "returncode=0" in sa:
-        sa = f"{ansi.RED}{sa}{ansi.RESET}" 
+        sa = f"{ansi.RED}{sa}{ansi.RESET}"
     print ( f"returned: {sa}" )
 
 def getDirname ( rundir ):
@@ -393,7 +394,7 @@ def getDirname ( rundir ):
     ret = ret.replace("rundir.","")
     return ret
 
-def runUpdater( dry_run : bool, time : float, rundir : os.PathLike, 
+def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         maxiterations : Union[None,int], dbpath : str, uploadTo : str ):
     """ thats the hiscore updater
     :param dry_run: create the scripts, dont start them
@@ -510,7 +511,7 @@ def cancelRangeOfRunners( jrange : str ):
         return
     cancelled = []
     p1 = jrange.find("-")
-    if 0 < p1 < len(jrange)-1: 
+    if 0 < p1 < len(jrange)-1:
         # full range given
         jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
         for i in range(jmin,jmax+1):
@@ -535,7 +536,7 @@ def cancelRangeOfRunners( jrange : str ):
         cancelRangeOfRunners( f"{jrange[:p1]}-{max(running)}" )
         return
     print ( "[slurm_walk] FIXME sth is wrong" )
-        
+
 
 def main():
     import argparse
@@ -568,7 +569,7 @@ def main():
     argparser.add_argument ( '--select', nargs="?",
                     help='filter analysis results, ("all", "em", "ul", "txnames:T1,T2", ... ["all"]',
                     type=str, default="all" )
-    argparser.add_argument ( '--forbidden', 
+    argparser.add_argument ( '--forbidden',
                     help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' [None]",
                     type=str, default="[]" )
     argparser.add_argument ( '--yvariable', nargs="?",
@@ -697,7 +698,7 @@ def main():
             maxsteps = args.maxsteps
             if maxsteps == None:
                 maxsteps = 1
-                runUpdater( args.dry_run, args.time, rundir, maxsteps, 
+                runUpdater( args.dry_run, args.time, rundir, maxsteps,
                             dbpath = dbpath, uploadTo = args.uploadTo )
                 continue
         if args.scan != -1:
