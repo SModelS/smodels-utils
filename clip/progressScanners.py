@@ -52,7 +52,7 @@ class Progress:
 
     def updateTQDM ( self, name : str, values : Dict, position : int ):
         """ update an entry in self.tqdms """
-        fullname = f"{name:14s}"
+        fullname = f"{name:17s}"
         n = tqdm ( desc=fullname, total = values["npoints"], position = position,
                    unit = "pt", bar_format="{desc}: {percentage:3.0f}%|{bar:46}| {n_fmt}/{total_fmt} [{remaining}] {postfix}", colour = "green" )
         self.tqdms[name]=n

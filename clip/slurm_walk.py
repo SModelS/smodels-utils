@@ -166,6 +166,8 @@ def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewr
     :returns: filename of script
     """
     fname = f"{rundir}/L{namer.asciiName(pid1)}.sh"
+    if yvariable == -1:
+        yvariable = 1000022
     if yvariable != 1000022:
         yvn = namer.asciiName(yvariable).replace(" ","").replace(",","")
         fname = f"{rundir}/L{namer.asciiName(pid1)}_{yvn}.sh"
@@ -190,7 +192,7 @@ def produceScanScript ( pid : int, force_rewrite : bool, yvariable : int,
     :returns: filename of script
     """
     syvariable=""
-    if yvariable!=-1:
+    if yvariable not in [ -1, "-1" ]:
         syvariable=namer.asciiName(yvariable)
         #syvariable=str(yvariable)
     fname = f"{rundir}/M{namer.asciiName(pid)}{syvariable}.sh"
@@ -614,6 +616,8 @@ def main():
                         type=str, default="default" )
     args=argparser.parse_args()
     args.yvariable = namer.pid ( args.yvariable )
+    if args.yvariable == "-1":
+        args.yvariable = -1
     if type(args.llhdscan) == str:
         if "X" in args.llhdscan:
             tmp = namer.pid ( args.llhdscan )
