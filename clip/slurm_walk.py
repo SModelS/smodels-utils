@@ -170,6 +170,7 @@ def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewr
         yvariable = 1000022
     if yvariable != 1000022:
         yvn = namer.asciiName(yvariable).replace(" ","").replace(",","")
+        yvn = yvn.replace("~","m")
         fname = f"{rundir}/L{namer.asciiName(pid1)}_{yvn}.sh"
     sselect,sdo_srcombine = "",""
     if select != "":
