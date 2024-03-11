@@ -12,7 +12,7 @@
 import logging
 from sympy import var
 from math import floor, log10
-from smodels.tools.physicsUnits import TeV
+from smodels.base.physicsUnits import TeV
 #For evaluating axes expressions in prettyAxes:
 from inspect import currentframe, getframeinfo
 import sys
@@ -547,7 +547,7 @@ def getMothers(txname):
     """
 
     if not txname in motherDict:
-       print ( f"\n[prettyDescriptions] txname {txname} missing in motherDict {us_}:{motherline_}. Add!" ) 
+       print ( f"\n[prettyDescriptions] txname {txname} missing in motherDict {us_}:{motherline_}. Add!" )
        sys.exit()
     mothers = motherDict[txname].lstrip().rstrip().split()
     if len(mothers) == 1:
@@ -565,7 +565,7 @@ def getIntermediates(txname):
     """
 
     if not txname in decayDict:
-       print ( f"\n[prettyDescriptions] txname {txname} missing in decayDict {us_}:{daughterline_}. Add!" ) 
+       print ( f"\n[prettyDescriptions] txname {txname} missing in decayDict {us_}:{daughterline_}. Add!" )
        sys.exit()
     #Get the decays
     decays = decayDict[txname].split(',')
@@ -661,7 +661,7 @@ def prettyDecay(txname,latex=True):
 
 def rootToLatex ( string : str, outputtype : str = "latex",
                   rectify = True ):
-    """ translate root string to latex 
+    """ translate root string to latex
     :param rectify: silly feature that rectifies the backslashes
     """
     if outputtype == "root":
