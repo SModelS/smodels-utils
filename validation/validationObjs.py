@@ -965,8 +965,7 @@ class ValidationPlot():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
-        print(self.willRun)
+        # print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, Database(self.databasePath), timeOut, False, parameterFile)
         self.removeFromListOfRunningFiles ( )
 
