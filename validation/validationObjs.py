@@ -52,7 +52,7 @@ class ValidationPlot():
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
-    def __init__( self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
+    def __init__( self, db, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                options : dict = {}, kfactor = 1., namedTarball = None, keep = False,
                combine = False ):
         """
@@ -60,6 +60,7 @@ class ValidationPlot():
         :param keep: keep temporary directories
         """
 
+        self.database = db
         self.databasePath = databasePath
         anaID = ExptRes.globalInfo.id
         if databasePath:
@@ -848,7 +849,7 @@ class ValidationPlot():
                 cleanedcurrent[f]=t
         current = cleanedcurrent
         for f in fileList:
-            if f in [ "results", "coordinates" ]:
+            if f in [ "results", "coordinates", "recipe" ]:
                 continue
             if not f in current:
                 if self.limitPoints in [-1, None] or len(shouldRun)<self.limitPoints:
@@ -966,7 +967,7 @@ class ValidationPlot():
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
         # print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
-        modelTester.testPoints( self.willRun, inDir, outputDir, parser, Database(self.databasePath), timeOut, False, parameterFile)
+        modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.database, timeOut, False, parameterFile)
         self.removeFromListOfRunningFiles ( )
 
         #Define original plot

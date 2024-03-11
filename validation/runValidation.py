@@ -31,12 +31,13 @@ logger = logging.getLogger(__name__)
 def starting( expRes, txnameStr, axes ):
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
 
-def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
+def validatePlot( db,expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
         pretty=False, combine=False, namedTarball = None, keep = False,
         dbpath = None ):
     """
     Creates a validation plot and saves its output.
 
+    :param db: database
     :param expRes: a ExpResult object containing the result to be validated
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
@@ -54,7 +55,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict, kfactor=1.,
     """
 
     starting( expRes, txnameStr, axes )
-    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,slhadir = None,
+    valPlot = validationObjs.ValidationPlot(db,expRes,txnameStr,axes,slhadir = None,
             databasePath = dbpath, options = options,kfactor=kfactor,
             namedTarball = namedTarball, keep = keep, combine = combine )
     if valPlot.niceAxes == None:
@@ -355,7 +356,7 @@ def run ( expResList, options : dict, keep, db, dbpath : str ):
                         tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
 
                     for p in prettyorugly:
-                        re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
+                        re = validatePlot(db,expRes,txnameStr,ax, tarfile, localopts,
                                 kfactor, p, combine, namedTarball = pnamedTarball,
                                 keep = keep, dbpath = dbpath )
                         # if not ":" in namedTarball:
@@ -397,7 +398,7 @@ def run ( expResList, options : dict, keep, db, dbpath : str ):
                 if hasattr ( txname, "yrange" ):
                     localopts = addRange ( "y", localopts, txname.yrange, ax )
                 for p in prettyorugly:
-                    validatePlot( expRes,txnameStr,ax,tarfile, localopts,
+                    validatePlot( db,expRes,txnameStr,ax,tarfile, localopts,
                                   gkfactor, p, combine, namedTarball = pnamedTarball,
                                   dbpath = dbpath )
                     localopts["generateData"] = False
