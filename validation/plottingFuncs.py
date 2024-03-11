@@ -14,7 +14,7 @@ sys.path.append('../')
 from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)
-from smodels.tools.physicsUnits import fb, GeV, pb
+from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 from validationHelpers import getExpResPath
@@ -120,12 +120,12 @@ class Recorder:
             ret = self.callable(*args, **kwargs)
             self.parent.callable_results.append(ret)
             return ret
-    
+
 
 def importMatplot ( record : bool ):
-    """ import matplotlib 
+    """ import matplotlib
     :param record: if true, then wrap the module into a recorder class.
-                   this class will create a recorder.py script 
+                   this class will create a recorder.py script
     """
     if not record:
         import matplotlib.pylab as plt
@@ -160,7 +160,7 @@ def isWithinRange ( xyrange : list, xy : float ):
 
 def filterWithinRanges ( points : dict, xrange : Optional[list], \
         yrange : Optional[list], defRetZeroes : bool = False ):
-    """ filter from points all that is not within xrange or yrange 
+    """ filter from points all that is not within xrange or yrange
     :param defRetZeroes: if true, then return list of zeroes if no y coordinates
     """
     pxs = points["x"]
@@ -185,7 +185,7 @@ def filterWithinRanges ( points : dict, xrange : Optional[list], \
 
 def getAxisRange ( options : dict, label : str = "xaxis" ):
     """ given an options dictionary, obtain a range for the axis named
-        <label> 
+        <label>
     :returns: range list, e.g. [0,1000], or None
     """
     if not "style" in options:
@@ -302,7 +302,7 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""
-        
+
     return subtitle
 
 def getFigureUrl( validationPlot ):

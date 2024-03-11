@@ -11,8 +11,9 @@
 import logging,os,sys,time,math,numpy,copy,random
 
 logger = logging.getLogger(__name__)
-from smodels.tools.physicsUnits import GeV
-from smodels.tools import modelTester
+from smodels.base.physicsUnits import GeV
+from smodels.matching import modelTester
+from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.various import round_to_n
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
@@ -623,7 +624,7 @@ class ValidationPlot():
                 return True
         return False
 
-    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int: 
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int:
         """ returns 1 if success else 0 """
         fout = resultsfile
         if not os.path.isfile(fout):
@@ -645,7 +646,7 @@ class ValidationPlot():
         try:
             exec( cmd, myglobals )
         except SyntaxError as e:
-            logger.error ( f"when reading {fout}: {e}. will skip" ) 
+            logger.error ( f"when reading {fout}: {e}. will skip" )
             os.unlink ( fout )
             return 0
         ff.close()
@@ -826,7 +827,7 @@ class ValidationPlot():
                 pass
 
     def addToListOfRunningFiles ( self, fileList : List ) -> List:
-        """ add files listed in fileList to list of running  files 
+        """ add files listed in fileList to list of running  files
         :returns: list you should actually run
         """
         current = {}
@@ -841,7 +842,7 @@ class ValidationPlot():
         cleanedcurrent = {}
         for f,t in current.items():
             dt = ( time.time() - t ) / 60. # minutes
-            ## FIXME we should actually only take out once 
+            ## FIXME we should actually only take out once
             ## we run out of "good" points
             if dt < 15.: # after 15 minutes we take it out!
                 cleanedcurrent[f]=t
@@ -960,16 +961,13 @@ class ValidationPlot():
         listOfExpRes = [self.expRes]
 
         """ Test all input points """
-        validationFolder = "validation"
-        if "validationFolder" in self.options:
-            validationFolder = self.options["validationFolder"]
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        # print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
-        modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
-                 listOfExpRes, timeOut, False, parameterFile)
+        print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
+        print(self.willRun)
+        modelTester.testPoints( self.willRun, inDir, outputDir, parser, Database(self.databasePath), timeOut, False, parameterFile)
         self.removeFromListOfRunningFiles ( )
 
         #Define original plot
@@ -992,7 +990,7 @@ class ValidationPlot():
             self.addResultToData ( slhafile, fout )
 
         #Remove temporary folder
-        if self.currentSLHADir != self.slhaDir and not self.keep: 
+        if self.currentSLHADir != self.slhaDir and not self.keep:
             shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
@@ -1171,7 +1169,7 @@ class ValidationPlot():
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
             if self.options["pdfPlots"]:
-               cmd = f"convert {filename} {newfilename}" 
+               cmd = f"convert {filename} {newfilename}"
                import subprocess
                o = subprocess.getoutput ( cmd )
         self.show ( filename )
@@ -1179,7 +1177,7 @@ class ValidationPlot():
         return True
 
     def getValidationDir ( self, validationDir ):
-        """ obtain the validation directory, usually, 
+        """ obtain the validation directory, usually,
             self.expRes.path + "/validation" """
         path = getExpResPath ( self.expRes, self.databasePath )
         def mkdir ( mydir ):

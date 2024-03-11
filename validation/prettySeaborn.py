@@ -17,7 +17,7 @@ sys.path.append('../')
 from array import array
 import math,ctypes
 logger = logging.getLogger(__name__)
-from smodels.tools.physicsUnits import fb, GeV, pb
+from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 import matplotlib.ticker as ticker
@@ -129,7 +129,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if not "llhd" in pt or not "l_SM" in pt:
                 if not "l_SM" in pt:
                     # its only weird if only l_SM is missing
-                    logger.error ( f"asked for significances but no l_SM in {pt['axes']}!" ) 
+                    logger.error ( f"asked for significances but no l_SM in {pt['axes']}!" )
                 # sys.exit()
             else:
                 Z = significanceFromLikelihoods ( pt["l_SM"], pt["llhd"] )

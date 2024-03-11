@@ -304,10 +304,10 @@ def run ( expResList, options : dict, keep, db, dbpath : str ):
                 gkfactor = float(kfactorDict[txnameStr.lower()])
 
             #Loop over all axes:
-            if not isinstance(txname.axes,list):
-                axes = [txname.axes]
+            if not isinstance(txname._axes,list):
+                axes = [txname._axes]
             else:
-                axes = txname.axes
+                axes = txname._axes
             axis = options["axis"]
             if axis in [ None, "None", "" ]:
                 for ax in axes:
@@ -449,8 +449,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             buPath = os.path.join ( databasePath, "validation.pcl" )
         import shutil # should actually only be necessary for
         # the transitional period to ml-spey
-        db = Database( buPath, force_load, discard_zeroes = False,
-                       subpickle = True )
+        db = Database( buPath, force_load, subpickle = True )
         if not "validation.pcl" in buPath: # ok so we create a new pickle
             currentPickle = os.path.join ( buPath, "db30.pcl" )
             if os.path.exists ( currentPickle ) and False:
@@ -552,6 +551,8 @@ if __name__ == "__main__":
     utilsPath = parser.get("path", "utilsPath")
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
+    if '/home/pascal/SModelS/smodels' in sys.path and "../../testSmodels" in smodelsPath:
+        sys.path.remove('/home/pascal/SModelS/smodels')
     from validation import plottingFuncs, validationObjs
     from smodels.experiment.databaseObj import Database
 
@@ -560,7 +561,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
-    from smodels.tools import smodelsLogging
+    from smodels.base import smodelsLogging
     smodelsLogging.setLogLevel( args.verbose )
 
     #Selected plots for validation:

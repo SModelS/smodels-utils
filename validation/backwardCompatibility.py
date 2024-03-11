@@ -3,7 +3,7 @@
 """
 .. module: backwardCompatibility
    :synopsis: Collection of methods that we only need for backwards-compatibility
-              between SModelS 2.0.0 and 1.2.x. The methods here are part of 
+              between SModelS 2.0.0 and 1.2.x. The methods here are part of
               smodels-proper in 2.x but not in 1.2.x
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -12,7 +12,7 @@
 
 import unum
 import numpy as np
-from smodels.tools.physicsUnits import GeV
+from smodels.base.physicsUnits import GeV
 
 def addUnit(obj,unit):
     """
@@ -72,8 +72,8 @@ def removeUnits(value,standardUnits):
         return value
 
 def rescaleWidth(width):
-    """ 
-    The function that is applied to all widths to 
+    """
+    The function that is applied to all widths to
     map it into a better variable for interpolation.
     It grows logarithmically from zero (for width=0.)
     to a large number (machine dependent) for width = infinity.
