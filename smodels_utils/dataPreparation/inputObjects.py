@@ -207,7 +207,7 @@ class MetaInfoInput(Locker):
     'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
     'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type',
-    'includeCRs', 'onnxFiles', 'resultType' ]
+    'includeCRs', 'onnxFiles', 'resultType', 'signalUncertainty' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
