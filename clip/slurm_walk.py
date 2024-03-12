@@ -501,9 +501,34 @@ def cancelAllRunners():
         cancelled.append ( nr )
     print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
 
+def getMaxJobId() -> int:
+    """ get the highest job id """
+    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    lines = o.split("\n")
+    nmax = 0
+    for line in lines:
+        tokens = line.split()
+        nr = int(tokens[0])
+        if nr > nmax:
+            nmax = nr
+    return nmax
+
+def getMinJobId() -> int:
+    """ get the lowest job id """
+    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    lines = o.split("\n")
+    nmin = 1e99
+    for line in lines:
+        tokens = line.split()
+        nr = int(tokens[0])
+        if nr < nmin:
+            nmin = nr
+    return nmin
+
 def cancelRangeOfRunners( jrange : str ):
     """ cancel only the jrange of runners """
     import re
+    jrange = jrange.strip(" ")
     if re.search('[a-zA-Z]', jrange) is not None:
         from running_stats import cancelJobsByString
         return cancelJobsByString ( jrange )
@@ -514,6 +539,13 @@ def cancelRangeOfRunners( jrange : str ):
         return
     cancelled = []
     p1 = jrange.find("-")
+    if p1 == len(jrange)-1: ## range is given as '<min>-'
+        maxJobId = getMaxJobId()
+        jrange += str(maxJobId)
+    if p1 == 0:
+        minJobId = getMinJobId()
+        jrange = str(minJobId) + jrange
+
     if 0 < p1 < len(jrange)-1:
         # full range given
         jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
@@ -602,6 +634,8 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
+    argparser.add_argument ( '--repeat', nargs='?', help='submit <n> times [1]',
+                        type=int, default=1 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )
@@ -703,15 +737,18 @@ def main():
             maxsteps = args.maxsteps
             if maxsteps == None:
                 maxsteps = 1
-                runUpdater( args.dry_run, args.time, rundir, maxsteps,
+                for i in range(args.repeat):
+                    runUpdater( args.dry_run, args.time, rundir, maxsteps,
                             dbpath = dbpath, uploadTo = args.uploadTo )
                 continue
         if args.scan != -1:
             rewrite = True # args.rewrite
-            runScanner ( args.scan, args.dry_run, args.time, rewrite, args.yvariable, rundir, dbpath, args.select, args.do_srcombine, args.uploadTo )
+            for i in range(args.repeat):
+                runScanner ( args.scan, args.dry_run, args.time, rewrite, args.yvariable, rundir, dbpath, args.select, args.do_srcombine, args.uploadTo )
             continue
         if args.llhdscan != -1:
-            runLLHDScanner ( args.llhdscan, args.yvariable, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
+            for i in range(args.repeat):
+                runLLHDScanner ( args.llhdscan, args.yvariable, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
             continue
 
         #with open("run_walker.sh","rt") as f:
@@ -734,7 +771,8 @@ def main():
         wallpids = not args.dont_wallpids
         while True:
             if nprocesses == 1:
-                runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
+                for i in range(args.repeat):
+                    runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
                       args.select, args.do_srcombine, args.record_history, seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
