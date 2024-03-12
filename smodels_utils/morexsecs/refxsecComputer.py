@@ -21,7 +21,7 @@ from smodels_utils.SModelSUtils import installDirectory
 from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 from smodels import installation as smodelsinstallation
 import os, sys, io, shutil, pyslha
-        
+
 class RefXSecComputer:
     """
     The xsec computer that simply looks up reference cross sections,
@@ -375,7 +375,7 @@ class RefXSecComputer:
             pids = channel["pids"]
             if pids[1] < pids[0]:
                 pids = [ pids[1], pids[0] ]
-            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1], 
+            xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1],
                     sqrts, ewk, channel["masses"] )
             # print ( f"for channel {pids}: {str(xsecall)[:10]}" )
             ## interpolate for the mass that we are looking for
@@ -436,7 +436,7 @@ class RefXSecComputer:
             if pid in oppositesignmodes:
                 channels.append ( { "pids": (-pid,pid), "masses": ( mass, mass ) } )
             for jpid, jmass in masses.items():
-                if pid >= jpid:
+                if pid >= jpid or jpid < 999999 or jmass > 5000:
                     continue
                 if (pid,jpid) in associateproduction:
                     channels.append ( { "pids": (jpid,pid), "masses": (jmass, mass ) } )
@@ -446,6 +446,7 @@ class RefXSecComputer:
                     channels.append ( { "pids": (jpid,-pid), "masses": (jmass, mass ) } )
                 if (-jpid,pid) in associateproduction:
                     channels.append ( { "pids": (pid,-jpid), "masses": (mass, jmass ) } )
+
         if len(channels)==0:
             print ( f"[refxsecComputer] found no open channels for {slhafile}" )
         return channels
@@ -581,7 +582,7 @@ class RefXSecComputer:
                 pb = True
             smass = masses[0]+masses[1]
             if type(masses) == tuple and smass > 1e-6 and abs(masses[1]-masses[0])/smass > 1e-3:
-                filename = "xsecN2C1mnondegenp%d.txt" % sqrts
+                filename = "xsecN2C1mnondegen%d.txt" % sqrts
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
@@ -594,24 +595,26 @@ class RefXSecComputer:
             isEWK=True
             smasses = masses[1]+masses[0]
             if type(masses) == tuple and smasses > 1e-6 and abs(masses[1]-masses[0])/smasses > 1e-3:
-                filename = "xsecN2C1pnondegenp%d.txt" % sqrts
+                filename = "xsecN2C1pnondegen%d.txt" % sqrts
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
-        if pid1 in [ 1000023 ] and pid2 in [ 1000022 ]:
+        if pid1 in [ 1000022 ] and pid2 in [ 1000023 ]:
             if sqrts == 8:
                 logger.info ( "asking for N2 N1 production for 8 TeV. we only have 13 TeV" )
                 return None, None, None
             if masses[1]+masses[0] == 0.:
                 return None, None, None
             dm = abs ( masses[1] - masses[0] ) / ( masses[1] + masses[0] )
-            if dm > .01:
-                logger.info ( f"asking for N2 N1 production but masses differ ({masses[0],masses[1]}) we only have for mass-degenerate case." )
-                return None, None, None
-
-            filename = "xsecN2N1p%d.txt" % sqrts
+            if dm > 1e-3:
+                filename = "xsecN2N1nondegen%d.txt" % sqrts
+                columns["mass"]=(0,2)
+                columns["xsec"]=3
+                pb = True
+            else:
+                filename = "xsecN2N1%d.txt" % sqrts
+                pb = False
             order = NLL
-            pb = False
             isEWK=True
         if pid1 in [ 1000023, 1000025 ] and pid2 in [ 1000023, 1000025 ]:
             if sqrts == 8:
@@ -623,7 +626,7 @@ class RefXSecComputer:
             if pid2 == 1000025:
                 s2 = "N3"
             self.warn ( f"asked to compute {s1,pid1} {s2,pid2} production xsecs, will recycle the N2 N1 ones!" )
-            filename = "xsecN2N1p%d.txt" % sqrts
+            filename = "xsecN2N1%d.txt" % sqrts
             if ewk == "degenerate":
                 filename = "xsecEWKdegenerate%d.txt" % sqrts
                 comment = "fully degenerate N1, N2, C1"
@@ -647,10 +650,9 @@ class RefXSecComputer:
             columns["xsec"]=2
             pb = True
         if pid1 in [ -1000024 ] and pid2 == -pid1:
-            ## left handed slep- slep+ production.
             filename = "xsecC1C1%d.txt" % sqrts
-            order = NLL #3
             pb = False
+            order = NLL #3
         if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
             filename = "xsecslepLslepL%d.txt" % sqrts
