@@ -58,6 +58,7 @@ class Progress:
         self.tqdms[name]=n
 
     def show( self ):
+        os.system("reset")
         self.parse()
         # self.pprint()
         self.tqdms = {}
