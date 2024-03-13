@@ -274,7 +274,6 @@ class GraphMassPlane(object):
         return ret
 
     def getXYValues(self, parameters : List ) -> Union[None,Dict]:
-
         """
         Translate mass and width arrays to a 2d point in the plot.
         Returns a dictionary for the x and y coordinates.
@@ -283,15 +282,26 @@ class GraphMassPlane(object):
         :returns: None if an error occurs,
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        ret = {}
+        
+        #ret = {}
+        eqs = []
+        from sympy.parsing.sympy_parser import parse_expr
         for index,param in self.parametersMap.items():
+            lhs = parse_expr ( str(param) )
+            rhs = float("nan")
             ## FIXME when is it widths instead??
             # print ( f"parameters are {parameters}" )
             if type(parameters[index]) in [ float ]:
-                ret[str(param)] = float ( parameters[index] )
+                # ret[str(param)] = float ( parameters[index] )
+                rhs = float ( parameters[index] )
             else:
-                ret[str(param)] = float ( parameters[index][1] )
-        # print ( ">> ret", ret )
+                # ret[str(param)] = float ( parameters[index][1] )
+                rhs = float ( parameters[index][1] )
+            eqs.append ( Eq ( lhs, rhs ) )
+        d = solve ( eqs )
+        ret = {}
+        for k,v in d.items():
+            ret[str(k)]=float(v)
         return ret
 
 class Axes(object):
