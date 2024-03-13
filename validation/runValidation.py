@@ -55,6 +55,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
 
     starting( expRes, txnameStr, axes )
     axisType = getAxisType(axes)
+    #print ( f"@@9 tarball", namedTarball, "axisType", axisType, "axes", axes )
+    #axisType="v2"
+    #sys.exit()
     if axisType=="v3":
         valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
                 slhadir = None, options = options, kfactor=kfactor,
@@ -230,6 +233,31 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"], validationPlot )
 
+def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
+    """ compare a given two axes, return true if they are identical.
+    this aims at being backwards compatible, being able to (loosely)
+    compare v2 axes with v3 axes.
+
+    :returns: true, if identical
+    """
+    axis1 = str ( eval ( axis1 ) )
+    axis2 = str ( eval ( axis2 ) )
+    if axis1 == axis2:
+        return True
+    d1 = eval ( axis1 )
+    d2 = eval ( axis2 )
+    if type(d1) == dict and type(d2) == list: # canonize order
+        d1,d2 = d2,d1
+    ctr = 0
+    for br in d1:
+        for symb in br:
+            ssymb = str(symb).replace(" ","")
+            # print ( "#", ctr, "symb", str(symb), d2[ctr]==ssymb )
+            if d2[ctr] != ssymb:
+                return False
+            ctr+=1
+    return True
+
 def runForOneResult ( expRes, options : dict, 
                       keep : bool, db ) -> None:
     """
@@ -334,7 +362,7 @@ def runForOneResult ( expRes, options : dict,
                 if type(namedTarball) == str and ":" in namedTarball:
                     myaxis,fname_= namedTarball.split(":")[:2]
                     myaxis = str ( eval ( myaxis ) )
-                    if myaxis == ax:
+                    if compareTwoAxes ( myaxis, ax ):
                         hasCorrectAxis_ = True
                         tarfile = os.path.join(slhadir,fname_)
                 elif type(namedTarball) == list:
@@ -342,8 +370,7 @@ def runForOneResult ( expRes, options : dict,
                     for nt in namedTarball:
                         if ":" in nt:
                             myaxis,fname_= nt.split(":")[:2]
-                            myaxis = str ( eval ( myaxis ) )
-                            if myaxis == ax:
+                            if compareTwoAxes ( myaxis, ax ):
                                 hasCorrectAxis_ = True
                                 pnamedTarball = fname_
                                 tarfile = os.path.join(slhadir,fname_)
@@ -352,8 +379,7 @@ def runForOneResult ( expRes, options : dict,
                     # print ( "namedTarball", namedTarball, "ax", ax )
                     if type(namedTarball) == str and ":" in namedTarball:
                         myaxis,fname_= namedTarball.split(":")[:2]
-                        myaxis = str ( eval ( myaxis ) )
-                        if myaxis == ax:
+                        if compareAxes ( myaxis, ax ):
                             kfactor = float(kfactorDict[fname_])
                             logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
                     else:
@@ -388,7 +414,7 @@ def runForOneResult ( expRes, options : dict,
             if type(namedTarball) == str and ":" in namedTarball:
                 myaxis,fname_= namedTarball.split(":")[:2]
                 myaxis = str ( eval ( myaxis ) )
-                if myaxis == ax:
+                if compareTwoAxes ( myaxis, ax ):
                     tarfile = os.path.join(slhadir,fname_)
                     hasCorrectAxis = True
             if type(namedTarball) == list:
@@ -397,7 +423,7 @@ def runForOneResult ( expRes, options : dict,
                     if ":" in nt:
                         myaxis,fname_= nt.split(":")[:2]
                         myaxis = str ( eval ( myaxis ) )
-                        if myaxis == ax:
+                        if compareTwoAxes ( myaxis, ax ):
                             tarfile = os.path.join(slhadir,fname_)
                             hasCorrectAxis = True
                             break
