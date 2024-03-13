@@ -35,6 +35,48 @@ def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
         return None
     return None
 
+def translateAxisV2 ( axisv2 : str ) -> str:
+    """ translate a v2 axis to v3 syntax """
+    from sympy import var
+    x,y,z,w = var("x y z w")
+    axisv3 = {}
+    ctr = 0
+    l = eval (axisv2)
+    if type(l)==dict: ## seems like its translated already!
+        return axisv2
+    for br in l:
+        for symb in br:
+            ssymb = str(symb).replace(" ","")
+            axisv3[ctr]=ssymb
+            ctr+=1
+    return str(axisv3)
+
+def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
+    """ compare a given two axes, return true if they are identical.
+    this aims at being backwards compatible, being able to (loosely)
+    compare v2 axes with v3 axes.
+
+    :returns: true, if identical
+    """
+    axis1 = str ( eval ( axis1 ) )
+    axis2 = str ( eval ( axis2 ) )
+    if axis1 == axis2:
+        return True
+    d1 = eval ( axis1 )
+    d2 = eval ( axis2 )
+    if type(d1) == dict and type(d2) == list: # canonize order
+        d1,d2 = d2,d1
+    ctr = 0
+    for br in d1:
+        for symb in br:
+            ssymb = str(symb).replace(" ","")
+            # print ( "#", ctr, "symb", str(symb), d2[ctr]==ssymb )
+            if d2[ctr] != ssymb:
+                return False
+            ctr+=1
+    return True
+
+
 def retrieveValidationFile ( filename, tarballname = None ):
     """ retrieve a certain validation file from the right tarball
     :param filename: name of slha file to extract

@@ -55,7 +55,7 @@ def getCollaboration ( anaid : Union[Text,Dict] ):
             collaboration = "CMS"
     return collaboration
 
-def getSqrts ( Id : str ):
+def getSqrts ( Id : str ) -> str:
     """ given analysis id <Id>, determine sqrts """
     if Id.startswith ( "CMS-EXO-16-057" ): # an exceptional case
         return 8
