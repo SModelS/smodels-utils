@@ -951,7 +951,7 @@ class ValidationPlot():
 
 
         if not self.pretty:
-            logger.info ( "saving plot in %s" % filename )
+            logger.info ( f"saving plot in {filename}" )
             self.savefig(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
@@ -1027,7 +1027,7 @@ class ValidationPlot():
         if not datafile:
             datafile = self.getDataFile(validationDir)
         self.datafile = datafile
-        print ( f"[validationObjs] saving data to {datafile}" )
+        print ( f"[validationObjs] saving {len(self.data)} points to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
         dataStr = str(self.data)
