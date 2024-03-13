@@ -10,7 +10,7 @@
 
 import logging,os,sys,numpy,random,copy
 from typing import Union, Optional
-sys.path.append('../')
+#sys.path.append('../')
 from array import array
 import math, ctypes
 logger = logging.getLogger(__name__)

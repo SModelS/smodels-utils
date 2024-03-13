@@ -9,7 +9,7 @@
 """
 
 import logging,os,sys,numpy,random,copy,shutil
-sys.path.append('../')
+#sys.path.append('../')
 from array import array
 import math
 logger = logging.getLogger(__name__)
