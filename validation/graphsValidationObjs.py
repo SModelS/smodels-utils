@@ -739,9 +739,7 @@ class ValidationPlot():
             widths = expRes["Width (GeV)"]
             nodesMap = expRes["Nodes Map"]
             parameters = self.constructParameterVector ( masses, widths, nodesMap )
-            # print ( f"@@1 we feed {parameters}" )
             varsDict = massPlane.getXYValues( parameters )
-            # print ( f"@@1 we get {varsDict}" )
             if varsDict is None:
                 logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {massPlane}." )
                 continue
@@ -789,20 +787,6 @@ class ValidationPlot():
                     dataset = self.expRes.datasets[0]
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                """
-                mnw=[]
-                if width == None:
-                    mnw = mass
-                else:
-                    for bm,bw in zip(mass,width):
-                        br=[]
-                        for m,w in zip(bm,bw):
-                            if w == 'stable':
-                                br.append( (m,0.0) )
-                            else:
-                                br.append( (m,w) )
-                        mnw.append(br)
-                """
                 if not "efficiency" in Dict.keys():
                     try:
                         eff = txname.txnameData.getValueFor(parameters)

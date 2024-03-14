@@ -13,7 +13,7 @@ __all__ = [ "createPrettyPlot" ]
 
 import logging,os,sys,random,copy
 import numpy as np
-sys.path.append('../')
+# sys.path.append('../')
 from array import array
 import math,ctypes
 logger = logging.getLogger(__name__)

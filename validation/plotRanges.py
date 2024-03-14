@@ -8,7 +8,7 @@
 
 """
 
-from __future__ import print_function
+# from __future__ import print_function
 
 import ROOT
 import numpy
@@ -16,7 +16,7 @@ import unum
 import sys
 import ctypes
 from smodels.experiment.txnameObj import TxNameData
-sys.path.insert(0,"../")
+# sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.base.physicsUnits import GeV
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
