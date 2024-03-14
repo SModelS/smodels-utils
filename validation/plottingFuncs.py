@@ -9,7 +9,7 @@
 """
 
 import logging,os,sys,numpy,random,copy
-from typing import Union, Optional
+from typing import Union, Optional, Set, List
 #sys.path.append('../')
 from array import array
 import math, ctypes
@@ -120,12 +120,12 @@ class Recorder:
             ret = self.callable(*args, **kwargs)
             self.parent.callable_results.append(ret)
             return ret
-    
+
 
 def importMatplot ( record : bool ):
-    """ import matplotlib 
+    """ import matplotlib
     :param record: if true, then wrap the module into a recorder class.
-                   this class will create a recorder.py script 
+                   this class will create a recorder.py script
     """
     if not record:
         import matplotlib.pylab as plt
@@ -159,7 +159,7 @@ def isWithinRange ( xyrange : list, xy : float ):
 
 def filterWithinRanges ( points : dict, xrange : Optional[list], \
         yrange : Optional[list], defRetZeroes : bool = False ):
-    """ filter from points all that is not within xrange or yrange 
+    """ filter from points all that is not within xrange or yrange
     :param defRetZeroes: if true, then return list of zeroes if no y coordinates
     """
     pxs = points["x"]
@@ -184,7 +184,7 @@ def filterWithinRanges ( points : dict, xrange : Optional[list], \
 
 def getAxisRange ( options : dict, label : str = "xaxis" ):
     """ given an options dictionary, obtain a range for the axis named
-        <label> 
+        <label>
     :returns: range list, e.g. [0,1000], or None
     """
     if not "style" in options:
@@ -304,7 +304,7 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""
-        
+
     return subtitle
 
 def getFigureUrl( validationPlot ):
@@ -383,15 +383,16 @@ def getGridPointsV2 ( validationPlot ):
     ## we will need this for .dataToCoordinates
     return ret
 
-def getGridPoints ( validationPlot ):
+def getGridPoints ( validationPlot ) -> List:
     """ retrieve the grid points of the upper limit / efficiency map.
-        currently only works for upper limit maps. """
+    """
     ret = []
     from validationHelpers import getAxisType
     axisType = getAxisType(validationPlot.axes)
     if axisType == "v2":
         return getGridPointsV2 ( validationPlot )
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
+    massesToCoords = {} ## cache the massesToCoords mapping
     for dataset in validationPlot.expRes.datasets:
         txNameObj = None
         for ctr,txn in enumerate(dataset.txnameList):
@@ -408,12 +409,16 @@ def getGridPoints ( validationPlot ):
             logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
             return []
         origdata = convertOrigData ( txNameObj.txnameData )
-        for ctr,masses in enumerate(origdata):
+        for ctr,cmasses in enumerate(origdata):
+            if tuple(cmasses) in massesToCoords:
+                continue
+            masses = copy.deepcopy ( cmasses )
             ## FIXME not sure if this works for widths
             for i,mass in enumerate(masses):
                 # info is, e.g.: (1,'mass',GeV)
                 masses[i]=(i+1,mass)
             coords = massPlane.getXYValues(masses)
+            massesToCoords[tuple(cmasses)] = coords
             if not coords == None and not coords in ret:
                 ret.append ( coords )
     logger.info ( f"found {len(ret)} gridpoints" )
