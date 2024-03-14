@@ -17,7 +17,7 @@ from smodels.base.physicsUnits import TeV
 from inspect import currentframe, getframeinfo
 import sys
 x,y,z,w = var('x y z w')
-from typing import Union, Text
+from typing import Union, Text, Dict
 
 # pretty name of particle:
 
@@ -865,30 +865,69 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
         pn = collaboration + " " + pn
     return pn
 
+def getParticleNames ( smsstring : str ) -> Dict:
+    """ turn e.g. (PV > anyBSM(1)), (anyBSM(1) > MET(3),mu+,mu-),
+    into { 1: "anyBSM", 3: "MET" }
+
+    :param  smstring: e.g. '(PV > anyBSM(1),anyBSM(2)), 
+    (anyBSM(1) > MET(3),mu+,mu-), (anyBSM(2) > MET(6),jet,jet)'
+    :returns: dictionary with node numbers as keys, particle names as values
+    """
+    ret = {}
+    import re
+    tokens = re.split ( " |,", smsstring )
+    for t in tokens:
+        numbers = re.findall(r'\d+', t )
+        if len(numbers)==0:
+            continue
+        name = t.replace(")","").replace("(","")
+        name = name.replace(numbers[0],"")
+        ret[int(numbers[0])]=name
+    return ret
+
 def prettyAxesV3( validationPlot = None ) -> str:
     """
     get a description of the axes of validation plot
     :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    print ( "@@FIXME in prettyDescriptions.prettyAxesV3 implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
+    # print ( "@@FIXME in prettyDescriptions.prettyAxesV3 implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
     txn = validationPlot.getTxname()
     axisMap = txn.axesMap[0]
     smsString = list(txn.smsMap.keys())[0].treeToString( removeIndicesFrom="SM" )
     indices = {}
     ret=[]
+    names = getParticleNames ( smsString )
+    #print ( f"axisMap {axisMap}" )
+    #print ( f"smsString {smsString}" )
+    #print ( f"smsMap {txn.smsMap}" )
+    #print ( f"particle names {names}" )
+    axesDict = {}
+    for k,v in axisMap.items():
+        node=txn.dataMap[k][0] ## okay, now we have the node
+        ## from the node we need the name
+        axesDict[v]=str(node)
+        if node in names:
+            axesDict[v]=names[node]
+    # print ( f"axesDict {axesDict}" )
+    for k,v in axesDict.items():
+        st = f"{k}=m({v})"
+        ret.append ( st )
+    """
     for k,v in txn.dataMap.items():
+        print ( f"@@3 key {k} value {v}" )
         value = axisMap[k]
-        # value = f"bsm({value} GeV)"
         if value in [ "x", "y", "z" ]:
             value = f"m({value})"
         else:
-            value = f"m({value} GeV)"
+            value = f"m({value}) GeV"
         indices[ v[0] ] = value
         if not value in ret:
             ret.append ( value )
-    # print ( "indices", indices, "ret", ret )
-    return ",".join( ret )
+    """
+    ret = ", ".join( ret )
+    #print ( f"returning {ret}" )
+    return ret
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
     """
