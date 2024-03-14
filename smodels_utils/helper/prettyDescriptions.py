@@ -885,7 +885,7 @@ def getParticleNames ( smsstring : str ) -> Dict:
         ret[int(numbers[0])]=name
     return ret
 
-def prettyAxesV3( validationPlot = None ) -> str:
+def prettyAxesV3( validationPlot ) -> str:
     """
     get a description of the axes of validation plot
     :param validationPlot: the validationPlot object.
