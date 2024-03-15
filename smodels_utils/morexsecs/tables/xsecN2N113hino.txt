@@ -1,6 +1,6 @@
 ## NLO-NLL hino-like ##01##02
 ## https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections13TeVn1n2hino
-m## [GeV] xsec [fb] uncertainty [fb]
+## m [GeV] xsec [fb] uncertainty [fb]
 80 8039.52 334.653
 100 3277.01 120.646
 150 715.14 30.1429
