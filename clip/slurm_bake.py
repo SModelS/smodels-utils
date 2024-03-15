@@ -11,6 +11,19 @@ except:
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 
+def queryStats ( maxsteps : int ):
+    """ just give us the statistics """
+    import running_stats
+    running_stats.count_jobs()
+    running_stats.running_stats()
+    if maxsteps != None:
+        for i in range(maxsteps):
+            time.sleep(30.)
+            print()
+            running_stats.count_jobs()
+            running_stats.running_stats()
+            print()
+
 def cancelAllBakers():
     o = subprocess.getoutput ( "slurm q | grep _B" )
     lines = o.split("\n")
@@ -162,6 +175,9 @@ def logCall ():
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
+    argparser.add_argument ( '-q','--query',
+            help='query status, dont actually run (use -M to query repeatedly)',
+            action="store_true" )
     argparser.add_argument ( '--dontlog',
             help='dont produce bakery log files',
             action="store_true" )
@@ -223,6 +239,9 @@ def main():
     if args.cancel_all:
         cancelAllBakers()
         return
+    if args.query:
+        queryStats ( 0 )
+        return
     doLog = not args.dontlog
     if args.mass == "default":
         # args.mass = "[(300,1099,25),'half',(200,999,25)]"
@@ -231,7 +250,8 @@ def main():
         for i in range(args.nbakes):
             print ( "args", vars(args) )
             bake ( vars(args) )
-    logCall()
+    if not args.query:
+        logCall()
 
 if __name__ == "__main__":
     main()
