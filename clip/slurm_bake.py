@@ -2,6 +2,8 @@
 
 from __future__ import print_function
 import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
+from typing import Dict
+
 try:
     import commands as subprocess
 except:
@@ -9,20 +11,34 @@ except:
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 
+def cancelAllBakers():
+    o = subprocess.getoutput ( "slurm q | grep _B" )
+    lines = o.split("\n")
+    cancelled = []
+    for line in lines:
+        if not "_B" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        cmd = f"scancel {nr}"
+        subprocess.getoutput ( cmd )
+        cancelled.append ( nr )
+    print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
+
+
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
-def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
-           time, doLog = True, adl_file = None, event_condition = None ):
+def bake ( args : Dict ):
     """ bake with the given recipe
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
     :param topo: eg T3GQ
     :param mass: eg [(50,4500,200),(50,4500,200),(0.)]
     :param nevents: number of events
     :param dry_run: dont do anything, just produce script
-    :param nproc: number of processes, typically 5
+    :param nprocesses: number of processes, typically 5
     :param cutlang: if true, then use cutlang
     :param checkmate: if true, then use checkmate
     :param time: time in hours
@@ -35,7 +51,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
         f.close()
     nevents = args["nevents"]
     topo = args["topo"]
-    nproc = args["nprocesses"]
+    nprocesses = args["nprocesses"]
     mass = args["mass"]
     dry_run = args["dry_run"]
     cutlang = args["cutlang"]
@@ -47,10 +63,11 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     analyses = args["analyses"]
     event_condition = args["event_condition"]
     adl_file = args["adl_file"]
+    njets = args["njets"]
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
-    Dir = "%s/smodels-utils/clip/temp/" % codedir
+    Dir = f"{codedir}/smodels-utils/clip/temp/"
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
     pathname = os.path.join ( Dir, filename )
@@ -58,8 +75,8 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     # nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( pathname, "wt" ) as f:
         for line in lines:
-            largs = f'-a -n {nevents} --topo {topo} -p {nproc} -m "{mass}"'
-            largs += f' --analyses "{analyses}"'
+            largs = f'-a -b -n {nevents} --topo {topo} -p {nprocesses} -m "{mass}"'
+            largs += f' --analyses "{analyses}" --njets {njets}'
             # args += ' -b'
             if cutlang:
                 largs += ' --cutlang'
@@ -74,42 +91,14 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
                 pids = { "gamma": 22, "Z": 23, "higgs": 25 }
                 for name,pid in pids.items():
                     event_condition = event_condition.replace ( name, str(pid) )
-                args += f" --event_condition '{event_condition}'"
+                largs += f" --event_condition '{event_condition}'"
             if adl_file is not None:
                 adl_file = adl_file.replace("'",'').replace('"','')
-                args += f" --adl_file '{adl_file}'"
-            f.write ( line.replace("@@ARGS@@", args ) )
+                largs += f" --adl_file '{adl_file}'"
+            f.write ( line.replace("@@ARGS@@", largs ) )
+            # f.write ( line )
         f.close()
     # the following is only needed with singularity containers! """
-    """
-    templatefile = f"{codedir}/smodels-utils/clip/run_bakery_template.sh"
-    with open ( templatefile, "rt" ) as f:
-        lines = f.readlines()
-        f.close()
-    tdir = "./temp"
-    if not os.path.exists ( tdir ):
-        os.mkdir ( tdir )
-    tmpfile = tempfile.mktemp(prefix="B", suffix=".sh",dir=tdir )
-    with open ( tmpfile, "wt" ) as f:
-        for line in lines:
-            f.write ( line.replace ( "@@SCRIPT@@", filename ) )
-        f.write ( f"# this script will perform:\n" )
-        line = f'./bake.py -a -n {nevents} -T {topo} -m "{mass}" --analyses "{analyses}" -p {nproc}'
-        if event_condition is not None:
-            event_condition = event_condition.replace("'",'"')
-            pids = { "gamma": 22, "Z": 23, "higgs": 25 }
-            for name,pid in pids.items():
-                event_condition = event_condition.replace ( name, str(pid) )
-            line += f" --event_condition '{event_condition}'"
-        if adl_file is not None:
-            adl_file = adl_file.replace("'",'').replace('"','')
-            line += f" --adl_file '{adl_file}'"
-        if cutlang:
-            line += ' --cutlang'
-        f.write ( f"# {line}\n" )
-        f.close()
-    os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
-    """
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
     if doLog:
@@ -128,15 +117,15 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     # ma5 seems to not need much RAM
-    ram = 2.5 * nproc
+    ram = 2.5 * nprocesses
     if nevents >= 50000:
-        ram = 3. * nproc
+        ram = 3. * nprocesses
     if nevents >= 100000:
-        ram = 4. * nproc
-    ncpus = int(nproc*1.5)
+        ram = 4. * nprocesses
+    ncpus = int(nprocesses*2)
     if cutlang:
-        ram = 2.5 * nproc ## in GB
-        ncpus = int(nproc*2)
+        ram = 2.5 * nprocesses ## in GB
+        ncpus = int(nprocesses*2)
     if checkmate:
         ram = int(1.5 * ram)
     cmd += [ "--mem", f"{ram}G" ]
@@ -146,7 +135,7 @@ def bake ( analyses, mass, topo, nevents, dry_run, nproc, cutlang,
     print ( f'[slurm.py] baking {" ".join ( cmd )}' )
     if not dry_run:
         a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
+        print ( f"returned: {a}" )
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
@@ -195,6 +184,8 @@ def main():
                     type=str, default="default" )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
+    argparser.add_argument ( '-j', '--njets', nargs='?', help='number of jets [1]',
+                        type=int, default=1 )
     argparser.add_argument ( '--event_condition', nargs="?",
                     help='optionally specify an event condition',
                     type=str, default=None )
@@ -224,15 +215,21 @@ def main():
                              action='store_true' )
     argparser.add_argument ( '--checkmate', help='use checkmate for baking',
                              action='store_true' )
+    argparser.add_argument ( '--cancel_all', help='cancel all bakers',
+            action="store_true" )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
     args=argparser.parse_args()
+    if args.cancel_all:
+        cancelAllBakers()
+        return
     doLog = not args.dontlog
     if args.mass == "default":
         # args.mass = "[(300,1099,25),'half',(200,999,25)]"
         args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
     for r in range(args.repeat):
         for i in range(args.nbakes):
+            print ( "args", vars(args) )
             bake ( vars(args) )
     logCall()
 
