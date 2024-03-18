@@ -654,7 +654,10 @@ class ValidationPlot():
         """
         D = {}
         def equal ( val1 : Union[str,float], val2 : Union[str,float] ) -> bool:
-            r = abs(float(val1)-float(val2))/abs(float(val1)+float(val2))
+            val1, val2 = float(val1), float(val2)
+            if val1 == val2 == 0.:
+                return True
+            r = abs(val1-val2)/abs(val1+val2)
             return r < 1e-5
         barename = slhafile.replace(".slha","")
         tokens = barename.split("_")
