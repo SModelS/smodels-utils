@@ -36,7 +36,7 @@ def cancelAllBakers():
         cmd = f"scancel {nr}"
         subprocess.getoutput ( cmd )
         cancelled.append ( nr )
-    print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
+    print ( f"[slurm_bake] cancelled {', '.join(cancelled)}" )
 
 
 def mkdir ( Dir ):
@@ -140,7 +140,8 @@ def bake ( args : Dict ):
         ram = 2.5 * nprocesses ## in GB
         ncpus = int(nprocesses*2)
     if checkmate:
-        ram = int(1.5 * ram)
+        ram = int(4 * ram)
+        ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     # cmd += [ tmpfile ]

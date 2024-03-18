@@ -631,7 +631,7 @@ class DataHandler(object):
         if waitFor == None:
             has_waited = True
         yields = []
-        with open(self.path,'r') as csvfile:
+        with open(self.path,'r', encoding = 'utf-8', errors='ignore' ) as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
                 if "@@EOF@@" in r:
