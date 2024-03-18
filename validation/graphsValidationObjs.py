@@ -653,8 +653,8 @@ class ValidationPlot():
         :returns: dictionary of axes, e.g. { "x": 400, "y": 200 }
         """
         D = {}
-        def equal ( val1 : float, val2 : float ) -> bool:
-            r = abs(val1-val2)/abs(val1+val2)
+        def equal ( val1 : Union[str,float], val2 : Union[str,float] ) -> bool:
+            r = abs(float(val1)-float(val2))/abs(float(val1)+float(val2))
             return r < 1e-5
         barename = slhafile.replace(".slha","")
         tokens = barename.split("_")
