@@ -657,7 +657,7 @@ class ValidationPlot():
             r = abs(val1-val2)/abs(val1+val2)
             return r < 1e-5
         barename = slhafile.replace(".slha","")
-        tokens = slhafile.s
+        tokens = barename.split("_")
         logger.error ( f"need to find axes for {slhafile}" )
         if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
                 equal ( tokens[2], tokens[4] ):
