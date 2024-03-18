@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import GeV
 from smodels.matching import modelTester
 from smodels_utils.helper.various import round_to_n
-from typing import Union
+from typing import Union, Dict
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
          rescaleWidth, addUnit
@@ -645,6 +645,33 @@ class ValidationPlot():
             return None
         return None
 
+    def getAxesFromSLHAFileName ( self, slhafile : str ) -> Dict:
+        """ get the axes dictionary from the slha filename alone.
+        meant for points that did not produce any smodels output.
+
+        :param slhafile: the slha filename, e.g. TChiWH_400_200_400_200.slha
+        :returns: dictionary of axes, e.g. { "x": 400, "y": 200 }
+        """
+        D = {}
+        def equal ( val1 : float, val2 : float ) -> bool:
+            r = abs(val1-val2)/abs(val1+val2)
+            return r < 1e-5
+        barename = slhafile.replace(".slha","")
+        tokens = slhafile.s
+        logger.error ( f"need to find axes for {slhafile}" )
+        if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
+                equal ( tokens[2], tokens[4] ):
+            # e.g. TChiWH_400_200_400_200.slha
+            D = { "x": float(tokens[1]), "y": float(tokens[2]) }
+
+        if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
+                equal ( tokens[3], tokens[6] ) and \
+                equal ( tokens[1]+tokens[3], 2*tokens[2] ):
+            # e.g. TChiWH_400_300_200_400_300_200.slha
+            D = { "x": float(tokens[1]), "y": float(tokens[3]) }
+
+        return D
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -697,7 +724,11 @@ class ValidationPlot():
             exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.error( f"No results for {slhafile} FIXME implement sth" )
+                logger.error( f"No results for {slhafile}" )
+                axes = self.getAxesFromSLHAFileName ( slhafile )
+                D = { "slhafile": slhafile, "error": "no result here",
+                      "axes": axes }
+                self.data.append ( D )
                 continue
             dt = None
             if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
