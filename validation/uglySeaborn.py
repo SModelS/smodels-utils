@@ -89,7 +89,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             break
         if "error" in pt.keys():
             vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
-            if vD != None:
+            if vD != None and "x" in vD:
                 x_, y_ = vD["x"], None
                 if not isWithinRange ( xrange, x_ ):
                     continue
