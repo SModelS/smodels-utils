@@ -439,7 +439,7 @@ class ValidationPlot():
             self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
         except:
             def getKey ( x ):
-                if x["axes"] is None:
+                if not "axes" in x or x["axes"] is None or not "x" in x["axes"]:
                     return -1e9
                 return x["axes"]["x"]
             self.data.sort ( key = lambda x: getKey ( x ) )
@@ -645,6 +645,15 @@ class ValidationPlot():
             return None
         return None
 
+    def getXYFromSLHAFileName ( self, slhafile : str, asDict : bool ) -> Dict:
+        """ for compatibility only.
+        """
+        D = self.getAxesFromSLHAFileName ( slhafile )
+        if asDict:
+            return D
+        return [ D["x"], D["y"] ]
+        
+
     def getAxesFromSLHAFileName ( self, slhafile : str ) -> Dict:
         """ get the axes dictionary from the slha filename alone.
         meant for points that did not produce any smodels output.
@@ -661,7 +670,7 @@ class ValidationPlot():
             return r < 1e-5
         barename = slhafile.replace(".slha","")
         tokens = barename.split("_")
-        logger.error ( f"need to find axes for {slhafile}" )
+        logger.debug ( f"need to find axes for {slhafile}" )
         if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
                 equal ( tokens[2], tokens[4] ):
             # e.g. TChiWH_400_200_400_200.slha

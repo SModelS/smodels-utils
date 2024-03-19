@@ -300,6 +300,8 @@ class GraphMassPlane(object):
             eqs.append ( Eq ( lhs, rhs ) )
         d = solve ( eqs )
         ret = {}
+        if d == []:
+            return ret
         for k,v in d.items():
             ret[str(k)]=float(v)
         return ret

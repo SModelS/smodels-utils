@@ -982,7 +982,7 @@ def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
                'm_{#tilde{#chi}^{#pm}_{1}} = .5 m_{#tilde{#chi}_{2}^{0}} + .5 m_{#tilde{#chi}_{1}^{0}}'  ]
         return rootToLatex ( ret, outputtype )
     if len(axes)>1 and axes[0] != axes[1]:
-        logging.error('Asymmetric branches are not yet automatized.')
+        logging.error('Asymmetric branches are not yet automated.')
         return "N/A"
 
     ax = axes[0]
