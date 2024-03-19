@@ -139,6 +139,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if rexp > 3.:
             rexp=3.
         if isinstance(xvals,dict):
+            if not "x" in xvals: #cant do nothing with this
+                continue
             if len(xvals) == 1:
                 x,y = xvals['x'],r
                 if logY:

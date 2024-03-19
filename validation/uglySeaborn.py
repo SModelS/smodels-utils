@@ -126,6 +126,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             tavg += pt["t"]
         r = pt['signal']/pt ['UL']
         if type(xvals) == dict:
+            if not "x" in xvals:
+                continue
         # if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
