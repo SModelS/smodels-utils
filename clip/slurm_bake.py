@@ -140,7 +140,7 @@ def bake ( args : Dict ):
         ram = 2.5 * nprocesses ## in GB
         ncpus = int(nprocesses*2)
     if checkmate:
-        ram = int(4 * ram)
+        ram = int(3 * ram)
         ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
