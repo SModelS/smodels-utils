@@ -31,7 +31,7 @@ hasWarned = { "emptystring": False }
 
 def _lambdify ( a, b, c, dummify ):
     f = lambdify ( a, b, c, dummify=dummify )
-    f.expr = "%s: %s" % ( a, b )
+    f.expr = f"{a}: {b}"
     return f
 
 class MassPlane(object):
@@ -553,10 +553,13 @@ class Axes(object):
 
         #Vars defines the number of variables to be solved for:
         nvars = len(xvars)
+        self._nArguments = nvars
         neqs = len(self._equations)
         if nvars > neqs:
-            logger.error('Underconstrained system. We have %i variables and %i equations' %(nvars,neqs))
-            sys.exit()
+            logger.debug( f'Underconstrained system. We have {nvars} variables and {neqs} equations' )
+            self._xvars = xvars
+            return
+            # sys.exit()
         #Solve for variables in vars using nvars equations:
         for eqs in permutations(self._equations,nvars):
             xy = solve(eqs,xvars,dict=True)
@@ -608,7 +611,6 @@ class Axes(object):
             logger.error ( line )
 
     def getXYValues(self,massArray,widthArray=None):
-
         """
         translate a mass array (for single branch) to a point of the plot
 
@@ -671,17 +673,11 @@ class Axes(object):
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for l in [ "A", "B", "C" ][:len(massArray)]:
-            if not "Mass%s" % l in massInput.keys():
-                massInput["Mass%s" % l] = None
-            if "Mass%s" % l in massInput.keys() and \
-                not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
-                massInput["Width%s" % l ]=None
-        #print ( "[getXYValues] massInput", massInput )
-        #print ( "[getXYValues] xyFunc", self._xyFunction, str(self._xyFunction) )
-        #print ( "massArray", massArray )
-        """import IPython
-        IPython.embed()
-        sys.exit()"""
+            if not f"Mass{l}" in massInput.keys():
+                massInput[ f"Mass{l}" ] = None
+            if f"Mass{l}" in massInput.keys() and \
+                not f"Width{l}" in massInput.keys(): ## FIXME why is this needed???
+                massInput[ f"Width{l}" ]=None
         for xv,xfunc in self._xyFunction.items():
             fexpr = str ( xfunc.expr )
             cleanedInput = {}
