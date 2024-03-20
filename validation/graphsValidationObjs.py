@@ -686,15 +686,16 @@ class ValidationPlot():
         d = solve ( eqs )
         if type(d)==dict and len(d)>0:
             for k,v in d.items():
-                D[str(k)]=v
-                return D
+                D[str(k)]=round(float(v),5)
+            return D
+        # print ( f"@@axesDict {axesDict} {slhafile}" )
         if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
                 equal ( tokens[3], tokens[6] ) and \
                 abs ( float(tokens[1])+float(tokens[3]) - 2*float(tokens[2])) < 1.5 \
                 and Eq ( axesDict[1], .5*x+.5*y )==True:
             # e.g. TChiWH_400_300_200_400_300_200.slha
             ## account for rounding
-            D = { "x": float(tokens[1]), "y": float(tokens[3]) }
+            D = { "x": round(float(tokens[1]),5), "y": round(float(tokens[3]),5) }
         """
         if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
                 equal ( tokens[2], tokens[4] ):
@@ -710,7 +711,7 @@ class ValidationPlot():
             D = { "x": float(tokens[1]), "y": float(tokens[2]) }
         """
     
-        print ( f"@@A getAxesFromSLHAFileName: slhafile={slhafile} D={D}" )
+        # print ( f"@@A getAxesFromSLHAFileName: slhafile={slhafile} D={D}" )
         # print ( f"@@A self.axes {self.axes} {type(self.axes)}" )
         #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
