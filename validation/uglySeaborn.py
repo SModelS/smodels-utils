@@ -240,13 +240,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if len(gridpoints)>3000: # a lot of points? put to background!
             zorder = 2
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
-                   linestyle=None, c="blue", linewidth=0, markersize=4, label="%s SModelS db grid points" % len(gridpoints), zorder = zorder )
-        #leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
+                   linestyle=None, c="blue", linewidth=0, markersize=4, label=f"{len(gridpoints)} SModelS db grid points", zorder = zorder )
+    axes = prettyAxesV3(validationPlot).replace("anyBSM","*")
+    #axes = axes.replace("MET","$\\\\slash{E}_T}$" )
     title = validationPlot.expRes.globalInfo.id + " " \
-            + validationPlot.txName \
-            + ": " + prettyAxesV3(validationPlot)
-#            + "_" + validationPlot.niceAxes
-            #+ "_" + validationPlot.axes
+            + validationPlot.txName + ": " + axes
     subtitle = getDatasetDescription ( validationPlot, maxLength = 50 )
     figureUrl = getFigureUrl(validationPlot)
 

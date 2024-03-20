@@ -678,8 +678,9 @@ class ValidationPlot():
 
         if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
                 equal ( tokens[3], tokens[6] ) and \
-                equal ( tokens[1]+tokens[3], 2*tokens[2] ):
+                abs ( float(tokens[1])+float(tokens[3]) - 2*float(tokens[2])) < 1.5:
             # e.g. TChiWH_400_300_200_400_300_200.slha
+            ## account for rounding
             D = { "x": float(tokens[1]), "y": float(tokens[3]) }
 
         if len ( tokens ) == 7 and equal ( tokens[3], 60.) and \

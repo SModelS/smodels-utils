@@ -380,7 +380,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if axisType == "v2":
         axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     else:
-        axStr = "plane: " + prettyAxesV3(validationPlot)
+        # axStr = "plane: " + prettyAxesV3(validationPlot)
+        axStr = prettyAxesV3(validationPlot).replace("anyBSM","*")
     plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)

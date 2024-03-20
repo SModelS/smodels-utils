@@ -71,7 +71,7 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         :param keep: keep temporary files
         """
-        template="../slha/templates/%s.template" % topology
+        template= f"../slha/templates/{topology}.template"
         if not os.path.exists ( template ):
             print ( "[slhaCreator] error: templatefile %s not found." %
                     template )
@@ -264,7 +264,7 @@ class TemplateFile(object):
         fslha.write(fdata)
         fslha.close()
 
-        logger.info("File %s created." %slhaname)
+        logger.info( f"File {slhaname} created." )
 
         return slhaname
 
@@ -604,7 +604,7 @@ if __name__ == "__main__":
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
                    swapBranches = args.swapBranches, 
                    ignore_pids = args.ignore_pids, comment = args.comment )
-    print ( "[slhaCreator] Produced %s slha files" % len(slhafiles ) )
+    print ( f"[slhaCreator] Produced {len(slhafile)} slha files" )
     # newtemp = tempfile.mkdtemp(dir="./" ) # FIXME now idea what that was for
     newtemp = tempf.tempdir # FIXME anyways this does it correctly it seems
     __tempfiles__.add ( newtemp )
