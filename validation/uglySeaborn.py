@@ -241,7 +241,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             zorder = 2
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
                    linestyle=None, c="blue", linewidth=0, markersize=4, label=f"{len(gridpoints)} SModelS db grid points", zorder = zorder )
-    axes = prettyAxesV3(validationPlot).replace("anyBSM","*")
+    axes = prettyAxesV3(validationPlot)
+    axes = axes.replace("*","")
+    axes = axes.replace("0.5",".5")
+    axes = axes.replace("anyBSM","*")
     #axes = axes.replace("MET","$\\\\slash{E}_T}$" )
     title = validationPlot.expRes.globalInfo.id + " " \
             + validationPlot.txName + ": " + axes

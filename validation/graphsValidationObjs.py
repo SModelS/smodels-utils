@@ -661,6 +661,14 @@ class ValidationPlot():
         :param slhafile: the slha filename, e.g. TChiWH_400_200_400_200.slha
         :returns: dictionary of axes, e.g. { "x": 400, "y": 200 }
         """
+        logger.debug ( f"need to find axes for {slhafile} ({self.axes})" )
+        axesDict = eval ( self.axes )
+        from sympy.parsing.sympy_parser import parse_expr 
+        from sympy import solve, var, Eq
+        x,y,z,w = var ( "x y z w" )
+
+        for nr, expr in axesDict.items():
+            axesDict[nr]=parse_expr ( expr )
         D = {}
         def equal ( val1 : Union[str,float], val2 : Union[str,float] ) -> bool:
             val1, val2 = float(val1), float(val2)
@@ -670,24 +678,41 @@ class ValidationPlot():
             return r < 1e-5
         barename = slhafile.replace(".slha","")
         tokens = barename.split("_")
-        logger.debug ( f"need to find axes for {slhafile}" )
+        txname, numbers = tokens[0], tokens[1:]
+        eqs = set()
+        if len(axesDict) == len(numbers):
+            for nr, expr in axesDict.items():
+                eqs.add ( Eq( expr, float ( numbers[nr] ) ) )
+        d = solve ( eqs )
+        if type(d)==dict and len(d)>0:
+            for k,v in d.items():
+                D[str(k)]=v
+                return D
+        if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
+                equal ( tokens[3], tokens[6] ) and \
+                abs ( float(tokens[1])+float(tokens[3]) - 2*float(tokens[2])) < 1.5 \
+                and Eq ( axesDict[1], .5*x+.5*y )==True:
+            # e.g. TChiWH_400_300_200_400_300_200.slha
+            ## account for rounding
+            D = { "x": float(tokens[1]), "y": float(tokens[3]) }
+        """
         if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
                 equal ( tokens[2], tokens[4] ):
             # e.g. TChiWH_400_200_400_200.slha
             D = { "x": float(tokens[1]), "y": float(tokens[2]) }
 
-        if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
-                equal ( tokens[3], tokens[6] ) and \
-                abs ( float(tokens[1])+float(tokens[3]) - 2*float(tokens[2])) < 1.5:
-            # e.g. TChiWH_400_300_200_400_300_200.slha
-            ## account for rounding
-            D = { "x": float(tokens[1]), "y": float(tokens[3]) }
 
         if len ( tokens ) == 7 and equal ( tokens[3], 60.) and \
                 equal ( tokens[1], tokens[4] ) and \
-                equal ( tokens[2], tokens[5] ):
+                equal ( tokens[2], tokens[5] ) and \
+                sympy.Eq ( self.axesDict[2], 60. ):
             # e.g. TChiWH_400_300_60_400_300_60.slha
             D = { "x": float(tokens[1]), "y": float(tokens[2]) }
+        """
+    
+        print ( f"@@A getAxesFromSLHAFileName: slhafile={slhafile} D={D}" )
+        # print ( f"@@A self.axes {self.axes} {type(self.axes)}" )
+        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
         return D
 
