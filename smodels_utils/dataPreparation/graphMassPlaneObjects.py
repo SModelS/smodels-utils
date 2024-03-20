@@ -54,10 +54,9 @@ class GraphMassPlane(object):
     def getNiceAxes(cls,axesStr):
         """
         Convert the axes definition format, e.g. {0 : 'x', 1 : 'y', 2 : 'x', 3 : 'y'}
-        to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+        to a nicer format: x_y_
 
         :param axesStr: string defining axes in the old format
-
         :return: string with a nicer representation of the axes (more suitable for printing)
         """
 
@@ -65,12 +64,22 @@ class GraphMassPlane(object):
             logger.error ( "Axes field is empty: cannot validate." )
             return None
         x,y,z,w = var('x y z w')
-        ret = str(eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w}))
-        ret = ret.replace(" ","")
-        ret = ret.replace(":","")
-        ret = ret.replace("'","")
-        ret = ret.replace(",","_")
-        ret = ret.replace("{","").replace("}","")
+        axesDict = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
+
+        def isSymmetrical ( axesDict : Dict ) -> bool:
+            """ check if dicionary is symmetrical """
+            if len(axesDict)%2==1:
+                return False ## odd number of entries
+            n = int(len(axesDict)/2)
+            for i in range(n):
+                if axesDict[i] != axesDict[i+n]:
+                    return False
+            return True
+        if isSymmetrical ( axesDict ):
+            n = int(len(axesDict)/2)
+            for i in range(n,2*n):
+                axesDict.pop(i)
+        ret = "_".join ( axesDict.values() )
         return ret
 
 

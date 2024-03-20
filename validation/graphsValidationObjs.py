@@ -682,6 +682,12 @@ class ValidationPlot():
             # e.g. TChiWH_400_300_200_400_300_200.slha
             D = { "x": float(tokens[1]), "y": float(tokens[3]) }
 
+        if len ( tokens ) == 7 and equal ( tokens[3], 60.) and \
+                equal ( tokens[1], tokens[4] ) and \
+                equal ( tokens[2], tokens[5] ):
+            # e.g. TChiWH_400_300_60_400_300_60.slha
+            D = { "x": float(tokens[1]), "y": float(tokens[2]) }
+
         return D
 
     def getDataFromPlanes(self):
@@ -1114,12 +1120,12 @@ class ValidationPlot():
             datafile += "."
         return datafile+'py'
 
-    def getPlotFileName(self,validationDir,fformat='pdf'):
+    def getPlotFileName(self,validationDir : str, fformat : str = 'pdf') -> str:
         """
         Defines the name of the plot file and returns it
 
-        :param validationDir: Folder where the root file will be saved
-
+        :param validationDir: Folder where the plots and validation dictionaries 
+        will be saved
         :return: name of the plot file
         """
 
@@ -1136,7 +1142,6 @@ class ValidationPlot():
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
-
         return filename
 
     def getNiceAxes(self,axesStr):
