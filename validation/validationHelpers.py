@@ -51,6 +51,32 @@ def translateAxisV2 ( axisv2 : str ) -> str:
             ctr+=1
     return str(axisv3)
 
+def prettyAxesV3 ( axesStr : str ) -> bool:
+    """ make an axes v3 description readable
+
+    :param axesStr: e.g. {0:'x',1:'0.5*x+0.5*y',2:'y',3:'x',4:'0.5*x+0.5*y',5:'y'}
+    :returns: e.g. x_y_60
+    """
+    axesDict = eval ( axesStr )
+    ## this code is a copy of graphMassPlaneObjects. eventually we should
+    ## unify
+    def isSymmetrical ( axesDict : Dict ) -> bool:
+        """ check if dicionary is symmetrical """
+        if len(axesDict)%2==1:
+            return False ## odd number of entries
+        n = int(len(axesDict)/2)
+        for i in range(n):
+            if axesDict[i] != axesDict[i+n]:
+                return False
+        return True
+    if isSymmetrical ( axesDict ):
+        n = int(len(axesDict)/2)
+        for i in range(n,2*n):
+            axesDict.pop(i)
+    saxes = "_".join ( axesDict.values() )
+    saxes =  saxes.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0")
+    return saxes
+
 def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
     """ compare a given two axes, return true if they are identical.
     this aims at being backwards compatible, being able to (loosely)

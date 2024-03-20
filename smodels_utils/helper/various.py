@@ -177,7 +177,6 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
                 except SyntaxError as e:
                     # for SModelS v3 axes
                     caxes = GraphMassPlane.getNiceAxes ( axes )
-                # print ( f"comparing caxis {caxis},{type(caxis)} with {caxes},{type(caxes)}" )
                 if maxes != None and caxis != caxes: # cname != axis:
                     continue
                 # tgraph = exclusionCurveToTGraph ( points, cname )
@@ -263,9 +262,25 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
         convertedDict = {}
         for k,v in jsonDict.items():
             convertedDict[int(k)]=v
-        #print ( "do they match? jsonDict", convertedDict == caxes )
-        # print ( "caxes", caxes, type(caxes) )
         return convertedDict == caxes
+
+    def axisDescriptionsMatch ( name : str, caxes : Dict ) -> bool:
+        """ do these match? 
+        :param name: e.g. obsExclusion_[[x,y,60.0],[x,y,60.0]]
+        :param caxes: e.g. {0: 'x', 1: '0.5*x+0.5*y', 2: 'y', 3: 'x', 4: '0.5*x+0.5*y', 5: 'y'}
+        :returns: match or no match
+        """
+        p1 = name.find("_")
+        axisInName = eval ( name[p1+1:] )
+        flattened = [item for row in axisInName for item in row]
+        import sympy
+        x,y,z,w = sympy.var('x y z w')
+        for k,v in caxes.items():
+            e1 = sympy.parse_expr ( str(v) )
+            e2 = sympy.parse_expr ( str(flattened[k]) )
+            if e1 != e2:
+                return False
+        return True
 
     for txn,content in content.items():
         if txname != None and txn != txname:
@@ -273,10 +288,11 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
         for name,line in content.items():
             if not match ( name ):
                 continue
+            if not axisDescriptionsMatch ( name, caxes ):
+                continue
             if "axisMap" in line and not axisMatch ( line["axisMap"] ):
                 continue
             points = cutPoints ( line, ranges )
-            # print ( "@@2 txn", txn, "name", name, "x", str(points["x"])[:50] )
             if not txn in ret:
                 ret[txn]=[]
                 if dicts:

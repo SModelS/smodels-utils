@@ -1141,7 +1141,7 @@ class ValidationPlot():
 
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
         filename = os.path.join(validationDir,filename)
-        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0")
         return filename
 
     def getNiceAxes(self,axesStr):

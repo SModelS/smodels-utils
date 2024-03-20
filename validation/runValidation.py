@@ -29,7 +29,9 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 def starting( expRes, txnameStr, axes ):
-    logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{axes.replace(' ','')}" )
+    from validationHelpers import prettyAxesV3
+    saxes = prettyAxesV3 ( axes )
+    logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{saxes}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         db, kfactor=1., pretty=False, combine=False, namedTarball = None, 
@@ -103,7 +105,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     """ add a range condition to options, overwrite one if already there
     :param var: variable, "x" or "y"
-    :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]', '[[x,0.0],[x,0.0]]:[220,520]'], or '[200,500]'
+    :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]', 
+    '[[x,0.0],[x,0.0]]:[220,520]'], or '[200,500]'
     """
     ax = eval ( axis )
     if type(xrange) == list:
