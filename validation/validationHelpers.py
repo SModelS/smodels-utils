@@ -84,6 +84,8 @@ def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
 
     :returns: true, if identical
     """
+    from sympy import var
+    x,y,z,w = var('x y z w')
     axis1 = str ( eval ( axis1 ) )
     axis2 = str ( eval ( axis2 ) )
     if axis1 == axis2:

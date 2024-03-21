@@ -769,8 +769,10 @@ class ValidationPlot():
             exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.error( f"No results for {slhafile}" )
+                logger.info( f"No results for {slhafile}" )
                 axes = self.getAxesFromSLHAFileName ( slhafile )
+                if len(axes)==0: # drop it, doesnt fall in this plane it seems
+                    continue
                 D = { "slhafile": slhafile, "error": "no result here",
                       "axes": axes }
                 self.data.append ( D )
@@ -786,6 +788,8 @@ class ValidationPlot():
                 logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
                 found_combined=False
                 for eR in res:
+                    if eR == None:
+                        continue
                     if "combined" in eR["DataSetID"]:
                         logger.debug ( "found a combined result. will use it." )
                         found_combined=True
@@ -805,11 +809,14 @@ class ValidationPlot():
                     logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
                     return False
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
-                logger.error("Something went wrong. Obtained results for the wrong analyses")
-                return False
+                logger.error("Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
+                sys.exit(-1)
+                # return False
             if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
-                logger.error("Something went wrong. Obtained results for the wrong txname")
-                return False
+                logger.error(f"Something went wrong. Obtained results for the wrong txname: {self.txName} != {expRes['TxNames']}")
+                sys.exit()
+                continue
+                # return False
 
             masses = expRes["Mass (GeV)"]
             widths = expRes["Width (GeV)"]
@@ -1168,7 +1175,7 @@ class ValidationPlot():
 
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
         filename = os.path.join(validationDir,filename)
-        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0")
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1")
         return filename
 
     def getNiceAxes(self,axesStr):

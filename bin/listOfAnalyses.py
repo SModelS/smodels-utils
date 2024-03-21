@@ -228,9 +228,10 @@ class Lister:
                             if hasattr ( _, "finalState" ):
                                 fState = _.finalState
                                 nonMet = False
-                                for fs in fState:
-                                    if fs != "MET":
-                                        nonMet = True
+                                if fState is not None:
+                                    for fs in fState:
+                                        if fs != "MET":
+                                            nonMet = True
                                 if nonMet:
                                     nres_hscp.add ( _.txName )
                         for ds in A.datasets:

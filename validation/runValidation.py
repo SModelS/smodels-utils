@@ -303,9 +303,11 @@ def runForOneResult ( expRes, options : dict,
                     axis,fname = fname.split(":")[:2]
                 else:
                     hasCorrectAxis = True
+                if fname == "skip": ## we are asked to skip this
+                    hasCorrectAxis = False
                 tarfile = os.path.join(slhadir,fname )
                 if not os.path.isfile ( tarfile ):
-                    logger.info( 'Missing %s file for %s.' % ( tarfile, txnameStr))
+                    logger.info( f'Missing {tarfile} file for {txnameStr}.' )
             # continue
 
         gkfactor = 1.

@@ -643,6 +643,9 @@ class TxNameInput(Locker):
         add it to to this TxnameInput object, together with axis name """
         for p in self._planes:
             if hasattr ( p, "validationTarball" ):
+                if p.validationTarball == None:
+                    # p.validationTarball = "skip"
+                    continue
                 line = str(p).replace(" ","")+":"+p.validationTarball
                 if not hasattr ( self, "validationTarball" ) or self.validationTarball in [ "", None ]:
                     self.validationTarball = line
