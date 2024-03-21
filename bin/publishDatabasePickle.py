@@ -302,7 +302,7 @@ def main():
     home = os.environ["HOME"]
     hasSSHpass = (shutil.which("sshpass")!=None)
     if ssh and not args.dry_run:
-        cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
+        cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         if hasSSHpass:
             cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
         print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )

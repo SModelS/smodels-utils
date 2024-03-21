@@ -54,7 +54,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     :param keep: keep temporary directories
     :return: ValidationPlot object or False
     """
-
     starting( expRes, txnameStr, axes )
     axisType = getAxisType(axes)
     if axisType=="v3":
@@ -304,7 +303,8 @@ def runForOneResult ( expRes, options : dict,
                 else:
                     hasCorrectAxis = True
                 if fname == "skip": ## we are asked to skip this
-                    hasCorrectAxis = False
+                    tarfile = "skip"
+                    continue
                 tarfile = os.path.join(slhadir,fname )
                 if not os.path.isfile ( tarfile ):
                     logger.info( f'Missing {tarfile} file for {txnameStr}.' )
@@ -350,6 +350,11 @@ def runForOneResult ( expRes, options : dict,
                     for nt in namedTarball:
                         if ":" in nt:
                             myaxis,fname_= nt.split(":")[:2]
+                            if fname_ == "skip":
+                                # spread the lore, we wish to skip this
+                                pnamedTarball = fname_
+                                tarfile = fname_
+                                continue
                             if compareTwoAxes ( myaxis, ax ):
                                 hasCorrectAxis_ = True
                                 pnamedTarball = fname_
@@ -370,11 +375,15 @@ def runForOneResult ( expRes, options : dict,
                     localopts = addRange ( "x", localopts, txname.xrange, ax )
                 if hasattr ( txname, "yrange" ):
                     localopts = addRange ( "y", localopts, txname.yrange, ax )
-                pnamedTarball = namedTarball
-                if not hasCorrectAxis_:
-                    pnamedTarball = None
-                    tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+                if pnamedTarball != "skip":
+                    pnamedTarball = namedTarball
+                    if not hasCorrectAxis_:
+                        pnamedTarball = None
+                        tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
 
+                if tarfile == "skip":
+                    logger.info ( f"skipping {expRes}:{txnameStr}:{ax}" )
+                    continue
                 for p in prettyorugly:
                     re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
                         db, kfactor, p, combine, namedTarball = pnamedTarball,
@@ -393,23 +402,30 @@ def runForOneResult ( expRes, options : dict,
             ax = str(eval(axis)) ## standardize the string
             if type(namedTarball) == str and ":" in namedTarball:
                 myaxis,fname_= namedTarball.split(":")[:2]
-                myaxis = str ( eval ( myaxis ) )
-                if compareTwoAxes ( myaxis, ax ):
-                    tarfile = os.path.join(slhadir,fname_)
-                    hasCorrectAxis = True
+                if fname == "skip":
+                    tarfile = "skip"
+                else:
+                    myaxis = str ( eval ( myaxis ) )
+                    if compareTwoAxes ( myaxis, ax ):
+                        tarfile = os.path.join(slhadir,fname_)
+                        hasCorrectAxis = True
             if type(namedTarball) == list:
                 # looks like were given multiples
                 for nt in namedTarball:
                     if ":" in nt:
                         myaxis,fname_= nt.split(":")[:2]
+                        if fname_ == "skip":
+                            tarfile = "skip"
+                            continue
                         myaxis = str ( eval ( myaxis ) )
                         if compareTwoAxes ( myaxis, ax ):
                             tarfile = os.path.join(slhadir,fname_)
                             hasCorrectAxis = True
                             break
             ## we need "local" options, since we switch one flag
-            pnamedTarball = namedTarball
-            if not hasCorrectAxis:
+            if pnamedTarball != "skip":
+                pnamedTarball = namedTarball
+            if not hasCorrectAxis and pnamedTarball != "skip":
                 pnamedTarball = None
                 tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
             localopts = copy.deepcopy ( options )
@@ -421,10 +437,10 @@ def runForOneResult ( expRes, options : dict,
                 validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
                               gkfactor, p, combine, namedTarball = pnamedTarball )
                 localopts["generateData"] = False
-        logger.info( "------ %s %s validated in  %.1f min %s" % \
-                     (RED, txnameStr,(time.time()-txt0)/60., RESET) )
-    logger.info( "--- %s %s validated in %.1f min %s" % \
-                 (RED, expRes.globalInfo.id,(time.time()-expt0)/60., RESET) )
+        dt = (time.time()-txt0)/60.
+        logger.info( f"------ {RED} {txnameStr} validated in  {dt:.1f} min {RESET}")
+    dt = (time.time()-expt0)/60.
+    logger.info( f"--- {RED} {expRes.globalInfo.id} validated in {dt:.1f} min {RESET}" )
 
 def run ( expResList : list, options : dict, 
           keep : bool, db ) -> None:

@@ -12,7 +12,7 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol
+from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol, core
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
@@ -292,23 +292,29 @@ class GraphMassPlane(object):
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         
-        #ret = {}
-        eqs = []
+        ret = {}
+        eqs = set()
         from sympy.parsing.sympy_parser import parse_expr
         for index,param in self.parametersMap.items():
-            lhs = parse_expr ( str(param) )
             rhs = float("nan")
             ## FIXME when is it widths instead??
             # print ( f"parameters are {parameters}" )
             if type(parameters[index]) in [ float ]:
                 # ret[str(param)] = float ( parameters[index] )
-                rhs = float ( parameters[index] )
+                rhs = np.round ( float ( parameters[index] ), 5 )
             else:
                 # ret[str(param)] = float ( parameters[index][1] )
-                rhs = float ( parameters[index][1] )
-            eqs.append ( Eq ( lhs, rhs ) )
-        d = solve ( eqs )
-        ret = {}
+                rhs = np.round ( float ( parameters[index][1] ), 5 )
+            lhs = parse_expr ( str(param) )
+            if type(lhs)==core.numbers.Float:
+                lhs = np.round ( float(lhs), 5 )
+            e = Eq ( lhs, rhs )
+            if e == True: ## take out trivial expressions
+                continue
+            if e == False: # if a numerical comparison is wrong, we can stop here
+                return ret
+            eqs.add ( e )
+        d = solve ( list(eqs) )
         if d == []:
             return ret
         for k,v in d.items():
