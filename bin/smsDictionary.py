@@ -26,10 +26,11 @@ class SmsDictWriter:
     smsgraphpath = "../../smodels.github.io/smsgraphs/"
 
     def __init__ ( self, database, drawSMSGraphs, results, addVer,
-                   dryrun, checkfirst, copy ):
+                   dryrun, checkfirst, copy, ignoreValidated ):
         self.databasePath = database
         self.constraintsToTxNames = {}
         self.hasWarned=False
+        self.ignoreValidated = ignoreValidated
         self.drawSMSGraphs = drawSMSGraphs
         self.dryrun =  dryrun
         self.copy = copy
@@ -92,7 +93,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         """ get the txnames and their constraints """
         topos = {}
         expresults = self.database.getExpResults( )
-        #expresults = self.database.expResultList ## also non-validated
+        if self.ignoreValidated:
+            expresults = self.database.expResultList ## also non-validated
         expresults.sort()
         for expRes in expresults:
             datasets = expRes.datasets
@@ -157,6 +159,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
     def createSmsGraph ( self, txname, constraint ):
         """ create the sms graphs, store them in ../smsgraphs/ """
+        print ( f"[smsDictionary] creating {txname}" )
         pathbase = f"../smsgraphs/{txname}"
         smsMap = self.constraintsToTxNames[txname][constraint].smsMap
         for mp,name in smsMap.items():
@@ -264,6 +267,8 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
                              action='store_false' )
+    argparser.add_argument ( '-i', '--ignoreValidated', help='dont add results column',
+                             action='store_false' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
     argparser.add_argument ( '-a', '--add_version',
@@ -271,7 +276,8 @@ if __name__ == '__main__':
     args = argparser.parse_args()
     writer = SmsDictWriter( database=args.database, drawSMSGraphs = args.smsgraphs,
             results = args.results, addVer = args.add_version,
-            dryrun = args.dry_run, checkfirst = args.checkfirst, copy = args.copy )
+            dryrun = args.dry_run, checkfirst = args.checkfirst, copy = args.copy,
+            ignoreValidated = args.ignoreValidated )
     print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
