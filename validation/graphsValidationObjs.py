@@ -846,6 +846,7 @@ class ValidationPlot():
             if "l_max" in expRes and "likelihood" in expRes:
                 Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
                 Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+                Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
                 if not "chi2" in expRes:
                     try:
                         from smodels.tools.statistics import chi2FromLmax
