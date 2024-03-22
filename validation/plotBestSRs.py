@@ -27,11 +27,13 @@ def convertNewAxes ( newa ):
     axes = copy.deepcopy(newa)
     if type(newa)==list:
         return axes[::-1]
-    if type(newa)==dict:
-        axes = [ newa["x"], newa["y"] ]
+    if type(newa)==dict and "x" in newa:
+        axes = [ newa["x"] ]
+        if "y" in newa:
+            axes.append( newa["y"] )
         if "z" in newa:
             axes.append ( newa["z"] )
-        return axes[::-1]
+        return axes[::-1] ## invert
     print ( f"[plotBestSRs] cannot convert axis {newa}" )
     return None
 
