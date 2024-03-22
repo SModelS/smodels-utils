@@ -189,7 +189,8 @@ CMS are for on- and off-shell at once.
             self.file.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
             nResults = { "ATLAS": set(), "CMS": set() }
             for exp in [ "ATLAS", "CMS" ]:
-                for tpe in [ "upper limits", "efficiency maps" ]:
+                #for tpe in [ "upper limits", "efficiency maps" ]:
+                for tpe in [ "efficiency maps", "upper limits" ]:
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     for expRes in expResList:
                         Id = expRes.globalInfo.id
@@ -198,7 +199,8 @@ CMS are for on- and off-shell at once.
                         nResults[exp].add(Id)
             print ( "[createWikiPage] results at %d TeV: %d CMS, %d ATLAS" % ( sqrts, len(nResults["CMS"]), len(nResults["ATLAS"]) ))
             for exp in [ "ATLAS", "CMS" ]:
-                for tpe in [ "upper limits", "efficiency maps" ]:
+                # for tpe in [ "upper limits", "efficiency maps" ]:
+                for tpe in [ "efficiency maps", "upper limits" ]:
                     print ( f"[createWikiPage] now {exp} {tpe}" )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     stpe = tpe.replace ( " ", "" )
