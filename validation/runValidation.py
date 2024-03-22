@@ -375,7 +375,7 @@ def runForOneResult ( expRes, options : dict,
                     localopts = addRange ( "x", localopts, txname.xrange, ax )
                 if hasattr ( txname, "yrange" ):
                     localopts = addRange ( "y", localopts, txname.yrange, ax )
-                if pnamedTarball != "skip":
+                if namedTarball != "skip":
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
@@ -516,7 +516,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.error("No experimental results found.")
 
     if options["ncpus"] <= 0:
-        from smodels.tools import runtime
+        from smodels.base import runtime
         options["ncpus"] = runtime.nCPUs() + options["ncpus"]
         if options["ncpus"] < 1: # cannot be less than 1
             options["ncpus"] = 1

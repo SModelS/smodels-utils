@@ -28,6 +28,13 @@ try:
 except ImportError:
     import subprocess as C
 
+def sortingFunc ( x : str ) -> str:
+    x = str(x).replace("SUSY","")
+    x = x.replace("EXOT","")
+    x = x.replace("EXO","")
+    x = x.replace("SUS","")
+    return x
+
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
@@ -526,7 +533,7 @@ CMS are for on- and off-shell at once.
         stype=tpe.replace(" ","")
         nres = 0
         nexpRes = 0
-        expResList.sort( reverse = True ) # start with most recent!
+        expResList.sort( key = sortingFunc, reverse = True ) # start with most recent!
         for expRes in expResList:
             txnames=[]
             tnamess = expRes.getTxNames()
@@ -549,7 +556,7 @@ CMS are for on- and off-shell at once.
                 return
         self.true_lines.append ( '\n\n<a name="%s%s%d"></a>\n' % ( exp,stype,sqrts ) )
         self.true_lines.append ( "## %s %s, %d TeV: %d analyses, %d results total\n\n" % (exp,tpe,sqrts, nexpRes, nres ) )
-        expResList.sort( reverse=True ) # start with most recent
+        expResList.sort( key = sortingFunc, reverse=True ) # start with most recent
         self.writeTableHeader ( tpe )
         for expRes in expResList:
             # print ( "id=",expRes.globalInfo.id )
