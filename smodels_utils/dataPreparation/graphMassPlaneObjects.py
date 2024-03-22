@@ -294,7 +294,7 @@ class GraphMassPlane(object):
         :returns: None if an error occurs,
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        # print ( f"@@A getXYValues {parameters}" )
+        #print ( f"@@A getXYValues {parameters}" )
         
         ret = {}
         eqs = set()
@@ -312,15 +312,17 @@ class GraphMassPlane(object):
             lhs = parse_expr ( str(param) )
             if type(lhs)==core.numbers.Float:
                 lhs = round_to_n ( float(lhs), 5 )
+            if lhs == 0. and rhs == 1.:
+                continue # hack for now FIXME
             e = Eq ( lhs, rhs )
-            # print ( f"@@A eq {lhs}={rhs}: {str(e)}" )
             if e == True: ## take out trivial expressions
                 continue
             if e == False: # if a numerical comparison is wrong, we can stop here
                 return ret
             eqs.add ( e )
         d = solve ( list(eqs) )
-        # print ( f"@@A d={d}" )
+        #print ( f"@@A d={d}" )
+        #print ( f"@@A getXYValues {parameters}: {d}" )
         if d == []:
             return ret
         for k,v in d.items():
