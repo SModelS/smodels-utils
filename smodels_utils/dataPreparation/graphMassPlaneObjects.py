@@ -15,9 +15,11 @@ import numpy as np
 from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol, core
 from scipy.spatial import Delaunay
 from itertools import permutations
-from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
+from smodels_utils.dataPreparation.dataHandlerObjects import \
+         DataHandler,ExclusionHandler
 import string
 import logging
+from smodels_utils.helper.various import round_to_n
 from typing import Union, Dict, List
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -80,6 +82,7 @@ class GraphMassPlane(object):
             for i in range(n,2*n):
                 axesDict.pop(i)
         ret = "_".join ( axesDict.values() )
+        # print ( f"@@ graphMassPlaneObjects {axesDict} turned into {ret}" )
         return ret
 
 
@@ -291,6 +294,7 @@ class GraphMassPlane(object):
         :returns: None if an error occurs,
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
+        # print ( f"@@A getXYValues {parameters}" )
         
         ret = {}
         eqs = set()
@@ -301,20 +305,22 @@ class GraphMassPlane(object):
             # print ( f"parameters are {parameters}" )
             if type(parameters[index]) in [ float ]:
                 # ret[str(param)] = float ( parameters[index] )
-                rhs = np.round ( float ( parameters[index] ), 5 )
+                rhs = round_to_n ( float ( parameters[index] ), 5 )
             else:
                 # ret[str(param)] = float ( parameters[index][1] )
-                rhs = np.round ( float ( parameters[index][1] ), 5 )
+                rhs = round_to_n ( float ( parameters[index][1] ), 5 )
             lhs = parse_expr ( str(param) )
             if type(lhs)==core.numbers.Float:
-                lhs = np.round ( float(lhs), 5 )
+                lhs = round_to_n ( float(lhs), 5 )
             e = Eq ( lhs, rhs )
+            # print ( f"@@A eq {lhs}={rhs}: {str(e)}" )
             if e == True: ## take out trivial expressions
                 continue
             if e == False: # if a numerical comparison is wrong, we can stop here
                 return ret
             eqs.add ( e )
         d = solve ( list(eqs) )
+        # print ( f"@@A d={d}" )
         if d == []:
             return ret
         for k,v in d.items():
@@ -554,6 +560,7 @@ class Axes(object):
                 Otherwise, returns a dictionary:
                 {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
+        # print ( f"@@B getXYValues {parameterMap}" )
         if not parametersMap:
             return {}
 
@@ -895,6 +902,7 @@ class WildAxes(Axes):
         :return: None if mass array do not met the conditions of one branch
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
+        # print ( f"@@C getXYValues {parameterMap}" )
         #print ( ">> widthArray", widthArray )
         # print ( ">> parametersMap", parametersMap )
 
@@ -1169,6 +1177,7 @@ class Axes(object):
                 Otherwise, returns a dictionary:
                 {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
+        # print ( f"@@D getXYValues {parameterMap}" )
         if not parametersMap:
             return {}
 

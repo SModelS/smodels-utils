@@ -616,7 +616,7 @@ class ValidationPlot():
 
     def constructParameterVector ( self, masses : list, widths : list,
             nodesMap : dict ) -> list:
-        """ given the knowledge of the dataMap, construct the 
+        """ given the knowledge of the dataMap, construct the
         container of parameters to be fed into the graphs map """
         dataMap = self.getDataMap()
         ret=[float("nan")]*len(dataMap)
@@ -631,7 +631,7 @@ class ValidationPlot():
 
     def getNodeParameter ( self, nodeName : str, masses : list, widths : list,
                            parameterType : str ) -> Union[float,None]:
-        """ get the parameter value for node "nodeName", given the masses, 
+        """ get the parameter value for node "nodeName", given the masses,
         the widths, and knowledge about the parameterType """
         if parameterType in [ "width", "totalwidth" ]:
             for k,v in widths:
@@ -652,7 +652,7 @@ class ValidationPlot():
         if asDict:
             return D
         return [ D["x"], D["y"] ]
-        
+
 
     def getAxesFromSLHAFileName ( self, slhafile : str ) -> Dict:
         """ get the axes dictionary from the slha filename alone.
@@ -663,7 +663,7 @@ class ValidationPlot():
         """
         logger.debug ( f"need to find axes for {slhafile} ({self.axes})" )
         axesDict = eval ( self.axes )
-        from sympy.parsing.sympy_parser import parse_expr 
+        from sympy.parsing.sympy_parser import parse_expr
         from sympy import solve, var, Eq
         x,y,z,w = var ( "x y z w" )
 
@@ -686,7 +686,7 @@ class ValidationPlot():
         d = solve ( eqs )
         if type(d)==dict and len(d)>0:
             for k,v in d.items():
-                D[str(k)]=round(float(v),5)
+                D[str(k)]=round_to_n(float(v),5)
             return D
         # print ( f"@@axesDict {axesDict} {slhafile}" )
         if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
@@ -695,7 +695,8 @@ class ValidationPlot():
                 and Eq ( axesDict[1], .5*x+.5*y )==True:
             # e.g. TChiWH_400_300_200_400_300_200.slha
             ## account for rounding
-            D = { "x": round(float(tokens[1]),5), "y": round(float(tokens[3]),5) }
+            D = { "x": round_to_n(float(tokens[1]),5),
+                  "y": round_to_n(float(tokens[3]),5) }
         """
         if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
                 equal ( tokens[2], tokens[4] ):
@@ -710,7 +711,7 @@ class ValidationPlot():
             # e.g. TChiWH_400_300_60_400_300_60.slha
             D = { "x": float(tokens[1]), "y": float(tokens[2]) }
         """
-    
+
         # print ( f"@@A getAxesFromSLHAFileName: slhafile={slhafile} D={D}" )
         # print ( f"@@A self.axes {self.axes} {type(self.axes)}" )
         #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
@@ -822,7 +823,10 @@ class ValidationPlot():
             widths = expRes["Width (GeV)"]
             nodesMap = expRes["Nodes Map"]
             parameters = self.constructParameterVector ( masses, widths, nodesMap )
+            #print ( f"@@4 parameters {parameters}" )
             varsDict = massPlane.getXYValues( parameters )
+            #print ( f"@@5 varsDict {varsDict}" )
+            #sys.exit()
             if varsDict is None:
                 logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {massPlane}." )
                 continue
@@ -1158,7 +1162,7 @@ class ValidationPlot():
         """
         Defines the name of the plot file and returns it
 
-        :param validationDir: Folder where the plots and validation dictionaries 
+        :param validationDir: Folder where the plots and validation dictionaries
         will be saved
         :return: name of the plot file
         """
