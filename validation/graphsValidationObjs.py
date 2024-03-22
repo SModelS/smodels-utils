@@ -823,10 +823,7 @@ class ValidationPlot():
             widths = expRes["Width (GeV)"]
             nodesMap = expRes["Nodes Map"]
             parameters = self.constructParameterVector ( masses, widths, nodesMap )
-            #print ( f"@@4 parameters {parameters}" )
             varsDict = massPlane.getXYValues( parameters )
-            #print ( f"@@5 varsDict {varsDict}" )
-            #sys.exit()
             if varsDict is None:
                 logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {massPlane}." )
                 continue
