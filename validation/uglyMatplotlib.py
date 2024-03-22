@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-.. module:: uglySeaborn
-   :synopsis: Main method for creating ugly plots, seaborn version
+.. module:: uglyMatplotlib
+   :synopsis: Main method for creating ugly plots, matplotlib version
 
 .. moduleauthor:: Wolfgang Waltenberger
 
@@ -39,14 +39,12 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     """
     def get ( var, mlist ): # get variable "var" from list of dicts, mlist
         return [ d[var] for d in mlist ]
-    import seaborn as sns
+    # import matplotlib as sns
     import matplotlib.pylab as plt
     plt.dontplot = False
     plt.clf()
     plt.grid(visible=False )
-    logger.info ( "now create ugly plot for %s, %s: %s" % \
-       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
-         validationPlot.axes ) )
+    logger.info ( f"now create ugly plot for {validationPlot.expRes.globalInfo.id}, {validationPlot.txName}: {validationPlot.axes}" )
     origdata = getGridPoints ( validationPlot )
     xlabel, ylabel = 'x','y'
     xrange = getAxisRange ( options, "xaxis" )
@@ -79,13 +77,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         ndots = int(os.environ["COLUMNS"])-45-ndigits
     dn = int(math.ceil(nmax/ndots))
     print ( " "*int(43+ndigits+ndots), end="<\r" )
-    print ( f"[uglySeaborn] checking {nmax} validation points >", end="" )
+    print ( f"[uglyMatplotlib] checking {nmax} validation points >", end="" )
     ycontainer=[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
         if ctPoints == nmax:
-            print ( "[uglySeaborn] emergency break" )
+            print ( "[uglyMatplotlib] emergency break" )
             break
         if "error" in pt.keys():
             vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
@@ -153,7 +151,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         coords = { "x": x, "y": y }
 
         if 'condition' in pt and pt['condition'] and pt['condition'] > 0.05:
-            logger.warning("Condition violated at %f for file %s" % ( pt['condition'], pt['slhafile']) )
+            logger.warning( f"Condition violated at {pt['condition']} for file {pt['slhafile']}" )
             cond_violated.append( coords )
         elif r > 1.:
             if r < looseness:
@@ -255,7 +253,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "dataset: UL"
 
-    sns.set()
+    # sns.set()
     plt.title(title)
     if logY: # y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
@@ -285,16 +283,16 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                    transform=fig.transFigure )
 
     if kfactor != None and abs ( kfactor - 1. ) > 1e-2:
-        plt.text ( .93, .18, "k-factor %.2f" % kfactor, c="gray",
+        plt.text ( .93, .18, "k-factor {kfactor:.2f}", c="gray",
                    fontsize = 10, rotation=90, transform = fig.transFigure )
     dxpnr = .95
     halign = "right"
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
         halign = "left"
-    plt.text ( dxpnr, 0.95, "%d / %d points with no results" % \
-            (nErrors, len(validationPlot.data) ), c="gray", fontsize=10,
-            transform = fig.transFigure, horizontalalignment=halign )
+    plt.text ( dxpnr, 0.95, f"{nErrors} / {len(validationPlot.data)} points with no results", 
+            c="gray", fontsize=10, transform = fig.transFigure, 
+            horizontalalignment=halign )
     l = plt.legend( loc="best") # could be upper right
     l.set_zorder(20)
     if options["extraInfo"]: ## a timestamp, on the right border

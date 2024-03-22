@@ -933,7 +933,7 @@ class ValidationPlot():
         if self.isOneDimensional():
             from oneDPlots import create1DPlot as createUglyPlot
         else:
-            from uglySeaborn import createUglyPlot
+            from uglyMatplotlib import createUglyPlot
         self.plot, self.base = createUglyPlot( self,silentMode=silentMode,
                                           options = self.options )
         self.pretty = False
@@ -947,7 +947,7 @@ class ValidationPlot():
         if self.isOneDimensional():
             self.pretty = False
             return
-        from prettySeaborn import createPrettyPlot
+        from prettyMatplotlib import createPrettyPlot
         options = copy.deepcopy ( self.options )
         if options["drawExpected"] == "auto":
             options["drawExpected"] = True

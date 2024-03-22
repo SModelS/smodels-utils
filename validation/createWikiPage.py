@@ -67,22 +67,22 @@ class WikiPageCreator:
         self.dotlessv = ""
         if add_version:
             self.dotlessv = self.db.databaseVersion.replace(".","" )
-        self.localdir = "../../smodels.github.io/validation/%s" %self.db.databaseVersion.replace(".","" )
+        self.localdir = f"../../smodels.github.io/validation/{self.db.databaseVersion.replace('.','' )}"
         has_uploaded = False
         if not os.path.exists ( self.localdir ) and self.force_upload:
-            print ( "%s does not exist. will try to create it." % self.localdir )
-            cmd = "mkdir %s" % self.localdir
+            print ( f"{self.localdir} does not exist. will try to create it." )
+            cmd = f"mkdir {self.localdir}"
             a= C.getoutput ( cmd )
-            print ( "%s: %s" % ( cmd, a ) )
+            print ( f"{cmd}: {a}" )
         if not os.path.exists ( self.localdir ) and self.force_upload:
-            print ( "Creating %s" % self.localdir )
-            cmd = "mkdir %s" % self.localdir
+            print ( f"Creating {self.localdir}" )
+            cmd = f"mkdir {self.localdir}"
             subprocess.getoutput ( cmd )
         cmd = "rsync -a --prune-empty-dirs --exclude \\*.tgz --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
-            print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            print ( f"[createWikiPage] Copying database from {self.databasePath} to {self.localdir}." )
             a= C.getoutput ( cmd )
-            print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
+            print ( f"[createWikiPage] {cmd}: {a}" )
             has_uploaded = True
         if self.force_upload and not has_uploaded:
             print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
@@ -596,8 +596,8 @@ CMS are for on- and off-shell at once.
         print ( "[createWikiPage] create tables" )
         for sqrts in [ 13, 8 ]:
             for exp in [ "ATLAS", "CMS" ]:
-                for tpe in [ "upper limits", "efficiency maps" ]:
-                    # print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
+                for tpe in [ "efficiency maps", "upper limits" ]:
+                # for tpe in [ "upper limits", "efficiency maps" ]:
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     if self.ignore_superseded:
                         expResList = filterSupersededFromList ( expResList )

@@ -47,7 +47,7 @@ class Lister:
         poptions["dictfile"] = "./temp.dict"
         poptions["show"] = True
         poptions["title"] = ""
-        poptions["Zmax"] = 3.25
+        # poptions["Zmax"] = 3.25
         poptions["nbins"] = 13
         poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
            'plotStats': False }
@@ -73,7 +73,7 @@ class Lister:
             poptions["dictfile"] = "./fudge.dict"
             poptions["show"] = True
             poptions["title"] = ""
-            poptions["Zmax"] = 3.25
+            # poptions["Zmax"] = 4.25
             poptions["nbins"] = 13
             poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
                'plotStats': False }

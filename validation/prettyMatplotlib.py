@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-.. module:: prettySeaborn
-   :synopsis: the module for the "pretty" seaborn-based plots
+.. module:: prettyMatplotlib
+   :synopsis: the module for the "pretty" matplotlib-based plots
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
