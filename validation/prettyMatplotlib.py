@@ -323,7 +323,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         ytick_loc = range( int(np.floor(min(ys))),int(np.ceil(max(ys)))+1 )
         ax.set_yticks ( ytick_loc )
         # ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '1e{:d}'.format(y)))
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'$10^{y:d}$' ))
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'$10^{{{y:d}}}$' ))
     from plottingFuncs import getColormap
     cm = getColormap()
     xtnt = ( min(xs), max(xs), min(ys), max(ys) )

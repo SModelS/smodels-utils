@@ -428,12 +428,22 @@ def getGridPoints ( validationPlot ) -> List:
 def yIsLog ( validationPlot ):
     """ determine if to use log for y axis """
     logY = False
-    A = validationPlot.axes.replace(" ","")
-    p1 = A.find("(")
-    p2 = A.find(")")
-    py = A.find("y")
-    if py == -1:
-        py = A.find("w")
-    if p1 < py < p2 and A[py-1]==",":
-        logY = True
+    if not "{" in validationPlot.axes: ## axis v2
+        A = validationPlot.axes.replace(" ","")
+        p1 = A.find("(")
+        p2 = A.find(")")
+        py = A.find("y")
+        if py == -1:
+            py = A.find("w")
+        if p1 < py < p2 and A[py-1]==",":
+            logY = True
+        return logY
+    # for v3 we look at the axis["y"] values
+    yvalues = set()
+    for d in validationPlot.data:
+        if "axes" in d and "y" in d["axes"]:
+            yvalues.add ( d["axes"]["y"] )
+    if len(yvalues)>0:
+        if 1e-40<max(yvalues)<1e-1:
+            logY = True
     return logY

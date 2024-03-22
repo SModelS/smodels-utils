@@ -39,7 +39,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     """
     def get ( var, mlist ): # get variable "var" from list of dicts, mlist
         return [ d[var] for d in mlist ]
-    # import matplotlib as sns
     import matplotlib.pylab as plt
     plt.dontplot = False
     plt.clf()

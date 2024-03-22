@@ -11,7 +11,7 @@
 import os, sys
 import logging as logger
 from smodels.experiment.expResultObj import ExpResult
-from typing import Union, Text, Dict
+from typing import Union, Text, Dict, List
 
 def removeAnaIdSuffices ( anaId ):
     """ given  analysis id <anaId>, remove all kinds of suffices """
@@ -272,7 +272,21 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
         """
         p1 = name.find("_")
         axisInName = eval ( name[p1+1:] )
-        flattened = [item for row in axisInName for item in row]
+        def flatten ( nested : List ) -> List:
+            temp = [item for row in axisInName for item in row]
+            ret = []
+            last = []
+            for t in temp:
+                if type(t) in [ tuple ]:
+                    ret.append ( t[0] )
+                    last.append ( t[1] )
+                else:
+                    ret.append ( t )
+            for t in last:
+                ret.append ( t )
+            return ret
+        flattened = flatten ( axisInName )
+
         import sympy
         x,y,z,w = sympy.var('x y z w')
         for k,v in caxes.items():
