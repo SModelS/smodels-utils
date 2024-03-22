@@ -24,6 +24,8 @@ warnings.simplefilter("ignore")
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
+    if len(newa)==0:
+        return None
     axes = copy.deepcopy(newa)
     if type(newa)==list:
         return axes[::-1]
@@ -61,7 +63,11 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
             if os.path.exists ( eljson ):
                 ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
                 if ll is not None:
-                    lines.append (  ll[topo] )
+                    if topo in ll:
+                        lines.append (  ll[topo] )
+                    else:
+                        print ( f"[plotBestSRs] {topo} is not in lines? {ll}" )
+
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )
@@ -112,7 +118,8 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
             if len(point["leadingDSes"]) < rank:
                 print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
             ds = point["leadingDSes"][rank-1][1]
-        bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
+        if axes != None:
+            bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
         print ( "[plotBestSRs] skipped %d/%d points: %s" % \
                 ( skipped, len(data), err ) )
@@ -239,6 +246,9 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         xs, ys = fetchPoints ( bestSRs, region )
         plt.scatter ( xs, ys, s=25, c=[ color ]*len(xs), label=region )
         miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
+    if numpy.isinf ( maxy ):
+        print ( f"[plotBestSRs] we have no finite points??" )
+        return
     xs, ys = fetchAllOtherPoints ( bestSRs, regions )
     miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
     if len(xs)>0:

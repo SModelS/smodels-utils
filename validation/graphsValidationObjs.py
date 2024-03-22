@@ -633,7 +633,7 @@ class ValidationPlot():
                            parameterType : str ) -> Union[float,None]:
         """ get the parameter value for node "nodeName", given the masses, 
         the widths, and knowledge about the parameterType """
-        if parameterType=="width":
+        if parameterType in [ "width", "totalwidth" ]:
             for k,v in widths:
                 if k==nodeName:
                     return v
