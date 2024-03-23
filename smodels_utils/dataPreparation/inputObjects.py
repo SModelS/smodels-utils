@@ -206,7 +206,8 @@ class MetaInfoInput(Locker):
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'source', 'Leff_inner', 'Leff_outer', 'type',
+    'combinableWith', 'jsonFiles', 'jsonFiles_FullLikelihood', 'source', 
+    'Leff_inner', 'Leff_outer', 'type',
     'includeCRs', 'onnxFiles', 'resultType', 'signalUncertainty' ]
     internalAttr = ['_sqrts', '_lumi']
 
@@ -1307,6 +1308,8 @@ class TxNameInput(Locker):
 
         for elMass in self.massConstraints:
             goodMasses = True
+            if elMass == None:
+                continue
             for ib,br in enumerate(elMass):
                 if len(massArray)<=ib:
                     if not massArray == [[], []]:
