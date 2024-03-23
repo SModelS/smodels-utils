@@ -103,7 +103,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             nErrors += 1
             continue
         if pt["UL"] == None:
-            logger.warning ( f"No upper limit for {pt}" )
+            logger.debug ( f"No upper limit for {pt}" )
             continue
         countPts += 1
         if kfactor == None and "kfactor" in pt:
