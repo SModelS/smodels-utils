@@ -50,12 +50,11 @@ class Lister:
         # poptions["Zmax"] = 3.25
         poptions["nbins"] = 13
         poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
-           'plotStats': False }
+           'plotStats': True }
         # poptions["roughviz"] = False
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
-        if not self.includeSuperseded:
-            poptions["nosuperseded"]=True
+        poptions["nosuperseded"]= not self.includeSuperseded
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
         sigsplot = self.significancesPlotFileName()
@@ -78,12 +77,11 @@ class Lister:
             # poptions["Zmax"] = 4.25
             poptions["nbins"] = 13
             poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
-               'plotStats': False }
+               'plotStats': True }
             # poptions["roughviz"] = False
             poptions["pvalues"] = False
             poptions["outfile"] = "tmp.png"
-            if not self.includeSuperseded:
-                poptions["nosuperseded"]=True
+            poptions["nosuperseded"]=not self.includeSuperseded
             plotter = plotDBDict.Plotter ( poptions )
             #print ( "[listOfAnalyses] ending roughviz" )
             sigsplot = self.significancesPlotFileName( "fudged" )
