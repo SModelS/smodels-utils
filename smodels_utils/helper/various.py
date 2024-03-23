@@ -84,7 +84,7 @@ def findCollaboration ( anaid : str ) -> str:
     return "???"
 
 def cutPoints ( points, ranges ) -> dict:
-    """ cut the points at ranges 
+    """ cut the points at ranges
     :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
     :returns: filtered points
     """
@@ -113,7 +113,7 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
                           expected=False, dicts=False, ranges=None ):
     """
     Reads exclusion_lines.json and returns the dictionary objects for the
-    exclusion curves, for axes being in SModelS v2 format. 
+    exclusion curves, for axes being in SModelS v2 format.
     If txname is defined, returns only the curves
     corresponding to the respective txname. If axes is defined, only
     returns the curves for that axis.
@@ -126,7 +126,7 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
                  e.g. [x, y, 60.0], [x, y, 60.0]] or {0:x,1:y,...}
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
-    :param ranges: if dict, then cut exclusion lines, e.g. 
+    :param ranges: if dict, then cut exclusion lines, e.g.
                    { "x": [ 100, 200 ] }
     :param dicts: if true, then do not return lists of lines,
                   but dictionaries instead
@@ -209,7 +209,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                  e.g. [x, y, 60.0], [x, y, 60.0]] or {0:x,1:y,...}
     :param get_all: Get also the +-1 sigma curves?
     :param expected: if true, get expected, not observed
-    :param ranges: if dict, then cut exclusion lines, e.g. 
+    :param ranges: if dict, then cut exclusion lines, e.g.
                    { "x": [ 100, 200 ] }
     :param dicts: if true, then do not return lists of lines,
                   but dictionaries instead
@@ -244,7 +244,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
     maxes = GraphMassPlane.getNiceAxes ( maxes )
 
     def match ( name : str ) -> bool:
-        """ do we want an exclusion line with this name? 
+        """ do we want an exclusion line with this name?
         :param name: e.g. obsExclusionP1_0
         """
         if expected and name.startswith ( "obs" ):
@@ -264,12 +264,26 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
             convertedDict[int(k)]=v
         return convertedDict == caxes
 
-    def axisDescriptionsMatch ( name : str, caxes : Dict ) -> bool:
-        """ do these match? 
-        :param name: e.g. obsExclusion_[[x,y,60.0],[x,y,60.0]]
-        :param caxes: e.g. {0: 'x', 1: '0.5*x+0.5*y', 2: 'y', 3: 'x', 4: '0.5*x+0.5*y', 5: 'y'}
+    def axisDescriptionsMatchV3 ( name : str, caxes : Dict ) -> bool:
+        """ do these match? v3 version!
+        :param name: e.g. obsExclusion_{0:'x',1:'y',2:'y'}
+        :param caxes: e.g. {0: 'x', 1: '0.5*x+0.5*y', 2: 'y', 3: 'x',
+        4: '0.5*x+0.5*y', 5: 'y'}
         :returns: match or no match
         """
+        p1 = name.find("_")
+        axes = eval ( name[p1+1:] )
+        return axes == caxes
+
+    def axisDescriptionsMatch ( name : str, caxes : Dict ) -> bool:
+        """ do these match?
+        :param name: e.g. obsExclusion_[[x,y,60.0],[x,y,60.0]]
+        :param caxes: e.g. {0: 'x', 1: '0.5*x+0.5*y', 2: 'y', 3: 'x',
+        4: '0.5*x+0.5*y', 5: 'y'}
+        :returns: match or no match
+        """
+        if "{" in name: ## we have a type v3 axis name!!
+            return axisDescriptionsMatchV3 ( name, caxes )
         p1 = name.find("_")
         axisInName = eval ( name[p1+1:] )
         def flatten ( nested : List ) -> List:
@@ -335,7 +349,7 @@ def getPathName ( dbpath, analysis, valfile = None ):
     # for backwards compatibility
     return getValidationDataPathName ( dbpath, analysis, valfile)
 
-def getValidationDataPathName ( dbpath : os.PathLike, analysis : str , 
+def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
         valfile : str, validationFolder : str = "validation" ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name
         potentially with wildcards
