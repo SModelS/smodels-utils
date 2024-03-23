@@ -94,15 +94,17 @@ def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
     d2 = eval ( axis2 )
     if type(d1) == dict and type(d2) == list: # canonize order
         d1,d2 = d2,d1
-    ctr = 0
-    for br in d1:
-        for symb in br:
-            ssymb = str(symb).replace(" ","")
-            # print ( "#", ctr, "symb", str(symb), d2[ctr]==ssymb )
-            if d2[ctr] != ssymb:
-                return False
-            ctr+=1
-    return True
+    if type(d1)==list:
+        ctr = 0
+        for br in d1:
+            for symb in br:
+                ssymb = str(symb).replace(" ","")
+                # print ( "#", ctr, "symb", str(symb), d2[ctr]==ssymb )
+                if d2[ctr] != ssymb:
+                    return False
+                ctr+=1
+        return True
+    return d1 == d2
 
 
 def retrieveValidationFile ( filename, tarballname = None ):
