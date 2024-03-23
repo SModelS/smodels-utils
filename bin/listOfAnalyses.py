@@ -54,6 +54,8 @@ class Lister:
         # poptions["roughviz"] = False
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
+        if not self.includeSuperseded:
+            poptions["nosuperseded"]=True
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
         sigsplot = self.significancesPlotFileName()
@@ -80,6 +82,8 @@ class Lister:
             # poptions["roughviz"] = False
             poptions["pvalues"] = False
             poptions["outfile"] = "tmp.png"
+            if not self.includeSuperseded:
+                poptions["nosuperseded"]=True
             plotter = plotDBDict.Plotter ( poptions )
             #print ( "[listOfAnalyses] ending roughviz" )
             sigsplot = self.significancesPlotFileName( "fudged" )
