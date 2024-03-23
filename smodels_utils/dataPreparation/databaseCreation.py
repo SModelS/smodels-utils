@@ -437,7 +437,7 @@ class DatabaseCreator(list):
                     continue  #Exclusion source has not been defined
                 ctr = 0
                 while True:
-                    name = f'{exclusion.name}_{ctr}'
+                    name = f'{exclusion.name}_{axes}'
                     if not name in curves and not name in allCurves:
                         break
                     ctr+=1
