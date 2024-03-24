@@ -55,6 +55,7 @@ class Lister:
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
         poptions["nosuperseded"]= not self.includeSuperseded
+        poptions["nofastlim"]= not self.includeFastlim
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
         sigsplot = self.significancesPlotFileName()
@@ -206,7 +207,7 @@ class Lister:
             self.f.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
             anas = { "CMS": set(), "ATLAS": set() }
             for exp in [ "ATLAS", "CMS" ]:
-                for tpe in [ "upper limits", "efficiency maps" ]:
+                for tpe in [ "efficiency maps", "upper limits" ]:
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
                     for ana in a:
@@ -215,7 +216,7 @@ class Lister:
             self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
 
             for exp in [ "ATLAS", "CMS" ]:
-                for tpe in [ "upper limits", "efficiency maps" ]:
+                for tpe in [ "efficiency maps", "upper limits" ]:
                     nMaps = 0
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
