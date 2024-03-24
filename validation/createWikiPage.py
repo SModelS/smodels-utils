@@ -33,6 +33,8 @@ def sortingFunc ( x : str ) -> str:
     x = x.replace("EXOT","")
     x = x.replace("EXO","")
     x = x.replace("SUS","")
+    x = x.replace("PAS","")
+    x = x.replace("CONF","")
     return x
 
 class WikiPageCreator:
