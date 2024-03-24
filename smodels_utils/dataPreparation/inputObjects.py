@@ -1371,6 +1371,8 @@ class TxNameInput(Locker):
             self._setMassConstraints()
         if len(self.massConstraints)==0: ## no constraints
             return True
+        if not hasattr ( self, "dataMap" ): # dont check
+            return True
         if type(self.massConstraints[0])!=dict:
             return self.checkMassConstraintsV2(massArray, value)
         #If massConstraints was pre-defined as None or empty list, return always True
