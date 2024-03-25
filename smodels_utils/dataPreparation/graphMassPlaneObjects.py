@@ -12,7 +12,7 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol, core
+from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol, core, Float
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import \
@@ -285,6 +285,19 @@ class GraphMassPlane(object):
             ret[k]=eval(value)
         return ret
 
+    def hasSimilarEquationAlready ( self, eqs : List, e ):
+        """ Check if we have a similar equation already """
+        # print ( f"@@12 check if {e} is fuzzily in {eqs}" )
+        if len(eqs)==0:
+            return False
+        for eq in eqs:
+            if eq.lhs == e.lhs: ## lefthand sides match
+                if type(eq.rhs) == Float and type(e.rhs) == Float:
+                    if 1e-8 < abs ( e.rhs - eq.rhs) < 1.6:
+                        # print ( f"@@13 fuzzy match!" )
+                        return True
+        return False
+
     def getXYValues(self, parameters : List ) -> Union[None,Dict]:
         """
         Translate mass and width arrays to a 2d point in the plot.
@@ -294,7 +307,7 @@ class GraphMassPlane(object):
         :returns: None if an error occurs,
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        #print ( f"@@A getXYValues {parameters}" )
+        # print ( f"@@11 getXYValues {parameters}" )
         
         ret = {}
         eqs = set()
@@ -313,16 +326,21 @@ class GraphMassPlane(object):
             if type(lhs)==core.numbers.Float:
                 lhs = round_to_n ( float(lhs), 5 )
             if lhs == 0. and rhs == 1.:
+              continue # hack for now FIXME
+            if type(lhs)==Float and type(rhs)==Float and \
+                    1e-8 < abs ( lhs - rhs ) < 1.6:
                 continue # hack for now FIXME
             e = Eq ( lhs, rhs )
             if e == True: ## take out trivial expressions
                 continue
             if e == False: # if a numerical comparison is wrong, we can stop here
                 return ret
-            eqs.add ( e )
+            if not self.hasSimilarEquationAlready ( eqs, e ):
+                eqs.add ( e )
+        # print ( f"@@11 eqs={eqs}" )
         d = solve ( list(eqs) )
-        #print ( f"@@A d={d}" )
-        #print ( f"@@A getXYValues {parameters}: {d}" )
+        #print ( f"@@11 solved {parameters}: {d}" )
+        ret = {}
         if d == []:
             return ret
         for k,v in d.items():
