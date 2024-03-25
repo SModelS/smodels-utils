@@ -366,11 +366,39 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         ## smodels exclusions dont make sense for the significances plot
         csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
+        #convert contour to a list of x,y values
+        path_cs = cs.collections[0].get_paths()[0]
+        vertices_cs = path_cs.vertices
+        x_cs, y_cs = vertices_cs[:,0].tolist(), vertices_cs[:,1].tolist()
+        x_ecs, y_ecs = [],[]
         if options["drawExpected"] in [ "auto", True ]:
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                             transform = fig.transFigure, linestyle="dotted" )
+            #convert contour to a list of x,y values
+            path_ecs = cs.collections[0].get_paths()[0]
+            vertices_ecs = path_ecs.vertices
+            x_ecs, y_ecs = vertices_ecs[:,0].tolist(), vertices_ecs[:,1].tolist()
+        
+        if not validationPlot.combine: plot_type = "bestSR"
+        else: plot_type = "comb"
+        #store x,y points in json file
+        plot_dict = {f"{validationPlot.txName}_{plot_type}": {"obs_excl":{'x':x_cs,'y':y_cs}, "exp_excl":{'x':x_ecs, 'y':y_ecs}}}
+        vDir = validationPlot.getValidationDir (validationDir=None)
+        file_js = "SModelS_ExclusionLines.json"
+        import json
+        plots = plot_dict
+        if os.path.exists(vDir+'/'+file_js):
+            file = open(f'{vDir}/{file_js}','r')
+            plots = json.load(file)
+            plots.update(plot_dict)
+        
+        file = open(f'{vDir}/{file_js}','w')
+        json.dump(plots,file)
+
+        
+    
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
@@ -403,8 +431,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "combination of tpreds"
     plt.text ( .97, .0222, subtitle, transform=fig.transFigure, fontsize=10,
                horizontalalignment="right" )
-
-
+               
     #if figureUrl:
     if False:
         plt.text( .13, .13, f"{figureUrl}",
