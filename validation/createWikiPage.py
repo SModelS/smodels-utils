@@ -80,24 +80,24 @@ class WikiPageCreator:
             print ( f"Creating {self.localdir}" )
             cmd = f"mkdir {self.localdir}"
             subprocess.getoutput ( cmd )
-        cmd = "rsync -a --prune-empty-dirs --exclude \\*.tgz --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
+        cmd = f"rsync -a --prune-empty-dirs --exclude \\*.tgz --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r {self.databasePath}/* {self.localdir}"
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( f"[createWikiPage] Copying database from {self.databasePath} to {self.localdir}." )
             a= C.getoutput ( cmd )
             print ( f"[createWikiPage] {cmd}: {a}" )
             has_uploaded = True
         if self.force_upload and not has_uploaded:
-            print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            print ( f"[createWikiPage] Copying database from {self.databasePath} to {self.localdir}." )
             a= C.getoutput ( cmd )
-            print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
+            print ( f"[createWikiPage] {cmd}: {a}" )
             has_uploaded = True
         else:
-            print ( "Database seems already copied to %s. Good." % self.localdir )
+            print ( f"Database seems already copied to {self.localdir}. Good." )
         # self.urldir = self.localdir.replace ( "/var/www", "" )
         self.urldir = self.localdir.replace ( "../../smodels.github.io", "" )
-        self.fName = 'Validation%s' % self.dotlessv
+        self.fName = f'Validation{self.dotlessv}'
         if self.ugly:
-            self.fName = 'ValidationUgly%s' % self.dotlessv
+            self.fName = f'ValidationUgly{self.dotlessv}'
         self.file = open ( self.fName, 'w' )
         self.nlines = 0
         print ( )
@@ -121,15 +121,15 @@ class WikiPageCreator:
         return dataset
 
     def close ( self ):
-        self.file.write ( "\nThis page was created %s\n" % time.asctime() )
+        self.file.write ( f"\nThis page was created {time.asctime()}\n" )
         self.file.close()
         if self.moveFile:
-            cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
+            cmd = f"mv {self.fName} ../../smodels.github.io/docs/{self.fName}.md" )
             print ( "[createWikiPage]",cmd )
             C.getoutput ( cmd )
 
     def writeHeader ( self ):
-        print ( '[createWikiPage] Creating wiki file (%s)....' % self.fName )
+        print ( f'[createWikiPage] Creating wiki file ({self.fName})....' )
         whatIsIncluded = "Superseded and Fastlim results are included"
         if not self.include_fastlim:
             whatIsIncluded = "Superseded results are listed; fastlim results are not"
@@ -166,7 +166,7 @@ CMS are for on- and off-shell at once.
         lengths = []
         for i in fields:
             #ret=ret +  ( "||<#EEEEEE:> '''%s''' " % i )
-            ret=ret +  ( "| **%s** " % i )
+            ret=ret +  ( f"| **{i}** " )
             lengths.append ( len(i)+6 )
         ret = ret + ( "|\n" )
         self.true_lines.append ( ret )
@@ -372,7 +372,7 @@ CMS are for on- and off-shell at once.
                             self.databasePath, "" )
                 figPath = dirPath+"/"+figName
                 figC = "https://smodels.github.io"+figPath
-                line += '<a href="%s"><img src="%s?%d" /></a>' % ( figC, figC, t0 )
+                line += f'<a href="{figC}"><img src="{figC}?{t0}" /></a>'
                 line += "<BR>"
                 hasFig=True
                 nfigs += 1
@@ -385,14 +385,14 @@ CMS are for on- and off-shell at once.
 
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe, validated ):
-                line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
+                line += f' <img src="https://smodels.github.io/pics/new.png" /> in {self.db.databaseVersion}! '
             else:
                 hasChanged = self.anaHasChanged ( id, txname.txName, tpe )
                 if hasChanged == "cov":
-                    line += ' <img src="https://smodels.github.io/pics/updated.png" /> added covariances in %s! ' % ( self.db.databaseVersion )
+                    line += f' <img src="https://smodels.github.io/pics/updated.png" /> added covariances in {self.db.databaseVersion}! '
                 if hasChanged == "eUL":
-                    line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
-            line += "<br><font color='grey'>source: %s</font><br>" % self.describeSource ( txname )
+                    line += f' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in {self.db.databaseVersion}! '
+            line += f"<br><font color='grey'>source: {self.describeSource ( txname )}</font><br>"
             if txname.validated not in [ "True", True ]:
                 font, endfont = "", ""
                 if txname.validated in [ "False", False ]:
@@ -558,14 +558,14 @@ CMS are for on- and off-shell at once.
             if len(txnames)>0: nexpRes+=1
         if nres == 0:
                 return
-        self.true_lines.append ( '\n\n<a name="%s%s%d"></a>\n' % ( exp,stype,sqrts ) )
-        self.true_lines.append ( "## %s %s, %d TeV: %d analyses, %d results total\n\n" % (exp,tpe,sqrts, nexpRes, nres ) )
+        self.true_lines.append ( f'\n\n<a name="{exp}{stype}{sqrts}"></a>\n' )
+        self.true_lines.append ( f"## {exp} {tpe}, {sqrts} TeV: {nexpRes} analyses, {nres} results total\n\n" )
         expResList.sort( key = sortingFunc, reverse=True ) # start with most recent
         self.writeTableHeader ( tpe )
         for expRes in expResList:
             # print ( "id=",expRes.globalInfo.id )
             if self.ignore_superseded and hasattr(expRes.globalInfo,'supersededBy'):
-                logger.debug ( "skip superseded %s" % expRes.globalInfo.id )
+                logger.debug ( f"skip superseded {expRes.globalInfo.id}" )
                 continue
             self.writeExpRes ( expRes, tpe )
 
@@ -648,7 +648,7 @@ if __name__ == "__main__":
         print ( f"[createWikiPage] cannot find {args.database}" )
         sys.exit()
     if not os.path.exists(os.path.expanduser(args.comparison_database)):
-        print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args.comparison_database )
+        print ( f"[createWikiPage] couldnt find comparison database {args.comparison_database}, set to ''" )
         args.comparison_database = ""
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version,
