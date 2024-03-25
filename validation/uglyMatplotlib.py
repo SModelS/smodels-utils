@@ -282,7 +282,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                    transform=fig.transFigure )
 
     if kfactor != None and abs ( kfactor - 1. ) > 1e-2:
-        plt.text ( .93, .18, "k-factor {kfactor:.2f}", c="gray",
+        plt.text ( .93, .18, f"k-factor {kfactor:.2f}", c="gray",
                    fontsize = 10, rotation=90, transform = fig.transFigure )
     dxpnr = .95
     halign = "right"
