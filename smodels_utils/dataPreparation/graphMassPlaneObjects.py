@@ -335,7 +335,7 @@ class GraphMassPlane(object):
                 continue
             if e == False: # if a numerical comparison is wrong, we can stop here
                 return ret
-            if not self.hasSimilarEquationAlready ( eqs, e ):
+            if True: # not self.hasSimilarEquationAlready ( eqs, e ):
                 eqs.add ( e )
         # print ( f"@@11 eqs={eqs}" )
         d = solve ( list(eqs) )
