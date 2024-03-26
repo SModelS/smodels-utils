@@ -17,6 +17,7 @@ from smodels.base.physicsUnits import TeV, fb
 from smodels.base.smodelsLogging import setLogLevel, logger
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList
 import subprocess
+from typing import List, Dict
 setLogLevel("debug" )
 
 ## TGQ12 should be possible
@@ -66,6 +67,8 @@ class WikiPageCreator:
         if self.comparison_dbPath:
             self.comparison_db = Database ( self.comparison_dbPath )
         self.force_upload = force_upload
+        self.compileNewAnaIds()
+        self.compileOldAnaIds()
         self.dotlessv = ""
         if add_version:
             self.dotlessv = self.db.databaseVersion.replace(".","" )
@@ -477,18 +480,14 @@ CMS are for on- and off-shell at once.
                     return "eUL"
         return False
 
-    def compileOldAnaIds ( self ):
-        """ compile the list of analysis ids in the comparison database,
-        i.e. create self.OldAnaIds, and self.topos
+    def compileAnaIds ( self, expRs : List ) -> Dict:
+        """ compile the list of analysis ids in a given list of exp results.
         """
-        expRs = self.comparison_db.getExpResults( useNonValidated = self.ignore_validated )
-        anaIds = [ x.globalInfo.id for x in expRs ]
-        self.OldAnaIds = set ( anaIds )
-        self.topos = {}
+        ret = {}
         for r in expRs:
             anaId = r.globalInfo.id
-            if not anaId in self.topos.keys():
-                self.topos[anaId]=[]
+            if not anaId in ret.keys():
+                ret[anaId]=[]
             topos = r.getTxNames()
             topos.sort()
             Type = "-ul"
@@ -496,15 +495,25 @@ CMS are for on- and off-shell at once.
                 Type = "-eff"
             for t in topos:
                 name = t.txName+Type
-                self.topos[anaId].append ( name )
-        # print ( "the old analysis ids are", self.OldAnaIds )
-        if True: # self.comparison_db.databaseVersion == "1.2.3":
-            print ( "[createWikiPage] adding ATLAS-SUSY-2016-24:TSlepSlep-eff" )
-            print ( "[createWikiPage] FIXME it would be better to check if there actually is a new for this case at all!!" )
-            self.topos["ATLAS-SUSY-2016-24"].append ( 'TSlepSlep-eff' )
-            ## FIXME it would be better to check if there actually is a
-            ## new result for this case at all!
+                ret[anaId].append ( name )
+        return ret
 
+
+    def compileOldAnaIds ( self ):
+        """ compile the list of analysis ids in the comparison database,
+        i.e. create self.topos and self.OldAnaIds
+        """
+        expRs = self.comparison_db.getExpResults( useNonValidated = self.ignore_validated )
+        anaIds = [ x.globalInfo.id for x in expRs ]
+        self.OldAnaIds = set ( anaIds )
+        self.topos = self.compileAnaIds ( expRs )
+
+    def compileNewAnaIds ( self ):
+        """ compile the list of analysis ids in the actual database,
+        i.e. create self.newtopos
+        """
+        expRs = self.db.getExpResults( useNonValidated = self.ignore_validated )
+        self.newtopos = self.compileAnaIds ( self.db.expResultList )
 
     def isNewAnaID ( self, id, txname, tpe, validated ):
         """ is analysis id <id> new?
@@ -521,8 +530,6 @@ CMS are for on- and off-shell at once.
         if self.comparison_db == None:
             # no comparison database given. So nothing is new.
             return False
-        if not hasattr ( self, "OldAnaIds" ):
-            self.compileOldAnaIds()
         if not id in self.OldAnaIds: ## whole ana is new?
             return True
         myType = "-ul"
@@ -530,6 +537,10 @@ CMS are for on- and off-shell at once.
             myType = "-eff"
         ## FIXME need to check also topo
         txtpe = txname+myType
+        if not id in self.newtopos:
+            return False
+        if not txtpe in self.newtopos[id]:
+            return False
         if not txtpe in self.topos[id]:
             ## txname is new
             return True
