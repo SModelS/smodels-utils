@@ -10,14 +10,15 @@
 
 """
 
-def extractSLHAFileFromTarball ( slhafile, tarball=None ):
+def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
     """
     extract one specific slha file from a tarball
     :param tarball: if supplied, extract from that tarball,
                     if None, look for tarball in smodels-utils/slha/
+    :param extractToDir: if supplied, extract into the given directory,
+    else extract to cwd
     :returns: path to slhafile
     """
-    ret = slhafile
     if tarball == None:
         p1 = slhafile.find("_")
         import os, tarfile
@@ -27,12 +28,15 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None ):
     tar = tarfile.open ( tarball, "r:gz" )
     fobj = tar.extractfile ( slhafile )
     txt = fobj.read()
-    with open ( slhafile, "wt" ) as f:
+    targetfile = slhafile
+    if extractToDir != None:
+        targetfile = f"{extractToDir}/{slhafile}"
+    with open ( targetfile, "wt" ) as f:
         f.write ( txt.decode("ascii") )
         f.close()
     tar.close()
     
-    return ret
+    return targetfile
 
 
 def removeXSecs ( In, Out=None ):
