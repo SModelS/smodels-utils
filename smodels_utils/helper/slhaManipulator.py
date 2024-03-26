@@ -20,7 +20,9 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
     :returns: path to slhafile
     """
     if tarball == None:
-        p1 = slhafile.find("_")
+        p1 = -1
+        while slhafile[p1+1].isalpha():
+            p1 = slhafile.find("_",p1+1)
         import os, tarfile
         from smodels_utils import SModelSUtils
         tarf = slhafile[:p1]+".tar.gz"
