@@ -124,7 +124,7 @@ class WikiPageCreator:
         self.file.write ( f"\nThis page was created {time.asctime()}\n" )
         self.file.close()
         if self.moveFile:
-            cmd = f"mv {self.fName} ../../smodels.github.io/docs/{self.fName}.md" )
+            cmd = f"mv {self.fName} ../../smodels.github.io/docs/{self.fName}.md"
             print ( "[createWikiPage]",cmd )
             C.getoutput ( cmd )
 
@@ -352,7 +352,6 @@ CMS are for on- and off-shell at once.
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
-            # print ( "@@@", txname, " ugly?", self.ugly, "files", files, "is1d", self.isOneDimensional ( txname ) )
             if self.add_old:
                 files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
             if self.ugly or self.isOneDimensional ( txname ):
@@ -499,9 +498,12 @@ CMS are for on- and off-shell at once.
                 name = t.txName+Type
                 self.topos[anaId].append ( name )
         # print ( "the old analysis ids are", self.OldAnaIds )
-        if self.comparison_db.databaseVersion == "1.2.3":
+        if True: # self.comparison_db.databaseVersion == "1.2.3":
             print ( "[createWikiPage] adding ATLAS-SUSY-2016-24:TSlepSlep-eff" )
+            print ( "[createWikiPage] FIXME it would be better to check if there actually is a new for this case at all!!" )
             self.topos["ATLAS-SUSY-2016-24"].append ( 'TSlepSlep-eff' )
+            ## FIXME it would be better to check if there actually is a
+            ## new result for this case at all!
 
 
     def isNewAnaID ( self, id, txname, tpe, validated ):
@@ -512,6 +514,8 @@ CMS are for on- and off-shell at once.
         :param validated: is it validated? for if it is not, it won't
                           be marked as new
         """
+        ## FIXME check if this actually corresponds to new data, or just
+        ## a validation plot!
         if validated == False:
             return False
         if self.comparison_db == None:
@@ -654,6 +658,6 @@ if __name__ == "__main__":
     creator = WikiPageCreator( args.ugly, args.database, args.add_version,
                                args.private, args.force_upload,
                                args.comparison_database, args.ignore_superseded,
-                               args.ignore, not args.dontmove, args.include_fastlim, 
+                               args.ignore, not args.dontmove, args.include_fastlim,
                                args.add_old )
     creator.run()
