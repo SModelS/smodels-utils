@@ -60,6 +60,7 @@ def getSqrts ( Id : str ) -> str:
     if Id.startswith ( "CMS-EXO-16-057" ): # an exceptional case
         return 8
     year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
+    year = year.replace("EXOT-","")
     year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
     year = year.replace("CONF-","").replace("CERN-EP-","")
     year = year.replace("CERN-PH-EP-","")
