@@ -27,6 +27,9 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
         from smodels_utils import SModelSUtils
         tarf = slhafile[:p1]+".tar.gz"
         tarball = os.path.join ( SModelSUtils.installDirectory(), "slha", tarf )
+    if not os.path.exists ( tarball ): ## no tarball!
+        print ( f"[slhaManipulator] tarball {tarball} does not exist!" )
+        return None
     tar = tarfile.open ( tarball, "r:gz" )
     fobj = tar.extractfile ( slhafile )
     txt = fobj.read()
@@ -39,7 +42,6 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
     tar.close()
     
     return targetfile
-
 
 def removeXSecs ( In, Out=None ):
     """ 
