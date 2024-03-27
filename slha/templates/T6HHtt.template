@@ -143,11 +143,7 @@ DECAY   1000006     1.00000000E+00   # stop1 decays
      1.00000000E+00    2     1000022         6   # BR(~t_1 -> ~chi_10 t )
 DECAY   2000006     1.00000000E+00   # stop2 decays
 #          BR         NDA      ID1       ID2
-<<<<<<< HEAD
-     1.00000000E+00    2     1000006         25   # BR(~t_2 -> ~t_1 H )
-=======
      1.00000000E+00    2     1000006         25   # BR(~t_2 -> ~t_1 h )
->>>>>>> develop
 
 DECAY   1000005     0.00000000E+00   # sbottom1 decays
 DECAY   2000005     0.00000000E+00   # sbottom2 decays
