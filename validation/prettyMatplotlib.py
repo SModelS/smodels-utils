@@ -367,10 +367,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
         #convert contour to a list of x,y values
-        path_cs = cs.collections[0].get_paths()[0]
-        vertices_cs = path_cs.vertices
-        x_cs, y_cs = vertices_cs[:,0].tolist(), vertices_cs[:,1].tolist()
+        x_cs, y_cs = [], []
         x_ecs, y_ecs = [],[]
+        if len(cs.collections)>0:
+            paths_cs = cs.collections[0].get_paths()
+            if len ( paths_cs ) > 0:
+                vertices_cs = paths_cs[0].vertices
+                x_cs, y_cs = vertices_cs[:,0].tolist(), vertices_cs[:,1].tolist()
         if options["drawExpected"] in [ "auto", True ]:
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
