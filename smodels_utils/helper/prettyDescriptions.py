@@ -893,7 +893,7 @@ def prettyAxesV3( validationPlot ) -> str:
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
     from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
-    from ptools.sparticleNames import SParticleNames
+    from smodels_utils.helper.sparticleNames import SParticleNames
     namer = SParticleNames ( susy = True )
     pids = getParticleIdsForTemplateFile ( validationPlot.txName )
     namesOnAxes = {}
