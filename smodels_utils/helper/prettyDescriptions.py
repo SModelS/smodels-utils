@@ -888,45 +888,45 @@ def getParticleNames ( smsstring : str ) -> Dict:
 def prettyAxesV3( validationPlot ) -> str:
     """
     get a description of the axes of validation plot
+
     :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    # print ( "@@FIXME in prettyDescriptions.prettyAxesV3 implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
+    from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
+    from ptools.sparticleNames import SParticleNames
+    namer = SParticleNames ( susy = True )
+    pids = getParticleIdsForTemplateFile ( validationPlot.txName )
+    namesOnAxes = {}
     txn = validationPlot.getTxname()
     axisMap = txn.axesMap[0]
-    smsString = list(txn.smsMap.keys())[0].treeToString( removeIndicesFrom="SM" )
-    indices = {}
-    ret=[]
-    names = getParticleNames ( smsString )
-    #print ( f"axisMap {axisMap}" )
-    #print ( f"smsString {smsString}" )
-    #print ( f"smsMap {txn.smsMap}" )
-    #print ( f"particle names {names}" )
-    axesDict = {}
     for k,v in axisMap.items():
-        node=txn.dataMap[k][0] ## okay, now we have the node
-        ## from the node we need the name
-        axesDict[v]=str(node)
-        if node in names:
-            axesDict[v]=names[node]
-    # print ( f"axesDict {axesDict}" )
-    for k,v in axesDict.items():
-        st = f"{k}=m({v})"
-        ret.append ( st )
-    """
-    for k,v in txn.dataMap.items():
-        print ( f"@@3 key {k} value {v}" )
-        value = axisMap[k]
-        if value in [ "x", "y", "z" ]:
-            value = f"m({value})"
-        else:
-            value = f"m({value}) GeV"
-        indices[ v[0] ] = value
-        if not value in ret:
-            ret.append ( value )
-    """
-    ret = ", ".join( ret )
-    #print ( f"returning {ret}" )
+        if k in pids:
+            name = pids[k]
+            pid = pids[k]
+            if pid in [ 1000002, 1000003, 1000004, 2000001, 2000002, 2000003,
+                        2000004 ]: ## a quarks
+                pid = 1000001
+            name = namer.texName ( pid, addDollars=True )
+            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
+            replacements["^+"] = "^\\pm"
+            replacements["^-"] = "^\\pm"
+            for frm,to in replacements.items():
+                name = name.replace(frm,to)
+            vplacements = {}
+            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
+            #vplacements["0.5*x"] = "$\\frac{x}{2}$"
+            #vplacements["0.5*y"] = "$\\frac{y}{2}$"
+            #vplacements["0.5"] = "$\\frac{1}{2}$"
+            #vplacements[".5"] = "$\\frac{1}{2}$"
+            # print ( f"@@A v {v}" )
+            for frm,to in vplacements.items():
+                v = v.replace(frm,to)
+            namesOnAxes[v]=name
+    terms = []
+    for k,v in namesOnAxes.items():
+        terms.append ( f"{k}=m({v})" )
+    ret = ", ".join ( terms )
+    # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
     return ret
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
