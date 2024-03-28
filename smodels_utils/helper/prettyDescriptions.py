@@ -898,7 +898,9 @@ def prettyAxesV3( validationPlot ) -> str:
     pids = getParticleIdsForTemplateFile ( validationPlot.txName )
     namesOnAxes = {}
     txn = validationPlot.getTxname()
-    axisMap = txn.axesMap[0]
+    axisMap = eval ( validationPlot.axes )
+    #axisMap = txn.axesMap[0]
+    #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
     def compressSQuarks ( pid : Union[int,Set] ):
         """ compress all squarks, i am only interested in ~q """
