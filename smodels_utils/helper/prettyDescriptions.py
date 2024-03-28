@@ -918,10 +918,24 @@ def prettyAxesV3( validationPlot ) -> str:
                 ret.add ( p )
         return ret
 
+    def compressSLeptons ( pid : Union[int,Set] ):
+        """ compress all sleptons, i am only interested in ~q """
+        if type(pid) in [ int ]:
+            return pid
+        ret = set()
+        for p in pid:
+            if p in [ 2000011, 2000013, 2000015 ]:
+                p -= 1000000
+            if p in [ 1000014, 1000016, 2000012, 2000014, 2000016 ]:
+                p = 1000012
+            ret.add ( p )
+        return ret
+
     for k,v in axisMap.items():
         if k in pids:
             name = pids[k]
             pid = compressSQuarks (  pids[k] )
+            pid = compressSLeptons ( pid )
             name = namer.texName ( pid, addDollars=True )
             replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
             replacements["^+"] = "^\\pm"
