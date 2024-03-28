@@ -17,7 +17,7 @@ from smodels.base.physicsUnits import TeV
 from inspect import currentframe, getframeinfo
 import sys
 x,y,z,w = var('x y z w')
-from typing import Union, Text, Dict
+from typing import Union, Text, Dict, Set
 
 # pretty name of particle:
 
@@ -899,13 +899,27 @@ def prettyAxesV3( validationPlot ) -> str:
     namesOnAxes = {}
     txn = validationPlot.getTxname()
     axisMap = txn.axesMap[0]
+
+    def compressSQuarks ( pid : Union[int,Set] ):
+        """ compress all squarks, i am only interested in ~q """
+        allquarks = [ 1000001, 1000002, 1000003, 1000004, 
+                      2000001, 2000002, 2000003, 2000004 ]
+        if type(pid) in [ int ]:
+            if pid in allquarks:
+                return 1000001
+            return pid
+        ret = set()
+        for p in pid:
+            if p in allquarks:
+                ret.add ( 1000001 )
+            else:
+                ret.add ( p )
+        return ret
+
     for k,v in axisMap.items():
         if k in pids:
             name = pids[k]
-            pid = pids[k]
-            if pid in [ 1000002, 1000003, 1000004, 2000001, 2000002, 2000003,
-                        2000004 ]: ## a quarks
-                pid = 1000001
+            pid = compressSQuarks (  pids[k] )
             name = namer.texName ( pid, addDollars=True )
             replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
             replacements["^+"] = "^\\pm"
