@@ -689,7 +689,8 @@ def rootToLatex ( string : str, outputtype : str = "latex",
         string = rectifyCommands ( string )
     return string
 
-def prettyTxname(txname,protons=True,outputtype="latex"):
+def prettyTxname(txname : str, protons : bool =True,
+        outputtype : bool ="latex") -> str:
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
@@ -723,6 +724,11 @@ def prettyTxname(txname,protons=True,outputtype="latex"):
     if outputtype == "latex":
         prodString = "$" + prodString.replace("#","\\" ) + "$"
         decayString = "$" + decayString.replace("#","\\" ) + "$"
+
+    if prodString is not None:
+        prodString = prodString.replace ( "ZPrime", "Z'" )
+    if decayString is not None:
+        decayString = decayString.replace ( "ZPrime", "Z'" )
 
     if prodString and decayString:
         return prodString + ", " + decayString
