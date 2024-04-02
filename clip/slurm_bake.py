@@ -132,15 +132,15 @@ def bake ( args : Dict ):
     # ma5 seems to not need much RAM
     ram = 2.5 * nprocesses
     if nevents >= 50000:
-        ram = 3. * nprocesses
+        ram = int ( 3. * nprocesses )
     if nevents >= 100000:
-        ram = 4. * nprocesses
+        ram = int ( 4. * nprocesses )
     ncpus = int(nprocesses*2)
     if cutlang:
         ram = 2.5 * nprocesses ## in GB
         ncpus = int(nprocesses*2)
     if checkmate:
-        ram = int(3 * ram)
+        ram = int(2 * ram)
         ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
