@@ -86,10 +86,16 @@ def bake ( args : Dict ):
     pathname = os.path.join ( Dir, filename )
     print ( f"[slurm.py] creating script at {pathname}: {len(lines)} lines." )
     # nprc = int ( math.ceil ( nproc * .5  ) )
+    maxgaps = ""
+    gaps = [ "maxgap1", "maxgap2", "maxgap13", "mingap1", "mingap2", "mingap13" ]
+    for gap in gaps:
+        if gap in args and args[gap]!=None:
+            ngap = args[gap]
+            maxgaps += f" --{gap} {ngap}"
     with open ( pathname, "wt" ) as f:
         for line in lines:
             largs = f'-a -b -n {nevents} --topo {topo} -p {nprocesses} -m "{mass}"'
-            largs += f' --analyses "{analyses}" --njets {njets}'
+            largs += f' --analyses "{analyses}"{maxgaps} --njets {njets}'
             # args += ' -b'
             if cutlang:
                 largs += ' --cutlang'
@@ -142,7 +148,7 @@ def bake ( args : Dict ):
     if checkmate:
         ram = int(2 * ram)
         ncpus = int(nprocesses*4)
-    cmd += [ "--mem", f"{ram}G" ]
+    cmd += [ "--mem", f"{int(ram)}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     # cmd += [ tmpfile ]
     cmd += [ Dir + filename ]
@@ -161,7 +167,7 @@ def logCall ():
             i = '"%s"' % i
         line += i + " "
     line = line.strip()
-    f=open("slurm.log","rt")
+    f=open(f"{os.environ['HOME']}/slurm.log","rt")
     lines = f.readlines()
     f.close()
     lastline = lines[-1].strip()
@@ -228,8 +234,8 @@ def main():
                              type=int, default=1 )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
                         type=str, default=None )
-    argparser.add_argument ( '-l', '--cutlang', help='use cutlang for baking',
-                             action='store_true' )
+    argparser.add_argument ( '-l', '--cutlang', '--adl',
+            help='use cutlang for baking', action='store_true' )
     argparser.add_argument ( '--checkmate', help='use checkmate for baking',
                              action='store_true' )
     argparser.add_argument ( '--cancel_all', help='cancel all bakers',
@@ -249,7 +255,7 @@ def main():
         args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
     for r in range(args.repeat):
         for i in range(args.nbakes):
-            print ( "args", vars(args) )
+            # print ( "args", vars(args) )
             bake ( vars(args) )
     if not args.query:
         logCall()
