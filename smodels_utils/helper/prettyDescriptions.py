@@ -17,7 +17,7 @@ from smodels.base.physicsUnits import TeV
 from inspect import currentframe, getframeinfo
 import sys
 x,y,z,w = var('x y z w')
-from typing import Union, Text, Dict
+from typing import Union, Text, Dict, Set
 
 # pretty name of particle:
 
@@ -689,7 +689,8 @@ def rootToLatex ( string : str, outputtype : str = "latex",
         string = rectifyCommands ( string )
     return string
 
-def prettyTxname(txname,protons=True,outputtype="latex"):
+def prettyTxname(txname : str, protons : bool =True,
+        outputtype : bool ="latex") -> str:
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
@@ -723,6 +724,11 @@ def prettyTxname(txname,protons=True,outputtype="latex"):
     if outputtype == "latex":
         prodString = "$" + prodString.replace("#","\\" ) + "$"
         decayString = "$" + decayString.replace("#","\\" ) + "$"
+
+    if prodString is not None:
+        prodString = prodString.replace ( "ZPrime", "Z'" )
+    if decayString is not None:
+        decayString = decayString.replace ( "ZPrime", "Z'" )
 
     if prodString and decayString:
         return prodString + ", " + decayString
@@ -888,45 +894,75 @@ def getParticleNames ( smsstring : str ) -> Dict:
 def prettyAxesV3( validationPlot ) -> str:
     """
     get a description of the axes of validation plot
+
     :param validationPlot: the validationPlot object.
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
-    # print ( "@@FIXME in prettyDescriptions.prettyAxesV3 implement sth that takes the smsMap as input, replaces all anyBSM(1) with x and so forth, prints that" )
+    from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
+    from smodels_utils.helper.sparticleNames import SParticleNames
+    namer = SParticleNames ( susy = True )
+    pids = getParticleIdsForTemplateFile ( validationPlot.txName )
+    namesOnAxes = {}
     txn = validationPlot.getTxname()
-    axisMap = txn.axesMap[0]
-    smsString = list(txn.smsMap.keys())[0].treeToString( removeIndicesFrom="SM" )
-    indices = {}
-    ret=[]
-    names = getParticleNames ( smsString )
-    #print ( f"axisMap {axisMap}" )
-    #print ( f"smsString {smsString}" )
-    #print ( f"smsMap {txn.smsMap}" )
-    #print ( f"particle names {names}" )
-    axesDict = {}
+    axisMap = eval ( validationPlot.axes )
+    #axisMap = txn.axesMap[0]
+    #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+
+    def compressSQuarks ( pid : Union[int,Set] ):
+        """ compress all squarks, i am only interested in ~q """
+        allquarks = [ 1000001, 1000002, 1000003, 1000004, 
+                      2000001, 2000002, 2000003, 2000004 ]
+        if type(pid) in [ int ]:
+            if pid in allquarks:
+                return 1000001
+            return pid
+        ret = set()
+        for p in pid:
+            if p in allquarks:
+                ret.add ( 1000001 )
+            else:
+                ret.add ( p )
+        return ret
+
+    def compressSLeptons ( pid : Union[int,Set] ):
+        """ compress all sleptons, i am only interested in ~q """
+        if type(pid) in [ int ]:
+            return pid
+        ret = set()
+        for p in pid:
+            if p in [ 2000011, 2000013, 2000015 ]:
+                p -= 1000000
+            if p in [ 1000014, 1000016, 2000012, 2000014, 2000016 ]:
+                p = 1000012
+            ret.add ( p )
+        return ret
+
     for k,v in axisMap.items():
-        node=txn.dataMap[k][0] ## okay, now we have the node
-        ## from the node we need the name
-        axesDict[v]=str(node)
-        if node in names:
-            axesDict[v]=names[node]
-    # print ( f"axesDict {axesDict}" )
-    for k,v in axesDict.items():
-        st = f"{k}=m({v})"
-        ret.append ( st )
-    """
-    for k,v in txn.dataMap.items():
-        print ( f"@@3 key {k} value {v}" )
-        value = axisMap[k]
-        if value in [ "x", "y", "z" ]:
-            value = f"m({value})"
-        else:
-            value = f"m({value}) GeV"
-        indices[ v[0] ] = value
-        if not value in ret:
-            ret.append ( value )
-    """
-    ret = ", ".join( ret )
-    #print ( f"returning {ret}" )
+        if k in pids:
+            name = pids[k]
+            pid = compressSQuarks (  pids[k] )
+            pid = compressSLeptons ( pid )
+            name = namer.texName ( pid, addDollars=True )
+            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
+            replacements["^+"] = "^\\pm"
+            replacements["^-"] = "^\\pm"
+            for frm,to in replacements.items():
+                name = name.replace(frm,to)
+            vplacements = {}
+            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
+            #vplacements["0.5*x"] = "$\\frac{x}{2}$"
+            #vplacements["0.5*y"] = "$\\frac{y}{2}$"
+            #vplacements["0.5"] = "$\\frac{1}{2}$"
+            #vplacements[".5"] = "$\\frac{1}{2}$"
+            # print ( f"@@A v {v}" )
+            for frm,to in vplacements.items():
+                v = v.replace(frm,to)
+            namesOnAxes[v]=name
+    terms = []
+    for k,v in namesOnAxes.items():
+        terms.append ( f"{k}=m({v})" )
+    ret = ", ".join ( terms )
+    # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
     return ret
 
 def prettyAxes( txname : str, axes : str ) -> Union[None,str]:

@@ -3,12 +3,49 @@
 """
 .. module:: slhaManipulator
         :synopsis: all sorts of manipulations of SLHA files.
-                   FIXME we also want removal of dupes, 
+                   FIXME we also want removal of dupes,
                    keeping the last entry.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
+
+from typing import Union, Dict
+
+def getParticleIdsForTemplateFile ( filename : str ) -> Dict:
+    """ given a template file name, return a dictionary of 
+    pids, with positions as keys.
+
+    :param filename: filename, e.g. T1.template
+    :returns: dictionary, position as keys, pids as values.
+    """
+    import os
+    def canonizeFilename ( filename : str ):
+        from smodels_utils import SModelSUtils
+        if not filename.endswith ( ".template" ):
+            filename = f"{filename}.template"
+        if not "/" in filename:
+            filename = f"{SModelSUtils.installDirectory()}/slha/templates/{filename}"
+        return filename
+    path = canonizeFilename ( filename )
+    filename = os.path.basename ( path )
+    txname = filename.replace(".template","")
+    f = open ( path, "rt" )
+    lines = f.readlines()
+    f.close()
+    ret = {}
+    pids = {}
+    for line in lines:
+        p1 = line.find("#")
+        if p1 > 0:
+            line = line[:p1]
+        for x in [ 0, 1, 2 ]:
+            if f"M{x}" in line or f"m{x}" in line:
+                tokens = line.split()
+                if not x in pids:
+                    pids[x]=set()
+                pids[x].add ( int(tokens[0]) )
+    return pids
 
 def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
     """
@@ -27,6 +64,9 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
         from smodels_utils import SModelSUtils
         tarf = slhafile[:p1]+".tar.gz"
         tarball = os.path.join ( SModelSUtils.installDirectory(), "slha", tarf )
+    if not os.path.exists ( tarball ): ## no tarball!
+        print ( f"[slhaManipulator] tarball {tarball} does not exist!" )
+        return None
     tar = tarfile.open ( tarball, "r:gz" )
     fobj = tar.extractfile ( slhafile )
     txt = fobj.read()
@@ -37,13 +77,12 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
         f.write ( txt.decode("ascii") )
         f.close()
     tar.close()
-    
+
     return targetfile
 
-
 def removeXSecs ( In, Out=None ):
-    """ 
-    removes all XSECTION blocks 
+    """
+    removes all XSECTION blocks
     :params In: name of input filename
     :params Out: name of output filename. If None, In is overwritten.
     :params In: name of input filename

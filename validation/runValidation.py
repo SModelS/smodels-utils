@@ -478,7 +478,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     """
 
     if not os.path.isdir(databasePath):
-        logger.error('%s is not a folder' %databasePath)
+        logger.error(f'{databasePath} is not a folder')
 
     ## to mark the points of the data grid
     import smodels.experiment.txnameObj

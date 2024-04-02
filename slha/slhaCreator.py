@@ -602,9 +602,9 @@ if __name__ == "__main__":
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
                    massesInFileName=True, nevents=args.nevents,
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
-                   swapBranches = args.swapBranches, 
+                   swapBranches = args.swapBranches,
                    ignore_pids = args.ignore_pids, comment = args.comment )
-    print ( f"[slhaCreator] Produced {len(slhafile)} slha files" )
+    print ( f"[slhaCreator] Produced {len(slhafiles)} slha files" )
     # newtemp = tempfile.mkdtemp(dir="./" ) # FIXME now idea what that was for
     newtemp = tempf.tempdir # FIXME anyways this does it correctly it seems
     __tempfiles__.add ( newtemp )
