@@ -302,8 +302,8 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TRV1bb': 'ZPrime --> b b',
     'TRV1tt': 'ZPrime --> t t',
     'TRV1qq': 'ZPrime --> q q',
-    'TRS1': 'phi --> chi chibar',
-    'TRPS1': 'phi --> chi chibar',
+    'TRS1': 'H0 --> chi chibar',
+    'TRPS1': 'H0 --> chi chibar',
     'TRPVM1jjj' : 'chargino^mp_1/neutralino_2/neutralino_1 --> quark antiquark quark',
     'TRPVM2jjj' : 'gluino --> neutralino_1 quark antiquark, neutralino_1 --> quark antiquark quark'    
 }
@@ -509,8 +509,8 @@ motherDict = {"T1" :  "gluino gluino",
     "TChipChimSlepSlepAll" :  "chargino^pm_1 chargino^pm_1",
     "TChipChimSlepSlep" :  "chargino^pm_1 chargino^pm_1",
     "TChiChipmSlep" :  "neutralino_2 chargino^pm_1",
-    "TRS1": "phi",
-    "TRPS1": "phi",
+    "TRS1": "H0",
+    "TRPS1": "H0",
     "TRV1": "ZPrime",
     "TRV1jj": "jet",
     'TRV1bb': "bjet",
@@ -739,8 +739,10 @@ def prettyTxname(txname : str, protons : bool =True,
 
     if prodString is not None:
         prodString = prodString.replace ( "ZPrime", "Z'" )
+        prodString = prodString.replace ( "H0", "H^0" )
     if decayString is not None:
         decayString = decayString.replace ( "ZPrime", "Z'" )
+        decayString = decayString.replace ( "H0", "H^0" )
 
     if prodString and decayString:
         return prodString + ", " + decayString

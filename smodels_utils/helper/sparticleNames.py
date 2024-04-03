@@ -156,7 +156,7 @@ class SParticleNames:
             -2: "u", -3: "s", -4: "c", -5: "b", -6: "t" }
         # generic BSM, not SUSY not XIDs:
         self.ids[55]="Z'"
-        self.ids[54]="\\phi"
+        self.ids[54]="H^{0}"
         self.ids[52]="\\chi"
         self.ids[-52]="\\bar{\\chi}"
         if self.susy:
