@@ -48,7 +48,7 @@ class Lister:
         poptions["show"] = True
         poptions["title"] = ""
         # poptions["Zmax"] = 3.25
-        poptions["nbins"] = 13
+        poptions["nbins"] = 29
         poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
            'plotStats': True }
         # poptions["roughviz"] = False
@@ -76,7 +76,7 @@ class Lister:
             poptions["show"] = True
             poptions["title"] = ""
             # poptions["Zmax"] = 4.25
-            poptions["nbins"] = 13
+            poptions["nbins"] = 29
             poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
                'plotStats': True }
             # poptions["roughviz"] = False
