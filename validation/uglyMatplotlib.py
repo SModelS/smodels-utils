@@ -15,8 +15,7 @@ import math
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes, \
-         prettyAxesV3
+from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV3
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
          getDatasetDescription, getAxisRange, isWithinRange, \
          filterWithinRanges
@@ -262,19 +261,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     else:
         if not "style" in options or not "axis" in options["style"]:
             pass
-            """
-            from smodels_utils.helper.rootTools import getBoundingBox, boundingBoxIsFinite
-            bb = getBoundingBox ( official )
-            if boundingBoxIsFinite ( bb ):
-                base.GetYaxis().SetRangeUser( .8*bb["y"][0], 1.25*bb["y"][1] )
-                base.GetXaxis().SetRangeUser( .8*bb["x"][0], 1.25*bb["x"][1] )
-            """
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
-    """
-    if xvals != None and len(xvals) == 1:
-        base.GetYaxis().SetRangeUser(0.0,2.0)
-    """
     plt.text(.05,.95, subtitle,fontsize=10, transform = fig.transFigure )
     #if figureUrl:
     if False:
