@@ -50,7 +50,7 @@ prettySMParticle = {
 }
 
 prettySUSYParticle = {
-    'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
+    'lsp' : '#tilde{#chi}^{0}_{1}',  # lightest SUSY particle
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
     'chi': '#chi', # dark matter particle
