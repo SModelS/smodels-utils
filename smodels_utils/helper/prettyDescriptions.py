@@ -54,6 +54,8 @@ prettySUSYParticle = {
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
     'chi': '#chi', # dark matter particle
+    'phi': '#phi', # scalar mediator for dark matter particle
+    'chibar': '#bar{#chi}', # dark matter particle
     'pion' : '#pi',            #Chargino
     'chargino^pm_1' : '#tilde{#chi}^{#pm}_{1}',            #Chargino
     'gravitino':'#tilde{G}',              #gravitino
@@ -295,13 +297,13 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiChipmSlep':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
     'TChipChimSlepSlepAll': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
-    'TRV1': 'ZPrime --> chi chi',
+    'TRV1': 'ZPrime --> chi chibar',
     'TRV1jj': 'ZPrime --> j j',
     'TRV1bb': 'ZPrime --> b b',
     'TRV1tt': 'ZPrime --> t t',
     'TRV1qq': 'ZPrime --> q q',
-    'TRS1': 'H0 --> chi chi',
-    'TRPS1': 'h0 --> chi chi',
+    'TRS1': 'phi --> chi chibar',
+    'TRPS1': 'phi --> chi chibar',
     'TRPVM1jjj' : 'chargino^mp_1/neutralino_2/neutralino_1 --> quark antiquark quark',
     'TRPVM2jjj' : 'gluino --> neutralino_1 quark antiquark, neutralino_1 --> quark antiquark quark'    
 }
@@ -507,8 +509,8 @@ motherDict = {"T1" :  "gluino gluino",
     "TChipChimSlepSlepAll" :  "chargino^pm_1 chargino^pm_1",
     "TChipChimSlepSlep" :  "chargino^pm_1 chargino^pm_1",
     "TChiChipmSlep" :  "neutralino_2 chargino^pm_1",
-    "TRS1": "H0",
-    "TRPS1": "h0",
+    "TRS1": "phi",
+    "TRPS1": "phi",
     "TRV1": "ZPrime",
     "TRV1jj": "jet",
     'TRV1bb': "bjet",
