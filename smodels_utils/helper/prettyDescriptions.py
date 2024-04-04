@@ -970,7 +970,7 @@ def prettyAxesV3( validationPlot ) -> str:
             #vplacements[".5"] = "$\\frac{1}{2}$"
             # print ( f"@@A v {v}" )
             for frm,to in vplacements.items():
-                v = v.replace(frm,to)
+                v = str(v).replace(frm,to)
             namesOnAxes[v]=name
     terms = []
     for k,v in namesOnAxes.items():
