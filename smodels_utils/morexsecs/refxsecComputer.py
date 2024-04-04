@@ -11,16 +11,26 @@
 """
 
 from __future__ import print_function
-from smodels.tools.wrapperBase import WrapperBase
+import os, sys, io, shutil, pyslha
+try:
+    from smodels.tools.wrapperBase import WrapperBase
+except:
+    sys.path.append(os.path.expanduser('~/smodels'))
+    from smodels.tools.wrapperBase import WrapperBase      
+
 from smodels.tools import wrapperBase
 from smodels.base.smodelsLogging import logger, setLogLevel
 from smodels.base.physicsUnits import fb, pb, GeV, TeV, mb, unum
 from smodels.base.crossSection import LO, NLO, NLL, NNLL
 from smodels.base import crossSection
-from smodels_utils.SModelSUtils import installDirectory
 from smodels.base.exceptions import SModelSBaseError as SModelSError
 from smodels import installation as smodelsinstallation
-import os, sys, io, shutil, pyslha
+
+try:
+    from smodels_utils.SModelSUtils import installDirectory
+except:
+    sys.path.append(os.path.expanduser('~/smodels-utils'))
+    from smodels_utils.SModelSUtils import installDirectory
 
 class RefXSecComputer:
     """
@@ -690,6 +700,9 @@ if __name__ == "__main__":
             type=int, nargs="*", default=None )
     argparser.add_argument ( "-i", "--ignore_pids",
             help="ignore pids", type=str, default=None )
+    argparser.add_argument ( "-v", "--verbose",
+            help="Verbose level", type=str, default='info' )            
+            
     args = argparser.parse_args()
     sqrts = args.sqrts
     if sqrts == None:
@@ -700,7 +713,7 @@ if __name__ == "__main__":
     ssmultipliers = { (1000021,1000021):2. }
     ssmultipliers = None
     ignores= args.ignore_pids
-    ignores= eval ( args.ignore_pids )
+#    ignores= eval ( args.ignore_pids )
     for slhapath in slhapaths:
         tool.computeForOneFile ( sqrtses=sqrts, inputFile = slhapath, tofile=True,
                       ssmultipliers = ssmultipliers, ignore_pids = ignores )
