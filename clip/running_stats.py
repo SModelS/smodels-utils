@@ -71,7 +71,7 @@ def prettyPrint ( myset : set ):
         ret=ret[:147]+"..."
     return ret
 
-def running_stats():
+def walker_stats():
     print ( )
     print ( "walker*log info:" )
     print ( "================" )
@@ -103,10 +103,11 @@ def running_stats():
     if len(notaccounted)>0:
         print ( f"not found ({len(notaccounted)}):", prettyPrint ( notaccounted ) )
 
+def running_stats():
     lines = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" ).split("\n")
     print ( )
     print ( "most recent jobs:" )
-    print ( "=====================" )
+    print ( "=================" )
     for line in lines:
         tokens = list(filter(None,line.split(" ")))
         print ( "   ".join ( tokens ) )

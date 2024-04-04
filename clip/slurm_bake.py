@@ -23,6 +23,20 @@ def queryStats ( maxsteps : int ):
             running_stats.count_jobs()
             running_stats.running_stats()
             print()
+    print ( )
+    print ( "embaked files:" )
+    print ( "==============" )
+    embakedFiles = glob.glob ( f"{codedir}/em-creator/embaked/*.embaked" )
+    for embakedFile in embakedFiles:
+        name = embakedFile.replace(".embaked","")
+        p1 = name.find("/embaked/")
+        name = name[p1+9:]
+        nlines = 0
+        with open ( embakedFile, "rt" ) as f:
+            nlines = len (f.readlines())
+            f.close()
+        print ( f"  - {name:40s} {nlines} points" )
+    
 
 def cancelAllBakers():
     o = subprocess.getoutput ( "slurm q | grep _B" )
@@ -258,7 +272,7 @@ def getMinJobId() -> int:
 
 def main():
     import argparse
-    argparser = argparse.ArgumentParser(description="slurm-run a walker")
+    argparser = argparse.ArgumentParser(description="slurm-run a baker")
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run (use -M to query repeatedly)',
             action="store_true" )
