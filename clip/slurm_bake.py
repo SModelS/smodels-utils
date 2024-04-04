@@ -179,6 +179,83 @@ def logCall ():
     f.write ( f"[slurm.py-{time.strftime('%H:%M:%S')}] {line}\n" )
     f.close()
 
+def cancelRangeOfBakers( jrange : str ):
+    """ cancel only the jrange of bakers """
+    #print ( f"[slurm_bake] cancel {jrange}" )
+    import re
+    jrange = jrange.strip(" ")
+    if re.search('[a-zA-Z]', jrange) is not None:
+        from running_stats import cancelJobsByString
+        return cancelJobsByString ( jrange )
+    if not "-" in jrange: # single job
+        cmd = f"scancel {jrange}"
+        #print ( f"[slurm_bake] cmd {cmd}" )
+        subprocess.getoutput ( cmd )
+        #print ( f"[slurm_bake] cancelled {jrange}" )
+        return
+    cancelled = []
+    p1 = jrange.find("-")
+    if p1 == len(jrange)-1: ## range is given as '<min>-'
+        maxJobId = getMaxJobId()
+        jrange += str(maxJobId)
+    elif p1 == 0:
+        minJobId = getMinJobId()
+        jrange = str(minJobId) + jrange
+    else:
+        # full range given
+        jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
+        if jmax < jmin:
+            print ( f"[slurm_bake] sth is wrong with the range: [{jmin},{jmax}]" )
+            return
+
+        for i in range(jmin,jmax+1):
+            cmd = f"scancel {i}"
+            #print ( f"[slurm_bake] cmd {cmd}" )
+            subprocess.getoutput ( cmd )
+            cancelled.append ( i )
+        print ( f"[slurm_bake] cancelled {', '.join(map(str,cancelled))}" )
+        return
+    o = subprocess.getoutput ( "slurm q | grep _B" )
+    lines = o.split("\n")
+    running = []
+    for line in lines:
+        if not "_B" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        running.append ( int ( nr ) )
+    if p1 == 0:
+        cancelRangeOfBakers( f"{jrange}" )
+        return
+    if p1 == len(jrange)-1:
+        cancelRangeOfBakers( f"{jrange}" )
+        return
+    print ( "[slurm_bake] FIXME sth is wrong" )
+
+def getMaxJobId() -> int:
+    """ get the highest job id """
+    o = subprocess.getoutput ( "slurm q | grep _B" )
+    lines = o.split("\n")
+    nmax = 0
+    for line in lines:
+        tokens = line.split()
+        nr = int(tokens[0])
+        if nr > nmax:
+            nmax = nr
+    return nmax
+
+def getMinJobId() -> int:
+    """ get the lowest job id """
+    o = subprocess.getoutput ( "slurm q | grep _B" )
+    lines = o.split("\n")
+    nmin = 1e99
+    for line in lines:
+        tokens = line.split()
+        nr = int(tokens[0])
+        if nr < nmin:
+            nmin = nr
+    return nmin
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
@@ -240,9 +317,14 @@ def main():
                              action='store_true' )
     argparser.add_argument ( '--cancel_all', help='cancel all bakers',
             action="store_true" )
+    argparser.add_argument ( '--cancel', help='cancel a certain range of bakers, e.g "65461977-65461985"',
+            type=str, default = None )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
     args=argparser.parse_args()
+    if args.cancel:
+        cancelRangeOfBakers ( args.cancel )
+        return
     if args.cancel_all:
         cancelAllBakers()
         return
