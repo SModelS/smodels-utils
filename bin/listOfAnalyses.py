@@ -77,8 +77,8 @@ class Lister:
             poptions["title"] = ""
             # poptions["Zmax"] = 4.25
             poptions["nbins"] = 29
-            poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
-               'plotStats': True }
+            poptions["options"] = {'ylabel':'# signal regions', \
+                'plot_averages': False, 'plotStats': True }
             # poptions["roughviz"] = False
             poptions["pvalues"] = False
             poptions["outfile"] = "tmp.png"
