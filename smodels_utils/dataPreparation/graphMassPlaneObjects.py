@@ -81,7 +81,7 @@ class GraphMassPlane(object):
             n = int(len(axesDict)/2)
             for i in range(n,2*n):
                 axesDict.pop(i)
-        ret = "_".join ( axesDict.values() )
+        ret = "_".join ( map ( str, axesDict.values() ) )
         # print ( f"@@ graphMassPlaneObjects {axesDict} turned into {ret}" )
         return ret
 
