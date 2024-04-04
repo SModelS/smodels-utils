@@ -377,7 +377,7 @@ class RefXSecComputer:
         #print ( "open", [ c["pids"] for c in channels ] )
         channels = self.selectChannels ( channels, ignore_pids )
         #print ( "selected ", channels )
-        print(channels)
+        
         xsecs = crossSection.XSectionList()
         for channel in channels:
             # obtain xsecs for all masses, but for the given channel
