@@ -47,6 +47,25 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             # if not math.isnan ( value )  and y > x:
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
+def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=True):
+
+    if not validationPlot.combine: plot_type = "bestSR"
+    else: plot_type = "comb"
+    #store x,y points in json file
+    plot_dict = {f"{validationPlot.txName}_{plot_type}": {"obs_excl":{'x':xobs,'y':yobs}, "exp_excl":{'x':xexp, 'y':yexp}}}
+    vDir = validationPlot.getValidationDir (validationDir=None)
+    file_js = "SModelS_ExclusionLines.json"
+    import json
+    plots = plot_dict
+    if os.path.exists(vDir+'/'+file_js):
+        file = open(f'{vDir}/{file_js}','r')
+        plots = json.load(file)
+        plots.update(plot_dict)
+    
+    file = open(f'{vDir}/{file_js}','w')
+    json.dump(plots,file)
+    file.close()
+
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                       looseness : float ):
     """
@@ -367,13 +386,18 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
         #convert contour to a list of x,y values
+        
         x_cs, y_cs = [], []
         x_ecs, y_ecs = [],[]
+        
         if len(cs.collections)>0:
-            paths_cs = cs.collections[0].get_paths()
+            paths_cs = cs.collections[0].get_paths()  #collections[0] refers to the 1st level
             if len ( paths_cs ) > 0:
-                vertices_cs = paths_cs[0].vertices
-                x_cs, y_cs = vertices_cs[:,0].tolist(), vertices_cs[:,1].tolist()
+                for paths in paths_cs:
+                    vertices_cs = paths.vertices
+                    x_cs.append(vertices_cs[:,0].tolist())
+                    y_cs.append(vertices_cs[:,1].tolist())
+        
         if options["drawExpected"] in [ "auto", True ]:
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
@@ -383,27 +407,13 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if len (cs.collections)>0:
                 paths_ecs = cs.collections[0].get_paths()
                 if len(paths_ecs)>0:
-                    vertices_ecs = paths_ecs[0].vertices
-                    x_ecs, y_ecs = vertices_ecs[:,0].tolist(), vertices_ecs[:,1].tolist()
+                    for paths in paths_ecs:
+                        vertices_ecs = paths.vertices
+                        x_ecs.append(vertices_ecs[:,0].tolist())
+                        y_ecs.append(vertices_ecs[:,1].tolist())
         
-        if not validationPlot.combine: plot_type = "bestSR"
-        else: plot_type = "comb"
-        #store x,y points in json file
-        plot_dict = {f"{validationPlot.txName}_{plot_type}": {"obs_excl":{'x':x_cs,'y':y_cs}, "exp_excl":{'x':x_ecs, 'y':y_ecs}}}
-        vDir = validationPlot.getValidationDir (validationDir=None)
-        file_js = "SModelS_ExclusionLines.json"
-        import json
-        plots = plot_dict
-        if os.path.exists(vDir+'/'+file_js):
-            file = open(f'{vDir}/{file_js}','r')
-            plots = json.load(file)
-            plots.update(plot_dict)
+        createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
         
-        file = open(f'{vDir}/{file_js}','w')
-        json.dump(plots,file)
-
-        
-    
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
