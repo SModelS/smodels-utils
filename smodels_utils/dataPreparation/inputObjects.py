@@ -47,8 +47,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 quenchNegativeMasses = False ## set to true, if you wish to
 # quench the warning about negative masses
-
 errormsgs = {}
+# if on, will check for overlapping constraints
+_complainAboutOverlappingConstraints = False
 
 def elementsInStr(instring,removeQuotes=True): ## from V2
     """
@@ -605,10 +606,12 @@ class DataSetInput(Locker):
                     continue
 
                 if hasattr ( elA, "particlesMatch" ) and elA.particlesMatch(elB):
-                        logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
-                        return False
+                    logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
+                    if not _complainAboutOverlappingConstraints: return True
+                    return False
                 if elA == elB:
                     logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
+                    if not _complainAboutOverlappingConstraints: return True
                     return False
 
         return True
