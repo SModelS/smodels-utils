@@ -46,7 +46,7 @@ class RefXSecComputer:
         """
         self.verbose = verbose
         if verbose:
-            setLogLevel ( "info" )
+            setLogLevel ( verbose )
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
                                        "morexsecs", "tables" )
     def warn ( self, *txt ):
