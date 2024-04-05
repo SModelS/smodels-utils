@@ -1402,9 +1402,12 @@ class TxNameInput(Locker):
                 nodeindices = [ invertedMap[x] for x in parindices ]
 
                 dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
-                if dm <= massGap:
-                    # print ( f"skipping {massArray}: does not meet mass constraint: {constraint}" )
-                    return False
+                if type(dm)!=float:
+                    print ( f"[inputObjects] FIXME dont know what to do with this sympy obj" )
+                if type(dm)==float:
+                    if dm <= massGap:
+                        # print ( f"skipping {massArray}: does not meet mass constraint: {constraint}" )
+                        return False
         return True
         #import IPython ; IPython.embed ( colors="neutral" )
         #sys.exit(-1)

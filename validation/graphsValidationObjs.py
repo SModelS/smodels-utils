@@ -668,7 +668,7 @@ class ValidationPlot():
         x,y,z,w = var ( "x y z w" )
 
         for nr, expr in axesDict.items():
-            axesDict[nr]=parse_expr ( expr )
+            axesDict[nr]=parse_expr ( str(expr) )
         D = {}
         def equal ( val1 : Union[str,float], val2 : Union[str,float] ) -> bool:
             val1, val2 = float(val1), float(val2)

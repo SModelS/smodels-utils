@@ -73,7 +73,7 @@ def prettyAxesV3 ( axesStr : str ) -> bool:
         n = int(len(axesDict)/2)
         for i in range(n,2*n):
             axesDict.pop(i)
-    saxes = "_".join ( axesDict.values() )
+    saxes = "_".join ( map ( str, axesDict.values() ) )
     saxes =  saxes.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1")
     return saxes
 
