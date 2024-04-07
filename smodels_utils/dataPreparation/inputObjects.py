@@ -51,6 +51,8 @@ errormsgs = {}
 # if on, will check for overlapping constraints
 _complainAboutOverlappingConstraints = False
 
+complainAbout = { "sympy obj": 0, "x in datamap": 0 }
+
 def elementsInStr(instring,removeQuotes=True): ## from V2
     """
     Parse instring and return a list of elements appearing in instring.
@@ -1397,13 +1399,19 @@ class TxNameInput(Locker):
                     invertedMap[v[0]]=k
                 for x in parindices:
                     if not x in invertedMap:
-                        logger.error ( f"could not found {x} in datamap {self.dataMap}" )
+                        complainAbout["x in datamap"]+=1
+                        if complainAbout["x in datamap"]<3:
+                            logger.error ( f"could not find {x} in datamap {self.dataMap}" )
                         sys.exit()
                 nodeindices = [ invertedMap[x] for x in parindices ]
 
                 dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
                 if type(dm)!=float:
-                    print ( f"[inputObjects] FIXME dont know what to do with this sympy obj" )
+                    complainAbout["sympy obj"]+=1
+                    if complainAbout["sympy obj"]<3:
+                        print ( f"[inputObjects] FIXME dont know what to do with this sympy expr {dm} < ={massGap}" )
+                    if complainAbout["sympy obj"]==4:
+                        print ( f"[inputObjects] (quenched more of the above errors)" )
                 if type(dm)==float:
                     if dm <= massGap:
                         # print ( f"skipping {massArray}: does not meet mass constraint: {constraint}" )
