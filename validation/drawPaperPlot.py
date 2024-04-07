@@ -30,11 +30,12 @@ def getCurveFromJson(anaDir, txname, type=["official", "bestSR", "combined"], ax
         file = open(f"{anaDir}/exclusion_lines.json")
         excl_file = json.load(file)
         axes = axes.replace(" ", "")
-        excl_x     = excl_file[txname][f"obsExclusion_{axes}"]['x']
-        excl_y     = excl_file[txname][f"obsExclusion_{axes}"]['y']
-        if f"expExclusion_{axes}" in excl_file[txname].keys():
-            exp_excl_x = excl_file[txname][f"expExclusion_{axes}"]['x']
-            exp_excl_y = excl_file[txname][f"expExclusion_{axes}"]['y']
+        if txname in excl_file:
+            excl_x     = excl_file[txname][f"obsExclusion_{axes}"]['x']
+            excl_y     = excl_file[txname][f"obsExclusion_{axes}"]['y']
+            if f"expExclusion_{axes}" in excl_file[txname].keys():
+                exp_excl_x = excl_file[txname][f"expExclusion_{axes}"]['x']
+                exp_excl_y = excl_file[txname][f"expExclusion_{axes}"]['y']
     
     else:
         file = open(f"{anaDir}/validation/SModelS_ExclusionLines.json","r")
