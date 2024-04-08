@@ -215,7 +215,7 @@ def drawPrettyPaperPlot(validationPlot):
     
     axes = eval(validationPlot.axes).values()
     fig_axes_title = ""
-    for ax in axes: fig_axes_title += ax + '_'
+    for ax in axes: fig_axes_title += str(ax) + '_'
     
     plt.savefig(f"{vDir}/{txname}_{fig_axes_title}obs.png", dpi=250)
     
