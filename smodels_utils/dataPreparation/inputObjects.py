@@ -1409,7 +1409,7 @@ class TxNameInput(Locker):
                 if type(dm)!=float:
                     complainAbout["sympy obj"]+=1
                     if complainAbout["sympy obj"]<3:
-                        print ( f"[inputObjects] FIXME dont know what to do with this sympy expr {dm} < ={massGap}" )
+                        print ( f"[inputObjects] FIXME dont know what to do with this sympy expr: {dm} < = {massGap}" )
                     if complainAbout["sympy obj"]==4:
                         print ( f"[inputObjects] (quenched more of the above errors)" )
                 if type(dm)==float:
