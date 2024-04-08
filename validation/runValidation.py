@@ -82,6 +82,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.getDataFromPlanes()
             # we did generate data
             options["generateData"]=True
+    if True:
+        from drawPaperPlot import drawPrettyPaperPlot
+        drawPrettyPaperPlot(valPlot)
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
     if pretty in [ True, "dictonly" ]:

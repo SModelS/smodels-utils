@@ -958,9 +958,6 @@ class ValidationPlot():
                    looseness = 1.2, options = options )
         self.pretty = True
 
-        from drawPaperPlot import drawPrettyPaperPlot
-        drawPrettyPaperPlot(self)
-
     def show ( self, filename ):
         """ we were asked to also show <filename> """
         term = os.environ["TERM"]
