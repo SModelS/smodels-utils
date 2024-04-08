@@ -289,7 +289,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
-    axis = "plane: "+prettyDescriptions.prettyAxesV3 ( validationPlot )
+    axis = prettyDescriptions.prettyAxesV3 ( validationPlot )
     fig = plt.gcf()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )

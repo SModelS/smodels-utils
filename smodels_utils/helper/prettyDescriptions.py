@@ -922,8 +922,11 @@ def prettyAxesV3( validationPlot ) -> str:
     wpids = allpids["widths"]
     namesOnAxes = {}
     txn = validationPlot.getTxname()
+    # the axisMap looks e.g. like: {0: 2400.0, 1: 'x', 2: 'y'}
+    # the dataMap looks like {0: (1, 'mass', 1.00E+00 [GeV]),
+    #                         1: (3, 'mass', 1.00E+00 [GeV]),
+    #                         2: (3, 'totalwidth', 1.00E+00 [GeV]),
     axisMap = eval ( validationPlot.axes )
-    #axisMap = txn.axesMap[0]
 
     def compressSQuarks ( pid : Union[int,Set] ):
         """ compress all squarks, i am only interested in ~q """
@@ -967,17 +970,13 @@ def prettyAxesV3( validationPlot ) -> str:
                 name = name.replace(frm,to)
             vplacements = {}
             vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
-            #vplacements["0.5*x"] = "$\\frac{x}{2}$"
-            #vplacements["0.5*y"] = "$\\frac{y}{2}$"
-            #vplacements["0.5"] = "$\\frac{1}{2}$"
-            #vplacements[".5"] = "$\\frac{1}{2}$"
-            # print ( f"@@A v {v}" )
             for frm,to in vplacements.items():
                 v = str(v).replace(frm,to)
             namesOnAxes[v]=f"m({name})"
-        if k in wpids:
-            name = wpids[k]
-            pid = compressSQuarks ( wpids[k] )
+        wk = k - len(pids)
+        if wk in wpids:
+            name = wpids[wk]
+            pid = compressSQuarks ( wpids[wk] )
             pid = compressSLeptons ( pid )
             name = namer.texName ( pid, addDollars=True )
             replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
@@ -987,11 +986,6 @@ def prettyAxesV3( validationPlot ) -> str:
                 name = name.replace(frm,to)
             vplacements = {}
             vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
-            #vplacements["0.5*x"] = "$\\frac{x}{2}$"
-            #vplacements["0.5*y"] = "$\\frac{y}{2}$"
-            #vplacements["0.5"] = "$\\frac{1}{2}$"
-            #vplacements[".5"] = "$\\frac{1}{2}$"
-            # print ( f"@@A v {v}" )
             for frm,to in vplacements.items():
                 v = str(v).replace(frm,to)
             namesOnAxes[v]=f"$\\Gamma$({name})"
@@ -1000,7 +994,15 @@ def prettyAxesV3( validationPlot ) -> str:
         term = f"{k}={v}"
         term = term.replace("0.0","0")
         terms.append ( term )
-    ret = ", ".join ( terms )
+    # ret = ", ".join ( terms )
+    ret = ""
+    for ctr,t in enumerate ( terms ):
+        ret += t + ", "
+        #if ctr == 1 and len(terms)>2: ## newline after second?
+        #    ret += r"\\"
+    if len(ret)>0:
+        ret = ret[:-2]
+    print ( f"@@9 returning {ret}" )
     # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
     return ret
 
