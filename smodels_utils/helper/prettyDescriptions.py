@@ -917,7 +917,9 @@ def prettyAxesV3( validationPlot ) -> str:
     from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
     from smodels_utils.helper.sparticleNames import SParticleNames
     namer = SParticleNames ( susy = True )
-    pids = getParticleIdsForTemplateFile ( validationPlot.txName )
+    allpids = getParticleIdsForTemplateFile ( validationPlot.txName )
+    pids = allpids["masses"]
+    wpids = allpids["widths"]
     namesOnAxes = {}
     txn = validationPlot.getTxname()
     axisMap = eval ( validationPlot.axes )
@@ -972,10 +974,30 @@ def prettyAxesV3( validationPlot ) -> str:
             # print ( f"@@A v {v}" )
             for frm,to in vplacements.items():
                 v = str(v).replace(frm,to)
-            namesOnAxes[v]=name
+            namesOnAxes[v]=f"m({name})"
+        if k in wpids:
+            name = wpids[k]
+            pid = compressSQuarks ( wpids[k] )
+            pid = compressSLeptons ( pid )
+            name = namer.texName ( pid, addDollars=True )
+            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
+            replacements["^+"] = "^\\pm"
+            replacements["^-"] = "^\\pm"
+            for frm,to in replacements.items():
+                name = name.replace(frm,to)
+            vplacements = {}
+            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
+            #vplacements["0.5*x"] = "$\\frac{x}{2}$"
+            #vplacements["0.5*y"] = "$\\frac{y}{2}$"
+            #vplacements["0.5"] = "$\\frac{1}{2}$"
+            #vplacements[".5"] = "$\\frac{1}{2}$"
+            # print ( f"@@A v {v}" )
+            for frm,to in vplacements.items():
+                v = str(v).replace(frm,to)
+            namesOnAxes[v]=f"$\\Gamma$({name})"
     terms = []
     for k,v in namesOnAxes.items():
-        term = f"{k}=m({v})"
+        term = f"{k}={v}"
         term = term.replace("0.0","0")
         terms.append ( term )
     ret = ", ".join ( terms )
