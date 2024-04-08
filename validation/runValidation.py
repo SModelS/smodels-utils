@@ -82,9 +82,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.getDataFromPlanes()
             # we did generate data
             options["generateData"]=True
-    if True:
-        from drawPaperPlot import drawPrettyPaperPlot
-        drawPrettyPaperPlot(valPlot)
     if pretty in [ True ]:
         valPlot.getPrettyPlot()
     if pretty in [ True, "dictonly" ]:
@@ -102,6 +99,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"]:
             valPlot.toPdf()
+    if True:
+        from drawPaperPlot import drawPrettyPaperPlot
+        drawPrettyPaperPlot(valPlot)
     return valPlot
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
