@@ -240,6 +240,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     axes = prettyAxesV3(validationPlot)
     axes = axes.replace("*","")
     axes = axes.replace("0.5",".5")
+    axes = axes.replace("0.0","0")
     axes = axes.replace("anyBSM","*")
     #axes = axes.replace("MET","$\\\\slash{E}_T}$" )
     title = validationPlot.expRes.globalInfo.id + " " \
@@ -277,8 +278,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
         halign = "left"
-    plt.text ( dxpnr, 0.95, f"{nErrors} / {len(validationPlot.data)} points with no results", 
-            c="gray", fontsize=10, transform = fig.transFigure, 
+    # ypnr = 0.95
+    ypnr = .03
+    plt.text ( dxpnr, ypnr, f"{nErrors} / {len(validationPlot.data)} points with no results",
+            c="gray", fontsize=10, transform = fig.transFigure,
             horizontalalignment=halign )
     l = plt.legend( loc="best") # could be upper right
     l.set_zorder(20)
