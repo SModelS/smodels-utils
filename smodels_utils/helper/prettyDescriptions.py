@@ -922,7 +922,6 @@ def prettyAxesV3( validationPlot ) -> str:
     txn = validationPlot.getTxname()
     axisMap = eval ( validationPlot.axes )
     #axisMap = txn.axesMap[0]
-    #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
     def compressSQuarks ( pid : Union[int,Set] ):
         """ compress all squarks, i am only interested in ~q """
@@ -976,7 +975,9 @@ def prettyAxesV3( validationPlot ) -> str:
             namesOnAxes[v]=name
     terms = []
     for k,v in namesOnAxes.items():
-        terms.append ( f"{k}=m({v})" )
+        term = f"{k}=m({v})"
+        term = term.replace("0.0","0")
+        terms.append ( term )
     ret = ", ".join ( terms )
     # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
     return ret
