@@ -115,10 +115,10 @@ class DataHandler(object):
                 coordinateMap.pop ( xy[0] )
         for xv in self.xvars:
             if not xv in coordinateMap:
-                logger.error("Coordinate %s has not been defined in coordinateMap" %xv)
+                logger.error( f"Coordinate {xv} has not been defined in coordinateMap" )
                 if xv in [ x, y, z ]:
-                    logger.error ( "Maybe you wrote '%s' instead of %s (i.e. a string instead of a sympy Symbol?)" % ( xv, xv ) )
-                sys.exit()
+                    logger.error ( f"Maybe you wrote '{xv}' instead of {xv} (i.e. a string instead of a sympy Symbol?)" )
+                # sys.exit()
 
 
     @property
