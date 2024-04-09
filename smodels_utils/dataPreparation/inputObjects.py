@@ -851,7 +851,7 @@ class TxNameInput(Locker):
 
             if dataType == 'upperLimit':
                 if not hasattr(plane,'upperLimits'):
-                    logger.error('%s source not defined for plane %s' %(dataType,plane))
+                    logger.error( f'{dataType} source not defined for plane {plane}' )
                     sys.exit()
                 else:
                     if self.addDataFrom(plane,'upperLimits'):
@@ -861,7 +861,7 @@ class TxNameInput(Locker):
                             self._goodPlanes.append(plane)
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
-                    logger.warning('%s source not defined for plane %s' %(dataType,plane))
+                    logger.info( f'{dataType} source not defined for plane {plane}' )
                     if not plane in self._goodPlanes:
                         self._goodPlanes.append(plane)
                     # sys.exit()
