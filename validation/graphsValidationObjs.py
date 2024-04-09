@@ -558,7 +558,10 @@ class ValidationPlot():
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
-            logger.warning ( f"weird, {outputDir} already exists?" )
+            logger.warning ( f"{outputDir} already exists, will recycle!" )
+            logger.warning ( f"FIXME make sure this also works in HPC cluster mode!" )
+            self.outputDir = outputDir
+            return fileList
             outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
         else:
             os.mkdir ( outputDir )
@@ -582,6 +585,7 @@ class ValidationPlot():
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
+        # print ( f"@@A and here is where we call smodels, fileList={fileList}, inDir={inDir}, outputDir={outputDir} currentSLHADir={self.currentSLHADir}" )
         modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         return fileList
@@ -754,6 +758,7 @@ class ValidationPlot():
                 continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
+            # print ( f"@@T outputDir {self.outputDir}, slhafile {slhafile}" )
             fout = os.path.join(self.outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
