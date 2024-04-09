@@ -115,10 +115,13 @@ class DataHandler(object):
                 coordinateMap.pop ( xy[0] )
         for xv in self.xvars:
             if not xv in coordinateMap:
-                logger.error( f"Coordinate {xv} has not been defined in coordinateMap" )
-                if xv in [ x, y, z ]:
-                    logger.error ( f"Maybe you wrote '{xv}' instead of {xv} (i.e. a string instead of a sympy Symbol?)" )
-                # sys.exit()
+                try:
+                    fl = float(str(xv)) ## if we can cast, its all good
+                except ValueError as e:
+                    logger.error( f"Coordinate {xv}, {type(xv)} has not been defined in coordinateMap" )
+                    if xv in [ x, y, z ]:
+                        logger.error ( f"Maybe you wrote '{xv}' instead of {xv} (i.e. a string instead of a sympy Symbol?)" )
+                    # sys.exit()
 
 
     @property
@@ -1487,7 +1490,7 @@ class ExclusionHandler(DataHandler):
     exclusion line
     """
 
-    def __init__(self,name,coordinateMap,xvars):
+    def __init__(self,name,coordinateMap,xvars,axes=None):
 
         """
         attributes 'sort' and 'reverse' are initialized with False
@@ -1502,9 +1505,11 @@ class ExclusionHandler(DataHandler):
 
         #Exclusion curve always has dimensions = 1 (x-value)
         DataHandler.__init__(self,name,coordinateMap,xvars)
+        self.axes = axes
         self.sort = False
         self.reverse = False
         self.dimensions = 1
+        # print ( f"@@0 adding exclusion handler name {name}, map {coordinateMap},xvars {xvars}, axes {axes}" )
 
     def __iter__(self):
 

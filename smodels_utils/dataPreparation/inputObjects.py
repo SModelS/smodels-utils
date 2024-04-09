@@ -802,14 +802,19 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
+        if not hasattr ( self, "axesMap" ):
+            self.axesMap = []
 
         if isinstance(plane,MassPlane):
             self._planes.append(plane)
+            self.axesMap.append ( eval(str(plane)) )
             return plane
         elif isinstance(plane,(list,dict)):
             massArray = plane
+            self.axesMap.append ( massArray )
         elif isinstance(plane,str):
             massArray = eval(plane)
+            self.axesMap.append ( massArray )
         else:
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
@@ -1405,6 +1410,7 @@ class TxNameInput(Locker):
                         sys.exit()
                 nodeindices = [ invertedMap[x] for x in parindices ]
 
+                # print ( f"@@0 massArray {massArray} nodeIndices {nodeindices}" )
                 dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
                 if type(dm)!=float:
                     complainAbout["sympy obj"]+=1
