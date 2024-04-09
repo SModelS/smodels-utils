@@ -25,9 +25,10 @@ class Progress:
         dirs = ndirs
         ctr = 0
         while len(dirs)==0:
-            print ( f"[progress] could not find any usual directories. will wait a bit." )
+            t = (2.+ctr)**2
+            print ( f"[progress] could not find any usual directories. will wait for {t:.0f}s" )
             ctr+=1
-            time.sleep ( (2.+ctr)**2 )
+            time.sleep ( t )
             if ctr>10:
                 print ( f"[progress] waited enough, lets terminate." )
                 sys.exit()

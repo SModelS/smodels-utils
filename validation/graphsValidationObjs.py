@@ -34,6 +34,8 @@ import glob
 
 logger.setLevel(level=logging.ERROR)
 
+complaints = { "NoResultsFor": 0 }
+
 class ValidationPlot():
     """
     Encapsulates all the data necessary for creating a single validation plot.
@@ -770,7 +772,12 @@ class ValidationPlot():
             exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.info( f"No results for {slhafile}" )
+                complaints["NoResultsFor"]+=1
+                if complaints["NoResultsFor"]<4:
+                    logger.info( f"No results for {slhafile}" )
+                if complaints["NoResultsFor"]==4:
+                    logger.info( f"(quenching more info msgs)" )
+
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
