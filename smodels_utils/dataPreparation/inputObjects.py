@@ -785,6 +785,20 @@ class TxNameInput(Locker):
         self._planes.append(massPlane)
         return massPlane
 
+    def addAxesMap ( self, plane ):
+        """ add an axesMap entry. """
+        if "z" in str(plane):
+            return ## dont add 3d axes. we dont validate them.
+        if not hasattr ( self, "axesMap" ):
+            self.axesMap = []
+        if isinstance(plane,MassPlane):
+            self.axesMap.append ( eval(str(plane)) )
+        elif isinstance(plane,(list,dict)):
+            self.axesMap.append ( plane )
+        elif isinstance(plane,str):
+            massArray = eval(plane)
+            self.axesMap.append ( massArray )
+
     def addMassPlane(self, plane):
         """
         add a MassPlane object with given axes to self.planes.
@@ -802,19 +816,14 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
-        if not hasattr ( self, "axesMap" ):
-            self.axesMap = []
-
+        self.addAxesMap ( plane )
         if isinstance(plane,MassPlane):
             self._planes.append(plane)
-            self.axesMap.append ( eval(str(plane)) )
             return plane
         elif isinstance(plane,(list,dict)):
             massArray = plane
-            self.axesMap.append ( massArray )
         elif isinstance(plane,str):
             massArray = eval(plane)
-            self.axesMap.append ( massArray )
         else:
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
