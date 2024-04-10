@@ -214,7 +214,7 @@ def drawPrettyPaperPlot(validationPlot):
     plt.text(mid_x + step_x*2,max_obs_y+(step_y*30),r"$\bf observed~exclusion$", fontsize = 10)
     
     plt.legend(loc='best', frameon=True, fontsize = 10)
-    fig_axes_title = str ( validationPlot.axes )
+    fig_axes_title = str ( validationPlot.axes ).replace(" ","")
     if getAxisType ( validationPlot.axes ) == "v3":
         axes = eval(validationPlot.axes).values()
         fig_axes_title = ""
