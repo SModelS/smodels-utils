@@ -585,7 +585,6 @@ class ValidationPlot():
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
-        # print ( f"@@A and here is where we call smodels, fileList={fileList}, inDir={inDir}, outputDir={outputDir} currentSLHADir={self.currentSLHADir}" )
         modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         return fileList
@@ -694,7 +693,6 @@ class ValidationPlot():
             for k,v in d.items():
                 D[str(k)]=round_to_n(float(v),5)
             return D
-        # print ( f"@@axesDict {axesDict} {slhafile}" )
         if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
                 equal ( tokens[3], tokens[6] ) and \
                 abs ( float(tokens[1])+float(tokens[3]) - 2*float(tokens[2])) < 1.5 \
@@ -717,11 +715,6 @@ class ValidationPlot():
             # e.g. TChiWH_400_300_60_400_300_60.slha
             D = { "x": float(tokens[1]), "y": float(tokens[2]) }
         """
-
-        # print ( f"@@A getAxesFromSLHAFileName: slhafile={slhafile} D={D}" )
-        # print ( f"@@A self.axes {self.axes} {type(self.axes)}" )
-        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
-
         return D
 
     def getDataFromPlanes(self):
@@ -758,7 +751,6 @@ class ValidationPlot():
                 continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
-            # print ( f"@@T outputDir {self.outputDir}, slhafile {slhafile}" )
             fout = os.path.join(self.outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
@@ -770,7 +762,6 @@ class ValidationPlot():
                 if ct_nooutput==5:
                     logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
                 continue
-            # print ( "reading %s" % fout )
             ff = open(fout,'r')
             txt = ff.read()
             cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
@@ -834,6 +825,14 @@ class ValidationPlot():
             masses = expRes["Mass (GeV)"]
             widths = expRes["Width (GeV)"]
             nodesMap = expRes["Nodes Map"]
+            if masses == None:
+                axes = self.getAxesFromSLHAFileName ( slhafile )
+                if len(axes)==0: # drop it, doesnt fall in this plane it seems
+                    continue
+                D = { "slhafile": slhafile, "error": "masses are None",
+                      "axes": axes }
+                self.data.append ( D )
+                continue
             parameters = self.constructParameterVector ( masses, widths, nodesMap )
             varsDict = massPlane.getXYValues( parameters )
             if varsDict in [ None, {} ]:
