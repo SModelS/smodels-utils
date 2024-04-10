@@ -12,6 +12,8 @@ from typing import Dict
 
 class Progress:
     def __init__ ( self ):
+        self.previous = {}
+        self.stats = {}
         self.show()
 
     def parse( self ):
@@ -32,12 +34,21 @@ class Progress:
             if ctr>10:
                 print ( f"[progress] waited enough, lets terminate." )
                 sys.exit()
+            dirs = glob.glob ( "_V*" )
+            dirs += glob.glob ( "tmp*" )
+            ndirs = []
+            for d in dirs:
+                if d.endswith ( ".ini" ) or d.endswith ( ".py" ) or d.endswith(".png"):
+                    continue
+                ndirs.append ( d )
+            dirs = ndirs
         ret = {}
         for d in dirs:
             npoints = len ( glob.glob ( f"{d}/T*slha" ) )
             ndone = len ( glob.glob ( f"{d}/results/T*.py" ) )
             ret[d]= { "npoints": npoints, "ndone": ndone }
         # print ( ret )
+        self.previous = self.stats
         self.stats = ret
 
     def pprint ( self ):
@@ -60,6 +71,11 @@ class Progress:
             time.sleep(.3)
             self.parse()
             for i,(k,v) in enumerate ( self.stats.items() ):
+                if "npoints" in v and k in self.previous:
+                    if "npoints" in self.previous[k]:
+                        prevnpoints = self.previous[k]["npoints"]
+                        if prevnpoints != v["npoints"]:
+                            self.tqdms[k].reset ( v["npoints"] )
                 if not k in self.tqdms:
                     if k in self.stats:
                         self.updateTQDM ( k, v, i )
