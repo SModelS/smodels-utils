@@ -19,7 +19,8 @@ import math,ctypes
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes, prettyAxesV3
+from smodels_utils.helper.prettyDescriptions import prettyTxname
+from validationHelpers import prettyAxes
 import matplotlib.ticker as ticker
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
          getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
@@ -419,15 +420,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         pName = "define {validationPlot.txName} in prettyDescriptions"
     txStr = validationPlot.txName +': '+pName
     plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )
-    axisType = getAxisType ( validationPlot.axes )
-    if axisType == "v2":
-        axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
-    else:
-        # axStr = "plane: " + prettyAxesV3(validationPlot)
-        axStr = prettyAxesV3(validationPlot)
-        axStr = axStr.replace("*","")
-        axStr = axStr.replace("0.5",".5")
-        axStr = axStr.replace("anyBSM","*")
+    axStr = prettyAxes(validationPlot)
+    axStr = axStr.replace("*","")
+    axStr = axStr.replace("0.5",".5")
+    axStr = axStr.replace("anyBSM","*")
     plt.text(.95,.965,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)

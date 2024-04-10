@@ -15,11 +15,11 @@ import math
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV3
+from smodels_utils.helper.prettyDescriptions import prettyTxname
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
          getDatasetDescription, getAxisRange, isWithinRange, \
          filterWithinRanges
-from validationHelpers import widthOfStableParticles
+from validationHelpers import widthOfStableParticles, getAxisType, prettyAxes
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -237,7 +237,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             zorder = 2
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
                    linestyle=None, c="blue", linewidth=0, markersize=4, label=f"{len(gridpoints)} SModelS db grid points", zorder = zorder )
-    axes = prettyAxesV3(validationPlot)
+    axes = prettyAxes(validationPlot)
     axes = axes.replace("*","")
     axes = axes.replace("0.5",".5")
     axes = axes.replace("anyBSM","*")

@@ -786,18 +786,20 @@ class ValidationPlot():
 
             txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
             mnw=[]
+            massGeV = []
             if width == None:
                 mnw = mass
             else:
+                # br=[]
                 for bm,bw in zip(mass,width):
-                    br=[]
                     for m,w in zip(bm,bw):
-                        if w == 'stable':
-                            br.append( (m,0.0) )
+                        if w == 'stable' or w > .1:
+                            massGeV.append( m )
+                            # br.append( (m,0.0) )
                         else:
-                            br.append( (m,w) )
-                    mnw.append(br)
-            massGeV = addUnit ( mnw, GeV )
+                            massGeV.append( (m,w) )
+                    # mnw.append(br)
+            # massGeV = addUnit ( mnw, GeV )
             if not "efficiency" in Dict.keys():
                 try:
                     eff = txname.txnameData.getValueFor(massGeV)

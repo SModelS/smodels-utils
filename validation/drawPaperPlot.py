@@ -10,8 +10,8 @@ import json
 import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes, prettyAxesV3
-from validationHelpers import getAxisType
+from smodels_utils.helper.prettyDescriptions import prettyTxname
+from validationHelpers import getAxisType, prettyAxes
 import matplotlib.ticker as ticker
 
 
@@ -178,9 +178,7 @@ def drawPrettyPaperPlot(validationPlot):
     
     plt.xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
     plt.ylim([0,round(max_obs_y+(step_y*100),-1)])
-    axis_label = str(validationPlot.axes).replace(" ","")
-    if getAxisType ( validationPlot.axes ) == "v3":
-        axis_label = prettyAxesV3(validationPlot).split(',')
+    axis_label = prettyAxes(validationPlot).split(',')
     x_label, y_label = "",""
     for lbl in axis_label:
         if "x=" in lbl: x_label = getPrettyAxisLabels(lbl.split("=")[-1].strip())

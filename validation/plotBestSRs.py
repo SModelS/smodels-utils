@@ -15,7 +15,8 @@ from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName, getExclusionCurvesFor
 from smodels_utils.helper import prettyDescriptions
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
-       mergeExclusionLines, mergeValidationData, widthOfStableParticles
+       mergeExclusionLines, mergeValidationData, widthOfStableParticles, \
+       prettyAxes
 from typing import Union
 
 __all__ = [ "plot" ]
@@ -289,7 +290,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
-    axis = prettyDescriptions.prettyAxesV3 ( validationPlot )
+    axis = prettyAxes ( validationPlot )
     fig = plt.gcf()
     plt.text(.95,.975,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )

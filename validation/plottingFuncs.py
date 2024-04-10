@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels.experiment.txnameObj import TxNameData
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from validationHelpers import getAxisType
+from smodels_utils.helper.prettyDescriptions import prettyTxname
+from validationHelpers import getAxisType, prettyAxes
 import numpy as np
 
 try:
