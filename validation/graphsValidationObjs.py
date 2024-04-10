@@ -900,11 +900,11 @@ class ValidationPlot():
 
         #Remove temporary folder
         if self.currentSLHADir != self.slhaDir and not self.keep:
+            logger.info ( f"now removing {self.currentSLHADir}" )
             shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
-            logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
-                          %(self.expRes.globalInfo.id,self.txName,self.axes))
+            logger.error( f"There is no data for {self.expRes.globalInfo.id}/{self.txName}/{self.axes}.\n Are the SLHA files correct? Are the constraints correct?" )
 
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):
