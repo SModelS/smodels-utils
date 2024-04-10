@@ -34,6 +34,8 @@ import glob
 
 logger.setLevel(level=logging.ERROR)
 
+complaints = { "NoResultsFor": 0 }
+
 class ValidationPlot():
     """
     Encapsulates all the data necessary for creating a single validation plot.
@@ -556,7 +558,10 @@ class ValidationPlot():
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
-            logger.warning ( f"weird, {outputDir} already exists?" )
+            logger.warning ( f"{outputDir} already exists, will recycle!" )
+            logger.warning ( f"FIXME make sure this also works in HPC cluster mode!" )
+            self.outputDir = outputDir
+            return fileList
             outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
         else:
             os.mkdir ( outputDir )
@@ -580,6 +585,7 @@ class ValidationPlot():
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
+        # print ( f"@@A and here is where we call smodels, fileList={fileList}, inDir={inDir}, outputDir={outputDir} currentSLHADir={self.currentSLHADir}" )
         modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         return fileList
@@ -752,6 +758,7 @@ class ValidationPlot():
                 continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
+            # print ( f"@@T outputDir {self.outputDir}, slhafile {slhafile}" )
             fout = os.path.join(self.outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
@@ -770,7 +777,12 @@ class ValidationPlot():
             exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.info( f"No results for {slhafile}" )
+                complaints["NoResultsFor"]+=1
+                if complaints["NoResultsFor"]<4:
+                    logger.info( f"No results for {slhafile}" )
+                if complaints["NoResultsFor"]==4:
+                    logger.info( f"(quenching more info msgs)" )
+
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
@@ -957,9 +969,6 @@ class ValidationPlot():
         self.plot, self.base = createPrettyPlot(self,silentMode=silentMode,
                    looseness = 1.2, options = options )
         self.pretty = True
-
-        from drawPaperPlot import drawPrettyPaperPlot
-        drawPrettyPaperPlot(self)
 
     def show ( self, filename ):
         """ we were asked to also show <filename> """

@@ -34,7 +34,7 @@ def getParticleIdsForTemplateFile ( filename : str ) -> Dict:
     lines = f.readlines()
     f.close()
     ret = {}
-    pids = {}
+    pids, wpids = {}, {}
     for line in lines:
         p1 = line.find("#")
         if p1 > 0:
@@ -45,7 +45,12 @@ def getParticleIdsForTemplateFile ( filename : str ) -> Dict:
                 if not x in pids:
                     pids[x]=set()
                 pids[x].add ( int(tokens[0]) )
-    return pids
+            if f"W{x}" in line or f"w{x}" in line:
+                tokens = line.split()
+                if not x in wpids:
+                    wpids[x]=set()
+                wpids[x].add ( int(tokens[1]) )
+    return { "masses": pids, "widths": wpids }
 
 def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
     """

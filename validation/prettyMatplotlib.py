@@ -418,7 +418,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
     txStr = validationPlot.txName +': '+pName
-    plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
+    plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )
     axisType = getAxisType ( validationPlot.axes )
     if axisType == "v2":
         axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
@@ -428,7 +428,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         axStr = axStr.replace("*","")
         axStr = axStr.replace("0.5",".5")
         axStr = axStr.replace("anyBSM","*")
-    plt.text(.95,.95,axStr,transform=fig.transFigure, fontsize=9,
+    plt.text(.95,.965,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
 

@@ -289,13 +289,13 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
-    axis = "plane: "+prettyDescriptions.prettyAxesV3 ( validationPlot )
+    axis = prettyDescriptions.prettyAxesV3 ( validationPlot )
     fig = plt.gcf()
-    plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
+    plt.text(.95,.975,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )
     plt.title ( f"{ttl}, {ananame}" )
     txStr = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
-    plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
+    plt.text(.03,.975,txStr,transform=fig.transFigure, fontsize=9 )
     topo = shortTxName ( txnames )
     print ( "[plotBestSRs] plotting %s (%s)" % ( analysis, topo ) )
     fname = outputfile.replace( "@a", analysis ).replace( "@t", topo )

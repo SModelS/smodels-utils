@@ -51,6 +51,8 @@ errormsgs = {}
 # if on, will check for overlapping constraints
 _complainAboutOverlappingConstraints = False
 
+complainAbout = { "sympy obj": 0, "x in datamap": 0 }
+
 def elementsInStr(instring,removeQuotes=True): ## from V2
     """
     Parse instring and return a list of elements appearing in instring.
@@ -783,6 +785,20 @@ class TxNameInput(Locker):
         self._planes.append(massPlane)
         return massPlane
 
+    def addAxesMap ( self, plane ):
+        """ add an axesMap entry. """
+        if "z" in str(plane):
+            return ## dont add 3d axes. we dont validate them.
+        if not hasattr ( self, "axesMap" ):
+            self.axesMap = []
+        if isinstance(plane,MassPlane):
+            self.axesMap.append ( eval(str(plane)) )
+        elif isinstance(plane,(list,dict)):
+            self.axesMap.append ( plane )
+        elif isinstance(plane,str):
+            massArray = eval(plane)
+            self.axesMap.append ( massArray )
+
     def addMassPlane(self, plane):
         """
         add a MassPlane object with given axes to self.planes.
@@ -800,7 +816,7 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
-
+        self.addAxesMap ( plane )
         if isinstance(plane,MassPlane):
             self._planes.append(plane)
             return plane
@@ -844,7 +860,7 @@ class TxNameInput(Locker):
 
             if dataType == 'upperLimit':
                 if not hasattr(plane,'upperLimits'):
-                    logger.error('%s source not defined for plane %s' %(dataType,plane))
+                    logger.error( f'{dataType} source not defined for plane {plane}' )
                     sys.exit()
                 else:
                     if self.addDataFrom(plane,'upperLimits'):
@@ -854,7 +870,7 @@ class TxNameInput(Locker):
                             self._goodPlanes.append(plane)
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
-                    logger.warning('%s source not defined for plane %s' %(dataType,plane))
+                    logger.info( f'{dataType} source not defined for plane {plane}' )
                     if not plane in self._goodPlanes:
                         self._goodPlanes.append(plane)
                     # sys.exit()
@@ -1397,13 +1413,20 @@ class TxNameInput(Locker):
                     invertedMap[v[0]]=k
                 for x in parindices:
                     if not x in invertedMap:
-                        logger.error ( f"could not found {x} in datamap {self.dataMap}" )
+                        complainAbout["x in datamap"]+=1
+                        if complainAbout["x in datamap"]<3:
+                            logger.error ( f"could not find {x} in datamap {self.dataMap}" )
                         sys.exit()
                 nodeindices = [ invertedMap[x] for x in parindices ]
 
+                # print ( f"@@0 massArray {massArray} nodeIndices {nodeindices}" )
                 dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
                 if type(dm)!=float:
-                    print ( f"[inputObjects] FIXME dont know what to do with this sympy obj" )
+                    complainAbout["sympy obj"]+=1
+                    if complainAbout["sympy obj"]<3:
+                        print ( f"[inputObjects] FIXME dont know what to do with this sympy expr: {dm} < = {massGap}" )
+                    if complainAbout["sympy obj"]==4:
+                        print ( f"[inputObjects] (quenched more of the above errors)" )
                 if type(dm)==float:
                     if dm <= massGap:
                         # print ( f"skipping {massArray}: does not meet mass constraint: {constraint}" )

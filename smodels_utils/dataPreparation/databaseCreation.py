@@ -436,12 +436,15 @@ class DatabaseCreator(list):
                 if not exclusion:
                     continue  #Exclusion source has not been defined
                 ctr = 0
+                saxes = axes
+                if hasattr ( exclusion, "axes" ):
+                    saxes = exclusion.axes
                 while True:
-                    name = f'{exclusion.name}_{axes}'
+                    name = f'{exclusion.name}_{saxes}'
                     if not name in curves and not name in allCurves:
                         break
                     ctr+=1
-                label = [txname.txName,exclusion.name,axes]
+                label = [txname.txName,exclusion.name,saxes]
                 if label in curves: #Curve already appears in dict
                     continue
                 stGraph = { "title": name, "name": exclusion.name,
@@ -449,7 +452,7 @@ class DatabaseCreator(list):
                 i=0
                 for pointDict in exclusion:
                     point = dict([[str(xv),v] for xv,v in pointDict.items()])
-                    point["axisMap"] = axes
+                    point["axisMap"] = saxes
                     if not 'y' in point:
                         point['y'] = 0.0
                     try:
