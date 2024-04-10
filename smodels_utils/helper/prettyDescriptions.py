@@ -306,7 +306,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TRS1': 'H0 --> chi chibar',
     'TRPS1': 'H0 --> chi chibar',
     'TRPVM1jjj' : 'neutralino_2/neutralino_1 --> quark antiquark quark',
-    'TRPVM2jjj' : 'gluino --> neutralino_1 quark antiquark, neutralino_1 --> quark antiquark quark'    
+    'TRPVM2jjj' : 'gluino --> neutralino_1 quark antiquark, neutralino_1 --> quark antiquark quark'
 }
 
 #Name of mother particles
@@ -519,7 +519,7 @@ motherDict = {"T1" :  "gluino gluino",
     'TRV1tt': "top",
     'TRV1qq': "quark",
     "TRPVM1jjj" : "neutralino_2 neutralino_1",
-    "TRPVM2jjj" : "gluino"    
+    "TRPVM2jjj" : "gluino"
 }
 
 def latexfy(instr):
@@ -563,7 +563,7 @@ def getMothers(txname):
     """
 
     if not txname in motherDict:
-       print ( f"\n[prettyDescriptions] txname {txname} missing in motherDict {us_}:{motherline_}. Add!" ) 
+       print ( f"\n[prettyDescriptions] txname {txname} missing in motherDict {us_}:{motherline_}. Add!" )
        sys.exit()
     mothers = motherDict[txname].lstrip().rstrip().split()
     #if len(mothers) == 1:
@@ -581,7 +581,7 @@ def getIntermediates(txname):
     """
 
     if not txname in decayDict:
-       print ( f"\n[prettyDescriptions] txname {txname} missing in decayDict {us_}:{daughterline_}. Add!" ) 
+       print ( f"\n[prettyDescriptions] txname {txname} missing in decayDict {us_}:{daughterline_}. Add!" )
        sys.exit()
     #Get the decays
     decays = decayDict[txname].split(',')
@@ -684,7 +684,7 @@ def prettyDecay(txname,latex=True):
 
 def rootToLatex ( string : str, outputtype : str = "latex",
                   rectify = True ):
-    """ translate root string to latex 
+    """ translate root string to latex
     :param rectify: silly feature that rectifies the backslashes
     """
     if outputtype == "root":
@@ -891,7 +891,7 @@ def getParticleNames ( smsstring : str ) -> Dict:
     """ turn e.g. (PV > anyBSM(1)), (anyBSM(1) > MET(3),mu+,mu-),
     into { 1: "anyBSM", 3: "MET" }
 
-    :param  smstring: e.g. '(PV > anyBSM(1),anyBSM(2)), 
+    :param  smstring: e.g. '(PV > anyBSM(1),anyBSM(2)),
     (anyBSM(1) > MET(3),mu+,mu-), (anyBSM(2) > MET(6),jet,jet)'
     :returns: dictionary with node numbers as keys, particle names as values
     """
@@ -907,30 +907,30 @@ def getParticleNames ( smsstring : str ) -> Dict:
         ret[int(numbers[0])]=name
     return ret
 
-def prettyAxesV3( validationPlot ) -> str:
+def prettyAxesV3( txn : str, axes : str ) -> str:
     """
     get a description of the axes of validation plot
 
-    :param validationPlot: the validationPlot object.
+    :param validationPlot: the validationPlot object. FIXME obsolete?
+    :param txn: the txname
     :return: string, describing the axes, e.g. x=m(C1)=m(N2), y=m(N1)
     """
     from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
     from smodels_utils.helper.sparticleNames import SParticleNames
     namer = SParticleNames ( susy = True )
-    allpids = getParticleIdsForTemplateFile ( validationPlot.txName )
+    allpids = getParticleIdsForTemplateFile ( txn )
     pids = allpids["masses"]
     wpids = allpids["widths"]
     namesOnAxes = {}
-    txn = validationPlot.getTxname()
     # the axisMap looks e.g. like: {0: 2400.0, 1: 'x', 2: 'y'}
     # the dataMap looks like {0: (1, 'mass', 1.00E+00 [GeV]),
     #                         1: (3, 'mass', 1.00E+00 [GeV]),
     #                         2: (3, 'totalwidth', 1.00E+00 [GeV]),
-    axisMap = eval ( validationPlot.axes )
+    axisMap = eval ( axes )
 
     def compressSQuarks ( pid : Union[int,Set] ):
         """ compress all squarks, i am only interested in ~q """
-        allquarks = [ 1000001, 1000002, 1000003, 1000004, 
+        allquarks = [ 1000001, 1000002, 1000003, 1000004,
                       2000001, 2000002, 2000003, 2000004 ]
         if type(pid) in [ int ]:
             if pid in allquarks:
@@ -1006,7 +1006,7 @@ def prettyAxesV3( validationPlot ) -> str:
     # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
     return ret
 
-def prettyAxes( txname : str, axes : str ) -> Union[None,str]:
+def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
     """
     Converts the axes string to the axes labels (plus additional constraints)
     in latex form
