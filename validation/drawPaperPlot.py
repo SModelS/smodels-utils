@@ -217,9 +217,11 @@ def drawPrettyPaperPlot(validationPlot):
     for ax in axes: fig_axes_title += ax + '_'
     
     plt.savefig(f"{vDir}/{txname}_{fig_axes_title}obs.png", dpi=250)
+    plt.clf()
+    plt.close()
     
     #--------expected plot-------
-    plt.clf()
+
     fig = plt.figure(figsize=(5,4))
     
     plt.rcParams['text.usetex'] = True
@@ -261,4 +263,5 @@ def drawPrettyPaperPlot(validationPlot):
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.savefig(f"{vDir}/{txname}_{fig_axes_title}exp.png", dpi=250)
     plt.clf()
+    plt.close()
         
