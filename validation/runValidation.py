@@ -29,8 +29,11 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 def starting( expRes, txnameStr, axes ):
-    from validationHelpers import prettyAxesV3
-    saxes = prettyAxesV3 ( axes )
+    from validationHelpers import prettyAxesV3, getAxisType
+    atype = getAxisType ( axes )
+    saxes = str(axes).replace(" ","")
+    if atype == "v3":
+        saxes = prettyAxesV3 ( axes )
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{saxes}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,

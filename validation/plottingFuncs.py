@@ -18,6 +18,7 @@ from smodels.base.physicsUnits import fb, GeV, pb
 from smodels.experiment.txnameObj import TxNameData
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+from validationHelpers import getAxisType
 import numpy as np
 
 try:
@@ -369,6 +370,7 @@ def getGridPointsV2 ( validationPlot ):
             logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
             return []
         origdata = convertOrigData ( txNameObj.txnameData )
+        axisType = getAxisType ( validationPlot.axes )
         if axisType == "v2":
             for ctr,pt in enumerate(origdata):
                 # masses = removeUnits ( pt[0], standardUnits=GeV )
@@ -391,7 +393,6 @@ def getGridPoints ( validationPlot ) -> List:
     """ retrieve the grid points of the upper limit / efficiency map.
     """
     ret = []
-    from validationHelpers import getAxisType
     axisType = getAxisType(validationPlot.axes)
     if axisType == "v2":
         return getGridPointsV2 ( validationPlot )
