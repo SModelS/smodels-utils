@@ -49,7 +49,8 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
 def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=True):
-
+    
+    print("[prettyMatplotlib] Creating SModelS Exclusion JSON")
     if not validationPlot.combine: plot_type = "bestSR"
     else: plot_type = "comb"
     #store x,y points in json file
@@ -413,7 +414,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                         x_ecs.append(vertices_ecs[:,0].tolist())
                         y_ecs.append(vertices_ecs[:,1].tolist())
         
-        createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
+        if options["createSModelSExclJson"]: createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
         
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:

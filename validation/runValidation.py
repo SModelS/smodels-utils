@@ -102,7 +102,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"]:
             valPlot.toPdf()
-    if True:
+    if options["drawPaperPlot"]:
         from drawPaperPlot import drawPrettyPaperPlot
         drawPrettyPaperPlot(valPlot)
     return valPlot
@@ -723,6 +723,8 @@ if __name__ == "__main__":
                 "show": False, ## show image after producing it?
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
+                "drawPaperPlot": False,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
+                "createSModelSExclJson": False     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
     }
 
     options["continue"]=args.cont

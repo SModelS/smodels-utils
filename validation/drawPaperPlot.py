@@ -165,6 +165,7 @@ def drawPrettyPaperPlot(validationPlot):
         if hasattr ( validationPlot.expRes.globalInfo, "covariance" ): ver = "(SLv1)"   #SLv1 vs SLv2
     
     #now plot figure
+    print("[drawPaperPlot] Drawing pretty obs and exp plots")
     
     #--------observed plot-------
     fig = plt.figure(figsize=(5,4))
@@ -220,7 +221,9 @@ def drawPrettyPaperPlot(validationPlot):
     
     plt.savefig(f"{vDir}/{txname}_{fig_axes_title}obs.png", dpi=250)
     plt.clf()
+    plt.rcdefaults()
     plt.close()
+    
     
     #--------expected plot-------
 
@@ -265,5 +268,6 @@ def drawPrettyPaperPlot(validationPlot):
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.savefig(f"{vDir}/{txname}_{fig_axes_title}exp.png", dpi=250)
     plt.clf()
+    plt.rcdefaults()
     plt.close()
         
