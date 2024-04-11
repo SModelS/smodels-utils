@@ -792,12 +792,16 @@ class TxNameInput(Locker):
         if not hasattr ( self, "axesMap" ):
             self.axesMap = []
         if isinstance(plane,MassPlane):
-            self.axesMap.append ( eval(str(plane)) )
+            s = eval(str(plane))
+            if not s in self.axesMap:
+                self.axesMap.append ( s )
         elif isinstance(plane,(list,dict)):
-            self.axesMap.append ( plane )
+            if not plane in self.axesMap:
+                self.axesMap.append ( plane )
         elif isinstance(plane,str):
             massArray = eval(plane)
-            self.axesMap.append ( massArray )
+            if not massArray in self.axesMap:
+                self.axesMap.append ( massArray )
 
     def addMassPlane(self, plane):
         """
