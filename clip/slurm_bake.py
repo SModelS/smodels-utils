@@ -36,6 +36,9 @@ def queryStats ( maxsteps : int ):
             nlines = len (f.readlines())
             f.close()
         print ( f"  - {name:40s} {nlines} points" )
+    xmlFiles = f"{codedir}/em-creator/cm2/checkmate2/data/atlas_2010_14293/BDTxml/ZeroLepton2018-SRBDT-GGo4_weight1.xml"
+    print ( )
+    print ( f"has xml files: {os.path.exists(xmlFiles)}" )
     
 
 def cancelAllBakers():
@@ -68,6 +71,7 @@ def bake ( args : Dict ):
     :param nprocesses: number of processes, typically 5
     :param cutlang: if true, then use cutlang
     :param checkmate: if true, then use checkmate
+    :param colliderbit: if true, then use colliderbit
     :param time: time in hours
     :param doLog: do write out bake-*.out log files
     :param adl_file: specify path to adl file
@@ -83,6 +87,7 @@ def bake ( args : Dict ):
     dry_run = args["dry_run"]
     cutlang = args["cutlang"]
     checkmate = args["checkmate"]
+    colliderbit = args["colliderbit"]
     time = args["time"]
     keep = args["keep"]
     keephepmc = args["keephepmc"]
@@ -115,6 +120,8 @@ def bake ( args : Dict ):
                 largs += ' --cutlang'
             if checkmate:
                 largs += ' --checkmate'
+            if colliderbit:
+                largs += ' --colliderbit'
             if keep:
                 largs += ' --keep'
             if keephepmc:
@@ -160,6 +167,9 @@ def bake ( args : Dict ):
         ram = 2.5 * nprocesses ## in GB
         ncpus = int(nprocesses*2)
     if checkmate:
+        ram = int(2 * ram)
+        ncpus = int(nprocesses*4)
+    if colliderbit:
         ram = int(2 * ram)
         ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{int(ram)}G" ]
@@ -328,6 +338,8 @@ def main():
     argparser.add_argument ( '-l', '--cutlang', '--adl',
             help='use cutlang for baking', action='store_true' )
     argparser.add_argument ( '--checkmate', help='use checkmate for baking',
+                             action='store_true' )
+    argparser.add_argument ( '--colliderbit', help='use colliderbit for baking',
                              action='store_true' )
     argparser.add_argument ( '--cancel_all', help='cancel all bakers',
             action="store_true" )
