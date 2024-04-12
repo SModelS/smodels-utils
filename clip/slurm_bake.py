@@ -96,6 +96,9 @@ def bake ( args : Dict ):
     event_condition = args["event_condition"]
     adl_file = args["adl_file"]
     njets = args["njets"]
+    source_env = ""
+    if colliderbit:
+        source_env = "source {codedir}/em-creator/utils/gambit_env.sh"
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
@@ -136,6 +139,7 @@ def bake ( args : Dict ):
                 adl_file = adl_file.replace("'",'').replace('"','')
                 largs += f" --adl_file '{adl_file}'"
             f.write ( line.replace("@@ARGS@@", largs ) )
+            f.write ( line.replace("@@SOURCE_ENV@@", source_env ) )
             # f.write ( line )
         f.close()
     # the following is only needed with singularity containers! """
