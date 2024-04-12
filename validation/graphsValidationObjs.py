@@ -34,6 +34,8 @@ import glob
 
 logger.setLevel(level=logging.ERROR)
 
+complaints = { "NoResultsFor": 0 }
+
 class ValidationPlot():
     """
     Encapsulates all the data necessary for creating a single validation plot.
@@ -556,7 +558,10 @@ class ValidationPlot():
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
-            logger.warning ( f"weird, {outputDir} already exists?" )
+            logger.warning ( f"{outputDir} already exists, will recycle!" )
+            logger.warning ( f"FIXME make sure this also works in HPC cluster mode!" )
+            self.outputDir = outputDir
+            return fileList
             outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
         else:
             os.mkdir ( outputDir )
@@ -668,7 +673,7 @@ class ValidationPlot():
         x,y,z,w = var ( "x y z w" )
 
         for nr, expr in axesDict.items():
-            axesDict[nr]=parse_expr ( expr )
+            axesDict[nr]=parse_expr ( str(expr) )
         D = {}
         def equal ( val1 : Union[str,float], val2 : Union[str,float] ) -> bool:
             val1, val2 = float(val1), float(val2)
@@ -688,7 +693,6 @@ class ValidationPlot():
             for k,v in d.items():
                 D[str(k)]=round_to_n(float(v),5)
             return D
-        # print ( f"@@axesDict {axesDict} {slhafile}" )
         if len ( tokens ) == 7 and equal ( tokens[1], tokens[4]) and \
                 equal ( tokens[3], tokens[6] ) and \
                 abs ( float(tokens[1])+float(tokens[3]) - 2*float(tokens[2])) < 1.5 \
@@ -711,11 +715,6 @@ class ValidationPlot():
             # e.g. TChiWH_400_300_60_400_300_60.slha
             D = { "x": float(tokens[1]), "y": float(tokens[2]) }
         """
-
-        # print ( f"@@A getAxesFromSLHAFileName: slhafile={slhafile} D={D}" )
-        # print ( f"@@A self.axes {self.axes} {type(self.axes)}" )
-        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
-
         return D
 
     def getDataFromPlanes(self):
@@ -763,14 +762,18 @@ class ValidationPlot():
                 if ct_nooutput==5:
                     logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
                 continue
-            # print ( "reading %s" % fout )
             ff = open(fout,'r')
             txt = ff.read()
             cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
             exec( cmd, myglobals )
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.info( f"No results for {slhafile}" )
+                complaints["NoResultsFor"]+=1
+                if complaints["NoResultsFor"]<4:
+                    logger.info( f"No results for {slhafile}" )
+                if complaints["NoResultsFor"]==4:
+                    logger.info( f"(quenching more info msgs)" )
+
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
@@ -822,6 +825,14 @@ class ValidationPlot():
             masses = expRes["Mass (GeV)"]
             widths = expRes["Width (GeV)"]
             nodesMap = expRes["Nodes Map"]
+            if masses == None:
+                axes = self.getAxesFromSLHAFileName ( slhafile )
+                if len(axes)==0: # drop it, doesnt fall in this plane it seems
+                    continue
+                D = { "slhafile": slhafile, "error": "masses are None",
+                      "axes": axes }
+                self.data.append ( D )
+                continue
             parameters = self.constructParameterVector ( masses, widths, nodesMap )
             varsDict = massPlane.getXYValues( parameters )
             if varsDict in [ None, {} ]:
@@ -889,11 +900,11 @@ class ValidationPlot():
 
         #Remove temporary folder
         if self.currentSLHADir != self.slhaDir and not self.keep:
+            logger.info ( f"now removing {self.currentSLHADir}" )
             shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
-            logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
-                          %(self.expRes.globalInfo.id,self.txName,self.axes))
+            logger.error( f"There is no data for {self.expRes.globalInfo.id}/{self.txName}/{self.axes}.\n Are the SLHA files correct? Are the constraints correct?" )
 
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):

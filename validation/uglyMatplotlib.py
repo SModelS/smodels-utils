@@ -15,11 +15,11 @@ import math
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV3
+from smodels_utils.helper.prettyDescriptions import prettyTxname
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
          getDatasetDescription, getAxisRange, isWithinRange, \
          filterWithinRanges
-from validationHelpers import widthOfStableParticles
+from validationHelpers import widthOfStableParticles, getAxisType, prettyAxes
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
@@ -237,13 +237,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             zorder = 2
         plt.plot ( get("x",gridpoints), get("y",gridpoints), marker="+", \
                    linestyle=None, c="blue", linewidth=0, markersize=4, label=f"{len(gridpoints)} SModelS db grid points", zorder = zorder )
-    axes = prettyAxesV3(validationPlot)
+    axes = prettyAxes(validationPlot)
     axes = axes.replace("*","")
     axes = axes.replace("0.5",".5")
     axes = axes.replace("anyBSM","*")
     #axes = axes.replace("MET","$\\\\slash{E}_T}$" )
     title = validationPlot.expRes.globalInfo.id + " " \
-            + validationPlot.txName + ": " + axes
+            + validationPlot.txName # + ": " + axes
     subtitle = getDatasetDescription ( validationPlot, maxLength = 50 )
     figureUrl = getFigureUrl(validationPlot)
 
@@ -252,7 +252,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         subtitle = "dataset: UL"
 
     # sns.set()
-    plt.title(title)
+    # plt.title(title)
+    plt.text ( .04, .95, title, fontsize=12, transform = fig.transFigure )
     if logY: # y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
         ymin = min ( ycontainer ) * 0.5
@@ -263,11 +264,15 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             pass
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
-    plt.text(.05,.95, subtitle,fontsize=10, transform = fig.transFigure )
+    ysubtitle = .95
+    ysubtitle = .02
+    plt.text(.04, ysubtitle, subtitle,fontsize=10, transform = fig.transFigure )
     #if figureUrl:
+    plt.text ( .95, .95, axes, fontsize = 8, transform = fig.transFigure,
+               horizontalalignment = "right" )
     if False:
         plt.text ( .05, .023, str(figureUrl), fontsize=10,
-                   transform=fig.transFigure )
+                   horizontalalignment = "right", transform=fig.transFigure )
 
     if kfactor != None and abs ( kfactor - 1. ) > 1e-2:
         plt.text ( .93, .18, f"k-factor {kfactor:.2f}", c="gray",
@@ -277,8 +282,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if reverse: ## if reverse put this line at left of plot
         dxpnr = .12
         halign = "left"
-    plt.text ( dxpnr, 0.95, f"{nErrors} / {len(validationPlot.data)} points with no results", 
-            c="gray", fontsize=10, transform = fig.transFigure, 
+    # ypnr = 0.95
+    ypnr = .03
+    plt.text ( dxpnr, ypnr, f"{nErrors} / {len(validationPlot.data)} points with no results",
+            c="gray", fontsize=10, transform = fig.transFigure,
             horizontalalignment=halign )
     l = plt.legend( loc="best") # could be upper right
     l.set_zorder(20)

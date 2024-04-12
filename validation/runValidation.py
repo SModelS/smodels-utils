@@ -29,8 +29,11 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 def starting( expRes, txnameStr, axes ):
-    from validationHelpers import prettyAxesV3
-    saxes = prettyAxesV3 ( axes )
+    from validationHelpers import prettyAxesV3, getAxisType
+    atype = getAxisType ( axes )
+    saxes = str(axes).replace(" ","")
+    if atype == "v3":
+        saxes = prettyAxesV3 ( axes )
     logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{saxes}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
@@ -99,6 +102,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"]:
             valPlot.toPdf()
+    if options["drawPaperPlot"]:
+        from drawPaperPlot import drawPrettyPaperPlot
+        drawPrettyPaperPlot(valPlot)
     return valPlot
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
@@ -331,7 +337,8 @@ def runForOneResult ( expRes, options : dict,
         axisType = getAxisType(axes)
         axis = options["axis"]
         if axis in [ None, "None", "" ]:
-            for ax in axes:
+            ltarfile = tarfile
+            for cax,ax in enumerate(axes):
                 hasCorrectAxis_ = hasCorrectAxis
                 x,y,z,w = var("x y z w")
                 # print ( "ax", ax) 
@@ -386,9 +393,16 @@ def runForOneResult ( expRes, options : dict,
                     logger.info ( f"skipping {expRes}:{txnameStr}:{ax}" )
                     continue
                 for p in prettyorugly:
-                    re = validatePlot(expRes,txnameStr,ax, tarfile, localopts,
+                    lkeep = keep
+                    if cax < len(axes)-1: ## not the last run!!!
+                        keep = True # we keep stuff
+                    # print ( f"@@C validatePlot {expRes}, ltarfile {ltarfile}, txnameStr {txnameStr}, ax {ax}, keep {keep} {namedTarball} {pnamedTarball}" )
+                    re = validatePlot(expRes,txnameStr,ax, ltarfile, localopts,
                         db, kfactor, p, combine, namedTarball = pnamedTarball,
                         keep = keep )
+                    if re.currentSLHADir != None:
+                        # print ( f"@@D change ltarfile from {ltarfile} to {re.currentSLHADir}, {re.slhaDir}" )
+                        ltarfile = re.currentSLHADir ## keep stuff!
                     # if not ":" in namedTarball:
                     localopts["generateData"]=False
                     oldNamedTarball = pnamedTarball
@@ -709,6 +723,8 @@ if __name__ == "__main__":
                 "show": False, ## show image after producing it?
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
+                "drawPaperPlot": False,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
+                "createSModelSExclJson": False     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
     }
 
     options["continue"]=args.cont

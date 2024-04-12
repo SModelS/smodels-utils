@@ -59,8 +59,6 @@ class ValidationPlot():
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
-        print ( "validationObjects init", Axes )
-
         self.databasePath = databasePath
         anaID = ExptRes.globalInfo.id
         if databasePath:
@@ -409,7 +407,7 @@ class ValidationPlot():
             ## FIXME here we could define different defaults for eg T5Gamma
             model = "mssm"
         with open ( parFile, "w" ) as f:
-            f.write( f"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = {combined}\n" )
+            f.write( f"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = {combine}\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
             sigmacut = 0.000000001
@@ -788,18 +786,20 @@ class ValidationPlot():
 
             txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
             mnw=[]
+            massGeV = []
             if width == None:
                 mnw = mass
             else:
+                # br=[]
                 for bm,bw in zip(mass,width):
-                    br=[]
                     for m,w in zip(bm,bw):
-                        if w == 'stable':
-                            br.append( (m,0.0) )
+                        if w == 'stable' or w > .1:
+                            massGeV.append( m )
+                            # br.append( (m,0.0) )
                         else:
-                            br.append( (m,w) )
-                    mnw.append(br)
-            massGeV = addUnit ( mnw, GeV )
+                            massGeV.append( (m,w) )
+                    # mnw.append(br)
+            # massGeV = addUnit ( mnw, GeV )
             if not "efficiency" in Dict.keys():
                 try:
                     eff = txname.txnameData.getValueFor(massGeV)
@@ -985,8 +985,10 @@ class ValidationPlot():
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
         # print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
-        modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
-                 listOfExpRes, timeOut, False, parameterFile)
+        #modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
+        #         listOfExpRes, timeOut, False, parameterFile)
+        modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
+                  timeOut, False, parameterFile)
         self.removeFromListOfRunningFiles ( )
 
         #Define original plot
@@ -1252,7 +1254,7 @@ class ValidationPlot():
                 meta["commentary"]=txt
         if hasattr ( self.expRes.globalInfo, "resultType" ):
             meta["resultType"]=self.expRes.globalInfo.resultType
-        from smodels.theory import theoryPrediction
+        from smodels.matching import theoryPrediction
         if "spey" in theoryPrediction.StatsComputer.__module__:
             import spey
             meta["spey"]=spey.__version__
@@ -1277,6 +1279,16 @@ class ValidationPlot():
         f.close()
 
         return True
+
+    def getTxname ( self ):
+        """ obtain the correct sms/axes/data maps, i.e. the ones corresponding to
+        our txname """
+        ds = self.expRes.datasets[0]
+        ## FIXME need to search
+        for txn in ds.txnameList:
+            if txn.txName == self.txName:
+                return txn
+        return None
 
     def getDataFile(self,validationDir,fformat='pdf'):
         """

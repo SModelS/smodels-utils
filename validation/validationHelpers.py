@@ -35,6 +35,15 @@ def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
         return None
     return None
 
+def prettyAxes( validationPlot ) -> str:
+    """ get a description of the axes that works with v2 as well as v3.
+    """
+    from smodels_utils.helper import prettyDescriptions
+    v = getAxisType ( validationPlot.axes )
+    if v == "v2":
+        return prettyDescriptions.prettyAxesV2 ( validationPlot.txName, validationPlot.axes )
+    return prettyDescriptions.prettyAxesV3 ( validationPlot.txName, validationPlot.axes )
+
 def translateAxisV2 ( axisv2 : str ) -> str:
     """ translate a v2 axis to v3 syntax """
     from sympy import var

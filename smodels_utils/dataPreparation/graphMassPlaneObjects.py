@@ -81,7 +81,7 @@ class GraphMassPlane(object):
             n = int(len(axesDict)/2)
             for i in range(n,2*n):
                 axesDict.pop(i)
-        ret = "_".join ( axesDict.values() )
+        ret = "_".join ( map ( str, axesDict.values() ) )
         # print ( f"@@ graphMassPlaneObjects {axesDict} turned into {ret}" )
         return ret
 
@@ -237,7 +237,7 @@ class GraphMassPlane(object):
                 coordinateMap = {x : 0, y : 1, 'value' : None}
                 if not y in self.xvars: # 1d data
                     coordinateMap = {x : 0, 'value' : None}
-            dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars)
+            dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars,self.parametersMap )
             self._exclusionCurves.append(dataObject)
 
         dataObject.dataUrl = self.dataUrl
@@ -279,7 +279,7 @@ class GraphMassPlane(object):
         # print ( "FIXME implement, getParticleMasses", xMass, "parameterMap is", self.parametersMap )
         ret = [0]*(1+max(self.parametersMap.keys()))
         for k,v in self.parametersMap.items():
-            value = v
+            value = str(v)
             for variable,mass in xMass.items():
                 value = value.replace(variable,str(mass))
             ret[k]=eval(value)
@@ -862,7 +862,7 @@ class WildAxes(Axes):
                 coordinateMap = {x : 0, y : 1, 'value' : None}
                 if not y in self.xvars: # 1d data
                     coordinateMap = {x : 0, 'value' : None}
-            dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars)
+            dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars,self.parametersMap )
             self._exclusionCurves.append(dataObject)
         dataObject.dataUrl = self.dataUrl
         #Set source of object
