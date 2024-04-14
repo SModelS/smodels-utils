@@ -98,7 +98,7 @@ def bake ( args : Dict ):
     njets = args["njets"]
     source_env = ""
     if colliderbit:
-        source_env = "source {codedir}/em-creator/utils/gambit_env.sh"
+        source_env = f"source {codedir}/em-creator/utils/gambit_env.sh"
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
@@ -138,8 +138,9 @@ def bake ( args : Dict ):
             if adl_file is not None:
                 adl_file = adl_file.replace("'",'').replace('"','')
                 largs += f" --adl_file '{adl_file}'"
-            f.write ( line.replace("@@ARGS@@", largs ) )
-            f.write ( line.replace("@@SOURCE_ENV@@", source_env ) )
+            line = line.replace("@@SOURCE_ENV@@", source_env )
+            line = line.replace("@@ARGS@@", largs )
+            f.write ( line )
             # f.write ( line )
         f.close()
     # the following is only needed with singularity containers! """
@@ -174,7 +175,7 @@ def bake ( args : Dict ):
         ram = int(2 * ram)
         ncpus = int(nprocesses*4)
     if colliderbit:
-        ram = int(2 * ram)
+        ram = int(1.5 * ram)
         ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{int(ram)}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process

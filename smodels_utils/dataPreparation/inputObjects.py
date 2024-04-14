@@ -263,6 +263,7 @@ class MetaInfoInput(Locker):
             handler = CSVCovarianceHandler ( filename,
                     max_datasets, aggregate, aggprefix )
         else:
+            """
             try:
                 import ROOT
                 handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
@@ -271,7 +272,7 @@ class MetaInfoInput(Locker):
                 logger.error ( "could not import pyroot, trying uproot now" )
                 handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
-            """ reverse logic
+            """
             try:
                 import uproot
                 handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
@@ -280,7 +281,6 @@ class MetaInfoInput(Locker):
                 logger.error ( "could not import uproot, trying pyroot now" )
                 handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
-            """
 
         if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
             if addOrder:
