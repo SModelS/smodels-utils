@@ -793,7 +793,7 @@ class ValidationPlot():
                 # br=[]
                 for bm,bw in zip(mass,width):
                     for m,w in zip(bm,bw):
-                        if w == 'stable' or w > .1:
+                        if w == 'stable' or w > .08:
                             massGeV.append( m )
                             # br.append( (m,0.0) )
                         else:

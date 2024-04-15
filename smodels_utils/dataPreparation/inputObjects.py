@@ -1319,6 +1319,7 @@ class TxNameInput(Locker):
 
     def checkMassConstraintsV2(self,massArray, value = None ):
         #If massConstraints was pre-defined as None or empty list, return always True
+        # print ( f"@@0 checkMassConstraintsV2 {self.massConstraints}" )
         if not self.massConstraints:
             return True
         if len(massArray)==0:
@@ -1394,10 +1395,10 @@ class TxNameInput(Locker):
             self._setMassConstraints()
         if len(self.massConstraints)==0: ## no constraints
             return True
-        if not hasattr ( self, "dataMap" ): # dont check
-            return True
         if type(self.massConstraints[0])!=dict:
             return self.checkMassConstraintsV2(massArray, value)
+        if not hasattr ( self, "dataMap" ): # dont check
+            return True
         #If massConstraints was pre-defined as None or empty list, return always True
         if len(massArray)==0:
             line = f"empty mass array {massArray} for constraint {self.massConstraints}??"

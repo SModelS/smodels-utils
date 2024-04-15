@@ -52,6 +52,8 @@ max_nbins = 12000
 allowTrimming=True ## allow big grids to be trimmed down
 trimmingFactor = [ 2 ] ## the factor by which to trim
 
+fileCache  = {} ## a file cache for input files, to speed things up
+
 class DataHandler(object):
 
     """
@@ -82,6 +84,7 @@ class DataHandler(object):
         self.dimensions = len(xvars)
         self.coordinateMap = coordinateMap
         self.xvars = xvars
+        # so we dont need to parse them so often
         self.path = None
         self.files = []
         self.fileType = None
@@ -832,13 +835,18 @@ class DataHandler(object):
         :yield: list with values as float, one float for every column
         """
         SR = self.objectName
-        try:
-            with open(self.path) as f:
-                print ( f"[dataHandler] reading {self.path} searching for {SR}" )
-                D=eval(f.read())
-        except Exception as e:
-            logger.error ( f"could not read {self.path}: {e}" )
-            sys.exit(-1)
+        D = None
+        if self.path in fileCache:
+            D = fileCache[self.path]
+        else:
+            try:
+                with open(self.path) as f:
+                    print ( f"[dataHandler] reading {self.path} searching for {SR}" )
+                    D=eval(f.read())
+                    fileCache[self.path]=D
+            except Exception as e:
+                logger.error ( f"could not read {self.path}: {e}" )
+                sys.exit(-1)
         keys = list(D.keys() )
         keys.sort()
         for pt in keys:
