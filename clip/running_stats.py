@@ -4,7 +4,8 @@
 slurm
 """
 
-import glob, stat, os, time, subprocess, colorama
+import glob, stat, os, time, subprocess
+from colorama import Fore as ansi
 
 def cancelJobsByString ( text : str ):
     """ cancel jobs that have text in their job names """
@@ -103,8 +104,12 @@ def walker_stats():
     if len(notaccounted)>0:
         print ( f"not found ({len(notaccounted)}):", prettyPrint ( notaccounted ) )
 
-def running_stats():
-    lines = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" ).split("\n")
+def running_stats( grep : str = None ):
+    sgrep = ""
+    if grep != None:
+        sgrep = f"grep {grep} |"
+    cmd = f"slurm q | {sgrep} head -n 3 | tail -n 2"
+    lines = subprocess.getoutput ( cmd ).split("\n")
     print ( )
     print ( "most recent jobs:" )
     print ( "=================" )
@@ -112,7 +117,8 @@ def running_stats():
         tokens = list(filter(None,line.split(" ")))
         print ( "   ".join ( tokens ) )
 
-    lines = subprocess.getoutput ( "slurm q | tail -n 2" ).split("\n")
+    cmd = f"slurm q | {sgrep} tail -n 2"
+    lines = subprocess.getoutput ( cmd ).split("\n")
     print ( )
     print ( "longest running jobs:" )
     print ( "=====================" )
@@ -120,23 +126,28 @@ def running_stats():
         tokens = list(filter(None,line.split(" ")))
         print ( "   ".join ( tokens ) )
 
-def count_jobs():
+def count_jobs( grep : str = None ):
     #print ( "slurm q says:" )
     #print ( "=============" )
-    pend = subprocess.getoutput ( "slurm q | grep PEND | wc -l" )
+    sgrep = ""
+    if grep != None:
+        sgrep = f"grep {grep} |"
+    cmd = f"slurm q | {sgrep} grep PEND | wc -l"
+    pend = subprocess.getoutput ( cmd )
     try:
         pend = int (pend )
     except:
         pass
-    running = subprocess.getoutput ( "slurm q | grep RUNNING | wc -l" )
+    cmd = f"slurm q | {sgrep} grep RUNNING | wc -l"
+    running = subprocess.getoutput ( cmd )
     try:
         running= int ( running )
     except:
         pass
-    lpend = "%s%s%s" % ( colorama.Fore.YELLOW, pend, colorama.Fore.RESET )
-    lrun = "%s%s%s" % ( colorama.Fore.GREEN, running, colorama.Fore.RESET )
-    ltot = "%s%s%s" % ( colorama.Fore.RED, pend+running, colorama.Fore.RESET )
-    print ( "pending", lpend, "running", lrun, "total", ltot )
+    lpend = f"{ansi.YELLOW}{pend}{ansi.RESET}"
+    lrun = f"{ansi.GREEN}{running}{ansi.RESET}"
+    ltot = f"{ansi.RED}{pend+running}{ansi.RESET}"
+    print ( "pending", lpend, "running", lrun )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
         print ( "remaining", remaining )

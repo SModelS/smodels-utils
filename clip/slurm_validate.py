@@ -127,7 +127,8 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
-    ram = int ( 12. + .8 * nproc )
+    # ram = int ( 12. + .8 * nproc ) # crazy high, no
+    ram = int ( 3. + .5 * nproc )
     # ncpus = nproc # int(nproc*1.5)
     ncpus = int(nproc*4)
     cmd += [ "--mem", f"{ram}G" ]
@@ -143,14 +144,23 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
 def logCall ():
-    f=open("slurm.log","at")
-    args = ""
+    logfile = "slurm_validate.log"
+    line = ""
     for i in sys.argv:
         if " " in i or "," in i:
             i = '"%s"' % i
-        args += i + " "
-    f.write ("[slurm.py-%s] %s\n" % ( time.strftime("%H:%M:%S"), args.strip() ) )
-    # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
+        line += i + " "
+    line = line.strip()
+    f=open(f"{os.environ['HOME']}/{logfile}","rt")
+    lines = f.readlines()
+    f.close()
+    lastline = lines[-1].strip()
+    p = lastline.find("]")
+    lastline = lastline[p+2:]
+    if line == lastline: # skip duplicates
+        return
+    f=open(logfile,"at")
+    f.write ( f"[slurm_validate.py-{time.strftime('%H:%M:%S')}] {line}\n" )
     f.close()
 
 def clean():

@@ -14,8 +14,8 @@ codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
 def queryStats ( maxsteps : int ):
     """ just give us the statistics """
     import running_stats
-    running_stats.count_jobs()
-    running_stats.running_stats()
+    running_stats.count_jobs( "_B" )
+    running_stats.running_stats( "_B" )
     if maxsteps != None:
         for i in range(maxsteps):
             time.sleep(30.)
@@ -190,13 +190,14 @@ def bake ( args : Dict ):
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
 def logCall ():
+    logfile = "slurm_bake.log"
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
             i = '"%s"' % i
         line += i + " "
     line = line.strip()
-    f=open(f"{os.environ['HOME']}/slurm.log","rt")
+    f=open(f"{os.environ['HOME']}/{logfile}","rt")
     lines = f.readlines()
     f.close()
     lastline = lines[-1].strip()
@@ -204,8 +205,8 @@ def logCall ():
     lastline = lastline[p+2:]
     if line == lastline: # skip duplicates
         return
-    f=open("slurm.log","at")
-    f.write ( f"[slurm.py-{time.strftime('%H:%M:%S')}] {line}\n" )
+    f=open(logfile,"at")
+    f.write ( f"[slurm_bake.py-{time.strftime('%H:%M:%S')}] {line}\n" )
     f.close()
 
 def cancelRangeOfBakers( jrange : str ):
