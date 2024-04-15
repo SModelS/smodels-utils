@@ -144,19 +144,21 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
 def logCall ():
-    logfile = "slurm_validate.log"
+    logfile = f"{os.environ['HOME']}/slurm_validate.log"
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
             i = '"%s"' % i
         line += i + " "
     line = line.strip()
-    f=open(f"{os.environ['HOME']}/{logfile}","rt")
-    lines = f.readlines()
-    f.close()
-    lastline = lines[-1].strip()
-    p = lastline.find("]")
-    lastline = lastline[p+2:]
+    lastline = ""
+    if os.path.exists( logfile ):
+        f=open(logfile,"rt")
+        lines = f.readlines()
+        f.close()
+        lastline = lines[-1].strip()
+        p = lastline.find("]")
+        lastline = lastline[p+2:]
     if line == lastline: # skip duplicates
         return
     f=open(logfile,"at")
