@@ -718,7 +718,7 @@ if __name__ == "__main__":
                 "maxcond": 1.0, ## maximum allowed condition violation in SModelS
                 "promptWidth": 1.1, ## particles with width above this value in GeV are considered stable
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)
-                "preliminary": False, ## add label 'preliminary' to plot?
+                "preliminary": "False", ## add label 'preliminary' to plot?
                 "model": "default", ## which model to use (default = mssm)
                 "show": False, ## show image after producing it?
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)

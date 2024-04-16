@@ -294,7 +294,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.text ( .93, .65, time.strftime("%b %d, %Y, %H:%M"), c="gray",
                    fontsize = 9, transform=fig.transFigure,
                    rotation = 90 )
-    if options["preliminary"]:
+    if options["preliminary"] not in [ False, "False" ]:
         ## preliminary label, ugly plot
         plt.text ( .3, .4, "SModelS preliminary", c="blue",
                    fontsize = 18, transform=fig.transFigure,
