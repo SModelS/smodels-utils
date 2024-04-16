@@ -519,7 +519,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         print ( f"[plotRatio] error when calling savefig: {e}" )
         if "tex" in str(e).lower():
             print ( f"[plotRatio] consider loading/installing latex, eg via:" )
-            print ( f"ml load texlive/20210324-gcccore-10.2.0 # on the clip cluster" )
+            # print ( f"ml load texlive/20210324-gcccore-10.2.0 # on the clip cluster" )
+            print ( f"ml load texlive/20220321-gcc-12.2.0 # on the clip cluster" )
             print ( f"sudo apt install texlive dvipng # on debian based linux distros" )
             sys.exit()
     if options["show"]:

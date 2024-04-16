@@ -215,4 +215,7 @@ def main():
     logCall()
 
 if __name__ == "__main__":
+    if "BOOST_ROOT" in os.environ and "1.74" in os.environ["BOOST_ROOT"]:
+        print ( f"[slurm_validate] I think you have the wrong environment!" )
+        sys.exit()
     main()
