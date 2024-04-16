@@ -459,15 +459,19 @@ class ValidationPlot():
         content = getValidationFileContent ( datafile )
         if overwrite:
             self.data = []
-        slhafiles = { x["slhafile"] : x for x in self.data }
+        # dict of current[!] validation content as values, slhafilename as keys
+        slhadict = { x["slhafile"] : x for x in self.data }
         ctadded = 0
+        # content["data"] is dict of previous[!] validation content
         for d in content["data"]:
-            if d["slhafile"] in slhafiles:
-                if d["slhafile"] != slhafiles[d["slhafile"]]:
-                    logger.error ( f"entry {d['slhafile']} changed content {d['slhafile']} != {slhafiles[d['slhafile']]}" )
-                continue
-            ctadded+=1
-            self.data.append ( d )
+            slhafile = d["slhafile"]
+            # d here is one entry in the validation dict file
+            if slhafile in slhadict:
+                if d != slhadict[slhafile]:
+                    logger.error ( f"entry {d['slhafile']} changed content {d} != {slhadict[slhafile]}" )
+            else:
+                ctadded+=1
+                self.data.append ( d )
         try:
             self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
         except:
@@ -940,6 +944,8 @@ class ValidationPlot():
             self.loadData()
             tmp = []
             countSkipped = 0
+            countSLHAFileInData = 0
+            countResultExists = 0
             for f in fileList:
                 if "recipe" in f:
                     continue
@@ -948,17 +954,20 @@ class ValidationPlot():
                 bf = os.path.basename ( f )
                 if self.slhafileInData ( bf ):
                     countSkipped += 1
+                    countSLHAFileInData += 1
                 elif self.resultExistsAlready ( bf ):
                     self.addResultToData ( bf, f"{outputDir}/{bf}.py" )
                     countSkipped += 1
+                    countResultExists += 1
                 else:
                     tmp.append ( f )
             if countSkipped > 0:
                 logger.info ( f"skipped a total of {countSkipped} points: generateData was set to 'ondemand'." )
+                logger.info ( f" -> {countSLHAFileInData} points are already in final validation dictionary, for {countResultExists} points a file exists in the temporary results folder." )
                 # lets randomize in these cases, so we can somewhat parallelize
                 # FIXME it would be better if we locked individual slha files
-                import random
-                random.shuffle ( tmp )
+            import random
+            random.shuffle ( tmp )
             fileList = tmp
         else:
             self.data = []
