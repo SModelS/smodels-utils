@@ -65,7 +65,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         topo = "*"
     if analyses == None:
         analyses = "all"
-    print ( f"[slurm.py] run validation with {inifile}" )
+    print ( f"[slurm_validate.py] run validation with {inifile}" )
     Dir = f"{codedir}/smodels-utils/clip/temp/"
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
@@ -79,15 +79,31 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
     # if possible name the tempdir the same as the temp script and the temp ini file
     skeep = ""
+    needTempDir = False ## if we operate in "continue" mode, we need:
+    hasTempDir = False ## a predefined tempdir, and 
+    hasLimitPoints = False ## limited points in the ini files!
     if keep:
         skeep = "--keep --cont"
+        needTempDir = True
     with open ( newini, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@TEMPDIR@@", tempdir )
             f.write ( newline )
+            if "@@TEMPDIR@@" in line:
+                hasTempDir = True
+            if "limitPoints" in line:
+                hasLimitPoints = True
         f.close()
+
+    if needTempDir:
+        if not hasTempDir:
+            print ( f"[slurm_validate.py] ERROR we are in continue mode, but no temp dir has been defined!" )
+            sys.exit()
+        if not hasLimitPoints:
+            print ( f"[slurm_validate.py] ERROR we are in continue mode, but no limitPoints has been defined!" )
+            sys.exit()
 
     with open ( f"{codedir}/smodels-utils/clip/validate_template.sh", "rt" ) as f:
         lines = f.readlines()
@@ -95,7 +111,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     # filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
     filename = os.path.basename ( newini ).replace(".ini",".sh")
     newFile = f"{Dir}/{filename}"
-    print ( f"[slurm.py] creating script at {newFile}" )
+    print ( f"[slurm_validate.py] creating script at {newFile}" )
     nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     with open ( newFile, "wt" ) as f:
         for line in lines:
@@ -135,13 +151,13 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     cmd += [ newFile ]
     # cmd += [ "./run_bakery.sh" ]
-    print ( f"[slurm.py] validating {' '.join ( cmd )}" )
+    print ( f"[slurm_validate.py] validating {' '.join ( cmd )}" )
     if not dry_run:
         a=subprocess.run ( cmd )
         print ( "returned: %s" % a )
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
-    #print ( "[slurm.py] %s %s" % ( cmd, o ) )
+    #print ( "[slurm_validate.py] %s %s" % ( cmd, o ) )
 
 def logCall ():
     logfile = f"{os.environ['HOME']}/slurm_validate.log"
