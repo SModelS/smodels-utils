@@ -20,14 +20,14 @@ def mkdir ( Dir ):
 def queryStats ( maxsteps : Union[None,int] = None ):
     """ just give us the statistics """
     import running_stats
-    running_stats.count_jobs()
-    running_stats.running_stats()
+    running_stats.count_jobs( "_V" )
+    running_stats.running_stats( "_V" )
     if maxsteps != None:
         for i in range(maxsteps):
             time.sleep(30.)
             print()
-            running_stats.count_jobs()
-            running_stats.running_stats()
+            running_stats.count_jobs( "_V" )
+            running_stats.running_stats( "_V" )
             print()
 
 def getNProcesses ( nprocesses, inifile ):
