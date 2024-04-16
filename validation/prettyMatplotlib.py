@@ -469,8 +469,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                   c="gray", transform = fig.transFigure )
     if options["preliminary"]:
         ## preliminary label, pretty plot
-        plt.text ( .3, .4, "SModelS preliminary", transform=fig.transFigure,
-                   rotation = 25., fontsize = 18, c="blue", zorder=100 )
+        t = plt.text ( .3, .22, "SModelS preliminary", transform=fig.transFigure,
+                   rotation = 35., fontsize = 20, c="red", zorder=100 )
+        t.set_bbox(dict(facecolor='white', alpha=0.5, linewidth=0))
     legendplacement = options["legendplacement"]
     legendplacement = legendplacement.replace("bottom","lower")
     legendplacement = legendplacement.replace("top","upper")
