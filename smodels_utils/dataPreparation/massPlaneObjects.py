@@ -158,7 +158,7 @@ class MassPlane(object):
 
 
     def __str__(self):
-        return "%s" % ( self.axes )
+        return f"{self.axes}"
 
     def setBranch(self,branchNumber, branchMasses):
 
@@ -344,8 +344,8 @@ class MassPlane(object):
         :return: None if mass array do not met the conditions of one branch
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        #print ( ">> widthArray", widthArray )
-        # print ( ">> massArray", massArray )
+        # print ( "@@0 widthArray", widthArray )
+        # print ( "@@0 massArray", massArray )
 
         if len(massArray) != len(self.branches):
             logger.error("dimension of mass array (%d) inconsistent with branches length (%d)" % ( len(massArray), len(self.branches) ) )

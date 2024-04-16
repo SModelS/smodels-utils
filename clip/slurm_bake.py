@@ -38,7 +38,9 @@ def queryStats ( maxsteps : int ):
         print ( f"  - {name:40s} {nlines} points" )
     xmlFiles = f"{codedir}/em-creator/cm2/checkmate2/data/atlas_2010_14293/BDTxml/ZeroLepton2018-SRBDT-GGo4_weight1.xml"
     print ( )
-    print ( f"has xml files: {os.path.exists(xmlFiles)}" )
+    print ( f"has checkmate2 atlas_2010_14293 xml files: {os.path.exists(xmlFiles)}" )
+    pythia8xml = f"{codedir}/em-creator/mg5/HEPTools/pythia8/share/Pythia8/xmldoc/Welcome.xml"
+    print ( f"has pythia8 xml files: {os.path.exists(pythia8xml)}" )
     
 
 def cancelAllBakers():

@@ -356,8 +356,7 @@ class DataHandler(object):
         """
 
         if len(point) < self.dimensions: # +1:
-            logger.error("%s should have at least %i dimensions (%i dimensions found)"
-                         %(self.name, self.dimensions+1,len(point)))
+            logger.error(f"{self.name} should have at least {self.dimensions+1} dimensions ({len(point)} dimensions found)" )
             sys.exit()
 
         ptDict = {}
@@ -826,7 +825,7 @@ class DataHandler(object):
                 yield fr
             csvfile.close()
 
-    def embaked(self):
+    def embaked(self) -> List:
         """
         iterable method
         preprocessing python dictionaries as defined by the em bakery
