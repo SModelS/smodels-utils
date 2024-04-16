@@ -463,8 +463,8 @@ class ValidationPlot():
         ctadded = 0
         for d in content["data"]:
             if d["slhafile"] in slhafiles:
-                if d != slhafiles[d["slhafile"]]:
-                    logger.error ( f"entry {d['slhafile']} changed content {d} != {slhafiles[d]}" )
+                if d["slhafile"] != slhafiles[d["slhafile"]]:
+                    logger.error ( f"entry {d['slhafile']} changed content {d['slhafile']} != {slhafiles[d['slhafile']]}" )
                 continue
             ctadded+=1
             self.data.append ( d )
@@ -984,7 +984,7 @@ class ValidationPlot():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        # print ( f"willRun {len(self.willRun)}, fileList {len(fileList)} limitPoints {self.limitPoints}" )
+        logger.info ( f"will run on {len(self.willRun)} points, we had {len(fileList)} in the candidate points list, the limit was set to {self.limitPoints} points." )
         #modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
         #         listOfExpRes, timeOut, False, parameterFile)
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,

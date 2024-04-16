@@ -33,8 +33,16 @@ def queryStats ( maxsteps : int ):
         name = name[p1+9:]
         nlines = 0
         with open ( embakedFile, "rt" ) as f:
-            nlines = len (f.readlines())
+            lines = f.readlines()
             f.close()
+            # nlines = len (f.readlines())
+            nlines = 0
+            for line in lines:
+                p1 = line.find("#")
+                if p1 > -1:
+                    line = line[:p1]
+                if "{" in line:
+                    nlines += 1
         print ( f"  - {name:40s} {nlines} points" )
     xmlFiles = f"{codedir}/em-creator/cm2/checkmate2/data/atlas_2010_14293/BDTxml/ZeroLepton2018-SRBDT-GGo4_weight1.xml"
     print ( )
