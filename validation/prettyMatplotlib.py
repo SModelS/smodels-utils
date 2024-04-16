@@ -467,10 +467,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if kfactor is not None and abs ( kfactor - 1.) > .01:
         plt.text( .13,.83, f"k-factor = {kfactor:.2f}", fontsize=10,
                   c="gray", transform = fig.transFigure )
-    if options["preliminary"]:
+    if options["preliminary"] != False:
+        text = options["preliminary"]
+        if text.lower() in [ "true", "1", "yes" ]:
+            text = "SModelS preliminary"
+        fontsize = 20
+        if len(text)>20:
+            fontsize = 16
         ## preliminary label, pretty plot
-        t = plt.text ( .3, .22, "SModelS preliminary", transform=fig.transFigure,
-                   rotation = 35., fontsize = 20, c="red", zorder=100 )
+        t = plt.text ( .3, .22, text, transform=fig.transFigure,
+                   rotation = 35., fontsize = fontsize, c="red", zorder=100 )
         t.set_bbox(dict(facecolor='white', alpha=0.5, linewidth=0))
     legendplacement = options["legendplacement"]
     legendplacement = legendplacement.replace("bottom","lower")
