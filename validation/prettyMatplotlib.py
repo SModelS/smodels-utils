@@ -49,7 +49,7 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
 def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=True):
-    
+
     print("[prettyMatplotlib] Creating SModelS Exclusion JSON")
     if not validationPlot.combine: plot_type = "bestSR"
     else: plot_type = "comb"
@@ -63,7 +63,7 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=Tr
         file = open(f'{vDir}/{file_js}','r')
         plots = json.load(file)
         plots.update(plot_dict)
-    
+
     file = open(f'{vDir}/{file_js}','w')
     json.dump(plots,file)
     file.close()
@@ -149,7 +149,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             if not "llhd" in pt or not "l_SM" in pt:
                 if not "l_SM" in pt:
                     # its only weird if only l_SM is missing
-                    logger.error ( f"asked for significances but no l_SM in {pt['axes']}!" ) 
+                    logger.error ( f"asked for significances but no l_SM in {pt['axes']}!" )
                 # sys.exit()
             else:
                 Z = significanceFromLikelihoods ( pt["l_SM"], pt["llhd"] )
@@ -388,10 +388,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         csl = plt.plot([-1,-1],[0,0], c = "blue", label = "exclusion (SModelS)",
                   transform = fig.transFigure )
         #convert contour to a list of x,y values
-        
+
         x_cs, y_cs = [], []
         x_ecs, y_ecs = [],[]
-        
+
         if len(cs.collections)>0:
             paths_cs = cs.collections[0].get_paths()  #collections[0] refers to the 1st level
             if len ( paths_cs ) > 0:
@@ -399,7 +399,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                     vertices_cs = paths.vertices
                     x_cs.append(vertices_cs[:,0].tolist())
                     y_cs.append(vertices_cs[:,1].tolist())
-        
+
         if options["drawExpected"] in [ "auto", True ]:
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
@@ -413,12 +413,27 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                         vertices_ecs = paths.vertices
                         x_ecs.append(vertices_ecs[:,0].tolist())
                         y_ecs.append(vertices_ecs[:,1].tolist())
-        
+
         if options["createSModelSExclJson"]: createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
-        
+
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
+    backend = ""
+    comment = validationPlot.expRes.globalInfo.comment.lower()
+    if "colliderbit" in comment:
+        backend = "ColliderBit"
+    if "ma5" in comment or "madanalysis" in comment:
+        backend = "MA5"
+    if "checkmate2" in comment:
+        backend = "CheckMate2"
+    if "checkmate" in comment:
+        backend = "CheckMate"
+    if "adl" in comment or "cutlang" in comment:
+        backend = "CutLang"
+    if backend!="":
+        plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure, 
+                 fontsize=9 )
     txStr = validationPlot.txName +': '+pName
     plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )
     axStr = prettyAxes(validationPlot)
@@ -443,7 +458,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             subtitle = "combination of tpreds"
     plt.text ( .97, .0222, subtitle, transform=fig.transFigure, fontsize=10,
                horizontalalignment="right" )
-               
+
     #if figureUrl:
     if False:
         plt.text( .13, .13, f"{figureUrl}",
