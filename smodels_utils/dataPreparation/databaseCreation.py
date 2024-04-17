@@ -796,7 +796,7 @@ class DatabaseCreator(list):
             if attr == "axes":
                 ## remove full 3d entries
                 if "z" in value:
-                    self.debug ( "There is a 3d axis. Will try to remove it." )
+                    logger.debug ( "There is a 3d axis. Will try to remove it." )
                     tokens = value.split(";")
                     value=""
                     for t in tokens:
