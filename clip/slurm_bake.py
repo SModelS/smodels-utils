@@ -200,7 +200,7 @@ def bake ( args : Dict ):
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
 def logCall ():
-    logfile = f"{os.environ['HOME']}/slurm_bake.log"
+    logfile = f"{os.environ['HOME']}/bake.log"
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:

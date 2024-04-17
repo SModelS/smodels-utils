@@ -10,8 +10,11 @@ from colorama import Fore as ansi
 from typing import Union
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
+outputsdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs/"
 if "CODEDIR" in os.environ:
     codedir = os.environ["CODEDIR"]
+if "OUTPUTS" in os.environ:
+    outputsdir = os.environ["OUTPUTS"]
 
 def mkdir ( Dir ):
     if not os.path.exists ( Dir ):
@@ -128,11 +131,10 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         os.mkdir ( tdir )
     os.chmod( newFile, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
-    outdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs"
-    #cmd += [ "--error", f"{outdir}/validate-%j.out",
-    #         "--output", f"{outdir}/validate-%j.out" ]
-    cmd += [ "--error", f"{outdir}/{tempdir}.out",
-             "--output", f"{outdir}/{tempdir}.out" ]
+    #cmd += [ "--error", f"{outputsdir}/validate-%j.out",
+    #         "--output", f"{outputsdir}/validate-%j.out" ]
+    cmd += [ "--error", f"{outputsdir}/{tempdir}.out",
+             "--output", f"{outputsdir}/{tempdir}.out" ]
     # cmd += [ "--ntasks-per-node", str(nproc) ]
     if True:
         # time = 48
@@ -161,7 +163,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     #print ( "[slurm_validate.py] %s %s" % ( cmd, o ) )
 
 def logCall ():
-    logfile = f"{os.environ['HOME']}/slurm_validate.log"
+    logfile = f"{os.environ['HOME']}/validate.log"
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
@@ -185,7 +187,7 @@ def logCall ():
 def clean():
     files = glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
     files += glob.glob ( f"{codedir}/smodels-utils/clip/temp/_V*" )
-    files += glob.glob ( f"{os.environ['OUTPUTS']}/validate*out" )
+    files += glob.glob ( f"{outputsdir}/validate*out" )
     for f in files:
         if os.path.exists ( f ):
             if os.path.isdir ( f ):
@@ -227,8 +229,36 @@ def main():
     if args.query:
         queryStats ( )
         sys.exit()
-    mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
+    mkdir ( outputsdir )
     nproc = getNProcesses ( args.nprocesses, args.validate )
+    if args.keep:
+        ## when running with --keep, we might want to
+        ## remove smodels-utils/validation/<tempname> first.
+        valdir = f"{codedir}/smodels-utils/validation/{args.tempname}".replace("//","/")
+        parfile = f"{valdir}/results/parameter.ini"
+        parfile = parfile.replace("//","/")
+        valdirExists = os.path.exists ( parfile )
+        valdirExists = False
+        if valdirExists:
+            print ( f"[slurm_validate] asked for continuation but {parfile} exists" )
+            answ = input ( f"[slurm_validate] do you wish to remove the folder and continue? [y|N]" )
+            if answ.lower() == "y":
+                cmd = f"rm -rf {valdir}"
+                print ( f"[slurm_validate] cmd: {cmd}" )
+                o = subprocess.getoutput ( cmd )
+            else:
+                print ( f"[slurm_validate] stopping execution." )
+                sys.exit()
+        valdictFile = f"{codedir}/smodels-database/"
+        valdictFileExists = False
+        ## when running with --keep, we might want to remove the
+        ## remove smodels-database/**/T*py first
+        ## FIXME not yet implemented!
+        if valdictFileExists:
+            print ( f"[slurm_validate] asked for continuation but {valdictFile} exists"  )
+            sys.exit()
+    # print ( f"breaking after" )
+    # sys.exit()
     for i in range(args.repeat):
         validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
                args.topo, args.keep, args.tempname )
