@@ -420,17 +420,18 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if pName == None:
         pName = "define {validationPlot.txName} in prettyDescriptions"
     backend = ""
-    comment = validationPlot.expRes.globalInfo.comment.lower()
-    if "colliderbit" in comment:
-        backend = "ColliderBit"
-    if "ma5" in comment or "madanalysis" in comment:
-        backend = "MA5"
-    if "checkmate2" in comment:
-        backend = "CheckMate2"
-    if "checkmate" in comment:
-        backend = "CheckMate"
-    if "adl" in comment or "cutlang" in comment:
-        backend = "CutLang"
+    if hasattr ( validationPlot.expRes.globalInfo, "comment" ):
+        comment = validationPlot.expRes.globalInfo.comment.lower()
+        if "colliderbit" in comment:
+            backend = "ColliderBit"
+        if "ma5" in comment or "madanalysis" in comment:
+            backend = "MA5"
+        if "checkmate2" in comment:
+            backend = "CheckMate2"
+        if "checkmate" in comment:
+            backend = "CheckMate"
+        if "adl" in comment or "cutlang" in comment:
+            backend = "CutLang"
     if backend!="":
         plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure, 
                  fontsize=9 )
@@ -467,7 +468,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if kfactor is not None and abs ( kfactor - 1.) > .01:
         plt.text( .13,.83, f"k-factor = {kfactor:.2f}", fontsize=10,
                   c="gray", transform = fig.transFigure )
-    if options["preliminary"] != False:
+    if options["preliminary"] not in [ False, "False", "false", "0", None ]:
         text = options["preliminary"]
         if text.lower() in [ "true", "1", "yes" ]:
             text = "SModelS preliminary"
