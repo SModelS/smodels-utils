@@ -1043,6 +1043,7 @@ class ValidationPlot():
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
+            logger.info ( f"saving plot in {filename}" )
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
@@ -1050,14 +1051,6 @@ class ValidationPlot():
                cmd = f"convert {filename} {newfilename}"
                import subprocess
                o = subprocess.getoutput ( cmd )
-            """
-            logger.debug ( "saving plot in %s (and pdf and root)" % filename )
-            self.savefig ( filename )
-            addLogo ( filename )
-            #filename = filename.replace('.png','.root')
-            #self.savefig ( filename )
-            # addLogo ( filename )
-            """
         self.show ( filename )
 
         return True
