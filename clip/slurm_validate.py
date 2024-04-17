@@ -6,6 +6,7 @@ the script to start all results validation jobs with
 """
 
 import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
+from colorama import Fore as ansi
 from typing import Union
 
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
@@ -65,7 +66,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         topo = "*"
     if analyses == None:
         analyses = "all"
-    print ( f"[slurm_validate.py] run validation with {inifile}" )
+    print ( f"[slurm_validate.py]{ansi.YELLOW} run validation with {inifile}{ansi.RESET}" )
     Dir = f"{codedir}/smodels-utils/clip/temp/"
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
@@ -215,6 +216,8 @@ def main():
                         type=str, default = None )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
+    argparser.add_argument ( '-r', '--repeat', nargs='?', help='repeat submission n times [1]',
+                        type=int, default=1 )
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run', action="store_true" )
     args=argparser.parse_args()
@@ -226,7 +229,8 @@ def main():
         sys.exit()
     mkdir ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/" )
     nproc = getNProcesses ( args.nprocesses, args.validate )
-    validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
+    for i in range(args.repeat):
+        validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
                args.topo, args.keep, args.tempname )
     logCall()
 
