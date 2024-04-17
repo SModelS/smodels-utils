@@ -335,7 +335,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     # pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
     T = interpolateOverMissing ( xs, ys, T, float("nan"), interpolation )
     vT = interpolateOverMissing ( xs, ys, T, -10., interpolation )
-    eT = interpolateOverMissing ( xs, ys, eT, float("nan"), interpolation )
+    eT = interpolateOverMissing ( xs, ys, eT, -10., interpolation )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
