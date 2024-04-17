@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 
 limitCache={}
+## global options, to turn on or off
+options = { "dropAllZeroMaps": False }
 
 try:
     input=raw_input ## make sure it works with python2 and 3!
@@ -842,7 +844,12 @@ class DatabaseCreator(list):
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         if onlyZeroes:
-            self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes) -- we could drop {path} (but dont).", c="error" )
+            if options["dropAllZeroMaps"]:
+                self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes) -- we drop {path}.", c="error" )
+                return
+            else:
+                self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes) -- we could drop {path} (but dont).", c="error" )
+                self.timeStamp ( f"if you want them to be dropped, add databaseCreation.options['dropAllZeroMaps']=True", c="error" )
             # return here, and the map is dropped
             # return
 
