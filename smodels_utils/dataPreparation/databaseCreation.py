@@ -796,7 +796,7 @@ class DatabaseCreator(list):
             if attr == "axes":
                 ## remove full 3d entries
                 if "z" in value:
-                    self.warn ( "There is a 3d axis. Will try to remove it." )
+                    self.debug ( "There is a 3d axis. Will try to remove it." )
                     tokens = value.split(";")
                     value=""
                     for t in tokens:
@@ -821,8 +821,7 @@ class DatabaseCreator(list):
                     value = "; ".join( tokens )
                     while value.find("  ")>-1:
                         value = value.replace( "  ", " " )
-            content = '%s%s%s%s\n' % (content, attr,\
-                                       self.assignmentOperator, value)
+            content = f'{content}{attr}{self.assignmentOperator}{value}\n'
         onlyZeroes = False
         countZeroes = 0
         for attr in obj.infoAttr:
@@ -841,11 +840,10 @@ class DatabaseCreator(list):
                     else:
                         countZeroes += 1
             value = self._formatData(value,dataType=attr,n=obj.round_to)
-            content = '%s%s%s%s\n' % (content, attr,\
-                                       self.assignmentOperator, value)
+            content = f'{content}{attr}{self.assignmentOperator}{value}\n'
         if onlyZeroes:
             if options["dropAllZeroMaps"]:
-                self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes) -- we drop {path}.", c="error" )
+                self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes): as per request, we drop {path}.", c="error" )
                 return
             else:
                 self.timeStamp ( f"{name} has no non-zero values (and {countZeroes} zeroes) -- we could drop {path} (but dont).", c="error" )
@@ -854,10 +852,10 @@ class DatabaseCreator(list):
             # return
 
         if len(content)>5000000:
-            logger.error ( "%s has more than 5M characters! This will likely " \
-                           "create problems!" % path )
+            logger.error ( f"{path} has more than 5M characters! This will likely"\
+                           " create problems!" )
         infoFile = open(self.base + path, 'w')
-        self.timeStamp ( "writing Tx file %s" % path )
+        self.timeStamp ( f"writing Tx file {path}" )
         infoFile.write(content)
         infoFile.close()
 
