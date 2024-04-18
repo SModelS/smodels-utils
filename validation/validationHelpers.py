@@ -60,6 +60,17 @@ def translateAxisV2 ( axisv2 : str ) -> str:
             ctr+=1
     return str(axisv3)
 
+def equal_dicts(d1 : Dict , d2 : Dict , ignore_keys : List) -> bool:
+    """ compare two dictionaries, but ignore a list of keys """
+    ignored = set(ignore_keys)
+    for k1, v1 in d1.items():
+        if k1 not in ignored and (k1 not in d2 or d2[k1] != v1):
+            return False
+    for k2, v2 in d2.items():
+        if k2 not in ignored and k2 not in d1:
+            return False
+    return True
+
 def prettyAxesV3 ( axesStr : str ) -> bool:
     """ make an axes v3 description readable
 

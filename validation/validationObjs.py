@@ -21,7 +21,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull
+from validationHelpers import point_in_hull, equal_dicts
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -467,7 +467,8 @@ class ValidationPlot():
             slhafile = d["slhafile"]
             # d here is one entry in the validation dict file
             if slhafile in slhadict:
-                if d != slhadict[slhafile]:
+                if not equal_dicts ( d, slhadict[slhafile], {"t",} ):
+                    ## FIXME ignore t!
                     logger.error ( f"entry {d['slhafile']} changed content {d} != {slhadict[slhafile]}" )
             else:
                 ctadded+=1
