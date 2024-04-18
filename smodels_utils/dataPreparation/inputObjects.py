@@ -1018,15 +1018,15 @@ class TxNameInput(Locker):
                     if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
                         skipMass = True
                         if not quenchNegativeMasses:
-                            logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
+                            logger.warning( f"Negative mass value found for {self}. Point {massArray} will be ignored." )
                         continue
                     if type(M) == tuple and M[1]<0.:
                         skipMass = True
-                        logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
+                        logger.warning( f"Negative lifetime found for {self}. Point {massArray} will be ignored." )
                         continue
             if value < 0.:
                 skipMass = True
-                logger.warning("Negative value for %s found. Point %s will be ignored." %(self,str(massArray)))
+                logger.warning( f"Negative value for {self} found. Point {massArray} will be ignored." )
             if skipMass:
                 continue
             #Check if mass array is consistent with the mass constraints given by the
@@ -1242,7 +1242,8 @@ class TxNameInput(Locker):
                     vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
                     branchConstraint.append(vertexConstraint)
                 elConstraint.append(branchConstraint)
-            self.massConstraints.append(elConstraint)
+            if elConstraint not in [ [], None ]:
+                self.massConstraints.append(elConstraint)
 
     def _setMassConstraints(self):
         """
@@ -1389,7 +1390,8 @@ class TxNameInput(Locker):
                           topology of the txname constraint.
         :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
         """
-        if hasattr(self,'massConstraint'): ## FIXME obsolete?
+        if hasattr(self,'massConstraint') and self.massConstraint!=None: 
+            ## FIXME obsolete?
             self.massConstraints = [self.massConstraint]
         if not hasattr(self,'massConstraints'):
             self._setMassConstraints()
@@ -1424,7 +1426,6 @@ class TxNameInput(Locker):
                         sys.exit()
                 nodeindices = [ invertedMap[x] for x in parindices ]
 
-                # print ( f"@@0 massArray {massArray} nodeIndices {nodeindices}" )
                 dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
                 if type(dm)!=float:
                     complainAbout["sympy obj"]+=1

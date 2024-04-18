@@ -116,7 +116,7 @@ def bake ( args : Dict ):
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )
     pathname = os.path.join ( Dir, filename )
-    print ( f"[slurm.py] creating script at {pathname}: {len(lines)} lines." )
+    print ( f"[slurm_bake] creating script at {pathname}: {len(lines)} lines." )
     # nprc = int ( math.ceil ( nproc * .5  ) )
     maxgaps = ""
     gaps = [ "maxgap1", "maxgap2", "maxgap13", "mingap1", "mingap2", "mingap13" ]
@@ -191,13 +191,14 @@ def bake ( args : Dict ):
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     # cmd += [ tmpfile ]
     cmd += [ Dir + filename ]
-    print ( f'[slurm.py] baking {" ".join ( cmd )}' )
+    print ( f'[slurm_bake] baking {" ".join ( cmd )}' )
     if not dry_run:
         a=subprocess.run ( cmd )
-        print ( f"returned: {a}" )
+        if a.returncode != 0:
+            print ( f"[slurm_bake] returned: {a}" )
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
-    #print ( "[slurm.py] %s %s" % ( cmd, o ) )
+    #print ( "[slurm_bake] %s %s" % ( cmd, o ) )
 
 def logCall ():
     logfile = f"{os.environ['HOME']}/bake.log"
