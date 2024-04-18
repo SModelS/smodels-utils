@@ -693,7 +693,7 @@ class Axes(object):
         newMass = self.getParticleMasses(**xValues)
 
         def isFloat ( x ):
-            return isinstance(x,(np.floating,float))
+            return isinstance(x,(np.floating,float,int))
 
         def distance ( x, y ):
             ## the distance between x and y
