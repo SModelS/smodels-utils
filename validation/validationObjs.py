@@ -684,11 +684,12 @@ class ValidationPlot():
         expRes = res[0]
         #Double checks (to make sure SModelS ran as expected):
         leadingDSes = {}
-        if True: # len(res) != 1:
+        if len(res) != 1:
             logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
             found_combined=False
             for eR in res:
-                if "combined" in eR["DataSetID"]:
+                datasetId = eR["DataSetID"]
+                if datasetId != None and  "combined" in datasetId:
                     logger.debug ( "found a combined result. will use it." )
                     found_combined=True
                     expRes = eR
