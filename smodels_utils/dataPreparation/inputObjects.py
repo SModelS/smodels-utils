@@ -1077,7 +1077,7 @@ class TxNameInput(Locker):
 
 
         if not dataList:
-            logger.warning('Could not retrieve data for %s (plane %s)' %(self,plane))
+            logger.warning( f'Could not retrieve data for {self} (plane {plane})')
             return False
         #Add data to txname. If dataLabel already exists, extend it
         if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
