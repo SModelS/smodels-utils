@@ -15,7 +15,8 @@ import math, ctypes
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+from smodels_utils.helper.prettyDescriptions import prettyTxname
+from validationHelpers import prettyAxes
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
                           getDatasetDescription, getAxisRange, isWithinRange
 
@@ -209,7 +210,7 @@ def create1DPlot( validationPlot, silentMode=True,
         plot ( values[label]["ex"], values[label]["ey"], color=c,
                 linestyle=linestyle, marker="." )
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
-    pAxis = prettyAxes(validationPlot.txName, validationPlot.axes ) #, outputtype="latex" )
+    pAxis = prettyAxes(validationPlot ) #, outputtype="latex" )
     title = f"{validationPlot.expRes.globalInfo.id}: {pName} \n {pAxis}"
 #       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
 #         validationPlot.axes ) )
