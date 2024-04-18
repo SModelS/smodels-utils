@@ -325,8 +325,8 @@ def main():
     argparser.add_argument ( '-m', '--mass', nargs="?",
                     help='bake EM maps, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]',
                     type=str, default="default" )
-    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
-                        type=int, default=48 )
+    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
+                        type=int, default=8 )
     argparser.add_argument ( '-j', '--njets', nargs='?', help='number of jets [1]',
                         type=int, default=1 )
     argparser.add_argument ( '--event_condition', nargs="?",
