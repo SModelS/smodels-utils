@@ -216,7 +216,7 @@ class ValidationPlot():
         #import ROOT
         curve = self.getOfficialCurves( get_all = False, expected = False )
         if curve == []:
-            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes.globalInfo.id,self.txName,self.axes  ) )
+            logger.error( f"could not get official tgraph curve for {self.expRes.globalInfo.id} {self.txName} {self.axes}" )
             return 1.0
         curve = curve[0]
         if isinstance(curve,list):
@@ -1026,8 +1026,7 @@ class ValidationPlot():
             shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
-            logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
-                          %(self.expRes.globalInfo.id,self.txName,self.axes))
+            logger.error( f"There is no data for {self.expRes.globalInfo.id}/{self.txName}/{self.axes}.\n Are the SLHA files correct? Are the constraints correct?" )
 
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):
