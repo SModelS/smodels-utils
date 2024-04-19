@@ -61,6 +61,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         ## sys.exit()
 
     nErrors = 0
+    nPointsOnPlane = 0
     # Get excluded and allowed points:
     nmax = len(validationPlot.data)
     if False:
@@ -84,6 +85,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             print ( "[uglyMatplotlib] emergency break" )
             break
         if "error" in pt.keys():
+            if "axes" in pt and pt["axes"]!=None:
+                noresult.append ( pt["axes"] )
+                nErrors += 1
+                nPointsOnPlane += 1
+            continue
+                # we should not even count these, they are not on our plane
+            """
             vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
             if vD != None and "x" in vD:
                 x_, y_ = vD["x"], None
@@ -101,6 +109,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 noresult.append( { "x": x_, "y": y_ } )
             nErrors += 1
             continue
+            """
+        nPointsOnPlane += 1
         if pt["UL"] == None:
             logger.debug ( f"No upper limit for {pt}" )
             continue
@@ -284,7 +294,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         halign = "left"
     # ypnr = 0.95
     ypnr = .03
-    plt.text ( dxpnr, ypnr, f"{nErrors} / {len(validationPlot.data)} points with no results",
+    ### we write <number of error points> / <number of points in plane> [<number of points in tarball]
+    plt.text ( dxpnr, ypnr, f"{nErrors}/{nPointsOnPlane} [{len(validationPlot.data)}] points w/o results",
             c="gray", fontsize=10, transform = fig.transFigure,
             horizontalalignment=halign )
     l = plt.legend( loc="best") # could be upper right
