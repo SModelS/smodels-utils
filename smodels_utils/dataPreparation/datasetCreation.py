@@ -25,6 +25,7 @@ from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 errorcounts = { "errorsvary": 0, "moreconservative": 0 }
 
 minimumBackgroundEstimate = 1e-4
+minimumBackgroundErrorEstimate = 1e-6
 
 def createAggregationList ( aggregationborders ):
     """
@@ -246,11 +247,12 @@ class DatasetsFromLatex:
                 binnr = int ( tokens[0] )
             except Exception as e:
                 pass
-            nobs = int ( tokens[self.c_obs] )
+            nobs = float ( tokens[self.c_obs] )
+            if nobs % 1 == 0:
+                nobs = int ( nobs )
             sbg = tokens[self.c_bg].strip()
             bg, bgerr = self.getBGAndError ( sbg )
-            name = "SR%d" % (binnr+1)
-            # name = "sr%d" % (binnr)
+            name = f"SR{binnr+1}"
             dataId = self.ds_name
             for i,token in enumerate ( tokens ):
                 ctoken = token.strip()
@@ -261,6 +263,9 @@ class DatasetsFromLatex:
             if not count_all in self.blinded_regions:
                 counter+=1
                 dataset = DataSetInput ( name )
+                if bgerr == 0:
+                    logger.warning ( f"background error estimate for {name} is at 0.0. Will put to {minimumBackgroundErrorEstimate}" )
+                    bgerr = minimumBackgroundErrorEstimate
                 if bg == 0.:
                     logger.warning ( f"background estimate for {name} is at 0.0. Will put to {minimumBackgroundEstimate}" )
                     bg=minimumBackgroundEstimate
@@ -360,6 +365,9 @@ class DatasetsFromRoot:
         bg = self.histo_bg.GetBinContent ( self.counter )
         bgerr = self.histo_bg.GetBinError ( self.counter )
         dataset = DataSetInput ( name )
+        if bgerr == 0:
+            logger.warning ( f"background error estimate for {name} is at 0.0. Will put to {minimumBackgroundErrorEstimate}" )
+            bgerr = minimumBackgroundErrorEstimate
         if bg == 0.:
             logger.warning ( f"background estimate for {name} is at 0.0. Will put to {minimumBackgroundEstimate}" )
             bg=minimumBackgroundEstimate
@@ -476,6 +484,9 @@ class DatasetsFromEmbaked:
                 if "comment" in values:
                     dataset.comment = values["comment"]
                 # print ( f"data: {nobs}, {bg}+-{bgerr}" )
+                if bgerr == 0.:
+                    logger.warning ( f"background error estimate for {dataId} is at 0.0. Will put to {minimumBackgroundErrorEstimate}" )
+                    bgerr=minimumBackgroundErrorEstimate
                 if bg == 0.:
                     logger.warning ( f"background estimate for {dataId} is at 0.0. Will put to {minimumBackgroundEstimate}" )
                     bg=minimumBackgroundEstimate
