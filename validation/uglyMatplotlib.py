@@ -250,6 +250,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     axes = prettyAxes(validationPlot)
     axes = axes.replace("*","")
     axes = axes.replace("0.5",".5")
+    axes = axes.replace("100.","100")
     axes = axes.replace("anyBSM","*")
     #axes = axes.replace("MET","$\\\\slash{E}_T}$" )
     title = validationPlot.expRes.globalInfo.id + " " \
