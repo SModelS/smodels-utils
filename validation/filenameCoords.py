@@ -49,3 +49,4 @@ coords["TChiWH4fcheck"]={'masses': [[1, 3, 4], [5, 7, 8]], 'widths': None}
 coords["TChiWZoffCd2"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["T6ttWW"]={'masses': [[1, 2, 3], [4, 5, 6]], 'widths': None}
 coords["T5ttddbb"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TRPV5tjb"]={'masses': [[1, 2], [3, 4]], 'widths': None}
