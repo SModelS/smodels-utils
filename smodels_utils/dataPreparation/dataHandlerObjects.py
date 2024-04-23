@@ -81,7 +81,12 @@ class DataHandler(object):
 
         self.txName = txName
         self.name = dataLabel
-        self.dimensions = len(xvars)
+        varsUsed = set()
+        for expr in xvars:
+            for i in [ "x", "y", "z" ]:
+                if i in str(expr):
+                    varsUsed.add ( i )
+        self.dimensions = len(varsUsed)
         self.coordinateMap = coordinateMap
         self.xvars = xvars
         # so we dont need to parse them so often
@@ -111,7 +116,7 @@ class DataHandler(object):
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error( f"Coordinate map {coordinateMap} (dim {len(coordinateMap)}) is not consistent with number of dimensions ({self.dimensions+1}) in {dataLabel}" )
-            sys.exit()
+            # sys.exit()
         for xy in { "x": x, "y": y, "z": z }.items(): # allow also strings
             if xy[0] in coordinateMap:
                 coordinateMap[xy[1]] = coordinateMap[xy[0]]
@@ -121,8 +126,8 @@ class DataHandler(object):
                 try:
                     fl = float(str(xv)) ## if we can cast, its all good
                 except ValueError as e:
-                    logger.error( f"Coordinate {xv}, {type(xv)} has not been defined in coordinateMap" )
                     if xv in [ x, y, z ]:
+                        logger.error( f"Coordinate {xv}, {type(xv)} has not been defined in coordinateMap" )
                         logger.error ( f"Maybe you wrote '{xv}' instead of {xv} (i.e. a string instead of a sympy Symbol?)" )
                     # sys.exit()
 
