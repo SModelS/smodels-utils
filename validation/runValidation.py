@@ -517,8 +517,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 # per default we do not do this
                 shutil.copyfile ( currentPickle, os.path.join ( databasePath, "validation.pcl" ) )
     except Exception as e:
-        logger.error("Error loading database at %s" % ( databasePath ) )
-        logger.error("Error: %s" % str(e) )
+        logger.error( f"Error loading database at {databasePath}" )
+        logger.error( f"Error: {str(e)}" )
         sys.exit()
 
     logger.info('-- Running validation...')
