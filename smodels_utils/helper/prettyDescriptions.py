@@ -31,6 +31,9 @@ prettySMParticle = {
  'quark': 'q',           #quark
   'antiquark': '#bar{q}',
  'up': 'u',           #up
+ 'jet': '#mathrm{jet\,}',
+ '(RPV)': '#mathrm{\,(RPV)}',
+ 'b': 'b',
  'down': 'd',           #down
  'charm': 'c',           #charm
  'strange': 's',           #strange
@@ -69,7 +72,6 @@ prettySUSYParticle = {
     'sstrange': '#tilde{s}',  #sstarnge
     'stop': '#tilde{t}',  #stop
     'sbottom': '#tilde{b}',  #sbottom
-
     'slepton' : '#tilde{l}',    #slepton
     'selectron' : '#tilde{e}',      #selectron
     'smuon' : '#tilde{#mu}',   #smuon
@@ -549,8 +551,6 @@ def latexfy(instr):
             outstr = outstr.replace(' '+key,' '+rep)
         if '/'+key in outstr:
             outstr = outstr.replace('/'+key,'/'+rep)
-
-
     outstr = outstr.replace('-->','#rightarrow')
     outstr = outstr.lstrip().rstrip()
     return outstr
