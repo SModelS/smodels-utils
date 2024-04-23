@@ -1102,7 +1102,13 @@ class TxNameInput(Locker):
             return self.addDataFromV2 ( plane, dataLabel )
 
         #Get dimension of the plot:
-        nvars = len(plane.xvars)
+        # nvars = len(plane.xvars)
+        hasVariables = set() # count
+        for ax in plane.xvars:
+            for i in [ "x", "y", "z" ]:
+                if i in str(ax):
+                    hasVariables.add ( i )
+        nvars = len ( hasVariables )
         if nvars < 1 or nvars > 4:
             logger.error(f'Can not deal with {nvars} variables' )
             sys.exit()
@@ -1124,7 +1130,7 @@ class TxNameInput(Locker):
         for ptDict in dataHandler:
             if len(ptDict) != nvars+1:
                 logger.error( f"Number of free parameters in data ({ptDict}) and in axes ({plane.xvars}) do not match")
-                sys.exit()
+                #sys.exit()
 
             #ptDic is of the form: {x : float, y : float, value-key : float}
             #where value-key is any key identifying the (upper limit,efficiency,..) value
