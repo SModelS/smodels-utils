@@ -83,7 +83,7 @@ class WikiPageCreator:
             print ( f"Creating {self.localdir}" )
             cmd = f"mkdir {self.localdir}"
             subprocess.getoutput ( cmd )
-        cmd = f"rsync -a --prune-empty-dirs --exclude \\*.tgz --exclude \\*/__pycache__ --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r {self.databasePath}/* {self.localdir}"
+        cmd = rf"rsync -a --prune-empty-dirs --exclude \*.tgz --exclude \*/__pycache__ --exclude \*.pdf --exclude \*.pcl --exclude \*.root --exclude \*.py --exclude \*.txt --exclude \*.bib --exclude \*/orig/\* --exclude \*data\* --exclude \*.sh --exclude README\*  -r {self.databasePath}/* {self.localdir}"
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( f"[createWikiPage] Copying database from {self.databasePath} to {self.localdir}." )
             a= C.getoutput ( cmd )
