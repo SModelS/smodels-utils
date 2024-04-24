@@ -559,7 +559,7 @@ class DataSetInput(Locker):
 
         #Check if it contains txnames:
         if not self._txnameList:
-            logger.error("Dataset %s does not contain txnames" %self)
+            logger.error( f"Dataset {self} does not contain txnames" )
             return False
 
         #Check txname data type
@@ -572,15 +572,13 @@ class DataSetInput(Locker):
                     txDataTypes.add('efficiencyMap')
             txDataTypes = list(txDataTypes)
             if not txDataTypes:
-                logger.error("Txname %s has no upperLimits or efficiencyMap data?" %\
-                              tx.txName)
+                logger.error( f"{self}:{tx.txName} has neither upperLimits nor efficiencyMap data?" )
                 return False
             if len(txDataTypes) > 1:
-                logger.error("Txname %s has mixed data types" %tx.txName)
+                logger.error( f"Txname {tx.txName} has mixed data types" )
                 return False
             elif not self.dataType in txDataTypes[0]:
-                logger.error("Txname %s data type (%s) does not match dataset type (%s)"
-                             %(tx.txName,txDataTypes[0],self.dataType))
+                logger.error( f"Txname {tx.txName} data type ({txDataTypes[0]}) does not match dataset type ({self.dataType})" )
                 return False
 
 
