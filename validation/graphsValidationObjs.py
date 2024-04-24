@@ -972,7 +972,7 @@ class ValidationPlot():
     def show ( self, filename ):
         """ we were asked to also show <filename> """
         term = os.environ["TERM"]
-        if not self.options["show"] or not term == "xterm-kitty":
+        if not self.options["show"]: # or not term == "xterm-kitty":
             return
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
