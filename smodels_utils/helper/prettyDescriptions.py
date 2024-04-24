@@ -31,8 +31,8 @@ prettySMParticle = {
  'quark': 'q',           #quark
   'antiquark': '#bar{q}',
  'up': 'u',           #up
- 'jet': '#mathrm{jet\,}',
- '(RPV)': '#mathrm{\,(RPV)}',
+ 'jet': r'#mathrm{jet\,}',
+ '(RPV)': r'#mathrm{\,(RPV)}',
  'b': 'b',
  'down': 'd',           #down
  'charm': 'c',           #charm
