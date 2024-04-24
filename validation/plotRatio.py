@@ -395,7 +395,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     if options["SR"] != None:
         txStr+=f' [{options["SR"]}]'
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
-    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, outputtype="latex" )
+    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1 ) #, outputtype="latex" )
     if axis1 != axis2:
         print ( f"[plotRatio] error, different axes!" )
         sys.exit()
@@ -455,7 +455,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
                 plt.plot ( px, E["y"], color='white', linestyle='-', linewidth=4, label="" )
                 plt.plot ( px, E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
                 label = ""
-    smodels_root = "%s/%s.root" % ( analysis, topo )
+    smodels_root = f"{analysis}/{topo}.root"
     if not os.path.exists ( smodels_root ):
         print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
         # print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
@@ -464,7 +464,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     else:
         smodels_line = getSModelSExclusion ( smodels_root )
         el2 = getExclusionLine ( smodels_line )
-    print ( "[plotRatio] Found SModelS exclusion line with %d points." % ( len(el2) ) )
+    print ( f"[plotRatio] Found SModelS exclusion line with {len(el2)} points." )
     label="SModelS exclsuion"
     for E in el2:
         hasLegend = True
@@ -510,7 +510,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     plt.text ( .80, .025, f"f={rmean:.2f}+-{rstd:.2f}", 
             transform=fig.transFigure, c="grey", fontsize=12  )
-    print ( "[plotRatio] Saving to %s" % figname )
+    print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
         plt.legend()
     try:
@@ -527,12 +527,12 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         plt.kittyPlot()
 #        plt.show()
     if options["copy"]:
-      cmd="cp %s ~/git/smodels.github.io/plots/" % ( figname )
-      print ( "[plotRatio] %s" % cmd )
+      cmd=f"cp {figname} ~/git/smodels.github.io/plots/"
+      print ( f"[plotRatio] {cmd}" )
       subprocess.getoutput ( cmd )
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
-            f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
+            f.write ( f"{figname} {rmean:.2f} +/- {rstd:.2f}\n" )
     print ( f"[plotRatio] ratio={rmean:.2f} +/- {rstd:.2f} (with {npoints} points)" )
     plt.clf()
 

@@ -909,6 +909,12 @@ def getParticleNames ( smsstring : str ) -> Dict:
         ret[int(numbers[0])]=name
     return ret
 
+def prettyAxes ( txn: str, axes : str ) -> str:
+    """ get pretty axes, v2 and v3 alike """
+    if "{" in axes:
+        return prettyAxesV3 ( txn, axes )
+    return prettyAxesV2 ( txn, axes )
+
 def prettyAxesV3( txn : str, axes : str ) -> str:
     """
     get a description of the axes of validation plot

@@ -122,8 +122,7 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
         if axes != None:
             bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
-        print ( "[plotBestSRs] skipped %d/%d points: %s" % \
-                ( skipped, len(data), err ) )
+        print ( f"[plotBestSRs] skipped {skipped}/{len(data)} points: {err}" )
     return bestSRs
 
 def countSignalRegions ( bestSRs : dict ) -> dict:
@@ -298,7 +297,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     txStr = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
     plt.text(.03,.975,txStr,transform=fig.transFigure, fontsize=9 )
     topo = shortTxName ( txnames )
-    print ( "[plotBestSRs] plotting %s (%s)" % ( analysis, topo ) )
+    print ( f"[plotBestSRs] plotting {analysis} ({topo})" )
     fname = outputfile.replace( "@a", analysis ).replace( "@t", topo )
     srank = "best"
     if rank == 2:
@@ -318,33 +317,33 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
 def writeBestSRs( push = False ):
     import glob
     Dir = "../../smodels.github.io/plots/"
-    files = glob.glob("%sbestSR*png" % Dir )
+    files = glob.glob( f"{Dir}bestSR*png" )
     files.sort()
     topos = set()
     for f in files:
         p = f.rfind ( "_" )
         topos.add ( f[p+1:-4] )
     # print ( topos )
-    with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
+    with open ( f"{Dir}bestSRs.md", "wt" ) as g:
         g.write ( "# plots of best expected signal regions\n" )
-        g.write ( "as of %s\n" % time.asctime() )
+        g.write ( f"as of {time.asctime()}\n" )
         g.write ( "checkout also the [ratio plots](README.md)\n" )
         tsorted = list(topos)
         tsorted.sort() ## why???
         for topo in tsorted:
-            g.write ( "\n## Topology: %s\n\n" % topo )
+            g.write ( f"\n## Topology: {topo}\n\n" )
             g.write ( "| andre | suchi |\n" )
             for f in files:
                 src = f.replace( Dir, "" )
                 if not topo in src:
                     continue
-                g.write ( '| <img src="%s" /> ' % ( src ) )
+                g.write ( f'| <img src="{src}" /> ' )
             g.write ( "|\n" )
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
     if push:
         o = subprocess.getoutput ( cmd )
-    print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
+    print ( f"[plotBestSRs] cmd {cmd}: {o}" )
 
 if __name__ == "__main__":
     """
@@ -402,16 +401,16 @@ if __name__ == "__main__":
                 fname = plot( ipath, args.max_x, args.max_y, args.outputfile,
                               rank = args.rank, nmax = args.nmax, show = args.show )
                 if args.copy:
-                    cmd = "cp %s ../../smodels.github.io/plots/" % fname
+                    cmd = f"cp {fname} ../../smodels.github.io/plots/"
                     o = subprocess.getoutput ( cmd )
-                    print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
+                    print ( f"[plotBestSRs] cmd {cmd}: {o}" )
     else:
         fname = plot( args.dbpath, args.analysis, args.validationfiles, 
                       args.max_x, args.max_y, args.outputfile, args.colors,
                       rank = args.rank, nmax = args.nmax, show=args.show )
         if args.copy:
-            cmd = "cp %s ../../smodels.github.io/plots/" % fname
+            cmd = f"cp {fname} ../../smodels.github.io/plots/"
             o = subprocess.getoutput ( cmd )
-            print ( "[plotBestSRs] cmd %s: %s" % (cmd, o ) )
+            print ( f"[plotBestSRs] cmd {cmd}: {o}" )
     if args.copy:
         writeBestSRs( args.push )
