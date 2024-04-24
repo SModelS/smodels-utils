@@ -339,17 +339,17 @@ class DatabaseCreator(list):
         """
 
         #Set current dataset folder (for writing all files below)
-        self.timeStamp ( "reading %s" % dataset, "debug" )
+        self.timeStamp ( f"reading {dataset}", "debug" )
         #Create dataInfo.txt file:
         if dataset.dataType == 'efficiencyMap':
             if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit'):
-                self.timeStamp("computing upper limits for %s" %str(dataset))
+                self.timeStamp( f"computing upper limits for {str(dataset)}" )
                 dataset.computeStatistics()
         #Write down dataInfo.txt
 
         #Consistency checks:
         if not dataset.checkConsistency():
-            logger.error("Dataset %s failed the consistency checks" %dataset)
+            logger.error( f"Dataset {dataset} failed the consistency checks" )
             return
             # sys.exit()
         self._createInfoFile('dataInfo', dataset, datasetFolder)
@@ -357,7 +357,7 @@ class DatabaseCreator(list):
         #Loop over txnames in datasets:
         for txName in dataset._txnameList:
             if not hasattr(txName, 'constraint'):
-                logger.error('Missing constraint for txname %s' %str(txName))
+                logger.error( f'Missing constraint for txname {str(txName)}' )
                 sys.exit()
 
             #(getData has to be called first to define which planes contain data for this txname)
