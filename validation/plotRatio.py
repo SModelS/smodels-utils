@@ -480,7 +480,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     if abs ( maxy - 80. ) < 3.:
         maxy = 79.9
     if nsr != "":
-        plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
+        plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     output = options["output"]
     if output != None:
@@ -495,20 +495,16 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     a1 = guessLabel ( options["label1"], anaId, anaId2, valfile )
     a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2 )
         
-    ypos = min(y)+.2*(max(y)-min(y))
-    if logScale:
-        ypos = min(y)*30.
-    xpos = max(x)+.3*(max(x)-min(x))
     line = f"$f$ = $r$({a1}) / $r$({a2})"
     if options["efficiencies"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
-    plt.text ( xpos, ypos, line, fontsize=13, rotation = 90)
+    plt.text ( .9, .1, line, fontsize=13, rotation = 90, transform=fig.transFigure)
 
     #text about no of SR in combined dataset
     # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
-    plt.text ( .80, .025, f"f={rmean:.2f}+-{rstd:.2f}", 
+    plt.text ( .80, .025, f"$\\bar{{f}}$={rmean:.2f}+-{rstd:.2f}", 
             transform=fig.transFigure, c="grey", fontsize=12  )
     print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
