@@ -188,7 +188,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             if noaxes < 5:
                 f1 = imp1.__file__.replace(dbpath,"")
                 slhapoint = point["slhafile"].replace(".slha","")
-                print ( "INFO: no axes in %s:%s" % ( f1, slhapoint ) )
+                print ( f"INFO: no axes in {f1}:{slhapoint}" )
             if noaxes == 5:
                 print ( " ... (more error msgs like these) " )
             continue
@@ -244,7 +244,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             ratio = float("nan")
             if r2 > 0.:
                 ratio = r1 / r2
-            #print ( f"masses:{axes[0],axes[1]} r={ratio} from r1,r2={r1,r2}" )
+            # print ( f"masses:{axes[0],axes[1]} r={ratio} from r1,r2={r1,r2}" )
             #sys.exit()
             tpl = (axes[0],ratio )
             if len(axes)>1:
