@@ -336,6 +336,7 @@ def runForOneResult ( expRes, options : dict,
                 axes = txname.axes
         axisType = getAxisType(axes)
         axis = options["axis"]
+        pnamedTarball = None
         if axis in [ None, "None", "" ]:
             ltarfile = tarfile
             for cax,ax in enumerate(axes):
