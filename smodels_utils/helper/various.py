@@ -138,8 +138,13 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
 
     import json
     if not os.path.isfile(jsonfile):
-        logger.error("json file %s not found" %jsonfile )
-        return None
+        logger.error( f"json file {jsonfile} not found" )
+        oldVersion = jsonfile.replace("exclusion_lines.json","exclusions.json")
+        if os.path.exists ( oldVersion ):
+            jsonfile = oldVersion
+            logger.warning( f"found an old {jsonfile}, trying with that" )
+        else:
+            return None
 
     with open ( jsonfile, "rt" ) as handle:
         content = json.load ( handle )

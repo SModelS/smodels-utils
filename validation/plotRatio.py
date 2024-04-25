@@ -86,7 +86,7 @@ def addDefaults ( options ):
     return defaults
 
 def hasAxisInfo ( content ):
-    """ the content of a validation dict file has info about 
+    """ the content of a validation dict file has info about
         the axes? """
     if not "meta" in content:
         return False
@@ -116,6 +116,8 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
             label = "combined"
     if anaId1 in anaId2:
         label = anaId2.lower()
+    if anaId2 == anaId1 + "-eff":
+        label = "ul"
     if label.startswith("-"):
         label = label[1:]
     if label == "???":
@@ -126,9 +128,9 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
     print ( f"[plotRatio] have been asked to guess the label for {anaId1}: {label}" )
     return label
 
-def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike, 
+def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
            analysis2 : str, valfile2 : PathLike, options : dict ):
-    """ plot. 
+    """ plot.
     :param options: a dictionary of various options:
     :option zmin: the minimum z value, e.g. .5
     :option zmax: the maximum z value, e.g. 1.7
@@ -323,7 +325,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % \
                 (err_msgs, len( content2["data"] ) ) )
-    
+
     #changed colormap to have discrete bins instead of continuous
     cm = plt.cm.get_cmap('seismic')
     plt.rc('text', usetex=True)
@@ -494,17 +496,19 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     a1, a2 = options["label1"], options["label2"]
     a1 = guessLabel ( options["label1"], anaId, anaId2, valfile )
     a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2 )
-        
+
     line = f"$f$ = $r$({a1}) / $r$({a2})"
     if options["efficiencies"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
-    plt.text ( .9, .1, line, fontsize=13, rotation = 90, transform=fig.transFigure)
+    plt.text ( .9, .5, line, fontsize=13, rotation = 90,
+               verticalalignment="center",
+               horizontalalignment="center", transform=fig.transFigure)
 
     #text about no of SR in combined dataset
     # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
-    plt.text ( .80, .025, f"$\\bar{{f}}$={rmean:.2f}+-{rstd:.2f}", 
+    plt.text ( .80, .025, f"$\\bar{{f}}$={rmean:.2f}+-{rstd:.2f}",
             transform=fig.transFigure, c="grey", fontsize=12  )
     print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
