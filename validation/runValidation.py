@@ -352,8 +352,10 @@ def runForOneResult ( expRes, options : dict,
                         myaxis = translateAxisV2 ( myaxis )
                     if compareTwoAxes ( myaxis, ax ):
                         hasCorrectAxis_ = True
-                        tarfile = os.path.join(slhadir,fname_)
-                        ltarfile = tarfile
+                        if os.path.join(slhadir,fname_) != tarfile:
+                            # different tarfile! change also ltarfile!
+                            tarfile = os.path.join(slhadir,fname_)
+                            ltarfile = tarfile
                 elif type(namedTarball) == list:
                     # looks like were given multiples
                     for nt in namedTarball:
@@ -362,14 +364,17 @@ def runForOneResult ( expRes, options : dict,
                             if fname_ == "skip":
                                 # spread the lore, we wish to skip this
                                 pnamedTarball = fname_
-                                tarfile = fname_
-                                ltarfile = tarfile
+                                if fname_ != tarfile:
+                                    # different tarfile! change also ltarfile!
+                                    tarfile = fname_
+                                    ltarfile = tarfile
                                 continue
                             if compareTwoAxes ( myaxis, ax ):
                                 hasCorrectAxis_ = True
                                 pnamedTarball = fname_
-                                tarfile = os.path.join(slhadir,fname_)
-                                ltarfile = tarfile
+                                if os.path.join(slhadir,fname_) != tarfile:
+                                    tarfile = os.path.join(slhadir,fname_)
+                                    ltarfile = tarfile
                                 break
                 if fname_ in kfactorDict:
                     # print ( "namedTarball", namedTarball, "ax", ax )
@@ -390,8 +395,9 @@ def runForOneResult ( expRes, options : dict,
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
-                        tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
-                        ltarfile = tarfile
+                        if os.path.join(slhadir,txnameStr+".tar.gz") != tarfile:
+                            tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+                            ltarfile = tarfile
 
                 if tarfile == "skip":
                     logger.info ( f"skipping {expRes}:{txnameStr}:{ax}" )
