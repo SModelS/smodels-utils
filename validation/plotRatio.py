@@ -148,7 +148,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         content = getValidationFileContent ( ipath1 )
         if not "meta" in content or content["meta"] is None:
             print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
-            sys.exit()
+            return
+            # sys.exit()
         axis1 = content["meta"]["axes"]
         contents.append ( content )
         p1 = valfile.find("_")
@@ -217,7 +218,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
                             effs[h]=val
                 else:
                     print ( f"[plotRatio.py] you specified SR {options['SR']} but no leadingDSes are in validation file {ipath1}. Perhaps rerun validation?" )
-                    sys.exit()
+                    return
+                    # sys.exit()
         # uls[ h ] = point["signal" ] / point["UL"]
 
     err_msgs = 0
@@ -284,7 +286,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
 
     if len(points) == 0:
         print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {ipath2}" )
-        sys.exit()
+        return
+        # sys.exit()
 
     points.sort()
     points = numpy.array ( points )
@@ -400,7 +403,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1 ) #, outputtype="latex" )
     if axis1 != axis2:
         print ( f"[plotRatio] error, different axes!" )
-        sys.exit()
+        return
+        # sys.exit()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
@@ -522,7 +526,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             # print ( f"ml load texlive/20210324-gcccore-10.2.0 # on the clip cluster" )
             print ( f"ml load texlive/20220321-gcc-12.2.0 # on the clip cluster" )
             print ( f"sudo apt install texlive dvipng # on debian based linux distros" )
-            sys.exit()
+            return
+            # sys.exit()
     if options["show"]:
         plt.kittyPlot()
 #        plt.show()
