@@ -28,13 +28,18 @@ except ImportError as e:
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
-def starting( expRes, txnameStr, axes ):
+def starting( expRes, txnameStr, axes, pretty ):
     from validationHelpers import prettyAxesV3, getAxisType
     atype = getAxisType ( axes )
     saxes = str(axes).replace(" ","")
     if atype == "v3":
         saxes = prettyAxesV3 ( axes )
-    logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
+    spretty = "ugly"
+    if pretty:
+        spretty = "pretty"
+    id = expRes.globalInfo.id
+    print( f"{GREEN}starting {id}:{txnameStr}:{saxes} ({spretty}){RESET}" )
+    #logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         db, kfactor=1., pretty=False, combine=False, namedTarball = None, 
@@ -57,7 +62,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     :param keep: keep temporary directories
     :return: ValidationPlot object or False
     """
-    starting( expRes, txnameStr, axes )
+    starting( expRes, txnameStr, axes, pretty )
     axisType = getAxisType(axes)
     if axisType=="v3":
         valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
