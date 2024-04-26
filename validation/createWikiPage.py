@@ -84,6 +84,7 @@ class WikiPageCreator:
             cmd = f"mkdir {self.localdir}"
             subprocess.getoutput ( cmd )
         cmd = rf"rsync -a --prune-empty-dirs --exclude \*.tgz --exclude \*/__pycache__ --exclude \*.pdf --exclude \*.pcl --exclude \*.root --exclude \*.py --exclude \*.txt --exclude \*.bib --exclude \*/orig/\* --exclude \*data\* --exclude \*.sh --exclude README\*  -r {self.databasePath}/* {self.localdir}"
+        print ( f"[createWikiPage] cmd {cmd}" )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( f"[createWikiPage] Copying database from {self.databasePath} to {self.localdir}." )
             a= C.getoutput ( cmd )
@@ -503,6 +504,7 @@ CMS are for on- and off-shell at once.
         """ compile the list of analysis ids in the comparison database,
         i.e. create self.topos and self.OldAnaIds
         """
+        print ( f"[createWikiPage] Creating list of old analysis ids" )
         expRs = self.comparison_db.getExpResults( useNonValidated = self.ignore_validated )
         anaIds = [ x.globalInfo.id for x in expRs ]
         self.OldAnaIds = set ( anaIds )
@@ -512,6 +514,7 @@ CMS are for on- and off-shell at once.
         """ compile the list of analysis ids in the actual database,
         i.e. create self.newtopos
         """
+        print ( f"[createWikiPage] Creating list of new analysis ids" )
         expRs = self.db.getExpResults( useNonValidated = self.ignore_validated )
         self.newtopos = self.compileAnaIds ( self.db.expResultList )
 

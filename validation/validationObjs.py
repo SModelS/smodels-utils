@@ -937,8 +937,13 @@ class ValidationPlot():
             if self.options["generateData"] == None:
                 logger.info ( f"results folder exists already, but generateData is ondemand, so will use them" )
             else:
-                outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
-                logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
+                if self.options["generateData"]==True:
+                    logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Removing {outputDir}!" )
+                    shutil.rmtree ( outputDir )
+                    os.mkdir ( outputDir )
+                else:
+                    outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+                    logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
         else:
             os.mkdir ( outputDir )
 
@@ -1023,6 +1028,7 @@ class ValidationPlot():
 
         #Remove temporary folder
         if self.currentSLHADir != self.slhaDir and not self.keep:
+            logger.info ( f"now removing {self.currentSLHADir}" )
             shutil.rmtree(self.currentSLHADir)
 
         if self.data == []:
