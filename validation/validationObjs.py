@@ -1013,8 +1013,6 @@ class ValidationPlot():
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
         logger.info ( f"will run on {len(self.willRun)} points, we had {len(fileList)} in the candidate points list, the limit was set to {self.limitPoints} points." )
-        print ( f"@@0 in self.data we have {len(self.data)}" )
-        print ( f"@@0 current dir is {self.currentSLHADir}" )
         #modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
         #         listOfExpRes, timeOut, False, parameterFile)
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
