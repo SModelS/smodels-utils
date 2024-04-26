@@ -287,6 +287,7 @@ class ValidationPlot():
         elif os.path.isfile(self.slhaDir):
             try:
                 tar = tarfile.open(self.slhaDir,'r:gz')
+                tempdir = "?"
                 if "tempdir" in self.options and self.options["tempdir"]!=None:
                     tdir =  self.options["tempdir"]
                     if "/" in tdir or "." in tdir:
@@ -294,6 +295,9 @@ class ValidationPlot():
                     tempdir = os.path.join ( os.getcwd(), tdir )
                 else:
                     tempdir = tempfile.mkdtemp(dir=os.getcwd())
+                p1 = tempdir.rfind("/")
+                stempdir = tempdir[p1+1:]
+                logger.info ( f"tempdir: {ansi.GREEN}{stempdir}{ansi.RESET}" )
                 members=tar.getmembers()
                 countm = 0
                 for m in members:
@@ -377,9 +381,9 @@ class ValidationPlot():
             #files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
             #if len(files)>0: ## use slha file as model
             #    model = files[0]
-        print ( f"model is {model}" )
         with open ( parFile, "w" ) as f:
-            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
+            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
+            f.write ( f"combineSRs = {combine}\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
             sigmacut = 0.000000001
@@ -394,8 +398,11 @@ class ValidationPlot():
                 maxcond = self.options["maxcond"]
             if "promptWidth" in self.options:
                 promptWidth = self.options["promptWidth"]
+            dataselector = "all"
+            if len(self.expRes.datasets)>1:
+                dataselector = "efficiencyMap"
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
-            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
+            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version3\noutputType = python\n")
             f.write(f"[particles]\nmodel={model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"

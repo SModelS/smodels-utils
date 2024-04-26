@@ -312,6 +312,7 @@ class ValidationPlot():
             try:
                 tar = tarfile.open(self.slhaDir,'r:gz')
                 nfiles = 0
+                tempdir = "?"
                 if "tempdir" in self.options and self.options["tempdir"]!=None:
                     tdir =  self.options["tempdir"]
                     if "/" in tdir or "." in tdir:
@@ -320,6 +321,9 @@ class ValidationPlot():
                     nfiles = len(glob.glob(tempdir+'/T*slha')) + 2
                 else:
                     tempdir = tempfile.mkdtemp(dir=os.getcwd())
+                p1 = tempdir.rfind("/")
+                stempdir = tempdir[p1+1:]
+                logger.info ( f"tempdir: {ansi.GREEN}{stempdir}{ansi.RESET}" )
                 members=tar.getmembers()
                 nmembers = len(members)
                 # logger.debug ( f"nfiles {nfiles} nmembers {nmembers}" )
@@ -408,7 +412,8 @@ class ValidationPlot():
             ## FIXME here we could define different defaults for eg T5Gamma
             model = "mssm"
         with open ( parFile, "w" ) as f:
-            f.write( f"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = {combine}\n" )
+            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
+            f.write ( f"combineSRs = {combine}\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
             sigmacut = 0.000000001
@@ -423,8 +428,11 @@ class ValidationPlot():
                 maxcond = self.options["maxcond"]
             if "promptWidth" in self.options:
                 promptWidth = self.options["promptWidth"]
+            dataselector = "all"
+            if len(self.expRes.datasets)>1:
+                dataselector = "efficiencyMap"
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
-            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = all\n" )
+            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version2\noutputType = python\n")
             f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
             #expected = "posteriori"
@@ -1005,6 +1013,8 @@ class ValidationPlot():
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
         logger.info ( f"will run on {len(self.willRun)} points, we had {len(fileList)} in the candidate points list, the limit was set to {self.limitPoints} points." )
+        print ( f"@@0 in self.data we have {len(self.data)}" )
+        print ( f"@@0 current dir is {self.currentSLHADir}" )
         #modelTester.testPoints( self.willRun, inDir, outputDir, parser, validationFolder,
         #         listOfExpRes, timeOut, False, parameterFile)
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
