@@ -470,9 +470,10 @@ def runForOneResult ( expRes, options : dict,
                               keep = keep )
                 localopts["generateData"] = False
         dt = (time.time()-txt0)/60.
-        logger.info( f"------ {RED} {txnameStr} validated in  {dt:.1f} min {RESET}")
+        print( f"{RED}finished {txnameStr} validated in  {dt:.1f} min {RESET}")
     dt = (time.time()-expt0)/60.
-    logger.info( f"--- {RED} {expRes.globalInfo.id} validated in {dt:.1f} min {RESET}" )
+    id = expRes.globalInfo.id
+    print( f"{RED}finished {id} validated in {dt:.1f} min {RESET}" )
 
 def run ( expResList : list, options : dict, 
           keep : bool, db ) -> None:
