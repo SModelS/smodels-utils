@@ -461,7 +461,8 @@ def runForOneResult ( expRes, options : dict,
                 localopts = addRange ( "y", localopts, txname.yrange, ax )
             for p in prettyorugly:
                 validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
-                              gkfactor, p, combine, namedTarball = pnamedTarball )
+                              gkfactor, p, combine, namedTarball = pnamedTarball,
+                              keep = keep )
                 localopts["generateData"] = False
         dt = (time.time()-txt0)/60.
         logger.info( f"------ {RED} {txnameStr} validated in  {dt:.1f} min {RESET}")
