@@ -290,7 +290,7 @@ class ValidationPlot():
         """
 
         if not os.path.isdir(slhadir) and not os.path.isfile(slhadir):
-            logger.error("SLHA files not found in %s for %s" %(slhadir,str(self)))
+            logger.error( f"SLHA files not found in {slhadir} for {str(self)}" )
             sys.exit()
         else:
             self.slhaDir = slhadir
@@ -983,7 +983,10 @@ class ValidationPlot():
 
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
-        logger.info( f"SLHA dir {self.slhaDir}" )
+        if os.path.isfile ( self.slhaDir ):
+            logger.info( f"tarball {self.slhaDir}" )
+        else:
+            logger.info( f"SLHA dir {self.slhaDir}" )
         logger.info( f"Parameter file: {parameterFile}" )
         # print ( f"Parameter file: {parameterFile}" )
 
@@ -1176,7 +1179,7 @@ class ValidationPlot():
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            logger.info ( f"saving plot in {YELLOW}{filename}{RESET}" )
+            logger.info ( f"saving plot in {ansi.YELLOW}{filename}{ansi.RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
