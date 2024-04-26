@@ -34,7 +34,7 @@ def starting( expRes, txnameStr, axes ):
     saxes = str(axes).replace(" ","")
     if atype == "v3":
         saxes = prettyAxesV3 ( axes )
-    logger.info( f"{expRes.globalInfo.id}:{txnameStr}:{saxes}" )
+    logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         db, kfactor=1., pretty=False, combine=False, namedTarball = None, 
