@@ -7,6 +7,7 @@
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
+from colorama import Fore as ansi
 
 import logging,os,sys,time,math,numpy,copy,random
 
@@ -1163,7 +1164,7 @@ class ValidationPlot():
 
 
         if not self.pretty:
-            logger.info ( f"saving plot in {filename}" )
+            logger.info ( f"saving plot in {ansi.YELLOW}{filename}{ansi.RESET}" )
             self.savefig(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
@@ -1175,7 +1176,7 @@ class ValidationPlot():
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            logger.info ( f"saving plot in {filename}" )
+            logger.info ( f"saving plot in {YELLOW}{filename}{RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')

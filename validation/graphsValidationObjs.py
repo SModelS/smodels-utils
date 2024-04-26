@@ -9,6 +9,7 @@
 """
 
 import logging,os,sys,time,math,numpy,copy,random
+from colorama import Fore as ansi
 
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import GeV
@@ -1032,7 +1033,7 @@ class ValidationPlot():
 
 
         if not self.pretty:
-            logger.info ( f"saving plot in {filename}" )
+            logger.info ( f"saving plot in {ansi.YELLOW}{filename}{ansi.RESET}" )
             self.savefig(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
@@ -1044,7 +1045,7 @@ class ValidationPlot():
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            logger.info ( f"saving plot in {filename}" )
+            logger.info ( f"saving plot in {ansi.YELLOW}{filename}{ansi.RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
