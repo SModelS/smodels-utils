@@ -372,10 +372,11 @@ class ValidationPlot():
         if model == "default":
             ## FIXME here we could define different defaults for eg T5Gamma
             model = "share.models.mssm"
-            slhapath = tempdir.replace("/results","")
-            files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
-            if len(files)>0: ## use slha file as model
-                model = files[0]
+            #slhapath = tempdir.replace("/results","")
+            #files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
+            #if len(files)>0: ## use slha file as model
+            #    model = files[0]
+        print ( f"model is {model}" )
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
