@@ -182,8 +182,11 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if dashes > 3:
         pos = find_nth ( anaId, "-", 4 )
         anaId = anaId[:pos]
-    ulres = db.getExpResults ( [ anaId ], [ None ], [ txname ],
+    ## dont mess with the original selection, so make a copy
+    mdb = copy.deepcopy ( db )
+    ulres = mdb.getExpResults ( [ anaId ], [ None ], [ txname ],
                        dataTypes = [ "upperLimit" ] )
+    del mdb
     if len(ulres)==0:
         return False # we actually do not have an UL result for that
     dbpath = db.subs[0].base
