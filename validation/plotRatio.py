@@ -588,7 +588,7 @@ def main():
             help="label in the legend for analysis1, guess if None [None]",
             type=str, default=None )
     argparser.add_argument ( "--SR",
-            help="if plotting efficiencies, plot ratio of efficiencies of this signal region. None = bestSR. [None]",
+            help="plot ratio of efficiencies of this signal region. None = bestSR. Will turn on --efficiencies [None]",
             type=str, default=None )
     argparser.add_argument ( "-o", "--output",
             help="outputfile, the @x's get replaced [ratios_@a_@t@sr.png]",
@@ -639,6 +639,8 @@ def main():
     argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     args = argparser.parse_args()
+    if args.SR != None:
+        args.efficiencies = True
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
     if not "_" in args.validationfile1:
