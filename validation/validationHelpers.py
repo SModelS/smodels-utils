@@ -94,7 +94,7 @@ def prettyAxesV3 ( axesStr : str ) -> bool:
         for i in range(n,2*n):
             axesDict.pop(i)
     saxes = "_".join ( map ( str, axesDict.values() ) )
-    saxes =  saxes.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1")
+    saxes =  saxes.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
     return saxes
 
 def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:

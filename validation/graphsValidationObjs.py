@@ -810,6 +810,7 @@ class ValidationPlot():
                 if self.options["keepTopNSRs"] not in [ None, 0 ]:
                     maxR, expRes = -1., None
                     for eR in res:
+                        print ( f"@@0 eR {eR}" )
                         if "r_expected" in eR:
                             r = eR["r_expected"]
                             while r in leadingDSes: # make sure it's unique
@@ -1190,7 +1191,7 @@ class ValidationPlot():
 
         filename = filename.replace(self.expRes.globalInfo.id+"_","")
         filename = os.path.join(validationDir,filename)
-        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1")
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
         return filename
 
     def getNiceAxes(self,axesStr):
