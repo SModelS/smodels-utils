@@ -41,7 +41,8 @@ def hasDebPkg():
     if a.startswith("ii"):
         return True
     print ( "error, you need cm-super-minimal installed! (apt install cm-super-minimal)" )
-    sys.exit(-1)
+    return
+    #sys.exit(-1)
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
