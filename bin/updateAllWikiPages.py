@@ -115,13 +115,16 @@ def main():
 
     if not A.no_pickle:
         gprint ( "\nCreate and publish database pickle" )
-        exec ( [ "./publishDatabasePickle.py", "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-f", "./superseded.pcl" ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-f", "./nonaggregated.pcl" ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-f", "./full_llhds.pcl" ], A.dry_run )
-        exec ( [ "./publishDatabasePickle.py", "-F", "-f", "./fastlim.pcl" ], A.dry_run )
+        cmd = [ "./publishDatabasePickle.py" ]
+        if A.ignore:
+            cmd += [ "-i" ]
+        exec ( cmd + [ "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
+        exec ( cmd + [ "-f", "./superseded.pcl" ], A.dry_run )
+        exec ( cmd + [ "-f", "./nonaggregated.pcl" ], A.dry_run )
+        exec ( cmd + [ "-f", "./full_llhds.pcl" ], A.dry_run )
+        exec ( cmd + [ "-F", "-f", "./fastlim.pcl" ], A.dry_run )
         if A.debug:
-            exec ( [ "./publishDatabasePickle.py", "--txnamevalues", "-b", "-f", db ], A.dry_run )
+            exec ( cmd + [ "--txnamevalues", "-b", "-f", db ], A.dry_run )
 
 
     gprint ( "\nCreate Validation" )
