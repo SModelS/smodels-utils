@@ -15,8 +15,8 @@ from __future__ import print_function
 import pickle, os, sys, argparse, time, copy, glob
 import hashlib
 import pathlib
-import colorama
 import gzip, shutil
+from colorama import Fore as ansi
 
 if sys.version[0]=="2":
     import commands as CMD
@@ -69,9 +69,7 @@ def checkNonValidated( database ):
             for tx in ds.txnameList:
                 if tx.validated in [ False, True, "N/A", "n/a" ]:
                     continue
-                print ( "[publishDatabasePickle] %sNon-validated result: %s%s, %s, %s: %s " % \
-                        ( colorama.Fore.RED, e.globalInfo.id, colorama.Fore.RESET, \
-                          ds, tx, tx.validated) )
+                print ( f"[publishDatabasePickle] {ansi.RED}Non-validated result: {e.globalInfo.id}{ansi.RESET}:{str(ds)}, {tx}: {tx.validated} " )
                 has_nonValidated = True
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
@@ -305,7 +303,7 @@ def main():
         cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         if hasSSHpass:
             cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
-        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( ansi.RED, ansi.RESET ) )
         print ( cmd2 )
         reallyDo = not args.dry_run
         if reallyDo:
@@ -318,7 +316,7 @@ def main():
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         #print ( "%s[publishDatabasePickle] then do also manually:%s" % \
-        #        ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        #        ( ansi.RED, ansi.RESET ) )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
         if hasSSHpass:
             cmd = f"sshpass -f {home}/.ssh/lxplus {cmd}"
