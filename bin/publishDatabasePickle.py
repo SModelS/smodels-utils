@@ -227,14 +227,14 @@ def main():
         pclfilename = f"{ver}.pcl"
 
     if ver == "unittest":
-        smodels_ver = "112"
-        infofile = "unittest%s" % smodels_ver
-        pclfilename = "%s.pcl" % infofile
+        smodels_ver = ver # "300"
+        infofile = f"unittest{smodels_ver}"
+        pclfilename = f"{infofile}.pcl"
     else:
         if "unittest" in ver:
             smodels_ver = ver.replace("unittest","")
-            infofile = "unittest%s" % smodels_ver
-            pclfilename = "%s.pcl" % infofile
+            infofile = f"unittest{smodels_ver}"
+            pclfilename = f"{infofile}.pcl"
 
     #cmd = "cp %s ./%s" % ( picklefile, pclfilename )
     ssh = True
@@ -247,9 +247,9 @@ def main():
     if has_nonValidated:
         nvlist = ",".join(which)
         if args.ignore:
-            print ( "has non-validated results (%s), but you requested to continue." % nvlist )
+            print ( f"has non-validated results ({nvlist}), but you requested to continue." )
         else:
-            print ( "has non-validated results (%s). Stopping the procedure." % nvlist )
+            print ( f"has non-validated results ({nvlist}). Stopping the procedure." )
             sys.exit()
     sexec="executing:"
     if args.dry_run:
