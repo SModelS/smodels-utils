@@ -69,7 +69,8 @@ def checkNonValidated( database ):
             for tx in ds.txnameList:
                 if tx.validated in [ False, True, "N/A", "n/a" ]:
                     continue
-                print ( f"[publishDatabasePickle] {ansi.RED}Non-validated result: {e.globalInfo.id}{ansi.RESET}:{str(ds)}, {tx}: {tx.validated} " )
+                sds = str(ds).replace("Dataset ","")
+                print ( f"[publishDatabasePickle] {ansi.RED}Non-validated result: {e.globalInfo.id}{ansi.RESET}:{sds}, {tx}: {tx.validated} " )
                 has_nonValidated = True
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
@@ -259,9 +260,9 @@ def main():
         cmd = "cp %s %s/" % ( pcfilename, eosdir )
         a=CMD.getoutput ( cmd )
         if len(a)>0:
-            print ( "[publishDatabasePickle] %s" % a )
-    cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
-    print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
+            print ( f"[publishDatabasePickle] {a}" )
+    cmd = f"mv {infofile} ../../smodels.github.io/database/{infofile}"
+    print ( f"[publishDatabasePickle] {sexec} {cmd}" )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
@@ -270,11 +271,10 @@ def main():
         latestfile = "latest"
         if not args.remove_fastlim:
             latestfile = "latest_fastlim"
-        cmd = "cp ../../smodels.github.io/database/%s ../../smodels.github.io/database/%s" %\
-               ( infofile, latestfile )
+        cmd = f"cp ../../smodels.github.io/database/{infofile} ../../smodels.github.io/database/{latestfile}"
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
-            print ( "[publishDatabasePickle] update latest:", cmd, a )
+            print ( f"[publishDatabasePickle] update latest: {cmd} {a}" )
     backupfile = None
     if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = "backup"+ver
