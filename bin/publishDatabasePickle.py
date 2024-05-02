@@ -171,6 +171,7 @@ def main():
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion="fastlim"+dbver
+        del e
     if args.remove_nonaggregated:
         # e = copy.deepcopy( d )
         e = Database ( picklefile, progressbar=True )
@@ -181,18 +182,19 @@ def main():
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion="nonaggregated"+dbver
+        del e
     if args.full_llhds:
         f = Database ( picklefile, progressbar=True )
         f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
         f.subs[0].databaseVersion=dbver
-        # print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )
+        print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )
+        del f
 
     if not args.skipValidation:
         validated, which = checkNonValidated(d)
         has_nonValidated = validated
     else:
         has_nonValidated = False
-
 
     p=open(picklefile,"rb")
     meta=pickle.load(p)
@@ -252,6 +254,7 @@ def main():
         else:
             print ( f"has non-validated results ({nvlist}). Stopping the procedure." )
             sys.exit()
+    del d
     sexec="executing:"
     if args.dry_run:
         sexec="suppressing execution of:"
