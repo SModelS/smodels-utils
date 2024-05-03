@@ -70,6 +70,7 @@ class Writer:
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
         self.minlumi = args.minlumi
+        self.ignorenonvalidated = args.ignorenonvalidated
         #Creat analyses list:
         self.bibtex = None
         self.timg = args.timg
@@ -116,7 +117,8 @@ class Writer:
         :param superseded: allow superseded results
         """
         self.listOfAnalyses = []
-        ers = self.database.getExpResults( ) # useSuperseded=superseded )
+        ers = self.database.getExpResults( 
+            useNonValidated = not self.ignorenonvalidated )
         ers = filterFastLimFromList ( ers )
         if superseded == False:
             ers = filterSupersededFromList ( ers )
@@ -553,6 +555,7 @@ class Writer:
             a = shutil.which ( "timg" )
             if a:
                 cmd = f"timg -p kitty {pngfile.replace('.png','*.png')}"
+                print ( cmd )
                 a = C.getoutput ( cmd )
                 print ( a )
 
@@ -602,6 +605,9 @@ if __name__ == "__main__":
         argparser.add_argument('--show_sqrts', help='show sqrts column',
             action='store_true' )
         argparser.add_argument('--timg', '-T', help='run timg on picture',
+            action='store_true' )
+        argparser.add_argument('--ignorenonvalidated', 
+            help='ignore non-validated results',
             action='store_true' )
         argparser.add_argument('-N', '--prettyNames',
             help='add column for description of analyses', action='store_true' )
