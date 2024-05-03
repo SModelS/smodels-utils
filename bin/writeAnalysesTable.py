@@ -115,7 +115,7 @@ class Writer:
         :param superseded: allow superseded results
         """
         self.listOfAnalyses = []
-        ers = self.database.getExpResults( useSuperseded=superseded )
+        ers = self.database.getExpResults( ) # useSuperseded=superseded )
         ers = filterFastLimFromList ( ers )
         if superseded == False:
             ers = filterSupersededFromList ( ers )
@@ -343,7 +343,7 @@ class Writer:
         if self.showsqrts:
             lines[0] += f"& {self.addColor ( sqrts )}"
         if self.likelihoods:
-            lines[0] += f"& {llhds}"
+            lines[0] += f"& {llhds} "
         if self.extended_likelihoods:
             ulobs, ulexp, em = " ", " ", " "
             check = "\\checkmark" ## check="x"
@@ -399,7 +399,9 @@ class Writer:
             frmt = frmt + "r|"
         if self.extended_likelihoods:
             frmt = frmt + "c|c|c|c|"
-        toprint = r"\begin{%s}{%s}\n\hline\n" % ( self.table, frmt )
+        toprint = rf"\begin{{{self.table}}}{{{frmt}}}"
+        toprint += "\n"
+        toprint += r"\hline"
         if self.numbers:
             toprint += r"{\bf \#} &"
         toprint += "{\\bf ID} & "
@@ -420,7 +422,10 @@ class Writer:
             toprint += r"& {\bf UL$_\mathrm{obs}$} & {\bf UL$_\mathrm{exp}$} & {\bf EM}"
         if self.addcombos:
             toprint += "& {\\bf comb.}"
-        toprint += r"\\\n\hline\n"
+        toprint += r"\\"
+        toprint += "\n"
+        toprint += r"\hline"
+        toprint += "\n"
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
         for ctr,ana in enumerate(self.listOfAnalyses):
             if nextIsSame:
