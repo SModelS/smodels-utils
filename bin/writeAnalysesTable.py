@@ -27,7 +27,7 @@ import IPython
 try:
     from ordered_set import OrderedSet
 except Exception as e:
-    print ( "exception",e )
+    print ( f"exception {e}" )
     print ( "please install ordered_set, e.g. via:" )
     if sys.version[0]=="3":
         print ( "pip3 install --user ordered_set" )
@@ -69,6 +69,7 @@ class Writer:
         """
         from smodels.experiment.databaseObj import Database
         self.database = Database ( args.database )
+        self.minlumi = args.minlumi
         #Creat analyses list:
         self.bibtex = None
         self.timg = args.timg
@@ -119,7 +120,19 @@ class Writer:
         ers = filterFastLimFromList ( ers )
         if superseded == False:
             ers = filterSupersededFromList ( ers )
+        if self.minlumi > 0.:
+            ers = self.filterLowLumiResults ( ers )
         self.listOfAnalyses = ers
+
+    def filterLowLumiResults ( self, expResults ):
+        """ filter out results with a lumi below self.minlumi
+        """
+        ret = []
+        for er in expResults:
+            lumi = er.globalInfo.lumi.asNumber(1/fb)
+            if lumi > self.minlumi:
+                ret.append ( er )
+        return ret
 
     def sameAnaIds ( self, ana1, ana2 ):
         """ check if analysis ids are identical, *after* removing all
@@ -550,16 +563,19 @@ if __name__ == "__main__":
                       'simple tool to generate a latex table with all analyses used')
         dbpath = os.path.abspath( '../../smodels-database/' )
         argparser.add_argument ( '-d', '--database', nargs='?',
-                            help=f'path to database [{dbpath}]', type=str,
-                            default=dbpath )
-        argparser.add_argument ( '-r', '--reference_database', nargs='?',
-                            help=f'path to reference database, if given make new entries bold [None]', type=str,
-                            default=None )
+            help=f'path to database [{dbpath}]', type=str,
+            default=dbpath )
+        argparser.add_argument ( '-r', '--reference_database', 
+            nargs='?', help=f'path to reference database, if given make new entries bold [None]', 
+            type=str, default=None )
+        argparser.add_argument ( '--minlumi', help="consider results only above a certain luminosity, in 1/fb [0.]", 
+            type=float, default=0. )
         outfile = "tab.tex"
         argparser.add_argument ( '-o', '--output', nargs='?',
-            help='output file [%s]' % outfile, type=str, default=outfile )
-        argparser.add_argument('-k', '--keep', help='keep tex files',
-            action='store_true' )
+            help=f'output file [{outfile}]', type=str, 
+            default=outfile )
+        argparser.add_argument('-k', '--keep', 
+            help='keep tex files', action='store_true' )
         argparser.add_argument ( '-e', '--experiment', nargs='?',
             help='experiment [both]', type=str, default='both')
         argparser.add_argument ( '-S', '--sqrts', nargs='?',
@@ -609,6 +625,7 @@ if __name__ == "__main__":
             if args.png:
                 writer.createPngFile()
             sys.exit()
+        ## asked for --combinations
         writer = Writer ( args )
         for s in [ 8, 13 ]:
             writer.sqrts = str(s)
