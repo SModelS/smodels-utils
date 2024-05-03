@@ -124,6 +124,8 @@ class Writer:
             ers = filterSupersededFromList ( ers )
         if self.minlumi > 0.:
             ers = self.filterLowLumiResults ( ers )
+        if self.ignorenonvalidated:
+            ers = self.filterNonValidated ( ers )
         self.listOfAnalyses = ers
 
     def filterLowLumiResults ( self, expResults ):
@@ -135,6 +137,23 @@ class Writer:
             if lumi > self.minlumi:
                 ret.append ( er )
         return ret
+
+    def filterNonValidated ( self, expResults ):
+        """ filter out results with a lumi below self.minlumi
+        """
+        ret = []
+        for er in expResults:
+            hasValidated = False # check if at least one validated
+            # result is in
+            for ds in er.datasets:
+                for txn in ds.txnameList:
+                    if txn.validated == True:
+                        hasValidated=True
+                        break
+            if hasValidated == True:
+                ret.append ( er )
+        return ret
+
 
     def sameAnaIds ( self, ana1, ana2 ):
         """ check if analysis ids are identical, *after* removing all
@@ -555,7 +574,7 @@ class Writer:
             a = shutil.which ( "timg" )
             if a:
                 cmd = f"timg -p kitty {pngfile.replace('.png','*.png')}"
-                print ( cmd )
+                # print ( cmd )
                 a = C.getoutput ( cmd )
                 print ( a )
 
