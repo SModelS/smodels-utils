@@ -450,7 +450,8 @@ class BibtexWriter:
         """ create the test.tex file, to check """
         print ( "Writing test.tex." )
         f = open ( "test.tex", "wt" )
-        f.write ( "\documentclass[a4paper,11pt]{article}\n" )
+        f.write ( r"\documentclass[a4paper,11pt]{article}" )
+        f.write ( "\n" )
         f.write ( "\\usepackage{amssymb}\n" )
         f.write ( "\\usepackage{amsmath}\n" )
         f.write ( "\\usepackage{hyperref}\n" )
@@ -461,7 +462,7 @@ class BibtexWriter:
         f.write (
 """\\bibliographystyle{plain}
 \\bibliography{database}
-\end{document}
+\\end{document}
 """ )
         f.close()
         f = open ( "latex.sh", "wt" )
@@ -492,7 +493,7 @@ class BibtexWriter:
         ret += "Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
         if commentOut:
             ret += "% "
-        ret+= "\cite{"
+        ret+= r"\cite{"
         labels = self.getLabels ( bibtex )
         for entry in filtered:
             ID = entry["ID"]
