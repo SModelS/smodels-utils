@@ -325,10 +325,10 @@ class Writer:
         if self.bibtex != None:
             citeme = gi_id
             citeme = self.bibtex.query ( gi_id )
-            Id += "~\cite{%s}" % citeme
+            Id += r"~\cite{{{citeme}}}"
         if self.numbers:
-            lines[0]+="%s &" % self.addColor ( ananr )
-        lines[0] += "%s & " % Id
+            lines[0]+=f"{self.addColor(ananr)} &"
+        lines[0] += f"{Id} & "
         if self.prettyNames:
             pn = prettyTexAnalysisName ( prettyName )
             # pn = self.addColor ( pn )
@@ -399,9 +399,9 @@ class Writer:
             frmt = frmt + "r|"
         if self.extended_likelihoods:
             frmt = frmt + "c|c|c|c|"
-        toprint = "\\begin{%s}{%s}\n\hline\n" % ( self.table, frmt )
+        toprint = r"\begin{%s}{%s}\n\hline\n" % ( self.table, frmt )
         if self.numbers:
-            toprint +="{\\bf \#} &"
+            toprint += r"{\bf \#} &"
         toprint += "{\\bf ID} & "
         if self.prettyNames:
             # toprint += "{\\bf Pretty Name} & "
@@ -417,10 +417,10 @@ class Writer:
         if self.likelihoods:
             toprint += "& {\\bf likelihoods}"
         if self.extended_likelihoods:
-            toprint += "& {\\bf UL$_\mathrm{obs}$} & {\\bf UL$_\mathrm{exp}$} & {\\bf EM}"
+            toprint += r"& {\bf UL$_\mathrm{obs}$} & {\bf UL$_\mathrm{exp}$} & {\bf EM}"
         if self.addcombos:
             toprint += "& {\\bf comb.}"
-        toprint += "\\\\\n\hline\n"
+        toprint += r"\\\n\hline\n"
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
         for ctr,ana in enumerate(self.listOfAnalyses):
             if nextIsSame:
