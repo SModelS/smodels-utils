@@ -773,9 +773,9 @@ class ValidationPlot():
                 s.append ( (k,v) )
             Dict["leadingDSes"]= s
         if "l_max" in expRes and "likelihood" in expRes:
-            #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
-            #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
-            #Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
+            Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
+            Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+            Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
             nll = 900.
             if expRes["likelihood"]>0.:
                 nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
@@ -1131,7 +1131,7 @@ class ValidationPlot():
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
             v = distutils.spawn.find_executable( viewer )
-            if viewer == "timg" and os.path.exists ( "/bin/timg" ):
+            if viewer == "timg" and os.path.exists ( "/bin/timg", "/bin:/usr/bin:/usr/sbin:/usr/local/bin"  ):
                 # override python install
                 v = "/bin/timg"
             if not v:
