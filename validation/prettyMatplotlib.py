@@ -145,16 +145,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if options["significances"]:
             ### dont plot r, plot Z!
             r = float("nan") ## better draw nothing than r instead of Z
-            from validationHelpers import significanceFromLikelihoods
-            if not "llhd" in pt or not "l_SM" in pt:
-                if not "l_SM" in pt:
-                    # its only weird if only l_SM is missing
-                    logger.error ( f"asked for significances but no l_SM in {pt['axes']}!" )
+            from validationHelpers import significanceFromNLLs
+            if not "nll" in pt or not "nll_SM" in pt:
+                if not "nll_SM" in pt:
+                    # its only weird if only nll_SM is missing
+                    logger.error ( f"asked for significances but no nll_SM in {pt['axes']}!" )
                 # sys.exit()
             else:
-                Z = significanceFromLikelihoods ( pt["l_SM"], pt["llhd"] )
+                Z = significanceFromNLLs ( pt["nll_SM"], pt["nll"] )
                 r = Z
-            # print ( f"Z({xvals['x']:.1f},{xvals['y']:.1f})={Z:.2f}, l_SM={pt['l_SM']:.2g} l_BSM={pt['llhd']:.2g}" )
+            # print ( f"Z({xvals['x']:.1f},{xvals['y']:.1f})={Z:.2f}, nll_SM={pt['nll_SM']:.2g} nll_BSM={pt['nll']:.2g}" )
         if r > 3.:
             r=3.
         if rexp > 3.:

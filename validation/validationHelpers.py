@@ -71,6 +71,26 @@ def equal_dicts(d1 : Dict , d2 : Dict , ignore_keys : List) -> bool:
             return False
     return True
 
+def significanceFromNLLs ( nll_SM : float, nll_BSM : float, ndf : int = 2)->float:
+    """ compute the significance Z from the likelihood ratio,
+
+    :param ndf: number of degrees of freedom
+    :returns: Z
+    """
+    import scipy.stats
+    import numpy as np
+    #if l_SM == 0.:
+    #    return float("nan")
+    #if l_BSM == 0.:
+    #    return float("nan")
+    T = max ( 2 * ( nll_SM - nll_BSM ), 0. )
+    # Z = np.sqrt ( T )
+    p = scipy.stats.chi2.cdf ( T, df=ndf )
+    Z = scipy.stats.norm.ppf ( p )
+    if Z < -3.:
+        Z = -3.
+    return Z
+
 def prettyAxesV3 ( axesStr : str ) -> bool:
     """ make an axes v3 description readable
 
