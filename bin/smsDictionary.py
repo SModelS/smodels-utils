@@ -41,7 +41,7 @@ class SmsDictWriter:
         if not addVer:
             self.ver=""
         self.hasResultsColumn = results
-        self.fname = "SmsDictionary%s" % self.ver
+        self.fname = f"SmsDictionary{self.ver}"
         self.f=open(self.fname,"w" )
 
     def close ( self ):
@@ -256,7 +256,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
 if __name__ == '__main__':
     import argparse
-    argparser = argparse.ArgumentParser(description='Write Wiki page that lists all SMSes, their constraints, and draws a SMS graph, see http://smodels.hephy.at/wiki/SmsDictionary')
+    argparser = argparse.ArgumentParser(description='Write Wiki page that lists all SMSes, their constraints, and draws a SMS graph, see http://smodels.github.io/docs/SmsDictionary')
     argparser.add_argument ( '-g', '--smsgraphs', help='also create SMS Graphs',
                              action='store_true' )
     argparser.add_argument ( '-s', '--checkfirst', help=f'create only SMS Graphs that do not exist in {SmsDictWriter.smsgraphpath}',

@@ -59,6 +59,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         self.f.write ( "|\n" )
 
     def body ( self ):
+        """ the 'body' of the wiki page """
         import glob
         path = f"{self.databasePath}/*/*/*/validation"
         obsfiles = glob.glob ( f"{path}/*obs.png" )
@@ -79,11 +80,13 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             tmp = tmp[p1+1:]
             # print ( "@@0 txname", txname ) 
             self.f.write ( f"| {ctr} " )
-            anaId = tmp
+            #from smodels_utils.helper import various
+            # anaId = various.removeAnaIdSuffices ( tmp )
+            anaId = tmp.replace("-eff","") ## actually we only want to remove -eff
             self.f.write ( f"| {anaId} " )
             self.f.write ( f"| {txname} " )
             figPath = f"https://smodels.github.io/validation/{self.ver}/{lpath}"
-            self.f.write ( f'| <a href "{figPath}"><img src="{figPath}?{t0}" /></a>' )
+            self.f.write ( f'| <a href="{figPath}"><img width="300px" src="{figPath}?{t0}" /></a>' )
             self.f.write ( "\n" )
 
     def run ( self ):

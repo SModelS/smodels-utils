@@ -93,9 +93,8 @@ class BibtexWriter:
 
     def cleanAnaId ( self, anaid : str ):
         """ clean analysis id from some extensions """
-        for ext in [ "agg", "strong", "ewk", "eff" ]:
-            anaid = anaid.replace( f"-{ext}", "" )
-        return anaid
+        from smodels_utils.helper import various
+        return various.removeAnaIdSuffices ( anaid )
 
     def mkdirs ( self ):
         """ make the directories """
