@@ -79,7 +79,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             p1 = tmp.find("/")
             tmp = tmp[p1+1:]
             # print ( "@@0 txname", txname ) 
-            self.f.write ( f"| {ctr} " )
+            self.f.write ( f"| {ctr+1} " )
             #from smodels_utils.helper import various
             # anaId = various.removeAnaIdSuffices ( tmp )
             anaId = tmp.replace("-eff","") ## actually we only want to remove -eff
