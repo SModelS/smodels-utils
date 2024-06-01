@@ -86,7 +86,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             self.f.write ( f"| {anaId} " )
             self.f.write ( f"| {txname} " )
             figPath = f"https://smodels.github.io/validation/{self.ver}/{lpath}"
-            self.f.write ( f'| <a href="{figPath}"><img width="300px" src="{figPath}?{t0}" /></a>' )
+            self.f.write ( f'| <a href="{figPath}"><img width="400px" src="{figPath}?{t0}" /></a>' )
             self.f.write ( "\n" )
 
     def run ( self ):
