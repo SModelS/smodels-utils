@@ -8,7 +8,6 @@
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
-
 """
 
 import setPath
@@ -18,7 +17,7 @@ from smodels.experiment.databaseObj import Database
 class ExclComparisonWriter:
     htmlpath = "../../smodels.github.io/"
 
-    def __init__ ( self, database, addVer, dryrun, copy ):
+    def __init__ ( self, database, addVer, dryrun ):
         self.databasePath = database
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
@@ -27,7 +26,6 @@ class ExclComparisonWriter:
         self.fname = f"ExclComparison{self.ver}"
         self.f=open(self.fname,"w" )
         self.dryrun =  dryrun
-        self.copy = copy
 
     def close ( self ):
         self.f.close()
@@ -60,9 +58,38 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             self.f.write ( "| "+"-"*l+ " " )
         self.f.write ( "|\n" )
 
+    def body ( self ):
+        import glob
+        path = f"{self.databasePath}/*/*/*/validation"
+        obsfiles = glob.glob ( f"{path}/*obs.png" )
+        t0 = time.time()
+        for ctr,obsfile in enumerate ( obsfiles ):
+            lpath = obsfile.replace(self.databasePath,"")
+            if lpath.startswith("/"):
+                lpath = lpath[1:]
+            tmp = lpath
+            p1 = tmp.find("TeV")
+            tmp = tmp[p1+4:]
+            pv = tmp.find("validation")
+            txname = tmp[pv+11:]
+            p_ = txname.find("_")
+            txname = txname[:p_]
+            tmp = tmp[:pv-1]
+            p1 = tmp.find("/")
+            tmp = tmp[p1+1:]
+            # print ( "@@0 txname", txname ) 
+            self.f.write ( f"| {ctr} " )
+            anaId = tmp
+            self.f.write ( f"| {anaId} " )
+            self.f.write ( f"| {txname} " )
+            figPath = f"https://smodels.github.io/validation/{self.ver}/{lpath}"
+            self.f.write ( f'| <a href "{figPath}"><img src="{figPath}?{t0}" /></a>' )
+            self.f.write ( "\n" )
+
     def run ( self ):
         self.header()
         self.tableHeader ()
+        self.body()
         self.footer()
         self.close()
         self.move()
@@ -74,10 +101,10 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
 if __name__ == '__main__':
     import argparse
-    argparser = argparse.ArgumentParser(description='Write Wiki page that lists all validation plots that compare exclusion lines, see http://smodels.github.io/docs/ExclComparison')
+    argparser = argparse.ArgumentParser(description='Write Wiki page that lists all '\
+        'validation plots that compare exclusion lines, '\
+        'see http://smodels.github.io/docs/ExclComparison')
     argparser.add_argument ( '-D', '--dry_run', help='dry run, dont actually draw',
-                             action='store_true' )
-    argparser.add_argument ( '-c', '--copy', help='copy SMS graphs to ../../smodels.github.io/smsgraphs/ (implies -g)',
                              action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
@@ -85,13 +112,6 @@ if __name__ == '__main__':
             help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
     writer = ExclComparisonWriter ( database=args.database, addVer = args.add_version,
-            dryrun = args.dry_run, copy = args.copy )
-    print ( "[exclComparison] Database", writer.database.databaseVersion )
+            dryrun = args.dry_run )
+    print ( f"[exclComparison] Database {writer.database.databaseVersion}" )
     writer.run()
-    if args.copy:
-        cmd = f"cp ../smsgraphs/T*.p* {SmsDictWriter.smsgraphpath}"
-        import subprocess
-        print ( f"[exclComparison] {cmd}" )
-        a = subprocess.getoutput ( cmd )
-        if len(a)>0:
-            print ( f"[exclComparison] error: {a}" )
