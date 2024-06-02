@@ -32,7 +32,7 @@ class ExclComparisonWriter:
 
     def header( self ):
         self.f.write (
-"""# Exclusion Lines Comparison Wiki
+"""# Validation plots: comparison of best-SR vs SR combination
 A first draft of a page that collects all validation plots that show comparisons of statistical models:
 best signal region only versus statistical models at varying degrees of complexity.
 The list has been created from the database version %s, considering also superseded results.
@@ -47,7 +47,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         return
 
     def tableHeader ( self ):
-        columns=[ "#", "AnaId", "TxName", "Plot" ]
+        columns=[ "#", "Analysis ID", "TxName", "Plot" ]
         lengths=[]
         for header in columns:
             #self.f.write ( "|<#EEEEEE:> **%s** " % header )
