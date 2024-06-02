@@ -865,6 +865,9 @@ class ValidationPlot():
                 for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
                     s.append ( (k,v) )
                 Dict["leadingDSes"]= s
+            if "nll_min" in expRes and "nll" in expRes:
+                for i in [ "nll", "nll_SM", "nll_min" ]:
+                    Dict[i]=expRes[i]
             if "l_max" in expRes and "likelihood" in expRes:
                 #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
                 #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
@@ -873,10 +876,10 @@ class ValidationPlot():
                 if expRes["likelihood"]>0.:
                     nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
                 Dict["nll"]= nll
-                nll_max = 900.
+                nll_min = 900.
                 if expRes["l_max"]>0.:
-                    nll_max = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
-                Dict["nll_max"]= nll_max
+                    nll_min = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
+                Dict["nll_min"]= nll_min
                 nll_SM = 900.
                 if expRes["l_SM"]>0.:
                     nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 ) 
