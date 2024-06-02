@@ -1130,8 +1130,8 @@ class ValidationPlot():
             return
         import subprocess, distutils.spawn
         for viewer in [ "timg", "see", "display" ]:
-            v = distutils.spawn.find_executable( viewer )
-            if viewer == "timg" and os.path.exists ( "/bin/timg", "/bin:/usr/bin:/usr/sbin:/usr/local/bin"  ):
+            v = distutils.spawn.find_executable( viewer, "/bin:/usr/bin:/usr/sbin:/usr/local/bin"  )
+            if viewer == "timg" and os.path.exists ( "/bin/timg" ):
                 # override python install
                 v = "/bin/timg"
             if not v:
