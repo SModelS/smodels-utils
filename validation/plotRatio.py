@@ -331,7 +331,10 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
                 (err_msgs, len( content2["data"] ) ) )
 
     #changed colormap to have discrete bins instead of continuous
-    cm = plt.cm.get_cmap('seismic')
+    try:
+        cm = matplotlib.cm.get_cmap('seismic')
+    except AttributeError as e:
+        cm = plt.colormaps["seismic"]
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
     vmin, vmax = options["zmin"], options["zmax"]
