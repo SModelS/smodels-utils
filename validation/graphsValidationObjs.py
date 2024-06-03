@@ -811,7 +811,7 @@ class ValidationPlot():
                 if self.options["keepTopNSRs"] not in [ None, 0 ]:
                     maxR, expRes = -1., None
                     for eR in res:
-                        print ( f"@@0 eR {eR}" )
+                        # print ( f"@@0 eR {eR}" )
                         if "r_expected" in eR:
                             r = eR["r_expected"]
                             while r in leadingDSes: # make sure it's unique
