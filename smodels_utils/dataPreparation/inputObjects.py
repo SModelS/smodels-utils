@@ -1233,6 +1233,10 @@ class TxNameInput(Locker):
         masses = { "higgs": 125.0, "t": 173.1, "Z": 91., "W": 80., "jet": 1.28,
                    "ta": 1.777, "e": 0.0005, "mu": 0.106, "b": 4.7, "c": 1.28 }
         for el in elementsInStr(self.constraint,removeQuotes=False):
+            for m in masses.keys():
+                for ext in  [ "+", "-", "" ]:
+                    el = el.replace( f"[{m}{ext}",f"['{m}{ext}'" )
+                    el = el.replace( f",{m}{ext}",f",'{m}{ext}'" )
             particles = eval(el)
             #Compute minimum mass difference (sum over SM final state masses)
             elConstraint = []
