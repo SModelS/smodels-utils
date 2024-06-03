@@ -35,15 +35,15 @@ def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
         return None
     return None
 
-"""
 def getDefaultModel ( tempdir : str ) -> str:
-    #given the temp directory with the slha files,
-	  #find out what model is a good default. if qnumbers are in the 
-    #slha files, then we use the first slha file as the model definition,
-    #else 'mssm'.
+    """
+    given the temp directory with the slha files,
+	  find out what model is a good default. if qnumbers are in the 
+    slha files, then we use the first slha file as the model definition,
+    else 'mssm'.
 
-    #returns: "mssm", or the first slha file name
-    "
+    returns: "mssm", or the first slha file name
+    """
     import glob, os
     slhapath = tempdir.replace("/results","")
     files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
@@ -61,7 +61,6 @@ def getDefaultModel ( tempdir : str ) -> str:
         if "qnumbers" in line:
             return files[0]
     return "share.models.mssm"
-"""
 
 def prettyAxes( validationPlot ) -> str:
     """ get a description of the axes that works with v2 as well as v3.

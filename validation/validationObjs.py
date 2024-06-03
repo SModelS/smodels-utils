@@ -22,7 +22,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull, equal_dicts
+from validationHelpers import point_in_hull, equal_dicts, getDefaultModel
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -409,10 +409,8 @@ class ValidationPlot():
             combine = "True"
             self.validationType="combine"
         model = self.options["model"]
-        """
         if model == "default":
             model = getDefaultModel ( tempdir )
-        """
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
@@ -437,7 +435,7 @@ class ValidationPlot():
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version2\noutputType = python\n")
             f.write(f"[particles]\n")
-            if model != "default":
+            if True: # model != "default":
                 f.write(f"model=share.models.{model}\n" )
             f.write(f"promptWidth={promptWidth}\n" )
             #expected = "posteriori"
