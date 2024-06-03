@@ -24,7 +24,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull
+from validationHelpers import point_in_hull, getDefaultModel
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -376,15 +376,7 @@ class ValidationPlot():
         if model in [ "mssm", "idm", "nmssm", "dgmssm" ]:
             model = f"share.models.{model}"
         if model == "default":
-            ## FIXME here we could define different defaults for eg T5Gamma
-            model = "share.models.mssm"
-            # model = "mssm"
-            if txname in [ "TRV1", "TRS1" ]:
-                logger.info ( f"for {txname} we derive the default model directly from the slha file!" )
-                slhapath = tempdir.replace("/results","")
-                files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
-                if len(files)>0: ## use slha file as model
-                    model = files[0]
+            model = getDefaultModel ( tempdir )
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
