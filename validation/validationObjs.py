@@ -409,8 +409,10 @@ class ValidationPlot():
             combine = "True"
             self.validationType="combine"
         model = self.options["model"]
+        """
         if model == "default":
             model = getDefaultModel ( tempdir )
+        """
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
@@ -434,7 +436,10 @@ class ValidationPlot():
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version2\noutputType = python\n")
-            f.write(f"[particles]\nmodel=share.models.{model}\npromptWidth={promptWidth}\n" )
+            f.write(f"[particles]\n")
+            if model != "default":
+                f.write(f"model=share.models.{model}\n" )
+            f.write(f"promptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
