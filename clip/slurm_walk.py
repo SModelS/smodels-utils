@@ -47,9 +47,9 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         "protomodels/snippets/mergeTwoModels.py",
         "smodels-utils/clip/slurm_walk.py",
         "smodels-utils/clip/progressScanners.py" ]:
-        bname = os.path.basename ( k )
+        bname = os.path.join ( basedir, os.path.basename ( k ) )
         if not os.path.exists ( bname ):
-            o = os.symlink ( f"{codedir}/{k}", f"./{bname}" )
+            o = os.symlink ( f"{codedir}/{k}", bname )
             # print ( "o", o )
     if Dir.endswith ( "/" ):
         Dir = Dir[:-1]
