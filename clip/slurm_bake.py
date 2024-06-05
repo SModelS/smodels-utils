@@ -9,7 +9,7 @@ try:
 except:
     import subprocess
 
-scratchdir = "/scratch-cbe/users/wolfgan.waltenberger"
+scratchdir = f"/scratch-cbe/users/{os.environ['USER']}"
 if "EMCREATOR_RUNTIME_PATH" in os.environ:
     scratchdir = os.environ["EMCREATOR_RUNTIME_PATH"]
 
