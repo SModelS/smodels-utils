@@ -48,9 +48,11 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         "smodels-utils/clip/slurm_walk.py",
         "smodels-utils/clip/progressScanners.py" ]:
         bname = os.path.join ( basedir, os.path.basename ( k ) )
-        if not os.path.exists ( bname ):
-            o = os.symlink ( f"{codedir}/{k}", bname )
-            # print ( "o", o )
+        if os.path.exists ( f"{codedir}/{k}" ) and not os.path.exists ( bname ):
+            try:
+                o = os.symlink ( f"{codedir}/{k}", bname )
+            except FileExistsError as e:
+                pass
     if Dir.endswith ( "/" ):
         Dir = Dir[:-1]
     bDir = os.path.basename(Dir)
