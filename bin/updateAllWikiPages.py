@@ -145,6 +145,12 @@ def main():
         ## simple hack for now, should actually be reported by
         # one of the steps above
                 url = f"{base}/ListOfAnalyses{ver}"
+    exec ( cmd, A.dry_run )
+    cmd = [ "./exclComparisonWiki.py", "-d", db ]
+    if not A.non_versioned:
+        cmd += [ "-a" ]
+    exec ( cmd, A.dry_run )
+
     print ( f"xdg-open {url}" )
 
 if __name__ == "__main__":

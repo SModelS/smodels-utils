@@ -24,7 +24,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull
+from validationHelpers import point_in_hull, getDefaultModel
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -376,12 +376,7 @@ class ValidationPlot():
         if model in [ "mssm", "idm", "nmssm", "dgmssm" ]:
             model = f"share.models.{model}"
         if model == "default":
-            ## FIXME here we could define different defaults for eg T5Gamma
-            model = "share.models.mssm"
-            #slhapath = tempdir.replace("/results","")
-            #files = list ( glob.glob( os.path.join ( slhapath,"*.slha" ) ) )
-            #if len(files)>0: ## use slha file as model
-            #    model = files[0]
+            model = getDefaultModel ( tempdir )
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
@@ -405,7 +400,10 @@ class ValidationPlot():
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version3\noutputType = python\n")
-            f.write(f"[particles]\nmodel={model}\npromptWidth={promptWidth}\n" )
+            f.write(f"[particles]\n" )
+            if True: # model != "default":
+                f.write ( f"model={model}\n" )
+            f.write(f"promptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"
             expected = self.options["expectationType"]
@@ -811,7 +809,7 @@ class ValidationPlot():
                 if self.options["keepTopNSRs"] not in [ None, 0 ]:
                     maxR, expRes = -1., None
                     for eR in res:
-                        print ( f"@@0 eR {eR}" )
+                        # print ( f"@@0 eR {eR}" )
                         if "r_expected" in eR:
                             r = eR["r_expected"]
                             while r in leadingDSes: # make sure it's unique
@@ -865,6 +863,9 @@ class ValidationPlot():
                 for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
                     s.append ( (k,v) )
                 Dict["leadingDSes"]= s
+            if "nll_min" in expRes and "nll" in expRes:
+                for i in [ "nll", "nll_SM", "nll_min" ]:
+                    Dict[i]=expRes[i]
             if "l_max" in expRes and "likelihood" in expRes:
                 #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
                 #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
@@ -873,10 +874,10 @@ class ValidationPlot():
                 if expRes["likelihood"]>0.:
                     nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
                 Dict["nll"]= nll
-                nll_max = 900.
+                nll_min = 900.
                 if expRes["l_max"]>0.:
-                    nll_max = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
-                Dict["nll_max"]= nll_max
+                    nll_min = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
+                Dict["nll_min"]= nll_min
                 nll_SM = 900.
                 if expRes["l_SM"]>0.:
                     nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 ) 
