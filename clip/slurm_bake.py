@@ -9,7 +9,11 @@ try:
 except:
     import subprocess
 
-codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
+scratchdir = "/scratch-cbe/users/wolfgan.waltenberger"
+if "EMCREATOR_RUNTIME_PATH" in os.environ:
+    scratchdir = os.environ["EMCREATOR_RUNTIME_PATH"]
+
+codedir = f"{scratchdir}/git"
 
 def queryStats ( maxsteps : int ):
     """ just give us the statistics """
@@ -157,8 +161,8 @@ def bake ( args : Dict ):
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
     if doLog:
-        cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out",
-             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/bake-%j.out" ]
+        cmd += [ "--error", f"{scratchdir}/outputs/bake-%j.out",
+             "--output", f"{scratchdir}/outputs/bake-%j.out" ]
     else:
         cmd += [ "--error",  "/dev/null",
                  "--output", "/dev/null" ]
@@ -172,9 +176,9 @@ def bake ( args : Dict ):
         cmd += [ "--qos", qos ]
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     # ma5 seems to not need much RAM
-    ram = 2.5 * nprocesses
+    ram = 3.5 * nprocesses
     if nevents >= 50000:
-        ram = int ( 3. * nprocesses )
+        ram = int ( 4. * nprocesses )
     if nevents >= 100000:
         ram = int ( 4. * nprocesses )
     ncpus = int(nprocesses*2)
