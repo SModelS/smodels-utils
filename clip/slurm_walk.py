@@ -24,7 +24,7 @@ def remove( fname, keep):
     except:
         pass
 
-basedir = "/scratch-cbe/users/wolfgan.waltenberger"
+basedir = f"/scratch-cbe/users/{os.environ['USER']}"
 if "RUNDIR" in os.environ:
     basedir = os.environ["RUNDIR"].replace("/rundir","")
 codedir = f"{basedir}/git"
