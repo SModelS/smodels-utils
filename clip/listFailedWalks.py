@@ -25,7 +25,7 @@ def main():
     g=open( submitsh,"wt")
     g.write ( "#!/bin/sh\n\n" )
     for oom,oof in zip(ooms,oofs):
-        rundir = oom[ oom.find("waltenberger/")+13:oom.find(" with " )-1 ]
+        rundir = oom[ oom.find(f"{os.environ['USER']}/")+13:oom.find(" with " )-1 ]
         nr = oom [ oom.find("starting")+9:oom.find(" @ ") ]
         try:
             nr = int(nr)
