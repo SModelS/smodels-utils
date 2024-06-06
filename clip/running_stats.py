@@ -29,8 +29,7 @@ def cancelJobsByString ( text : str ):
 
 
 def getRundir():
-    # ret="/scratch-cbe/users/wolfgan.waltenbergerrundir/"
-    ret="/scratch-cbe/users/wolfgan.waltenberger/rundir/"
+    ret=f"/scratch-cbe/users/{os.environ['USER']}/rundir/"
     if os.path.exists ( "rundir.conf" ):
         with open ( "rundir.conf" ) as f:
             ret = f.read()

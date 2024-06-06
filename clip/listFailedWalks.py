@@ -31,12 +31,12 @@ def main():
             nr = int(nr)
             line = "./slurm.py -R %s -n %d -N %d" % ( rundir, nr, nr+1)
             g.write ( line+"\n" )
-            line = "rm -rf /scratch-cbe/users/wolfgan.waltenberger/outputs/%s" % oof 
+            line = f"rm -rf /scratch-cbe/users/{os.environ['USER']}/outputs/%s" % oof
             g.write ( line+"\n\n" )
         except Exception as e:
             print ( "exception", e, nr )
     g.close()
     os.chmod ( submitsh, 0o755 )
-    shutil.copy ( submitsh, "/users/wolfgan.waltenberger" )
+    shutil.copy ( submitsh, f"{os.environ['HOME']}" )
 
 main()
