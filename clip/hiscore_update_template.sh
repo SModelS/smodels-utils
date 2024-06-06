@@ -5,8 +5,8 @@
 
 ## ml --latest singularity
 
-# cd /users/wolfgan.waltenberger/git/projects/singularity/
+# cd /users/$USER/git/projects/singularity/
 
-singularity shell -c -B /tmp,/run,/scratch -s @@RUNDIR@@/upHi.py -H /scratch-cbe/users/wolfgan.waltenberger /scratch-cbe/users/wolfgan.waltenberger/container/current.simg
+singularity shell -c -B /tmp,/run,/scratch -s @@RUNDIR@@/upHi.py -H /scratch-cbe/users/wolfgan.waltenberger /scratch-cbe/users/$USER/container/current.simg
 
 ###SBATCH --ntasks-per-node=20.
