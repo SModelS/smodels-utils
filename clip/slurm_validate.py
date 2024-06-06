@@ -9,8 +9,8 @@ import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
 from colorama import Fore as ansi
 from typing import Union
 
-codedir = "/scratch-cbe/users/wolfgan.waltenberger/git"
-outputsdir = "/scratch-cbe/users/wolfgan.waltenberger/outputs/"
+codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
+outputsdir = f"/scratch-cbe/users/{os.environ['USER']}/outputs/"
 if "CODEDIR" in os.environ:
     codedir = os.environ["CODEDIR"]
 if "OUTPUTS" in os.environ:
