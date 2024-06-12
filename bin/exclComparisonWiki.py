@@ -62,6 +62,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
     def oneTable ( self, obsfiles ):
         """ given obsfiles, create one table """
         t0 = time.time()
+        obsfiles.sort( reverse=True )
         for ctr,obsfile in enumerate ( obsfiles ):
             lpath = obsfile.replace(self.databasePath,"")
             if lpath.startswith("/"):
@@ -102,7 +103,6 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
 
     def run ( self ):
         self.header()
-        self.tableHeader ()
         self.body()
         self.footer()
         self.close()
