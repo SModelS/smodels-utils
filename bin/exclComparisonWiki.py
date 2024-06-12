@@ -40,6 +40,7 @@ The list has been created from the database version %s, considering also superse
 There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses%s), a [ListOfAnalyses%sWithSuperseded](https://smodels.github.io/docs/ListOfAnalyses%sWithSuperseded), and [Validation%s](Validation%s).
 
 """ % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver, self.ver, self.ver ) )
+        self.f.write ( f"\n## [CMS](#CMS) [ATLAS](#ATLAS)\n" )
 
     def footer( self ):
         self.f.write ( "\n<font color='grey'>This page was created %s</font>\n" % \
@@ -58,11 +59,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             self.f.write ( "| "+"-"*l+ " " )
         self.f.write ( "|\n" )
 
-    def body ( self ):
-        """ the 'body' of the wiki page """
-        import glob
-        path = f"{self.databasePath}/*/*/*/validation"
-        obsfiles = glob.glob ( f"{path}/*obs.png" )
+    def oneTable ( self, obsfiles ):
+        """ given obsfiles, create one table """
         t0 = time.time()
         for ctr,obsfile in enumerate ( obsfiles ):
             lpath = obsfile.replace(self.databasePath,"")
@@ -89,6 +87,18 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             figPath = f"https://smodels.github.io/validation/{self.ver}/{lpath}"
             self.f.write ( f'| <a href="{figPath}"><img width="500px" src="{figPath}?{t0}" /></a>' )
             self.f.write ( "\n" )
+
+    def body ( self ):
+        """ the 'body' of the wiki page """
+        import glob
+        path = f"{self.databasePath}/*/*/*/validation"
+        obsfiles = glob.glob ( f"{path}/*obs.png" )
+        for exp in [ "CMS", "ATLAS" ]:
+            self.f.write ( f'\n<a name="{exp}"></a>\n' )
+            self.f.write ( f"## {exp}\n\n" )
+            self.tableHeader()
+            tmp = [ x for x in obsfiles if exp in x ]
+            self.oneTable ( tmp )
 
     def run ( self ):
         self.header()
