@@ -909,6 +909,11 @@ class ValidationPlot():
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
                 if not "efficiency" in Dict.keys():
                     try:
+                        #print ( f"@@12 Dict {Dict}" )
+                        #print ( f"@@13 parameters {parameters}" )
+                        for i,p in enumerate(parameters):
+                            if p=="stable":
+                                parameters[i]=0.
                         eff = txname.txnameData.getValueFor(parameters)
                         if eff != None:
                             Dict['efficiency'] = round ( eff, 8 )
