@@ -319,9 +319,11 @@ class GraphMassPlane(object):
             if type(parameters[index]) in [ float ]:
                 # ret[str(param)] = float ( parameters[index] )
                 rhs = round_to_n ( float ( parameters[index] ), 5 )
-            else:
+            elif type(parameters[index]) in [ tuple, list ]:
                 # ret[str(param)] = float ( parameters[index][1] )
                 rhs = round_to_n ( float ( parameters[index][1] ), 5 )
+            else:
+                rhs = parameters[index]
             lhs = parse_expr ( str(param) )
             if type(lhs)==core.numbers.Float:
                 lhs = round_to_n ( float(lhs), 5 )
