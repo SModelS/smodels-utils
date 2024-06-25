@@ -16,7 +16,7 @@ try:
     from smodels.tools.wrapperBase import WrapperBase
 except:
     sys.path.append(os.path.expanduser('~/smodels'))
-    from smodels.tools.wrapperBase import WrapperBase      
+    from smodels.tools.wrapperBase import WrapperBase
 
 from smodels.tools import wrapperBase
 from smodels.base.smodelsLogging import logger, setLogLevel
@@ -377,7 +377,6 @@ class RefXSecComputer:
         #print ( "open", [ c["pids"] for c in channels ] )
         channels = self.selectChannels ( channels, ignore_pids )
         #print ( "selected ", channels )
-        
         xsecs = crossSection.XSectionList()
         for channel in channels:
             # obtain xsecs for all masses, but for the given channel
@@ -424,7 +423,7 @@ class RefXSecComputer:
         # productions of same-sign-pid pairs when the particle is within reach
         samesignmodes = ( 1000021, 1000023, 1000025 )
         # production of opposite-sign-pid pairs when the particle is within reach
-        oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 1000024 )
+        oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 2000011, 2000013, 2000015, 1000024 )
 
         # associate production
         associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ), ( 1000023, 1000025 ), ( 1000024, 1000025 ), ( -1000024, 1000025 ) )
@@ -550,7 +549,7 @@ class RefXSecComputer:
                 line = line[:line.find("#")]
             if "mass [GeV]" in line: ## skip
                 continue
-            tokens = line.split ()
+            tokens = line.replace("GeV","").split ()
             if len(tokens)<2:
                 continue
             m = columns["mass"]
@@ -560,7 +559,7 @@ class RefXSecComputer:
                 mass = tuple( tokens[x] for x in m )
                 if len(mass) == 1:
                     mass = float(mass)
-            xsec = float(tokens[ columns["xsec"] ].replace("GeV","") )
+            xsec = float(tokens[ columns["xsec"] ] )
             if not pb:
                 xsec = xsec / 1000.
             ret[ mass ] = xsec
@@ -701,8 +700,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-i", "--ignore_pids",
             help="ignore pids", type=str, default=None )
     argparser.add_argument ( "-v", "--verbose",
-            help="Verbose level", type=str, default='info' )            
-            
+            help="Verbose level", type=str, default='info' )
+
     args = argparser.parse_args()
     sqrts = args.sqrts
     if sqrts == None:
