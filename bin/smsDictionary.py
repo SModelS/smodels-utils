@@ -221,7 +221,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         entries.append ( constraint ) # "Topology" column
         images = ""
         for i in range ( len(maps) ):
-            images += f'<img alt="{txname}_{i+1}" src="../smsgraphs/{txname}_{i+1}.png" height="130"><BR>'
+            images += f'<img alt="{txname}_{i+1}" src="../smsgraphs/{txname}_{i+1}.png"><BR>'
+            # images += f'<img alt="{txname}_{i+1}" src="../smsgraphs/{txname}_{i+1}.png" height="130"><BR>'
         entries.append ( images ) # "Graph" column
 
         if self.hasResultsColumn:

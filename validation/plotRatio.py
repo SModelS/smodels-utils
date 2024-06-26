@@ -516,7 +516,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
-    plt.text ( .80, .025, f"$\\bar{{f}}$={rmean:.2f}+-{rstd:.2f}",
+    plt.text ( .80, .025, f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$",
             transform=fig.transFigure, c="grey", fontsize=12  )
     print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
