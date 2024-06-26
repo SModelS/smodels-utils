@@ -271,7 +271,10 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and \
             validationPlot.combine == True:
         ## pyhf combination
-        subtitle = "pyhf combining %d SRs: " % len(validationPlot.expRes.datasets)
+        subtitle = f"pyhf combining {len(validationPlot.expRes.datasets)} SRs: "
+    if hasattr ( validationPlot.expRes.globalInfo, "mlModel" ) and \
+            validationPlot.combine == True:
+        subtitle = f"NN combining {len(validationPlot.expRes.datasets)} SRs: "
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
