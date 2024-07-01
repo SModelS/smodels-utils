@@ -53,8 +53,9 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=Tr
     print("[prettyMatplotlib] Creating SModelS Exclusion JSON")
     if not validationPlot.combine: plot_type = "bestSR"
     else: plot_type = "comb"
+    axes = validationPlot.axes
     #store x,y points in json file
-    plot_dict = {f"{validationPlot.txName}_{plot_type}": {"obs_excl":{'x':xobs,'y':yobs}, "exp_excl":{'x':xexp, 'y':yexp}}}
+    plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obs_excl":{'x':xobs,'y':yobs}, "exp_excl":{'x':xexp, 'y':yexp}}}
     vDir = validationPlot.getValidationDir (validationDir=None)
     file_js = "SModelS_ExclusionLines.json"
     import json
