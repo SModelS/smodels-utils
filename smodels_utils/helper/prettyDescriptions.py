@@ -71,6 +71,7 @@ prettySUSYParticle = {
     'scharm': '#tilde{c}',  #scharm
     'sstrange': '#tilde{s}',  #sstarnge
     'stop': '#tilde{t}',  #stop
+    'mu': '#tilde{mu}', # muon
     'sbottom': '#tilde{b}',  #sbottom
     'slepton' : '#tilde{l}',    #slepton
     'selectron' : '#tilde{e}',      #selectron
@@ -479,8 +480,8 @@ motherDict = {"T1" :  "gluino gluino",
     "TSlepSlep" : "slepton slepton",
     "TSelSel" : "selectron selectron",
     "TSelSelDisp" : "selectron selectron",
-    "TSmuSmu" : "smuon smuno",
-    "TSmuSmuDisp" : "smuon smuno",
+    "TSmuSmu" : "smuon smuon",
+    "TSmuSmuDisp" : "smuon smuon",
     "TStauStau" : "stau stau",
     "TStauStauDisp" : "stau stau",
     "THSCPM1" : "chargino^pm_1 chargino^pm_1",
