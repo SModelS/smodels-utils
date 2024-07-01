@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+""" simple script to create smodels-database.json that will be used
+to mark SModelS entries at hepdata """
+
 def create():
     from smodels.experiment.databaseObj import Database
     from smodels_utils.helper.various import getCollaboration
