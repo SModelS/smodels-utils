@@ -370,8 +370,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     Dir2=os.path.dirname ( ipath2 )
     # smsrootfile = Dir.replace("validation","sms.root" )
     # smsrootfile2 = Dir2.replace("validation","sms.root" )
-    exclusionlines1 = Dir.replace("validation","exclusion_lines.json" )
-    exclusionlines2 = Dir2.replace("validation","exclusion_lines.json" )
+    exclusionlines1 = Dir.replace( options["folder1"],"exclusion_lines.json" )
+    exclusionlines2 = Dir2.replace( options["folder2"],"exclusion_lines.json" )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo = shortTxName ( list ( topos ) )
     stopos = []
@@ -491,7 +491,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
-    figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
+    figname = "%s_%s.png" % ( analysis.replace( options["folder1"],"ratio" ), topo )
     output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
