@@ -1,5 +1,5 @@
 # From https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections13TeVgluglu
-# NNLOapprox + NNLL gluino-gluino cross section, 13 TeV
+# NNLOapprox + NNLL gluino-gluino cross section [pb], 13 TeV
 500. GeV	0.338E+02 ± 7.86 %
 505. GeV	0.319E+02 ± 7.89 %
 510. GeV	0.301E+02 ± 7.92 %

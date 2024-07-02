@@ -19,7 +19,7 @@ from scipy.interpolate import griddata
 import itertools
 import importlib
 from smodels_utils.helper import prettyDescriptions
-from smodels_utils.helper.various import getPathName
+from smodels_utils.helper.various import getValidationDataPathName
 #from smodels_utils.helper.various import getValidationModule
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
@@ -145,7 +145,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     topos = set()
     axis1, axi2 = None, None
     for valfile in valfile1.split(","):
-        ipath1 = getPathName ( dbpath, analysis1, valfile )
+        ipath1 = getValidationDataPathName ( dbpath, analysis1, valfile, options["folder1"] )
         content = getValidationFileContent ( ipath1 )
         if not "meta" in content or content["meta"] is None:
             print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
@@ -158,7 +158,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     content1 = mergeValidationData ( contents )
     contents = []
     for valfile in valfile2.split(","):
-        ipath2 = getPathName ( dbpath, analysis2, valfile )
+        ipath2 = getValidationDataPathName ( dbpath, analysis2, valfile, options["folder2"] )
         content = getValidationFileContent ( ipath2 )
         if not "meta" in content or content["meta"] is None:
             print ( f"[plotRatio] meta info is missing in {ipath2}. Perhaps rerun validation?" )
@@ -370,8 +370,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     Dir2=os.path.dirname ( ipath2 )
     # smsrootfile = Dir.replace("validation","sms.root" )
     # smsrootfile2 = Dir2.replace("validation","sms.root" )
-    exclusionlines1 = Dir.replace("validation","exclusion_lines.json" )
-    exclusionlines2 = Dir2.replace("validation","exclusion_lines.json" )
+    exclusionlines1 = Dir.replace( options["folder1"],"exclusion_lines.json" )
+    exclusionlines2 = Dir2.replace( options["folder2"],"exclusion_lines.json" )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo = shortTxName ( list ( topos ) )
     stopos = []
@@ -491,7 +491,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
-    figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
+    figname = "%s_%s.png" % ( analysis.replace( options["folder1"],"ratio" ), topo )
     output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
@@ -516,7 +516,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
-    plt.text ( .80, .025, f"$\\bar{{f}}$={rmean:.2f}+-{rstd:.2f}",
+    plt.text ( .80, .025, f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$",
             transform=fig.transFigure, c="grey", fontsize=12  )
     print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
@@ -591,6 +591,12 @@ def main():
     argparser.add_argument ( "-l1", "--label1",
             help="label in the legend for analysis1, guess if None [None]",
             type=str, default=None )
+    argparser.add_argument ( "-f1", "--folder1",
+            help="validation folder name for analysis1 [validation]",
+            type=str, default="validation" )
+    argparser.add_argument ( "-f2", "--folder2",
+            help="validation folder name for analysis2 [validation]",
+            type=str, default="validation" )
     argparser.add_argument ( "--SR",
             help="plot ratio of efficiencies of this signal region. None = bestSR. Will turn on --efficiencies [None]",
             type=str, default=None )
@@ -659,9 +665,6 @@ def main():
             valfile2 = valfile1
         if not "_" in valfile2:
             valfile2 = valfile2 + "_2EqMassAx_EqMassBy.py"
-        # imp1 = getValidationModule ( args.dbpath, args.analysis1, valfile1 )
-        # imp2 = getValidationModule ( args.dbpath, args.analysis2, valfile2 )
-
         draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
                vars(args ) )
 
