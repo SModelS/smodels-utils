@@ -22,6 +22,15 @@ def merge ( entry1, entry2, anaId ):
             print ( f"[createHepJson] entry {k} differs for {anaId}: '{v}' != '{entry1[k]}'" )
     return entry1
 
+def getHepData ( nr ):
+    hepdata = f"https://www.hepdata.net/record/ins{nr}"
+    # return hepdata ## good enough?
+    import requests
+    req = requests.request ( url=hepdata, method="GET" )
+    content = eval(req.content)
+    return content["@id"]
+    # return hepdata
+
 def create():
     """ create the json """
     from smodels.experiment.databaseObj import Database
@@ -38,7 +47,7 @@ def create():
         coll = getCollaboration ( gI.id )
         dses = er.datasets
         resultType = "EM"
-        SRcomb = "None"
+        SRcomb = None
         if hasattr ( gI, "covariance" ):
             SRcomb = "SLv1"
         if hasattr ( gI, "jsonFiles" ):
@@ -64,8 +73,12 @@ def create():
                     if p2 > -1 :
                         tmp = tmp[:p2]
                     # print ( "tmp", dU, "->", tmp )
-                    entry["inspire"]=tmp
-        entry["SRcomb"]=SRcomb
+                    hepdata = getHepData  ( tmp )
+                    inspire = f"https://inspirehep.net/literature/{tmp}"
+                    entry["hepdata"]=hepdata
+                    entry["inspire"]=inspire
+        if SRcomb != None:
+            entry["SRcomb"]=SRcomb
         if hasattr ( gI, "arxiv" ):
             ar = gI.arxiv
             p1 = ar.rfind("/")
