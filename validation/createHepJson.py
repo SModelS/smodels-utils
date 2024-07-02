@@ -11,7 +11,7 @@ def merge ( entry1, entry2, anaId ):
         if not k in entry1:
             entry1[k]=v
             continue
-        if k == "resultType" and v != entry1[k]:
+        if k == "resultType" and v != entry1[k] and v not in entry1[k]:
             entry1[k]+=f",{v}"
             continue
         if k == "SRcomb":
