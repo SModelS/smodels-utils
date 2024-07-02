@@ -137,7 +137,8 @@ def create():
         attrOrder = [ "exp", "anaID", "arXiv", "inspire", "paper", "paperDOI", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
         for attr in attrOrder:
             if attr in entry:
-                line += f'"attr": "{entry[attr]}", '
+                line += f'"{attr}": "{entry[attr]}", '
+        line = line[:-2]
         line += "}"
         f.write ( line+"\n" )
     f.close()
