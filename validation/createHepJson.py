@@ -20,8 +20,13 @@ def merge ( entry1, entry2, anaId ):
             entry1[k] = v
             # print ( f"merging {entry1} and {entry2}: {entry1}" )
             continue
+        if k == "prettyName":
+            # take the shorter!
+            if v in entry1[k]:
+                entry1[k]=v
         if v != entry1[k]:
             print ( f"[createHepJson] entry {k} differs for {anaId}: '{v}' != '{entry1[k]}'" )
+            print ( f"[createHepJson] will use {entry1[k]}" )
     return entry1
 
 def getHepData ( nr ):
@@ -73,7 +78,10 @@ def create():
             SRcomb = "pyhf"
         if len(dses) == 1 and dses[0].dataInfo.dataId == None:
             resultType = "UL"
-        entry = { "exp": coll, "anaID": gI.id, "resultType": resultType }
+        Id = gI.id
+        for ext in [ "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
+           Id = Id.replace(ext,"") 
+        entry = { "exp": coll, "anaID": Id, "resultType": resultType }
         # signatureType = "prompt"
         if hasattr ( gI, "type" ):
             # signatureType = gI.type
@@ -93,9 +101,13 @@ def create():
                     p2 = tmp.find("?")
                     if p2 > -1 :
                         tmp = tmp[:p2]
+                    p2 = tmp.find("_")
+                    if p2 > -1 :
+                        tmp = tmp[:p2]
                     # print ( "tmp", dU, "->", tmp )
                     hepdata = getHepData  ( tmp )
-                    inspire = f"https://inspirehep.net/literature/{tmp}"
+                    inspire = tmp
+                    # inspire = f"https://inspirehep.net/literature/{tmp}"
                     entry["hepdata"]=hepdata
                     entry["inspire"]=inspire
         if SRcomb != None:
@@ -106,7 +118,7 @@ def create():
             entry["arXiv"]=ar[p1+1:]
         if hasattr ( gI, "prettyName" ):
             entry["prettyName"]=gI.prettyName
-        if False and hasattr ( gI, "publication" ):
+        if True and hasattr ( gI, "publication" ):
             entry["paper"]=gI.publication
         if hasattr ( gI, "publicationDOI" ):
             doi = gI.publicationDOI
@@ -114,13 +126,20 @@ def create():
             doi = doi.replace("https://doi.org/","")
             entry["paperDOI"]=doi
         entry["wiki"]=gI.url
-        if gI.id in entries:
-            merged = merge ( entries[gI.id], entry, gI.id )
-            entries[gI.id] = merged
+        if Id in entries:
+            merged = merge ( entries[Id], entry, Id )
+            entries[Id] = merged
         else:
-            entries[gI.id] = entry
+            entries[Id] = entry
     for anaId,entry in entries.items():
-        f.write ( str(entry).replace("'",'"')+"\n" )
+        line = str(entry).replace("'",'"')
+        line = "{"
+        attrOrder = [ "exp", "anaID", "arXiv", "inspire", "paper", "paperDOI", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
+        for attr in attrOrder:
+            if attr in entry:
+                line += f'"attr": "{entry[attr]}", '
+        line += "}"
+        f.write ( line+"\n" )
     f.close()
 
 if __name__ == "__main__":
