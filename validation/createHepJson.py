@@ -73,10 +73,12 @@ def create():
             SRcomb = "pyhf"
         if len(dses) == 1 and dses[0].dataInfo.dataId == None:
             resultType = "UL"
-        signatureType = "prompt"
-        if hasattr ( gI, "type" ):
-            signatureType = gI.type
         entry = { "exp": coll, "anaID": gI.id, "resultType": resultType }
+        # signatureType = "prompt"
+        if hasattr ( gI, "type" ):
+            # signatureType = gI.type
+            # entry["signatureType"]=signatureType
+            entry["signatureType"]=gI.type
         for ds in dses:
             if hasattr ( ds.dataInfo, "thirdMoment" ):
                 SRcomb = "SLv2"

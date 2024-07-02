@@ -9,4 +9,5 @@ def run_smodels ( slhafile : os.PathLike ):
 
 if __name__ == "__main__":
     import argparse
+    ap = argparse.ArgumentParser(description="first candidate for gambit/colliderbit SModelS backend")
     run_smodels ( slhafile )
