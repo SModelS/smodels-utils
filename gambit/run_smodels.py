@@ -25,7 +25,7 @@ def run_smodels ( slhafile : os.PathLike ) -> Dict:
     from smodels.share.models.SMparticles import SMList
     from smodels.particlesLoader import load
     from smodels.experiment.databaseObj import Database
-    from smodels.base.physicsUnits import fb, GeV, TeV
+    from smodels.base.physicsUnits import fb, GeV
     from smodels.decomposition import decomposer
     from smodels.matching.theoryPrediction import theoryPredictionsFor
 
@@ -49,7 +49,7 @@ def run_smodels ( slhafile : os.PathLike ) -> Dict:
         invisibleCompress=True, minmassgap=mingap )
 
     ## now we get theory predictions, ie. we match the experimental
-    ## results with the decompose theory
+    ## results with the decomposed theory
     ## 'combinedResults' means that we combine signal regions, if we
     ## can
     allPredictions = theoryPredictionsFor(database, topDict, 
