@@ -3,6 +3,8 @@
 """ simple script to create smodels-database.json that will be used
 to mark SModelS entries at hepdata """
 
+import os
+
 def merge ( entry1, entry2, anaId ):
     """ merge two entries """
     for k,v in entry2.items():
@@ -24,12 +26,29 @@ def merge ( entry1, entry2, anaId ):
 
 def getHepData ( nr ):
     hepdata = f"https://www.hepdata.net/record/ins{nr}"
-    # return hepdata ## good enough?
+    if not os.path.exists ( "cache" ):
+        os.mkdir ( "cache" )
+    cachefile = f"cache/{nr}"
+    if os.path.exists ( cachefile ):
+        try:
+            with open ( cachefile, "rt" )  as f:
+                content = f.read()
+                f.close()
+                return content
+        except Exception as e:
+            print ( f"cannot read cachefile {cachefile}: {e}" )
     import requests
     req = requests.request ( url=hepdata, method="GET" )
-    content = eval(req.content)
-    return content["@id"]
-    # return hepdata
+    try:
+        content = eval(req.content)
+        ret = content["@id"]
+        with open ( cachefile, "wt" ) as f:
+            f.write ( ret )
+            f.close()
+        return ret
+    except SyntaxError as e:
+        print ( f"cannot read content for {nr}: {e}" )
+        return hepdata
 
 def create():
     """ create the json """
@@ -41,9 +60,9 @@ def create():
     expResList = db.getExpResults()
     f=open("smodels-database.json","wt")
     entries = {}
-    for er in expResList:
+    for i,er in enumerate(expResList):
         gI = er.globalInfo
-        # print ( gI.id )
+        print ( f"[createHepJson] {i+1}/{len(expResList)}: {gI.id}" )
         coll = getCollaboration ( gI.id )
         dses = er.datasets
         resultType = "EM"
