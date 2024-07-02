@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-""" a first version of a SModelS backend for gambit/colliderbit """
+""" a first version of a SModelS backend for gambit/colliderbit 
+depends only SModelS (pip install smodels), nothing else.
+"""
 
 import os
 from typing import Dict
@@ -17,29 +19,44 @@ def run_smodels ( slhafile : os.PathLike ) -> Dict:
     if not os.path.exists ( slhafile ):
         print ( f"[run_smodels] slha file {slhafile} not found" )
         return {}
+
+    ## some imports
     from smodels.base.model import Model
     from smodels.share.models.SMparticles import SMList
     from smodels.particlesLoader import load
     from smodels.experiment.databaseObj import Database
     from smodels.base.physicsUnits import fb, GeV, TeV
     from smodels.decomposition import decomposer
-    from smodels.base import runtime
     from smodels.matching.theoryPrediction import theoryPredictionsFor
+
+    ## the database, we could use something other than the official
+    ## database
     dbpath = "official"
     database = Database(dbpath)
-    runtime.modelFile = "smodels.share.models.mssm"
     BSMList = load()
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     slhafile = os.path.abspath(os.path.expanduser(slhafile))
+
+    ## a few minor parameters that can be adapted
     model.updateParticles(inputFile=slhafile,
         ignorePromptQNumbers = ['eCharge','colordim','spin'])
     sigmacut=0.05*fb
     mingap = 5.*GeV
+
+    ## here we decompose our model into its simplified model
+    ## spectrum
     topDict = decomposer.decompose(model, sigmacut, massCompress=True,
         invisibleCompress=True, minmassgap=mingap )
+
+    ## now we get theory predictions, ie. we match the experimental
+    ## results with the decompose theory
+    ## 'combinedResults' means that we combine signal regions, if we
+    ## can
     allPredictions = theoryPredictionsFor(database, topDict, 
             combinedResults=True )
     return_dict = {}
+
+    ## from these results, lets create a dictionary for gambit
     for theoryPrediction in allPredictions:
         tpId = theoryPrediction.analysisId()+":"+theoryPrediction.dataType ( short=True )
         robs = theoryPrediction.getRValue()
