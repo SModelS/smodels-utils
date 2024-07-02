@@ -36,7 +36,7 @@ def run_smodels ( slhafile : os.PathLike ):
         robs = theoryPrediction.getRValue()
         rexp = theoryPrediction.getRValue( expected = True )
         tp_dict = { "robs": robs, "rexp": rexp }
-        if theoryPrediction.dataType() == 'efficiencyMap':
+        if theoryPrediction.dataType() in [ 'efficiencyMap', 'combined' ]:
             theoryPrediction.computeStatistics()
             tp_dict["nll_BSM"]=theoryPrediction.likelihood ( return_nll=True )
             tp_dict["nll_SM"]=theoryPrediction.lsm ( return_nll = True )
