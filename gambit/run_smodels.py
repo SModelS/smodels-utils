@@ -52,4 +52,5 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--slhafile', required = True,
             help='slhafile to run SModelS for', type = str )
     args = ap.parse_args()
-    run_smodels ( args.slhafile )
+    r = run_smodels ( args.slhafile )
+    print ( r )
