@@ -2,4 +2,4 @@
 all: test
 
 test:
-	./run_smodels.py -f test.slha
+	./run_smodels.py -f test.slha | tee bla
