@@ -367,6 +367,10 @@ def drawPrettyPaperPlot(validationPlot):
     if 'CMS-SUS-16-050-agg' in analysis:
         if 'T5t' in txname:massg = '$ m_{\\tilde{\\tau}} =  m_{\\tilde{\\chi}_1^0} + 20 $ '
     
+    if 'ATLAS-SUSY-2018-33' in analysis:
+        x_label = '$m(\\tilde{t}$)'
+        y_label = '$\\Gamma(\\tilde{t})$'
+    
     
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
