@@ -71,7 +71,7 @@ prettySUSYParticle = {
     'scharm': '#tilde{c}',  #scharm
     'sstrange': '#tilde{s}',  #sstarnge
     'stop': '#tilde{t}',  #stop
-    'mu': '#tilde{mu}', # muon
+    'mu': '#mu', # muon
     'sbottom': '#tilde{b}',  #sbottom
     'slepton' : '#tilde{l}',    #slepton
     'selectron' : '#tilde{e}',      #selectron
