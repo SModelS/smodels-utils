@@ -2,8 +2,8 @@
 all: test
 
 test:
-	./run_string.py -f test.slha | tee string.txt
+	./run_smodels.py -f test.slha | tee string.txt
 
 
 file_input:
-	./run_smodels.py -f test.slha | tee file.txt
+	./run_slhafile.py -f test.slha | tee file.txt
