@@ -71,7 +71,7 @@ prettySUSYParticle = {
     'scharm': '#tilde{c}',  #scharm
     'sstrange': '#tilde{s}',  #sstarnge
     'stop': '#tilde{t}',  #stop
-    'mu': '#tilde{mu}', # muon
+    'mu': '#mu', # muon
     'sbottom': '#tilde{b}',  #sbottom
     'slepton' : '#tilde{l}',    #slepton
     'selectron' : '#tilde{e}',      #selectron
@@ -153,7 +153,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5WWoff':'gluino  --> quark antiquark  chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5ttbbWW':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'TRPV5tjb':'gluino  --> top stop, stop --> jet b (RPV)',
-    'TRPV1jmu': 'stop -> jet mu (RPV)',
+    'TRPV1jmu': 'stop --> jet mu (RPV)',
     'T5ttbbWWoff':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5WZ':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
     'T5Hy':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> H lsp, neutralino_2 --> gamma lsp',
