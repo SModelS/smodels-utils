@@ -5,21 +5,19 @@ depends only SModelS (pip install smodels), nothing else.
 """
 
 import os
-from typing import Dict, Text
+from typing import Dict
 
-def run_smodels ( slha : Text ) -> Dict:
-    """ given the SLHA file content as a string, this little script runs
+def run_smodels ( slhafile : os.PathLike ) -> Dict:
+    """ given the path to an slha file, this little script runs
     SModelS, returns the results as dictionary.
-
-    :param slha: slha file content, given as a single string
 
     :returns: dictionary with analysis Ids as keys, and (negative log) 
     likelihoods, and r-values 
     (r := predicted cross section / upper limit on cross section ) 
     as values
     """
-    if len(slha)==0:
-        print ( f"[run_smodels] slha string is found empty" )
+    if not os.path.exists ( slhafile ):
+        print ( f"[run_smodels] slha file {slhafile} not found" )
         return {}
 
     ## some imports
@@ -37,9 +35,10 @@ def run_smodels ( slha : Text ) -> Dict:
     database = Database(dbpath)
     BSMList = load()
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
+    slhafile = os.path.abspath(os.path.expanduser(slhafile))
 
     ## a few minor parameters that can be adapted
-    model.updateParticles(inputFile=slha,
+    model.updateParticles(inputFile=slhafile,
         ignorePromptQNumbers = ['eCharge','colordim','spin'])
     sigmacut=0.05*fb
     mingap = 5.*GeV
@@ -80,6 +79,5 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--slhafile', required = True,
             help='slhafile to run SModelS for', type = str )
     args = ap.parse_args()
-    with open ( args.slhafile, "rt" ) as f:
-        r = run_smodels ( f.read() )
-        print ( r )
+    r = run_smodels ( args.slhafile )
+    print ( r )
