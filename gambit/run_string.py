@@ -7,7 +7,7 @@ depends only SModelS (pip install smodels), nothing else.
 import os
 from typing import Dict, Text
 
-def run_string ( slha : Text ) -> Dict:
+def run_smodels ( slha : Text ) -> Dict:
     """ given the path to an slha file, this little script runs
     SModelS, returns the results as dictionary.
 
@@ -81,5 +81,5 @@ if __name__ == "__main__":
             help='slhafile to run SModelS for', type = str )
     args = ap.parse_args()
     with open ( args.slhafile, "rt" ) as f:
-        r = run_string ( f.read() )
+        r = run_smodels ( f.read() )
         print ( r )
