@@ -197,6 +197,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana1 = ana1[p2+1:]
     valfile1 = os.path.basename ( datafile )
     ana2 = anaId # expRes.globalInfo.id
+    output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
+    options = { "show": opts["show"], "output": output }
     ana2origtest = os.path.dirname ( datafile ) + f"../../../{ana2}-orig"
     ana2origtest = os.path.abspath ( ana2origtest )
     if os.path.exists ( ana2origtest ):
@@ -204,11 +206,11 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         ## compare against that one!
         ana2 = ana2 + "-orig"
         valfile2 = valfile1
+        options["label1"]="NN"
+        options["label2"]="original"
     else:
     #print ( f"@@try out {ana2origtest} {os.path.exists(ana2origtest)}" )
         valfile2 = valfile1.replace("_combined","")
-    output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
-    options = { "show": opts["show"], "output": output }
     #options["zmin"]=0.
     #options["zmax"]=2.
     import plotRatio
