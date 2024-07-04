@@ -126,7 +126,8 @@ def clearJsons ( path : str ):
             #comment ( f"removing {fname}" )
             ctRemoved += 1
             os.unlink ( js )
-    comment ( f"removed {ctRemoved} json files" )
+    if ctRemoved>0:
+        comment ( f"removed {ctRemoved} json files" )
 
 def removeNonValidated( db : Database, dirname : str = "database/" ):
     """ remove all non-validated analyses from text database """
