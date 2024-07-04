@@ -204,6 +204,10 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     import plotRatio
     if False:
         print ( f"[runValidation] ./plotRatio.py -d {dbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}" )
+    if not "folder1" in options:
+        options["folder1"]="validation"
+    if not "folder2" in options:
+        options["folder2"]="validation"
     plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
     return True
 
