@@ -197,14 +197,28 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana1 = ana1[p2+1:]
     valfile1 = os.path.basename ( datafile )
     ana2 = anaId # expRes.globalInfo.id
-    valfile2 = valfile1.replace("_combined","")
+    ana2origtest = os.path.dirname ( datafile ) + f"../../../{ana2}-orig"
+    ana2origtest = os.path.abspath ( ana2origtest )
+    if os.path.exists ( ana2origtest ):
+        ## if an -orig result exists with the same analysis id, 
+        ## compare against that one!
+        ana2 = ana2 + "-orig"
+        valfile2 = valfile1
+    else:
+    #print ( f"@@try out {ana2origtest} {os.path.exists(ana2origtest)}" )
+        valfile2 = valfile1.replace("_combined","")
     output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
-    options = { "show": opts["show"], "output": output, "zmin": 0.,
-                "zmax": 2. }
+    options = { "show": opts["show"], "output": output }
+    #options["zmin"]=0.
+    #options["zmax"]=2.
     import plotRatio
     if False:
         print ( f"[runValidation] ./plotRatio.py -d {dbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}" )
     if not "folder1" in options:
+        folder1 = os.path.dirname ( datafile ).replace( dbpath, "" )
+        p1 = folder1.rfind ( "/" )
+        if p1 > 0:
+            folder1 = folder1[p1+1:]
         options["folder1"]="validation"
     if not "folder2" in options:
         options["folder2"]="validation"
