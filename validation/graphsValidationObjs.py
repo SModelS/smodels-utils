@@ -1151,6 +1151,8 @@ class ValidationPlot():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if hasattr ( self.expRes.globalInfo, "includeCRs" ):
+            meta["includeCRs"]=self.expRes.globalInfo.includeCRs
         if hasattr ( self, "pointsInTarFile" ):
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
