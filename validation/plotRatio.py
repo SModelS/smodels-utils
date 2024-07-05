@@ -349,9 +349,10 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     #    vmax = 0.5
     if vmax > 5.:
         opts = { "norm": matplotlib.colors.LogNorm()  }
+    else:
+        opts = { "vmin": vmin, "vmax": vmax }
 
-    scatter = plt.scatter ( x, y, s=s, c=col, marker="o", cmap=cm,
-                            vmin=vmin, vmax=vmax, **opts )
+    scatter = plt.scatter ( x, y, s=s, c=col, marker="o", cmap=cm, **opts )
     ax = plt.gca()
     fig = plt.gcf()
     plt.ylabel ( ylabel, size=13 )
