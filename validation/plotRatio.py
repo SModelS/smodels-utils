@@ -119,6 +119,8 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
         label = anaId2.lower()
     if anaId2 == anaId1 + "-eff":
         label = "ul"
+    if anaId2 == anaId1:
+        label = "ul"
     if label.startswith("-"):
         label = label[1:]
     if label == "???":
@@ -386,6 +388,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     isEff = False
     if "-eff" in analysis1 or "-eff" in analysis2:
         isEff = True
+    origAnaId = anaId = analysis1
     anaId = analysis1.replace("-andre","")
     anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
     anaId2 = analysis2.replace("-andre","")
@@ -503,7 +506,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
 
     figname = figname.replace("@sr",sr)
     a1, a2 = options["label1"], options["label2"]
-    a1 = guessLabel ( options["label1"], anaId, anaId2, valfile )
+    a1 = guessLabel ( options["label1"], origAnaId, anaId2, valfile )
     a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2 )
 
     line = f"$f$ = $r$({a1}) / $r$({a2})"
