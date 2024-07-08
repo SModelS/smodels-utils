@@ -1286,6 +1286,8 @@ class ValidationPlot():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if hasattr ( self.expRes.globalInfo, "includeCRs" ):
+            meta["includeCRs"]=self.expRes.globalInfo.includeCRs
         if os.path.exists ( f"{validationDir}/../validation_commentary.txt" ):
             with open( f"{validationDir}/../validation_commentary.txt","rt") as f2:
                 txt=f2.read().strip()

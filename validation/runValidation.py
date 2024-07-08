@@ -197,13 +197,39 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana1 = ana1[p2+1:]
     valfile1 = os.path.basename ( datafile )
     ana2 = anaId # expRes.globalInfo.id
-    valfile2 = valfile1.replace("_combined","")
     output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
-    options = { "show": opts["show"], "output": output, "zmin": 0.,
-                "zmax": 2. }
+    options = { "show": opts["show"], "output": output }
+    ana2origtest = os.path.dirname ( datafile ) + f"../../../{ana2}-orig"
+    ana2origtest = os.path.abspath ( ana2origtest )
+    if os.path.exists ( ana2origtest ) and not "-orig" in ana1:
+        ## if an -orig result exists with the same analysis id, 
+        ## compare against that one!
+        ana2 = ana2 + "-orig"
+        valfile2 = valfile1
+        options["label1"]="NN"
+        options["label2"]="original"
+    else:
+        ana2 = ana2.replace("-orig","")
+    #print ( f"@@try out {ana2origtest} {os.path.exists(ana2origtest)}" )
+        valfile2 = valfile1.replace("_combined","")
+    #options["zmin"]=0.
+    #options["zmax"]=2.
     import plotRatio
-    if False:
-        print ( f"[runValidation] ./plotRatio.py -d {dbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}" )
+    if not "folder1" in options:
+        folder1 = os.path.dirname ( datafile ).replace( dbpath, "" )
+        p1 = folder1.rfind ( "/" )
+        if p1 > 0:
+            folder1 = folder1[p1+1:]
+        options["folder1"]="validation"
+    if not "folder2" in options:
+        options["folder2"]="validation"
+    if True:
+        cmd = f"./plotRatio.py -d {dbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
+        if "folder1" in options and options["folder1"]!="validation":
+            cmd += f" -f1 {options['folder1']}"
+        if "folder2" in options and options["folder2"]!="validation":
+            cmd += f" -f2 {options['folder2']}"
+        print ( f"{cmd}" )
     plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
     return True
 
