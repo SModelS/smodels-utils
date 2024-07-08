@@ -130,8 +130,10 @@ def bake ( args : Dict ):
             maxgaps += f" --{gap} {ngap}"
     with open ( pathname, "wt" ) as f:
         for line in lines:
-            largs = f'-a -b -n {nevents} --topo {topo} -p {nprocesses} -m "{mass}"'
-            largs += f' --analyses "{analyses}"{maxgaps} --njets {njets}'
+            largs = f'-b -n {nevents} --topo {topo} -p {nprocesses} -m "{mass}"'
+            largs += f' --njets {njets}{maxgaps}'
+            if analyses != None:
+                largs += f' -a --analyses "{analyses}"'
             # args += ' -b'
             if cutlang:
                 largs += ' --cutlang'
