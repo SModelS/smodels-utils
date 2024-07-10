@@ -41,6 +41,7 @@ class Lister:
         options = { "compute_ps": True, "suffix": "temp" }
         # options["database"]="../../smodels-database" 
         options["dbpath"]=self.dbpath
+        options["outfile"]="none"
         modifier = expResModifier.ExpResModifier ( options )
         from protomodels.plotting import plotDBDict
         poptions = { "topologies": None, "roughviz": False }
@@ -67,6 +68,7 @@ class Lister:
         if self.fudged:
             options["fudge"]=0.7
             options["suffix"]="fudge"
+            options["outfile"]="none"
             del plotter
             del modifier
             modifier = expResModifier.ExpResModifier ( options )
