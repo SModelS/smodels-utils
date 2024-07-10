@@ -94,7 +94,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         import glob
         path = f"{self.databasePath}/*/*/*/validation"
         obsfiles = glob.glob ( f"{path}/*obs.png" )
-        for exp in [ "CMS", "ATLAS" ]:
+        for exp in [ "ATLAS", "CMS" ]:
             self.f.write ( f'\n<a name="{exp}"></a>\n' )
             self.f.write ( f"## {exp}\n\n" )
             self.tableHeader()
