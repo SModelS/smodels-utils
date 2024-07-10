@@ -306,7 +306,7 @@ def main():
         cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         if hasSSHpass:
             cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
-        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied command to your clipboard):%s" % ( ansi.RED, ansi.RESET ) )
+        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):%s" % ( ansi.RED, ansi.RESET ) )
         print ( cmd2 )
         reallyDo = not args.dry_run
         if reallyDo:
