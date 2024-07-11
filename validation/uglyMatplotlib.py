@@ -173,6 +173,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 allowed.append( coords )
     print ( )
 
+
     logger.info ( "done!" )
 
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
@@ -181,7 +182,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         #coords = massPlane.getXYValues(masses)
         if coords != None and "y" in coords:
             if logY and coords["y"]>1e-8:
-                continue
+                coords["y"]=math.exp(-coords["y"])
             if xrange != None and not ( xrange[0] < coords["x"] < xrange[1] ):
                 continue
             if yrange != None and not ( yrange[0] < coords["y"] < yrange[1] ):
