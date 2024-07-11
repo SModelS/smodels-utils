@@ -40,7 +40,7 @@ The list has been created from the database version %s, considering also superse
 There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses%s), a [ListOfAnalyses%sWithSuperseded](https://smodels.github.io/docs/ListOfAnalyses%sWithSuperseded), and [Validation%s](Validation%s).
 
 """ % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver, self.ver, self.ver ) )
-        self.f.write ( f"\n## [CMS](#CMS) [ATLAS](#ATLAS)\n" )
+        self.f.write ( f"\n## [ATLAS](#ATLAS) [CMS](#CMS)\n" )
 
     def footer( self ):
         self.f.write ( "\n<font color='grey'>This page was created %s</font>\n" % \
