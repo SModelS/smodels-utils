@@ -57,15 +57,24 @@ def getHepData ( nr ):
         print ( f"cannot read content for {nr}: {e}" )
         return hepdata
 
-def create():
-    """ create the json """
-    from smodels.experiment.databaseObj import Database
+def header(f):
+    """ header of the json file """
+    f.write ( "{\n" )
+    f.write ( '    "tool": "SModelS",\n' )
+    f.write ( '    "link_types": [ "implementation", "publication" ],\n' )
+    f.write ( '    "url_templates": {\n' )
+    f.write ( '        "implementation": "https://github.com/SModelS/smodels-database-release/tree/main/%s",\n' )
+    f.write ( '        "publication": "https://doi.org/%s"\n' )
+    f.write ( '    },\n' )
+    f.write ( '    "links" : {\n' )
+
+def footer(f):
+    """ footer of the json file """
+    f.write ( '    }\n' )
+    f.write ( '}\n' )
+
+def collectEntries( expResList ) -> dict:
     from smodels_utils.helper.various import getCollaboration
-    dbpath = "official"
-    dbpath = "../../smodels-database/"
-    db = Database ( dbpath )
-    expResList = db.getExpResults()
-    f=open("smodels-database.json","wt")
     entries = {}
     for i,er in enumerate(expResList):
         gI = er.globalInfo
@@ -82,7 +91,7 @@ def create():
             resultType = "UL"
         Id = gI.id
         for ext in [ "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
-           Id = Id.replace(ext,"") 
+           Id = Id.replace(ext,"")
         entry = { "exp": coll, "anaID": Id, "resultType": resultType }
         # signatureType = "prompt"
         if hasattr ( gI, "type" ):
@@ -126,23 +135,58 @@ def create():
             doi = gI.publicationDOI
             # doi = doi.replace("http://doi.org/","")
             doi = doi.replace("https://doi.org/","")
-            entry["paperDOI"]=doi
+            entry["publication"]=doi
         entry["wiki"]=gI.url
         if Id in entries:
             merged = merge ( entries[Id], entry, Id )
             entries[Id] = merged
         else:
             entries[Id] = entry
+    return entries
+
+def body(f,expResList):
+    entries = collectEntries ( expResList )
+    from smodels_utils.helper.various import getSqrts
+    first = True
+
     for anaId,entry in entries.items():
-        line = str(entry).replace("'",'"')
-        line = "{"
-        attrOrder = [ "exp", "anaID", "arXiv", "inspire", "paper", "paperDOI", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
-        for attr in attrOrder:
-            if attr in entry:
-                line += f'"{attr}": "{entry[attr]}", '
-        line = line[:-2]
-        line += "}"
-        f.write ( line+"\n" )
+        if not "inspire" in entry:
+            continue
+        if not first:
+            f.write ( ',\n' )
+        first = False
+        inspire = entry["inspire"]
+        f.write ( f'        "{inspire}": {{\n' )
+        sqrts = getSqrts ( anaId )
+        exp = entry["exp"]
+        implementation = f"{sqrts}TeV/{exp}/{anaId}/"
+        f.write ( f'            "implementation": "{implementation}"' )
+        for label in [ "publication", "anaID" ]:
+            if label in entry:
+                f.write ( ',\n' )
+                l = entry[label]
+                f.write ( f'            "{label}": ["{l}"]' )
+        for label in [ "prettyName", "wiki" ]:
+            if label in entry:
+                f.write ( ',\n' )
+                l = entry[label]
+                f.write ( f'            "{label}": "{l}"' )
+        f.write ( '\n        }' )
+    f.write('\n' )
+
+    #  [ "exp", "anaID", "arXiv", "inspire", "paper", "publication", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
+
+def create():
+    """ create the json """
+    from smodels.experiment.databaseObj import Database
+    dbpath = "official"
+    dbpath = "../../smodels-database/"
+    db = Database ( dbpath )
+    expResList = db.getExpResults()
+    f=open("smodels-database.json","wt")
+    header(f)
+    body(f,expResList)
+    footer(f)
     f.close()
 
 if __name__ == "__main__":
