@@ -218,6 +218,9 @@ CMS are for on- and off-shell at once.
                         for tn in expRes.getTxNames():
                             validated = tn.validated
                             tname = tn.txName
+                            if tname in txns:
+                                continue
+                            txns.append ( tname )
                             if not self.ignore_validated and validated in [ "n/a" ]:
                                 continue
                             Id = expRes.globalInfo.id
@@ -228,9 +231,6 @@ CMS are for on- and off-shell at once.
                             if "efficiency" in tpe:
                                 dataset = self.getDatasetName ( tn )
                                 if dataset == "data": continue
-                            if tname in txns:
-                                continue
-                            txns.append ( tname )
                             hasTn=True
                             nres.add ( Idnoagg )
                             if isNew or hasChanged:
@@ -274,13 +274,6 @@ CMS are for on- and off-shell at once.
         # print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " )
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
-        if id in [ "ATLAS-SUSY-2016-07" ]:
-            for txn in txnames:
-                if False: # txn.txName == "TGQ":
-                    txn2 = copy.deepcopy ( txn )
-                    txn2.txName = "TGQ12"
-                    txnames.append ( txn2 )
-                #print ( id, txn.txName )
         if id in [ "ATLAS-SUSY-2016-24" ]:
             for txn in txnames:
                 if txn.txName == "TSelSel":
@@ -335,8 +328,8 @@ CMS are for on- and off-shell at once.
                 if dataset == "data":
                     continue
             #if hadTxname: ## not the first txname for this expres?
-            #    line += "| "
-            line += "| [%s](%s) " %( id, url )
+            shorttpe = { "efficiency maps": "em", "upper limits": "ul" }
+            line += f'| <a name="{id}_{shorttpe[tpe]}">[{id}]({url})</a> '
 
             hadTxname = True
             line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )

@@ -16,6 +16,11 @@ def merge ( entry1, entry2, anaId ):
                 continue
             entry1[k]+=f",{v}"
             continue
+        if k == "path" and v != entry1[k]:
+            if v in entry1[k]: ## already in!
+                continue
+            entry1[k]+=f",{v}"
+            continue
         if k == "SRcomb":
             if v in [ None, "None" ]: ## skip
                 continue
@@ -59,11 +64,14 @@ def getHepData ( nr ):
 
 def header(f):
     """ header of the json file """
+    import smodels
     f.write ( "{\n" )
     f.write ( '    "tool": "SModelS",\n' )
-    f.write ( '    "link_types": [ "implementation", "publication" ],\n' )
+    f.write (f'    "version": "{smodels.installation.version()}",\n' )
+    f.write ( '    "link_types": [ "implementation", "validation", "publication" ],\n' )
     f.write ( '    "url_templates": {\n' )
     f.write ( '        "implementation": "https://github.com/SModelS/smodels-database-release/tree/main/%s",\n' )
+    f.write ( '        "validation": "https://smodels.github.io/docs/Validation#%s",\n' )
     f.write ( '        "publication": "https://doi.org/%s"\n' )
     f.write ( '    },\n' )
     f.write ( '    "links" : {\n' )
@@ -93,6 +101,9 @@ def collectEntries( expResList ) -> dict:
         for ext in [ "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
            Id = Id.replace(ext,"")
         entry = { "exp": coll, "anaID": Id, "resultType": resultType }
+        path = gI.path.replace("/globalInfo.txt","")
+        p1 = path.rfind("/")
+        entry["path"]=path[p1+1:]
         # signatureType = "prompt"
         if hasattr ( gI, "type" ):
             # signatureType = gI.type
@@ -159,14 +170,24 @@ def body(f,expResList):
         f.write ( f'        "{inspire}": {{\n' )
         sqrts = getSqrts ( anaId )
         exp = entry["exp"]
-        implementation = f"{sqrts}TeV/{exp}/{anaId}/"
-        f.write ( f'            "implementation": "{implementation}"' )
-        for label in [ "publication", "anaID" ]:
-            if label in entry:
-                f.write ( ',\n' )
-                l = entry[label]
-                f.write ( f'            "{label}": ["{l}"]' )
-        for label in [ "prettyName", "wiki" ]:
+        resultTypes = entry["resultType"].lower().split(",")
+        implementations = []
+        for path in entry["path"].split(","):
+            implementation = f'"{sqrts}TeV/{exp}/{path}/"'
+            implementations.append ( implementation )
+        simplementations = ", ".join ( implementations )
+        f.write ( f'            "implementation": [{simplementations}],\n' )
+        validations = []
+        for resultType in resultTypes:
+            validations.append ( f'"{anaId}_{resultType}"' )
+        svalidations = ", ".join(validations)
+        f.write ( f'            "validation": [{svalidations}]' )
+        #for label in [ "publication", "anaID" ]:
+        #    if label in entry:
+        #        f.write ( ',\n' )
+        #        l = entry[label]
+        #        f.write ( f'            "{label}": ["{l}"]' )
+        for label in [ "publication", "anaID", "arXiv", "SRcomb", "signatureType", "prettyName", "wiki" ]:
             if label in entry:
                 f.write ( ',\n' )
                 l = entry[label]
@@ -183,7 +204,7 @@ def create():
     dbpath = "../../smodels-database/"
     db = Database ( dbpath )
     expResList = db.getExpResults()
-    f=open("smodels-database.json","wt")
+    f=open("smodels-analyses.json","wt")
     header(f)
     body(f,expResList)
     footer(f)
