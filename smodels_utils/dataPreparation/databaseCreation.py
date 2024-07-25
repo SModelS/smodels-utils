@@ -743,7 +743,8 @@ class DatabaseCreator(list):
                     value=f"{value}*TeV"
                 if attr == "lumi" and type(value) in [ int, float ]:
                     value=f"{value}/fb"
-                if attr == "jsonFiles" and type(value) == dict:
+                if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ] \
+                        and type(value) == dict:
                     value = self.formatJsonFile ( value )
             if name == "dataInfo" and attr == "jsonfile":
                 # we copy the jsonfile and rewrite the value field
