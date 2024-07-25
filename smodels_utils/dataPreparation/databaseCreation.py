@@ -22,6 +22,7 @@ from math import floor, log10
 from unum import Unum
 import time
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+from typing import Dict
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -690,6 +691,19 @@ class DatabaseCreator(list):
             json.dump ( content, handle, indent = 1 )
             handle.close()
 
+    def formatJsonFile ( self, value : Dict ):
+        """ we have jsonFiles entry given as a dictionary.
+        format it nicely.
+        """
+        ret = "{\n"
+        for jsonFileName, SRs in value.items():
+            ret += f"  '{jsonFileName}': [\n"
+            for SR in SRs:
+                ret += f"    {str(SR)},\n"
+            ret = ret[:-2]+"],\n"
+        ret += "}"
+        return ret
+
     def _createInfoFile(self, name, obj, folder):
 
         """
@@ -729,6 +743,8 @@ class DatabaseCreator(list):
                     value=f"{value}*TeV"
                 if attr == "lumi" and type(value) in [ int, float ]:
                     value=f"{value}/fb"
+                if attr == "jsonFiles" and type(value) == dict:
+                    value = self.formatJsonFile ( value )
             if name == "dataInfo" and attr == "jsonfile":
                 # we copy the jsonfile and rewrite the value field
                 sourcefile = "%s/%s" % ( self.base, value )
