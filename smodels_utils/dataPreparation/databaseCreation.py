@@ -701,7 +701,7 @@ class DatabaseCreator(list):
             for SR in SRs:
                 ret += f"    {str(SR)},\n"
             ret = ret[:-2]+"],\n"
-        ret += "}"
+        ret = ret[:-2]+ "\n  }"
         return ret
 
     def _createInfoFile(self, name, obj, folder):
