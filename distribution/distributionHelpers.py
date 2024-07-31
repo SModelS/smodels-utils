@@ -85,16 +85,20 @@ def clearGlobalInfo( filename : str ):
     cmd = f"cp {fname} {filename}"
     runCmd( cmd, prtMsg=False )
 
-def clearJsons ( path : str ):
+def clearJsons ( path : str, verbose : bool ):
     """ clear the jsons in the given path. look at globalInfo.txt
         which jsons get used. ditch the rest. """
     gI = f"{path}/globalInfo.txt"
+    rpath = path[path.rfind("/"):]
     if not os.path.exists ( gI ):
         return
     usedJsons = set()
     f = open ( gI, "rt" )
     lines = f.readlines()
     f.close()
+    from smodels.experiment.expAuxiliaryFuncs import concatenateLines
+    lines = concatenateLines ( lines )
+    from icecream import ic
     for i,line in enumerate(lines):
         p1 = line.find("#")
         if p1 >= 0:
@@ -106,11 +110,6 @@ def clearJsons ( path : str ):
             continue
         txt = line.replace("jsonFiles:","")
         txt = txt.replace("jsonFiles_FullLikelihood:","")
-        j=i
-        while "{" in txt and not "}" in txt and not j >= (len(lines)-1):
-            # seems like we need the next line
-            j+=1
-            txt += lines[j]
         try:
             D = eval(txt)
         except Exception as e:
@@ -123,11 +122,15 @@ def clearJsons ( path : str ):
         fname = os.path.basename ( js )
         remove = fname not in usedJsons
         if remove:
-            #comment ( f"removing {fname}" )
+            if verbose:
+                ko = f"keeping only {','.join(usedJsons)}"
+                if len(usedJsons)==0:
+                    ko = "no pyhf models used"
+                comment ( f"removing {fname} in {rpath}: {ko}" )
             ctRemoved += 1
             os.unlink ( js )
     if ctRemoved>0:
-        comment ( f"removed {ctRemoved} json files" )
+        comment ( f"removed {ctRemoved} json files in {rpath}" )
 
 def removeNonValidated( db : Database, dirname : str = "database/" ):
     """ remove all non-validated analyses from text database """
