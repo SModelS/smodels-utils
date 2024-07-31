@@ -9,7 +9,8 @@
 """
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
-from distributionHelpers import *
+from distributionHelpers import clearJsons, comment, runCmd, cloneDatabase, \
+         clearGlobalInfos, createDatabase
 from smodels.experiment.databaseObj import Database
 from typing import Union
 sys.path.insert(0,"../")
@@ -76,7 +77,7 @@ def cpMakefile ():
     cmd = "cp dmakefile database/Makefile"
     o = subprocess.getoutput ( cmd )
 
-def cleanDatabase(dirname : str ):
+def cleanDatabase(dirname : str, verbose : bool ):
     """
     Clean up the database, e.g. remove orig and validation folders
     """
@@ -114,7 +115,7 @@ def cleanDatabase(dirname : str ):
             fullpath = os.path.join( File, rf )
             if os.path.exists( fullpath):
                 os.unlink( fullpath )
-        clearJsons ( File )
+        clearJsons ( File, verbose )
 
 def moveFastlim ( filename , dirname ):
     """
@@ -266,7 +267,8 @@ def createDBRelease(output,tag,reuse):
         mkdir(dirname) ## .. then create the temp dir
         cpMakefile() ## copy Makefile if doesnt exist, for convenience only
         cloneDatabase(tag,dirname,dummyRun) ## git clone the database
-    cleanDatabase(dirname) ## clean up database, remove orig, validated
+    verbose = True
+    cleanDatabase(dirname,verbose) ## clean up database, remove orig, validated
     clearTxtFiles(dirname) ## now clear up all txt files
     moveFastlim(output,dirname) ## split database into official and optional
     db = createDatabase ( dirname, reuse ) ## load the database
