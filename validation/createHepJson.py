@@ -75,7 +75,7 @@ def header(f):
     f.write ( '        "publication": "https://doi.org/%s",\n' )
     f.write ( '        "arXiv": "https://arxiv.org/abs/%s"\n' )
     f.write ( '    },\n' )
-    f.write ( '    "links" : {\n' )
+    f.write ( '    "analyses" : {\n' )
 
 def footer(f):
     """ footer of the json file """
