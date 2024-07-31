@@ -89,7 +89,7 @@ def clearJsons ( path : str, verbose : bool ):
     """ clear the jsons in the given path. look at globalInfo.txt
         which jsons get used. ditch the rest. """
     gI = f"{path}/globalInfo.txt"
-    rpath = path[path.rfind("/"):]
+    rpath = path[path.rfind("/")+1:]
     if not os.path.exists ( gI ):
         return
     usedJsons = set()
