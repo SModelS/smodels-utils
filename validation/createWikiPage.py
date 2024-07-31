@@ -511,9 +511,9 @@ CMS are for on- and off-shell at once.
         expRs = self.db.getExpResults( useNonValidated = self.ignore_validated )
         self.newtopos = self.compileAnaIds ( self.db.expResultList )
 
-    def isNewAnaID ( self, id, txname, tpe, validated ):
-        """ is analysis id <id> new?
-        :param id: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
+    def isNewAnaID ( self, anaId, txname, tpe, validated ):
+        """ is analysis id <anaId> new?
+        :param anaId: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
         :param txname: topology name, e.g. T1 (str)
         :param tpe: type of result, e.g. "upper limits" (str)
         :param validated: is it validated? for if it is not, it won't
@@ -526,18 +526,21 @@ CMS are for on- and off-shell at once.
         if self.comparison_db == None:
             # no comparison database given. So nothing is new.
             return False
-        if not id in self.OldAnaIds: ## whole ana is new?
+        if anaId+"-agg" in self.OldAnaIds:
+            ##  looks like a non-aggregated result
+            return False
+        if not anaId in self.OldAnaIds: ## whole ana is new?
             return True
         myType = "-ul"
         if "eff" in tpe:
             myType = "-eff"
         ## FIXME need to check also topo
         txtpe = txname+myType
-        if not id in self.newtopos:
+        if not anaId in self.newtopos:
             return False
-        if not txtpe in self.newtopos[id]:
+        if not txtpe in self.newtopos[anaId]:
             return False
-        if not txtpe in self.topos[id]:
+        if not txtpe in self.topos[anaId]:
             ## txname is new
             return True
         return False
