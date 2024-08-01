@@ -10,7 +10,7 @@
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
 from distributionHelpers import clearJsons, comment, runCmd, cloneDatabase, \
-         clearGlobalInfos, createDatabase
+         clearGlobalInfos, createDatabase, removeNonValidated, moveNonAggregated
 from smodels.experiment.databaseObj import Database
 from typing import Union
 sys.path.insert(0,"../")

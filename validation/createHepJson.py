@@ -68,6 +68,7 @@ def header(f):
     f.write ( "{\n" )
     f.write ( '    "tool": "SModelS",\n' )
     f.write (f'    "version": "{smodels.installation.version()}",\n' )
+    f.write (f'    "created": "{time.asctime()}",\n' )
     f.write ( '    "link_types": [ "implementation", "validation", "publication", "arXiv" ],\n' )
     f.write ( '    "url_templates": {\n' )
     f.write ( '        "implementation": "https://github.com/SModelS/smodels-database-release/tree/main/%s",\n' )
@@ -198,11 +199,9 @@ def body(f,expResList):
 
     #  [ "exp", "anaID", "arXiv", "inspire", "paper", "publication", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
 
-def create():
-    """ create the json """
+def create( dbpath : os.PathLike ):
+    """ create smodels-analyses.json """
     from smodels.experiment.databaseObj import Database
-    dbpath = "official"
-    dbpath = "../../smodels-database/"
     db = Database ( dbpath )
     expResList = db.getExpResults()
     f=open("smodels-analyses.json","wt")
@@ -212,4 +211,11 @@ def create():
     f.close()
 
 if __name__ == "__main__":
-    create()
+    import argparse
+    ap = argparse.ArgumentParser(description="simple script to create the smodels-analyses.json files" )
+    ap.add_argument('-d', '--dbpath',
+            help='path to database [../../smodels-database/]', 
+            default='../../smodels-database/')
+    args = ap.parse_args()
+    # args.dbpath = "official"
+    create( args.dbpath )
