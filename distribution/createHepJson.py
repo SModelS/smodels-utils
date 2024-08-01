@@ -3,7 +3,7 @@
 """ simple script to create smodels-database.json that will be used
 to mark SModelS entries at hepdata """
 
-import os
+import os, sys, time
 
 def merge ( entry1, entry2, anaId ):
     """ merge two entries """
@@ -199,12 +199,15 @@ def body(f,expResList):
 
     #  [ "exp", "anaID", "arXiv", "inspire", "paper", "publication", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
 
-def create( dbpath : os.PathLike ):
+def create( dbpath : os.PathLike, outputfile : os.PathLike ):
     """ create smodels-analyses.json """
     from smodels.experiment.databaseObj import Database
+    if not os.path.exists ( dbpath ):
+        print ( f"[createHepJson] {dbpath} not found" )
+        sys.exit()
     db = Database ( dbpath )
     expResList = db.getExpResults()
-    f=open("smodels-analyses.json","wt")
+    f=open(outputfile,"wt")
     header(f)
     body(f,expResList)
     footer(f)
@@ -216,6 +219,9 @@ if __name__ == "__main__":
     ap.add_argument('-d', '--dbpath',
             help='path to database [../../smodels-database/]', 
             default='../../smodels-database/')
+    ap.add_argument('-o', '--outputfile',
+            help='path to database [smodels-analyses.json]', 
+            default='smodels-analyses.json')
     args = ap.parse_args()
     # args.dbpath = "official"
-    create( args.dbpath )
+    create( args.dbpath, args.outputfile )

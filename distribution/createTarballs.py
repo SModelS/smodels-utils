@@ -27,8 +27,8 @@ def rmlog(dirname):
     cmd="rm -f /tmp/create.log"
     if os.path.isfile('create.log'):
         os.remove('create.log')
-    if os.path.isfile('%s/smodels-database/create.log' %dirname):
-        os.remove('%s/smodels-database/create.log' %dirname)
+    if os.path.isfile( f'{dirname}/smodels-database/create.log' ):
+        os.remove( f'{dirname}/smodels-database/create.log' )
 
 def mkdir(dirname):
     """
@@ -36,8 +36,8 @@ def mkdir(dirname):
     """
     ## for i in( dirname, fastlimdir ):
     for i in( [ dirname ] ): ## , fastlimdir ):
-        comment("Creating temporary directory %s" % i )
-        runCmd( "mkdir -p %s" % i )
+        comment( f"Creating temporary directory {i}" )
+        runCmd( f"mkdir -p {i}" )
 
 def rmdir(dirname):
     """
@@ -45,8 +45,8 @@ def rmdir(dirname):
     """
     for i in( dirname, ): ## fastlimdir ):
         if os.path.exists(i):
-            comment( "Removing temporary directory %s" % i )
-            runCmd("rm -rf %s" % i )
+            comment( f"Removing temporary directory {i}" )
+            runCmd( f"rm -rf {i}" )
 
 def clone( dirname : str ):
     """
@@ -54,7 +54,7 @@ def clone( dirname : str ):
     distribution, and test.
     """
     comment( "Git-cloning smodels into %s(this might take a while)" % dirname )
-    cmd = "git clone --depth 1 -b %s https://github.com/SModelS/smodels.git %s" %(version, dirname)
+    cmd = f"git clone --depth 1 -b {version} https://github.com/SModelS/smodels.git {dirname}"
 #     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
     if dummyRun:
         cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
