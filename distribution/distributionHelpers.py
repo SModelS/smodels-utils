@@ -256,9 +256,11 @@ def cloneDatabase( tag : str = "3.0.0", dirname : os.PathLike = "database/",
              ( dirname, dbversion )
     runCmd( cmd )
 
+    comment( "create hep json file" )
     import createHepJson
     createHepJson.create ( f"{dirname}/smodels-database", f"{dirname}/smodels-database/smodels-analyses.json" )
 
+    comment( "remove cruft" )
     ## remove cruft
     rmcmd = "cd %s/smodels-database; " \
             "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \

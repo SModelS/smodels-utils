@@ -48,21 +48,6 @@ def rmdir(dirname):
             comment( f"Removing temporary directory {i}" )
             runCmd( f"rm -rf {i}" )
 
-def clone( dirname : str ):
-    """
-    Git clone smodels itself into dirname, then remove .git, .gitignore,
-    distribution, and test.
-    """
-    comment( "Git-cloning smodels into %s(this might take a while)" % dirname )
-    cmd = f"git clone --depth 1 -b {version} https://github.com/SModelS/smodels.git {dirname}"
-#     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
-    if dummyRun:
-        cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
-    runCmd( cmd )
-    for i in os.listdir( dirname ):
-        if i in [".git", ".gitignore", "distribution", "test" ] or i.endswith ( ".pcl" ):
-            runCmd( "rm -rf %s/%s" %(dirname,i) )
-
 def makeClean(dirname):
     """
     Execute 'make clean' in host directory.

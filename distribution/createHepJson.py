@@ -190,7 +190,10 @@ def collectEntries( expResList ) -> dict:
             # doi = doi.replace("http://doi.org/","")
             doi = doi.replace("https://doi.org/","")
             entry["publication"]=doi
-        entry["wiki"]=gI.url
+        wiki = gI.url
+        if ";" in wiki:
+            wiki = wiki.find(";")
+        entry["wiki"]=wiki
         if not "inspire" in entry:
             inspire = getInspireFromWebPage ( gI )
             if inspire != None:
