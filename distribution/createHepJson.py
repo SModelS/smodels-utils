@@ -93,10 +93,24 @@ def getInspireFromWebPage ( gI ) -> Union[None,int]:
     import requests
     r = requests.get ( gI.url )
     txt = r.text
-    p1 = txt.find("https://www.hepdata.net/record/ins")
+    ## first search for inspirehep.net/record links
+    p1 = txt.find("://inspirehep.net/record/")
     while p1 > 0 and len(txt)>0:
-        p1 = txt.find("https://www.hepdata.net/record/ins")
-        txt = txt[p1+34:]
+        p1 = txt.find("://inspirehep.net/record/")
+        txt = txt[p1+25:]
+        p2 = txt.find('"')
+        tmp = txt[:p2]
+        try:
+            tmp = int(tmp)
+            return tmp
+        except ValueError as e:
+            pass
+    txt = r.text
+    ## now try  hepdata.net/record links
+    p1 = txt.find("://www.hepdata.net/record/ins")
+    while p1 > 0 and len(txt)>0:
+        p1 = txt.find("://www.hepdata.net/record/ins")
+        txt = txt[p1+29:]
         p2 = txt.find('"')
         tmp = txt[:p2]
         try:
