@@ -294,7 +294,7 @@ def main():
 
     args = ap.parse_args()
     if args.clear:
-        cmd = "rm -rf database"
+        cmd = "rm -rf database smodels-nonaggregated/ smodels-fastlim/"
         o = subprocess.getoutput ( cmd )
         print ( "[createTarballs] %s: %s" % ( cmd, o ) )
     sys.path.insert(0,os.path.abspath(args.smodelsPath))

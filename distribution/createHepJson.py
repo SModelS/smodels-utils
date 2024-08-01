@@ -62,12 +62,14 @@ def getHepData ( nr ):
         print ( f"cannot read content for {nr}: {e}" )
         return hepdata
 
-def header(f):
+def header(f, db ):
     """ header of the json file """
     import smodels
     f.write ( "{\n" )
     f.write ( '    "tool": "SModelS",\n' )
-    f.write (f'    "version": "{smodels.installation.version()}",\n' )
+    # ver = smodels.installation.version()
+    ver = db.databaseVersion
+    f.write (f'    "version": "{ver}",\n' )
     f.write (f'    "created": "{time.asctime()}",\n' )
     f.write ( '    "link_types": [ "implementation", "validation", "publication", "arXiv" ],\n' )
     f.write ( '    "url_templates": {\n' )
@@ -208,7 +210,7 @@ def create( dbpath : os.PathLike, outputfile : os.PathLike ):
     db = Database ( dbpath )
     expResList = db.getExpResults()
     f=open(outputfile,"wt")
-    header(f)
+    header(f, db )
     body(f,expResList)
     footer(f)
     f.close()
