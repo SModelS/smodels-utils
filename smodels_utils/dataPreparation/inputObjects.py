@@ -790,6 +790,8 @@ class TxNameInput(Locker):
         if not hasattr ( self, "axesMap" ):
             self.axesMap = []
         if isinstance(plane,MassPlane):
+            import sympy
+            x,y,z,w=sympy.var("x y z w")
             s = eval(str(plane))
             if not s in self.axesMap:
                 self.axesMap.append ( s )
