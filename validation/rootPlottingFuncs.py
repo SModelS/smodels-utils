@@ -12,8 +12,13 @@ import logging,os,sys
 logger = logging.getLogger(__name__)
 
 from smodels_utils.helper.rootTools import setROOTColorPalette
-from validationHelpers import getExpResPath
 setROOTColorPalette()
+
+def getExpResPath ( expResult, dbpath ):
+    """ get path to experimental result """
+    from icecream import ic
+    ic ( dbpath )
+    ic ( expResult.globalInfo.path )
 
 def setAxes ( h, style ):
     """ set the axes ranges if anything is specified in 'style' """
@@ -80,8 +85,7 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
 
     if type(expResult)==list:
         expResult=expResult[0]
-    path = getExpResPath ( expResult, dbpath )
-    rootpath = os.path.join(path,'sms.root')
+    rootpath = expResult.globalInfo.path.replace("/globalInfo.txt","/sms.root" )
     if not os.path.isfile(rootpath):
         logger.error("Root file %s not found" %rootpath)
         return False
