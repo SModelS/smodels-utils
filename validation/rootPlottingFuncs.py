@@ -87,7 +87,7 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
         expResult=expResult[0]
     rootpath = expResult.globalInfo.path.replace("/globalInfo.txt","/sms.root" )
     if not os.path.isfile(rootpath):
-        logger.error("Root file %s not found" %rootpath)
+        logger.error( f"Root file {rootpath} not found" )
         return False
 
     rootFile = ROOT.TFile(rootpath)
@@ -98,7 +98,7 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
         if txname and txname != objName: continue
         txnames[objName] = obj.ReadObj()
     if not txnames:
-        logger.warning("Exclusion curve for %s not found in %s" %(txname,rootpath))
+        logger.warning( f"Exclusion curve for {txname} not found in {rootpath}")
         return False
 
     #For each Txname/Directory get list of exclusion curves
