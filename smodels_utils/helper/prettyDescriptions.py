@@ -1077,9 +1077,13 @@ def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
         ret = ['m_{#tilde{#chi}_{2}^{0}} = x, m_{#tilde{#chi}_{2}^{0}} - m_{#tilde{#chi}_{1}^{0}} = y',
                'm_{#tilde{#chi}^{#pm}_{1}} = .5 m_{#tilde{#chi}_{2}^{0}} + .5 m_{#tilde{#chi}_{1}^{0}}'  ]
         return rootToLatex ( ret, outputtype )
+    if txname in [ "TChiQ" ]:
+        ret = [ 'm_{#tilde{q}} = x', 'm_{#tilde{#chi}_{1}^{0}} = y' ]
+        return rootToLatex ( ret, outputtype )
+
     if len(axes)>1 and axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automated.')
-        return "N/A"
+        # return "N/A"
 
     ax = axes[0]
     if len(ax) > 3:
