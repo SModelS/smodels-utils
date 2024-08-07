@@ -479,7 +479,7 @@ def queryStats ( maxsteps : int ):
             print()
 
 def logCall ():
-    fname = f"{os.environ['HOME']}/slurm.log"
+    fname = f"{os.environ['HOME']}/walker.log"
     f=open( fname,"at")
     args = ""
     for i in sys.argv:
