@@ -822,7 +822,7 @@ class ValidationPlot():
                     logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
                     return False
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
-                logger.error("Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
+                logger.error( f"Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
                 sys.exit(-1)
                 # return False
             if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
