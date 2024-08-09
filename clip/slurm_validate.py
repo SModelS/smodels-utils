@@ -56,7 +56,6 @@ def validate ( args : Dict ):
     keep = args["keep"]
     tempname = args["tempname"]
     limit_points = args["limit_points"]
-    model = args["model"]
     if topo in [ None, "all" ]:
         topo = "*"
     if analyses == None:
@@ -88,13 +87,13 @@ def validate ( args : Dict ):
             newline = newline.replace("@@GENERATEDATA@@", "ondemand" )
             newline = newline.replace("@@DATASELECTOR@@", "combined" )
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
-            newline = newline.replace("@@MODEL@@", "default" )
+            newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@TEMPDIR@@", tempdir )
             if limit_points in [ "all", 0, None, -1 ] and "limitPoints" in newline:
                 ## we dont limit the points
                 continue
-            newline = newline.replace("@@LIMITPOINTS@@", str(limit_points) )
+            newline = newline.replace("@@LIMITPOINTS@@", str(limit_points))
             f.write ( newline )
             if "@@TEMPDIR@@" in line:
                 hasTempDir = True
