@@ -34,7 +34,7 @@ def queryStats ( maxsteps : Union[None,int] = None ):
             running_stats.running_stats( "_V" )
             print()
 
-def validate ( args : Dict ):
+def validate ( args : Dict, idx ):
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
@@ -56,7 +56,7 @@ def validate ( args : Dict ):
     keep = args["keep"]
     tempname = args["tempname"]
     limit_points = args["limit_points"]
-    generatedata = args["generatedata"]
+    generatedata = args["generate_data"]
     dataselector = "combined"
     if topo in [ None, "all" ]:
         topo = "*"
@@ -72,7 +72,7 @@ def validate ( args : Dict ):
     if tempname is None:
         newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
     else:
-        newini = f"{Dir}/{tempname}.ini"
+        newini = f"{Dir}/{tempname}_{idx}.ini"
     tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
     # if possible name the tempdir the same as the temp script and the temp ini file
     skeep = ""
@@ -214,6 +214,9 @@ def main():
     argparser.add_argument ( '-m', '--model', nargs='?',
             help='model to use [default]',
             type=str, default="default" )
+    argparser.add_argument ( '-g', '--generate_data', nargs='?',
+            help='generateData [False,True,ondemand]. In combination with --repeat we switch to ondemand after the first [ondemand]',
+            type=str, default="ondemand" )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [default.ini]',
@@ -264,10 +267,9 @@ def main():
             sys.exit()
     # print ( f"breaking after" )
     # sys.exit()
-    args.generatedata = "True"
     for i in range(args.repeat):
-        validate ( vars ( args ) )
-        args.generatedata = "ondemand"
+        validate ( vars ( args ), i )
+        args.generate_data = "ondemand"
     logCall()
 
 if __name__ == "__main__":
