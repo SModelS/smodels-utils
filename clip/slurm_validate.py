@@ -7,7 +7,7 @@ the script to start all results validation jobs with
 
 import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
 from colorama import Fore as ansi
-from typing import Union
+from typing import Union, Dict
 
 codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
 outputsdir = f"/scratch-cbe/users/{os.environ['USER']}/outputs/"
@@ -34,9 +34,7 @@ def queryStats ( maxsteps : Union[None,int] = None ):
             running_stats.running_stats( "_V" )
             print()
 
-def validate ( inifile, dry_run, nprocesses, time, analyses, topo,
-               keep : bool, tempname : Union[None,str],
-               limit_points : Union[int,str] ):
+def validate ( args : Dict ):
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
@@ -47,7 +45,18 @@ def validate ( inifile, dry_run, nprocesses, time, analyses, topo,
     :param keep: keep temporary files
     :param tempname: if not None, use this for the temp files names
     :param limit_points: run over only that many points
+    :param model: the model to use (default)
     """
+    inifile = args["validate"]
+    dry_run = args["dry_run"]
+    nprocesses = args["nprocesses"]
+    time = args["time"]
+    analyses = args["analyses"]
+    topo = args["topo"]
+    keep = args["keep"]
+    tempname = args["tempname"]
+    limit_points = args["limit_points"]
+    model = args["model"]
     if topo in [ None, "all" ]:
         topo = "*"
     if analyses == None:
@@ -79,6 +88,7 @@ def validate ( inifile, dry_run, nprocesses, time, analyses, topo,
             newline = newline.replace("@@GENERATEDATA@@", "ondemand" )
             newline = newline.replace("@@DATASELECTOR@@", "combined" )
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
+            newline = newline.replace("@@MODEL@@", "default" )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@TEMPDIR@@", tempdir )
             if limit_points in [ "all", 0, None, -1 ] and "limitPoints" in newline:
@@ -200,6 +210,9 @@ def main():
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to run [10]',
             type=int, default=10 )
+    argparser.add_argument ( '-m', '--model', nargs='?',
+            help='model to use [default]',
+            type=str, default="default" )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [default.ini]',
@@ -251,9 +264,7 @@ def main():
     # print ( f"breaking after" )
     # sys.exit()
     for i in range(args.repeat):
-        validate ( args.validate, args.dry_run, args.nprocesses, args.time, 
-                args.analyses, args.topo, args.keep, args.tempname, 
-                args.limit_points )
+        validate ( vars ( args ) )
     logCall()
 
 if __name__ == "__main__":
