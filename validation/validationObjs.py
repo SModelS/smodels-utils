@@ -61,7 +61,6 @@ class ValidationPlot():
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
-        self.databasePath = databasePath
         anaID = ExptRes.globalInfo.id
         if databasePath:
             if os.path.isdir(databasePath):

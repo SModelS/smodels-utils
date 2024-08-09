@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import GeV
 from smodels.matching import modelTester
 from smodels_utils.helper.various import round_to_n
-from typing import Union, Dict
+from typing import Union, Dict, List
 import numpy as np
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
@@ -63,11 +63,41 @@ class ValidationPlot():
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
+        anaID = ExptRes.globalInfo.id
+        if databasePath:
+            if os.path.isdir(databasePath):
+                self.databasePath = databasePath
+            else:
+                logger.error("Database folder "+databasePath+" does not exist")
+                sys.exit()
+        #Try to guess the path:
+        else:
+            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
+            if not os.path.isdir(self.databasePath):
+                logger.error("Could not define databasePath folder")
+                sys.exit()
         self.expRes = copy.deepcopy(ExptRes)
         self.db = db
         self.keep = keep
+        self.runningDictFile = f"run_{anaID}.dict"
+        self.runningDictLockFile = f"run_{anaID}.lock"
+        if not options["continue"]:
+            if os.path.exists ( self.runningDictFile ):
+                try:
+                    os.unlink ( self.runningDictFile )
+                except FileNotFoundError as e:
+                    pass
+            if os.path.exists ( self.runningDictLockFile ):
+                try:
+                    os.unlink ( self.runningDictLockFile )
+                except FileNotFoundError as e:
+                    pass
         self.t0 = time.time()
         self.options = options
+        self.limitPoints = self.options["limitPoints"]
+        self.willRun = []
         self.txName = TxNameStr
         self.namedTarball = namedTarball
         self.axes = Axes.strip()
@@ -100,7 +130,6 @@ class ValidationPlot():
                 sys.exit()
         #Try to guess the path:
         else:
-            anaID = ExptRes.globalInfo.id
             self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
@@ -830,9 +859,68 @@ class ValidationPlot():
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
-        modelTester.testPoints(fileList, inDir, outputDir, parser, self.db,
+        self.willRun = self.addToListOfRunningFiles ( fileList )
+        modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
+        self.removeFromListOfRunningFiles ( )
         return fileList
+
+    def lockFile ( self, lockfile = None ):
+        if lockfile is None:
+            lockfile = self.runningDictLockFile 
+        ctr = 0
+        while os.path.exists ( lockfile ):
+            ctr+=1
+            time.sleep ( .1 * ctr )
+            if ctr > 10: # we dont wait forever
+                self.unlockFile( lockfile )
+                return
+        from pathlib import Path
+        Path ( lockfile ).touch()
+
+    def unlockFile( self, lockfile = None ):
+        if lockfile is None:
+            lockfile = self.runningDictLockFile 
+        if os.path.exists ( lockfile ):
+            try:
+                os.unlink ( lockfile )
+            except FileNotFoundError as e:
+                pass
+
+    def addToListOfRunningFiles ( self, fileList : List ) -> List:
+        """ add files listed in fileList to list of running  files 
+        :returns: list you should actually run
+        """
+        current = {}
+        shouldRun = set()
+        if os.path.exists ( self.runningDictFile ):
+            with open ( self.runningDictFile, "rt" ) as f:
+                try:
+                    current = eval ( f.read() )
+                except Exception as e:
+                    logger.info ( f"exception {e}" )
+            f.close()
+        cleanedcurrent = {}
+        for f,t in current.items():
+            dt = ( time.time() - t ) / 60. # minutes
+            ## FIXME we should actually only take out once 
+            ## we run out of "good" points
+            if dt < 15.: # after 15 minutes we take it out!
+                cleanedcurrent[f]=t
+        current = cleanedcurrent
+        for f in fileList:
+            if f in [ "results", "coordinates" ]:
+                continue
+            if not f in current:
+                if self.limitPoints in [-1, None] or len(shouldRun)<self.limitPoints:
+                    current[f]=time.time()
+                    shouldRun.add ( f )
+        self.lockFile()
+        with open ( self.runningDictFile, "wt" ) as f:
+            f.write ( f"{current}\n" )
+            f.close()
+        self.unlockFile()
+        return shouldRun
 
     def getDataMap ( self ):
         """ obtain the correct data map, i.e. the one corresponding to
@@ -946,21 +1034,34 @@ class ValidationPlot():
             ## account for rounding
             D = { "x": round_to_n(float(tokens[1]),5),
                   "y": round_to_n(float(tokens[3]),5) }
-        """
-        if len ( tokens ) == 5 and equal ( tokens[1], tokens[3]) and \
-                equal ( tokens[2], tokens[4] ):
-            # e.g. TChiWH_400_200_400_200.slha
-            D = { "x": float(tokens[1]), "y": float(tokens[2]) }
-
-
-        if len ( tokens ) == 7 and equal ( tokens[3], 60.) and \
-                equal ( tokens[1], tokens[4] ) and \
-                equal ( tokens[2], tokens[5] ) and \
-                sympy.Eq ( self.axesDict[2], 60. ):
-            # e.g. TChiWH_400_300_60_400_300_60.slha
-            D = { "x": float(tokens[1]), "y": float(tokens[2]) }
-        """
         return D
+
+    def removeFromListOfRunningFiles ( self ):
+        """ remove files listed in fileList to list of running  files """
+        fileList = self.willRun
+        current = {}
+        if os.path.exists ( self.runningDictFile ):
+            with open ( self.runningDictFile, "rt" ) as f:
+                try:
+                    current = eval ( f.read() )
+                except Exception as e:
+                    logger.info ( f"exception {e}" )
+            f.close()
+        for f in fileList:
+            if f in [ "results", "coordinates" ]:
+                continue
+            try:
+                current.pop ( f )
+            except KeyError as e: # it's not in, so nothing to take out
+                # we can ignore
+                pass
+        self.lockFile()
+        with open ( self.runningDictFile, "wt" ) as f:
+            f.write ( f"{current}\n" )
+            f.close()
+        self.unlockFile()
+        self.willRun = []
+        return
 
     def getDataFromPlanes(self):
         """
