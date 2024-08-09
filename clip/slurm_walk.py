@@ -94,7 +94,10 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         jmax = jmin + 1
     if jmax == jmin + 1:
         line = f"run walker {jmin}"
-    runner = f"{rundir}/RUNNER_{jmin}.py"
+    slurmdir = f"{rundir}/slurm/" 
+    if not os.path.exists ( slurmdir ):
+        os.mkdir ( slurmdir )
+    runner = f"{slurmdir}/RUNNER_{jmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -140,7 +143,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
     # cmd += [ "-k" ]
-    cmd += [ "--mem", f"{ram:d}M", "--time", "%s" % ( time*60-1 ), "%s" % runner ]
+    cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", runner ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
@@ -479,7 +482,7 @@ def queryStats ( maxsteps : int ):
             print()
 
 def logCall ():
-    fname = f"{os.environ['HOME']}/slurm.log"
+    fname = f"{os.environ['HOME']}/walker.log"
     f=open( fname,"at")
     args = ""
     for i in sys.argv:

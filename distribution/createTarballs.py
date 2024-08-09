@@ -10,7 +10,7 @@
 
 import sys, subprocess, os, time, argparse, glob, shutil, colorama
 from distributionHelpers import clearJsons, comment, runCmd, cloneDatabase, \
-         clearGlobalInfos, createDatabase
+         clearGlobalInfos, createDatabase, removeNonValidated, moveNonAggregated
 from smodels.experiment.databaseObj import Database
 from typing import Union
 sys.path.insert(0,"../")
@@ -27,8 +27,8 @@ def rmlog(dirname):
     cmd="rm -f /tmp/create.log"
     if os.path.isfile('create.log'):
         os.remove('create.log')
-    if os.path.isfile('%s/smodels-database/create.log' %dirname):
-        os.remove('%s/smodels-database/create.log' %dirname)
+    if os.path.isfile( f'{dirname}/smodels-database/create.log' ):
+        os.remove( f'{dirname}/smodels-database/create.log' )
 
 def mkdir(dirname):
     """
@@ -36,8 +36,8 @@ def mkdir(dirname):
     """
     ## for i in( dirname, fastlimdir ):
     for i in( [ dirname ] ): ## , fastlimdir ):
-        comment("Creating temporary directory %s" % i )
-        runCmd( "mkdir -p %s" % i )
+        comment( f"Creating temporary directory {i}" )
+        runCmd( f"mkdir -p {i}" )
 
 def rmdir(dirname):
     """
@@ -45,23 +45,8 @@ def rmdir(dirname):
     """
     for i in( dirname, ): ## fastlimdir ):
         if os.path.exists(i):
-            comment( "Removing temporary directory %s" % i )
-            runCmd("rm -rf %s" % i )
-
-def clone( dirname : str ):
-    """
-    Git clone smodels itself into dirname, then remove .git, .gitignore,
-    distribution, and test.
-    """
-    comment( "Git-cloning smodels into %s(this might take a while)" % dirname )
-    cmd = "git clone --depth 1 -b %s https://github.com/SModelS/smodels.git %s" %(version, dirname)
-#     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
-    if dummyRun:
-        cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
-    runCmd( cmd )
-    for i in os.listdir( dirname ):
-        if i in [".git", ".gitignore", "distribution", "test" ] or i.endswith ( ".pcl" ):
-            runCmd( "rm -rf %s/%s" %(dirname,i) )
+            comment( f"Removing temporary directory {i}" )
+            runCmd( f"rm -rf {i}" )
 
 def makeClean(dirname):
     """
@@ -294,7 +279,7 @@ def main():
 
     args = ap.parse_args()
     if args.clear:
-        cmd = "rm -rf database"
+        cmd = "rm -rf database smodels-nonaggregated/ smodels-fastlim/"
         o = subprocess.getoutput ( cmd )
         print ( "[createTarballs] %s: %s" % ( cmd, o ) )
     sys.path.insert(0,os.path.abspath(args.smodelsPath))

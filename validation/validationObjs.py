@@ -435,8 +435,9 @@ class ValidationPlot():
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version2\noutputType = python\n")
             f.write(f"[particles]\n")
-            if True: # model != "default":
-                f.write(f"model=share.models.{model}\n" )
+            if not "share.models" in model:
+                model = f"share.models.{model}"
+            f.write(f"model={model}\n" )
             f.write(f"promptWidth={promptWidth}\n" )
             #expected = "posteriori"
             #expected = "priori"

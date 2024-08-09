@@ -375,10 +375,19 @@ def getGridPointsV2 ( validationPlot ):
         origdata = convertOrigData ( txNameObj.txnameData )
         axisType = getAxisType ( validationPlot.axes )
         if axisType == "v2":
+            from sympy import var
+            x,y,z,w = var ( "x y z w" )
+            axes = eval ( validationPlot.axes )
             for ctr,pt in enumerate(origdata):
                 # masses = removeUnits ( pt[0], standardUnits=GeV )
-                n = int ( len(pt)/2 )
-                masses = [ pt[:n], pt[n:] ] ## silly hack for now
+                # n = int ( len(pt)/2 )
+                masses = []
+                offset = 0
+                for ax in axes:
+                    tmp = pt[offset:offset+len(ax)]
+                    offset += len(ax)
+                    masses.append ( tmp )
+                # masses = [ pt[:n], pt[n:] ] ## silly hack for now
                 coords = massPlane.getXYValues(masses)
                 if not coords == None and not coords in ret:
                     ret.append ( coords )

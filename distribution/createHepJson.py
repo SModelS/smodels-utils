@@ -3,7 +3,8 @@
 """ simple script to create smodels-database.json that will be used
 to mark SModelS entries at hepdata """
 
-import os
+import os, sys, time
+from typing import Union
 
 def merge ( entry1, entry2, anaId ):
     """ merge two entries """
@@ -62,12 +63,15 @@ def getHepData ( nr ):
         print ( f"cannot read content for {nr}: {e}" )
         return hepdata
 
-def header(f):
+def header(f, db ):
     """ header of the json file """
     import smodels
     f.write ( "{\n" )
     f.write ( '    "tool": "SModelS",\n' )
-    f.write (f'    "version": "{smodels.installation.version()}",\n' )
+    # ver = smodels.installation.version()
+    ver = db.databaseVersion
+    f.write (f'    "version": "{ver}",\n' )
+    f.write (f'    "created": "{time.asctime()}",\n' )
     f.write ( '    "link_types": [ "implementation", "validation", "publication", "arXiv" ],\n' )
     f.write ( '    "url_templates": {\n' )
     f.write ( '        "implementation": "https://github.com/SModelS/smodels-database-release/tree/main/%s",\n' )
@@ -81,6 +85,41 @@ def footer(f):
     """ footer of the json file """
     f.write ( '    }\n' )
     f.write ( '}\n' )
+
+def getInspireFromWebPage ( gI ) -> Union[None,int]:
+    """ try to get the inspire number from the wiki page """
+    if not hasattr ( gI, "url" ):
+        return None
+    import requests
+    r = requests.get ( gI.url )
+    txt = r.text
+    ## first search for inspirehep.net/record links
+    p1 = txt.find("://inspirehep.net/record/")
+    while p1 > 0 and len(txt)>0:
+        p1 = txt.find("://inspirehep.net/record/")
+        txt = txt[p1+25:]
+        p2 = txt.find('"')
+        tmp = txt[:p2]
+        try:
+            tmp = int(tmp)
+            return tmp
+        except ValueError as e:
+            pass
+    txt = r.text
+    ## now try  hepdata.net/record links
+    p1 = txt.find("://www.hepdata.net/record/ins")
+    while p1 > 0 and len(txt)>0:
+        p1 = txt.find("://www.hepdata.net/record/ins")
+        txt = txt[p1+29:]
+        p2 = txt.find('"')
+        tmp = txt[:p2]
+        try:
+            tmp = int(tmp)
+            return tmp
+        except ValueError as e:
+            pass
+            # print ( e )
+    return None
 
 def collectEntries( expResList ) -> dict:
     from smodels_utils.helper.various import getCollaboration
@@ -99,7 +138,7 @@ def collectEntries( expResList ) -> dict:
         if len(dses) == 1 and dses[0].dataInfo.dataId == None:
             resultType = "UL"
         Id = gI.id
-        for ext in [ "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
+        for ext in [ "-ma5", "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
            Id = Id.replace(ext,"")
         entry = { "exp": coll, "anaID": Id, "resultType": resultType }
         path = gI.path.replace("/globalInfo.txt","")
@@ -114,6 +153,8 @@ def collectEntries( expResList ) -> dict:
             if hasattr ( ds.dataInfo, "thirdMoment" ):
                 SRcomb = "SLv2"
             for txn in ds.txnameList:
+                if not hasattr ( txn, "dataUrl" ):
+                    continue
                 dU = txn.dataUrl
                 if dU != None and "/ins" in dU:
                     p1 = dU.find("/ins")
@@ -128,11 +169,12 @@ def collectEntries( expResList ) -> dict:
                     if p2 > -1 :
                         tmp = tmp[:p2]
                     # print ( "tmp", dU, "->", tmp )
-                    hepdata = getHepData  ( tmp )
                     inspire = tmp
+                    hepdata = getHepData  ( inspire )
                     # inspire = f"https://inspirehep.net/literature/{tmp}"
                     entry["hepdata"]=hepdata
                     entry["inspire"]=inspire
+                    break
         if SRcomb != None:
             entry["SRcomb"]=SRcomb
         if hasattr ( gI, "arxiv" ):
@@ -148,12 +190,22 @@ def collectEntries( expResList ) -> dict:
             # doi = doi.replace("http://doi.org/","")
             doi = doi.replace("https://doi.org/","")
             entry["publication"]=doi
-        entry["wiki"]=gI.url
+        wiki = gI.url
+        if ";" in wiki:
+            wiki = wiki.find(";")
+        entry["wiki"]=wiki
+        if not "inspire" in entry:
+            inspire = getInspireFromWebPage ( gI )
+            if inspire != None:
+                entry["inspire"]=inspire
+                hepdata = getHepData  ( inspire )
+                entry["hepdata"]= hepdata
         if Id in entries:
             merged = merge ( entries[Id], entry, Id )
             entries[Id] = merged
         else:
             entries[Id] = entry
+        print ( f"[createHepJson] {entry}" )
     return entries
 
 def body(f,expResList):
@@ -198,18 +250,29 @@ def body(f,expResList):
 
     #  [ "exp", "anaID", "arXiv", "inspire", "paper", "publication", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
 
-def create():
-    """ create the json """
+def create( dbpath : os.PathLike, outputfile : os.PathLike ):
+    """ create smodels-analyses.json """
     from smodels.experiment.databaseObj import Database
-    dbpath = "official"
-    dbpath = "../../smodels-database/"
+    if not os.path.exists ( dbpath ):
+        print ( f"[createHepJson] {dbpath} not found" )
+        sys.exit()
     db = Database ( dbpath )
     expResList = db.getExpResults()
-    f=open("smodels-analyses.json","wt")
-    header(f)
+    f=open(outputfile,"wt")
+    header(f, db )
     body(f,expResList)
     footer(f)
     f.close()
 
 if __name__ == "__main__":
-    create()
+    import argparse
+    ap = argparse.ArgumentParser(description="simple script to create the smodels-analyses.json files" )
+    ap.add_argument('-d', '--dbpath',
+            help='path to database [../../smodels-database/]', 
+            default='../../smodels-database/')
+    ap.add_argument('-o', '--outputfile',
+            help='path to database [smodels-analyses.json]', 
+            default='smodels-analyses.json')
+    args = ap.parse_args()
+    # args.dbpath = "official"
+    create( args.dbpath, args.outputfile )

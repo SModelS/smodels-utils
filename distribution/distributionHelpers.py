@@ -236,7 +236,7 @@ def moveNonAggregated( db : Database, dirname : str = "database/",
     comment ( f"created {tarball}" )
     return db
 
-def cloneDatabase( tag : str = "2.3.0", dirname = "database/",
+def cloneDatabase( tag : str = "3.0.0", dirname : os.PathLike = "database/",
        pretend : bool = False ):
     """
     Execute 'git clone' to retrieve the database.
@@ -255,12 +255,17 @@ def cloneDatabase( tag : str = "2.3.0", dirname = "database/",
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
              ( dirname, dbversion )
     runCmd( cmd )
+
+    comment( "create hep json file" )
+    import createHepJson
+    createHepJson.create ( f"{dirname}/smodels-database", f"{dirname}/smodels-database/smodels-analyses.json" )
+
+    comment( "remove cruft" )
     ## remove cruft
     rmcmd = "cd %s/smodels-database; " \
             "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \
             ( dirname )
     runCmd( rmcmd )
-
 
 def clearGlobalInfos( path : str ):
     """ clear all globalInfos.txt files under path """

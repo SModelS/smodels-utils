@@ -12,8 +12,13 @@ import logging,os,sys
 logger = logging.getLogger(__name__)
 
 from smodels_utils.helper.rootTools import setROOTColorPalette
-from validationHelpers import getExpResPath
 setROOTColorPalette()
+
+def getExpResPath ( expResult, dbpath ):
+    """ get path to experimental result """
+    from icecream import ic
+    ic ( dbpath )
+    ic ( expResult.globalInfo.path )
 
 def setAxes ( h, style ):
     """ set the axes ranges if anything is specified in 'style' """
@@ -80,10 +85,9 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
 
     if type(expResult)==list:
         expResult=expResult[0]
-    path = getExpResPath ( expResult, dbpath )
-    rootpath = os.path.join(path,'sms.root')
+    rootpath = expResult.globalInfo.path.replace("/globalInfo.txt","/sms.root" )
     if not os.path.isfile(rootpath):
-        logger.error("Root file %s not found" %rootpath)
+        logger.error( f"Root file {rootpath} not found" )
         return False
 
     rootFile = ROOT.TFile(rootpath)
@@ -94,7 +98,7 @@ def getExclusionCurvesForFromSmsRoot( expResult, txname=None, axes=None,
         if txname and txname != objName: continue
         txnames[objName] = obj.ReadObj()
     if not txnames:
-        logger.warning("Exclusion curve for %s not found in %s" %(txname,rootpath))
+        logger.warning( f"Exclusion curve for {txname} not found in {rootpath}")
         return False
 
     #For each Txname/Directory get list of exclusion curves
