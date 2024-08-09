@@ -7,7 +7,7 @@ the script to start all results validation jobs with
 
 import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
 from colorama import Fore as ansi
-from typing import Union
+from typing import Union, Dict
 
 codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
 outputsdir = f"/scratch-cbe/users/{os.environ['USER']}/outputs/"
@@ -34,37 +34,30 @@ def queryStats ( maxsteps : Union[None,int] = None ):
             running_stats.running_stats( "_V" )
             print()
 
-def getNProcesses ( nprocesses, inifile ):
-    if nprocesses > 0:
-        return nprocesses
-    inipath = f"{codedir}/smodels-utils/validation/inifiles/{inifile}"
-    if not os.path.exists ( inipath ):
-        print ( f"[slurm_validate] error: cannot find {inipath}" )
-        sys.exit()
-    f = open ( inipath, "rt" )
-    ncpus = 1
-    for line in f.readlines():
-        if not "ncpus" in line:
-            continue
-        p1 = line.find("=")
-        p2 = line.find(";")
-        token = line[p1+1:p2]
-        token = token.strip()
-        ncpus = int(token)/2# *2
-    return ncpus
-
-def validate ( inifile, dry_run, nproc, time, analyses, topo,
-               keep : bool, tempname : Union[None,str] ):
+def validate ( args : Dict, idx ):
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
-    :param nproc: number of processes, typically 5
+    :param nprocesses: number of processes, typically 5
     :param time: time in hours
     :param analyses: string that replaces @@ANALYSES@@ in inifile
     :param topo: string that replaces @@TOPOS@@ in inifile
     :param keep: keep temporary files
     :param tempname: if not None, use this for the temp files names
+    :param limit_points: run over only that many points
+    :param model: the model to use (default)
     """
+    inifile = args["validate"]
+    dry_run = args["dry_run"]
+    nprocesses = args["nprocesses"]
+    time = args["time"]
+    analyses = args["analyses"]
+    topo = args["topo"]
+    keep = args["keep"]
+    tempname = args["tempname"]
+    limit_points = args["limit_points"]
+    generatedata = args["generate_data"]
+    dataselector = "combined"
     if topo in [ None, "all" ]:
         topo = "*"
     if analyses == None:
@@ -79,7 +72,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     if tempname is None:
         newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
     else:
-        newini = f"{Dir}/{tempname}.ini"
+        newini = f"{Dir}/{tempname}_{idx}.ini"
     tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
     # if possible name the tempdir the same as the temp script and the temp ini file
     skeep = ""
@@ -93,7 +86,16 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
+            newline = newline.replace("@@GENERATEDATA@@", generatedata )
+            newline = newline.replace("@@DATASELECTOR@@", dataselector )
+            newline = newline.replace("@@NCPUS@@", str(nprocesses) )
+            newline = newline.replace("@@MODEL@@", args["model"] )
+            newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@TEMPDIR@@", tempdir )
+            if limit_points in [ "all", 0, None, -1 ] and "limitPoints" in newline:
+                ## we dont limit the points
+                continue
+            newline = newline.replace("@@LIMITPOINTS@@", str(limit_points))
             f.write ( newline )
             if "@@TEMPDIR@@" in line:
                 hasTempDir = True
@@ -103,7 +105,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
 
     if needTempDir:
         if not hasTempDir:
-            print ( f"[slurm_validate.py] ERROR we are in continue mode, but no temp dir has been defined!" )
+            print ( f"[slurm_validate.py] ERROR we are in continue mode, but no temp dir has been defined in {inifile}!" )
             sys.exit()
         if not hasLimitPoints:
             print ( f"[slurm_validate.py] ERROR we are in continue mode, but no limitPoints has been defined!" )
@@ -116,7 +118,6 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     filename = os.path.basename ( newini ).replace(".ini",".sh")
     newFile = f"{Dir}/{filename}"
     print ( f"[slurm_validate.py] creating script at {newFile}" )
-    nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
@@ -147,9 +148,9 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
     # ram = int ( 12. + .8 * nproc ) # crazy high, no
-    ram = int ( 3. + .5 * nproc )
+    ram = int ( 3. + .5 * nprocesses )
     # ncpus = nproc # int(nproc*1.5)
-    ncpus = int(nproc*4)
+    ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     cmd += [ newFile ]
@@ -208,16 +209,24 @@ def main():
             help='keep the temporary files,do not remove them afterwards',
             action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
-            help='number of processes to split task up to, 0 means as specified in inifile [0]',
-            type=int, default=0 )
+            help='number of processes to run [10]',
+            type=int, default=10 )
+    argparser.add_argument ( '-m', '--model', nargs='?',
+            help='model to use [default]',
+            type=str, default="default" )
+    argparser.add_argument ( '-g', '--generate_data', nargs='?',
+            help='generateData [False,True,ondemand]. In combination with --repeat we switch to ondemand after the first [ondemand]',
+            type=str, default="ondemand" )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
-    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [combined.ini]',
-                        type=str, default = "combined.ini" )
+    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [default.ini]',
+                        type=str, default = "default.ini" )
     argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name. Use this for multi-cpu mode [None]',
                         type=str, default = None )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
+    argparser.add_argument ( '-l', '--limit_points', help='run over no more than many points [all]',
+                        type=int, default=0 )
     argparser.add_argument ( '-r', '--repeat', nargs='?', help='repeat submission n times [1]',
                         type=int, default=1 )
     argparser.add_argument ( '-q','--query',
@@ -230,7 +239,6 @@ def main():
         queryStats ( )
         sys.exit()
     mkdir ( outputsdir )
-    nproc = getNProcesses ( args.nprocesses, args.validate )
     if args.keep:
         ## when running with --keep, we might want to
         ## remove smodels-utils/validation/<tempname> first.
@@ -260,8 +268,8 @@ def main():
     # print ( f"breaking after" )
     # sys.exit()
     for i in range(args.repeat):
-        validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
-               args.topo, args.keep, args.tempname )
+        validate ( vars ( args ), i )
+        args.generate_data = "ondemand"
     logCall()
 
 if __name__ == "__main__":
