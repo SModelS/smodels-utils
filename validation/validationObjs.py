@@ -663,10 +663,10 @@ class ValidationPlot():
             if self.ct_nooutput>4:
                 ## suppress subsequently same error messages
                 return
-            logger.error( f"No SModelS output found for {slhafile} (should be {fout})" )
+            logger.info( f"No SModelS output found for {slhafile} (should be {fout})" )
             self.ct_nooutput+=1
             if self.ct_nooutput==5:
-                logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
+                logger.info("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
             return
         logger.debug ( f"reading {fout}" )
         ff = open(fout,'r')
