@@ -1111,7 +1111,15 @@ class ValidationPlot():
             ff = open(fout,'r')
             txt = ff.read()
             cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
-            exec( cmd, myglobals )
+            try:
+                exec( cmd, myglobals )
+            except SyntaxError as e:
+                if os.path.exists ( fout ):
+                    try:
+                        os.unlink ( fout )
+                    except FileNotFoundError as f:
+                        pass
+                continue
             ff.close()
             if not 'ExptRes' in smodelsOutput:
                 complaints["NoResultsFor"]+=1
