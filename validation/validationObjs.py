@@ -858,21 +858,25 @@ class ValidationPlot():
             return True
         return False
 
-    def lockRunningDict ( self ):
+    def lockFile ( self, lockfile = None ):
+        if lockfile is None:
+            lockfile = self.runningDictLockFile 
         ctr = 0
-        while os.path.exists ( self.runningDictLockFile ):
+        while os.path.exists ( lockfile ):
             ctr+=1
             time.sleep ( .1 * ctr )
             if ctr > 10: # we dont wait forever
-                self.unlockRunningDict()
+                self.unlockFile( lockfile )
                 return
         from pathlib import Path
-        Path ( self.runningDictLockFile ).touch()
+        Path ( lockfile ).touch()
 
-    def unlockRunningDict( self ):
-        if os.path.exists ( self.runningDictLockFile ):
+    def unlockFile( self, lockfile = None ):
+        if lockfile is None:
+            lockfile = self.runningDictLockFile 
+        if os.path.exists ( lockfile ):
             try:
-                os.unlink ( self.runningDictLockFile )
+                os.unlink ( lockfile )
             except FileNotFoundError as e:
                 pass
 
@@ -904,11 +908,11 @@ class ValidationPlot():
                 if self.limitPoints in [-1, None] or len(shouldRun)<self.limitPoints:
                     current[f]=time.time()
                     shouldRun.add ( f )
-        self.lockRunningDict()
+        self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
             f.write ( f"{current}\n" )
             f.close()
-        self.unlockRunningDict()
+        self.unlockFile()
         return shouldRun
 
     def removeFromListOfRunningFiles ( self ):
@@ -930,11 +934,11 @@ class ValidationPlot():
             except KeyError as e: # it's not in, so nothing to take out
                 # we can ignore
                 pass
-        self.lockRunningDict()
+        self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
             f.write ( f"{current}\n" )
             f.close()
-        self.unlockRunningDict()
+        self.unlockFile()
         self.willRun = []
         return
 
@@ -1263,6 +1267,8 @@ class ValidationPlot():
         if not datafile:
             datafile = self.getDataFile(validationDir)
         self.datafile = datafile
+        lockfile = datafile + ".lock"
+        self.lockFile ( lockfile )
         print ( f"[validationObjs] saving data to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
@@ -1319,6 +1325,7 @@ class ValidationPlot():
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         f.write("meta = %s\n" % str(meta) )
         f.close()
+        self.unlockFile ( lockfile )
 
         return True
 
