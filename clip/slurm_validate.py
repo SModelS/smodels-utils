@@ -34,36 +34,19 @@ def queryStats ( maxsteps : Union[None,int] = None ):
             running_stats.running_stats( "_V" )
             print()
 
-def getNProcesses ( nprocesses, inifile ):
-    if nprocesses > 0:
-        return nprocesses
-    inipath = f"{codedir}/smodels-utils/validation/inifiles/{inifile}"
-    if not os.path.exists ( inipath ):
-        print ( f"[slurm_validate] error: cannot find {inipath}" )
-        sys.exit()
-    f = open ( inipath, "rt" )
-    ncpus = 1
-    for line in f.readlines():
-        if not "ncpus" in line:
-            continue
-        p1 = line.find("=")
-        p2 = line.find(";")
-        token = line[p1+1:p2]
-        token = token.strip()
-        ncpus = int(token)/2# *2
-    return ncpus
-
-def validate ( inifile, dry_run, nproc, time, analyses, topo,
-               keep : bool, tempname : Union[None,str] ):
+def validate ( inifile, dry_run, nprocesses, time, analyses, topo,
+               keep : bool, tempname : Union[None,str],
+               limit_points : Union[int,str] ):
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
-    :param nproc: number of processes, typically 5
+    :param nprocesses: number of processes, typically 5
     :param time: time in hours
     :param analyses: string that replaces @@ANALYSES@@ in inifile
     :param topo: string that replaces @@TOPOS@@ in inifile
     :param keep: keep temporary files
     :param tempname: if not None, use this for the temp files names
+    :param limit_points: run over only that many points
     """
     if topo in [ None, "all" ]:
         topo = "*"
@@ -93,7 +76,15 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
+            newline = newline.replace("@@GENERATEDATA@@", "ondemand" )
+            newline = newline.replace("@@DATASELECTOR@@", "combined" )
+            newline = newline.replace("@@NCPUS@@", str(nprocesses) )
+            newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@TEMPDIR@@", tempdir )
+            if limit_points in [ "all", 0, None, -1 ] and "limitPoints" in newline:
+                ## we dont limit the points
+                continue
+            newline = newline.replace("@@LIMITPOINTS@@", str(limit_points) )
             f.write ( newline )
             if "@@TEMPDIR@@" in line:
                 hasTempDir = True
@@ -103,7 +94,7 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
 
     if needTempDir:
         if not hasTempDir:
-            print ( f"[slurm_validate.py] ERROR we are in continue mode, but no temp dir has been defined!" )
+            print ( f"[slurm_validate.py] ERROR we are in continue mode, but no temp dir has been defined in {inifile}!" )
             sys.exit()
         if not hasLimitPoints:
             print ( f"[slurm_validate.py] ERROR we are in continue mode, but no limitPoints has been defined!" )
@@ -116,7 +107,6 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
     filename = os.path.basename ( newini ).replace(".ini",".sh")
     newFile = f"{Dir}/{filename}"
     print ( f"[slurm_validate.py] creating script at {newFile}" )
-    nprc = nproc #  int ( math.ceil ( nproc * .5  ) )
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
@@ -147,9 +137,9 @@ def validate ( inifile, dry_run, nproc, time, analyses, topo,
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
     # ram = int ( 12. + .8 * nproc ) # crazy high, no
-    ram = int ( 3. + .5 * nproc )
+    ram = int ( 3. + .5 * nprocesses )
     # ncpus = nproc # int(nproc*1.5)
-    ncpus = int(nproc*4)
+    ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     cmd += [ newFile ]
@@ -208,16 +198,18 @@ def main():
             help='keep the temporary files,do not remove them afterwards',
             action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
-            help='number of processes to split task up to, 0 means as specified in inifile [0]',
-            type=int, default=0 )
+            help='number of processes to run [10]',
+            type=int, default=10 )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
                         type=str, default=None )
-    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [combined.ini]',
-                        type=str, default = "combined.ini" )
+    argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [default.ini]',
+                        type=str, default = "default.ini" )
     argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name. Use this for multi-cpu mode [None]',
                         type=str, default = None )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
+    argparser.add_argument ( '-l', '--limit_points', help='run over no more than many points [all]',
+                        type=int, default=0 )
     argparser.add_argument ( '-r', '--repeat', nargs='?', help='repeat submission n times [1]',
                         type=int, default=1 )
     argparser.add_argument ( '-q','--query',
@@ -230,7 +222,6 @@ def main():
         queryStats ( )
         sys.exit()
     mkdir ( outputsdir )
-    nproc = getNProcesses ( args.nprocesses, args.validate )
     if args.keep:
         ## when running with --keep, we might want to
         ## remove smodels-utils/validation/<tempname> first.
@@ -260,8 +251,9 @@ def main():
     # print ( f"breaking after" )
     # sys.exit()
     for i in range(args.repeat):
-        validate ( args.validate, args.dry_run, nproc, args.time, args.analyses, 
-               args.topo, args.keep, args.tempname )
+        validate ( args.validate, args.dry_run, args.nprocesses, args.time, 
+                args.analyses, args.topo, args.keep, args.tempname, 
+                args.limit_points )
     logCall()
 
 if __name__ == "__main__":
