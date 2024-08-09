@@ -365,7 +365,7 @@ class ValidationPlot():
         parFile = os.path.join ( tempdir, "parameter.ini" )
         if os.path.exists ( parFile ):
             logger.warning ( f"weird, parameter file {parFile} already exists?" )
-            parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+            parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini' ) # , text=True )
         pf = open ( parFile, "wt" )
 
         combine = "False"
@@ -566,11 +566,16 @@ class ValidationPlot():
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
-            logger.warning ( f"{outputDir} already exists, will recycle!" )
-            logger.warning ( f"FIXME make sure this also works in HPC cluster mode!" )
-            self.outputDir = outputDir
-            return fileList
-            outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+            if self.options["generateData"] == None:
+                logger.info ( f"results folder exists already, and generateData is ondemand, so will use them" )
+            else:
+                if self.options["generateData"]==True:
+                    logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Removing {outputDir}!" )
+                    shutil.rmtree ( outputDir )
+                    os.mkdir ( outputDir )
+                else:
+                    outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+                    logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
         else:
             os.mkdir ( outputDir )
         self.outputDir = outputDir

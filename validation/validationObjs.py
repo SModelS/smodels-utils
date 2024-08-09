@@ -967,7 +967,7 @@ class ValidationPlot():
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
             if self.options["generateData"] == None:
-                logger.info ( f"results folder exists already, but generateData is ondemand, so will use them" )
+                logger.info ( f"results folder exists already, and generateData is ondemand, so will use them" )
             else:
                 if self.options["generateData"]==True:
                     logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Removing {outputDir}!" )

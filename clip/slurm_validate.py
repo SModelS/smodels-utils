@@ -56,6 +56,8 @@ def validate ( args : Dict ):
     keep = args["keep"]
     tempname = args["tempname"]
     limit_points = args["limit_points"]
+    generatedata = args["generatedata"]
+    dataselector = "combined"
     if topo in [ None, "all" ]:
         topo = "*"
     if analyses == None:
@@ -84,8 +86,8 @@ def validate ( args : Dict ):
         for line in lines:
             newline = line.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
-            newline = newline.replace("@@GENERATEDATA@@", "ondemand" )
-            newline = newline.replace("@@DATASELECTOR@@", "combined" )
+            newline = newline.replace("@@GENERATEDATA@@", generatedata )
+            newline = newline.replace("@@DATASELECTOR@@", dataselector )
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
             newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
@@ -262,8 +264,10 @@ def main():
             sys.exit()
     # print ( f"breaking after" )
     # sys.exit()
+    args.generatedata = "True"
     for i in range(args.repeat):
         validate ( vars ( args ) )
+        args.generatedata = "ondemand"
     logCall()
 
 if __name__ == "__main__":
