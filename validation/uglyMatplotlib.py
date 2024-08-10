@@ -77,7 +77,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     dn = int(math.ceil(nmax/ndots))
     print ( " "*int(43+ndigits+ndots), end="<\r" )
     print ( f"[uglyMatplotlib] checking {nmax} validation points >", end="" )
-    ycontainer=[]
+    xcontainer,ycontainer=[],[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
@@ -91,25 +91,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 nPointsOnPlane += 1
             continue
                 # we should not even count these, they are not on our plane
-            """
-            vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
-            if vD != None and "x" in vD:
-                x_, y_ = vD["x"], None
-                if not isWithinRange ( xrange, x_ ):
-                    continue
-                if "y" in vD.keys():
-                    y_ = vD["y"]
-                elif "w" in vD.keys():
-                    y_ = vD["w"]
-                if y_ is None:
-                    logger.error ( "the data is 1d." ) # is separate module now
-                    sys.exit()
-                if not isWithinRange ( yrange, y_ ):
-                    continue
-                noresult.append( { "x": x_, "y": y_ } )
-            nErrors += 1
-            continue
-            """
         nPointsOnPlane += 1
         if pt["UL"] == None:
             logger.debug ( f"No upper limit for {pt}" )
@@ -155,6 +136,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             continue
         if not isWithinRange ( yrange, y ):
             continue
+        xcontainer.append ( x )
         ycontainer.append ( y )
         coords = { "x": x, "y": y }
 
@@ -240,7 +222,16 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.plot ( get("x",cond_violated), get("y",cond_violated), marker="o", \
                 linestyle=None, c="gray", linewidth=0, label="condition violated")
     if len(noresult)>0:
-        plt.plot ( get("x",noresult), get("y",noresult), marker="o", \
+        filterednoresult = []
+        xRange = ( min(xcontainer)*.8-2, max(xcontainer)*1.1+2 )
+        yRange = ( min(ycontainer)*.8-2, max(ycontainer)*1.1+2 )
+        if logY:
+            yRange = ( min(ycontainer)*.2, max(ycontainer)*5. )
+        for r in noresult:
+            if isWithinRange ( xRange, r["x"] ) and \
+                    isWithinRange ( yRange, r["y"] ):
+                filterednoresult.append (  r )
+        plt.plot ( get("x",filterednoresult), get("y",filterednoresult), marker="o", \
                    linestyle=None, c="gray", linewidth=0, markersize=2, label="no result", zorder = 1)
     if len(gridpoints)>0:
         zorder = 12
