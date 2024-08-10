@@ -368,6 +368,8 @@ def main():
             sys.exit()
     # print ( f"breaking after" )
     # sys.exit()
+    if args.repeat > 1:
+        args.keep = True
     for i in range(args.repeat):
         validate ( vars ( args ), i )
         args.generate_data = "ondemand"
