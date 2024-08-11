@@ -401,8 +401,9 @@ def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
     ipath = f"{folder}/{validationFolder}/{valfile}"
     files = glob.glob ( ipath )
     if len(files)==0:
-        print ( "[various] could not find validation file %s" % ipath )
-        sys.exit()
+        print ( f"[various] could not find validation file {ipath}" )
+        return None
+        # sys.exit()
     if len(files)>1:
         print ( "[helper/various] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
         for f in files[:2]:

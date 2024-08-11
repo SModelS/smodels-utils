@@ -209,6 +209,8 @@ def getValidationFileContent ( validationfile : str ):
     :param validation file: filename
     :returns: dictionary with content of validation file
     """
+    if validationfile in [ "", None ]:
+        return { "data": {}, "meta": {} }
     #Save data to file
     f = open( validationfile, 'r' )
     lines = f.readlines()
