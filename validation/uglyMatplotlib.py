@@ -77,7 +77,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     dn = int(math.ceil(nmax/ndots))
     print ( " "*int(43+ndigits+ndots), end="<\r" )
     print ( f"[uglyMatplotlib] checking {nmax} validation points >", end="" )
-    ycontainer=[]
+    xcontainer,ycontainer=[],[]
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
@@ -91,25 +91,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 nPointsOnPlane += 1
             continue
                 # we should not even count these, they are not on our plane
-            """
-            vD = validationPlot.getXYFromSLHAFileName ( pt["slhafile"], asDict=True )
-            if vD != None and "x" in vD:
-                x_, y_ = vD["x"], None
-                if not isWithinRange ( xrange, x_ ):
-                    continue
-                if "y" in vD.keys():
-                    y_ = vD["y"]
-                elif "w" in vD.keys():
-                    y_ = vD["w"]
-                if y_ is None:
-                    logger.error ( "the data is 1d." ) # is separate module now
-                    sys.exit()
-                if not isWithinRange ( yrange, y_ ):
-                    continue
-                noresult.append( { "x": x_, "y": y_ } )
-            nErrors += 1
-            continue
-            """
         nPointsOnPlane += 1
         if pt["UL"] == None:
             logger.debug ( f"No upper limit for {pt}" )
@@ -155,6 +136,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             continue
         if not isWithinRange ( yrange, y ):
             continue
+        xcontainer.append ( x )
         ycontainer.append ( y )
         coords = { "x": x, "y": y }
 

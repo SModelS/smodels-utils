@@ -21,6 +21,93 @@ def mkdir ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
 
+def cancelAllValidaters():
+    o = subprocess.getoutput ( "slurm q | grep _V" )
+    lines = o.split("\n")
+    cancelled = []
+    for line in lines:
+        if not "_V" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        cmd = f"scancel {nr}"
+        subprocess.getoutput ( cmd )
+        cancelled.append ( nr )
+    print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
+
+def getMaxJobId() -> int:
+    """ get the highest job id """
+    o = subprocess.getoutput ( "slurm q | grep _V" )
+    lines = o.split("\n")
+    nmax = 0
+    for line in lines:
+        tokens = line.split()
+        nr = int(tokens[0])
+        if nr > nmax:
+            nmax = nr
+    return nmax
+
+def getMinJobId() -> int:
+    """ get the lowest job id """
+    o = subprocess.getoutput ( "slurm q | grep _V" )
+    lines = o.split("\n")
+    nmin = 1e99
+    for line in lines:
+        tokens = line.split()
+        nr = int(tokens[0])
+        if nr < nmin:
+            nmin = nr
+    return nmin
+
+def cancelRangerOfValiders( jrange : str ):
+    """ cancel only the jrange of runners """
+    import re
+    jrange = jrange.strip(" ")
+    if re.search('[a-zA-Z]', jrange) is not None:
+        from running_stats import cancelJobsByString
+        return cancelJobsByString ( jrange )
+    if not "-" in jrange: # single job
+        cmd = f"scancel {jrange}"
+        subprocess.getoutput ( cmd )
+        print ( f"[slurm_walk] cancelled {jrange}" )
+        return
+    cancelled = []
+    p1 = jrange.find("-")
+    if p1 == len(jrange)-1: ## range is given as '<min>-'
+        maxJobId = getMaxJobId()
+        jrange += str(maxJobId)
+    if p1 == 0:
+        minJobId = getMinJobId()
+        jrange = str(minJobId) + jrange
+
+    if 0 < p1 < len(jrange)-1:
+        # full range given
+        jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
+        for i in range(jmin,jmax+1):
+            cmd = f"scancel {i}"
+            subprocess.getoutput ( cmd )
+            cancelled.append ( i )
+        print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
+        return
+    o = subprocess.getoutput ( "slurm q | grep _V" )
+    lines = o.split("\n")
+    running = []
+    for line in lines:
+        if not "_V" in line:
+            continue
+        tokens = line.split()
+        nr = tokens[0]
+        running.append ( int ( nr ) )
+    if p1 == 0:
+        cancelRangerOfValiders( f"{min(running)}-{jrange[p1+1:]}" )
+        return
+    if p1 == len(jrange)-1:
+        cancelRangerOfValiders( f"{jrange[:p1]}-{max(running)}" )
+        return
+    print ( "[slurm_walk] FIXME sth is wrong" )
+
+
+
 def queryStats ( maxsteps : Union[None,int] = None ):
     """ just give us the statistics """
     import running_stats
@@ -69,11 +156,15 @@ def validate ( args : Dict, idx ):
     with open ( f"{codedir}/smodels-utils/validation/inifiles/{inifile}", "rt" ) as f:
         lines = f.readlines()
         f.close()
+    ## the first job might be a little different
+    ## (eg generateData = True instead of ondemand)
+    binaryIdx = 0 if idx == 0 else 1
     if tempname is None:
         newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
     else:
-        newini = f"{Dir}/{tempname}_{idx}.ini"
-    tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
+        newini = f"{Dir}/{tempname}_{binaryIdx}.ini"
+    # tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
+    tempdir = os.path.basename ( tempname )
     # if possible name the tempdir the same as the temp script and the temp ini file
     skeep = ""
     needTempDir = False ## if we operate in "continue" mode, we need:
@@ -229,6 +320,10 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-r', '--repeat', nargs='?', help='repeat submission n times [1]',
                         type=int, default=1 )
+    argparser.add_argument ( '--cancel_all', help='cancel all validaters',
+            action="store_true" )
+    argparser.add_argument ( '--cancel', help='cancel a certain range of validaters, e.g "65461977-65461985"',
+            type=str, default = None )
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run', action="store_true" )
     args=argparser.parse_args()
@@ -238,6 +333,12 @@ def main():
     if args.query:
         queryStats ( )
         sys.exit()
+    if args.cancel:
+        cancelRangerOfValiders ( args.cancel )
+        return
+    if args.cancel_all:
+        cancelAllValidaters()
+        return
     mkdir ( outputsdir )
     if args.keep:
         ## when running with --keep, we might want to
@@ -267,6 +368,8 @@ def main():
             sys.exit()
     # print ( f"breaking after" )
     # sys.exit()
+    if args.repeat > 1:
+        args.keep = True
     for i in range(args.repeat):
         validate ( vars ( args ), i )
         args.generate_data = "ondemand"
