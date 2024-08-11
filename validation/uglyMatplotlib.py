@@ -240,7 +240,18 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         plt.plot ( get("x",cond_violated), get("y",cond_violated), marker="o", \
                 linestyle=None, c="gray", linewidth=0, label="condition violated")
     if len(noresult)>0:
-        plt.plot ( get("x",noresult), get("y",noresult), marker="o", \
+        filterednoresult = []
+        xRange = ( min(xcontainer)*.8-2, max(xcontainer)*1.1+2 )
+        yRange = ( min(ycontainer)*.8-2, max(ycontainer)*1.1+2 )
+        if logY:
+            yRange = ( min(ycontainer)*.2, max(ycontainer)*5. )
+        for r in noresult:
+            if "x" in r and isWithinRange ( xRange, r["x"] ):
+                if not "y" in r:
+                    filterednoresult.append (  r )
+                elif "y" in r and isWithinRange ( yRange, r["y"] ):
+                    filterednoresult.append (  r )
+        plt.plot ( get("x",filterednoresult), get("y",filterednoresult), marker="o", \
                    linestyle=None, c="gray", linewidth=0, markersize=2, label="no result", zorder = 1)
     if len(gridpoints)>0:
         zorder = 12
