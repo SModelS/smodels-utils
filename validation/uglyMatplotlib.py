@@ -228,9 +228,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         if logY:
             yRange = ( min(ycontainer)*.2, max(ycontainer)*5. )
         for r in noresult:
-            if isWithinRange ( xRange, r["x"] ) and \
-                    isWithinRange ( yRange, r["y"] ):
-                filterednoresult.append (  r )
+            if "x" in r and isWithinRange ( xRange, r["x"] ):
+                if not "y" in r:
+                    filterednoresult.append (  r )
+                elif "y" in r and isWithinRange ( yRange, r["y"] ):
+                    filterednoresult.append (  r )
         plt.plot ( get("x",filterednoresult), get("y",filterednoresult), marker="o", \
                    linestyle=None, c="gray", linewidth=0, markersize=2, label="no result", zorder = 1)
     if len(gridpoints)>0:

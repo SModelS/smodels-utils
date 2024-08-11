@@ -1427,8 +1427,6 @@ class ValidationPlot():
                import subprocess
                o = subprocess.getoutput ( cmd )
         self.show ( filename )
-        from icecream import ic
-        ic ( "a" )
 
         return True
 
