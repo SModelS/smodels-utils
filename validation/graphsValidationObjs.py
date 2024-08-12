@@ -469,8 +469,9 @@ class ValidationPlot():
         ctadded = 0
         for d in content["data"]:
             if d["slhafile"] in slhafiles:
-                if d != slhafiles[d["slhafile"]]:
-                    logger.error ( f"entry {d['slhafile']} changed content {d} != {slhafiles[d]}" )
+                slhafile = d["slhafile"]
+                if d != slhafiles[ slhafile ]:
+                    logger.error ( f"entry {d['slhafile']} changed content {d} != {slhafiles[ slhafile ]}" )
                 continue
             ctadded+=1
             self.data.append ( d )
