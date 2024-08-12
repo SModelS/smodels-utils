@@ -50,6 +50,8 @@ def convertNewAxes ( newa ):
     if type(newa)==list:
         return axes[::-1]
     if type(newa)==dict:
+        if len ( newa ) == 0:
+            return []
         axes = [ newa["x"] ]
         if "y" in newa:
             axes.append ( newa["y"] )
@@ -410,8 +412,8 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
     axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1 ) #, outputtype="latex" )
     if axis1 != axis2:
-        print ( f"[plotRatio] error, different axes!" )
-        return
+        print ( f"[plotRatio] error, different axes: {axis1}!={axis2}" )
+        # return
         # sys.exit()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )
