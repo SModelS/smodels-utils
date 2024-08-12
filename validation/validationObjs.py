@@ -723,7 +723,7 @@ class ValidationPlot():
             logger.error("Something went wrong. Obtained results for the wrong analyses")
             return 0
         if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
-            logger.error("Something went wrong. Obtained results for the wrong txname")
+            logger.error( f"Something went wrong. Obtained results for the wrong txname: got {expRes['TxNames']} but want {self.txName}")
             return 0
 
         #Replaced rounded masses by original masses
