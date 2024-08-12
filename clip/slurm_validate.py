@@ -239,7 +239,7 @@ def validate ( args : Dict, idx ):
         cmd += [ "--time", "%s" % ( time*60-1 ) ]
     #ram = 1. * nproc
     # ram = int ( 12. + .8 * nproc ) # crazy high, no
-    ram = int ( 3. + .5 * nprocesses )
+    ram = int ( 5. + .7 * nprocesses )
     # ncpus = nproc # int(nproc*1.5)
     ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]

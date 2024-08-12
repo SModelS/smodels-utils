@@ -211,26 +211,30 @@ def getValidationFileContent ( validationfile : str ):
     """
     if validationfile in [ "", None ]:
         return { "data": {}, "meta": {} }
-    #Save data to file
-    f = open( validationfile, 'r' )
-    lines = f.readlines()
-    f.close()
-    nlines = len(lines)
-    txt = "\n".join(lines[:-1])
-    if nlines == 1:
-        txt = "\n".join(lines[:])
-    # print ( "txt", txt )
-    ret = {}
-    txt = txt.replace("validationData = ","")
-    txt = txt.replace("inf,","float('inf'),")
-    txt = txt.replace("nan,","float('nan'),")
-    data = eval(txt)
-    ret["data"] = data
-    meta = None
-    if len(lines)>1 and lines[-1].startswith ( "meta" ):
-        meta = eval(lines[-1].replace("meta = ","").replace("meta=","") )
-    ret["meta"]=meta
-    return ret
+    try:
+        #Save data to file
+        f = open( validationfile, 'r' )
+        lines = f.readlines()
+        f.close()
+        nlines = len(lines)
+        txt = "\n".join(lines[:-1])
+        if nlines == 1:
+            txt = "\n".join(lines[:])
+        # print ( "txt", txt )
+        ret = {}
+        txt = txt.replace("validationData = ","")
+        txt = txt.replace("inf,","float('inf'),")
+        txt = txt.replace("nan,","float('nan'),")
+        data = eval(txt)
+        ret["data"] = data
+        meta = None
+        if len(lines)>1 and lines[-1].startswith ( "meta" ):
+            meta = eval(lines[-1].replace("meta = ","").replace("meta=","") )
+        ret["meta"]=meta
+        return ret
+    except (SyntaxError,ValueError) as e:
+        # if there is an error, we continue without
+        return { "data": {}, "meta": {} }
 
 def shortTxName( txnames : list ):
     """ get a short moniker for the txnames
