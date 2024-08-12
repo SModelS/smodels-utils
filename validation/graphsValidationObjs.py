@@ -786,7 +786,7 @@ class ValidationPlot():
                 else:
                     tmp.append ( f )
             if countSkipped > 0:
-                logger.info ( f"skipped a total of {countSkipped} points: generateData was set to 'ondemand'." )
+                logger.info ( f"skipped a total of {countSkipped} points that are already in final dictionary: generateData was set to 'ondemand'." )
             fileList = tmp
         else:
             self.data = []
@@ -814,9 +814,7 @@ class ValidationPlot():
             countSLHAFileInData = 0
             countResultExists = 0
             for f in fileList:
-                if "recipe" in f:
-                    continue
-                if "coordinates" in f:
+                if f in [ "results", "coordinates", "comment" ]:
                     continue
                 bf = os.path.basename ( f )
                 if self.slhafileInData ( bf ):
@@ -829,7 +827,7 @@ class ValidationPlot():
                 else:
                     tmp.append ( f )
             if countSkipped > 0:
-                logger.info ( f"skipped a total of {countSkipped} points: generateData was set to 'ondemand'." )
+                logger.info ( f"skipped a total of {countSkipped} points that are in temporary folder: generateData was set to 'ondemand'." )
                 logger.info ( f" -> {countSLHAFileInData} points are already in final validation dictionary, for {countResultExists} points a file exists in the temporary results folder." )
                 # lets randomize in these cases, so we can somewhat parallelize
                 # FIXME it would be better if we locked individual slha files
