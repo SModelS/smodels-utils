@@ -36,7 +36,7 @@ def getCurveFromJson(anaDir, txname, type=["official", "bestSR", "combined"], ax
             if f"obsExclusion_{axes}" not in excl_file[txname].keys():
                 axes_keys = list(excl_file[txname].keys())
                 axes = axes_keys[0].split('_')[-1]
-                print("modified axes ", axes)
+                print( f"[drawPaperPlot] modified axes {axes}" )
    
             excl_x = excl_file[txname][f"obsExclusion_{axes}"]['x']
             excl_y = excl_file[txname][f"obsExclusion_{axes}"]['y']
@@ -45,10 +45,11 @@ def getCurveFromJson(anaDir, txname, type=["official", "bestSR", "combined"], ax
                 exp_excl_y = excl_file[txname][f"expExclusion_{axes}"]['y']
 
     else:
-        file = open(f"{anaDir}/validation/SModelS_ExclusionLines.json","r")
+        fname = f"{anaDir}/validation/SModelS_ExclusionLines.json"
+        file = open(fname,"r")
         excl_file = json.load(file)
         if f"{txname}_comb_{axes}" not in excl_file or f"{txname}_bestSR_{axes}" not in excl_file:
-            print(f"{txname}:{axes} not found")
+            print(f"[drawPaperPlot] {txname}:{axes} not found in {fname}")
             return excl_lines
         if type == "bestSR":
             excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
@@ -65,7 +66,7 @@ def getCurveFromJson(anaDir, txname, type=["official", "bestSR", "combined"], ax
     excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
 
     if ('x - y' in axes or 'x-y' in axes) and eval_axes:
-        print(f"{type} {txname} {axes} yes")
+        print(f"[drawPaperPlot] {type} {txname} {axes} yes")
         for type, excl in excl_lines.items():
             excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
             excl_lines[type] = {"x":excl["x"],"y":excl_y}
@@ -88,37 +89,37 @@ def getOnshellAxesForOffshell(anaDir, tx_onshell):
         return None
     else:
         axes = sm_file_keys[0].split('_')[-1]
-        print(axes)
+        print("[drawPaperPlot]", axes)
         return axes
         
     
 def drawOffshell(excl_lines, excl_off, min_off_y = 0.0, official=False):
     
-    print("min_off_y ", min_off_y )
+    print("[drawPaperPlot] min_off_y ", min_off_y )
     for type,excl in excl_lines.items():
         if excl_off[type]["x"] == []:
             continue
         
         if excl_off[type]["x"][0] > excl_off[type]["x"][-1] or excl_off[type]["x"][1] > excl_off[type]["x"][-2]:
-            print("off reverse")
+            print("[drawPaperPlot] off reverse")
             excl_off[type]["x"].reverse()
             excl_off[type]["y"].reverse()
         if official: min_off_y = excl_off[type]["y"][0]
         
         if excl_off[type]["y"][-1] < excl_off[type]["y"][0]:# and official:
-            print("yes ")
+            print("[drawPaperPlot] yes ")
             index = [i for i,y  in enumerate(excl_off[type]["y"]) if y>excl_off[type]["y"][0]+50]
             excl_off[type]["x"] = excl_off[type]["x"][:index[-1]]
             excl_off[type]["y"] = excl_off[type]["y"][:index[-1]]
         
         if excl["x"][0] > excl["x"][-1]:
-            print("on reverse")
+            print("[drawPaperPlot] on reverse")
             excl["x"].reverse()
             excl["y"].reverse()
         
         if excl_off[type]["x"][-1] > excl["x"][0]:
             index = [i for i,x  in enumerate(excl["x"]) if x>excl_off[type]["x"][-1]+20]
-            print("cut off ", excl["x"][index[0]])
+            print("[drawPaperPlot] cut off ", excl["x"][index[0]])
             excl["x"] = excl["x"][index[0]:]
             excl["y"] = excl["y"][index[0]:]
         
@@ -239,14 +240,17 @@ def drawPrettyPaperPlot(validationPlot):
     if offshell:
         bestSR_excl = getCurveFromJson(anaDir, txname, type="bestSR", axes=axes_on)
         bestSR_excl_off = getCurveFromJson(anaDir, txnameOff, type="bestSR", axes=axes)
+        from icecream import ic
+        ic ( bestSR_excl )
+        ic ( bestSR_excl_off )
         if not bestSR_excl_off:
-            print("[drawPrettyPaperPlot] No best SR SModelS excl line. Not drawing paper plot.")
+            print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
             return
         bestSR_excl = drawOffshell(bestSR_excl, bestSR_excl_off)
     else:
         bestSR_excl = getCurveFromJson(anaDir, txname, type="bestSR", axes=axes, eval_axes=eval_axes)
         if not bestSR_excl:
-            print("[drawPrettyPaperPlot] No best SR SModelS excl line.")
+            print(f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txname}:{axes}.")
             bestSR = False
             return
 
@@ -254,7 +258,7 @@ def drawPrettyPaperPlot(validationPlot):
         comb_excl = getCurveFromJson(anaDir, txname, type="combined", axes=axes_on)
         comb_excl_off = getCurveFromJson(anaDir, txnameOff, type="combined", axes=axes)
         if not comb_excl_off:
-            print("[drawPrettyPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
+            print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
             return
         comb_excl = drawOffshell(comb_excl, comb_excl_off)
     else:
