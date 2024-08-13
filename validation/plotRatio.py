@@ -155,6 +155,12 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
             return
             # sys.exit()
+        if not "axes" in content["meta"]:
+            print ( f"[plotRatio] meta 'axes' info is missing in {ipath1}. Perhaps rerun validation?" )
+            print ( f"[plotRatio] {dbpath} {analysis1} {valfile} {options['folder1']}" )
+            #return
+            sys.exit()
+
         axis1 = content["meta"]["axes"]
         contents.append ( content )
         p1 = valfile.find("_")

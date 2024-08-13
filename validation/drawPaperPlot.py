@@ -25,6 +25,7 @@ def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"],
     :param axes: axes map of official exclusion line
     returns a dict of obs and exp exclusion lines
     """
+    saxes = str(axes).replace(" ","").replace("'","")
 
     excl_x,excl_y,exp_excl_x,exp_excl_y = [],[],[],[]
     excl_lines = {}
@@ -49,7 +50,6 @@ def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"],
         fname = f"{anaDir}/validation/SModelS_ExclusionLines.json"
         file = open(fname,"r")
         excl_file = json.load(file)
-        saxes = axes.replace(" ","").replace("'","")
         if f"{txname}_comb_{axes}" not in excl_file:
             print(f"[drawPaperPlot] {txname}_comb_{saxes[:20]} not found in {fname}")
         if f"{txname}_bestSR_{axes}" not in excl_file:
@@ -220,7 +220,8 @@ def drawPrettyPaperPlot(validationPlot):
     txname = validationPlot.txName
     axes = validationPlot.axes
     eval_axes = True
-    print(f"[drawPaperPlot] Drawing pretty paper plot for {txname}:{axes} ")
+    saxes = str(axes).replace(" ","").replace("'","")
+    print(f"[drawPaperPlot] Drawing pretty paper plot for {txname}:{saxes} ")
     
     offshell = False
     txnameOff = ''

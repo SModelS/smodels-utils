@@ -144,7 +144,7 @@ def validate ( args : Dict, idx ):
     tempname = args["tempname"]
     limit_points = args["limit_points"]
     generatedata = args["generate_data"]
-    dataselector = "combined"
+    dataselector = args["dataselector"]
     if topo in [ None, "all" ]:
         topo = "*"
     if analyses == None:
@@ -164,7 +164,9 @@ def validate ( args : Dict, idx ):
     else:
         newini = f"{Dir}/{tempname}_{binaryIdx}.ini"
     # tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
-    tempdir = os.path.basename ( tempname )
+    tempdir = None
+    if tempname != None:
+        tempdir = os.path.basename ( tempname )
     # if possible name the tempdir the same as the temp script and the temp ini file
     skeep = ""
     needTempDir = False ## if we operate in "continue" mode, we need:
@@ -182,7 +184,10 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
             newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
-            newline = newline.replace("@@TEMPDIR@@", tempdir )
+            if tempdir is None and "@@TEMPDIR@@" in line:
+                continue
+            if tempdir is not None:
+                newline = newline.replace("@@TEMPDIR@@", tempdir )
             if limit_points in [ "all", 0, None, -1 ] and "limitPoints" in newline:
                 ## we dont limit the points
                 continue
@@ -318,6 +323,8 @@ def main():
                         type=int, default=8 )
     argparser.add_argument ( '-l', '--limit_points', help='run over no more than many points [all]',
                         type=int, default=0 )
+    argparser.add_argument ( '--dataselector', help='dataselector, eg combined, efficiencyMap, upperLimit [combined]',
+                        type=str, default="combined" )
     argparser.add_argument ( '-r', '--repeat', nargs='?', help='repeat submission n times [1]',
                         type=int, default=1 )
     argparser.add_argument ( '--cancel_all', help='cancel all validaters',
