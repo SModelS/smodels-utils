@@ -310,10 +310,6 @@ class ValidationPlot():
         :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
         :return: path to the folder containing the SLHA files
         """
-        from icecream import ic
-        ic ( "getSLHAdir" )
-        ic ( self.slhaDir )
-        ic ( self.currentSLHADir )
 
         if os.path.isdir(self.slhaDir):
             self.currentSLHADir = self.slhaDir
