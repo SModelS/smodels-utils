@@ -346,6 +346,11 @@ class ValidationPlot():
                 tar.close()
                 logger.debug(f"SLHA files extracted to {tempdir}" )
                 self.currentSLHADir = tempdir
+                commentfile = f"{tempdir}/comment"
+                with open ( commentfile, "wt" ) as f:
+                    d = { "npoints": len(members) }
+                    f.write ( f"{str(d)}\n" )
+                    f.close()
                 return tempdir
             except Exception as e:
                 logger.error(f"Could not extract SLHA files from {self.slhaDir}: {e}")
@@ -901,6 +906,8 @@ class ValidationPlot():
                 cleanedcurrent[f]=t
         current = cleanedcurrent
         for f in fileList:
+            if f.endswith ( ".tar.gz" ):
+                continue
             if f in [ "results", "coordinates", "comment" ]:
                 continue
             if not f in current:
@@ -926,7 +933,9 @@ class ValidationPlot():
                     logger.info ( f"exception {e}" )
             f.close()
         for f in fileList:
-            if f in [ "results", "coordinates" ]:
+            if f.endswith ( ".tar.gz" ):
+                continue
+            if f in [ "results", "coordinates", "comment" ]:
                 continue
             try:
                 current.pop ( f )
@@ -985,9 +994,9 @@ class ValidationPlot():
             countSLHAFileInData = 0
             countResultExists = 0
             for f in fileList:
-                if "recipe" in f:
+                if f.endswith ( ".tar.gz" ):
                     continue
-                if "coordinates" in f:
+                if f in [ "results", "coordinates", "comment" ]:
                     continue
                 bf = os.path.basename ( f )
                 if self.slhafileInData ( bf ):

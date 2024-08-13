@@ -310,6 +310,10 @@ class ValidationPlot():
         :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
         :return: path to the folder containing the SLHA files
         """
+        from icecream import ic
+        ic ( "getSLHAdir" )
+        ic ( self.slhaDir )
+        ic ( self.currentSLHADir )
 
         if os.path.isdir(self.slhaDir):
             self.currentSLHADir = self.slhaDir
@@ -340,8 +344,13 @@ class ValidationPlot():
                     members=members[:limitPoints]
                 tar.extractall(path=tempdir,members=members)
                 tar.close()
-                logger.debug("SLHA files extracted to %s" %tempdir)
+                logger.debug( f"SLHA files extracted to {tempdir}" )
                 self.currentSLHADir = tempdir
+                commentfile = f"{tempdir}/comment"
+                with open ( commentfile, "wt" ) as f:
+                    d = { "npoints": len(members) }
+                    f.write ( f"{str(d)}\n" )
+                    f.close()
                 return tempdir
             except Exception as e:
                 logger.error("Could not extract SLHA files from %s: %s" %\
@@ -781,6 +790,8 @@ class ValidationPlot():
             tmp = []
             countSkipped = 0
             for f in fileList:
+                if f.endswith ( ".tar.gz" ):
+                    continue
                 bf = os.path.basename ( f )
                 if self.slhafileInData ( bf ):
                     countSkipped += 1
@@ -815,6 +826,8 @@ class ValidationPlot():
             countSLHAFileInData = 0
             countResultExists = 0
             for f in fileList:
+                if f.endswith ( ".tar.gz" ):
+                    continue
                 if f in [ "results", "coordinates", "comment" ]:
                     continue
                 bf = os.path.basename ( f )
@@ -908,7 +921,9 @@ class ValidationPlot():
                 cleanedcurrent[f]=t
         current = cleanedcurrent
         for f in fileList:
-            if f in [ "results", "coordinates" ]:
+            if f.endswith ( ".tar.gz" ):
+                continue
+            if f in [ "results", "coordinates", "comment" ]:
                 continue
             if not f in current:
                 if self.limitPoints in [-1, None] or len(shouldRun)<self.limitPoints:
@@ -1047,7 +1062,9 @@ class ValidationPlot():
                     logger.info ( f"exception {e}" )
             f.close()
         for f in fileList:
-            if f in [ "results", "coordinates" ]:
+            if f.endswith ( ".tar.gz" ):
+                continue
+            if f in [ "results", "coordinates", "comment" ]:
                 continue
             try:
                 current.pop ( f )
