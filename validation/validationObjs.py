@@ -348,7 +348,7 @@ class ValidationPlot():
                 self.currentSLHADir = tempdir
                 commentfile = f"{tempdir}/comment"
                 with open ( commentfile, "wt" ) as f:
-                    d = { "npoints": len(members) }
+                    d = { "npoints": countm }
                     f.write ( f"{str(d)}\n" )
                     f.close()
                 return tempdir
