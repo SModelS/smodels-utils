@@ -294,7 +294,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-c','--clean', help='clean out all temp files',
                              action="store_true" )
-    argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking and validation [None]',
+    argparser.add_argument ( '-a', '--analyses', help='analyses considered [None]',
                         type=str, default=None )
     argparser.add_argument ( '-k','--keep',
             help='keep the temporary files,do not remove them afterwards',
@@ -308,7 +308,7 @@ def main():
     argparser.add_argument ( '-g', '--generate_data', nargs='?',
             help='generateData [False,True,ondemand]. In combination with --repeat we switch to ondemand after the first [ondemand]',
             type=str, default="ondemand" )
-    argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking and validation [None]',
+    argparser.add_argument ( '-T', '--topo', help='topology considered [None]',
                         type=str, default=None )
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [default.ini]',
                         type=str, default = "default.ini" )

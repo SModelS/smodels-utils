@@ -57,7 +57,7 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=Tr
     plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obs_excl":{'x':xobs,'y':yobs}, "exp_excl":{'x':xexp, 'y':yexp}}}
     vDir = validationPlot.getValidationDir (validationDir=None)
     file_js = "SModelS_ExclusionLines.json"
-    print("[prettyMatplotlib] Creating SModelS Exclusion JSON at {vDir}/{file_js}")
+    print( f"[prettyMatplotlib] Creating SModelS Exclusion JSON at {vDir}/{file_js}")
     import json
     plots = plot_dict
     if os.path.exists(vDir+'/'+file_js):
