@@ -220,7 +220,7 @@ def drawPrettyPaperPlot(validationPlot):
     if 'off' in txname:
         axes_on = getOnshellAxesForOffshell(anaDir, txname.split('off')[0])
         if axes_on:
-            print("yes offshell")
+            print("[drawPaperPlot] yes offshell")
             offshell=True
             txnameOff = txname
             txname = txname.split('off')[0]
@@ -317,13 +317,13 @@ def drawPrettyPaperPlot(validationPlot):
     mid_x = int((max_obs_x - min_obs_x)/2)
     step_y = int(max_obs_y)
 
-    print("max obs y ", max_obs_y)
-    print("step y", step_y)
+    print("[drawPaperPlot] max obs y ", max_obs_y)
+    print("[drawPaperPlot] step y", step_y)
     
-    print("max exp y ", max_exp_y)
+    print("[drawPaperPlot] max exp y ", max_exp_y)
     
     axis_label = prettyAxes(validationPlot).split(',')
-    print("Axis label ", axis_label)
+    print("[drawPaperPlot] Axis label ", axis_label)
     x_label, y_label = "",""
     massg = ""
     for lbl in axis_label:
@@ -367,7 +367,7 @@ def drawPrettyPaperPlot(validationPlot):
         else:
             y_label = '$  m_{\\tilde{\\tau}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
             massg = '$  m_{\\tilde{\\chi}_1^{\\pm}} = m_{\\tilde{\\tau}} - 0.5 m_{\\tilde{\\chi}_1^0} $'
-    #print("massg ", massg)
+    print("[drawPaperPlot] massg ", massg)
     if 'CMS-SUS-16-050-agg' in analysis:
         if 'T5t' in txname:massg = '$ m_{\\tilde{\\tau}} =  m_{\\tilde{\\chi}_1^0} + 20 $ '
     
@@ -462,7 +462,7 @@ def drawPrettyPaperPlot(validationPlot):
     if getAxisType(axes) == "v2":
         axes = translateAxisV2(axes)
     axes = eval(axes).values()
-    print("fig ", axes)
+    print("[drawPaperPlot] fig ", axes)
     fig_axes_title = ""
     for a in axes: fig_axes_title += str(a) + '_'
     fig_axes_title = fig_axes_title.replace('x-y', 'y')
