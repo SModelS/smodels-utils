@@ -61,7 +61,7 @@ def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"],
             exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
             exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
         
-        elif type == "combined":
+        elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
             excl_x     = sum(excl_file[f'{txname}_comb_{axes}']['obs_excl']['x'], [])
             excl_y     = sum(excl_file[f'{txname}_comb_{axes}']['obs_excl']['y'], [])
             exp_excl_x = sum(excl_file[f'{txname}_comb_{axes}']['exp_excl']['x'], [])
@@ -589,7 +589,7 @@ def drawPrettyPaperPlot(validationPlot):
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.tight_layout()
     outfile = f"{vDir}/{txname}_{fig_axes_title}exp.png"
-    print ( f"[drawPaperPlot] saving to {outfile}" )
+    print ( f"[drawPaperPlot] saving to {ansi.YELLOW}{outfile}{ansi.RESET}" )
     plt.savefig( outfile, dpi=250)
     plt.clf()
     plt.rcdefaults()
