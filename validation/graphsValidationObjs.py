@@ -310,10 +310,6 @@ class ValidationPlot():
         :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
         :return: path to the folder containing the SLHA files
         """
-        from icecream import ic
-        ic ( "getSLHAdir" )
-        ic ( self.slhaDir )
-        ic ( self.currentSLHADir )
 
         if os.path.isdir(self.slhaDir):
             self.currentSLHADir = self.slhaDir
@@ -340,15 +336,15 @@ class ValidationPlot():
                 self.pointsInTarFile = countm
                 random.shuffle ( members )
                 limitPoints = self.options["limitPoints"]
-                if limitPoints != None and limitPoints > 0:
-                    members=members[:limitPoints]
+                #if limitPoints != None and limitPoints > 0:
+                #    members=members[:limitPoints]
                 tar.extractall(path=tempdir,members=members)
                 tar.close()
                 logger.debug( f"SLHA files extracted to {tempdir}" )
                 self.currentSLHADir = tempdir
                 commentfile = f"{tempdir}/comment"
                 with open ( commentfile, "wt" ) as f:
-                    d = { "npoints": len(members) }
+                    d = { "npoints": countm }
                     f.write ( f"{str(d)}\n" )
                     f.close()
                 return tempdir
