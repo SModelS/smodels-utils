@@ -34,11 +34,40 @@ def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"],
         file = open(f"{anaDir}/exclusion_lines.json")
         excl_file = json.load(file)
         axes = axes.replace(" ", "")
+        daxes = eval(axes)
+        import sympy
+        x,y,z,w = sympy.var("x y z w")
+        from sympy.parsing.sympy_parser import parse_expr
         if txname in excl_file:
             if f"obsExclusion_{axes}" not in excl_file[txname].keys():
                 axes_keys = list(excl_file[txname].keys())
-                axes = axes_keys[0].split('_')[-1]
-                print( f"[drawPaperPlot] modified axes {axes}" )
+                # print ( f"[drawPaperPlot] draw for {axes}" )
+                # print ( "[drawPaperPlot] candidates", axes_keys )
+                foundNewAxis = False
+                for axis_candidate in axes_keys:
+                    maxes = axis_candidate.split('_')[-1]
+                    tmp = maxes.replace("[","").replace("]","")
+                    tokens = tmp.split ( "," )
+                    misses = False
+                    for k,v in daxes.items():
+                        sv = parse_expr ( v )
+                        isInTokens = False
+                        for t in tokens:
+                            st = parse_expr ( t )
+                            if st == sv:
+                                isInTokens = True
+                                break
+                        if not isInTokens:
+                            misses=True
+                            break
+                    if not misses:
+                        axes = maxes
+                        foundNewAxis = True
+                if foundNewAxis:
+                    print( f"[drawPaperPlot] {ansi.GREEN}converted axis: {axes}{ansi.RESET}" )
+                else:
+                    print( f"[drawPaperPlot] {ansi.RED}ERROR could not find new axis. implement! {axes} {ansi.RESET}" )
+                    sys.exit(-1)
    
             excl_x = excl_file[txname][f"obsExclusion_{axes}"]['x']
             excl_y = excl_file[txname][f"obsExclusion_{axes}"]['y']
@@ -317,7 +346,8 @@ def drawPrettyPaperPlot(validationPlot):
                 num_cr += len(files)
         if hasattr ( validationPlot.expRes.globalInfo, "covariance" ): ver = "(SLv1)"   #SLv1 vs SLv2
     
-    if 'CMS-SUS-20-004' in analysis: ver = "(SLv2)"
+    if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
+        ver = "(SLv2)"
     
     #now plot figure
     # print("[drawPaperPlot] Drawing pretty obs and exp plots")

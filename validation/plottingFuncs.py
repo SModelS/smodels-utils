@@ -152,6 +152,27 @@ def getColormap():
     cmap=LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
 
+errMsgIssued = { "axis": False }
+
+def convertNewAxes ( newa ):
+    """ convert new types of axes (dictionary) to old (lists) """
+    axes = copy.deepcopy(newa)
+    if type(newa)==list:
+        return axes[::-1]
+    if type(newa)==dict:
+        if len ( newa ) == 0:
+            return []
+        axes = [ newa["x"] ]
+        if "y" in newa:
+            axes.append ( newa["y"] )
+        if "z" in newa:
+            axes.append ( newa["z"] )
+        return axes[::-1]
+    if not errMsgIssued["axis"]:
+        print ( "[plotRatio] cannot convert axis '%s'" % newa )
+        errMsgIssued["axis"]=True
+    return None
+
 def isWithinRange ( xyrange : list, xy : float ):
     """ check if xy is within xyrange """
     if xyrange == None:

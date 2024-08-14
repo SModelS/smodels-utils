@@ -23,12 +23,12 @@ from smodels_utils.helper.various import getValidationDataPathName
 #from smodels_utils.helper.various import getValidationModule
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
+from validation.plottingFuncs import convertNewAxes
 import warnings
 warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
-errMsgIssued = { "axis": False }
 
 def hasDebPkg():
     """ do we have the package installed """
@@ -43,25 +43,6 @@ def hasDebPkg():
     print ( "error, you need cm-super-minimal installed! (apt install cm-super-minimal)" )
     return
     #sys.exit(-1)
-
-def convertNewAxes ( newa ):
-    """ convert new types of axes (dictionary) to old (lists) """
-    axes = copy.deepcopy(newa)
-    if type(newa)==list:
-        return axes[::-1]
-    if type(newa)==dict:
-        if len ( newa ) == 0:
-            return []
-        axes = [ newa["x"] ]
-        if "y" in newa:
-            axes.append ( newa["y"] )
-        if "z" in newa:
-            axes.append ( newa["z"] )
-        return axes[::-1]
-    if not errMsgIssued["axis"]:
-        print ( "[plotRatio] cannot convert axis '%s'" % newa )
-        errMsgIssued["axis"]=True
-    return None
 
 def axisHash ( axes_ ):
     ret = 0
