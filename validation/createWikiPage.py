@@ -437,8 +437,8 @@ CMS are for on- and off-shell at once.
             return "MA5"
         if "recast" in source:
             return txname.source
-        print ( f"[createWikiPage] there is an unknown2 in {source}" )
-        return "unknown2"
+        print ( f"[createWikiPage] there is an unknown source in {source}" )
+        return txname.source
 
     def anaHasChanged ( self, id, txname, tpe ):
         """ has analysis id <id> changed?
