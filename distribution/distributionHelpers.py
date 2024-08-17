@@ -132,11 +132,22 @@ def clearJsons ( path : str, verbose : bool ):
     if ctRemoved>0:
         comment ( f"removed {ctRemoved} json files in {rpath}" )
 
+def hasNonValidated ( ers ):
+    """ FIXME remove when not anymore used! """
+    hasNonValidated = False
+    for er in ers:
+        dss = er.datasets
+        for ds in dss:
+            for txn in ds.txnameList:
+                if txn.validated == False:
+                    hasNonValidated = True
+    return hasNonValidated
+
 def removeNonValidated( db : Database, dirname : str = "database/" ):
     """ remove all non-validated analyses from text database """
     comment( f"starting removeNonValidated" )
     comment( "Now remove non-validated results." )
-    ers = db.expResultList
+    ers = db.getExpResults ( useNonValidated = True )
     comment( "Loaded the database with %d results." %( len(ers) ) )
     for er in ers:
         if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
@@ -150,8 +161,7 @@ def removeNonValidated( db : Database, dirname : str = "database/" ):
                 for txn in dataset.txnameList:
 #                    if txn.validated in [ None, False ]:
                     if txn.validated in [ False ]:
-                        #comment( "%s/%s/%s is not validated. Delete it." % \
-                        #         ( er, dataset, txn ) )
+                        comment( f"{er}/{dataset}/{txn} is not validated. Delete it." )
                         cmd="rm '%s'" % txn.path
                         runCmd( cmd )
                     else:
@@ -210,7 +220,7 @@ def moveNonAggregated( db : Database, dirname : str = "database/",
         os.mkdir ( destination )
     from smodels_utils.helper.databaseManipulations import filterNonAggregatedFromList
     # print ( f"now i need to remove all non-aggregated from {str(db)} dirname is {dirname} reuse is {reuse}" )
-    ers = db.expResultList
+    ers = db.getExpResults ( useNonValidated = True )
     nonaggregated = filterNonAggregatedFromList ( ers, invert=True )
     comment( f"now filtering non aggregated: {len(nonaggregated)}/{len(ers)}" )
     for na in nonaggregated:
