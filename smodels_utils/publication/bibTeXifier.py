@@ -11,7 +11,8 @@
 
 import urllib
 import setPath
-from smodels_utils.helper import databaseBrowser
+from smodels.tools import databaseBrowser
+# from smodels_utils.helper import databaseBrowser
 
 class BibTeXifier:
     def __init__ ( self, analysis, run=None, database=None ):
@@ -123,13 +124,13 @@ class BibTeXifier:
 
 
 if __name__ == '__main__':
-    import argparse, types
+    import argparse
     argparser = argparse.ArgumentParser(description='tool that is meant to return optimal bibtex entry for a given analysis')
-    argparser.add_argument ( '-r', '--run', nargs='?', help='name of the run', type=types.StringType, default=None )
-    argparser.add_argument ( '-d', '--database', nargs='?', help='path to database', type=types.StringType, default=None )
+    argparser.add_argument ( '-r', '--run', nargs='?', help='name of the run', type=str, default=None )
+    argparser.add_argument ( '-d', '--database', nargs='?', help='path to database', type=str, default=None )
     argparser.add_argument ( '-f', '--filename', nargs='?', help='write to <filename>, if None, print to stdout', \
-                             type=types.StringType, default=None )
-    argparser.add_argument ( 'analyses', nargs='+', help='name of the analyses', type=types.StringType, default=None )
+                             type=str, default=None )
+    argparser.add_argument ( 'analyses', nargs='+', help='name of the analyses', type=str, default=None )
     args=argparser.parse_args()
 
     for analysis in args.analyses:
