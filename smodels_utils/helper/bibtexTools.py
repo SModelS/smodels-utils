@@ -351,14 +351,22 @@ class BibtexWriter:
         cachef.write ( "\n" )
         cachef.close()
 
-    def writeBibEntry ( self, bib, Id ):
+    def writeBibEntry ( self, bib : str , Id : str ):
         self.success += 1
         self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
+        bib=bib.strip()
+        if not "label" in bib:
+            bib = bib[:-1]+",\n    label={"+Id+"}}"
+        if bib.endswith("}"):
+            bib = bib[:-1]+"\n}\n"
+
         self.f.write ( bib )
         self.f.write ( "\n" )
+        if "10.1103/PhysRevD.103.112006" in bib:
+            print ( f"XXX {Id}" )
         if self.write_cache:
             self.writeCache ( Id, bib )
         return
@@ -408,7 +416,6 @@ class BibtexWriter:
             self.nfailed += 1
             self.nsuperseded += 1
             return
-        self.log ( f" * DOI {expRes.globalInfo.publicationDOI}" )
         self.log ( f" * Id, url: {Id}, {url}" )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
@@ -420,8 +427,27 @@ class BibtexWriter:
             self.log ( " * rewriting %s -> %s\n" % ( oldurl, url ) )
             # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
             bib = self.bibtexFromWikiUrl ( url, Id )
-            if bib:
-                self.writeBibEntry ( bib, Id )
+            if bib[0]:
+                self.writeBibEntry ( bib[1], Id )
+                return
+        ## try with doi2bib
+        if hasattr ( expRes.globalInfo, "publicationDOI" ):
+            from doi2bib.crossref import get_bib_from_doi
+            bib = get_bib_from_doi ( expRes.globalInfo.publicationDOI )
+            if bib[0]:
+                text = bib[1]
+                p1 = text.find("author={")
+                p2 = text.find("}",p1 )
+                if p2 - p1 > 10000: 
+                    ## replace author list with collaboration name
+                    text = text[:p1] + "author={" + coll + " collaboration}" + bib[1][p2+1:]
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>\n', r"$pp$" )
+                text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>', r"$pp$" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>\n', r"$\sqrt{s} =$ 13 TeV" )
+                text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>', r"$\sqrt{s} =$ 13 TeV" )
+
+                text = text.replace(", ",", \n    ")
+                self.writeBibEntry ( text, Id )
                 return
         self.nfailed += 1
         self.nomatch.append ( Id )
