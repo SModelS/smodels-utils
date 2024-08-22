@@ -132,17 +132,20 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     for valfile in valfile1.split(","):
         ipath1 = getValidationDataPathName ( dbpath, analysis1, valfile, options["folder1"] )
         content = getValidationFileContent ( ipath1 )
+        axis1 = '[[x, y], [x, y]]'
         if not "meta" in content or content["meta"] is None:
             print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
-            return
-            # sys.exit()
-        if not "axes" in content["meta"]:
-            print ( f"[plotRatio] meta 'axes' info is missing in {ipath1}. Perhaps rerun validation?" )
-            print ( f"[plotRatio] {dbpath} {analysis1} {valfile} {options['folder1']}" )
             #return
-            sys.exit()
-
-        axis1 = content["meta"]["axes"]
+            # continue
+            # sys.exit()
+        else: 
+            if "axes" in content["meta"]:
+                axis1 = content["meta"]["axes"]
+            else:
+                print ( f"[plotRatio] meta 'axes' info is missing in {ipath1}. Perhaps rerun validation?" )
+                print ( f"[plotRatio] {dbpath} {analysis1} {valfile} {options['folder1']}" )
+                #return
+                # sys.exit()
         contents.append ( content )
         p1 = valfile.find("_")
         topos.add ( valfile[:p1] )
@@ -434,7 +437,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             el2 = []
             #removing analysisID name for contour line
             #label += f"(+{anaId2})"
-        if t in el:
+        if el is not None and t in el:
             for E in el[t]:
                 name = E["name"]
                 # print ( "name", name )

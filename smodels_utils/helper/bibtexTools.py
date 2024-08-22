@@ -14,7 +14,8 @@ __all__ = [ "BibtexWriter", "removeDoubleEntries" ]
 
 from smodels.base.smodelsLogging import setLogLevel
 import bibtexparser
-import urllib, colorama, subprocess
+import urllib, subprocess
+from colorama import Fore as ansi
 import os, sys
 from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
@@ -77,7 +78,7 @@ class BibtexWriter:
         self.nsuperseded = 0
         self.not_found = 0
         self.success = 0
-        self.nomatch = 0
+        self.nomatch = []
         self.fastlim = 0
         self.stats = { "CMS":{}, "ATLAS":{} } ## stats
         self.specialcases = {
@@ -124,7 +125,7 @@ class BibtexWriter:
             if len(o) != 0:
                 self.log ( "cp: %s" % o )
             else:
-                self.log ( "Success!" )
+                self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
         else:
             if not os.path.isdir ( self.databasepath ):
                 print ( "Databasepath %s is not a directory. Wont copy." % self.databasepath )
@@ -133,13 +134,13 @@ class BibtexWriter:
 
 
     def close ( self ):
-        self.log ( "%d results in container." % len(self.res) )
-        self.log ( "Summary: %d / %d successful." % \
-                ( self.success, self.npublications ) )
+        self.log ( f"{len(self.res)} results in container." )
+        self.log ( f"Summary: {self.success} / {self.npublications} successful." )
         self.log ( " ... of which: %d superseded results" % self.nsuperseded )
-        self.log ( "               %d not found" % self.not_found )
-        self.log ( "               %d fastlim" % self.fastlim )
-        self.log ( "               %d no match" % self.nomatch )
+        self.log ( f"               {self.not_found} not found" )
+        self.log ( f"               {self.fastlim} fastlim" )
+        self.log ( f"               {len(self.nomatch)} no match" )
+        self.log ( f"               {','.join( self.nomatch )}" )
         self.log ( "failed: %d" % self.nfailed )
         self.g.close()
         self.h.close()
@@ -233,7 +234,7 @@ class BibtexWriter:
         line = line.replace(' id="inspire_link"','')
         pos1 = line.find ( "HREF=" )
         pos2 = line.find ( "<B>" )
-        print  ( "pos", pos1, pos2 )
+        # print  ( "pos", pos1, pos2 )
         if pos1 > 0 and pos2 > pos1:
             ret = line[pos1+6:pos2-2]
             return ret
@@ -316,7 +317,7 @@ class BibtexWriter:
         self.g.write ( line + "\n" )
 
     def warn ( self, line ):
-        print ( "%sWARN %s%s" % ( colorama.Fore.RED, line, colorama.Fore.RESET ) )
+        print ( f"{ansi.RED}WARN {line}{ansi.RESET}" )
         self.g.write ( line + "\n" )
 
     def test( self ):
@@ -350,14 +351,22 @@ class BibtexWriter:
         cachef.write ( "\n" )
         cachef.close()
 
-    def writeBibEntry ( self, bib, Id ):
+    def writeBibEntry ( self, bib : str , Id : str ):
         self.success += 1
-        self.log ( "Success!" )
+        self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
+        bib=bib.strip()
+        if not "label" in bib:
+            bib = bib[:-1]+",\n    label={"+Id+"}}"
+        if bib.endswith("}"):
+            bib = bib[:-1]+"\n}\n"
+
         self.f.write ( bib )
         self.f.write ( "\n" )
+        if "10.1103/PhysRevD.103.112006" in bib:
+            print ( f"XXX {Id}" )
         if self.write_cache:
             self.writeCache ( Id, bib )
         return
@@ -366,13 +375,13 @@ class BibtexWriter:
         """ process the given experimental result """
         self.npublications += 1
         Id = self.cleanAnaId ( expRes.globalInfo.id )
-        self.log ( "\n\n\nNow processing %s" % Id )
+        self.log ( f"\nNow processing {ansi.YELLOW}{Id}{ansi.RESET}" )
         self.log ( "==================================" )
 
         backup = self.tryFetchFromCache( Id )
         if backup != False:
             self.success += 1
-            self.log ( "Success!" )
+            self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
             self.f.write ( backup )
             self.f.write ( "\n" )
             return
@@ -387,7 +396,9 @@ class BibtexWriter:
             else:
                 self.log ( "Special treatment failed." )
 
-        contact = expRes.globalInfo.contact ## globalInfo.contact
+        contact = None
+        if hasattr ( expRes.globalInfo, "contact" ):
+            contact = expRes.globalInfo.contact ## globalInfo.contact
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         if contact and "fastlim" in contact:
@@ -397,15 +408,15 @@ class BibtexWriter:
             self.log ( "Fastlim. Skipping.\n" )
             return
         if "superseded" in url:
-            self.log ( "superseded appears in URL (%s)" % Id )
-            self.log ( "   `-- %s" % url )
-            self.log ( "Failed!" )
-            self.h.write ( "%s failed. (superseded).\n" % Id )
-            self.h.write ( "    `---- %s\n" % url )
+            self.log ( f"superseded appears in URL ({Id})" )
+            self.log ( f"   `-- {url}" )
+            self.log ( f"{ansi.RED}Failed!{ansi.RESET}" )
+            self.h.write ( f"{Id} failed. (superseded).\n" )
+            self.h.write ( f"    `---- {url}\n" )
             self.nfailed += 1
             self.nsuperseded += 1
             return
-        self.log ( " * Id, url: %s, %s" % ( Id, url ) )
+        self.log ( f" * Id, url: {Id}, {url}" )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
             self.writeBibEntry ( bib, Id )
@@ -416,12 +427,31 @@ class BibtexWriter:
             self.log ( " * rewriting %s -> %s\n" % ( oldurl, url ) )
             # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
             bib = self.bibtexFromWikiUrl ( url, Id )
-            if bib:
-                self.writeBibEntry ( bib, Id )
+            if bib[0]:
+                self.writeBibEntry ( bib[1], Id )
+                return
+        ## try with doi2bib
+        if hasattr ( expRes.globalInfo, "publicationDOI" ):
+            from doi2bib.crossref import get_bib_from_doi
+            bib = get_bib_from_doi ( expRes.globalInfo.publicationDOI )
+            if bib[0]:
+                text = bib[1]
+                p1 = text.find("author={")
+                p2 = text.find("}",p1 )
+                if p2 - p1 > 10000: 
+                    ## replace author list with collaboration name
+                    text = text[:p1] + "author={" + coll + " collaboration}" + bib[1][p2+1:]
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>\n', r"$pp$" )
+                text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>', r"$pp$" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>\n', r"$\sqrt{s} =$ 13 TeV" )
+                text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>', r"$\sqrt{s} =$ 13 TeV" )
+
+                text = text.replace(", ",", \n    ")
+                self.writeBibEntry ( text, Id )
                 return
         self.nfailed += 1
-        self.nomatch += 1
-        self.log ( "Failed!" )
+        self.nomatch.append ( Id )
+        self.log ( f"{ansi.RED}Failed!{ansi.RESET}" )
         self.h.write ( "%s failed (no match).\n" % Id )
         self.h.write ( "    `---- %s\n" % url )
 
@@ -482,10 +512,19 @@ class BibtexWriter:
         entries = bibtex.entries
         filtered = []
         for entry in entries:
-            collaboration = getCollaboration ( entry )
+            label = "???"
+            if "label" in entry:
+                label = entry["label"]
+            else:
+                if "reportNumber" in entry:
+                    label = entry["reportNumber"].split(",")[0].strip()
+                else:
+                    self.warn ( f"label not defined in {entry}" )
+                    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+            collaboration = getCollaboration ( label )
             if not experiment == collaboration:
                 continue
-            filtered.append ( entry )
+            filtered.append ( entry ) # label )
         ret = ""
         if commentOut:
             ret += "% "
@@ -512,7 +551,7 @@ class BibtexWriter:
         biblabels = bibtex.entries_dict.keys()
         labels = {}
         for label,entry in bibtex.entries_dict.items():
-            for i in [ "label", "reportnumber", "number" ]:
+            for i in [ "label", "reportnumber", "reportNumber" ]:
                 if i in entry:
                     name = entry[i].split(",")[0]
                     name = name.split(".")[0]
@@ -573,7 +612,7 @@ class BibtexWriter:
         f=open("refs.bib")
         self.log ( "adding summaries to database.bib." )
         self.header()
-        bibtex=bibtexparser.load ( f )
+        bibtex=bibtexparser.parse_file ( "refs.bib" )
         f.close()
         self.i.write ( "\n" )
         self.i.write ( self.createSummaryCitation ( bibtex, "CMS" ) )

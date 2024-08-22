@@ -5,5 +5,7 @@ minecart ## for pdf reader
 reportlab ## for addLogoToPlots
 pypdf2 ## for addLogoToPlots
 colorama
+doi2bib ## for bibtexTools 
+bibtexparser ## for bibtexTools
 matplotlib
 sympy
