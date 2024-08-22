@@ -737,15 +737,6 @@ def main():
         if args.clean_all:
             clean_dirs( rundir, clean_all = True )
             continue
-        if args.updater:
-            ## update flag given standalone
-            maxsteps = args.maxsteps
-            if maxsteps == None:
-                maxsteps = 1
-                for i in range(args.repeat):
-                    runUpdater( args.dry_run, args.time, rundir, maxsteps,
-                            dbpath = dbpath, uploadTo = args.uploadTo )
-                continue
         if args.scan != -1:
             rewrite = True # args.rewrite
             for i in range(args.repeat):
@@ -824,6 +815,16 @@ def main():
             col = ansi.RED
         if totjobs == 0:
             col = ansi.RED
+        if args.updater:
+            ## update flag given standalone
+            #maxsteps = args.maxsteps
+            #if maxsteps == None:
+            #    maxsteps = 1
+            #    for i in range(args.repeat):
+            runUpdater( args.dry_run, args.time, rundir, 1,
+                    dbpath = dbpath, uploadTo = args.uploadTo )
+            totjobs += 1
+            #    continue
         print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
         if seed != None: ## count up
             seed += (1+len(rundirs))*(1+nprocesses)
