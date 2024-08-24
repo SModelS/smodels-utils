@@ -145,8 +145,9 @@ def main():
                 url = f"{base}/ListOfAnalyses{ver}"
     # exec ( cmd, A.dry_run )
     cmd = [ "./exclComparisonWiki.py", "-d", db ]
-    if not A.non_versioned:
-        cmd += [ "-a" ]
+    if A.non_versioned:
+        exec ( cmd, A.dry_run )
+    cmd += [ "-a" ]
     exec ( cmd, A.dry_run )
     print ( f"\n[updateAllWikiPages] all done!" )
     print ( f"[updateAllWikiPages] now wait 15 minutes, then point your browser to:" )
