@@ -185,7 +185,7 @@ def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewr
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --xvariable {pid1} --yvariable '{yvariable}' --produce --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
+            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --xvariable {pid1} --yvariable '{yvariable}' --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
