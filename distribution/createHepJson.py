@@ -253,7 +253,9 @@ def body(f,expResList):
 def create( dbpath : os.PathLike, outputfile : os.PathLike ):
     """ create smodels-analyses.json """
     from smodels.experiment.databaseObj import Database
-    if not os.path.exists ( dbpath ):
+    if not os.path.exists ( dbpath ) and not dbpath in [ "official", "superseded",
+            "fastlim", "full_llhds", "nonaggregated", "backup", "latest",
+            "backupunittest", "unittest", "debug", ]:
         print ( f"[createHepJson] {dbpath} not found" )
         sys.exit()
     db = Database ( dbpath )
