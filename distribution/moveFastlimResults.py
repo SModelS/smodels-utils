@@ -14,9 +14,9 @@ fastlimdir = "../../smodels-fastlim"
 
 def run ( cmd, dryrun=False ):
     if dryrun:
-        print ( "Dry-run: skipping %s." % cmd )
+        print ( f"Dry-run: skipping {cmd}." )
     else:
-        print ( "[moveFastlimResults] Executing: %s." % str(cmd) )
+        print ( f"[moveFastlimResults] Executing: {cmd}." )
         subprocess.getoutput ( cmd )
 
 def backupScript():
@@ -26,35 +26,37 @@ def backupScript():
 
 def rmDirs():
     if os.path.exists ( fastlimdir ):
-        cmd = "rm -r %s" % fastlimdir
+        cmd = f"rm -r {fastlimdir}"
         run ( cmd )
 
 def mkDirs():
-    cmd="mkdir %s" % fastlimdir
+    cmd= f"mkdir {fastlimdir}"
     run ( cmd )
 
-def isFastlim ( path, dryrun ):
+def moveFastlimResult ( path, dryrun ):
+    """ path is a fastlim result -- move it to separate directory
+    <fastlimdir> """
     dname = os.path.dirname ( path )
     bname = os.path.basename ( path )
-    print ( "%s is fastlim!" % bname )
-    cmd = "mkdir -p %s/%s" % ( fastlimdir, dname )
+    print ( f"{bname} is fastlim!" )
+    cmd = f"mkdir -p {fastlimdir}/{dname}"
     run ( cmd )
-    cmd = "mv %s %s/%s" % ( path, fastlimdir, dname )
+    cmd = f"mv {path} {fastlimdir}/{dname}"
     if dryrun:
-        cmd = "cp -a %s %s/%s" % ( path, fastlimdir, dname )
+        cmd = f"cp -a {path} {fastlimdir}/{dname}"
     run ( cmd )
-    cmd = "rm -r %s/%s/*/orig" % ( fastlimdir, path )
+    cmd = f"rm -r {fastlimdir}/{path}/*/orig"
     run ( cmd )
-    cmd = "rm -r %s/%s/*/convert.py" % ( fastlimdir, path )
+    cmd = f"rm -r {fastlimdir}/{path}/*/convert.py"
     run ( cmd )
-    cmd = "rm -r %s/%s/validation" % ( fastlimdir, path )
+    cmd = f"rm -r {fastlimdir}/{path}/validation"
     run ( cmd )
-    cmd = "rm -r %s/%s/sms.root" % ( fastlimdir, path )
+    cmd = f"rm -r {fastlimdir}/{path}/sms.root"
     run ( cmd )
     clearGlobalInfos ( fastlimdir )
 
 def createFastlimTarball():
-    cmd = "cd %s; tar czvf ../smodels-fastlim.tgz ./" % fastlimdir
+    cmd = f"cd {fastlimdir}; tar czvf ../smodels-fastlim.tgz ./"
     run ( cmd )
 
 ## now traverse the *TeV dirs
@@ -75,29 +77,29 @@ def traverse( dryrun ):
                 lines=gif.readlines()
                 for line in lines:
                     if "fastlim" in line and "contact" in line:
-                        isFastlim ( fullpath, dryrun )
+                        moveFastlimResult ( fullpath, dryrun )
                         break
                 gif.close()
 
 def error ( text ):
-    print ( "ERROR: %s" % text )
+    print ( f"ERROR: {text}" )
 
 def moveBibFile ( dryrun ):
     """ move fastlim-specific bibliography file """
     fastlim_bib = "references-fastlim.bib"
     if not os.path.exists ( fastlim_bib ):
-        error ( "%s is missing!" % fastlim_bib )
+        error ( f"{fastlim_bib} is missing!" )
     else:
-        cmd = "mv %s %s" % ( fastlim_bib, fastlimdir )
+        cmd = f"mv {fastlim_bib} {fastlimdir}"
         run ( cmd, dryrun )
         
 def moveReadmeFile ( dryrun ):
     """ move fastlim-specific README file """
     fastlim_readme = "README_fastlim"
     if not os.path.exists ( fastlim_readme ):
-        error ( "%s is missing!" % fastlim_readme )
+        error ( f"{fastlim_readme} is missing!" )
     else:
-        cmd = "mv %s %s" % ( fastlim_readme, os.path.join(fastlimdir,'README' ))
+        cmd = f"mv {fastlim_readme} {os.path.join(fastlimdir,'README' )}"
         run ( cmd, dryrun )        
 
 def main():

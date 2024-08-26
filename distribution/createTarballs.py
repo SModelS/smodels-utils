@@ -110,11 +110,9 @@ def moveFastlim ( filename , dirname ):
     cwd=os.getcwd()
     comment( f"cwd: {cwd}", urgency = "debug" )
     comment( f"debug dirname: {dirname}", urgency = "debug" )
-    cmd = "cd %s/smodels-database/; %s/moveFastlimResults.py" % \
-         ( dirname, cwd )
+    cmd = f"cd {dirname}/smodels-database/; {cwd}/moveFastlimResults.py"
     runCmd( cmd )
-    cmd = "mv ./smodels-fastlim.tgz %s/%s-fastlim-1.0.tgz" % \
-         (cwd, filename)
+    cmd = f"mv ./smodels-fastlim.tgz {cwd}/{filename}-fastlim-1.0.tgz"
     runCmd( cmd )
 
 def clearTxtFiles(dirname):
@@ -141,19 +139,19 @@ def createTarball(filename,dirname):
     """
     Create the tarball of smodels + database
     """
-    comment( "Create tarball %s.tgz from %s" % ( filename, dirname ) )
+    comment( f"Create tarball {filename}.tgz from {dirname}"  )
     cmd = f"cp -r {dirname} {dirname}.backup"
     subprocess.getoutput ( cmd )
     removePickles ( dirname )
-    runCmd("tar czvf %s.tgz %s" %(filename, dirname))
+    runCmd( f"tar czvf {filename}.tgz {dirname}" )
 
 def createDBTarball(filename,dirname):
     """
     Create the tarball of the database alone
     """
-    comment( "Create tarball %s.tgz" %filename )
+    comment( f"Create tarball {filename}.tgz" )
     removePickles ( dirname )
-    runCmd("cd %s; tar czvf %s.tgz smodels-database" %(dirname, filename ))
+    runCmd( f"cd {dirname}; tar czvf {filename}.tgz smodels-database" )
 
 def rmExtraFiles(dirname):
     """
@@ -163,7 +161,7 @@ def rmExtraFiles(dirname):
     extras = [ "inputFiles/slha/nobdecay.slha", "inputFiles/slha/broken.slha",
                "docs/documentation/smodels.log", "inputFiles/slha/complicated.slha" ]
     for i in extras:
-        cmd = "rm -rf %s/%s" %( dirname, i )
+        cmd = f"rm -rf {dirname}/{i}"
         runCmd( cmd )
 
 def convertRecipes(dirname):
@@ -171,16 +169,16 @@ def convertRecipes(dirname):
     Compile recipes from .ipynb to .py and .html.
     """
     comment( "Converting the recipes" )
-    cmd = "cd %s/docs/manual/source/recipes/; make convert remove_ipynb" % dirname
+    cmd = f"cd {dirname}/docs/manual/source/recipes/; make convert remove_ipynb"
     runCmd(cmd)
 
 def makeDocumentation(dirname):
     """
     create the documentation via sphinx """
     comment( "Creating the documentation" )
-    cmd = "cd %s/docs/manual/; make clean html; rm -r make.bat Makefile source " % dirname
+    cmd = f"cd {dirname}/docs/manual/; make clean html; rm -r make.bat Makefile source "
     runCmd(cmd)
-    cmd = "cd %s/docs/documentation/; make clean html; rm -r make.bat  Makefile source update" % dirname
+    cmd = f"cd {dirname}/docs/documentation/; make clean html; rm -r make.bat  Makefile source update"
     runCmd(cmd)
 
 def explode(filename):
@@ -188,7 +186,7 @@ def explode(filename):
     Explode the tarball.
     """
     comment( "Explode the tarball ..." )
-    cmd = "tar xzvf %s" %filename
+    cmd = f"tar xzvf {filename}"
     runCmd(cmd)
 
 def make(dirname):
@@ -196,7 +194,7 @@ def make(dirname):
     Execute 'make' in dirname/lib.
     """
     comment( "Now run make in dirname/lib ..." )
-    cmd = "cd %s/lib; make" % dirname
+    cmd = f"cd {dirname}/lib; make"
     runCmd(cmd)
 
 def runExample(dirname):
@@ -204,10 +202,10 @@ def runExample(dirname):
     Execute Example.py.
     """
     comment( "Now run Example.py ..." )
-    cmd = "cd %s/; ./Example.py 2>&1 | tee out.log" % dirname
+    cmd = f"cd {dirname}/; ./Example.py 2>&1 | tee out.log" 
     runCmd(cmd)
     comment( "Now check diff" )
-    cmd = "diff -u default.log %s/out.log" % dirname
+    cmd = f"diff -u default.log {dirname}/out.log"
     d = runCmd( cmd )
     if len( d ) > 4:
         comment( "Example test failed!!", "error" )
@@ -230,7 +228,7 @@ def test(filename,dirname):
 def testDocumentation(dirname):
     """ Test the documentation """
     comment( "Test the documentation" )
-    cmd="ls %s/docs/manual/build/html/index.html" % dirname
+    cmd=f"ls {dirname}/docs/manual/build/html/index.html"
     runCmd(cmd)
 
 def createDBRelease(output,tag,reuse):
@@ -241,13 +239,13 @@ def createDBRelease(output,tag,reuse):
 
     dirname = output
     if os.path.isdir(dirname) and not reuse:
-        comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz, or reuse, i.e. run with -r" %(output,output))
+        comment( f"Folder ``{output}'' already exists. Remove it (i.e. run with -c) before creating the tarball {output}.tgz, or reuse, i.e. run with -r" )
         return False
 
     isDummy()
     if not reuse:
         rmlog(dirname) ## first remove the log file
-        comment( "Creating tarball for database distribution, version v%s" %tag )
+        comment( f"Creating tarball for database distribution, version v{tag}" )
         rmdir(dirname)
         mkdir(dirname) ## .. then create the temp dir
         cpMakefile() ## copy Makefile if doesnt exist, for convenience only
@@ -281,7 +279,7 @@ def main():
     if args.clear:
         cmd = "rm -rf database smodels-nonaggregated/ smodels-fastlim/"
         o = subprocess.getoutput ( cmd )
-        print ( "[createTarballs] %s: %s" % ( cmd, o ) )
+        print ( f"[createTarballs] {cmd}: {o}" )
     sys.path.insert(0,os.path.abspath(args.smodelsPath))
     createDBRelease( args.output, args.tag, args.reuse )
 
