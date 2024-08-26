@@ -110,7 +110,7 @@ def moveFastlim ( filename , dirname ):
     cwd=os.getcwd()
     comment( f"cwd: {cwd}", urgency = "debug" )
     comment( f"debug dirname: {dirname}", urgency = "debug" )
-    cmd = f"cd {dirname}/smodels-database/; {cwd}/moveFastlimResults.py"
+    cmd = f"cd {dirname}/smodels-database/; {cwd}/resultsMover.py"
     runCmd( cmd )
     cmd = f"mv ./smodels-fastlim.tgz {cwd}/{filename}-fastlim-1.0.tgz"
     runCmd( cmd )

@@ -427,7 +427,7 @@ class BibtexWriter:
             self.log ( " * rewriting %s -> %s\n" % ( oldurl, url ) )
             # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
             bib = self.bibtexFromWikiUrl ( url, Id )
-            if bib[0]:
+            if bib is not None and bib[0]:
                 self.writeBibEntry ( bib[1], Id )
                 return
         ## try with doi2bib
@@ -455,13 +455,17 @@ class BibtexWriter:
         self.h.write ( "%s failed (no match).\n" % Id )
         self.h.write ( "    `---- %s\n" % url )
 
-    def run( self, write_cache ):
+    def run( self, write_cache, do_filter : bool, outfile : os.PathLike ):
+        """ 
+        :param outfile: name of output file, default: database.bib
+        """
         self.write_cache = write_cache
         self.openHandles()
         home = os.environ["HOME"]
         self.db = Database ( self.databasepath )
-        res = self.db.getExpResults ()
-        self.res = filterSupersededFromList ( filterFastLimFromList ( res ) )
+        self.res = self.db.getExpResults ()
+        if do_filter:
+            self.res = filterSupersededFromList ( filterFastLimFromList(self.res) )
         ids = set()
         for expRes in self.res:
             ID = self.cleanAnaId ( expRes.globalInfo.id )
@@ -473,7 +477,7 @@ class BibtexWriter:
                 # continue
             self.processExpRes ( expRes, write_cache )
         self.f.close()
-        self.addSummaries()
+        self.addSummaries( outfile )
 
     def createTestTex ( self, bibtex ):
         """ create the test.tex file, to check """
@@ -608,9 +612,9 @@ class BibtexWriter:
         import IPython
         IPython.embed( colors="neutral" )
 
-    def addSummaries ( self ):
+    def addSummaries ( self, outfile : os.PathLike ):
         f=open("refs.bib")
-        self.log ( "adding summaries to database.bib." )
+        self.log ( f"adding summaries to {outfile}." )
         self.header()
         bibtex=bibtexparser.parse_file ( "refs.bib" )
         f.close()
@@ -621,7 +625,7 @@ class BibtexWriter:
         self.i.write ( "\n" )
         self.i.close()
         self.createTestTex ( bibtex )
-        commands.getoutput ( "cat refs.bib >> database.bib" )
+        commands.getoutput ( f"cat refs.bib >> {outfile}" )
 
     def createStatsFile ( self ):
         """ create a file that contains the stats of this process """
@@ -656,6 +660,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-d', '--database',
             help='path to database [../../../smodels-database]',
             type=str, default='../../../smodels-database' )
+    argparser.add_argument ( '-o', '--outfile',
+            help='output file name [database.bib]',
+            type=str, default='database.bib' )
     argparser.add_argument ( '-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str )
@@ -667,6 +674,9 @@ if __name__ == "__main__":
             action="store_true" )
     argparser.add_argument ( "-w", "--write_cache",
             help=f"cache the retrieved results in {BibtexWriter.cachedir}",
+            action="store_true" )
+    argparser.add_argument ( "-n", "--dont_filter",
+            help=f"dont filter anything out",
             action="store_true" )
     argparser.add_argument ( "-p", "--pdf",
             help=f"create pdf summary document",
@@ -680,7 +690,7 @@ if __name__ == "__main__":
     if args.copy:
         writer.copy()
     else:
-        writer.run( args.write_cache )
+        writer.run( args.write_cache, not args.dont_filter, args.outfile )
         writer.close()
     if args.pdf:
         writer.createPdf()

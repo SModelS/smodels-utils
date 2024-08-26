@@ -366,9 +366,14 @@ def filterSupersededFromList ( expRes, invert=False ):
     :returns: list of non-superseded results if invert is False, else return
               list of superseded results
     """
-    ret, ss = [], []
+    ret, ss, ssids = [], [], []
     for er in expRes:
+        if hasattr ( er.globalInfo, "supersedes" ):
+            ssids.append ( er.globalInfo.supersedes )
         if hasattr ( er.globalInfo, "supersededBy" ):
+            ssids.append ( er.globalInfo.id )
+    for er in expRes:
+        if er.globalInfo.id in ssids:
             ss.append ( er )
         else:
             ret.append ( er )

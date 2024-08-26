@@ -262,17 +262,16 @@ def cloneDatabase( tag : str = "3.0.0", dirname : os.PathLike = "database/",
     cmd = f"cd {dirname}; git clone --depth 1 -b {dbversion} git+ssh://git@github.com/SModelS/smodels-database.git"
 
     if pretend:
-        cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
-             ( dirname, dbversion )
+        cmd = f"cd {dirname}; cp -a ../../../smodels-database-v{dbversion} smodels-database"
     runCmd( cmd )
 
     comment( "create hep json file" )
     import createHepJson
-    createHepJson.create ( f"{dirname}/smodels-database", f"{dirname}/smodels-database/smodels-analyses.json" )
+    # createHepJson.create ( f"{dirname}/smodels-database", f"{dirname}/smodels-database/smodels-analyses.json" )
 
     comment( "remove cruft" )
     ## remove cruft
-    rmcmd = "cd %s/smodels-database; " \
+    rmcmd = f"cd %s/smodels-database; " \
             "rm -rf .git .gitignore *.sh *.tar *.pyc; find *.py ! -name 'databaseParticles.py' -type f -exec rm -f {} +" % \
             ( dirname )
     runCmd( rmcmd )
