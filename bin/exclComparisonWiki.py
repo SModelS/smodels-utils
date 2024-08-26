@@ -20,7 +20,11 @@ class ExclComparisonWriter:
     def __init__ ( self, database, addVer, dryrun ):
         self.databasePath = database
         self.database = Database ( database )
+        ## whats the version
         self.ver=self.database.databaseVersion.replace(".","")
+        ## even if we dont write version numbers, we want to
+        ## know whats the version
+        self.actualVer = self.ver
         if not addVer:
             self.ver=""
         self.fname = f"ExclComparison{self.ver}"
@@ -85,7 +89,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             anaUrl = f"https://smodels.github.io/docs/ListOfAnalyses{self.ver}#{anaId}"
             self.f.write ( f"| <a href='{anaUrl}'>{anaId}</a> " )
             self.f.write ( f"| <a href='https://smodels.github.io/docs/SmsDictionary{self.ver}#{txname}'>{txname}</a> " )
-            figPath = f"https://smodels.github.io/validation/{self.ver}/{lpath}"
+            figPath = f"https://smodels.github.io/validation/{self.actualVer}/{lpath}"
             self.f.write ( f'| <a href="{figPath}"><img width="500px" src="{figPath}?{t0}" /></a>' )
             self.f.write ( "\n" )
 
