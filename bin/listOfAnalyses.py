@@ -206,7 +206,7 @@ class Lister:
         for sqrts in [ 13, 8 ]:
             run = 1
             if sqrts == 13: run = 2
-            self.f.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            self.f.write ( f"\n### Run {run} - {sqrts} TeV\n" )
             anas = { "CMS": set(), "ATLAS": set() }
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "efficiency maps", "upper limits" ]:
@@ -215,7 +215,7 @@ class Lister:
                     for ana in a:
                         shortid = removeAnaIdSuffices ( ana.globalInfo.id )
                         anas[exp].add ( shortid )
-            self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
+            self.f.write ( f"In total, we have results from {len(anas['ATLAS'])} ATLAS and {len(anas['CMS'])} CMS {sqrts} TeV searches.\n" )
 
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "efficiency maps", "upper limits" ]:
@@ -252,13 +252,13 @@ class Lister:
                     aflim=""
                     llp=""
                     if nfastlim:
-                        flim = " (of which %d FastLim)" % nfastlim
-                        aflim = " (of which %d FastLim)" % a_fastlim
+                        flim = f" (of which {nfastlim} FastLim)"
+                        aflim = f" (of which {a_fastlim} FastLim)"
                     if nres_hscp>0:
                         llp=" (of which %d LLP)" % nres_hscp
                     mapsCountS = ""
                     if "efficiency" in tpe:
-                        mapsCountS = ", %d individual maps" % nMaps
+                        mapsCountS = f", {nMaps} individual maps"
 
                     line = f" * [{exp} {tpe}](#{exp}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n"
                     self.f.write ( line )

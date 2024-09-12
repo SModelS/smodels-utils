@@ -15,7 +15,8 @@ from typing import Union, Text, Dict, List
 
 def removeAnaIdSuffices ( anaId ):
     """ given  analysis id <anaId>, remove all kinds of suffices """
-    for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin" ]:
+    for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
+               "-hino", "-wino" ]:
         anaId = anaId.replace(i,"")
     return anaId
 
