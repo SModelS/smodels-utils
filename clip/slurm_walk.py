@@ -119,6 +119,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( jmax - jmin ) )
+    ram = ram*1.5
     if "comb" in rundir: ## combinations need more RAM
         ram = ram * 1.2
     if "history" in rundir: ## history runs need more RAM
@@ -133,6 +134,8 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     cmd = [ "sbatch" ]
     cmd += [ "--error", f"{outputdir}/walk-%j.out",
              "--output", f"{outputdir}/walk-%j.out" ]
+    cmd += ["--cpus-per-task", "3"]
+    
     qos = "c_short"
     if time > 48:
         qos = "c_long"
