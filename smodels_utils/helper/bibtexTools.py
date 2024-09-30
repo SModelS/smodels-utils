@@ -584,9 +584,7 @@ class BibtexWriter:
         path = os.path.dirname ( __file__ )
         refsfile = f"{path}/refs.bib"
         if os.path.exists ( refsfile ):
-            f=open( refsfile )
-            bibtex=bibtexparser.load ( f )
-            f.close()
+            bibtex=bibtexparser.parse_file ( refsfile )
             biblabels = bibtex.entries_dict.keys()
             labels = self.getLabels ( bibtex )
             if anaid in labels:
