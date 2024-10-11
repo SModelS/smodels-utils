@@ -351,7 +351,7 @@ CMS are for on- and off-shell at once.
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
             if self.add_old:
                 files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
-            if self.ugly or self.isOneDimensional ( txname ):
+            if self.ugly or self.isOneDimensional ( txname ) or len(files)==0:
                 tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
                 if self.add_old:
                     tmp += glob.glob(valDir+"/old/"+txname.txName+"_*.png")
@@ -378,6 +378,10 @@ CMS are for on- and off-shell at once.
                 line += "  |"
             else:
                 line = line[:line.rfind("<<BR>>")] + "|"
+            if False and "CMS-EXO-20-004" in line:
+                print ( "--------" )
+                print ( "figs", files )
+                print ( "line", line )
 
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe, validated ):
