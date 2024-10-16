@@ -227,7 +227,8 @@ class HepJsonCreator:
         first = True
         ver = self.db.databaseVersion
         dotlessver = ver.replace(".","")
-        baseUrl = f"https://smodels.github.io/docs/Validation{dotlessver}#"
+        baseUrl = f"https://smodels.github.io/docs/Validation#"
+        # baseUrl = f"https://smodels.github.io/docs/Validation{dotlessver}#"
         for anaId,entry in entries.items():
             if not "inspire" in entry:
                 continue
