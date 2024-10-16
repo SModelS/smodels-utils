@@ -7,8 +7,10 @@ import os, sys, time
 from typing import Union
 
 class HepJsonCreator:
-    def __init__ ( self ):
-        self.short_version = True
+    def __init__ ( self, long_version ):
+        ## the short version is this super simplistic version that
+        ## hepdata is currently using
+        self.long_version = long_version
 
     def merge ( self, entry1, entry2, anaId ):
         """ merge two entries """
@@ -67,6 +69,9 @@ class HepJsonCreator:
             print ( f"cannot read content for {nr}: {e}" )
             return hepdata
 
+    def short_header ( self ):
+        self.f.write ( "{\n" )
+
     def header( self ):
         """ header of the json file """
         import smodels
@@ -84,6 +89,9 @@ class HepJsonCreator:
         self.f.write ( '        "arXiv": "https://arxiv.org/abs/%s"\n' )
         self.f.write ( '    },\n' )
         self.f.write ( '    "analyses" : {\n' )
+
+    def short_footer ( self ):
+        self.f.write ( '\n}\n' )
 
     def footer(self):
         """ footer of the json file """
@@ -212,6 +220,35 @@ class HepJsonCreator:
             print ( f"[createHepJson] {entry}" )
         return entries
 
+    def short_body( self ):
+        expResList = self.db.getExpResults()
+        entries = self.collectEntries ( expResList )
+        from smodels_utils.helper.various import getSqrts
+        first = True
+        ver = self.db.databaseVersion
+        dotlessver = ver.replace(".","")
+        baseUrl = f"https://smodels.github.io/docs/Validation{dotlessver}#"
+        for anaId,entry in entries.items():
+            if not "inspire" in entry:
+                continue
+            if not first:
+                self.f.write ( ',\n' )
+            inspire = entry["inspire"]
+            self.f.write ( f'        "{inspire}": [\n' )
+
+            resultTypes = entry["resultType"].lower().split(",")
+            validations = []
+            for resultType in resultTypes:
+                validations.append ( f'"{baseUrl}{anaId}_{resultType}"' )
+            for i,validation in enumerate(validations):
+                self.f.write ( f'                {validation}' )
+                isLast = ( i == len(validations)-1 )
+                if not isLast:
+                    self.f.write ( ',' )
+                self.f.write ( '\n' )
+            self.f.write ( "        ]" )
+            first = False
+
     def body( self):
         expResList = self.db.getExpResults()
         entries = self.collectEntries ( expResList )
@@ -265,21 +302,29 @@ class HepJsonCreator:
             sys.exit()
         self.db = Database ( dbpath )
         self.f=open(outputfile,"wt")
-        self.header( )
-        self.body( )
-        self.footer()
+        if self.long_version:
+            self.header( )
+            self.body( )
+            self.footer()
+        else:
+            self.short_header( )
+            self.short_body( )
+            self.short_footer()
         self.f.close()
 
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(description="simple script to create the smodels-analyses.json files" )
     ap.add_argument('-d', '--dbpath',
-            help='path to database [../../smodels-database/]', 
+            help='path to database [../../smodels-database/]',
             default='../../smodels-database/')
     ap.add_argument('-o', '--outputfile',
-            help='path to database [smodels-analyses.json]', 
+            help='path to database [smodels-analyses.json]',
             default='smodels-analyses.json')
+    ap.add_argument('-l', '--long_version',
+            help='create long version, not short',
+            action='store_true' )
     args = ap.parse_args()
     # args.dbpath = "official"
-    creator = HepJsonCreator()
+    creator = HepJsonCreator( args.long_version )
     creator.create( args.dbpath, args.outputfile )
