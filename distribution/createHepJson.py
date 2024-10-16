@@ -5,6 +5,8 @@ to mark SModelS entries at hepdata """
 
 import os, sys, time
 from typing import Union
+from smodels_utils.helper.databaseManipulations import filterFastLimFromList        
+
 
 class HepJsonCreator:
     def __init__ ( self, long_version ):
@@ -135,6 +137,7 @@ class HepJsonCreator:
 
     def collectEntries( self, expResList ) -> dict:
         from smodels_utils.helper.various import getCollaboration
+
         entries = {}
         for i,er in enumerate(expResList):
             gI = er.globalInfo
@@ -222,6 +225,7 @@ class HepJsonCreator:
 
     def short_body( self ):
         expResList = self.db.getExpResults()
+        expResList = filterFastLimFromList ( expResList )
         entries = self.collectEntries ( expResList )
         from smodels_utils.helper.various import getSqrts
         first = True
@@ -252,6 +256,7 @@ class HepJsonCreator:
 
     def body( self):
         expResList = self.db.getExpResults()
+        expResList = filterFastLimFromList ( expResList )
         entries = self.collectEntries ( expResList )
         from smodels_utils.helper.various import getSqrts
         first = True
