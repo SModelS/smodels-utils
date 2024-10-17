@@ -313,8 +313,10 @@ class Lister:
         if "PAS" in ana_name:
             label = "Physics Analysis Summaries"
             label = "PAS"
+            label = "Preliminary result"
         if "CONF" in ana_name:
             label = "Conf Notes"
+            label = "Preliminary result"
         return label
 
     def emptyLine( self, ana_name : Union [ None, str]  = None ):

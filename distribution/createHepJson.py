@@ -242,9 +242,9 @@ class HepJsonCreator:
             self.f.write ( f'        "{inspire}": [\n' )
 
             resultTypes = entry["resultType"].lower().split(",")
-            validations = []
+            validations = set()
             for resultType in resultTypes:
-                validations.append ( f'"{baseUrl}{anaId}"' )
+                validations.add ( f'"{baseUrl}{anaId}"' )
                 #validations.append ( f'"{baseUrl}{anaId}_{resultType}"' )
             for i,validation in enumerate(validations):
                 self.f.write ( f'                {validation}' )
