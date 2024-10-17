@@ -452,9 +452,9 @@ class Lister:
         self.f.write ( f" | {short_desc} | {ana.globalInfo.lumi.asNumber()} | {topos_s} |" )
         if self.includeSuperseded:
             self.f.write ( f"{ssuperseded} |" )
-        hasoUL = self.yesno ( has["oul"] )
-        haseUL = self.yesno ( has["oul"] )
-        hasEM = self.yesno ( has["em"] )
+        hasoUL = self.linkIfYes ( has["oul"], ana.globalInfo.id, "ul" )
+        haseUL = self.linkIfYes ( has["oul"], ana.globalInfo.id, "ul" )
+        hasEM = self.linkIfYes ( has["em"], ana.globalInfo.id, "em" )
         self.f.write ( f" {hasoUL} |" ) 
         if self.likelihoods:
             self.f.write ( f" {haseUL} |" )
@@ -463,6 +463,17 @@ class Lister:
             llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
             self.f.write ( f" {llhd} |" )
         self.f.write ( "\n" )
+
+    def linkIfYes ( self, B : bool, anaId : str, linkTo : str ) -> str:
+        """ if B is True, then link to validation plot
+        :param anaId: analysis Id, e.g. CMS-SUS-20-004
+        :param linkTo: what to link to, e.g. "UL"
+        """
+        if B in [ False, "False" ]: return ""
+        baseUrl = f"https://smodels.github.io/docs/Validation{self.dotlessv}#"
+        if B in [ True, "True" ]: 
+            return f"[&#10004;]({baseUrl}{anaId}_{linkTo})"
+        return f"[?]({baseUrl}{anaId}_{linkTo})"
 
     def yesno ( self, B ):
         if B in [ True, "True" ]: return "&#10004;"

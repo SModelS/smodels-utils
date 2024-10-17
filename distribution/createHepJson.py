@@ -231,8 +231,8 @@ class HepJsonCreator:
         first = True
         ver = self.db.databaseVersion
         dotlessver = ver.replace(".","")
-        baseUrl = f"https://smodels.github.io/docs/Validation#"
-        # baseUrl = f"https://smodels.github.io/docs/Validation{dotlessver}#"
+        baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses#"
+        # baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses{dotlessver}#"
         for anaId,entry in entries.items():
             if not "inspire" in entry:
                 continue
@@ -244,7 +244,8 @@ class HepJsonCreator:
             resultTypes = entry["resultType"].lower().split(",")
             validations = []
             for resultType in resultTypes:
-                validations.append ( f'"{baseUrl}{anaId}_{resultType}"' )
+                validations.append ( f'"{baseUrl}{anaId}"' )
+                #validations.append ( f'"{baseUrl}{anaId}_{resultType}"' )
             for i,validation in enumerate(validations):
                 self.f.write ( f'                {validation}' )
                 isLast = ( i == len(validations)-1 )
