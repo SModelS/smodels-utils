@@ -5,7 +5,8 @@ to mark SModelS entries at hepdata """
 
 import os, sys, time
 from typing import Union
-from smodels_utils.helper.databaseManipulations import filterFastLimFromList        
+from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
+         filterSupersededFromList
 
 
 class HepJsonCreator:
@@ -226,13 +227,17 @@ class HepJsonCreator:
     def short_body( self ):
         expResList = self.db.getExpResults()
         expResList = filterFastLimFromList ( expResList )
+        supersededList = filterSupersededFromList ( expResList, True )
+        superseded = set ( [ x.globalInfo.id for x in supersededList ] )
         entries = self.collectEntries ( expResList )
         from smodels_utils.helper.various import getSqrts
         first = True
         ver = self.db.databaseVersion
         dotlessver = ver.replace(".","")
         baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses#"
+        supersededUrl = f"https://smodels.github.io/docs/ListOfAnalysesWithSuperseded#"
         # baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses{dotlessver}#"
+        # baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses{dotlessver}WithSuperseded#"
         for anaId,entry in entries.items():
             if not "inspire" in entry:
                 continue
@@ -244,7 +249,10 @@ class HepJsonCreator:
             resultTypes = entry["resultType"].lower().split(",")
             validations = set()
             for resultType in resultTypes:
-                validations.add ( f'"{baseUrl}{anaId}"' )
+                if anaId in superseded:
+                    validations.add ( f'"{supersededUrl}{anaId}"' )
+                else:
+                    validations.add ( f'"{baseUrl}{anaId}"' )
                 #validations.append ( f'"{baseUrl}{anaId}_{resultType}"' )
             for i,validation in enumerate(validations):
                 self.f.write ( f'                {validation}' )
