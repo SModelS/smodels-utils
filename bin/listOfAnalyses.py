@@ -474,7 +474,7 @@ class Lister:
         if B in [ False, "False" ]: return ""
         baseUrl = f"https://smodels.github.io/docs/Validation{self.dotlessv}#"
         if B in [ True, "True" ]: 
-            return f"[validation]({baseUrl}{anaId}_{linkTo})"
+            return f"[&#x1F517;]({baseUrl}{anaId}_{linkTo})"
             # return f"[&#10004;]({baseUrl}{anaId}_{linkTo})"
         return f"[?]({baseUrl}{anaId}_{linkTo})"
 
