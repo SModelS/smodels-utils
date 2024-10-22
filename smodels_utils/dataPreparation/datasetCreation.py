@@ -217,7 +217,7 @@ class DatasetsFromLatex:
 
     def getBGAndError ( self, sbg ):
         sbg = sbg.replace("$","" ).replace("{","").replace("}","")
-        sbg = re.sub("\\\\pm\s*([.\d]*)",r"+\1 -\1",sbg) ## replace "\pm x" with "+x -x"
+        sbg = re.sub(r"\\\\pm\s*([.\d]*)",r"+\1 -\1",sbg) ## replace "\pm x" with "+x -x"
         sbg = sbg.replace("+"," ").replace("-"," ").replace("^", " " ).replace("_"," " ) ## remove dollars, brackets
         tokens = sbg.split ()
         tokens = list ( map ( float, tokens ) )
