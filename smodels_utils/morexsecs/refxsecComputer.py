@@ -577,6 +577,7 @@ class RefXSecComputer:
         isEWK=False
         comment = ""
         # comment="refxsec [pb]"
+        print ( "pids", pid1, pid2 )
         if pid1 in [ 1000021 ] and pid2 == pid1:
             filename = "xsecgluino%d.txt" % sqrts
             columns["xsec"]=2
@@ -608,6 +609,10 @@ class RefXSecComputer:
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
+            if ewk == "degenerate":
+                filename = f"xsecEWKdegenerate{sqrts}.txt"
+                comment = "fully degenerate N1, N2, C1"
+                columns["xsec"]=1
         if pid1 in [ 1000022 ] and pid2 in [ 1000023 ]:
             if sqrts == 8:
                 logger.info ( "asking for N2 N1 production for 8 TeV. we only have 13 TeV" )
@@ -662,6 +667,10 @@ class RefXSecComputer:
             filename = "xsecC1C1%d.txt" % sqrts
             pb = False
             order = NLL #3
+        if pid1 in [ -1000024 ] and pid2 in [ 1000023 ] and ewk == "degenerate":
+            ## in this case, the +1000024, 1000023 already contains
+            ## the xsec for C1- N2
+            return None, None, None
         if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
             filename = "xsecslepLslepL%d.txt" % sqrts
@@ -676,6 +685,8 @@ class RefXSecComputer:
             # sys.exit()
         if ewk == "hino":
             filename = filename.replace(".txt","hino.txt" )
+        if ".txt" in ewk:
+            filename = ewk
         if isEWK:
             if comment == "":
                 comment = " (%s)" % ewk
@@ -683,7 +694,7 @@ class RefXSecComputer:
         if self.verbose:
             print ( f"[refxsecComputer] will query {filename}" )
         if not os.path.exists ( path ):
-            logger.error ( "%s missing" % path )
+            logger.error ( f"{path} missing for pids=({pid1},{pid2})" )
             sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
         return xsecs,order,comment
