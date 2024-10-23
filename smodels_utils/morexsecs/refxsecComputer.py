@@ -670,7 +670,9 @@ class RefXSecComputer:
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ] and ewk == "degenerate":
             ## in this case, the +1000024, 1000023 already contains
             ## the xsec for C1- N2
-            return None, None, None
+            filename = f"xsecEWKdegenerate{sqrts}.txt"
+            comment = "fully degenerate N1, N2, C1"
+            columns["xsec"]=1
         if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
             filename = "xsecslepLslepL%d.txt" % sqrts
