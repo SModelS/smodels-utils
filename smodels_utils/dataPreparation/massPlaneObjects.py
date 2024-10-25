@@ -17,6 +17,7 @@ from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
 import string
 import logging
+from typing import Union
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -237,12 +238,13 @@ class MassPlane(object):
             self.addSource(dataLabel,dataFile, dataFormat,
                            objectName, index, unit, coordinate, scale, **args )
 
-    def addSource(self,dataLabel,dataFile,dataFormat=None, objectName=None,index=None,
-                  unit=None,coordinateMap=None,scale=None, **args ):
+    def addSource(self,dataLabel : str,dataFile : str ,dataFormat : str = None, 
+            objectName : str = None, index : Union[int,None] = None,
+                  unit = None, coordinateMap = None, scale=None, **args ):
         """
         Defines a single data sources for the plane.
 
-        :param dataLabel: Srings with the dataLabel
+        :param dataLabel: String with the dataLabel
                           possible data labels are defined in allowedDataLabels
                           (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
         :param dataFile: Strings with the file path to the data file.
@@ -250,12 +252,16 @@ class MassPlane(object):
                            root, csv, embaked. If none, then file extension is
                            format.
         :param objectName: String with the object name stored in root-file or cMacro
-        :param index: Index for objects in listOfPrimitives of ROOT.TCanvas
+        :param index: Index for objects in listOfPrimitives of ROOT.TCanvas,
+                      if string and csv file, it specifies the value of the constraint
+                      (see coordinate map)
         :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...),
                      similar to "scale", can also be used to re-scale the data, either
                      via a '*' or a '/' symbol
         :param coordinateMap: Dictionaries with the mapping of txt file columns
-                            to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})
+                              to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})
+                              'constraint' lists the constraint that needs to match "index",
+                              see index!
         :param scale: Float to re-scale the data
 
         """
