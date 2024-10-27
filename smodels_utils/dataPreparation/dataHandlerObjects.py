@@ -714,10 +714,13 @@ class DataHandler(object):
                     sys.exit()
             values = [] # compute the final return values from these containers
             for y in yields:
-                values.append ( self.createEntryFromYield ( y ) )
+                tmp = self.createEntryFromYield ( y )
+                if tmp != None:
+                    values.append ( tmp )
             self.extendDataToZero ( values )
             for v in values:
-                # print ( "returning v", v, self.coordinateMap )
+                # print ( "returning v", v, "coord map is", self.coordinateMap )
+                # print ( "name", self.index )
                 yield v
 
     def createEntryFromYield ( self, yld : list ) -> list:
@@ -732,6 +735,10 @@ class DataHandler(object):
                 print ( f"[dataHandlerObjects] too high index {self.index} for {yr} in {self.path}" )
                 sys.exit()
             ret = yld[:self.dimensions] + [ yld[self.index] ]
+        if type ( self.index ) in [ str ]:
+            if "constraint" in self.coordinateMap:
+                if yld[self.coordinateMap["constraint"]] != self.index:
+                    ret = None
         return ret
 
 
