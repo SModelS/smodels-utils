@@ -105,7 +105,7 @@ class DataHandler(object):
         if self.name == 'upperLimits' or self.name == 'expectedUpperLimits':
             self._unit = 'pb'
 
-        newCoordinateMap = {} # take out entries with none
+        newCoordinateMap = {} # take out entries with 'None'
         for k,v in coordinateMap.items():
             if v != None:
                 newCoordinateMap[k]=v
@@ -113,9 +113,14 @@ class DataHandler(object):
             len(newCoordinateMap) == self.dimensions+1:
                 coordinateMap = newCoordinateMap
 
+        nCoordinateMap = 0 ## determine length of coordinate map
+        for k,v in coordinateMap.items():
+            if k!="constraint":
+                nCoordinateMap+=1
+
         #Consistency checks:
-        if len(coordinateMap) != self.dimensions+1:
-            logger.error( f"Coordinate map {coordinateMap} (dim {len(coordinateMap)}) is not consistent with number of dimensions ({self.dimensions+1}) in {dataLabel}" )
+        if nCoordinateMap != self.dimensions+1:
+            logger.error( f"Coordinate map {coordinateMap} (dim {nCoordinateMap}) is not consistent with number of dimensions ({self.dimensions+1}) in {dataLabel}" )
             # sys.exit()
         for xy in { "x": x, "y": y, "z": z }.items(): # allow also strings
             if xy[0] in coordinateMap:
@@ -712,6 +717,7 @@ class DataHandler(object):
                 values.append ( self.createEntryFromYield ( y ) )
             self.extendDataToZero ( values )
             for v in values:
+                # print ( "returning v", v, self.coordinateMap )
                 yield v
 
     def createEntryFromYield ( self, yld : list ) -> list:

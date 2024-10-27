@@ -996,8 +996,12 @@ class TxNameInput(Locker):
 
         dataList = []
         for ptDict in dataHandler:
+            nPtDict = 0
+            for k,v in ptDict.items():
+                if k not in [ "constraint", "value" ]:
+                    nPtDict += 1
 
-            if len(ptDict) != nvars+1:
+            if nPtDict != nvars:
                 logger.error( f"Number of free parameters in data ({ptDict}) and in axes ({plane.xvars}) do not match")
                 sys.exit()
 
