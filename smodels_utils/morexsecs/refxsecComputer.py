@@ -382,7 +382,7 @@ class RefXSecComputer:
             # obtain xsecs for all masses, but for the given channel
             # for sqrts in self.sqrtses: # FIXME
             pids = channel["pids"]
-            if pids[1] < pids[0]:
+            if pids[1]!=None and pids[1] < pids[0]:
                 pids = [ pids[1], pids[0] ]
             xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1],
                     sqrts, ewk, channel["masses"] )
@@ -427,12 +427,13 @@ class RefXSecComputer:
 
         # associate production
         associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ), ( 1000023, 1000025 ), ( 1000024, 1000025 ), ( -1000024, 1000025 ) )
+        schannel = ( 35, )
         ## production modes to add that needs two different particles
         ## to be unfrozen
         # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
 
         for pid,mass in masses.items():
-            if pid < 999999:
+            if pid < 999999 and pid not in schannel:
                 continue
             if type(mass) not in [ float, int ]:
                 logger.error ( f"I found a mass of {mass} in {slhafile}, do not know what to do with it." )
@@ -440,6 +441,9 @@ class RefXSecComputer:
             if mass > 5000:
                 continue
 
+            print ( "pid", pid )
+            if pid in schannel:
+                channels.append ( { "pids": (pid,None), "masses": ( mass,None ) } )
             if pid in samesignmodes:
                 channels.append ( { "pids": (pid,pid), "masses": ( mass, mass ) } )
             if pid in oppositesignmodes:
@@ -507,8 +511,12 @@ class RefXSecComputer:
         if type(mass) in [ str ]:
             return float(mass)
         for i in range(len(mass)-1):
-            smass = mass[i]+mass[i+1]
-            if smass > 1e-6 and abs (mass[i]-mass[i+1]) / smass > 1e-3:
+            smass = mass[i]
+            dm = 0
+            if mass[i+1] is not None:
+                smass = mass[i]+mass[i+1]
+                dm = abs ( mass[i]-mass[i+1] )
+            if smass > 1e-6 and dm / smass > 1e-3:
                 return mass
         return mass[0]
 
@@ -578,6 +586,11 @@ class RefXSecComputer:
         comment = ""
         # comment="refxsec [pb]"
         print ( "pids", pid1, pid2 )
+        if pid1 in [ 35 ] and pid2 == None:
+            filename = f"xsecScalar{sqrts}.txt"
+            columns["xsec"]=1
+            isEWK=False
+            order = LO
         if pid1 in [ 1000021 ] and pid2 == pid1:
             filename = "xsecgluino%d.txt" % sqrts
             columns["xsec"]=2
@@ -687,7 +700,7 @@ class RefXSecComputer:
             # sys.exit()
         if ewk == "hino":
             filename = filename.replace(".txt","hino.txt" )
-        if ".txt" in ewk:
+        if ewk is not None and ".txt" in ewk:
             filename = ewk
         if isEWK:
             if comment == "":
