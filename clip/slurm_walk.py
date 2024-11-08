@@ -534,7 +534,10 @@ def getMinJobId() -> int:
     return nmin
 
 def cancelRangeOfRunners( jrange : str ):
-    """ cancel only the jrange of runners """
+    """ cancel only the jrange of runners 
+    :param jrange: ranges of job ids given as string,
+    e.g. 100-102, -98, 120-, 100
+    """ 
     import re
     jrange = jrange.strip(" ")
     if re.search('[a-zA-Z]', jrange) is not None:
@@ -550,9 +553,13 @@ def cancelRangeOfRunners( jrange : str ):
     if p1 == len(jrange)-1: ## range is given as '<min>-'
         maxJobId = getMaxJobId()
         jrange += str(maxJobId)
-    if p1 == 0:
+        cancelRangeOfRunners( jrange )
+        return
+    if p1 == 0: ## range given as '-<max>'
         minJobId = getMinJobId()
         jrange = str(minJobId) + jrange
+        cancelRangeOfRunners( jrange )
+        return
 
     if 0 < p1 < len(jrange)-1:
         # full range given
@@ -572,13 +579,7 @@ def cancelRangeOfRunners( jrange : str ):
         tokens = line.split()
         nr = tokens[0]
         running.append ( int ( nr ) )
-    if p1 == 0:
-        cancelRangeOfRunners( f"{min(running)}-{jrange[p1+1:]}" )
-        return
-    if p1 == len(jrange)-1:
-        cancelRangeOfRunners( f"{jrange[:p1]}-{max(running)}" )
-        return
-    print ( "[slurm_walk] FIXME sth is wrong" )
+    # print ( "[slurm_walk] FIXME sth is wrong" )
 
 
 def main():
