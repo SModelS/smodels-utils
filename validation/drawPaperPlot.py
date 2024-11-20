@@ -77,6 +77,10 @@ def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"],
 
     else:
         fname = f"{anaDir}/validation/SModelS_ExclusionLines.json"
+        if not os.path.exists ( fname ):
+            print ( f"[drawPaperPlot] error: {fname} does not exist!" )
+            return []
+
         file = open(fname,"r")
         excl_file = json.load(file)
         if f"{txname}_comb_{axes}" not in excl_file:
