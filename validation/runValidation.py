@@ -762,6 +762,7 @@ if __name__ == "__main__":
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
+                "useTevatronCLsConstruction": False, ## use tevatron CLs construction
                 "maxcond": 1.0, ## maximum allowed condition violation in SModelS
                 "promptWidth": 1.1, ## particles with width above this value in GeV are considered stable
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)

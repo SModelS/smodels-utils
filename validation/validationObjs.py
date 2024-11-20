@@ -418,7 +418,10 @@ class ValidationPlot():
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
-            f.write ( f"useTevatronCLsConstruction = False\n" )
+            useTevatron = False
+            if "useTevatronCLsConstruction" in self.options:
+                useTevatron = self.options["useTevatronCLsConstruction"]
+            f.write ( f"useTevatronCLsConstruction = {useTevatron}\n" )
             f.write ( f"pyhfbackend = pytorch\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
