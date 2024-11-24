@@ -414,10 +414,6 @@ class ValidationPlot():
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
-            useTevatron = False
-            if "useTevatronCLsConstruction" in self.options:
-                useTevatron = self.options["useTevatronCLsConstruction"]
-            f.write ( f"useTevatronCLsConstruction = {useTevatron}\n" )
             f.write ( f"pyhfbackend = pytorch\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
@@ -436,6 +432,11 @@ class ValidationPlot():
             dataselector = "all"
             if len(self.expRes.datasets)>1:
                 dataselector = "efficiencyMap"
+            f.write ( "[experimentalFeatures]\n" )
+            useTevatron = False
+            if "useTevatronCLsConstruction" in self.options:
+                useTevatron = self.options["useTevatronCLsConstruction"]
+            f.write ( f"tevatroncls = {useTevatron}\n" )
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write("[printer]\noutputFormat = version3\noutputType = python\n")
