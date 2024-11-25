@@ -24,11 +24,12 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull, getDefaultModel
+from validationHelpers import point_in_hull
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
 from smodels.experiment.databaseObj import Database
+from validationObjsBase import ValidationObjsBase
 from sympy import var
 import pyslha
 import string
@@ -38,7 +39,7 @@ logger.setLevel(level=logging.ERROR)
 
 complaints = { "NoResultsFor": 0 }
 
-class ValidationPlot():
+class ValidationPlot( ValidationObjsBase ):
     """
     Encapsulates all the data necessary for creating a single validation plot.
 
@@ -63,6 +64,7 @@ class ValidationPlot():
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
+        super ( ValidationPlot, self ).__init__ ( ) 
         anaID = ExptRes.globalInfo.id
         if databasePath:
             if os.path.isdir(databasePath):
@@ -377,81 +379,6 @@ class ValidationPlot():
             return tgraph
         else:
             return [ tgraph[0] ]
-
-    def getParameterFile(self,tempdir=None):
-        """
-        Creates a temporary parameter file to be passed to runSModelS
-
-        :param tempdir: Temporary folder where the parameter file will be created. Default = current folder.
-        """
-
-        #Get the analysis ID, txname and dataset ID:
-        expId = self.expRes.globalInfo.id
-        txname = self.expRes.getTxNames()[0].txName
-
-        #Get number of cpus:
-        if not hasattr(self, 'ncpus') or not self.ncpus:
-            self.ncpus  = 1
-            if "ncpus" in self.options:
-                self.ncpus = self.options["ncpus"]
-
-        if tempdir is None: tempdir = os.getcwd()
-        parFile = os.path.join ( tempdir, "parameter.ini" )
-        if os.path.exists ( parFile ):
-            logger.warning ( f"weird, parameter file {parFile} already exists?" )
-            parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini' ) # , text=True )
-        pf = open ( parFile, "wt" )
-
-        combine = "False"
-        if self.combine:
-            combine = "True"
-            self.validationType="combine"
-        model = self.options["model"]
-        if model in [ "mssm", "idm", "nmssm", "dgmssm" ]:
-            model = f"share.models.{model}"
-        if model == "default":
-            model = getDefaultModel ( tempdir )
-        with open ( parFile, "w" ) as f:
-            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
-            f.write ( f"combineSRs = {combine}\n" )
-            f.write ( f"pyhfbackend = pytorch\n" )
-            if self.options["keepTopNSRs"] not in  [ None, 0 ]:
-                f.write ( "reportAllSRs = True\n" )
-            sigmacut = 0.000000001
-            minmassgap = 2.0
-            maxcond = 1.0
-            promptWidth=1.1
-            if "sigmacut" in self.options:
-                sigmacut = self.options["sigmacut"]
-            if "minmassgap" in self.options:
-                minmassgap = self.options["minmassgap"]
-            if "maxcond" in self.options:
-                maxcond = self.options["maxcond"]
-            if "promptWidth" in self.options:
-                promptWidth = self.options["promptWidth"]
-            dataselector = "all"
-            if len(self.expRes.datasets)>1:
-                dataselector = "efficiencyMap"
-            f.write ( "[experimentalFeatures]\n" )
-            useTevatron = False
-            if "useTevatronCLsConstruction" in self.options:
-                useTevatron = self.options["useTevatronCLsConstruction"]
-            f.write ( f"tevatroncls = {useTevatron}\n" )
-            f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
-            f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
-            f.write("[printer]\noutputFormat = version3\noutputType = python\n")
-            f.write(f"[particles]\n" )
-            if True: # model != "default":
-                f.write ( f"model={model}\n" )
-            f.write(f"promptWidth={promptWidth}\n" )
-            #expected = "posteriori"
-            #expected = "priori"
-            expected = self.options["expectationType"]
-            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\naddNodesMap=True\n")
-            f.close()
-        # os.close(pf)
-        pf.close()
-        return parFile
 
     def loadData(self, overwrite = True ):
         """
