@@ -9,8 +9,9 @@
 
 """
 import logging
-import os
+import os, time
 from validationHelpers import getDefaultModel
+from typing import Union
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.ERROR)
@@ -103,3 +104,99 @@ class ValidationObjsBase():
         # os.close(pf)
         pf.close()
         return parFile
+
+    def saveData(self,validationDir : Union[None,os.PathLike] =None,
+                 datafile : Union[None,os.PathLike] =None) -> bool:
+        """
+        Saves the data and plot in a text file in the validationDir folder.
+        If the folder does not exist, it will be created.
+        If the folder is not defined the plot will be created in the
+        analysis/validation/ folder
+        If datafile is not define, uses the default naming (Txname_axes.py)
+
+        :param validationDir: Folder where the root file will be saved
+        :param datafile: Name of the data file
+
+        :returns: true, if all worked fine
+        """
+
+        if not hasattr(self,'data') or not self.data:
+            logger.warning("No data found. Nothing will be saved")
+            return False
+
+        if self.options["generateData"] in [ None, "ondemand" ]:
+            nadded = self.loadData ( overwrite = False )
+            logger.info ( f"loaded {len(self.data)} data points" )
+            if nadded == 0:
+                logger.warning("No added points. Nothing will be saved")
+                return False
+
+        validationDir = self.getValidationDir ( validationDir )
+
+        if not datafile:
+            datafile = self.getDataFile(validationDir)
+        self.datafile = datafile
+        lockfile = datafile + ".lock"
+        self.lockFile ( lockfile )
+        print ( f"[validationObjs] saving {len(self.data)} points to {datafile}" )
+        #Save data to file
+        f = open(datafile,'w')
+        dataStr = str(self.data)
+        dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
+        dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        dataStr = dataStr.replace( "}, {" , "},\n{" )
+        if "inf" in dataStr:
+            dataStr = dataStr.replace("inf,","float('inf')," )
+        f.write("validationData = "+dataStr+"\n")
+        from smodels import installation
+        from smodels_utils import SModelSUtils
+        nerr = 0
+        for i in self.data:
+            if "error" in i:
+                nerr += 1
+        dt = round ( ( time.time() - self.t0 ) / 60. / 60., 3 ) ## in hours
+        #hostname = "unknown"
+        import socket
+        hostname = socket.gethostname()
+        meta = { "smodelsver": installation.version(), "axes": self.axes,
+                 "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
+                 "expectationType": self.options["expectationType"],
+                 "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if hasattr ( self.expRes.globalInfo, "includeCRs" ):
+            meta["includeCRs"]=self.expRes.globalInfo.includeCRs
+        if os.path.exists ( f"{validationDir}/../validation_commentary.txt" ):
+            with open( f"{validationDir}/../validation_commentary.txt","rt") as f2:
+                txt=f2.read().strip()
+                f2.close()
+                meta["commentary"]=txt
+        if hasattr ( self.expRes.globalInfo, "resultType" ):
+            meta["resultType"]=self.expRes.globalInfo.resultType
+        from smodels.matching import theoryPrediction
+        if "spey" in theoryPrediction.StatsComputer.__module__:
+            import spey
+            meta["spey"]=spey.__version__
+        if hasattr ( self, "pointsInTarFile" ):
+            meta["nmax"]=self.pointsInTarFile
+        meta["host"]=hostname
+        meta["nSRs"]=len ( self.expRes.datasets )
+        if hasattr ( self, "meta" ):
+            if "runs" in self.meta:
+                meta["runs"] = self.meta["runs"]
+            if 'dt[h]' in self.meta:
+                dt = round ( dt + self.meta["dt[h]"], 3 )
+                meta["dt[h]"] = dt
+        if not "runs" in meta:
+            meta["runs"]=f"{len(self.data)}"
+        if hasattr ( self, "ncpus" ):
+            meta["ncpus"]=self.ncpus
+        if self.namedTarball != None:
+            meta["namedTarball"]=self.namedTarball
+        meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
+        from smodels.base.runtime import experimentalFeature
+        meta["tevatroncls"]= experimentalFeature ( "tevatroncls" )
+        f.write( f"meta = {str(meta)}\n" )
+        f.close()
+        self.unlockFile ( lockfile )
+
+        return True
+
