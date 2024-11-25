@@ -952,7 +952,7 @@ class ValidationPlot( ValidationObjsBase ):
 
 
         #Get parameter file:
-        parameterFile = self.getParameterFile(tempdir=outputDir)
+        parameterFile = self.getParameterFile(tempdir=outputDir,outputformat=2)
         if os.path.isfile ( self.slhaDir ):
             logger.info( f"tarball {self.slhaDir}" )
         else:

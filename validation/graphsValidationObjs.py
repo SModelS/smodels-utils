@@ -783,7 +783,7 @@ class ValidationPlot( ValidationObjsBase ):
         self.outputDir = outputDir
 
         #Get parameter file:
-        parameterFile = self.getParameterFile(tempdir=outputDir)
+        parameterFile = self.getParameterFile(tempdir=outputDir,outputformat=3)
         logger.info( f"SLHA dir {self.slhaDir}" )
         logger.info( f"Parameter file: {parameterFile}" )
 

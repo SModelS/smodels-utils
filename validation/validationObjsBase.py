@@ -21,11 +21,15 @@ class ValidationObjsBase():
     of their code.
     """
 
-    def getParameterFile(self,tempdir : str = None ) -> str:
+    def getParameterFile(self,tempdir : str = None,
+           outputformat : int = 3 ) -> str:
         """
         Creates a temporary parameter file to be passed to runSModelS
 
         :param tempdir: Temporary folder where the parameter file will be created. Default = current folder.
+        :param outputformat: is it v2 or v3 type output?
+
+        :returns: name of temporary parameter file
         """
 
         #Get the analysis ID, txname and dataset ID:
@@ -83,7 +87,7 @@ class ValidationObjsBase():
             f.write ( f"tevatroncls = {useTevatron}\n" )
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
-            f.write("[printer]\noutputFormat = version2\noutputType = python\n")
+            f.write(f"[printer]\noutputFormat = version{outputformat}\noutputType = python\n")
             f.write(f"[particles]\n")
             if not "share.models" in model:
                 model = f"share.models.{model}"
@@ -93,6 +97,8 @@ class ValidationObjsBase():
             #expected = "priori"
             expected = self.options["expectationType"]
             f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
+            if outputformat == 3:
+                f.write ( "addNodesMap=True\n" )
             f.close()
         # os.close(pf)
         pf.close()
