@@ -192,8 +192,12 @@ class ValidationObjsBase():
         if self.namedTarball != None:
             meta["namedTarball"]=self.namedTarball
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
-        from smodels.base.runtime import experimentalFeature
-        meta["tevatroncls"]= experimentalFeature ( "tevatroncls" )
+        meta["tevatroncls"]= False
+        try:
+            from smodels.base.runtime import experimentalFeature
+            meta["tevatroncls"]= experimentalFeature ( "tevatroncls" )
+        except Exception as e:
+            print ( f"[validationOjbsBase] experimentalFeature not yet available. its ok we can skip this" )
         f.write( f"meta = {str(meta)}\n" )
         f.close()
         self.unlockFile ( lockfile )
