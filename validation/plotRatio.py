@@ -235,7 +235,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         if h in effs.keys():
             eff1 = effs[h]
         hasResult = False
-        if not plotEfficiencies and r1 and r1>0. and "UL" in point:
+        if not plotEfficiencies and r1 and r1>0. and "UL" in point and point["UL"] != None:
             r2 = point["signal"] / point["UL"]
             # ul2 = point["signal"] / point["UL"]
             ratio = float("nan")
