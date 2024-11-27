@@ -17,6 +17,8 @@ widthOfStableParticles = 1e-25
 
 def showPlot ( filename ):
     """ we were asked to also show <filename> """
+    if not os.path.exists ( filename ):
+        return
     term = os.environ["TERM"]
     import subprocess, distutils.spawn
     for viewer in [ "timg", "see", "display" ]:
