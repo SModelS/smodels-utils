@@ -241,10 +241,12 @@ def getExtremeValue(excl_line, extreme, type, width=False):
                 mini = min(mini, min(excl_line))
             return mini
 
-def drawPrettyPaperPlot(validationPlot):
+def drawPrettyPaperPlot(validationPlot) -> list:
     """
     Function which holds the generalised plotting parameters
     :param validationPlot: validationPlot object
+
+    :returns: filenames of plots
     """
     #get info about the analysis and txname from validationPlot
     analysis = validationPlot.expRes.globalInfo.id
@@ -526,6 +528,7 @@ def drawPrettyPaperPlot(validationPlot):
     for a in axes: fig_axes_title += str(a) + '_'
     fig_axes_title = fig_axes_title.replace('x-y', 'y')
     fig_axes_title = fig_axes_title.replace('00', '0')
+    outfiles = []
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"
     print ( f"[drawPaperPlot] saving to {ansi.YELLOW}{outfile}{ansi.RESET}" )
@@ -533,7 +536,7 @@ def drawPrettyPaperPlot(validationPlot):
     plt.clf()
     plt.rcdefaults()
     plt.close()
-    
+    outfiles.append ( outfile ) 
     
     #--------expected plot-------
     plt.rcParams['text.usetex'] = True
@@ -628,4 +631,6 @@ def drawPrettyPaperPlot(validationPlot):
     plt.clf()
     plt.rcdefaults()
     plt.close()
+    outfiles.append ( outfile )
+    return outfiles
         

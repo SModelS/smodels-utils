@@ -8,11 +8,32 @@
 
 """
 
+import os
 from typing import Union, List, Dict, Text
 
 ## what do we set the width of stable particles to,
 ## for plotting?
 widthOfStableParticles = 1e-25
+
+def showPlot ( filename ):
+    """ we were asked to also show <filename> """
+    term = os.environ["TERM"]
+    import subprocess, distutils.spawn
+    for viewer in [ "timg", "see", "display" ]:
+        v = distutils.spawn.find_executable( viewer, "/bin:/usr/bin:/usr/sbin:/usr/local/bin"  )
+        if viewer == "timg" and os.path.exists ( "/bin/timg" ):
+            # override python install
+            v = "/bin/timg"
+        if not v:
+            continue
+        if viewer == "timg" and term == "xterm-kitty":
+            v += " -pkitty "
+        cmd = f"{v} {filename}"
+        o = subprocess.getoutput ( cmd )
+        print ( f"{cmd}" )
+        print ( f"{o}" )
+        return
+
 
 def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
     """ determine whether a given axis is v2-type ([[x,y],[x,y]]) or v3-type

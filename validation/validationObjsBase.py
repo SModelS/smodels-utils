@@ -10,7 +10,7 @@
 """
 import logging
 import os, time
-from validationHelpers import getDefaultModel
+from validationHelpers import getDefaultModel, showPlot
 from typing import Union
 
 logger = logging.getLogger(__name__)
@@ -203,4 +203,11 @@ class ValidationObjsBase():
         self.unlockFile ( lockfile )
 
         return True
+
+    def show ( self, filename ):
+        """ we were asked to also show <filename> """
+        term = os.environ["TERM"]
+        if not self.options["show"]: #  or not term == "xterm-kitty":
+            return
+        showPlot ( filename )
 

@@ -109,7 +109,11 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.toPdf()
     if options["drawPaperPlot"]:
         from drawPaperPlot import drawPrettyPaperPlot
-        drawPrettyPaperPlot(valPlot)
+        of = drawPrettyPaperPlot(valPlot)
+        if options["show"]:
+            from validationHelpers import showPlot 
+            for f in of:
+                showPlot ( f )
     return valPlot
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):

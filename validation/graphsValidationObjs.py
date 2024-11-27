@@ -1289,24 +1289,6 @@ class ValidationPlot( ValidationObjsBase ):
                    looseness = 1.2, options = options )
         self.pretty = True
 
-    def show ( self, filename ):
-        """ we were asked to also show <filename> """
-        term = os.environ["TERM"]
-        if not self.options["show"]: # or not term == "xterm-kitty":
-            return
-        import subprocess, distutils.spawn
-        for viewer in [ "timg", "see", "display" ]:
-            v = distutils.spawn.find_executable( viewer, "/bin:/usr/bin:/usr/sbin:/usr/local/bin" )
-            if not v:
-                continue
-            if viewer == "timg" and term == "xterm-kitty":
-                v += " -p kitty "
-            cmd = f"{v} {filename}"
-            o = subprocess.getoutput ( cmd )
-            print ( f"{cmd}" )
-            print ( f"{o}" )
-            return
-
     def savefig ( self, filename ):
         """ save the figure, never mind if root or matplotlib """
         if hasattr ( self.plot, "Print" ):
