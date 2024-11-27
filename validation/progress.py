@@ -11,7 +11,15 @@ from tqdm import tqdm
 from typing import Dict, Union
 
 class Progress:
-    def __init__ ( self, dirs : Union[None,str] = None ):
+    def __init__ ( self, dirs : Union[None,str] = None, 
+                   waitForDirs : bool = True ):
+        """ initialise, and start.
+        :param dirs: if None, look for _V* and tmp* directories, else
+        consider only the directories given.
+        :param waitForDirs: if true, then wait for directories to appear.
+        if false, stop, if no directories found
+        """
+        self.waitForDirs = waitForDirs
         self.previous = {}
         self.stats = {}
         self.parse( dirs )
@@ -36,6 +44,8 @@ class Progress:
         ctr = 0
         while len(dirs)==0:
             t = (2.+ctr)**2
+            if not self.waitForDirs: 
+                return # asked to _not_ wait
             print ( f"[progress] could not find any usual directories. will wait for {t:.0f}s" )
             ctr+=1
             time.sleep ( t )

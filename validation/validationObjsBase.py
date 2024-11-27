@@ -9,7 +9,7 @@
 
 """
 import logging
-import os, time
+import os, time, sys
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
 from typing import Union
@@ -137,6 +137,14 @@ class ValidationObjsBase():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
+        if False: ## this is currently not working
+            pid = os.fork()
+            if pid == 0: ## child process
+                dirname = os.path.basename ( self.currentSLHADir )
+                print ( f"@@0 child process, will need to run progress bar for {dirname}" )
+                from progress import Progress
+                p = Progress ( dirname, False )
+                sys.exit()
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
