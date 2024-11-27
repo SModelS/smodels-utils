@@ -35,6 +35,8 @@ def showPlot ( filename : str ) -> bool:
         cmd = f"{v} {filename}"
         o = subprocess.getoutput ( cmd )
         print ( f"[showPlot] {cmd}" )
+        import time ## need to wait a little
+        time.sleep(.5)
         print ( f"{o}" )
         return True
     return False
