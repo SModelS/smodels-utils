@@ -11,6 +11,7 @@
 import logging
 import os, time
 from validationHelpers import getDefaultModel, showPlot
+from smodels.matching import modelTester
 from typing import Union
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,113 @@ class ValidationObjsBase():
         import subprocess
         o = subprocess.getoutput ( command )
         # print ( "toPdf", command, o )
+
+    def runSModelS ( self, outputformat : int = 3 ) -> list:
+        """ run SModelS proper 
+        :param outputformat: define if the output is v2 or v3
+        :returns: list of slha files that we ran over (is this true?)
+        """
+
+        self.getSLHAdir()  #Path to the folder containing the SLHA files
+        logger.debug( f"SLHA files for validation at {self.currentSLHADir}" )
+
+        #Get list of input files to be tested
+        try:
+            fileList, inDir = modelTester.getAllInputFiles(self.currentSLHADir)
+        except Exception: ## old version?
+            fileList = modelTester.getAllInputFiles(self.currentSLHADir)
+            inDir = slhaDir
+        if self.options["generateData"]==None:
+            self.loadData()
+            tmp = []
+            countSkipped = 0
+            for f in fileList:
+                if f.endswith ( ".tar.gz" ):
+                    continue
+                bf = os.path.basename ( f )
+                if self.slhafileInData ( bf ):
+                    countSkipped += 1
+                else:
+                    tmp.append ( f )
+            if countSkipped > 0:
+                logger.info ( f"skipped a total of {countSkipped} points that are already in final dictionary: generateData was set to 'ondemand'." )
+            fileList = tmp
+        else:
+            self.data = []
+
+        #Set temporary outputdir:
+        outputDir = os.path.join ( self.currentSLHADir, "results" )
+        if os.path.exists ( outputDir ):
+            if self.options["generateData"] == None:
+                logger.info ( f"results folder exists already, and generateData is ondemand, so will use them" )
+            else:
+                if self.options["generateData"]==True:
+                    logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Removing {outputDir}!" )
+                    shutil.rmtree ( outputDir )
+                    os.mkdir ( outputDir )
+                else:
+                    outputDir = tempfile.mkdtemp(dir=self.currentSLHADir,prefix='results_')
+                    logger.warning ( f"weird, {outputDir} already exists, and generateData is {self.options['generateData']}? Creating new results folder {outputDir}" )
+        else:
+            os.mkdir ( outputDir )
+
+        if self.options["generateData"]==None:
+            self.loadData()
+            tmp = []
+            countSkipped = 0
+            countSLHAFileInData = 0
+            countResultExists = 0
+            for f in fileList:
+                if f.endswith ( ".tar.gz" ):
+                    continue
+                if f in [ "results", "coordinates", "comment" ]:
+                    continue
+                bf = os.path.basename ( f )
+                if self.slhafileInData ( bf ):
+                    countSkipped += 1
+                    countSLHAFileInData += 1
+                elif self.resultExistsAlready ( bf ):
+                    self.addResultToData ( bf, f"{outputDir}/{bf}.py" )
+                    countSkipped += 1
+                    countResultExists += 1
+                else:
+                    tmp.append ( f )
+            if countSkipped > 0:
+                logger.info ( f"skipped a total of {countSkipped} points that are in temporary folder: generateData was set to 'ondemand'." )
+                logger.info ( f" -> {countSLHAFileInData} points are already in final validation dictionary, for {countResultExists} points a file exists in the temporary results folder." )
+                # lets randomize in these cases, so we can somewhat parallelize
+                # FIXME it would be better if we locked individual slha files
+            import random
+            random.shuffle ( tmp )
+            fileList = tmp
+        else:
+            self.data = []
+
+        self.outputDir = outputDir
+
+        #Get parameter file:
+        parameterFile = self.getParameterFile(tempdir=outputDir,outputformat=outputformat)
+        logger.info( f"SLHA dir {self.slhaDir}" )
+        logger.info( f"Parameter file: {parameterFile}" )
+
+        #Read and check parameter file, exit parameterFile does not exist
+        parser = modelTester.getParameters(parameterFile)
+
+        #Select the desired experimental result
+        listOfExpRes = [self.expRes]
+
+        """ Test all input points """
+        validationFolder = "validation"
+        if "validationFolder" in self.options:
+            validationFolder = self.options["validationFolder"]
+        timeOut = 5000
+        if "timeOut" in self.options:
+            timeOut = self.options["timeOut"]
+        self.willRun = self.addToListOfRunningFiles ( fileList )
+        modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
+                               timeOut, False, parameterFile )
+        self.removeFromListOfRunningFiles ( )
+        return fileList
 
     def getParameterFile(self,tempdir : str = None,
            outputformat : int = 3 ) -> str:
