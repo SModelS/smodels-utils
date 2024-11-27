@@ -295,6 +295,9 @@ def drawPrettyPaperPlot(validationPlot) -> list:
             bestSR = False
             return
     crDir = anaDir.replace("-eff","-CR")
+    if not os.path.exists ( crDir ):
+        crDir = anaDir.replace("-eff","-orig")
+
     cr_excl = None
     if os.path.exists ( crDir ):
         cr_excl = getCurveFromJson (crDir, txname, type="combined", axes=axes, eval_axes=eval_axes)
@@ -504,14 +507,16 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if cr_excl is not None:
         x_vals = cr_excl["obs_excl"]["x"]
         y_vals = cr_excl["obs_excl"]["y"]
+        label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}")
+            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
-        else:ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}")
+        else:
+            ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label)
 
     if 'Gamma' in y_label: ax.set_yscale('log')
     if massg != "":plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
@@ -613,14 +618,15 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if cr_excl is not None:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
+        label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}")
+            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
-        else:ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}")
+        else:ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label )
     
     if 'Gamma' in y_label: ax.set_yscale('log')
     
