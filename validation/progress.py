@@ -8,17 +8,25 @@
 
 import glob, time, sys
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, Union
 
 class Progress:
-    def __init__ ( self ):
+    def __init__ ( self, dirs : Union[None,str] = None ):
         self.previous = {}
         self.stats = {}
+        self.parse( dirs )
         self.show()
 
-    def parse( self ):
-        dirs = glob.glob ( "_V*" )
-        dirs += glob.glob ( "tmp*" )
+    def parse( self, dirs : Union[None,str] = None ):
+        """ parse for directories
+        :param dirs: if None, look for _V* and tmp* directories, else
+        consider only the directories given.
+        """
+        if dirs == None:
+            dirs = glob.glob ( "_V*" )
+            dirs += glob.glob ( "tmp*" )
+        elif "*" in dirs or "?" in dirs:
+            dirs = glob.glob ( dirs )
         ndirs = []
         for d in dirs:
             if d.endswith ( ".ini" ) or d.endswith ( ".py" ) or d.endswith(".png"):
@@ -62,7 +70,6 @@ class Progress:
         self.tqdms[name]=n
 
     def show( self ):
-        self.parse()
         # self.pprint()
         self.tqdms = {}
         for i,(k,v) in enumerate ( self.stats.items() ):
