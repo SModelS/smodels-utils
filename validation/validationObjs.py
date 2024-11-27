@@ -1079,18 +1079,6 @@ class ValidationPlot( ValidationObjsBase ):
         if hasattr ( self.plot, "savefig" ):
             self.plot.savefig(filename)
 
-    def toPdf ( self, validationDir=None ):
-        """ convert from png to pdf (new, for uproot) """
-        vDir = self.getValidationDir ( validationDir )
-        oldfilename = self.getPlotFileName(vDir,"png")
-        if self.pretty:
-            oldfilename = oldfilename.replace('.png','_pretty.png')
-        newfilename = oldfilename.replace(".png",".pdf")
-        command = f"convert {oldfilename} {newfilename}"
-        import subprocess
-        o = subprocess.getoutput ( command )
-        # print ( "toPdf", command, o )
-
     def savePlot(self,validationDir=None,fformat='png'):
         """
         Saves the plot in the format specified in the validationDir folder.

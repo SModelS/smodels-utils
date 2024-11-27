@@ -22,6 +22,18 @@ class ValidationObjsBase():
     of their code.
     """
 
+    def toPdf ( self, validationDir : str = None ):
+        """ convert from png to pdf (new, for uproot) """
+        vDir = self.getValidationDir ( validationDir )
+        oldfilename = self.getPlotFileName(vDir,"png")
+        if self.pretty:
+            oldfilename = oldfilename.replace('.png','_pretty.png')
+        newfilename = oldfilename.replace(".png",".pdf")
+        command = f"convert {oldfilename} {newfilename}"
+        import subprocess
+        o = subprocess.getoutput ( command )
+        # print ( "toPdf", command, o )
+
     def getParameterFile(self,tempdir : str = None,
            outputformat : int = 3 ) -> str:
         """
