@@ -295,8 +295,10 @@ def drawPrettyPaperPlot(validationPlot) -> list:
             bestSR = False
             return
     crDir = anaDir.replace("-eff","-CR")
+    cr_is = "CR"
     if not os.path.exists ( crDir ):
         crDir = anaDir.replace("-eff","-orig")
+        cr_is = "orig"
 
     cr_excl = None
     if os.path.exists ( crDir ):
@@ -491,23 +493,28 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
         y_vals = comb_excl["obs_excl"]["y"]
+        label = f"SModelS: comb. {num_sr} SRs {ver}"
+        if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
+            label = f"SModelS: NN {num_sr} SRs {ver}"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = f"SModelS: comb. {num_sr} SRs {ver}")
+            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
             sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
             # print("yes gamma 3")
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
-        else:ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = f"SModelS: comb. {num_sr} SRs {ver}")
+        else:ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
 
     if cr_excl is not None:
         x_vals = cr_excl["obs_excl"]["x"]
         y_vals = cr_excl["obs_excl"]["y"]
         label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
+        if cr_is == "orig":
+            label = f"SModelS: orig pyhf {num_cr} SRs+CRs {ver}"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -607,18 +614,23 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if combSR:
         x_vals = comb_excl["exp_excl"]["x"]
         y_vals = comb_excl["exp_excl"]["y"]
+        label = f"SModelS: comb. {num_sr} SRs {ver}"
+        if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
+            label = f"SModelS: NN {num_sr} SRs {ver}"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = f"SModelS: comb. {num_sr} SRs {ver}")
+            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
-        else:ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = f"SModelS: comb. {num_sr} SRs {ver}")
+        else:ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
     if cr_excl is not None:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
         label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
+        if cr_is == "orig":
+            label = f"SModelS: orig pyhf {num_cr} SRs+CRs {ver}"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]

@@ -15,10 +15,12 @@ from typing import Union, List, Dict, Text
 ## for plotting?
 widthOfStableParticles = 1e-25
 
-def showPlot ( filename ):
-    """ we were asked to also show <filename> """
+def showPlot ( filename : str ) -> bool:
+    """ we were asked to also show <filename>
+    :returns: true if succesful
+    """
     if not os.path.exists ( filename ):
-        return
+        return False
     term = os.environ["TERM"]
     import subprocess, distutils.spawn
     for viewer in [ "timg", "see", "display" ]:
@@ -32,9 +34,10 @@ def showPlot ( filename ):
             v += " -pkitty "
         cmd = f"{v} {filename}"
         o = subprocess.getoutput ( cmd )
-        print ( f"{cmd}" )
+        print ( f"[showPlot] {cmd}" )
         print ( f"{o}" )
-        return
+        return True
+    return False
 
 
 def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
@@ -61,7 +64,7 @@ def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
 def getDefaultModel ( tempdir : str ) -> str:
     """
     given the temp directory with the slha files,
-	  find out what model is a good default. if qnumbers are in the 
+	  find out what model is a good default. if qnumbers are in the
     slha files, then we use the first slha file as the model definition,
     else 'mssm'.
 
