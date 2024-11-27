@@ -470,15 +470,17 @@ def drawPrettyPaperPlot(validationPlot) -> list:
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
+            if len(x_vals)>0:
+                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
             #sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
             #sec_ax.set_ylabel(r"$\tau$ (s)", fontsize=12)
             #sec_ax.set_yscale('log')
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
         else:
-            ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
+            if len(x_vals)>0:
+                ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
             
@@ -583,15 +585,17 @@ def drawPrettyPaperPlot(validationPlot) -> list:
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
+            if len(x_vals)>0:
+                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
             sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
         else:
-            ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
+            if len(x_vals)>0:
+                ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 
