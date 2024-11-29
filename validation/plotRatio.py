@@ -64,7 +64,7 @@ def addDefaults ( options ):
                  "efficiencies": False, "ymin": None, "ymax": None, "zmin": None,
                  "zmax": None, "title": None, "output": "ratios_@a_@t@sr.png",
                  "label1": None, "label2": None, "show": False, "meta": False,
-                 "copy": False, "SR": None
+                 "copy": False, "SR": None, "comment": None
                 }
     defaults.update(options)
     return defaults
@@ -123,6 +123,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     :option xlabel: label on x axis, default: x [GeV]
     :option ylabel: label on y axis, default: y [GeV]
     :option show: show plot in terminal
+    :option comment: a possible comment to be added to the plot
     """
     plt.clf()
     options = addDefaults ( options )
@@ -514,6 +515,9 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     plt.text ( .80, .025, f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$",
             transform=fig.transFigure, c="grey", fontsize=12  )
+    if options["comment"] not in [ None, "" ]:
+        plt.text ( .1, .025, options["comment"], transform=fig.transFigure, 
+                   c="grey", fontsize=12  )
     print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
         plt.legend()

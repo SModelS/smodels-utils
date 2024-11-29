@@ -170,7 +170,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
        axis ):
     """ check if we should plot a ratio plot. plot, if we should
     :param txname: the txname
-    :param combine: is a a combined result that is asked for?
+    :param combine: is it a combined result that is asked for?
     :param db: the database
     :param datafile: validation file
     :returns: True, if ratioplots were created, else False
@@ -214,7 +214,6 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         options["label2"]="original"
     else:
         ana2 = ana2.replace("-orig","")
-    #print ( f"@@try out {ana2origtest} {os.path.exists(ana2origtest)}" )
         valfile2 = valfile1.replace("_combined","")
     #options["zmin"]=0.
     #options["zmax"]=2.
@@ -234,6 +233,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         if "folder2" in options and options["folder2"]!="validation":
             cmd += f" -f2 {options['folder2']}"
         print ( f"{cmd}" )
+    options["comment"]=opts["ratio_comment"]
     plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
     return True
 
@@ -762,6 +762,7 @@ if __name__ == "__main__":
                 "pdfPlots": True, ## also pdf plots?
                 "significances": False, ## significance plot instead of ul plot?
                 "continue": False, ## continue old productions
+                "ratio_comment": None, ## comment in ratio plot
                 "expectationType": "posteriori",
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
