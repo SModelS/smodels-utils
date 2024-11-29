@@ -24,6 +24,7 @@ from smodels_utils.helper.various import getValidationDataPathName
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
 from validation.plottingFuncs import convertNewAxes
+from colorama import Fore as ansi
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -518,7 +519,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     if options["comment"] not in [ None, "" ]:
         plt.text ( .1, .025, options["comment"], transform=fig.transFigure, 
                    c="grey", fontsize=12  )
-    print ( f"[plotRatio] Saving to {figname}" )
+    print ( f"[plotRatio] Saving to {ansi.YELLOW}{figname}{ansi.RESET}" )
     if hasLegend:
         plt.legend()
     try:
@@ -633,6 +634,9 @@ def main():
     argparser.add_argument ( "-Y", "--ymax",
             help="maximum y value, None means auto [None]",
             type=float, default=None )
+    argparser.add_argument ( "--comment",
+            help="add a comment to the plot [None]",
+            type=str, default=None )
     argparser.add_argument ( "-d", "--dbpath",
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
