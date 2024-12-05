@@ -209,11 +209,12 @@ class ValidationObjsBase():
             dataselector = "all"
             if len(self.expRes.datasets)>1:
                 dataselector = "efficiencyMap"
-            f.write(f"[experimentalFeatures]\n" )
             useTevatron = False
             if "useTevatronCLsConstruction" in self.options:
                 useTevatron = self.options["useTevatronCLsConstruction"]
-            f.write ( f"tevatroncls = {useTevatron}\n" )
+            if useTevatron:
+                f.write(f"[experimentalFeatures]\n" )
+                f.write ( f"tevatroncls = {useTevatron}\n" )
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write(f"[printer]\noutputFormat = version{outputformat}\noutputType = python\n")
