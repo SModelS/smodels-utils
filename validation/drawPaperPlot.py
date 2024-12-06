@@ -15,7 +15,7 @@ from validationHelpers import getAxisType, prettyAxes, translateAxisV2
 import matplotlib.ticker as ticker
 from colorama import Fore as ansi
 
-def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"], 
+def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"], 
                       axes=None, eval_axes=True ):
     """
     Get Exclusion Curve from official and SModelS json files
@@ -76,10 +76,11 @@ def getCurveFromJson( anaDir, txname, type=["official", "bestSR", "combined"],
                 exp_excl_y = excl_file[txname][f"expExclusion_{axes}"]['y']
 
     else:
-        fname = f"{anaDir}/validation/SModelS_ExclusionLines.json"
+        fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
         if not os.path.exists ( fname ):
             print ( f"[drawPaperPlot] error: {fname} does not exist!" )
             return []
+        print ( f"[drawPaperPlot] got exclusion curve from {fname}" )
 
         file = open(fname,"r")
         excl_file = json.load(file)
@@ -251,6 +252,7 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     #get info about the analysis and txname from validationPlot
     analysis = validationPlot.expRes.globalInfo.id
     vDir = validationPlot.getValidationDir (validationDir=None)
+    validationFolder = os.path.basename ( vDir )
     anaDir = os.path.dirname(vDir)
     txname = validationPlot.txName
     axes = validationPlot.axes
@@ -275,21 +277,21 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
     if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
     if offshell:
-        off_excl = getCurveFromJson(anaDir, txname, type="official", axes = axes_on)
-        off_excl_offshell = getCurveFromJson(anaDir, txnameOff, type="official", axes = axes)
+        off_excl = getCurveFromJson(anaDir, validationFolder, txname, type="official", axes = axes_on)
+        off_excl_offshell = getCurveFromJson(anaDir, validationFolder, txnameOff, type="official", axes = axes)
         off_excl = drawOffshell(off_excl, off_excl_offshell, official=True)
-    else: off_excl = getCurveFromJson(anaDir, txname, type="official", axes = axes, eval_axes=eval_axes)
+    else: off_excl = getCurveFromJson(anaDir, validationFolder, txname, type="official", axes = axes, eval_axes=eval_axes)
     
     bestSR, combSR = True, True
     if offshell:
-        bestSR_excl = getCurveFromJson(anaDir, txname, type="bestSR", axes=axes_on)
-        bestSR_excl_off = getCurveFromJson(anaDir, txnameOff, type="bestSR", axes=axes)
+        bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname, type="bestSR", axes=axes_on)
+        bestSR_excl_off = getCurveFromJson(anaDir, validationFolder, txnameOff, type="bestSR", axes=axes)
         if not bestSR_excl_off:
             print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
             return
         bestSR_excl = drawOffshell(bestSR_excl, bestSR_excl_off)
     else:
-        bestSR_excl = getCurveFromJson(anaDir, txname, type="bestSR", axes=axes, eval_axes=eval_axes)
+        bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname, type="bestSR", axes=axes, eval_axes=eval_axes)
         if not bestSR_excl:
             print(f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txname}:{axes}.")
             bestSR = False
@@ -302,23 +304,24 @@ def drawPrettyPaperPlot(validationPlot) -> list:
 
     cr_excl = None
     if os.path.exists ( crDir ):
-        cr_excl = getCurveFromJson (crDir, txname, type="combined", axes=axes, eval_axes=eval_axes)
+        cr_excl = getCurveFromJson (crDir, validationFolder, txname, type="combined", axes=axes, eval_axes=eval_axes)
         print ( f"[drawPaperPlot] found curve for {crDir}!" )
 
 
     if offshell:
-        comb_excl = getCurveFromJson(anaDir, txname, type="combined", axes=axes_on)
-        comb_excl_off = getCurveFromJson(anaDir, txnameOff, type="combined", axes=axes)
+        comb_excl = getCurveFromJson(anaDir, validationFolder, txname, type="combined", axes=axes_on)
+        comb_excl_off = getCurveFromJson(anaDir, validationFolder, txnameOff, type="combined", axes=axes)
         if not comb_excl_off:
             print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
             return
         comb_excl = drawOffshell(comb_excl, comb_excl_off)
     else:
-        comb_excl = getCurveFromJson(anaDir, txname, type="combined", axes=axes, eval_axes=eval_axes)
+        comb_excl = getCurveFromJson(anaDir, validationFolder, txname, type="combined", axes=axes, eval_axes=eval_axes)
         if not comb_excl:
-            print("[drawPrettyPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
+            print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
             combSR = False
             return
+        print( f"[drawPaperPlot] got combined curve from {anaDir}" )
 
  
     #get the range of x values in obs and exp curves to set lim on plot ranges. low limit on y axes usually 0 for plot (except for width plots)
