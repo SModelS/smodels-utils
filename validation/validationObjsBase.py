@@ -9,7 +9,7 @@
 
 """
 import logging
-import os, time, sys, copy, tarfile, tempfile
+import os, time, sys, copy, tarfile, tempfile, random
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
 from typing import Union, List, Dict
@@ -420,6 +420,68 @@ class ValidationObjsBase():
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
         return fileList
+
+    def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
+        """ try to guess the mass vector from the SLHA file name 
+        :returns: mass vector
+        """
+        tokens = filename.replace(".slha","").split("_")
+        if not tokens[0].startswith ( "T" ):
+            print ( f"why does token 0 not start with a T??? {tokens[0]}" )
+            sys.exit(-1)
+        widths = []
+        for t in tokens[1:]:
+            try:
+                v = float(t)
+                widths.append ( v )
+            except ValueError as e:
+                pass
+        ret = []
+        for m in widths:
+            if m>0. and m<1e-10:
+                ret.append ( m )
+        return ret
+
+    def slhafileInData ( self, slhafile : str ) -> bool:
+        """ is slhafile already in the data? """
+        for d in self.data:
+            slhashort = os.path.basename ( slhafile )
+            if d["slhafile"] in [ slhafile, slhashort ]:
+                return True
+        return False
+
+    def getMassesFromSLHAFileName ( self, filename : str ) -> List:
+        """ try to guess the mass vector from the SLHA file name """
+        tokens = filename.replace(".slha","").split("_")
+        if not tokens[0].startswith ( "T" ):
+            print ( "why does token 0 not start with a T??? {tokens[0]}" )
+            sys.exit(-1)
+        masses = []
+        for t in tokens[1:]:
+            try:
+                v = float(t)
+                masses.append ( v )
+            except ValueError as e:
+                pass
+        for m in masses:
+            if m>0. and m<1e-10:
+                continue
+                # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
+                # sys.exit()
+        n=int(len(masses)/2)
+        if len(masses) % 2 != 0:
+            if "THSCPM7" in filename:
+                n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
+                ## so all works out if we just slice at one after the half
+            elif not "T3GQ" in filename and not "T5GQ" in filename and not "T2Disp" in filename:
+                print ( f"[validationObjs] mass vector {masses} is asymmetrical. dont know what to do" )
+            # sys.exit(-1)
+        ret = [ masses[:n], masses[n:] ]
+        if "T5GQ" in filename:
+            ret = [ masses[:n+1], masses[n+1:] ]
+        if "T2Disp" in filename:
+            ret = [ masses[:2], masses[:2] ]
+        return ret
 
     def getParameterFile(self,tempdir : str = None,
            outputformat : int = 3 ) -> str:
