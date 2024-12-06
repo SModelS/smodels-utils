@@ -212,10 +212,6 @@ class ValidationPlot( ValidationObjsBase ):
         self.meta["npoints"] = ndata
         return addedpoints
 
-    def topologyHasWidths ( self ):
-        """ is this a topology with a width-dependency? """
-        return "(" in self.axes
-
     def addResultToData ( self, slhafile : str, resultsfile : str ) -> int: 
         """ returns 1 if success else 0 """
         fout = resultsfile

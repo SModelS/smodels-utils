@@ -57,6 +57,10 @@ class ValidationObjsBase():
         else:
             self.slhaDir = slhadir
 
+    def topologyHasWidths ( self ):
+        """ is this a topology with a width-dependency? """
+        return "(" in self.axes
+
     def getOfficialCurves(self, get_all : bool = True, 
             expected : bool = False ) -> Union[Dict,List]:
         """

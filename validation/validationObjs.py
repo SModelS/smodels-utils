@@ -216,10 +216,6 @@ class ValidationPlot( ValidationObjsBase ):
         self.meta["npoints"] = ndata
         return addedpoints
 
-    def topologyHasWidths ( self ):
-        """ is this a topology with a width-dependency? """
-        return "(" in self.axes
-
     def getXYFromSLHAFileName ( self, filename, asDict=False ):
         """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
         Meant as fallback for when no ExptRes is available.
