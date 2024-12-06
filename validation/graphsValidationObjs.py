@@ -23,7 +23,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-import tempfile,tarfile,shutil,copy
+import shutil,copy
 from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
 from smodels.experiment.databaseObj import Database
@@ -151,61 +151,6 @@ class ValidationPlot( ValidationObjsBase ):
                     replace(":","").replace("'","").replace(" ","")
         vstr = f"{self.expRes.globalInfo.id}:{self.txName}_{axes}"
         return vstr
-
-    def getSLHAdir(self):
-        """
-        Returns path to the folders containing the SLHA files.
-        If slhadir is a .tar.gz file, returns a temporary folder where the files
-        have been extracted to.
-
-        :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
-        :return: path to the folder containing the SLHA files
-        """
-
-        if os.path.isdir(self.slhaDir):
-            self.currentSLHADir = self.slhaDir
-            return self.slhaDir
-        elif os.path.isfile(self.slhaDir):
-            try:
-                tar = tarfile.open(self.slhaDir,'r:gz')
-                tempdir = "?"
-                if "tempdir" in self.options and self.options["tempdir"]!=None:
-                    tdir =  self.options["tempdir"]
-                    if "/" in tdir or "." in tdir:
-                        logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
-                    tempdir = os.path.join ( os.getcwd(), tdir )
-                else:
-                    tempdir = tempfile.mkdtemp(dir=os.getcwd())
-                p1 = tempdir.rfind("/")
-                stempdir = tempdir[p1+1:]
-                logger.info ( f"tempdir: {ansi.GREEN}{stempdir}{ansi.RESET}" )
-                members=tar.getmembers()
-                countm = 0
-                for m in members:
-                    if m.name.endswith ( ".slha" ):
-                        countm += 1
-                self.pointsInTarFile = countm
-                random.shuffle ( members )
-                limitPoints = self.options["limitPoints"]
-                #if limitPoints != None and limitPoints > 0:
-                #    members=members[:limitPoints]
-                tar.extractall(path=tempdir,members=members)
-                tar.close()
-                logger.debug( f"SLHA files extracted to {tempdir}" )
-                self.currentSLHADir = tempdir
-                commentfile = f"{tempdir}/comment"
-                with open ( commentfile, "wt" ) as f:
-                    d = { "npoints": countm }
-                    f.write ( f"{str(d)}\n" )
-                    f.close()
-                return tempdir
-            except Exception as e:
-                logger.error("Could not extract SLHA files from %s: %s" %\
-                              ( self.slhaDir, e ) )
-                sys.exit()
-        else:
-            logger.error("%s is not a file nor a folder" %self.slhaDir)
-            sys.exit()
 
     def loadData(self, overwrite = True ):
         """

@@ -9,7 +9,7 @@
 
 """
 import logging
-import os, time, sys, copy
+import os, time, sys, copy, tarfile, tempfile
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
 from typing import Union, List, Dict
@@ -103,6 +103,70 @@ class ValidationObjsBase():
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
         return filename
+
+    def getSLHAdir(self) -> str:
+        """
+        Returns path to the folders containing the SLHA files.
+        If slhadir is a .tar.gz file, returns a temporary folder where the files
+        have been extracted to.
+
+        :return: path to the folder containing the SLHA files
+        """
+
+        if os.path.isdir(self.slhaDir):
+            self.currentSLHADir = self.slhaDir
+            return self.slhaDir
+        elif os.path.isfile(self.slhaDir):
+            try:
+                tar = tarfile.open(self.slhaDir,'r:gz')
+                nfiles = 0
+                tempdir = "?"
+                if "tempdir" in self.options and self.options["tempdir"]!=None:
+                    tdir =  self.options["tempdir"]
+                    if "/" in tdir or "." in tdir:
+                        logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
+                    tempdir = os.path.join ( os.getcwd(), tdir )
+                    nfiles = len(glob.glob(tempdir+'/T*slha')) + 2
+                else:
+                    tempdir = tempfile.mkdtemp(dir=os.getcwd())
+                p1 = tempdir.rfind("/")
+                stempdir = tempdir[p1+1:]
+                logger.info ( f"tempdir: {ansi.GREEN}{stempdir}{ansi.RESET}" )
+                members=tar.getmembers()
+                nmembers = len(members)
+                # logger.debug ( f"nfiles {nfiles} nmembers {nmembers}" )
+                if nfiles >= nmembers:
+                    logger.debug ( f"the slha files seem to already be there, returning {tempdir}" )
+                    self.currentSLHADir = tempdir
+                    self.pointsInTarFile = nmembers-2
+                    return tempdir
+                if nfiles > 3:
+                    logger.warning ( f"we have {nfiles} files, should have {nmembers}. Lets explode the tarball!" )
+                countm = 0
+                for m in members:
+                    if m.name.endswith ( ".slha" ):
+                        countm += 1
+                self.pointsInTarFile = countm
+                random.shuffle ( members )
+                #if self.limitPoints != None and self.limitPoints > 0:
+                #    members=members[:self.limitPoints]
+                tar.extractall(path=tempdir,members=members)
+                tar.close()
+                logger.debug(f"SLHA files extracted to {tempdir}" )
+                self.currentSLHADir = tempdir
+                commentfile = f"{tempdir}/comment"
+                with open ( commentfile, "wt" ) as f:
+                    d = { "npoints": countm }
+                    f.write ( f"{str(d)}\n" )
+                    f.close()
+                return tempdir
+            except Exception as e:
+                logger.error(f"Could not extract SLHA files from {self.slhaDir}: {e}")
+                sys.exit()
+        else:
+            logger.error(f"{self.slhaDir} is not a file nor a folder" )
+            sys.exit()
+
 
     def getPrettyPlot(self,silentMode : bool = True ):
         """
