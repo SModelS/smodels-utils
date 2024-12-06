@@ -21,7 +21,7 @@ except:
     from backwardCompatibility import addUnit, rescaleWidth
 
 from plottingFuncs import getExclusionCurvesFor
-from validationHelpers import point_in_hull, equal_dicts
+from validationHelpers import equal_dicts
 import tempfile,tarfile,shutil
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
@@ -152,149 +152,6 @@ class ValidationPlot( ValidationObjsBase ):
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.axes
         return vstr
-
-    def computeHulls ( self ):
-        """ compute the convex hulls from the Voronoi
-            partition, so we can later weight points with the areas of the
-            Voronoi cell """
-        if not self.options["weightedAgreementFactor"]: #  self.weightedAF:
-            return
-        # we could weight the point with the area of its voronoi partition
-        points = []
-        for point in self.data:
-            try: ## we seem to have two different ways of writing the x,y values
-                x,y=point["axes"]['x'],point["axes"]['y']
-            except Exception as e:
-                x,y=point["axes"][0],point["axes"][1]
-            points.append ( [x,y] )
-        xy=numpy.array ( points )
-        logY=False
-        if max ( xy[::,1] ) < 1e-6:
-            logY=True
-            points = [ [ x,rescaleWidth(y) ] for x,y in points ]
-
-        from scipy.spatial import Voronoi, ConvexHull
-        vor = Voronoi ( points )
-        ## FIXME now get the bounding box of a point, then
-        ## get the area of the bounding box. weight the points with that area.
-        # now check for [ 1700. -15. ]
-        self.hulls = []
-        self.volumes = []
-        totalarea = 0.
-        n_points = 0
-        for i, reg_num in enumerate(vor.point_region):
-            indices = vor.regions[reg_num]
-            if not (-1 in indices): # s me regions can be opened
-                hull = ConvexHull(vor.vertices[indices])
-                n_points += 1
-                self.hulls.append ( hull )
-                vol = hull.volume
-                self.volumes.append ( vol )
-                totalarea += vol
-        self.average_area = totalarea / n_points
-
-    def computeWeight ( self, point ):
-        """ compute the weight of a point by computing the area of its voronoi cell """
-        if 0.<point[1]<1e-6:
-            point[1]=rescaleWidth( point[1] )
-        for i,hull in enumerate(self.hulls):
-            if point_in_hull ( point, hull ):
-                return self.volumes[i]
-        return self.average_area
-
-    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0,
-                                 weighted = False ):
-        """ computes how much the plot agrees with the official exclusion curve
-            by counting the points that are inside/outside the official
-            exclusion curve, and comparing against the points' r values
-            ( upper limit / predict theory cross section )
-            :param looseness: how much do we loosen the criterion? I.e. by what factor do we
-                   change the cross sections in favor of getting the right assignment?
-            :param signal_factor: an additional factor that is multiplied with
-                   the signal cross section,
-            :param weighted: weight the points with the areas of their Voronoi cells
-
-        """
-        #import ROOT
-        curve = self.getOfficialCurves( get_all = False, expected = False )
-        if curve == []:
-            logger.error( f"could not get official tgraph curve for {self.expRes.globalInfo.id} {self.txName} {self.axes}" )
-            return 1.0
-        curve = curve[0]
-        if isinstance(curve,list):
-            for c in curve:
-                objName = c.GetName()
-                if 'exclusion_' in objName:
-                    curve = c
-                    break
-
-        from smodels_utils.helper.rootTools import completeROOTGraph
-        completeROOTGraph ( curve )
-
-        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0,
-               "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
-
-        self.computeHulls()
-
-        for point in self.data:
-            if "error" in point.keys():
-                continue
-            x,y=None, None
-            try: ## we seem to have two different ways of writing the x,y values
-                x=point["axes"]['x']
-                y=point["axes"]['y']
-            except Exception as e:
-                pass
-            try:
-                x,y=point["axes"][0],point["axes"][1]
-            except Exception as e:
-                pass
-            if x == None or y == None:
-                continue
-            w = 1.
-            if weighted:
-                w = self.computeWeight ( [x,y] )
-            if y==0: y=1.5 ## to avoid points sitting on the line
-            if point["UL"]==None:
-                continue
-            excluded = point["UL"] < point["signal"]
-            really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
-            really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
-            from smodels_utils.helper.rootTools import exclusionCurveToTGraph
-            rcurve = exclusionCurveToTGraph ( curve )
-            inside = rcurve.IsInside ( x, y )
-            pts["total"]+=w
-            s=""
-            if excluded:
-                s="excluded"
-            else:
-                s="not_excluded"
-            if inside:
-                s+="_inside"
-            else:
-                s+="_outside"
-            pts[s]+=w
-            if really_excluded and not inside:
-                pts["wrong"]+=w
-            if really_not_excluded and inside:
-                pts["wrong"]+=w
-        if pts["total"]==0:
-            return float("nan")
-        return 1.0 - float(pts["wrong"]) / float(pts["total"])
-
-    def setSLHAdir(self,slhadir):
-        """
-        Defines the folder or .tar.gz file containing all the slha files to be
-        used to generate the validation plot
-
-        :param slhadir: existing folder containing SLHA files
-        """
-
-        if not os.path.isdir(slhadir) and not os.path.isfile(slhadir):
-            logger.error( f"SLHA files not found in {slhadir} for {str(self)}" )
-            sys.exit()
-        else:
-            self.slhaDir = slhadir
 
     def getSLHAdir(self) -> str:
         """
@@ -836,18 +693,3 @@ class ValidationPlot( ValidationObjsBase ):
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor
 
-    def getDataFile(self,validationDir,fformat='pdf'):
-        """
-        Defines the name of the .py file and returns it
-
-        :param validationDir: Folder where the root file will be saved
-
-        :return: name of the .py file
-        """
-        if fformat.startswith("."):
-            fformat = fformat[1:]
-        datafile = self.getPlotFileName(validationDir,fformat)
-        datafile = datafile.rstrip(fformat)
-        if not datafile.endswith ( "." ):
-            datafile += "."
-        return datafile+'py'
