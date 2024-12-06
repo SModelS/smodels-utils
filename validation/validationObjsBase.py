@@ -12,7 +12,7 @@ import logging
 import os, time, sys
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
-from typing import Union
+from typing import Union, List
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.ERROR)
@@ -34,6 +34,13 @@ class ValidationObjsBase():
         import subprocess
         o = subprocess.getoutput ( command )
         # print ( "toPdf", command, o )
+
+    def resultExistsAlready(self,slhafilename : str ) -> bool:
+        """ does a result exist already for the given slha file """
+        resultfile = f"{self.currentSLHADir}/results/{slhafilename}.py"
+        if os.path.exists ( resultfile ):
+            return True
+        return False
 
     def runSModelS ( self, outputformat : int = 3 ) -> list:
         """ run SModelS proper 
@@ -239,6 +246,108 @@ class ValidationObjsBase():
         # os.close(pf)
         pf.close()
         return parFile
+
+    def getTxname ( self ):
+        """ obtain the correct sms/axes/data maps, i.e. the ones corresponding to
+        our txname """
+        ds = self.expRes.datasets[0]
+        ## FIXME need to search
+        for txn in ds.txnameList:
+            if txn.txName == self.txName:
+                return txn
+        return None
+
+    def removeFromListOfRunningFiles ( self ):
+        """ remove files listed in fileList to list of running  files """
+        fileList = self.willRun
+        current = {}
+        if os.path.exists ( self.runningDictFile ):
+            with open ( self.runningDictFile, "rt" ) as f:
+                try:
+                    current = eval ( f.read() )
+                except Exception as e:
+                    logger.info ( f"exception {e}" )
+            f.close()
+        for f in fileList:
+            if f.endswith ( ".tar.gz" ):
+                continue
+            if f in [ "results", "coordinates", "comment" ]:
+                continue
+            try:
+                current.pop ( f )
+            except KeyError as e: # it's not in, so nothing to take out
+                # we can ignore
+                pass
+        self.lockFile()
+        with open ( self.runningDictFile, "wt" ) as f:
+            f.write ( f"{current}\n" )
+            f.close()
+        self.unlockFile()
+        self.willRun = []
+        return
+
+
+    def addToListOfRunningFiles ( self, fileList : List ) -> List:
+        """ add files listed in fileList to list of running  files 
+        :returns: list you should actually run
+        """
+        current = {}
+        shouldRun = set()
+        if os.path.exists ( self.runningDictFile ):
+            with open ( self.runningDictFile, "rt" ) as f:
+                try:
+                    current = eval ( f.read() )
+                except Exception as e:
+                    logger.info ( f"exception {e}" )
+            f.close()
+        cleanedcurrent = {}
+        for f,t in current.items():
+            dt = ( time.time() - t ) / 60. # minutes
+            ## FIXME we should actually only take out once 
+            ## we run out of "good" points
+            if dt < 15.: # after 15 minutes we take it out!
+                cleanedcurrent[f]=t
+        current = cleanedcurrent
+        for f in fileList:
+            if f.endswith ( ".tar.gz" ):
+                continue
+            if f in [ "results", "coordinates", "comment" ]:
+                continue
+            if not f in current:
+                if self.limitPoints in [-1, None] or len(shouldRun)<self.limitPoints:
+                    current[f]=time.time()
+                    shouldRun.add ( f )
+        self.lockFile()
+        with open ( self.runningDictFile, "wt" ) as f:
+            f.write ( f"{current}\n" )
+            f.close()
+        self.unlockFile()
+        return shouldRun
+
+
+    def lockFile ( self, lockfile : Union [ None, str ] = None ):
+        """ a locking mechanism """
+        if lockfile is None:
+            lockfile = self.runningDictLockFile 
+        ctr = 0
+        while os.path.exists ( lockfile ):
+            ctr+=1
+            time.sleep ( .1 * ctr )
+            if ctr > 10: # we dont wait forever
+                self.unlockFile( lockfile )
+                return
+        from pathlib import Path
+        Path ( lockfile ).touch()
+
+    def unlockFile( self, lockfile : Union [ None, str ] = None ):
+        """ a locking mechanism """
+        if lockfile is None:
+            lockfile = self.runningDictLockFile 
+        if os.path.exists ( lockfile ):
+            try:
+                os.unlink ( lockfile )
+            except FileNotFoundError as e:
+                pass
 
     def saveData(self,validationDir : Union[None,os.PathLike] =None,
                  datafile : Union[None,os.PathLike] =None) -> bool:
