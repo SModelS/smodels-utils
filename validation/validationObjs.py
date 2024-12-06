@@ -20,7 +20,6 @@ try:
 except:
     from backwardCompatibility import addUnit, rescaleWidth
 
-from plottingFuncs import getExclusionCurvesFor
 from validationHelpers import equal_dicts
 import tempfile,tarfile,shutil
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -216,28 +215,6 @@ class ValidationPlot( ValidationObjsBase ):
         else:
             logger.error(f"{self.slhaDir} is not a file nor a folder" )
             sys.exit()
-
-    def getOfficialCurves(self, get_all=True, expected = False ):
-        """
-        Reads the root file associated to the ExpRes and
-        obtain the experimental exclusion curve for the corresponding TxName and Axes.
-
-        :param get_all: get also the +- 1 sigma curves
-        :param expected: if true, get expected instead of observed
-
-        :return: a container of root TGraph objects
-        """
-        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
-                       axes=self.axes, get_all = get_all, expected=expected )
-        if not tgraphDict:
-            return []
-        tgraph = tgraphDict[self.txName]
-        if len(tgraph)==0:
-            return tgraph
-        if get_all:
-            return tgraph
-        else:
-            return [ tgraph[0] ]
 
     def loadData(self, overwrite = True ):
         """

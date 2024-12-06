@@ -12,9 +12,10 @@ import logging
 import os, time, sys, copy
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
-from typing import Union, List
+from typing import Union, List, Dict
 from colorama import Fore as ansi
 from validationHelpers import point_in_hull
+from plottingFuncs import getExclusionCurvesFor
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.ERROR)
@@ -55,6 +56,29 @@ class ValidationObjsBase():
             sys.exit()
         else:
             self.slhaDir = slhadir
+
+    def getOfficialCurves(self, get_all : bool = True, 
+            expected : bool = False ) -> Union[Dict,List]:
+        """
+        Reads the root file associated to the ExpRes and
+        obtain the experimental exclusion curve for the corresponding TxName and Axes.
+
+        :param get_all: get also the +- 1 sigma curves
+        :param expected: if true, get expected instead of observed
+
+        :return: a container of root TGraph objects
+        """
+        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
+                       axes=self.axes, get_all = get_all, expected=expected )
+        if not tgraphDict:
+            return []
+        tgraph = tgraphDict[self.txName]
+        if len(tgraph)==0:
+            return tgraph
+        if get_all:
+            return tgraph
+        else:
+            return [ tgraph[0] ]
 
     def getPlotFileName(self,validationDir : str, fformat : str = 'pdf') -> str:
         """
