@@ -212,9 +212,15 @@ class ValidationObjsBase():
             useTevatron = False
             if "useTevatronCLsConstruction" in self.options:
                 useTevatron = self.options["useTevatronCLsConstruction"]
-            if useTevatron:
+            asimovIsExpected = False
+            if "asimovIsExpected" in self.options:
+                asimovIsExpected = self.options["asimovIsExpected"]
+            if asimovIsExpected or useTevatron:
                 f.write(f"[experimentalFeatures]\n" )
+            if useTevatron:
                 f.write ( f"tevatroncls = {useTevatron}\n" )
+            if asimovIsExpected:
+                f.write ( f"asimovisexpected = {asimovIsExpected}\n" )
             f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write(f"[printer]\noutputFormat = version{outputformat}\noutputType = python\n")
@@ -322,13 +328,17 @@ class ValidationObjsBase():
             meta["namedTarball"]=self.namedTarball
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         useTevatronCLs = False
+        asimovIsExpected = False
+        from smodels.base.runtime import experimentalFeature
         try:
-            from smodels.base.runtime import experimentalFeature
             useTevatronCLs = experimentalFeature ( "tevatroncls" )
+            asimovIsExpected = experimentalFeature ( "asimovisexpected" )
         except Exception as e:
             print ( f"[validationOjbsBase] experimentalFeature not yet available. its ok we can skip this" )
         if useTevatronCLs:
             meta["tevatroncls"]= useTevatronCLs
+        if asimovIsExpected:
+            meta["asimovisexpected"]= asimovIsExpected
         f.write( f"meta = {str(meta)}\n" )
         f.close()
         self.unlockFile ( lockfile )
