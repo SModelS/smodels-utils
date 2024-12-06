@@ -335,9 +335,13 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     # vmin,vmax= .5, 1.7
     vmin, vmax = options["zmin"], options["zmax"]
     if vmax is None or abs(vmax)<1e-5:
-        vmax = numpy.nanmax ( col )*1.1
+        vmax = min ( numpy.nanmax ( col )*1.1, 2.0 )
     if vmin is None: # or abs(vmin)<1e-5:
-        vmin = numpy.nanmin ( col )*0.9
+        vmin = abs ( numpy.nanmin ( col )*0.9 - 1.0 )
+    if (vmax - 1.0 ) < ( 1.0 - vmin ):
+        vmax = 2. - vmin
+    else:
+        vmin = 2. - vmax
     opts = { }
     #print ( "vmax", vmax )
     #if logScale:
