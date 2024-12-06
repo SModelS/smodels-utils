@@ -36,7 +36,7 @@ def showPlot ( filename : str ) -> bool:
         o = subprocess.check_output ( cmd, shell=True )
         print ( f"[showPlot] {cmd}" )
         import time
-        time.sleep(.7)
+        time.sleep(.8)
         print ( f"{o.decode('ascii')}" )
         return True
     return False
