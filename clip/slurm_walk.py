@@ -28,6 +28,8 @@ basedir = f"/scratch-cbe/users/{os.environ['USER']}"
 if "RUNDIR" in os.environ:
     basedir = os.environ["RUNDIR"].replace("/rundir","")
 codedir = f"{basedir}/git"
+if "CODEDIR" in os.environ:
+    codedir = os.environ["CODEDIR"]
 outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
 
