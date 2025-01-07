@@ -399,13 +399,13 @@ class DataHandler(object):
         self.args = args
 
         if type(path) not in [ tuple, list ] and not os.path.isfile(path):
-            logger.error("File %s not found" %path)
+            logger.error( f"File {path} not found" )
             if type(self.dataUrl ) == str and os.path.basename(path) == os.path.basename ( self.dataUrl ):
                 logger.info( "But you supplied a dataUrl with same basename, so I try to fetch it" )
                 import requests
                 r = requests.get ( self.dataUrl )
                 if not r.status_code == 200:
-                    logger.error ( "retrieval failed: %d" % r.status_code )
+                    logger.error ( f"retrieval failed: {r.status_code}" )
                     sys.exit()
                 with open ( path, "wb" ) as f:
                     f.write ( r.content )
@@ -967,14 +967,15 @@ class DataHandler(object):
         obj = rootFile.get(name)
         # self.interact()
         if not obj:
-            logger.error("Object %s not found in %s" %(name,self.path))
+            logger.error( f"Object {name} not found in {self.path}" )
             sys.exit()
-        rootFile.close()
 
+        # print ( f"@@X _getUpRootPoints for {name} {self.index}" )
         points = list ( self._getUpRootPoints(obj) )
         self.extendDataToZero ( points )
         for point in points:
             yield point
+        rootFile.close()
 
     def rootByName ( self, name ):
         try:
@@ -1030,11 +1031,11 @@ class DataHandler(object):
 
         import ROOT
         ROOT.gROOT.SetBatch()
-        ROOT.gROOT.ProcessLine(".x %s" %self.path)
+        ROOT.gROOT.ProcessLine( f".x {self.path}" )
         try:
-            limit = eval("ROOT.%s" %self.objectName)
+            limit = eval(f"ROOT.{self.objectName}")
         except:
-            logger.error("Object %s not found in %s" %(self.objectName,self.path))
+            logger.error(f"Object {self.objectName} not found in {self.path}" )
             sys.exit()
 
         for point in self._getUpRootPoints(limit):
@@ -1096,8 +1097,11 @@ class DataHandler(object):
             return self._getUpRootHistoPoints(obj)
         if obj.classname in [ "TGraph", "TGraph2D" ]:
             return self._getUpRootGraphPoints(obj)
+        if obj.classname in [ "TTree" ]:
+            return self._getUpRootTreePoints(obj)
         else:
-            logger.error( f"ROOT object must be a THx or TGraphx object, not a {obj.classname}")
+            logger.error( f"ROOT object must be a THx, TTree or TGraphx object, not a {obj.classname}")
+            import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             sys.exit()
 
     def _getPyRootPoints(self,obj):
@@ -1470,6 +1474,46 @@ class DataHandler(object):
             elif graph.classname in [ "TGraph2D" ]:
                 z = graph.values()[2][i]
                 yield [ x, y, z ]
+
+    def _getUpRootTreePoints(self,tree):
+
+        """
+        Iterable metod for extracting points from root TTree objects
+        :param tree: Root tree object (TTree)
+        :yield: ttree point
+        """
+        import uproot
+
+        if self.dimensions >= 3:
+            logger.error(f"Root trees can not contain more than 2 axes. \
+            (Data is defined as {self.dimensions}-th dimensional)" )
+            sys.exit()
+
+        #Check dimensions:
+        if self.dimensions == 1 and not len(tree.keys())==3:
+            logger.error(f"TTree dimensions ({self.dimensions}) do not match data ({len(tree.keys())})")
+            sys.exit()
+        if self.dimensions == 2 and not len(tree.keys())==4:
+            logger.error(f"TTree dimensions ({self.dimensions}) do not match data ({len(tree.keys())})")
+            sys.exit()
+
+        branches = tree.arrays()
+        keys = tree.keys()
+        xvar, yvar = keys[0], keys[1] # get the names of the branches!
+        effs = branches [ "AccEff" ]
+        ## import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        for i in range( len(branches[xvar]) ):
+            if type(self.index) == str and \
+                    self.index != branches["SearchBin"][i]:
+                continue
+            eff = float(effs[i])
+            x = float(branches[ xvar ][i])
+            if self.dimensions == 1:
+                yield [ x, eff ]
+            elif self.dimensions == 2:
+                y = float(branches[ yvar ][i])
+                yield [ x, y, eff ]
+
 
     def _getPyRootGraphPoints(self,graph):
 

@@ -424,7 +424,7 @@ class DataSetInput(Locker):
         if name == None:
             name = "data"
         if type(name)!=str or len(name)<1: ## or name[0] not in string.ascii_letters:
-            logger.error ( "Illegal dataset name: ``%s''. Make sure it starts with a letter." % name )
+            logger.error ( f"Illegal dataset name: ``{name}''. Make sure it starts with a letter." )
             sys.exit()
 
         self._name = name
