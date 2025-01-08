@@ -971,7 +971,6 @@ class DataHandler(object):
             logger.error( f"Object {name} not found in {self.path}" )
             sys.exit()
 
-        # print ( f"@@X _getUpRootPoints for {name} {self.index}" )
         points = list ( self._getUpRootPoints(obj) )
         self.extendDataToZero ( points )
         for point in points:
@@ -1062,13 +1061,12 @@ class DataHandler(object):
         rootFile = ROOT.TFile(self.path, 'r')
         canvas = rootFile.Get(self.objectName)
         if not canvas:
-            logger.error("Object %s not found in %s" %(self.objectName,self.path))
+            logger.error( f"Object {self.objectName} not found in {self.path}" )
             sys.exit()
         try:
             limit = canvas.GetListOfPrimitives()[self.index]
         except IndexError:
-            logger.error("ListOfPrimitives %s has not index %s"
-                          %(self.objectName,self.index))
+            logger.error( f"ListOfPrimitives {self.objectName} has not index {self.index}" )
             sys.exit()
 
         for point in self._getRootPoints(limit):
@@ -1483,11 +1481,13 @@ class DataHandler(object):
         :param tree: Root tree object (TTree)
         :yield: ttree point
         """
-        idfier = tree.file.file_path + ":" + tree.name
-        if idfier in pointsCache:
-            for y in pointsCache[idfier]:
-                yield y
-            return
+        idfier = tree.file.file_path + ":" + tree.name + ":" + self.index
+        if not idfier in pointsCache:
+            self._cacheUpRootTreePoints ( tree )
+        for y in pointsCache[idfier]:
+            yield y
+
+    def _cacheUpRootTreePoints(self,tree ):
         import uproot
 
         if self.dimensions >= 3:
@@ -1507,22 +1507,24 @@ class DataHandler(object):
         keys = tree.keys()
         xvar, yvar = keys[0], keys[1] # get the names of the branches!
         effs = branches [ "AccEff" ]
-        ## import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         yields = []
+        print ( f"[dataHandlerObjects] caching {len(branches[xvar])} entries!" )
+        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         for i in range( len(branches[xvar]) ):
-            if type(self.index) == str and \
-                    self.index != branches["SearchBin"][i]:
-                continue
+#            if type(self.index) == str: # and \
+#                    self.index != branches["SearchBin"][i]:
+#                continue
             eff = float(effs[i])
             x = float(branches[ xvar ][i])
+            tidfier = tree.file.file_path + ":" + tree.name + ":" + branches["SearchBin"][i]
+            if not tidfier in pointsCache:
+                pointsCache[tidfier] = []
             if self.dimensions == 1:
-                yields.append ( ( x, eff ) )
+                pointsCache[tidfier].append ( ( x, eff ) )
             elif self.dimensions == 2:
                 y = float(branches[ yvar ][i])
-                yields.append ( ( x, y, eff ) )
-        pointsCache[idfier]=yields
-        for y in yields:
-            yield y
+                pointsCache[tidfier].append ( ( x, y, eff ) )
+        print ( f"[dataHandlerObjects] cached {len(branches[xvar])} entries!" )
 
     def _getPyRootGraphPoints(self,graph):
 
@@ -1587,7 +1589,6 @@ class ExclusionHandler(DataHandler):
         self.sort = False
         self.reverse = False
         self.dimensions = 1
-        # print ( f"@@0 adding exclusion handler name {name}, map {coordinateMap},xvars {xvars}, axes {axes}" )
 
     def __iter__(self):
 

@@ -357,7 +357,7 @@ class DatasetsFromRoot:
         self.counter += 1
         if self.counter > self.n:
             raise StopIteration ()
-        name = "SR%d" % ( self.counter+1 )
+        name = f"SR{self.counter+1}"
         # name = "sr%d" % ( self.counter )
         if self.readDatasetNames:
             name = self.xaxis.GetBinLabel ( self.counter )

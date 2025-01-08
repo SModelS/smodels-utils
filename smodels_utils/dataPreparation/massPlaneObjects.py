@@ -17,7 +17,7 @@ from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
 import string
 import logging
-from typing import Union
+from typing import Union, List
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -239,7 +239,7 @@ class MassPlane(object):
                            objectName, index, unit, coordinate, scale, **args )
 
     def addSource(self,dataLabel : str,dataFile : str ,dataFormat : str = None, 
-            objectName : str = None, index : Union[int,None] = None,
+            objectName : str = None, index : Union[List,str,int,None] = None,
                   unit = None, coordinateMap = None, scale=None, **args ):
         """
         Defines a single data sources for the plane.
