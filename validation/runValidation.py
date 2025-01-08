@@ -10,10 +10,10 @@ __all__ = [ "validatePlot" ]
 
 import sys,os,copy
 try:
-    import colorama as __c
-    GREEN, RED, RESET = __c.Fore.GREEN, __c.Fore.RED, __c.Fore.RESET
+    from colorama import Fore as __c
+    GREEN, YELLOW, RED, RESET = __c.GREEN, __c.YELLOW,  __c.RED, __c.RESET
 except:
-    GREEN, RED, RESET = "","",""
+    GREEN, YELLOW, RED, RESET = "","", "", ""
 import logging
 import argparse,time
 from sympy import var
@@ -277,7 +277,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     nmax = 6
     saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
     output = os.path.dirname ( datafile ) + f"/bestSR_{txname}_{saxes}.png"
-    logger.info ( f"now plotting bestSR plot to {output}" )
+    logger.info ( f"saving bestSR plot to {YELLOW}{output}{RESET}" )
     defcolors = None
     from plotBestSRs import plot
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,

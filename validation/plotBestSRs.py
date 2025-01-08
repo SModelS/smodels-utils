@@ -396,7 +396,7 @@ if __name__ == "__main__":
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
-                print ( "[plotBestSRs:default] now drawing %s:%s" % (a, v ) )
+                print ( f"[plotBestSRs:default] now drawing {a}:{v}" )
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = plot( ipath, args.max_x, args.max_y, args.outputfile,
                               rank = args.rank, nmax = args.nmax, show = args.show )
