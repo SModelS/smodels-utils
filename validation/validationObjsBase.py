@@ -18,7 +18,7 @@ from validationHelpers import point_in_hull
 from plottingFuncs import getExclusionCurvesFor
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.ERROR)
+logger.setLevel(level=logging.INFO)
 
 class ValidationObjsBase():
     """
@@ -221,21 +221,11 @@ class ValidationObjsBase():
 
         filename = self.getPlotFileName(vDir,fformat)
 
-
-        if not self.pretty:
-            logger.info ( f"saving plot in {ansi.YELLOW}{filename}{ansi.RESET}" )
-            self.savefig(filename)
-            filename = filename.replace('.'+fformat,'.png')
-            try:
-                self.savefig(filename)
-            except Exception as e:
-                # if fails because of missing dep, then just proceed
-                pass
-        else:
+        if self.pretty:
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            logger.info ( f"saving plot in {ansi.YELLOW}{filename}{ansi.RESET}" )
+            logger.info ( f"saving to {ansi.YELLOW}{filename}{ansi.RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
@@ -243,6 +233,15 @@ class ValidationObjsBase():
                cmd = f"convert {filename} {newfilename}"
                import subprocess
                o = subprocess.getoutput ( cmd )
+        else:
+            logger.info ( f"saving to {ansi.YELLOW}{filename}{ansi.RESET}" )
+            self.savefig(filename)
+            filename = filename.replace('.'+fformat,'.png')
+            try:
+                self.savefig(filename)
+            except Exception as e:
+                # if fails because of missing dep, then just proceed
+                pass
         self.show ( filename )
 
         return True
