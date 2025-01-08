@@ -103,6 +103,7 @@ class ValidationPlot( ValidationObjsBase ):
         self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.currentSLHADir = None
+        self.outputDir = None # define an output directory
         self.data = []
         self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
@@ -521,7 +522,7 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
-            fout = os.path.join(outputDir,slhafile + '.py')
+            fout = os.path.join(self.outputDir,slhafile + '.py')
             self.addResultToData ( slhafile, fout )
 
         #Remove temporary folder
