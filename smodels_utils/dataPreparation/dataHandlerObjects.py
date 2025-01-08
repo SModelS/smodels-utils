@@ -17,7 +17,7 @@ import os
 import logging
 import math
 import numpy as np
-from typing import List
+from typing import List, Generator
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -1474,13 +1474,32 @@ class DataHandler(object):
                 z = graph.values()[2][i]
                 yield [ x, y, z ]
 
-    def _getUpRootTreePoints(self,tree):
+    def _getUpRootTreePoints(self,tree : uproot.TTree ) -> Generator:
 
         """
         Iterable metod for extracting points from root TTree objects
         :param tree: Root tree object (TTree)
         :yield: ttree point
         """
+        if type(self.index) in [ tuple, list ]: ## for aggregation!
+            ys = []
+            for i in self.index:
+                idfier = tree.file.file_path + ":" + tree.name + ":" + i
+                if not idfier in pointsCache:
+                    self._cacheUpRootTreePoints ( tree )
+                for y in pointsCache[idfier]:
+                    ys.append ( y )
+            ysDict = {}
+            for y in ys:
+                tmpy = y[:-1]
+                if not tmpy in ysDict:
+                    ysDict[tmpy]=0.
+                ysDict[tmpy]+=y[-1]
+            for k,v in ysDict.items():
+                t = ( *k, v )
+                yield t
+            return
+
         idfier = tree.file.file_path + ":" + tree.name + ":" + self.index
         if not idfier in pointsCache:
             self._cacheUpRootTreePoints ( tree )
@@ -1508,7 +1527,7 @@ class DataHandler(object):
         xvar, yvar = keys[0], keys[1] # get the names of the branches!
         effs = branches [ "AccEff" ]
         yields = []
-        print ( f"[dataHandlerObjects] caching {len(branches[xvar])} entries!" )
+        print ( f"[dataHandlerObjects] caching {len(branches[xvar])} ttree entries!" )
         #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         for i in range( len(branches[xvar]) ):
 #            if type(self.index) == str: # and \
@@ -1524,7 +1543,6 @@ class DataHandler(object):
             elif self.dimensions == 2:
                 y = float(branches[ yvar ][i])
                 pointsCache[tidfier].append ( ( x, y, eff ) )
-        print ( f"[dataHandlerObjects] cached {len(branches[xvar])} entries!" )
 
     def _getPyRootGraphPoints(self,graph):
 
