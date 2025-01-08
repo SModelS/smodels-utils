@@ -30,6 +30,7 @@ from smodels.installation import version
 import copy
 import math
 import scipy
+from typing import Dict
 
 import logging
 from smodels_utils.helper import prettyDescriptions
@@ -152,9 +153,8 @@ def getSignalRegionsEMBaked ( filename, exclude : list = [] ):
                 #ret.add(k)
     return ret
 
-def getStatsEMBaked ( ):
+def getStatsEMBaked ( statsfile : os.PathLike = "orig/statsEM.py" ) -> Dict:
     """ retrieve the stats from an emBaked stats file """
-    statsfile = "orig/statsEM.py"
     if not os.path.exists ( statsfile ):
         print ( f"ERROR: cannot find {statsfile}" )
         return None
