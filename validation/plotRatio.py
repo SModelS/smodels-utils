@@ -103,6 +103,8 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
         label = anaId2.lower()
     if anaId2 == anaId1 + "-eff":
         label = "ul"
+    if anaId2 == anaId1 + "-agg":
+        label = "ul"
     if anaId2 == anaId1:
         label = "ul"
     if label.startswith("-"):
@@ -112,7 +114,7 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
         last = anaId1[p1+1:]
         if not last.isdigit() and not last in [ "eff" ]:
             label = last
-    print ( f"[plotRatio] have been asked to guess the label for {anaId1}: {label}" )
+    print ( f"[plotRatio] have been asked to guess the label for {anaId1} re {anaId2}: {label}" )
     return label
 
 def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
