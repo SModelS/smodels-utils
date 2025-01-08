@@ -53,6 +53,7 @@ allowTrimming=True ## allow big grids to be trimmed down
 trimmingFactor = [ 2 ] ## the factor by which to trim
 
 fileCache  = {} ## a file cache for input files, to speed things up
+pointsCache = {}
 
 class DataHandler(object):
 
@@ -1482,6 +1483,11 @@ class DataHandler(object):
         :param tree: Root tree object (TTree)
         :yield: ttree point
         """
+        idfier = tree.file.file_path + ":" + tree.name
+        if idfier in pointsCache:
+            for y in pointsCache[idfier]:
+                yield y
+            return
         import uproot
 
         if self.dimensions >= 3:
@@ -1502,6 +1508,7 @@ class DataHandler(object):
         xvar, yvar = keys[0], keys[1] # get the names of the branches!
         effs = branches [ "AccEff" ]
         ## import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        yields = []
         for i in range( len(branches[xvar]) ):
             if type(self.index) == str and \
                     self.index != branches["SearchBin"][i]:
@@ -1509,11 +1516,13 @@ class DataHandler(object):
             eff = float(effs[i])
             x = float(branches[ xvar ][i])
             if self.dimensions == 1:
-                yield [ x, eff ]
+                yields.append ( ( x, eff ) )
             elif self.dimensions == 2:
                 y = float(branches[ yvar ][i])
-                yield [ x, y, eff ]
-
+                yields.append ( ( x, y, eff ) )
+        pointsCache[idfier]=yields
+        for y in yields:
+            yield y
 
     def _getPyRootGraphPoints(self,graph):
 
