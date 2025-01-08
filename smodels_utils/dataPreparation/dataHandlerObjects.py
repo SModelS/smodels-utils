@@ -1474,7 +1474,7 @@ class DataHandler(object):
                 z = graph.values()[2][i]
                 yield [ x, y, z ]
 
-    def _getUpRootTreePoints(self,tree : uproot.TTree ) -> Generator:
+    def _getUpRootTreePoints( self, tree ) -> Generator:
 
         """
         Iterable metod for extracting points from root TTree objects
