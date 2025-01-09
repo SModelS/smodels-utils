@@ -367,7 +367,7 @@ class ValidationObjsBase():
             for f in fileList:
                 if f.endswith ( ".tar.gz" ):
                     continue
-                if f in [ "results", "coordinates", "comment" ]:
+                if f in [ "results", "coordinates", "comment", "recipe", "recipe.py" ]:
                     continue
                 bf = os.path.basename ( f )
                 if self.slhafileInData ( bf ):
