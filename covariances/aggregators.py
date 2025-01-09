@@ -14,6 +14,7 @@ import tempfile
 import os
 import argparse
 import cov_helpers
+from typing import Dict
 
 def getDatasets( result, addReverse = True, verbose = False ):
     """ given an experimental result, return datasets and possibly
@@ -116,12 +117,36 @@ def retrieveEMStats ( database, analysis ):
     D = eval ( txt )
     return D
 
-def obtainDictFromComment ( comment, analysis, level=1 ):
+def obtainDictFromComment ( comment : str, analysis : str, level : int=1 ) -> Dict:
     """ given the comment, obtain a dict with relevant analysis specific info,
         for clustering 
+    :param comment: the comment field of the SR, e.g. 
+    "ML_A3l_2016_0 (AccEff_MultiLep,CMS-SUS-19-012)"
     :param level: level of detail. 1 is course, higher is more aggregated regions
     """
     D = {}
+    if "CMS-SUS-21-008" in analysis:
+        p1 = comment.rfind("(")
+        tbranch = comment[p1:].replace("(","").replace(")","")
+        comment = comment[:p1-1]
+        branchvalues = tbranch.split(",")
+        branch,subanalysis = branchvalues
+        tokens = comment.split("_")
+        lastnr = None
+        try:
+            lastnr = int ( tokens[-1] )
+        except Exception as e:
+            pass
+        if lastnr != None:
+            D["triplet"] = lastnr % 3
+        D["branch"] = branch
+        year = None
+        if "201" in tokens[2]:
+            year = tokens[2]
+        if tokens[1].endswith("l"):
+            D["subbranch"]=tokens[1]
+        if year is not None:
+            D["year"] = year
     if "CMS-SUS-19-006" in analysis:
         tokens = comment.split("_")
         D["jets"]= int ( tokens[1].replace("Njet","") )
@@ -175,7 +200,7 @@ def obtainDictFromComment ( comment, analysis, level=1 ):
         p1 = met.find("to")
         # D["MET"] = int ( met[:p1] )
     if len(D)==0:
-        print ( f"[aggregators.py] ERROR: empty dictionary, implement for {analysis}!" )
+        print ( f"[aggregators.py] ERROR: empty dictionary, implement for {analysis}, comment was {comment}!" )
         sys.exit()
     return D
 
@@ -337,7 +362,7 @@ def describe ( aggs, dropped, n=None ):
     for i in aggs:
         for j in i: c.add ( j )
     # oaggs = oneIndex ( aggs )
-    print ( "[aggregators.py] largest aggregation has %d elements" % ( max( [ len(x) for x in aggs ] ) ) )
+    print ( f"[aggregators.py] largest aggregation has {max( [ len(x) for x in aggs ] )} elements" )
     nregions, nexclusives = len(c), 0
     if n != None:
         nregions = n
@@ -345,9 +370,8 @@ def describe ( aggs, dropped, n=None ):
         if len(i)==1:
             nexclusives+=1
     print ( f"# {' '.join(sys.argv)}" )
-    print ( "# %d regions -> %d agg regions with %d dropped and %d exclusives:" % \
-            ( n, len(aggs), len(dropped), nexclusives ) )
-    print ( "aggregate = %s" % ( aggs ) )
+    print ( f"# {n} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
+    print ( f"aggregate = {aggs}" )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
 
 def check ( aggs, drops, n ):
