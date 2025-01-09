@@ -14,7 +14,7 @@ import tempfile
 import os
 import argparse
 import cov_helpers
-from typing import Dict
+from typing import Dict, List, Union
 
 def getDatasets( result, addReverse = True, verbose = False ):
     """ given an experimental result, return datasets and possibly
@@ -143,6 +143,8 @@ def obtainDictFromComment ( comment : str, analysis : str, level : int=1 ) -> Di
         year = None
         if "201" in tokens[2]:
             year = tokens[2]
+        if "SR" in tokens[1]:
+            D["subbranch"]=tokens[1]
         if tokens[1].endswith("l"):
             D["subbranch"]=tokens[1]
         if year is not None:
@@ -232,29 +234,34 @@ def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
     datasets, comments = getDatasets( result, addReverse=False, verbose = verbose )
     filtered = {}
     dropped, aggs = [], []
+    droppedD = []
+    D = {}
     for srnr, srname in datasets.items():
         if srnr in drops:
-            dropped.append ( srnr )
+            droppedD.append ( srname )
             continue
         if srnr in exclusives:
-            aggs.append ( [ srnr ] )
+            D.append ( [ srname ] )
             continue
         filtered[srnr] = srname
-    newaggs = []
+    aggs, aggnames = {}, {}
+    srprefixes = {}
     for srnr,srname in filtered.items():
         comment = obtainDictFromComment ( comments[srnr], analysis, level )
-        hasAdded=False
-        for aggctr, agg in enumerate ( newaggs ):
-            for aggnr in agg:
-                aggcomment = obtainDictFromComment ( comments[aggnr], analysis, level )
-                if comment == aggcomment and not hasAdded:
-                    newaggs[aggctr].append ( srnr )
-                    hasAdded = True
-
-        if not hasAdded:
-            newaggs.append ( [ srnr ] )
-    aggs += newaggs
-    return aggs, dropped
+        scomment = str(comment)
+        if not scomment in aggnames.keys():
+            p1 = srname.find("_")
+            srprefix = srname[:p1]
+            if not srprefix in srprefixes:
+                srprefixes[srprefix]=[]
+            newname=f"{srprefix}_{chr(97+len(srprefixes[srprefix]))}"
+            srprefixes[srprefix].append(newname)
+            #newname=f"ar{len(aggnames)}"
+            aggnames[scomment]=newname
+            aggs[newname]=[]
+        name = aggnames[scomment]
+        aggs[name].append ( srname )
+    return aggs, droppedD
 
 def aggregateByCorrs ( database, analysis, drop, exclusives, corr, verbose ):
     """ run the aggregator based on correlations
@@ -357,7 +364,48 @@ def aggregateByCorrs ( database, analysis, drop, exclusives, corr, verbose ):
 
     return aggs, dropped
 
+def describeDict ( aggs : Dict, dropped : List, n : Union[None,int] =None ):
+    c=set()
+    nregions, nexclusives = len(c), 0
+    if n != None:
+        nregions = n
+    for i in aggs:
+        if len(i)==1:
+            nexclusives+=1
+    print ( f"# {' '.join(sys.argv)}" )
+    print ( f"# {n} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
+    print ( "aggregate={", end="" )
+    for aggname, srs in aggs.items():
+        print ( f"'{aggname}': {srs}," )
+    print ( "}" )
+
+def check ( aggs, drops, n ):
+    """ check if every SR is accounted for """
+    errors = 0
+    for i in range ( 1, n+1 ):
+        #print ( f"[aggregators] SR{i}:", end=" " )
+        accountedFor=0
+        if i in drops:
+            #print  ( "dropped." )
+            accountedFor+=1
+            continue
+        for aggnr,agg in enumerate( aggs ):
+            if i in agg:
+                #print ( f"in {aggnr+1}" )
+                accountedFor+=1
+        if accountedFor == 0:
+            #print ( "unaccounted for!!!" )
+            errors += 1
+        if accountedFor > 1:
+            #print ( f"accounted for {accountedFor} times!!!" )
+            errors += 1
+    if errors > 0:
+        print ( f"[aggregators] {errors} errors found." )
+
+
 def describe ( aggs, dropped, n=None ):
+    if type(aggs)==dict:
+        return describeDict ( aggs, dropped, n=None )
     c=set()
     for i in aggs:
         for j in i: c.add ( j )
