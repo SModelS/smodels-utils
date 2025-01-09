@@ -366,6 +366,9 @@ def aggregateByCorrs ( database, analysis, drop, exclusives, corr, verbose ):
 
 def describeDict ( aggs : Dict, dropped : List, n : Union[None,int] =None ):
     c=set()
+    for aggname, srs in aggs.items():
+        for sr in srs:
+            c.add ( sr )
     nregions, nexclusives = len(c), 0
     if n != None:
         nregions = n
@@ -373,7 +376,7 @@ def describeDict ( aggs : Dict, dropped : List, n : Union[None,int] =None ):
         if len(i)==1:
             nexclusives+=1
     print ( f"# {' '.join(sys.argv)}" )
-    print ( f"# {n} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
+    print ( f"# {nregions} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
     print ( "aggregate={", end="" )
     for aggname, srs in aggs.items():
         print ( f"'{aggname}': {srs}," )
