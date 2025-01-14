@@ -377,7 +377,7 @@ def describeDict ( aggs : Dict, dropped : List, n : Union[None,int] =None ):
             nexclusives+=1
     print ( f"# {' '.join(sys.argv)}" )
     print ( f"# {nregions} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
-    print ( "aggregate={", end="" )
+    print ( "aggregates={", end="" )
     for aggname, srs in aggs.items():
         print ( f"'{aggname}': {srs}," )
     print ( "}" )
@@ -422,7 +422,7 @@ def describe ( aggs, dropped, n=None ):
             nexclusives+=1
     print ( f"# {' '.join(sys.argv)}" )
     print ( f"# {n} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
-    print ( f"aggregate = {aggs}" )
+    print ( f"aggregates={aggs}" )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
 
 def check ( aggs, drops, n ):
