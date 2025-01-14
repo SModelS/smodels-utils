@@ -138,7 +138,7 @@ def obtainDictFromComment ( comment : str, analysis : str, level : int=1 ) -> Di
         except Exception as e:
             pass
         if lastnr != None:
-            D["triplet"] = lastnr % 3
+            D["triplet"] = lastnr % level
         D["branch"] = branch
         year = None
         if "201" in tokens[2]:

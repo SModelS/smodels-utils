@@ -68,12 +68,12 @@ def run():
     ap.add_argument( '-l','--list', help="list all", action="store_true" )
     ap.add_argument( '-i','--isolate', help="minimum score (a measure of sensitivity) with which we isolate a signal region. [150.]",
                      default = 150., type=float )
-    ap.add_argument( '-c','--corr',help="cut on correlations for findAggregates, zero means aggregate by names [None]",
+    ap.add_argument( '-c','--corr',help="cut on correlations for findAggregates, None (or 0.) means aggregate by names [None]",
                      default = None, type=float )
     ap.add_argument('-D','--database',help="path to database [../../smodels-database]",
                     default = "../../smodels-database", type=str )
-    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-006-ma5]",
-                    default = "CMS-SUS-19-006-ma5", type=str )
+    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-21-008]",
+                    default = "CMS-SUS-21-008", type=str )
     args = ap.parse_args()
     path = various.getPathName ( args.database, args.analysis )
     files = glob.glob ( f"{path}/validation/T*_2EqMassAx_EqMassBy.py" )
