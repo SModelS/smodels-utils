@@ -5,7 +5,7 @@ slurm
 """
 
 import glob, stat, os, time, subprocess
-from colorama import Fore as ansi
+from smodels_utils.helper.terminalcolors import *
 
 def cancelJobsByString ( text : str ):
     """ cancel jobs that have text in their job names """
@@ -143,9 +143,9 @@ def count_jobs( grep : str = None ):
         running= int ( running )
     except:
         pass
-    lpend = f"{ansi.YELLOW}{pend}{ansi.RESET}"
-    lrun = f"{ansi.GREEN}{running}{ansi.RESET}"
-    ltot = f"{ansi.RED}{pend+running}{ansi.RESET}"
+    lpend = f"{YELLOW}{pend}{RESET}"
+    lrun = f"{GREEN}{running}{RESET}"
+    ltot = f"{RED}{pend+running}{RESET}"
     print ( "pending", lpend, "running", lrun )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:

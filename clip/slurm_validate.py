@@ -6,7 +6,7 @@ the script to start all results validation jobs with
 """
 
 import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
-from colorama import Fore as ansi
+from smodels_utils.helper.terminalcolors import *
 from typing import Union, Dict
 
 codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
@@ -149,7 +149,7 @@ def validate ( args : Dict, idx ):
         topo = "*"
     if analyses == None:
         analyses = "all"
-    print ( f"[slurm_validate.py]{ansi.YELLOW} run validation with {inifile}{ansi.RESET}" )
+    print ( f"[slurm_validate.py]{YELLOW} run validation with {inifile}{RESET}" )
     Dir = f"{codedir}/smodels-utils/clip/temp/"
     if not os.path.exists ( Dir ):
         os.mkdir ( Dir )

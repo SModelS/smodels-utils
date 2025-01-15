@@ -3,10 +3,10 @@
 """ compare the timing between the stats code and the spey code """
 
 import os, sys
-from colorama import Fore
 import numpy as np
 from datetime import datetime
 from smodels_utils.helper.various import getValidationDataPathName
+from smodels_utils.helper.terminalcolors import *
 
 def compare ( dbpath : os.PathLike, analysis : os.PathLike, 
               validationFile : os.PathLike ):
@@ -14,7 +14,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     speypath = statspath.replace("validation","validationSpey")
     anaName = analysis.replace("13TeV/","").replace("8TeV/","").replace("CMS/","")
     anaName = anaName.replace("ATLAS/","").replace("/","")
-    print ( f"[compare] for {Fore.GREEN}{anaName}:{validationFile}{Fore.RESET}" )
+    print ( f"[compare] for {GREEN}{anaName}:{validationFile}{RESET}" )
     paths = { "stats": statspath, "spey": speypath }
     meta, dicts = {}, {}
     for name,path in paths.items():
@@ -30,7 +30,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
             timestamp = datetime.strptime(meta[name]["timestamp"],"%a %b %d %H:%M:%S %Y")
             dt = ( datetime.now() - timestamp ).days
             if dt > 10:
-                print ( f"{Fore.YELLOW}{name} {meta[name]['timestamp']}{Fore.RESET}" )
+                print ( f"{YELLOW}{name} {meta[name]['timestamp']}{RESET}" )
             h.close()
     statsTimes, speyTimes, ratioTimes = {}, {}, {}
     vratios, ULratios, eULratios = [], [], []
@@ -81,7 +81,7 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
     pre,post="",""
     topoPasses = True
     if len(vratios)*2 < len(statsTimes)+len(speyTimes):
-        pre,post = Fore.RED, Fore.RESET
+        pre,post = RED, RESET
     print ( f"[n]{pre} stat={len(statsTimes)}, spey={len(speyTimes)}, both={len(vratios)}{post}" )
     if len(vratios)!=len(speyTimes) or len(vratios)!=len(statsTimes):
         topoPasses=False
@@ -90,32 +90,32 @@ def compare ( dbpath : os.PathLike, analysis : os.PathLike,
         std = np.std(ULratios)
         pre,post="",""
         if abs(mean-1.0)>.3 or std>.3:
-            pre,post=Fore.RED,Fore.RESET
+            pre,post=RED,RESET
         print ( f"[UL] {pre}{mean:.2f}+-{std:.2f} ({len(ratioULs)}){post}" )
         if abs(mean-1.)>5e-2 or std>.1:
             topoPasses=False
     else:
-        print ( f"{Fore.RED}[UL] no upper limit values{Fore.RESET}" )
+        print ( f"{RED}[UL] no upper limit values{RESET}" )
         topoPasses=False
     if len(eULratios)>0:
         mean = np.mean(eULratios)
         std = np.std(eULratios)
         pre,post="",""
         if abs(mean-1.0)>.3 or std>.3:
-            pre,post=Fore.RED,Fore.RESET
+            pre,post=RED,RESET
         if abs(mean-1.)>5e-2 or std>.1:
             topoPasses=False
         pre,post="",""
         print ( f"[eUL] {pre}{mean:.2f}+-{std:.2f} ({len(ratioeULs)}){post}" )
     else:
-        print ( f"{Fore.RED}[eUL] no expected upper limit values{Fore.RESET}" )
+        print ( f"{RED}[eUL] no expected upper limit values{RESET}" )
 
     if len(vratios)==0:
         print ( f"[n] no ratios" )
     else:
         print ( f"[t] stat/spey={np.mean(vratios):.2f}+-{np.std(vratios):.2f}" )
     if topoPasses:
-        print ( f"{Fore.GREEN}[compare] passed!{Fore.RESET}" )
+        print ( f"{GREEN}[compare] passed!{RESET}" )
     print ()
                 
 def findAll ( dbpath : os.PathLike ):

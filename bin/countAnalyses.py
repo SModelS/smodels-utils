@@ -11,16 +11,17 @@
 
 from __future__ import print_function
 import setPath
-import sys, colorama
+import sys
 from smodels.experiment.databaseObj import Database
 from smodels.base.physicsUnits import TeV
 from smodels.base.smodelsLogging import setLogLevel
 from smodels_utils.helper import databaseManipulations as manips
 from smodels_utils.helper.various import removeAnaIdSuffices
+from smodels_utils.helper.terminalcolors import *
 setLogLevel("debug")
 
 def discussExperiment ( anas, experiment, title, verbose ):
-    print ( colorama.Fore.GREEN + title + experiment + ":" + colorama.Fore.RESET )
+    print ( f"{GREEN}{title}{experiment}:{RESET}" )
     ianas = set()
     ul,em=0,0
     n_results = 0

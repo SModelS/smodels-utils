@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-import tempfile, argparse, stat, os, math, sys, time, glob, colorama, random
+import tempfile, argparse, stat, os, math, sys, time, glob, random
 from typing import Dict
 
 try:

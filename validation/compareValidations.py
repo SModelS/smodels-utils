@@ -8,8 +8,8 @@
 
 """
 
-import glob, os, sys, copy, subprocess, colorama, time
-
+import glob, os, sys, copy, subprocess, time
+from smodels_utils.helper.terminalcolors import *
 
 def pprint ( *args ):
     f=open("comparison.log","at")
@@ -20,7 +20,7 @@ def pprint ( *args ):
 
 def error ( *args ):
     f=open("comparison.log","at")
-    print ( colorama.Fore.RED, *args, colorama.Fore.RESET )
+    print ( RED, *args, RESET )
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
     f.close()
@@ -31,14 +31,14 @@ def error ( *args ):
 
 def info ( *args ):
     f=open("comparison.log","at")
-    print ( colorama.Fore.GREEN, *args, colorama.Fore.RESET )
+    print ( GREEN, *args, RESET )
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
     f.close()
 
 def warn ( *args ):
     f=open("comparison.log","at")
-    print ( colorama.Fore.YELLOW, *args, colorama.Fore.RESET )
+    print ( YELLOW, *args, RESET )
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
     f.close()

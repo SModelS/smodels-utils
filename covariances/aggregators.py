@@ -4,7 +4,6 @@
 
 
 import sys, numpy
-import colorama
 from math import sqrt
 from smodels.experiment.databaseObj import Database
 from smodels_utils.helper import various

@@ -15,7 +15,6 @@ __all__ = [ "BibtexWriter", "removeDoubleEntries" ]
 from smodels.base.smodelsLogging import setLogLevel
 import bibtexparser
 import urllib, subprocess
-from colorama import Fore as ansi
 import os, sys
 from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
@@ -23,6 +22,7 @@ from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
          filterSupersededFromList
 from smodels_utils.helper.various import getSqrts, getCollaboration
 from typing import Union, Text
+from smodels_utils.helper.terminalcolors import *
 
 if sys.version[0]=="2":
     reload(sys)
@@ -123,12 +123,12 @@ class BibtexWriter:
             cmd = "cp ./database.bib %s" % self.databasepath
             o = commands.getoutput ( cmd )
             if len(o) != 0:
-                self.log ( "cp: %s" % o )
+                self.log ( f"cp: {o}" )
             else:
-                self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
+                self.log ( f"{GREEN}Success!{RESET}" )
         else:
             if not os.path.isdir ( self.databasepath ):
-                print ( "Databasepath %s is not a directory. Wont copy." % self.databasepath )
+                print ( f"Databasepath {self.databasepath} is not a directory. Wont copy." )
             else:
                 self.log ( "Did not copy ./database.bib and ./refs.bib. Something seems wrong. Maybe you did not generate them?" )
 
@@ -317,7 +317,7 @@ class BibtexWriter:
         self.g.write ( line + "\n" )
 
     def warn ( self, line ):
-        print ( f"{ansi.RED}WARN {line}{ansi.RESET}" )
+        print ( f"{RED}WARN {line}{RESET}" )
         self.g.write ( line + "\n" )
 
     def test( self ):
@@ -353,7 +353,7 @@ class BibtexWriter:
 
     def writeBibEntry ( self, bib : str , Id : str ):
         self.success += 1
-        self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
+        self.log ( f"{GREEN}Success!{RESET}" )
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
@@ -375,13 +375,13 @@ class BibtexWriter:
         """ process the given experimental result """
         self.npublications += 1
         Id = self.cleanAnaId ( expRes.globalInfo.id )
-        self.log ( f"\nNow processing {ansi.YELLOW}{Id}{ansi.RESET}" )
+        self.log ( f"\nNow processing {YELLOW}{Id}{RESET}" )
         self.log ( "==================================" )
 
         backup = self.tryFetchFromCache( Id )
         if backup != False:
             self.success += 1
-            self.log ( f"{ansi.GREEN}Success!{ansi.RESET}" )
+            self.log ( f"{GREEN}Success!{RESET}" )
             self.f.write ( backup )
             self.f.write ( "\n" )
             return
@@ -410,7 +410,7 @@ class BibtexWriter:
         if "superseded" in url:
             self.log ( f"superseded appears in URL ({Id})" )
             self.log ( f"   `-- {url}" )
-            self.log ( f"{ansi.RED}Failed!{ansi.RESET}" )
+            self.log ( f"{RED}Failed!{RESET}" )
             self.h.write ( f"{Id} failed. (superseded).\n" )
             self.h.write ( f"    `---- {url}\n" )
             self.nfailed += 1
@@ -451,9 +451,9 @@ class BibtexWriter:
                 return
         self.nfailed += 1
         self.nomatch.append ( Id )
-        self.log ( f"{ansi.RED}Failed!{ansi.RESET}" )
-        self.h.write ( "%s failed (no match).\n" % Id )
-        self.h.write ( "    `---- %s\n" % url )
+        self.log ( f"{RED}Failed!{RESET}" )
+        self.h.write ( f"{Id} failed (no match).\n" )
+        self.h.write ( f"    `---- {url}\n" )
 
     def run( self, write_cache, do_filter : bool, outfile : os.PathLike ):
         """ 

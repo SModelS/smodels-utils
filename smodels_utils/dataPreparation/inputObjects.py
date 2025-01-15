@@ -34,12 +34,7 @@ from typing import Dict
 
 import logging
 from smodels_utils.helper import prettyDescriptions
-RED,RESET="",""
-try:
-    from colorama import Fore
-    RED,RESET=Fore.RED,Fore.RESET
-except Exception as e:
-    pass
+from smodels_utils.helper.terminalcolors import *
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)

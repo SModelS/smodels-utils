@@ -8,11 +8,11 @@
 
 """
 
-GREEN, YELLOW, RED, RESET, CYAN, MAGENTA = [ "" ] * 6
+GREEN, YELLOW, RED, RESET, CYAN, MAGENTA, BLUE = [ "" ] * 7
 
 try:
     from colorama import Fore as __c
     GREEN, YELLOW, RED, RESET = __c.GREEN, __c.YELLOW,  __c.RED, __c.RESET
-    CYAN, MAGENTA = __c.CYAN, __C.MAGENTA
+    CYAN, MAGENTA, BLUE = __c.CYAN, __C.MAGENTA, __C.BLUE
 except:
     pass

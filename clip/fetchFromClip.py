@@ -2,12 +2,12 @@
 
 """ simple tool to fetch all sorts of files from clip """
 
-import subprocess, sys, copy, argparse, colorama, os
+import subprocess, sys, copy, argparse, os
+from smodels_utils.helper.terminalcolors import *
 
 def fetch ( files, rundir ):
     """ fetch the files in list """
-    print ( colorama.Fore.GREEN + "fetching:",", ".join ( files ) )
-    print ( colorama.Fore.RESET )
+    print ( f"{GREEN}fetching:{', '.join ( files )}{RESET}" )
     files = set ( files ) ## remove dupes
     basedir = os.environ['CODEDIR']
     for i in files:

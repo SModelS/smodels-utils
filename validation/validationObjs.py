@@ -7,7 +7,6 @@
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
-from colorama import Fore as ansi
 
 import logging,os,sys,time,copy,shutil
 

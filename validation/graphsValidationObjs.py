@@ -9,7 +9,6 @@
 """
 
 import logging,os,sys,time,math,numpy,copy
-from colorama import Fore as ansi
 
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import GeV

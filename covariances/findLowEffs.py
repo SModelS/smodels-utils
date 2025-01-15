@@ -3,7 +3,6 @@
 """ Identify efficiency maps that never make it above a certain threshold """
 
 import sys, numpy, subprocess
-import colorama
 from math import sqrt
 from smodels.experiment.databaseObj import Database
 import IPython

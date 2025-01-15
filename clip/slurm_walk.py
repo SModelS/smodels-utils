@@ -5,7 +5,7 @@ protomodels walkers.
 """
 
 import tempfile, argparse, stat, os, math, sys, time, glob, random
-from colorama import Fore as ansi
+from smodels_utils.helper.terminalcolors import *
 import subprocess
 from typing import Union, List, Tuple
 
@@ -159,11 +159,11 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
         if "Submitted batch job " in sb:
-            sb=sb.replace("Submitted batch job ",f"Submitted batch job {ansi.YELLOW}" )
-            sb+=ansi.RESET
+            sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
+            sb+=RESET
         print ( sb )
         if not "returncode=0" in sa:
-            sa = f"{ansi.RED}{sa}{ansi.RESET}"
+            sa = f"{RED}{sa}{RESET}"
         print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
@@ -387,11 +387,11 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
     sa = str(a)
     sb = str ( a.stdout.decode().strip() )
     if "Submitted batch job " in sb:
-        sb=sb.replace("Submitted batch job ",f"Submitted batch job {ansi.YELLOW}" )
-        sb+=ansi.RESET
+        sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
+        sb+=RESET
     print ( sb )
     if not "returncode=0" in sa:
-        sa = f"{ansi.RED}{sa}{ansi.RESET}"
+        sa = f"{RED}{sa}{RESET}"
     print ( f"returned: {sa}" )
 
 def getDirname ( rundir ):
@@ -699,9 +699,9 @@ def main():
         rundirs = [ rundir ]
     rundirs.sort()
     if len(rundirs)>1:
-        print ( f"[slurm.py] rundirs {ansi.YELLOW} {', '.join(rundirs)}{ansi.RESET}" )
+        print ( f"[slurm.py] rundirs {YELLOW} {', '.join(rundirs)}{RESET}" )
     else:
-        print ( f"[slurm.py] rundir {ansi.YELLOW} {rundirs[0]}{ansi.RESET}" )
+        print ( f"[slurm.py] rundir {YELLOW} {rundirs[0]}{RESET}" )
 
     if not args.query:
         logCall ()
@@ -807,20 +807,20 @@ def main():
 
                 for j in jobs:
                     j.join()
-                res = ansi.RESET
-                col = ansi.GREEN
+                res = RESET
+                col = GREEN
                 totjobs+=len(jobs)
                 if len(jobs) in [ 48, 49, 51 ]:
-                    colo = ansi.RED
+                    colo = RED
                 if len(jobs)>0:
                     print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
             break
-        res = ansi.RESET
-        col = ansi.GREEN
+        res = RESET
+        col = GREEN
         if totjobs % 10 != 0 and (totjobs)>1:
-            col = ansi.RED
+            col = RED
         if totjobs == 0:
-            col = ansi.RED
+            col = RED
         if args.updater:
             ## update flag given standalone
             #maxsteps = args.maxsteps

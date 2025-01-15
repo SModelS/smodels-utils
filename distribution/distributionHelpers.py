@@ -7,22 +7,11 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import colorama, subprocess, os, glob, time
+import subprocess, os, glob, time
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
 from typing import Union
-
-RED = "\033[31;11m"
-GREEN = "\033[32;11m"
-YELLOW = "\033[33;11m"
-RESET = "\033[7;0m"
-try:
-    RED = colorama.Fore.RED
-    GREEN = colorama.Fore.GREEN
-    YELLOW = colorama.Fore.YELLOW
-    RESET = colorama.Fore.RESET
-except:
-    pass
+from smodels_utils.helper.terminalcolors import *
 
 def comment( text : str, urgency : str = "info" ):
     """ comment on what you are doing """

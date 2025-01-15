@@ -25,7 +25,6 @@ import os
 import time
 from smodels_utils.plotting import mpkitty as plt
 from covariances.cov_helpers import getSensibleMuRange, computeLlhdHisto, addJitter, withinMuRange, createLine
-from colorama import Fore, Cursor
 
 dbpath = [ "../../smodels-database/" ]
 # dbpath = [ "official" ]

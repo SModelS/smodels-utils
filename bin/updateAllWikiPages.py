@@ -2,8 +2,9 @@
 
 ## a super simple script to update all wiki pages in a single go.
 
-import sys, subprocess, argparse, os, colorama
+import sys, subprocess, argparse, os
 from typing import Union, Text
+from smodels_utils.helper.terminalcolors import *
 
 def execute(cmd):
     print ( "[cmd] %s" % " ".join ( cmd ) )
@@ -23,7 +24,7 @@ def exec(cmd, dry_run ):
         print ( line, end="" )
 
 def gprint ( line ):
-    print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
+    print ( f"{GREEN}{line}{RESET}" )
 
 def gitPush( dry_run, commit, version : Union[None,Text] ):
     """ git commit and git push 

@@ -8,7 +8,7 @@
 
 """
 
-import sys, subprocess, os, time, argparse, glob, shutil, colorama
+import sys, subprocess, os, time, argparse, glob, shutil 
 from distributionHelpers import clearJsons, comment, runCmd, cloneDatabase, \
          clearGlobalInfos, createDatabase, removeNonValidated, moveNonAggregated
 from smodels.experiment.databaseObj import Database

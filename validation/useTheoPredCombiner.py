@@ -102,14 +102,8 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         self.validationType = "tpredcomb"
 
     def hello ( self ):
-        blue, reset = "", ""
-        try:
-            import colorama
-            blue = colorama.Fore.BLUE
-            reset = colorama.Fore.RESET
-        except Exception as e:
-            pass
-        logger.info ( f"--- {blue}using theoPredsCombiner on {self.options['ncpus']} CPUs {reset}" )
+        from smodels_utils.helper.terminalcolors import *
+        logger.info ( f"--- {BLUE}using theoPredsCombiner on {self.options['ncpus']} CPUs {RESET}" )
         self.resetStatusFile()
 
     def getDataFromPlanes(self):

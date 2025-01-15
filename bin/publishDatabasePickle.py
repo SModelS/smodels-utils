@@ -16,7 +16,7 @@ import pickle, os, sys, argparse, time, copy, glob
 import hashlib
 import pathlib
 import gzip, shutil
-from colorama import Fore as ansi
+from smodels_utils.helper.terminalcolors import *
 
 if sys.version[0]=="2":
     import commands as CMD
@@ -70,7 +70,7 @@ def checkNonValidated( database ):
                 if tx.validated in [ False, True, "N/A", "n/a" ]:
                     continue
                 sds = str(ds).replace("Dataset ","")
-                print ( f"[publishDatabasePickle] {ansi.RED}Non-validated result: {e.globalInfo.id}{ansi.RESET}:{sds}, {tx}: {tx.validated} " )
+                print ( f"[publishDatabasePickle] {RED}Non-validated result: {e.globalInfo.id}{RESET}:{sds}, {tx}: {tx.validated} " )
                 has_nonValidated = True
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
@@ -306,7 +306,7 @@ def main():
         cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         if hasSSHpass:
             cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
-        print ( "%s[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):%s" % ( ansi.RED, ansi.RESET ) )
+        print ( f"{RED}[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):{RESET}" 
         print ( cmd2 )
         reallyDo = not args.dry_run
         if reallyDo:
@@ -318,8 +318,6 @@ def main():
             print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
-        #print ( "%s[publishDatabasePickle] then do also manually:%s" % \
-        #        ( ansi.RED, ansi.RESET ) )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
         if hasSSHpass:
             cmd = f"sshpass -f {home}/.ssh/lxplus {cmd}"

@@ -13,7 +13,7 @@ import pyhf
 import pickle, os, subprocess
 import numpy as np
 import scipy.stats
-import colorama
+from smodels_utils.helper.terminalcolors import *
 
 class CovMatrixEstimator ( object ):
     def __init__ ( self, anaid ):
@@ -218,7 +218,7 @@ class CovMatrixEstimator ( object ):
         #line += ", ".join ( [ self.dataIndexNames[k] for k in keys ] )
         line = ", ".join ( map ( addApostrophes, [ self.dataIndexNames[k] for k in keys ] ) )
         self.datasetOrder = line
-        print ( f"{colorama.Fore.GREEN}datasetOrder: {line}" )
+        print ( f"{GREEN}datasetOrder: {line}" )
         # print ( "retrieving submatrix for", keys )
         self.indices = keys
         matrix = self.retrieveSubmatrix ( keys )
@@ -253,7 +253,7 @@ class CovMatrixEstimator ( object ):
             for i in self.getSkewness():
                 skewness += "%5.2f, " % i
             skewness = skewness[:-2]+"]"
-        print ( "skewness:", skewness, colorama.Fore.RESET )
+        print ( f"[covMatrixEstimator] skewness: {skewness}{RESET}" )
 
     def retrieveMatrix( self ):
         self.patch()

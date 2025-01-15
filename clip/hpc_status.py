@@ -3,8 +3,9 @@
 """ print the overall status of a validation run, 
     mostly intended for running on HPC """
     
-import glob, os, time, colorama
+import glob, os, time
 from typing import Tuple, Dict
+from smodels_utils.helper.terminalcolors import *
 
 def getAnalysisTxName ( directory : os.PathLike ) -> Tuple:
     parfile = os.path.join ( directory, "results", "parameter.ini" )
@@ -28,11 +29,9 @@ def statusOneValidation( directory : os.PathLike, D : Dict ) -> Tuple:
         return 0,0
     results = glob.glob ( os.path.join ( directory, "results", "T*py" ) )
     analysis,txname = getAnalysisTxName ( directory )
-    pre,post="",""
+    pre,post=GREEN,RESET
     if len(results)==0:
-        pre,post=colorama.Fore.RED,colorama.Fore.RESET
-    if len(results)==len(slhas):
-        pre,post=colorama.Fore.GREEN,colorama.Fore.RESET
+        pre=RED
     jobid="          "
     if directory in D:
         jobid=f"({D[directory]})"

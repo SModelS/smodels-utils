@@ -13,7 +13,7 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
 from validationHelpers import getAxisType, prettyAxes, translateAxisV2
 import matplotlib.ticker as ticker
-from colorama import Fore as ansi
+from smodels_utils.helper.terminalcolors import *
 
 def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"], 
                       axes=None, eval_axes=True ):
@@ -64,9 +64,9 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
                         axes = maxes
                         foundNewAxis = True
                 if foundNewAxis:
-                    print( f"[drawPaperPlot] {ansi.GREEN}converted axis: {axes}{ansi.RESET}" )
+                    print( f"[drawPaperPlot] {GREEN}converted axis: {axes}{RESET}" )
                 else:
-                    print( f"[drawPaperPlot] {ansi.RED}ERROR could not find new axis. implement! {axes} {ansi.RESET}" )
+                    print( f"[drawPaperPlot] {RED}ERROR could not find new axis. implement! {axes} {RESET}" )
                     sys.exit(-1)
    
             excl_x = excl_file[txname][f"obsExclusion_{axes}"]['x']
@@ -548,7 +548,7 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     outfiles = []
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"
-    print ( f"[drawPaperPlot] saving to {ansi.YELLOW}{outfile}{ansi.RESET}" )
+    print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
     plt.savefig(outfile, dpi=250)
     plt.clf()
     plt.rcdefaults()
@@ -651,7 +651,7 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.tight_layout()
     outfile = f"{vDir}/{txname}_{fig_axes_title}exp.png"
-    print ( f"[drawPaperPlot] saving to {ansi.YELLOW}{outfile}{ansi.RESET}" )
+    print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
     plt.savefig( outfile, dpi=250)
     plt.clf()
     plt.rcdefaults()

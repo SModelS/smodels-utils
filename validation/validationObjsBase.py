@@ -13,9 +13,9 @@ import os, time, sys, copy, tarfile, tempfile, random, glob
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
 from typing import Union, List, Dict
-from colorama import Fore as ansi
 from validationHelpers import point_in_hull
 from plottingFuncs import getExclusionCurvesFor
+from smodels_utils.helper.terminalcolors import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
@@ -135,7 +135,7 @@ class ValidationObjsBase():
                     tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 p1 = tempdir.rfind("/")
                 stempdir = tempdir[p1+1:]
-                logger.info ( f"tempdir: {ansi.GREEN}{stempdir}{ansi.RESET}" )
+                logger.info ( f"tempdir: {GREEN}{stempdir}{RESET}" )
                 members=tar.getmembers()
                 nmembers = len(members)
                 # logger.debug ( f"nfiles {nfiles} nmembers {nmembers}" )
@@ -225,7 +225,7 @@ class ValidationObjsBase():
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            logger.info ( f"saving to {ansi.YELLOW}{filename}{ansi.RESET}" )
+            logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
             newfilename = filename.replace('.'+fformat,'.pdf')
@@ -234,7 +234,7 @@ class ValidationObjsBase():
                import subprocess
                o = subprocess.getoutput ( cmd )
         else:
-            logger.info ( f"saving to {ansi.YELLOW}{filename}{ansi.RESET}" )
+            logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
             self.savefig(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
