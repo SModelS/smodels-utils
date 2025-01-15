@@ -29,7 +29,7 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
     for expResult in listOfExpRes:                                             
         predictions = theoryPredictionsFor(expResult, toplist, combinedResults=True )
     npredictions=len(predictions)
-    print ( f"{npredictions} predictions" )
+    print ( f"[createPoint] {npredictions} predictions" )
 
 def createSpeyCode():
     filename = "forjack.py"
@@ -47,7 +47,7 @@ speyModel = stat_wrapper( data = obsN, background_yields = bg,
     covariance_matrix = cov, signal_yields = nsig,
     xsection = [ x / lumi for x in nsig ], analysis = analysis )
 
-print ( "ul", speyModel.poi_upper_limit( expected = spey.ExpectationType.apriori ) ) 
+print ( "[createPoint] ul", speyModel.poi_upper_limit( expected = spey.ExpectationType.apriori ) ) 
 
 """ )
     f.close()
@@ -61,7 +61,7 @@ def createSLHAFile ( args : Dict ) -> str:
     :returns: slha file name
     """
     valfile = getValidationDataPathName ( args["dbpath"], args["analysisname"], 
-                            args["validationfile" ], "validationSpey"  )
+                            args["validationfile" ], args["validationfolder"] )
     module = getValidationModuleFromPath ( valfile, args["analysisname"] )
     ctSlhaFiles = 0
     slhafile = None
@@ -72,24 +72,24 @@ def createSLHAFile ( args : Dict ) -> str:
         isIn = True
         for coord,value in axes.items():
             if not coord in args:
-                print ( f"error: need to specify {coord}" )
+                print ( f"[createPoint] error: need to specify {coord}" )
                 sys.exit()
             dx = .5 * abs ( value - args[coord] ) / ( value + args[coord] )
             if dx > 1e-5:
                 isIn = False
         if isIn:
             slhafile = pt["slhafile"]
-            # print ( f"we found {slhafile}" )
+            # print ( f"[createPoint] we found {slhafile}" )
             ctSlhaFiles += 1
     if ctSlhaFiles > 1:
-        print ( f"error we found too many matches for slhafiles" )
+        print ( f"[createPoint] error we found too many matches for slhafiles" )
         sys.exit()
     if ctSlhaFiles == 0:
-        print ( f"error we found no match for slhafile" )
+        print ( f"[createPoint] error we found no match for slhafile" )
         sys.exit()
     from validation.validationHelpers import retrieveValidationFile
     retrieveValidationFile ( slhafile )
-    print ( "created", slhafile )
+    print ( f"[createPoint] created {slhafile}" )
     return slhafile
     
 def create ( args : Dict ):
@@ -109,6 +109,9 @@ def main():
     defaultvalfile = "TChiWH_2EqMassAx_EqMassBy_combined.py"
     ap.add_argument('-v', '--validationfile',
             help=f'validation path [{defaultvalfile}]', default=None)
+    defaultvalfolder = "validationSpey"
+    ap.add_argument('-f', '--validationfolder',
+            help=f'validation path [{defaultvalfolder}]', default=defaultvalfolder)
     ap.add_argument('-x', '--x',
             help='xvalue', default=2075., type=float )
     ap.add_argument('-y', '--y',
@@ -120,13 +123,6 @@ def main():
         args.validationfile=defaultvalfile
     if args.analysisname == None:
         args.analysisname = defaultananame
-    if False: # args.p2:
-        args.validationfile="T2tt_2EqMassAx_EqMassBy_combined.py"
-        args.analysisname = "CMS-SUS-16-050-eff"
-        args.x = 1160.
-        args.y = 200.
-        #args.x = 880.
-        #args.y = 350.
 
     create ( vars(args) )
 

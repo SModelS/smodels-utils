@@ -9,11 +9,7 @@
 __all__ = [ "validatePlot" ]
 
 import sys,os,copy
-try:
-    from colorama import Fore as __c
-    GREEN, YELLOW, RED, RESET = __c.GREEN, __c.YELLOW,  __c.RED, __c.RESET
-except:
-    GREEN, YELLOW, RED, RESET = "","", "", ""
+from smodels_utils.helper.terminalcolors import *
 import logging
 import argparse,time
 from sympy import var

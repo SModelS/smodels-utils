@@ -12,16 +12,17 @@ import os, sys
 import logging as logger
 from smodels.experiment.expResultObj import ExpResult
 from typing import Union, Text, Dict, List
+from smodels_utils.helper.terminalcolors import *
 
-def removeAnaIdSuffices ( anaId ):
+def removeAnaIdSuffices ( anaId : str ) -> str:
     """ given  analysis id <anaId>, remove all kinds of suffices """
     for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
                "-hino", "-wino" ]:
         anaId = anaId.replace(i,"")
     return anaId
 
-def round_to_n ( x, n ):
-    """ round x to n significant digits """
+def round_to_n ( x : float, n : int ) -> float:
+    """ round <x> to <n> significant digits """
     if x in [ None, 0. ]:
         return x
     import math
@@ -29,7 +30,7 @@ def round_to_n ( x, n ):
         return -round(-x, -int(math.floor(math.log10(-x))) + (n - 1))
     return round(x, -int(math.floor(math.log10(x))) + (n - 1))
 
-def getCollaboration ( anaid : Union[Text,Dict] ):
+def getCollaboration ( anaid : Union[Text,Dict] ) -> str:
     """ from <anaid> retrieve the collaboration name
     :param anaid: analysis id, like CMS-SUS-17-001, or a dictionary with an "ID"
                   entry
@@ -378,7 +379,7 @@ def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
     if not dbpath.endswith ( "/"):
         dbpath += "/"
     for sqrts in [ 8, 13, 14, -1 ]:
-        anadir = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
+        anadir = f"{dbpath}{sqrts}TeV/{experiment}/{analysis}"
         if os.path.exists ( anadir ):
             break
     if sqrts == -1:
@@ -386,32 +387,31 @@ def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
             oldana = analysis
             analysis += "-eff"
             for sqrts in [ 8, 13, 14, -1 ]:
-                anadir = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
+                anadir = f"{dbpath}{sqrts}TeV/{experiment}/{analysis}"
                 if os.path.exists ( anadir ):
                     print ( f"[various] added -eff to '{oldana}'." )
                     break
             if sqrts == -1:
-                print ( "[various] could not find analysis %s, nor %s-eff."% \
-                        ( oldana, oldana ) )
+                print ( f"[various] could not find analysis {oldana}, nor {oldana}-eff." )
                 sys.exit()
         else:
-            print ( "[various] could not find analysis %s." % analysis )
-    folder = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
+            print ( f"[various] could not find analysis {analysis}." )
+    folder = f"{dbpath}{sqrts}TeV/{experiment}/{analysis}"
     if valfile == None:
         return folder
     ipath = f"{folder}/{validationFolder}/{valfile}"
     files = glob.glob ( ipath )
     if len(files)==0:
-        print ( f"[various] could not find validation file {ipath}" )
+        print ( f"[various] could not find validation file {RED}{ipath}{RESET}" )
         return None
         # sys.exit()
     if len(files)>1:
-        print ( "[helper/various] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
+        print ( f"[helper/various] globbing {ipath} resulted in {len(files)} files. please specify." )
         for f in files[:2]:
             p = f.rfind("/")
             if p > 0:
                 f = f[p+1:]
-            print ( "[helper/various] found: %s" % ( f ) )
+            print ( f"[helper/various] found: {f}" )
         sys.exit()
     ipath = files[0]
     return ipath
@@ -450,7 +450,7 @@ def getValidationModuleFromPath ( ipath, analysis ):
         spec.loader.exec_module(imp)
         imp.ana = analysis
     except Exception as e:
-        print ( f"Could not import validation file {ipath}: {e}" )
+        print ( f"[various] Could not import validation file {ipath}: {e}" )
         sys.exit()
     return imp
 
