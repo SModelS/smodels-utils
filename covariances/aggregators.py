@@ -140,10 +140,14 @@ def obtainDictFromComment ( comment : str, analysis : str, level : int=1 ) -> Di
             D["triplet"] = lastnr % level
         D["branch"] = branch
         year = None
+        print ( tokens )
         if "201" in tokens[2]:
             year = tokens[2]
-        if "SR" in tokens[1]:
-            D["subbranch"]=tokens[1]
+        if "SR" in tokens[1] or "bVeto" in tokens[1] or "nj" in tokens[1]:
+            D["subbranch"]=f"{tokens[1]}_{tokens[2]}"
+            D["unique"]=True
+        #if "SR" in tokens[1]:
+        #    D["subbranch"]=tokens[1]
         if tokens[1].endswith("l"):
             D["subbranch"]=tokens[1]
         if year is not None:
@@ -246,14 +250,16 @@ def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
     aggs, aggnames = {}, {}
     srprefixes = {}
     for srnr,srname in filtered.items():
-        comment = obtainDictFromComment ( comments[srnr], analysis, level )
-        scomment = str(comment)
+        commdict = obtainDictFromComment ( comments[srnr], analysis, level )
+        scomment = str(commdict)
         if not scomment in aggnames.keys():
             p1 = srname.find("_")
             srprefix = srname[:p1]
             if not srprefix in srprefixes:
                 srprefixes[srprefix]=[]
             newname=f"{srprefix}_{chr(97+len(srprefixes[srprefix]))}"
+            if "unique" in commdict.keys():
+                newname = srname
             srprefixes[srprefix].append(newname)
             #newname=f"ar{len(aggnames)}"
             aggnames[scomment]=newname

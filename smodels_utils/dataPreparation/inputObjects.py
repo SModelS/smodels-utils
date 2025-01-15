@@ -230,8 +230,9 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
-                          max_datasets=None, aggregate = None, datasets = None,
-                          matrixIsCorrelations=False, aggprefix="ar" ):
+            max_datasets=None, aggregate = None, datasets = None, 
+            matrixIsCorrelations=False, aggprefix="ar", zeroIndexed=False
+            ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -250,13 +251,18 @@ class MetaInfoInput(Locker):
         refers to a correlation matrix, not a covariance matrix, so multiply with
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
+        :param zeroIndexed: are indices given one-indexed or zero-indexed
         """
         if type(filename)==dict:
+            if zeroIndexed:
+                logger.error ( "zeroIndex not implemented for FakeCovarianceHandler" )
             handler = FakeCovarianceHandler ( filename, max_datasets, aggregate,
                     aggprefix )
         elif filename.endswith ( ".csv" ):
             handler = CSVCovarianceHandler ( filename,
                     max_datasets, aggregate, aggprefix )
+            if zeroIndexed:
+                logger.error ( "zeroIndex not implemented for CSVCovarianceHandler" )
         else:
             """
             try:
@@ -271,11 +277,13 @@ class MetaInfoInput(Locker):
             try:
                 import uproot
                 handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
-                    aggregate, aggprefix )
+                    aggregate, aggprefix, zeroIndexed )
             except ModuleNotFoundError as e:
                 logger.error ( "could not import uproot, trying pyroot now" )
                 handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
+                if zeroIndexed:
+                    logger.error ( "zeroIndex not implemented for PYROOTCovarianceHandler" )
 
         if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
             if addOrder:

@@ -25,22 +25,31 @@ overrideWithConservativeErrors = True
 
 minVariance = 1e-4 ## the minimum value for variance
 
-def computeAggCov ( covariance, agg1, agg2 ):
+def computeAggCov ( covariance : list[list], agg1 : list, agg2 : list, 
+        zeroIndexed : bool = False ) -> float:
     """ compute the covariance between agg1 and agg2
     :param covariance: the covariance matrix
     :param agg1: list of indices to aggregate
     :param agg2: list of indices to aggregate
+    :param zeroIndexed: are indices given one-indexed or zero-indexed
+
+    :returns: the covariance (float)
     """
     C=0.
+    di = 0
+    if not zeroIndexed:
+        di = 1
     for i in agg1:
         for j in agg2:
-            C+=covariance[i-1][j-1]
+            C+=covariance[i-di][j-di]
     return C
 
-def aggregateMe ( covariance, aggregate, aggprefix="AR" ):
+def aggregateMe ( covariance : list[list], aggregate : list, 
+          aggprefix : str ="AR", zeroIndexed : bool = False ) -> tuple[list,list]:
     """ aggregate the covariance matrix according to aggregate
     :param covariance: the matrix.
     :param aggregate: list of lists of indices
+    :param zeroIndexed: are indices given one-indexed or zero-indexed
     :returns a small covariance matrix, and a dataset order
     """
     newDSOrder=[]
@@ -62,16 +71,20 @@ def aggregateMe ( covariance, aggregate, aggprefix="AR" ):
             tmp.append ( v )
         aggregate = tmp
 
+    di = 1
+    if zeroIndexed:
+        di = 0
     #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
     for ctr,agg in enumerate ( aggregate ):
         V=0.
         for i in agg:
             for j in agg:
-                V+=covariance[i-1][j-1]
-        newCov[ctr][ctr]=V
+                #V+=covariance[i-1][j-1]
+                V+=oldcov[i-di][j-di]
+        newCov[ctr][ctr]=V ## that should be the new main diagonal
         for ctr2,agg2 in enumerate ( aggregate ):
             if ctr == ctr2: continue
-            cov = computeAggCov ( covariance, agg, agg2 )
+            cov = computeAggCov ( covariance, agg, agg2, zeroIndexed )
             newCov[ctr][ctr2]=cov
     return newCov, newDSOrder
 
@@ -125,16 +138,18 @@ class CovarianceHandler:
         if removed > 0:
             logger.warning ( f"removed {removed}/{ntot} correlations below threshold of {threshold} from covariance matrix" )
 
-    def aggregateThis ( self, aggregate ):
-        """ yo. aggregate. """
+    def aggregateThis ( self, aggregate, zeroIndexed : bool = False ):
+        """ yo. aggregate.
+        :param zeroIndexed: are indices given one-indexed or zero-indexed
+        """
         newCov, newDSOrder = aggregateMe ( self.covariance, aggregate,
-                                           self.aggprefix )
+                                           self.aggprefix, zeroIndexed )
         self.covariance = newCov
         self.datasetOrder=newDSOrder
 
 class UPROOTCovarianceHandler ( CovarianceHandler ):
     def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None, aggprefix = "ar" ):
+                   aggregate = None, aggprefix = "ar", zeroIndexed : bool = False ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
                          from.
@@ -173,9 +188,10 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                 row.append ( el )
             self.covariance.append ( row )
 
+        self.fullcovariance = copy.deepcopy ( self.covariance )
         if aggregate != None:
             ## aggregate the stuff
-            self.aggregateThis ( aggregate )
+            self.aggregateThis ( aggregate, zeroIndexed )
 
         self.removeSmallValues()
         self.checkCovarianceMatrix()
