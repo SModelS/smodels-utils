@@ -450,7 +450,8 @@ def getValidationModuleFromPath ( ipath, analysis ):
         spec.loader.exec_module(imp)
         imp.ana = analysis
     except Exception as e:
-        print ( "Could not import validation file 1: %s" % e )
+        print ( f"Could not import validation file {ipath}: {e}" )
+        sys.exit()
     return imp
 
 

@@ -3,7 +3,7 @@
 """ create a spey point, ready for jacks inspection """
 
 from typing import Dict
-from smodels.tools import speyTools
+from smodels.statistics import speyTools
 from smodels_utils.helper.various import getValidationDataPathName, getValidationModuleFromPath
 speyTools._debug["writePoint"]=True
 import os, sys
@@ -92,9 +92,8 @@ def createSLHAFile ( args : Dict ) -> str:
     print ( "created", slhafile )
     return slhafile
     
-            
-
 def create ( args : Dict ):
+    """ create the spey code given <args> """
     slhafile = createSLHAFile ( args )
     runSModelS ( args, slhafile )
     createSpeyCode()
@@ -104,10 +103,10 @@ def main():
     ap = argparse.ArgumentParser(description="create a specific point ready for jacks inspection" )
     ap.add_argument('-d', '--dbpath',
             help='database path [<home>/git/smodels-database]', default=None)
-    defaultananame = "CMS-SUS-20-004-eff"
+    defaultananame = "CMS-SUS-21-008-eff"
     ap.add_argument('-a', '--analysisname',
             help=f'analysis path [{defaultananame}]', default=None)
-    defaultvalfile = "T5HH_2EqMassAx_EqMassBx-50_EqMassC1.0_combined.py"
+    defaultvalfile = "TChiWH_2EqMassAx_EqMassBy_combined.py"
     ap.add_argument('-v', '--validationfile',
             help=f'validation path [{defaultvalfile}]', default=None)
     ap.add_argument('-x', '--x',
@@ -121,7 +120,7 @@ def main():
         args.validationfile=defaultvalfile
     if args.analysisname == None:
         args.analysisname = defaultananame
-    if args.p2:
+    if False: # args.p2:
         args.validationfile="T2tt_2EqMassAx_EqMassBy_combined.py"
         args.analysisname = "CMS-SUS-16-050-eff"
         args.x = 1160.
