@@ -5,10 +5,10 @@
 from typing import Dict
 from smodels.statistics import speyTools
 from smodels_utils.helper.various import getValidationDataPathName, getValidationModuleFromPath
-speyTools._debug["writePoint"]=True
-import os, sys
+import os, sys, shutil
 
 def runSModelS( args : Dict, slhafile : os.PathLike ):
+    print ( f"[createPoint] running SModelS" )
     from smodels.decomposition import decomposer
     from smodels.base.physicsUnits import fb, GeV, TeV
     from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
@@ -27,28 +27,33 @@ def runSModelS( args : Dict, slhafile : os.PathLike ):
                                     invisibleCompress=True, minmassgap=mingap)
     anaids = [ args["analysisname"].replace("-eff","") ]
     listOfExpRes = db.getExpResults( analysisIDs = anaids )
+    speyTools._debug["writePoint"]=True ## this makes sure data.txt is created!!!
     for expResult in listOfExpRes:
         predictions = theoryPredictionsFor(db, toplist, combinedResults=True )
     npredictions=len(predictions)
     print ( f"[createPoint] {npredictions} predictions" )
 
-def createSpeyCode():
+def createSpeyCode( args : Dict ):
     filename = "forjack.py"
     f=open(filename,"wt")
     f.write( "#!/usr/bin/env python3\n\n" )
+    f.write ( f"## produced via: {' '.join(sys.argv)}\n" )
+    f.write ( f"## args are: {args}\n" )
     with open ( "data.txt", "rt" ) as g:
         f.write ( g.read() )
+    shutil.move ( "data.txt", "data.old" )
     f.write (
 """
 import spey
-
 
 stat_wrapper = spey.get_backend("default_pdf.correlated_background")
 speyModel = stat_wrapper( data = obsN, background_yields = bg,
     covariance_matrix = cov, signal_yields = nsig,
     xsection = [ x / lumi for x in nsig ], analysis = analysis )
 
-print ( "[createPoint] ul", speyModel.poi_upper_limit( expected = spey.ExpectationType.apriori ) )
+expected = False # spey.ExpectationType.apriori
+ul = speyModel.poi_upper_limit( expected = expected )
+print ( f"[forjack] ul={ul}" )
 
 """ )
     f.close()
@@ -88,18 +93,18 @@ def createSLHAFile ( args : Dict ) -> str:
         sys.exit()
     from validation.validationHelpers import retrieveValidationFile
     retrieveValidationFile ( slhafile )
-    print ( f"[createPoint] created {slhafile}" )
+    print ( f"[createPoint] created {slhafile} {os.path.exists('data.txt')}" )
     return slhafile
 
 def create ( args : Dict ):
     """ create the spey code given <args> """
     slhafile = createSLHAFile ( args )
-    runSModelS ( args, slhafile )
-    createSpeyCode()
+    runSModelS ( args, slhafile ) ## need to run it so data.txt is produced
+    createSpeyCode( args )
 
 def main():
     import argparse
-    ap = argparse.ArgumentParser(description="create a specific point ready for jacks inspection" )
+    ap = argparse.ArgumentParser(description="create a specific input point ready for jacks inspection" )
     defaultdbpath = "~/git/smodels-database/" # validation.pcl"
     ap.add_argument('-d', '--dbpath',
             help=f'database path [{defaultdbpath}]', default=defaultdbpath)
@@ -117,8 +122,6 @@ def main():
     ap.add_argument('-y', '--y',
             help='y-value', default=None, type=float )
     args = ap.parse_args()
-    # if args.dbpath == None:
-    #      args.dbpath = f"~/git/smodels-database/validation.pcl"
     args.dbpath = os.path.expanduser ( args.dbpath )
     if args.validationfile == None:
         args.validationfile=defaultvalfile
