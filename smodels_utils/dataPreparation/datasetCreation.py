@@ -103,10 +103,10 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
             errorcounts["moreconservative"]+=1
             newds.bgError = oldBgError
         errorcounts["errorsvary"]+=1
-    ntoys, alpha = 200000, .05
+    # alpha = .05
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-    comp = UpperLimitComputer ( ntoys, 1. - alpha )
+    comp = UpperLimitComputer ( ) # 1. - alpha )
     logger.error ( "FIXME need to replace with spey!" )
     m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
     try:
