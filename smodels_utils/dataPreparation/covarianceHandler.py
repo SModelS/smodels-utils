@@ -149,10 +149,13 @@ class CovarianceHandler:
 
 class UPROOTCovarianceHandler ( CovarianceHandler ):
     def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None, aggprefix = "ar", zeroIndexed : bool = False ):
+                   aggregate = None, aggprefix = "ar", zeroIndexed : bool = False,
+                   scaleCov : float = 1.0 ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
-                         from.
+        from.
+        :param scaleCov: scale the covariances down ever so slightly, to be
+        sure the determinant stay negative.
         """
         self.aggprefix = aggprefix
         import uproot
@@ -182,9 +185,11 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                     continue
                 el = h.values()[i][j]
                 if i==j and el < 1e-4:
-                   logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
+                   logger.error ( f"variance in the covariance matrix at position {i} has a very small value ({el:g})" )
                    logger.error ( "will set it to 1e-4" )
                    el = 1e-4
+                if i!=j and scaleCov != 1.0:
+                    el = scaleCov * el ## slight downscale!
                 row.append ( el )
             self.covariance.append ( row )
 

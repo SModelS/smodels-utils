@@ -231,7 +231,8 @@ class MetaInfoInput(Locker):
 
     def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
             max_datasets=None, aggregate = None, datasets = None, 
-            matrixIsCorrelations=False, aggprefix="ar", zeroIndexed=False
+            matrixIsCorrelations=False, aggprefix="ar", zeroIndexed=False,
+            scaleCov=1.0
             ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
@@ -252,17 +253,23 @@ class MetaInfoInput(Locker):
         the SR erros, accordingly
         :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
         :param zeroIndexed: are indices given one-indexed or zero-indexed
+        :param scaleCov: allows to downscale the offdiagonal elements, so that
+        the determinant stays firmly positive
         """
         if type(filename)==dict:
             if zeroIndexed:
                 logger.error ( "zeroIndex not implemented for FakeCovarianceHandler" )
+            if abs ( scaleCov - 1. ) > 1e-20:
+                logger.error ( "scaleCov not implemented for FakeCovarianceHandler" )
             handler = FakeCovarianceHandler ( filename, max_datasets, aggregate,
                     aggprefix )
         elif filename.endswith ( ".csv" ):
-            handler = CSVCovarianceHandler ( filename,
-                    max_datasets, aggregate, aggprefix )
             if zeroIndexed:
                 logger.error ( "zeroIndex not implemented for CSVCovarianceHandler" )
+            if abs ( scaleCov - 1. ) > 1e-20:
+                logger.error ( "scaleCov not implemented for CSVCovarianceHandler" )
+            handler = CSVCovarianceHandler ( filename,
+                    max_datasets, aggregate, aggprefix )
         else:
             """
             try:
@@ -277,13 +284,15 @@ class MetaInfoInput(Locker):
             try:
                 import uproot
                 handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
-                    aggregate, aggprefix, zeroIndexed )
+                    aggregate, aggprefix, zeroIndexed, scaleCov = scaleCov )
             except ModuleNotFoundError as e:
                 logger.error ( "could not import uproot, trying pyroot now" )
-                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
-                    aggregate, aggprefix )
                 if zeroIndexed:
                     logger.error ( "zeroIndex not implemented for PYROOTCovarianceHandler" )
+                if abs ( scaleCov - 1. ) > 1e-20:
+                    logger.error ( "scaleCov not implemented for PYROOTCovarianceHandler" )
+                handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
+                    aggregate, aggprefix )
 
         if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
             if addOrder:
