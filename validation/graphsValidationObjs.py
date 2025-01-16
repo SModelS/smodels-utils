@@ -9,8 +9,8 @@
 """
 
 import logging,os,sys,time,math,numpy,copy
-
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
+from smodels.base.smodelsLogging import logger
 from smodels.base.physicsUnits import GeV
 from smodels_utils.helper.various import round_to_n
 from typing import Union, Dict, List

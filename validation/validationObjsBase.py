@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import logging
+#import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
@@ -16,9 +16,10 @@ from typing import Union, List, Dict
 from validationHelpers import point_in_hull
 from plottingFuncs import getExclusionCurvesFor
 from smodels_utils.helper.terminalcolors import *
+from smodels.base.smodelsLogging import logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+#logger = logging.getLogger(__name__)
+#logger.setLevel(level=logging.INFO)
 
 class ValidationObjsBase():
     """
