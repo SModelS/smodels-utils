@@ -34,9 +34,9 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
         file = open(f"{anaDir}/exclusion_lines.json")
         excl_file = json.load(file)
         axes = axes.replace(" ", "")
+        import sympy
         x,y,z,w = sympy.var("x y z w")
         daxes = eval(axes)
-        import sympy
         from sympy.parsing.sympy_parser import parse_expr
         if txname in excl_file:
             if f"obsExclusion_{axes}" not in excl_file[txname].keys():

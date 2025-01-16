@@ -131,6 +131,7 @@ def validate ( args : Dict, idx ):
     :param topo: string that replaces @@TOPOS@@ in inifile
     :param keep: keep temporary files
     :param tempname: if not None, use this for the temp files names
+    :param validationfolder: string that replaces @@VALIDATIONFOLDER@@ in inifile
     :param limit_points: run over only that many points
     :param model: the model to use (default)
     """
@@ -142,6 +143,7 @@ def validate ( args : Dict, idx ):
     topo = args["topo"]
     keep = args["keep"]
     tempname = args["tempname"]
+    validationfolder = args["validationfolder"]
     limit_points = args["limit_points"]
     generatedata = args["generate_data"]
     dataselector = args["dataselector"]
@@ -164,6 +166,8 @@ def validate ( args : Dict, idx ):
     else:
         newini = f"{Dir}/{tempname}_{binaryIdx}.ini"
     # tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
+    if validationfolder is None:
+        validationfolder = "validation"
     tempdir = None
     if tempname != None:
         tempdir = os.path.basename ( tempname )
@@ -184,6 +188,7 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
             newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
+            newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
             if tempdir is None and "@@TEMPDIR@@" in line:
                 continue
             if tempdir is not None:
@@ -318,6 +323,8 @@ def main():
     argparser.add_argument ( '-V', '--validate', help='run validation with ini file that resides in smodels-utils/validation/inifiles/ [default.ini]',
                         type=str, default = "default.ini" )
     argparser.add_argument ( '--tempname', help='name of temp files to use, without extension, e.g. _Vx9fmn28x. Files and folders will be named accordingly. None for random temp name. Use this for multi-cpu mode [None]',
+                        type=str, default = None )
+    argparser.add_argument ( '--validationfolder', help='the name of the validation folder [validation]',
                         type=str, default = None )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
