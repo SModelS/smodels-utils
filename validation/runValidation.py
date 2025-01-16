@@ -217,7 +217,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if not "folder1" in options:
         if "validationFolder" in opts:
             options["folder1"] = opts["validationFolder"]
-            options["folder2"] = opts["validationFolder"]
+            # options["folder2"] = opts["validationFolder"]
         else:
             folder1 = os.path.dirname ( datafile ).replace( dbpath, "" )
             p1 = folder1.rfind ( "/" )
