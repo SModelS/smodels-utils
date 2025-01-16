@@ -239,9 +239,11 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         if h in effs.keys():
             eff1 = effs[h]
         hasResult = False
+        ul = "UL"
+        if "eul2" in options and options["eul2"]==True:
+            ul = "eUL"
         if not plotEfficiencies and r1 and r1>0. and "UL" in point and point["UL"] != None:
-            r2 = point["signal"] / point["UL"]
-            # ul2 = point["signal"] / point["UL"]
+            r2 = point["signal"] / point[ul]
             ratio = float("nan")
             if r2 > 0.:
                 ratio = r1 / r2
@@ -648,6 +650,8 @@ def main():
             default="../../smodels-database/" )
     argparser.add_argument ( "-e1", "--eul", action="store_true",
             help="for the first analysis, use expected, not observed, upper limits" )
+    argparser.add_argument ( "-e2", "--eul2", action="store_true",
+            help="for the second analysis, use expected, not observed, upper limits" )
     argparser.add_argument ( "-e", "--efficiencies", action="store_true",
             help="plot ratios of efficencies of best SRs, not ULs" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
