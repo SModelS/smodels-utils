@@ -242,7 +242,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
         ul = "UL"
         if "eul2" in options and options["eul2"]==True:
             ul = "eUL"
-        if not plotEfficiencies and r1 and r1>0. and "UL" in point and point["UL"] != None:
+        if not plotEfficiencies and r1 and r1>0. and ul in point and point[ul] != None:
             r2 = point["signal"] / point[ul]
             ratio = float("nan")
             if r2 > 0.:
@@ -524,7 +524,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     plt.text ( .80, .025, f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$",
             transform=fig.transFigure, c="grey", fontsize=12  )
-    if options["comment"] not in [ None, "" ]:
+    if options["comment"] not in [ None, "", "None" ]:
         plt.text ( .1, .025, options["comment"], transform=fig.transFigure, 
                    c="grey", fontsize=12  )
     print ( f"[plotRatio] Saving to {YELLOW}{figname}{RESET}" )
