@@ -132,6 +132,8 @@ def validate ( args : Dict, idx ):
     :param keep: keep temporary files
     :param tempname: if not None, use this for the temp files names
     :param validationfolder: string that replaces @@VALIDATIONFOLDER@@ in inifile
+    :param databasepath: string that replaces @@DATABASEPATH@@ in inifile
+    :param spey: use spey, replace @@SPEY@@in inifile
     :param limit_points: run over only that many points
     :param model: the model to use (default)
     """
@@ -144,6 +146,8 @@ def validate ( args : Dict, idx ):
     keep = args["keep"]
     tempname = args["tempname"]
     validationfolder = args["validationfolder"]
+    databasepath = args["databasepath"]
+    spey = args["spey"]
     limit_points = args["limit_points"]
     generatedata = args["generate_data"]
     dataselector = args["dataselector"]
@@ -189,6 +193,8 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
+            newline = newline.replace("@@DATABASEPATH@@", databasepath )
+            newline = newline.replace("@@SPEY@@", spey )
             if tempdir is None and "@@TEMPDIR@@" in line:
                 continue
             if tempdir is not None:
@@ -326,6 +332,8 @@ def main():
                         type=str, default = None )
     argparser.add_argument ( '--validationfolder', help='the name of the validation folder [validation]',
                         type=str, default = None )
+    argparser.add_argument ( '--databasepath', help='the path to the database [../../smodels-database]',
+                        type=str, default = "../../smodels-database" )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
     argparser.add_argument ( '-l', '--limit_points', help='run over no more than many points [all]',
@@ -334,6 +342,8 @@ def main():
                         type=str, default="combined" )
     argparser.add_argument ( '-r', '--repeat', nargs='?', help='repeat submission n times [1]',
                         type=int, default=1 )
+    argparser.add_argument ( '--spey', help='use spey statistics',
+            action="store_true" )
     argparser.add_argument ( '--cancel_all', help='cancel all validaters',
             action="store_true" )
     argparser.add_argument ( '--cancel', help='cancel a certain range of validaters, e.g "65461977-65461985"',

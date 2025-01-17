@@ -784,6 +784,7 @@ if __name__ == "__main__":
                 "continue": False, ## continue old productions
                 "ratio_comment": None, ## comment in ratio plot
                 "expectationType": "posteriori",
+                "spey": False, ## use spey statistics
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
@@ -850,6 +851,14 @@ if __name__ == "__main__":
 
     if args.show:
         options["show"]=True
+
+    if "spey" in options and options["spey"]==True:
+        from smodels.base import runtime
+        if "spey" in runtime._experimental:
+            runtime._experimental["spey"]=True
+        else:
+            logger.error ( "asked for spey but don't see any support for it in this SModelS version" ) 
+            sys.exit()
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options,
