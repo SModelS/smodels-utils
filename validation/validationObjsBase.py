@@ -9,7 +9,7 @@
 
 """
 #import logging
-import os, time, sys, copy, tarfile, tempfile, random, glob
+import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
 from validationHelpers import getDefaultModel, showPlot
 from smodels.matching import modelTester
 from typing import Union, List, Dict
