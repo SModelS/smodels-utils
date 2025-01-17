@@ -785,6 +785,7 @@ if __name__ == "__main__":
                 "ratio_comment": None, ## comment in ratio plot
                 "expectationType": "posteriori",
                 "spey": False, ## use spey statistics
+                "databasepath": "../../smodels-database", ## smodels database
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
