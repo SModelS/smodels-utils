@@ -329,7 +329,7 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""
-    if "spey" in validationPlot.meta:
+    if hasattr ( validationPlot, "meta" ) and "spey" in validationPlot.meta:
         # subtitle += f" [spey {validationPlot.meta['spey']}]"
         subtitle += f" [spey]"
 

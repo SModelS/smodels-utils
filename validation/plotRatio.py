@@ -404,6 +404,10 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             title = anaId2
         if anaId in anaId2:
             title = anaId
+    if "eul" in options:
+        title += " (expected)"
+    else:
+        title += " (observed)"
 
     plt.title ( title )
     txStr = stopo
