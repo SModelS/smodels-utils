@@ -21,6 +21,19 @@ from smodels.base.smodelsLogging import logger
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
 
+def sha1sum(filename : os.PathLike ) -> str:
+    """ get sha1 hash sums for the tarballs
+    :returns: sha1 hashsum
+    """
+    import hashlib
+    h  = hashlib.sha1() # 256 is safer but longer
+    b  = bytearray(128*1024)
+    mv = memoryview(b)
+    with open(filename, 'rb', buffering=0) as f:
+        while n := f.readinto(mv):
+            h.update(mv[:n])
+    return h.hexdigest()
+
 class ValidationObjsBase():
     """
     The base class for ValidationPlot and GraphsValidationPlot, as they share much
@@ -62,7 +75,7 @@ class ValidationObjsBase():
         """ is this a topology with a width-dependency? """
         return "(" in self.axes
 
-    def getOfficialCurves(self, get_all : bool = True, 
+    def getOfficialCurves(self, get_all : bool = True,
             expected : bool = False ) -> Union[Dict,List]:
         """
         Reads the root file associated to the ExpRes and
@@ -247,7 +260,7 @@ class ValidationObjsBase():
 
         return True
 
-    
+
     def getUglyPlot(self,silentMode : bool = True ):
         """
         Uses the data in self.data and the official exclusion curve
@@ -311,7 +324,7 @@ class ValidationObjsBase():
         return False
 
     def runSModelS ( self, outputformat : int = 3 ) -> list:
-        """ run SModelS proper 
+        """ run SModelS proper
         :param outputformat: define if the output is v2 or v3
         :returns: list of slha files that we ran over (is this true?)
         """
@@ -426,7 +439,7 @@ class ValidationObjsBase():
         return fileList
 
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
-        """ try to guess the mass vector from the SLHA file name 
+        """ try to guess the mass vector from the SLHA file name
         :returns: mass vector
         """
         tokens = filename.replace(".slha","").split("_")
@@ -618,7 +631,7 @@ class ValidationObjsBase():
 
 
     def addToListOfRunningFiles ( self, fileList : List ) -> List:
-        """ add files listed in fileList to list of running  files 
+        """ add files listed in fileList to list of running  files
         :returns: list you should actually run
         """
         current = {}
@@ -633,7 +646,7 @@ class ValidationObjsBase():
         cleanedcurrent = {}
         for f,t in current.items():
             dt = ( time.time() - t ) / 60. # minutes
-            ## FIXME we should actually only take out once 
+            ## FIXME we should actually only take out once
             ## we run out of "good" points
             if dt < 15.: # after 15 minutes we take it out!
                 cleanedcurrent[f]=t
@@ -658,7 +671,7 @@ class ValidationObjsBase():
     def lockFile ( self, lockfile : Union [ None, str ] = None ):
         """ a locking mechanism """
         if lockfile is None:
-            lockfile = self.runningDictLockFile 
+            lockfile = self.runningDictLockFile
         ctr = 0
         while os.path.exists ( lockfile ):
             ctr+=1
@@ -672,7 +685,7 @@ class ValidationObjsBase():
     def unlockFile( self, lockfile : Union [ None, str ] = None ):
         """ a locking mechanism """
         if lockfile is None:
-            lockfile = self.runningDictLockFile 
+            lockfile = self.runningDictLockFile
         if os.path.exists ( lockfile ):
             try:
                 os.unlink ( lockfile )
@@ -740,7 +753,6 @@ class ValidationObjsBase():
             meta["includeCRs"]=self.expRes.globalInfo.includeCRs
         if hasattr ( self.expRes.datasets[0].dataInfo, "thirdMoment" ):
             meta["thirdMoments"]=True
-        import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         if os.path.exists ( f"{validationDir}/../validation_commentary.txt" ):
             with open( f"{validationDir}/../validation_commentary.txt","rt") as f2:
                 txt=f2.read().strip()
@@ -770,6 +782,7 @@ class ValidationObjsBase():
         if self.namedTarball != None:
             meta["namedTarball"]=self.namedTarball
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
+        meta["sha1"]=sha1sum ( self.slhaDir )
         useTevatronCLs = False
         asimovIsExpected = False
         from smodels.base.runtime import experimentalFeature
@@ -807,7 +820,7 @@ class ValidationObjsBase():
         return self.massPlane.getNiceAxes ( axesStr )
 
     def computeWeight ( self, point ) -> float:
-        """ compute the weight of a point by computing the area of its 
+        """ compute the weight of a point by computing the area of its
         voronoi cell """
         if 0.<point[1]<1e-6:
             point[1]=rescaleWidth( point[1] )
@@ -817,7 +830,7 @@ class ValidationObjsBase():
         return self.average_area
 
 
-    def computeAgreementFactor ( self, looseness : float =1.2, 
+    def computeAgreementFactor ( self, looseness : float =1.2,
             signal_factor : float =1.0, weighted : bool = False ) -> float:
         """ computes how much the plot agrees with the official exclusion curve
         by counting the points that are inside/outside the official
