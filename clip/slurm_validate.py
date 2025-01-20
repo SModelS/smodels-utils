@@ -169,6 +169,8 @@ def validate ( args : Dict, idx ):
         newini = tempfile.mktemp(prefix="_V",suffix=".ini",dir=Dir )
     else:
         newini = f"{Dir}/{tempname}_{binaryIdx}.ini"
+        #if spey:
+        #    newini = newini.replace(".ini", ".spey.ini" )
     # tempdir = os.path.basename ( newini ).replace(".ini","") # .replace("_V","tmp")
     if validationfolder is None:
         validationfolder = "validation"
@@ -194,7 +196,7 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
             newline = newline.replace("@@DATABASEPATH@@", databasepath )
-            newline = newline.replace("@@SPEY@@", spey )
+            newline = newline.replace("@@SPEY@@", str(spey) )
             if tempdir is None and "@@TEMPDIR@@" in line:
                 continue
             if tempdir is not None:
@@ -298,6 +300,7 @@ def clean():
     files += glob.glob ( f"{outputsdir}/validate*out" )
     for f in files:
         if os.path.exists ( f ):
+            print ( f"[slurm_validate] removing {f}" )
             if os.path.isdir ( f ):
                 shutil.rmtree ( f, ignore_errors=True )
             else:
