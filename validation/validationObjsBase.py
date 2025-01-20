@@ -745,8 +745,9 @@ class ValidationObjsBase():
                 meta["commentary"]=txt
         if hasattr ( self.expRes.globalInfo, "resultType" ):
             meta["resultType"]=self.expRes.globalInfo.resultType
-        from smodels.matching import theoryPrediction
-        if "spey" in theoryPrediction.StatsComputer.__module__:
+        from smodels.base import runtime
+        if "spey" in runtime._experimental and \
+                runtime._experimental["spey"]==True:
             import spey
             meta["spey"]=spey.__version__
         if hasattr ( self, "pointsInTarFile" ):
