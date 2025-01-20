@@ -738,6 +738,9 @@ class ValidationObjsBase():
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
         if hasattr ( self.expRes.globalInfo, "includeCRs" ):
             meta["includeCRs"]=self.expRes.globalInfo.includeCRs
+        if hasattr ( self.expRes.datasets[0].dataInfo, "thirdMoment" ):
+            meta["thirdMoments"]=True
+        import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         if os.path.exists ( f"{validationDir}/../validation_commentary.txt" ):
             with open( f"{validationDir}/../validation_commentary.txt","rt") as f2:
                 txt=f2.read().strip()
