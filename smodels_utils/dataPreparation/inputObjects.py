@@ -211,8 +211,7 @@ class MetaInfoInput(Locker):
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
 
-    def __new__(cls, ID):
-
+    def __new__( cls, ID : str ):
         """
         checks if databaseCreator already contains
         a MetaInfoInput object, writes this object to
@@ -230,15 +229,13 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename : str,
-            histoname : Union[str,None] = None,
-            addOrder : bool =True,
+            histoname : Union[str,None] = None, addOrder : bool =True,
             max_datasets : Union[int,None] = None,
             aggregate : Union[list,None] = None,
             datasets : Union[list,None] = None,
             matrixIsCorrelations : bool = False,
-            aggprefix : str ="ar",
-            zeroIndexed : bool = False,
-            scaleCov : float = 1.0 ):
+            aggprefix : str ="ar", zeroIndexed : bool = False,
+            scaleCov : float = 1.0, blinded_regions : list = [] ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -261,6 +258,7 @@ class MetaInfoInput(Locker):
         :param zeroIndexed: are indices given one-indexed or zero-indexed
         :param scaleCov: allows to downscale the offdiagonal elements, so that
         the determinant stays firmly positive
+        :param blinded_regions: list of regions we omit
         """
         if type(filename)==dict:
             if zeroIndexed:
@@ -289,8 +287,9 @@ class MetaInfoInput(Locker):
             """
             try:
                 import uproot
-                handler = UPROOTCovarianceHandler ( filename, histoname, max_datasets,
-                    aggregate, aggprefix, zeroIndexed, scaleCov = scaleCov )
+                handler = UPROOTCovarianceHandler ( filename, histoname, 
+                    max_datasets, aggregate, aggprefix, zeroIndexed, 
+                    scaleCov = scaleCov )
             except ModuleNotFoundError as e:
                 logger.error ( "could not import uproot, trying pyroot now" )
                 if zeroIndexed:

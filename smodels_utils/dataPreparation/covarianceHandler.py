@@ -12,6 +12,7 @@ import sys
 import copy
 import logging
 import numpy
+from typing import Union
 from smodels_utils.helper import prettyDescriptions
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -148,14 +149,22 @@ class CovarianceHandler:
         self.datasetOrder=newDSOrder
 
 class UPROOTCovarianceHandler ( CovarianceHandler ):
-    def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None, aggprefix = "ar", zeroIndexed : bool = False,
-                   scaleCov : float = 1.0 ):
+    def __init__ ( self, filename : str, histoname : str, 
+            max_datasets : Union [int,None] = None,
+            aggregate : Union[list,None] = None, aggprefix : str = "ar", 
+            zeroIndexed : bool = False, scaleCov : float = 1.0,
+            blinded_regions : list = [] ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
         from.
+        :param max_datasets: if not None, restrict the number of datasets
+        :param aggregate: aggregate signal regions, given by indices, e.g.
+         [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
+        :param aggprefix: prefix for aggregate signal region names, eg ar0, ar1, etc
+        :param zeroIndexed: are indices given one-indexed or zero-indexed
         :param scaleCov: scale the covariances down ever so slightly, to be
         sure the determinant stay negative.
+        :param blinded_regions: list of regions we omit
         """
         self.aggprefix = aggprefix
         import uproot
@@ -167,7 +176,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
             self.n=min(max_datasets+1,self.n+1)
         self.datasetOrder = []
         self.covariance = []
-        self.blinded_regions = []
+        self.blinded_regions = blinded_regions
         cterr = 0
         # self.interact ( xaxis )
         for i in range ( self.n ):
