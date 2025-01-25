@@ -30,7 +30,7 @@ from smodels.installation import version
 import copy
 import math
 import scipy
-from typing import Dict
+from typing import Dict, Union
 
 import logging
 from smodels_utils.helper import prettyDescriptions
@@ -204,7 +204,7 @@ class MetaInfoInput(Locker):
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment', 'modelFile', 'datasetOrderForModel',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'jsonFiles_FullLikelihood', 'source', 
+    'combinableWith', 'jsonFiles', 'jsonFiles_FullLikelihood', 'source',
     'Leff_inner', 'Leff_outer', 'type',
     'includeCRs', 'onnxFiles', 'resultType', 'signalUncertainty' ]
     internalAttr = ['_sqrts', '_lumi']
@@ -229,11 +229,16 @@ class MetaInfoInput(Locker):
         databaseCreator.metaInfo = metaInfo
         return metaInfo
 
-    def createCovarianceMatrix ( self, filename, histoname = None, addOrder=True,
-            max_datasets=None, aggregate = None, datasets = None, 
-            matrixIsCorrelations=False, aggprefix="ar", zeroIndexed=False,
-            scaleCov=1.0
-            ):
+    def createCovarianceMatrix ( self, filename : str,
+            histoname : Union[str,None] = None,
+            addOrder : bool =True,
+            max_datasets : Union[int,None] = None,
+            aggregate : Union[list,None] = None,
+            datasets : Union[list,None] = None,
+            matrixIsCorrelations : bool = False,
+            aggprefix : str ="ar",
+            zeroIndexed : bool = False,
+            scaleCov : float = 1.0 ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -244,6 +249,7 @@ class MetaInfoInput(Locker):
                          be defined purely from the signal regions (overwrite),
                          only if no datasetOrder is explicitly given (True),
                          or the standard "SRx" names be used (False)
+        :param max_datasets: if not None, restrict the number of datasets
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         :param datasets: list of datasets, so we can cross-check the covariance
@@ -1416,7 +1422,7 @@ class TxNameInput(Locker):
                           topology of the txname constraint.
         :param value: the actual value. if this is zero, then we do not need to complain. if None, we dont take it into account
         """
-        if hasattr(self,'massConstraint') and self.massConstraint!=None: 
+        if hasattr(self,'massConstraint') and self.massConstraint!=None:
             ## FIXME obsolete?
             self.massConstraints = [self.massConstraint]
         if not hasattr(self,'massConstraints'):

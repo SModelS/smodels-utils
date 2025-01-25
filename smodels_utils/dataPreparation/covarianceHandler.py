@@ -61,7 +61,7 @@ def aggregateMe ( covariance : list[list], aggregate : list,
         newCov.append ( copy.deepcopy(row) )
     newDSOrder = [ f"{aggprefix}{ctr}" for ctr in range(nNew) ]
     if aggprefix == "SR":
-    #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+    #logger.error ( f"aggregating cov matrix from {self.n} to {nNew} dims." )
         newDSOrder = [ f"{aggprefix}{agg}{ctr}" for agg in aggregate ]
     if type(aggregate) == dict:
         newDSOrder = []
@@ -74,7 +74,7 @@ def aggregateMe ( covariance : list[list], aggregate : list,
     di = 1
     if zeroIndexed:
         di = 0
-    #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+    #logger.error ( f"aggregating cov matrix from {self.n} to {nNew} dims." )
     for ctr,agg in enumerate ( aggregate ):
         V=0.
         for i in agg:
@@ -103,20 +103,20 @@ class CovarianceHandler:
         import scipy.linalg
         n=len(self.covariance)
         m=Data( [0.]*n, [0.]*n, self.covariance )
-        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
+        logger.info(f"Check {n}-dim covariance matrix for positive definiteness.")
         try:
             # I=(m.covariance)**(-1)
             I=scipy.linalg.inv(m.covariance)
         except Exception as e:
-            logger.error ( "Inversion failed. %s" % e )
+            logger.error ( f"Inversion failed. {e}" )
             sys.exit()
         try:
             from scipy import stats
             l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
         except Exception as e:
             import numpy
-            logger.error ( "computation of logpdf failed: %s" % e )
-            logger.error ( "the first entries in the diagonal read:\n%s " % ( numpy.diag ( m.covariance )[:10] ) )
+            logger.error ( f"computation of logpdf failed: {e}" )
+            logger.error ( f"the first entries in the diagonal read:\n{numpy.diag ( m.covariance )[:10]}" )
             sys.exit()
 
     def removeSmallValues ( self ):
@@ -208,7 +208,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         h=f.get ( histoname )
         if h: return h
         if not "/" in histoname:
-            logger.error ( "cannot find %s in %s" % (histoname, f.parent.file_path))
+            logger.error ( f"cannot find {histoname} in {f.parent.file_path}" )
             sys.exit()
         tokens = histoname.split("/")
         """
@@ -216,24 +216,20 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
             return f.get(tokens[0])
         """
         if not len(tokens)==2:
-            logger.error ( "cannot interpret histoname %s in %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot interpret histoname {histoname} in {f.name}" )
             sys.exit()
         c= f.get ( tokens[0] )
         if not c:
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot retrieve {histoname} from {f.name}" )
             sys.exit()
         if c.classname == "TCanvas":
             logger.error ( "we cannot read tcanvas objects with uproot!" )
             sys.exit()
             h=c.GetPrimitive ( tokens[1] )
             if h: return h
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot retrieve {histoname} from {f.name}" )
             sys.exit()
-        logger.error ( "cannot interpret %s in %s" % \
-                        ( histoname, f.name ) )
+        logger.error ( f"cannot interpret {histoname} in {f.name}" )
         sys.exit()
 
 class PYROOTCovarianceHandler ( CovarianceHandler ):
@@ -290,26 +286,22 @@ class PYROOTCovarianceHandler ( CovarianceHandler ):
         h=f.Get ( histoname )
         if h: return h
         if not "/" in histoname:
-            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
+            logger.error ( f"cannot find {histoname} in {f.GetName()}" )
             sys.exit()
         tokens = histoname.split("/")
         if not len(tokens)==2:
-            logger.error ( "cannot interpret histoname %s in %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot interpret histoname {histoname} in {f.name}" )
             sys.exit()
         c= f.Get ( tokens[0] )
         if not c:
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot retrieve {histoname} from {f.name}" )
             sys.exit()
         if c.ClassName() == "TCanvas":
             h=c.GetPrimitive ( tokens[1] )
             if h: return h
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot retrieve {histoname} from {f.name}" )
             sys.exit()
-        logger.error ( "cannot interpret %s in %s" % \
-                        ( histoname, f.name ) )
+        logger.error ( f"cannot interpret {histoname} in {f.name}" )
         sys.exit()
 
 class CSVCovarianceHandler ( CovarianceHandler ):
@@ -370,26 +362,22 @@ class CSVCovarianceHandler ( CovarianceHandler ):
         h=f.Get ( histoname )
         if h: return h
         if not "/" in histoname:
-            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
+            logger.error ( f"cannot find {histoname} in {f.GetName()}" )
             sys.exit()
         tokens = histoname.split("/")
         if not len(tokens)==2:
-            logger.error ( "cannot interpret histoname %s in %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot interpret histoname {histoname} in {f.name}" )
             sys.exit()
         c= f.Get ( tokens[0] )
         if not c:
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot retrieve {histoname} from {f.name}" )
             sys.exit()
         if c.ClassName() == "TCanvas":
             h=c.GetPrimitive ( tokens[1] )
             if h: return h
-            logger.error ( "cannot retrieve %s from %s" % \
-                            ( histoname, f.name ) )
+            logger.error ( f"cannot retrieve {histoname} from {f.name}" )
             sys.exit()
-        logger.error ( "cannot interpret %s in %s" % \
-                        ( histoname, f.name ) )
+        logger.error ( f"cannot interpret {histoname} in {f.name}" )
         sys.exit()
 
 class FakeCovarianceHandler ( CovarianceHandler ):
