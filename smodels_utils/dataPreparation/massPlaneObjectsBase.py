@@ -71,6 +71,26 @@ class MassPlaneBase(object):
             else:
                 self.branches[branchNumber] = Axes.fromConvert(branchMasses)
 
+    def _removePoints_ ( self, points, obj ):
+        """ remove all points within an area spanned by <points> """
+        hull = Delaunay ( points )
+        newdata=[]
+        for i in obj.data:
+            p = [ i[x], i[y] ]
+            in_hull = hull.find_simplex ( p )
+            if in_hull == -1: ## not in a cut-out region
+                newdata.append ( i )
+            else:
+                logger.info ( "removing point %s as it is in cut-out region." % ( p ) )
+        obj.data = newdata
+
+    def removeArea(self,points):
+        """ remove all points within an area spanned by <points> """
+        points.append ( points[0] )
+        for i in [ "efficiencyMap", "upperLimits", "expectedUpperLimits" ]:
+            if hasattr ( self, i ):
+                self._removePoints_ ( points, getattr(self,i) )
+
     def setSources(self,dataLabels,dataFiles,dataFormats,
                    objectNames=None,indices=None,units=None,coordinates=None,
                    scales=None, **args ):
