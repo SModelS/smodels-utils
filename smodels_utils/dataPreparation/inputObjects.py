@@ -49,7 +49,7 @@ _complainAboutOverlappingConstraints = False
 
 complainAbout = { "sympy obj": 0, "x in datamap": 0 }
 
-def elementsInStr(instring,removeQuotes=True): ## from V2
+def elementsInStr(instring : str,removeQuotes : bool = True) -> list: ## from V2
     """
     Parse instring and return a list of elements appearing in instring.
     instring can also be a list of strings.
@@ -72,8 +72,8 @@ def elementsInStr(instring,removeQuotes=True): ## from V2
             # Combine list of strings in a single string
             outstr += st
     else:
-        raise SModelSError ( "syntax error in constraint/condition: ``%s''." \
-              "Check your constraints and conditions in your database." % str(instring) )
+        raise SModelSError(f"syntax error in constraint/condition: ``{instring}''."\
+              "Check your constraints and conditions in your database." )
 
     elements = []
     outstr = outstr.replace(" ", "")
@@ -183,7 +183,7 @@ class Locker(object):
         if name in self.allowedAttr:
             object.__setattr__(self, name, attr)
             return
-        logger.error("Attribute %s is not allowed for %s" %(name,type(self)))
+        logger.error( f"Attribute {name} is not allowed for {type(self)}" )
 
     @property
     def allowedAttr(self):
@@ -296,9 +296,9 @@ class MetaInfoInput(Locker):
 
         if not hasattr ( self, "datasetOrder" ) or addOrder == "overwrite":
             if addOrder:
-                self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
+                self.datasetOrder = ", ".join ( [ f'"{x}"' for x in  handler.datasetOrder ] )
             else:
-                self.datasetOrder = ", ".join ( [ '"SR%d"' % (x+1) for x in range ( handler.n ) ] )
+                self.datasetOrder = ", ".join ( [ f'"SR{x+1}"' for x in range ( handler.n ) ] )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
@@ -314,19 +314,19 @@ class MetaInfoInput(Locker):
                         #if colctr < 2 and rowctr < 2:
                         #    logger.error ( f">>> ctrs={colctr}, {rowctr}, bgerr={datasets[colctr].bgError}, x={oldx}, {x}" )
                     if rowctr==colctr:
-                        logger.debug ( "variance(%d,%d)=%f" % ( rowctr+1, colctr+1, x ) )
+                        logger.debug ( f"variance({rowctr+1},{colctr+1})={x}" )
                         if datasets != None:
                             dsSigma = (datasets[rowctr].bgError)
                             dsVar = (datasets[rowctr].bgError)**2
                             if dsVar > 1.5 * x and not matrixIsCorrelations and covarianceHandler.overrideWithConservativeErrors:
-                                logger.error ( "variance determined from table (%.2g) is more than 1.5*variance in covariance matrix (%.2g) at #(%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1 ) )
+                                logger.error ( f"variance determined from table ({dsVar:.2g}) is more than 1.5*variance in covariance matrix ({x:.2g}) at #({rowctr+1}). replace variance in covariance matrix with more conservative estimate." )
                                 x = dsVar
-                            logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
+                            logger.debug ( f"dataset({rowctr+1})^2={dsSigma}^2={dsVar}" )
                             off = max ( dsVar,x ) / min ( dsVar,x)
-                            logger.debug ( "it is a factor of %.1f off" % off )
+                            logger.debug ( f"it is a factor of {off:.1f} off" )
                             err = 2.*(dsVar-x ) / (dsVar+x)
-                            logger.debug ( "relative error on variance %.1f percent" % (100.*err) )
-                    self.covariance += "%.4g, " % x
+                            logger.debug ( f"relative error on variance {100*err:.1f} percent" )
+                    self.covariance += f"{x:.4g}, "
                 self.covariance = self.covariance[:-2] + "], "
             self.covariance = self.covariance[:-2]+"]"
 
@@ -403,12 +403,12 @@ class MetaInfoInput(Locker):
                 check[0] = float(check[0])
             except:
                 return False
-            if len(check) == 1: return '%s%s%s' %(value,operation,unit)
+            if len(check) == 1: return f'{value}{operation}{unit}'
             if len(check) == 2: return value
             return False
         try:
             check = float(value)
-            return '%s%s%s' %(value,operation,unit)
+            return f'{value}{operation}{unit}'
         except:
             return False
 
@@ -544,7 +544,7 @@ class DataSetInput(Locker):
         self.upperLimit = str(ul)+'*fb'
         self.expectedUpperLimit = str(ulExpected)+'*fb'
 
-    def addTxName(self,txname):
+    def addTxName( self,txname : str ):
         """
         Adds txname to dataset. Checks if txname already exists and
         raise an error if it does.
@@ -556,7 +556,7 @@ class DataSetInput(Locker):
 
         for txobj in self._txnameList:
             if txobj._name == txname:
-                logger.error("Txname %s already exists in dataset" %txname)
+                logger.error( f"Txname {txname} already exists in dataset" )
                 sys.exit()
 
         txobj = TxNameInput(txname)
@@ -618,11 +618,11 @@ class DataSetInput(Locker):
                     continue
 
                 if hasattr ( elA, "particlesMatch" ) and elA.particlesMatch(elB):
-                    logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
+                    logger.error( f"Constraints ({elA} <-> {elB}) appearing in dataset {self} overlap (may result in double counting)" )
                     if not _complainAboutOverlappingConstraints: return True
                     return False
                 if elA == elB:
-                    logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
+                    logger.error( f"Constraints ({elA} <-> {elB}) appearing in dataset {self} overlap (may result in double counting)" )
                     if not _complainAboutOverlappingConstraints: return True
                     return False
 
@@ -704,7 +704,7 @@ class TxNameInput(Locker):
         self.bsmProcess = prettyDescriptions.prettyTxname(txName,outputtype="text")
         self._txDecay = TxDecay(self._name)
         if not self._txDecay:
-            logger.error("Unknown txname %s" %self._name)
+            logger.error( f"Unknown txname {self._name}" )
             sys.exit()
         self._planes = []
         self._goodPlanes = []
@@ -733,16 +733,16 @@ class TxNameInput(Locker):
 
         pFile = os.path.abspath(particlesFile)
         if not os.path.isfile(pFile):
-            logger.error("Could not find file %s" %pFile)
+            logger.error( f"Could not find file {pFile}" )
             sys.exit()
 
         from importlib import import_module
         sys.path.append(os.path.dirname(pFile))
         pF = os.path.basename(os.path.splitext(pFile)[0])
-        logger.debug("Loading database particles from: %s" %pFile)
+        logger.debug( f"Loading database particles from: {pFile}" )
         modelFile = import_module(pF, package='smodels')
         if not hasattr(modelFile,'finalStates'):
-            logger.error("Model definition (finalStates) not found in" % pFile)
+            logger.error( f"Model definition (finalStates) not found in {pFile}" )
         else:
             #set model name to file location:
             modelFile.finalStates.label = os.path.basename(pFile)
@@ -788,7 +788,7 @@ class TxNameInput(Locker):
             if str(br) == '[*]':  #Ignore wildcard branches
                 continue
             if len(massArray[ibr]) != br.vertnumb+1:
-                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim) in %s [%s]" % ( len(massArray[ibr]), br.vertnumb+1, self._txDecay, plane ))
+                logger.error( f"Mass array definition ({len(massArray[ibr])}-dim) is not consistent with the txname constraint ({br.vertnumb+1}-dim) in {self._txDecay} [{plane}]" )
                 sys.exit()
         #Create mass plane for new input
         massPlane = MassPlane(self._txDecay,massArray)
@@ -897,7 +897,7 @@ class TxNameInput(Locker):
                         if not plane in self._goodPlanes:
                             self._goodPlanes.append(plane)
             else:
-                logger.error('Unknown data type %s' %dataType)
+                logger.error( f'Unknown data type {dataType}' )
                 sys.exit()
 
             #Add expected upper limits, if it exists:
@@ -977,7 +977,7 @@ class TxNameInput(Locker):
         logger.error ( f"cannot determine the unit of the values from {unit}" )
         return ""
 
-    def addDataFromV2(self, plane, dataLabel):
+    def addDataFromV2(self, plane, dataLabel : str ):
         """
         extend the given data list by the values related to this type of list
         examples for data lists are: upperLimits, efficiencyMaps, ....
@@ -990,12 +990,12 @@ class TxNameInput(Locker):
         #Get dimension of the plot:
         nvars = len(plane.xvars)
         if nvars < 1 or nvars > 4:
-            logger.error('Can not deal with %i variables' %nvars)
+            logger.error( f'Cannot deal with {nvars} variables' )
             sys.exit()
 
         #Check if plane has a dataLabel object holder:
         if not hasattr(plane,dataLabel):
-            logger.error("Plane %s does not contain data holder for dataLabel %s" %(plane,dataLabel))
+            logger.error( f"Plane {plane} does not contain data holder for dataLabel {dataLabel}" )
             sys.exit()
 
         dataHandler = getattr(plane,dataLabel)
@@ -1161,15 +1161,15 @@ class TxNameInput(Locker):
                 if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
                     skipMass = True
                     if not quenchNegativeMasses:
-                        logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
+                        logger.warning( f"Negative mass value found for {self}. Point {massArray} will be ignored." )
                     continue
                 if type(M) == tuple and M[1]<0.:
                     skipMass = True
-                    logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
+                    logger.warning( f"Negative lifetime found for {self}. Point {massArray} will be ignored." )
                     continue
             if value < 0.:
                 skipMass = True
-                logger.warning("Negative value for %s found. Point %s will be ignored." %(self,str(massArray)))
+                logger.warning( f"Negative value for {self} found. Point {massArray} will be ignored." )
             if skipMass:
                 continue
             #Check if mass array is consistent with the mass constraints given by the
@@ -1230,7 +1230,7 @@ class TxNameInput(Locker):
             if not hasattr(self,'efficiencyMap') or not getattr(self,'efficiencyMap'):
                 return False
         else:
-            logger.error("DataType %s unknown" %dataType)
+            logger.error( f"DataType {dataType} unknown" )
             sys.exit()
 
         return True
@@ -1265,7 +1265,7 @@ class TxNameInput(Locker):
                     for ptc in vertex:
                         if ptc in masses:
                             vertexMasses.append(masses[ptc])
-                    vertexConstraint = "dm >= %s" %str(sum(vertexMasses))
+                    vertexConstraint = f"dm >= {sum(vertexMasses)}"
                     branchConstraint.append(vertexConstraint)
                 elConstraint.append(branchConstraint)
             if elConstraint not in [ [], None ]:
@@ -1388,7 +1388,7 @@ class TxNameInput(Locker):
                         self._smallerThanError += 1
                         if not quenchNegativeMasses:
                             if self._smallerThanError < 3:
-                                logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s value is %s" % (m1,m2,str(self),value))
+                                logger.error( f"Parent mass ({m1:.1f}) is smaller than daughter mass ({m2:.1f}) for {self} value is {value}" )
                             if self._smallerThanError == 3:
                                 logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
@@ -1398,7 +1398,7 @@ class TxNameInput(Locker):
                         goodMasses = False
                         break
                     if not check in [ False, True ]:
-                        logger.error("Something went wrong evaluating the mass constraint %s. Check was %s(%s), massDiff was %s" % ( vertex, check, type(check), massDiff ) )
+                        logger.error( f"Something went wrong evaluating the mass constraint {vertex}. Check was {check}({type(check)}), massDiff was {massDiff}" )
                         return False
             if goodMasses:
                 return True
