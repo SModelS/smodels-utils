@@ -179,10 +179,16 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         self.blinded_regions = blinded_regions
         cterr = 0
         # self.interact ( xaxis )
+        skipped = 0
         for i in range ( self.n ):
-            if i in self.blinded_regions:
-                continue
             dsId = xaxis.labels()[i]
+            if i in self.blinded_regions or dsId in self.blinded_regions:
+                if skipped < 4:
+                    print ( f"[covarianceHandler] skipping {i}/{dsId}: is mentioned in blinded_regions" )
+                if skipped == 4:
+                    print ( f"[covarianceHandler] ... " )
+                skipped += 1
+                continue
             try:
                 dsId = f"SR{int(dsId)}"
             except Exception as e:
@@ -190,7 +196,8 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
             self.datasetOrder.append ( dsId )
             row = []
             for j in range ( self.n ):
-                if j in self.blinded_regions:
+                dsIdj = xaxis.labels()[j]
+                if j in self.blinded_regions or dsIdj in self.blinded_regions:
                     continue
                 el = h.values()[i][j]
                 if i==j and el < 1e-4:
@@ -242,8 +249,9 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         sys.exit()
 
 class PYROOTCovarianceHandler ( CovarianceHandler ):
-    def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None, aggprefix = "ar" ):
+    def __init__ ( self, filename : str, histoname : str, 
+            max_datasets : Union[None,int] = None,
+            aggregate : Union[list, None ] = None, aggprefix : str = "ar" ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
                          from.

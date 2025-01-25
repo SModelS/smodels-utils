@@ -289,13 +289,19 @@ class MetaInfoInput(Locker):
                 import uproot
                 handler = UPROOTCovarianceHandler ( filename, histoname, 
                     max_datasets, aggregate, aggprefix, zeroIndexed, 
-                    scaleCov = scaleCov )
+                    scaleCov = scaleCov, blinded_regions = blinded_regions )
             except ModuleNotFoundError as e:
                 logger.error ( "could not import uproot, trying pyroot now" )
                 if zeroIndexed:
                     logger.error ( "zeroIndex not implemented for PYROOTCovarianceHandler" )
+                    sys.exit()
                 if abs ( scaleCov - 1. ) > 1e-20:
                     logger.error ( "scaleCov not implemented for PYROOTCovarianceHandler" )
+                    sys.exit()
+                if len ( blinded_regions ) > 0:
+                    logger.error ( "blinded_regions not implemented for PYROOTCovarianceHandler" )
+                    sys.exit()
+
                 handler = PYROOTCovarianceHandler ( filename, histoname, max_datasets,
                     aggregate, aggprefix )
 
