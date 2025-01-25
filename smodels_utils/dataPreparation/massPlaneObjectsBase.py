@@ -71,6 +71,62 @@ class MassPlaneBase(object):
             else:
                 self.branches[branchNumber] = Axes.fromConvert(branchMasses)
 
+    def setSources(self,dataLabels,dataFiles,dataFormats,
+                   objectNames=None,indices=None,units=None,coordinates=None,
+                   scales=None, **args ):
+        """
+        Defines the data sources for the plane.
+
+        :param dataLabels: List of strings with the dataLabels
+                          possible data labels are defined in allowedDataLabels
+                          (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
+        :param dataFiles: List of strings with the file paths
+                          to the data files.
+        :param dataFormats: List of strings with the file formats
+                          for the data files.
+        :param objectNames: List of object names stored in root-file or cMacro.
+                            String appearing in title of csv table in csv files.
+        :param indices: List of indices objects in listOfPrimitives of ROOT.TCanvas
+        :param units: List of strings with units for objects (e.g. 'fb', None, ...)
+        :param coordinates: Lists of dictionaries with the mapping of txt file columns
+                          to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})
+        :param scales: Lists of floats to rescale the data
+
+        """
+        for d in dataFiles:
+            self.allInputFiles.append ( d )
+
+        #Make sure input is consistent:
+        optionalInput = { "objectNames": objectNames, "indices": indices,
+                         "units": units,"coordinates": coordinates,"scales": scales }
+        # optionalInput = [objectNames,indices,units,coordinates,scales]
+        #allInput = [dataFiles,dataLabels,dataFormats] + optionalInput
+        allInput = { "dataFiles": dataFiles, "dataLabels": dataLabels,
+                     "dataFormats": dataFormats }
+        allInput.update ( optionalInput )
+        for i,(key,inputList) in enumerate(allInput.items()):
+            if inputList is None and key in optionalInput.keys():
+                allInput[key] = [None]*len(dataFiles)
+            if not isinstance(allInput[key],list):
+                logger.error("Input %s must be a list" % key )
+                sys.exit()
+            elif len(allInput[key]) != len(dataFiles):
+                logger.error("Length of lists is inconsistent: ``%s'' has %d entries -- should have %d.." % ( key, len(allInput[key]),len(dataFiles) ) )
+                sys.exit()
+
+
+        for i,dataFile in enumerate(dataFiles):
+            dataLabel = allInput["dataLabels"][i]
+            dataFormat = allInput["dataFormats"][i]
+            objectName = allInput["objectNames"][i]
+            index = allInput["indices"][i]
+            unit = allInput["units"][i]
+            coordinate = allInput["coordinates"][i]
+            scale = allInput["scales"][i]
+            self.addSource(dataLabel,dataFile, dataFormat,
+                           objectName, index, unit, coordinate, scale, **args )
+
+
 class Axes(object):
 
     """
@@ -297,9 +353,9 @@ class Axes(object):
         if self.hasWarned[line]<2:
             logger.error ( line )
 
-    def getXYValuesV3(self,parametersMap):
-
+    def _getXYValuesV3(self,parametersMap):
         """
+        FIXME is this used?
         translate a mass array (for single branch) to a point of the plot
 
         :param parametersMap: list containing  floats, representing
@@ -417,6 +473,7 @@ class Axes(object):
 
     def getXYValuesV2(self,massArray,widthArray=None):
         """
+        FIXME is this used?
         translate a mass array (for single branch) to a point of the plot
 
         :param massArray: list containing  floats, representing
