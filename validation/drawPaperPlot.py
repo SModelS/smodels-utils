@@ -80,7 +80,7 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
         if not os.path.exists ( fname ):
             print ( f"[drawPaperPlot] error: {fname} does not exist!" )
             return []
-        print ( f"[drawPaperPlot] got exclusion curve from {fname}" )
+        print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
 
         file = open(fname,"r")
         excl_file = json.load(file)
@@ -90,16 +90,22 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
             # return excl_lines
         if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
+            print (f"[drawPaperPlot] we have {txname}_bestSR_{axes} as an exclusion line" )
             excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
             excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
             exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
             exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
         
         elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
-            excl_x     = sum(excl_file[f'{txname}_comb_{axes}']['obs_excl']['x'], [])
-            excl_y     = sum(excl_file[f'{txname}_comb_{axes}']['obs_excl']['y'], [])
-            exp_excl_x = sum(excl_file[f'{txname}_comb_{axes}']['exp_excl']['x'], [])
-            exp_excl_y = sum(excl_file[f'{txname}_comb_{axes}']['exp_excl']['y'], [])
+            curve = f'{txname}_comb_{axes}'
+            excl_x     = sum(excl_file[curve]['obs_excl']['x'], [])
+            excl_y     = sum(excl_file[curve]['obs_excl']['y'], [])
+            exp_excl_x = sum(excl_file[curve]['exp_excl']['x'], [])
+            exp_excl_y = sum(excl_file[curve]['exp_excl']['y'], [])
+            col = CYAN
+            if len(excl_x)==0:
+                col = RED
+            print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
             
     excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
 

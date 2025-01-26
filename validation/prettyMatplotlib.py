@@ -22,6 +22,7 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname
 from validationHelpers import prettyAxes
 import matplotlib.ticker as ticker
+from smodels_utils.helper.terminalcolors import *
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
          getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
          importMatplot
@@ -48,7 +49,11 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             # if not math.isnan ( value )  and y > x:
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
-def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=True):
+def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
+    """ create the SModelS_ExclusionLines.json exclusion files """
+    if len(xobs)==0 and len(xexp)==0:
+        print( f"[prettyMatplotlib] {RED}Skipping creation of SModelS Exclusion JSON: no points{RESET}")
+        return
 
     if not validationPlot.combine: plot_type = "bestSR"
     else: plot_type = "comb"
@@ -57,13 +62,14 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot, create=Tr
     plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obs_excl":{'x':xobs,'y':yobs}, "exp_excl":{'x':xexp, 'y':yexp}}}
     vDir = validationPlot.getValidationDir (validationDir=None)
     file_js = "SModelS_ExclusionLines.json"
-    print( f"[prettyMatplotlib] Creating SModelS Exclusion JSON at {vDir}/{file_js}")
     import json
     plots = plot_dict
     if os.path.exists(vDir+'/'+file_js):
         file = open(f'{vDir}/{file_js}','r')
         plots = json.load(file)
         plots.update(plot_dict)
+
+    print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {xobs} points{RESET}")
 
     file = open(f'{vDir}/{file_js}','w')
     json.dump(plots,file)
@@ -415,7 +421,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                         x_ecs.append(vertices_ecs[:,0].tolist())
                         y_ecs.append(vertices_ecs[:,1].tolist())
 
-        if options["createSModelSExclJson"]: createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
+        if options["createSModelSExclJson"]: 
+            createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
