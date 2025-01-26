@@ -373,7 +373,7 @@ class Axes(object):
         if self.hasWarned[line]<2:
             logger.error ( line )
 
-    def _getXYValuesV3(self,parametersMap):
+    def getXYValuesV3(self,parametersMap):
         """
         FIXME is this used?
         translate a mass array (for single branch) to a point of the plot
