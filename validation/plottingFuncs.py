@@ -293,7 +293,7 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
             validationPlot.combine == True:
         ## pyhf combination
         subtitle = f"pyhf combining {len(validationPlot.expRes.datasets)} SRs: "
-    if hasattr ( validationPlot.expRes.globalInfo, "mlModel" ) and \
+    if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ) and \
             validationPlot.combine == True:
         subtitle = f"NN combining {len(validationPlot.expRes.datasets)} SRs: "
     for dataset in validationPlot.expRes.datasets:
