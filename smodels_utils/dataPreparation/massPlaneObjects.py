@@ -268,7 +268,7 @@ class MassPlane(MassPlaneBase):
         xyArray = {}
         if widthArray == None:
             for i,mass in enumerate(massArray):
-                xyDict = self.branches[i].getXYValues(mass)
+                xyDict = self.branches[i].getXYValuesV2(mass)
                 if xyDict is None:
                     return None
                 for xvar,value in xyDict.items():
@@ -282,7 +282,7 @@ class MassPlane(MassPlaneBase):
         for i,(mass,width) in enumerate(zip(massArray,widthArray)):
             if self.axes[i]==['*']: ## skip the "any" branches
                 continue
-            xyDict = self.branches[i].getXYValues(mass,width)
+            xyDict = self.branches[i].getXYValuesV2(mass,width)
             if xyDict is None:
                 return None
             for xvar,value in xyDict.items():
