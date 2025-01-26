@@ -103,7 +103,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     if options["drawPaperPlot"]:
         from drawPaperPlot import drawPrettyPaperPlot
         of = drawPrettyPaperPlot(valPlot)
-        if options["show"]:
+        if options["show"] and of is not None:
             from validationHelpers import showPlot 
             for f in of:
                 showPlot ( f )
