@@ -13,6 +13,7 @@ GREEN, YELLOW, RED, RESET, CYAN, MAGENTA, BLUE = [ "" ] * 7
 try:
     from colorama import Fore as __c
     GREEN, YELLOW, RED, RESET = __c.GREEN, __c.YELLOW,  __c.RED, __c.RESET
-    CYAN, MAGENTA, BLUE = __c.CYAN, __C.MAGENTA, __C.BLUE
-except:
+    CYAN, MAGENTA, BLUE = __c.CYAN, __c.MAGENTA, __c.BLUE
+except Exception as e:
+    print ( f"[terminalcolors] no colors: {e}" )
     pass
