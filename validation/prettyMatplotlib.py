@@ -49,6 +49,27 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             # if not math.isnan ( value )  and y > x:
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
+def retrievePoints ( cs ) -> tuple:
+    """ retrieve the points from the contour """
+    x, y = [], []
+    if hasattr ( cs, "collections" ) and len(cs.collections)>0:
+        paths_cs = cs.collections[0].get_paths()  #collections[0] refers to the 1st level
+        if len ( paths_cs ) > 0:
+            for paths in paths_cs:
+                vertices_cs = paths.vertices
+                x.append(vertices_cs[:,0].tolist())
+                y.append(vertices_cs[:,1].tolist())
+        return x, y
+    if hasattr ( cs, "_paths" ):
+        paths_cs = cs._paths  #collections[0] refers to the 1st level
+        if len ( paths_cs ) > 0:
+            for paths in paths_cs:
+                vertices_cs = paths.vertices
+                x.append(vertices_cs[:,0].tolist())
+                y.append(vertices_cs[:,1].tolist())
+        return x, y
+    return x, y
+
 def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files """
     if len(xobs)==0 and len(xexp)==0:
@@ -69,7 +90,7 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
         plots = json.load(file)
         plots.update(plot_dict)
 
-    print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {xobs} points{RESET}")
+    print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {len(xobs)} points{RESET}")
 
     file = open(f'{vDir}/{file_js}','w')
     json.dump(plots,file)
@@ -396,30 +417,15 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                   transform = fig.transFigure )
         #convert contour to a list of x,y values
 
-        x_cs, y_cs = [], []
         x_ecs, y_ecs = [],[]
-
-        if hasattr ( cs, "collections" ) and len(cs.collections)>0:
-            paths_cs = cs.collections[0].get_paths()  #collections[0] refers to the 1st level
-            if len ( paths_cs ) > 0:
-                for paths in paths_cs:
-                    vertices_cs = paths.vertices
-                    x_cs.append(vertices_cs[:,0].tolist())
-                    y_cs.append(vertices_cs[:,1].tolist())
+        x_cs, y_cs = retrievePoints ( cs )
 
         if options["drawExpected"] in [ "auto", True ]:
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                             transform = fig.transFigure, linestyle="dotted" )
-            #convert contour to a list of x,y values
-            if hasattr ( cs, "collections" ) and len (cs.collections)>0:
-                paths_ecs = cs.collections[0].get_paths()
-                if len(paths_ecs)>0:
-                    for paths in paths_ecs:
-                        vertices_ecs = paths.vertices
-                        x_ecs.append(vertices_ecs[:,0].tolist())
-                        y_ecs.append(vertices_ecs[:,1].tolist())
+            x_ecs, y_ecs = retrievePoints ( cs )
 
         if options["createSModelSExclJson"]: 
             createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
