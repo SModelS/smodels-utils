@@ -708,15 +708,15 @@ class ValidationObjsBase():
         """
 
         if not hasattr(self,'data') or not self.data:
-            logger.warning("No data found. Nothing will be saved")
-            return False
+            logger.warning("No data found." ) # Nothing will be saved")
+            # return False ## dont return false, as we might need to update meta
 
         if self.options["generateData"] in [ None, "ondemand" ]:
             nadded = self.loadData ( overwrite = False )
             logger.info ( f"loaded {len(self.data)} data points" )
             if nadded == 0:
-                logger.warning("No added points. Nothing will be saved")
-                return False
+                logger.warning("No additional points." ) #  Nothing will be saved")
+                # return False # dont return false we might need to update meta
 
         validationDir = self.getValidationDir ( validationDir )
 
@@ -772,12 +772,13 @@ class ValidationObjsBase():
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
-        if hasattr ( self, "meta" ):
-            if "runs" in self.meta:
-                meta["runs"] = self.meta["runs"]
-            if 'dt[h]' in self.meta:
-                dt = round ( dt + self.meta["dt[h]"], 3 )
-                meta["dt[h]"] = dt
+        if not hasattr ( self, "meta" ):
+            self.meta = {}
+        if "runs" in self.meta:
+            meta["runs"] = self.meta["runs"]
+        if 'dt[h]' in self.meta:
+            dt = round ( dt + self.meta["dt[h]"], 3 )
+            meta["dt[h]"] = dt
         if not "runs" in meta:
             meta["runs"]=f"{len(self.data)}"
         if hasattr ( self, "ncpus" ):
