@@ -10,6 +10,7 @@
 
 import os
 from typing import Union, List, Dict, Text
+from smodels_utils.helper.terminalcolors import *
 
 ## what do we set the width of stable particles to,
 ## for plotting?
@@ -246,7 +247,8 @@ def getValidationFileContent ( validationfile : str ):
         f.close()
         nlines = len(lines)
         txt = "\n".join(lines[:-1])
-        if nlines == 1:
+        ## if meta is missing, or just one line
+        if nlines == 1 or not lines[-1].startswith("meta"):
             txt = "\n".join(lines[:])
         # print ( "txt", txt )
         ret = {}
@@ -261,6 +263,8 @@ def getValidationFileContent ( validationfile : str ):
         ret["meta"]=meta
         return ret
     except (SyntaxError,ValueError) as e:
+        print ( f"[validationHelpers] error when parsing {RED}{validationfile}: {e}{RESET} Please fix manually." )
+        import sys; sys.exit()
         # if there is an error, we continue without
         return { "data": {}, "meta": {} }
 
