@@ -255,6 +255,7 @@ def drawPrettyPaperPlot(validationPlot) -> list:
 
     :returns: filenames of plots
     """
+    addJitter = True ## add jitter to NN lines, so we see them
     #get info about the analysis and txname from validationPlot
     analysis = validationPlot.expRes.globalInfo.id
     vDir = validationPlot.getValidationDir (validationDir=None)
@@ -502,7 +503,6 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
         y_vals = comb_excl["obs_excl"]["y"]
-        addJitter = True
         if addJitter:
             for i, y in enumerate(y_vals):
                 y_vals[i]= y * random.uniform(.98,1.02)
@@ -628,7 +628,6 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if combSR:
         x_vals = comb_excl["exp_excl"]["x"]
         y_vals = comb_excl["exp_excl"]["y"]
-        addJitter = True
         if addJitter:
             for i, y in enumerate(y_vals):
                 y_vals[i]= y * random.uniform(.98,1.02)
