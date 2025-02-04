@@ -60,12 +60,12 @@ def getSModelSExclusionFromContent ( content ):
     line = []
     return line
 
-def addDefaults ( options ):
+def addDefaults ( options : dict ) -> dict:
     defaults = { "xmin": None, "xmax": None, "xlabel": None, "ylabel": None,
                  "efficiencies": False, "ymin": None, "ymax": None, "zmin": None,
                  "zmax": None, "title": None, "output": "ratios_@a_@t@sr.png",
                  "label1": None, "label2": None, "show": False, "meta": False,
-                 "copy": False, "SR": None, "comment": None
+                 "copy": False, "SR": None, "comment": None, "zlabel_offset": .9,
                 }
     defaults.update(options)
     return defaults
