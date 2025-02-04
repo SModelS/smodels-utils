@@ -2,7 +2,7 @@
 
 __all__ = [ "drawPrettyPaperPlot" ]
 
-import os
+import os, random
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array
@@ -502,6 +502,10 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
         y_vals = comb_excl["obs_excl"]["y"]
+        addJitter = True
+        if addJitter:
+            for i, y in enumerate(y_vals):
+                y_vals[i]= y * random.uniform(.98,1.02)
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
             label = f"SModelS: NN {num_sr} SRs + {num_cr-num_sr} CRs"
@@ -511,12 +515,13 @@ def drawPrettyPaperPlot(validationPlot) -> list:
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
+            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid' )
             sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
             # print("yes gamma 3")
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
-        else:ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
+        else:
+            ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
 
     if cr_excl is not None:
         x_vals = cr_excl["obs_excl"]["x"]
