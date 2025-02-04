@@ -749,7 +749,9 @@ class ValidationObjsBase():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
-        meta["sha1"]=sha1sum ( self.slhaDir )
+        if os.path.isfile ( self.slhaDir ):
+            ## currently we have sha1sums only for named tarballs
+            meta["sha1"]=sha1sum ( self.slhaDir )
         if hasattr ( self.expRes.globalInfo, "includeCRs" ):
             meta["includeCRs"]=self.expRes.globalInfo.includeCRs
         if hasattr ( self.expRes.datasets[0].dataInfo, "thirdMoment" ):
