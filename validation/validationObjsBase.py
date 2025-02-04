@@ -709,7 +709,7 @@ class ValidationObjsBase():
 
         if not hasattr(self,'data') or not self.data:
             logger.warning("No data found." ) # Nothing will be saved")
-            # return False ## dont return false, as we might need to update meta
+            return False ## dont return false, as we might need to update meta
 
         if self.options["generateData"] in [ None, "ondemand" ]:
             nadded = self.loadData ( overwrite = False )
