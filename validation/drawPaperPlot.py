@@ -248,14 +248,15 @@ def getExtremeValue(excl_line, extreme, type, width=False):
                 mini = min(mini, min(excl_line))
             return mini
 
-def drawPrettyPaperPlot(validationPlot) -> list:
+def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     """
     Function which holds the generalised plotting parameters
     :param validationPlot: validationPlot object
+    :param addJitter: if true, then add jitter to the NN line.
+    so we can see it in case its perfectly aligned with the orig line
 
     :returns: filenames of plots
     """
-    addJitter = True ## add jitter to NN lines, so we see them
     #get info about the analysis and txname from validationPlot
     analysis = validationPlot.expRes.globalInfo.id
     vDir = validationPlot.getValidationDir (validationDir=None)
