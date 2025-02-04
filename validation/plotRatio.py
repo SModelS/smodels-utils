@@ -518,7 +518,7 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     line = f"$f$ = $r$({a1}) / $r$({a2})"
     if options["efficiencies"]:
         line = f"$f$ = eff({a1}) / eff({a2})"
-    plt.text ( .9, .5, line, fontsize=13, rotation = 90,
+    plt.text ( options["zlabel_offset"], .5, line, fontsize=13, rotation = 90,
                verticalalignment="center",
                horizontalalignment="center", transform=fig.transFigure)
 
@@ -637,6 +637,9 @@ def main():
     argparser.add_argument ( "-x", "--xmin",
             help="minimum x value, None means auto [None]",
             type=float, default=None )
+    argparser.add_argument ( "--zlabel_offset",
+            help="offset of zlabel [.9]",
+            type=float, default=.9 )
     argparser.add_argument ( "-X", "--xmax",
             help="maximum x value, None means auto [None]",
             type=float, default=None )
