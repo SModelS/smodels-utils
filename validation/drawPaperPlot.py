@@ -628,6 +628,10 @@ def drawPrettyPaperPlot(validationPlot) -> list:
     if combSR:
         x_vals = comb_excl["exp_excl"]["x"]
         y_vals = comb_excl["exp_excl"]["y"]
+        addJitter = True
+        if addJitter:
+            for i, y in enumerate(y_vals):
+                y_vals[i]= y * random.uniform(.98,1.02)
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
             label = f"SModelS: NN {num_sr} SRs + {num_cr-num_sr} CRs"
@@ -638,7 +642,8 @@ def drawPrettyPaperPlot(validationPlot) -> list:
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
-        else:ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
+        else:
+            ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
     if cr_excl is not None:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
