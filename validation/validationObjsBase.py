@@ -575,7 +575,7 @@ class ValidationObjsBase():
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write(f"[printer]\noutputFormat = version{outputformat}\noutputType = python\n")
             f.write(f"[particles]\n")
-            if not "share.models" in model:
+            if not "share.models" in model and not model.endswith(".slha") and not "/" in model:
                 model = f"share.models.{model}"
             f.write(f"model={model}\n" )
             f.write(f"promptWidth={promptWidth}\n" )
