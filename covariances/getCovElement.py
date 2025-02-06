@@ -15,6 +15,7 @@ def getVariance( expRes, srName : str ):
     pos = poses[0]
     print ( f"we want the {pos}th element ({srName} of {expRes.globalInfo.id})" )
     print ( f"obs({pos})={expRes.datasets[pos].dataInfo.observedN}" )
+    print ( f"bg({pos})={expRes.datasets[pos].dataInfo.expectedBG}" )
     print ( f"cov({pos},{pos})={cov[pos][pos]:.3f}" )
     print ( f"sigma({pos},{pos})={math.sqrt(cov[pos][pos]):.3f}" )
 
