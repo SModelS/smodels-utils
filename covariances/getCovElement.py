@@ -7,9 +7,8 @@ from smodels.base.smodelsLogging import setLogLevel
 import math
 
 def get():
-    anaId =  "CMS-PAS-SUS-16-052" 
-    sr = "SR1LcY"
-    # sr = "SR1VLaX"
+    anaId =  "CMS-SUS-21-002" 
+    sr = "H_SR0"
     setLogLevel("info")
     d=Database("../../smodels-database")
     e=d.getExpResults ( analysisIDs = [ anaId ], 
@@ -25,4 +24,5 @@ def get():
     print ( f"sigma({pos},{pos})={math.sqrt(cov[pos][pos])}" )
     
 
-get()
+if __name__ == "__main__":
+    get()
