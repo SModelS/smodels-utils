@@ -18,10 +18,10 @@ def getVariance( expRes, srName : str ):
         return
     pos = poses[0]
     print ( f"we want the {pos}th element ({srName} of {expRes.globalInfo.id})" )
-    print ( f"obs({pos})={expRes.datasets[pos].dataInfo.observedN}" )
-    print ( f"bg({pos})={expRes.datasets[pos].dataInfo.expectedBG}" )
-    print ( f"cov({pos},{pos})={cov[pos][pos]:.3f}" )
-    print ( f"sigma({pos},{pos})={math.sqrt(cov[pos][pos]):.3f}" )
+    print ( f"obs({srName})={expRes.datasets[pos].dataInfo.observedN}" )
+    print ( f"bg({srName})={expRes.datasets[pos].dataInfo.expectedBG}" )
+    print ( f"cov({srName},{srName})={cov[pos][pos]:.3f}" )
+    print ( f"sigma({srName},{srName})={math.sqrt(cov[pos][pos]):.3f}" )
 
 def getCovariance( expRes, srName1 : str, srName2 : str ):
     """ retrieve the variance of srName in expRes """
@@ -39,9 +39,9 @@ def getCovariance( expRes, srName1 : str, srName2 : str ):
             print ( f"could not find {srName2} in {expRes.globalInfo.id}" )
         return
     pos2 = poses2[0]
-    print ( f"{srName1} is at {pos1}" )
-    print ( f"{srName2} is at {pos2}" )
-    print ( f"cov({pos1},{pos2})={cov[pos1][pos2]:.3f}" )
+    #print ( f"{srName1} is at {pos1}" )
+    #print ( f"{srName2} is at {pos2}" )
+    print ( f"cov({srName1},{srName2})={cov[pos1][pos2]:.3f}" )
     # print ( f"rho({pos1},{pos})={math.sqrt(cov[pos][pos]):.3f}" )
 
 def getExample():
