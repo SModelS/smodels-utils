@@ -14,15 +14,15 @@ def get():
     d=Database("../../smodels-database")
     e=d.getExpResults ( analysisIDs = [ anaId ], 
                         dataTypes = [ "efficiencyMap" ] )
-    print ( "%d results" % len(e) )
+    print ( f"{len(e)} results" )
     dsOrder = e[0].globalInfo.datasetOrder
     cov = e[0].globalInfo.covariance
     poses = [ i for i,x in enumerate(dsOrder) if x == sr ]
     pos = poses[0]
     print ( dsOrder )
-    print ( "we want the %d element" % pos )
-    print ( "cov(%d,%d)=%f" % ( pos, pos, cov[pos][pos] ) )
-    print ( "sigma(%d,%d)=%f" % ( pos, pos, math.sqrt(cov[pos][pos] )) )
+    print ( f"we want the {pos} element" )
+    print ( f"cov({pos},{pos})={cov[pos][pos]}" )
+    print ( f"sigma({pos},{pos})={math.sqrt(cov[pos][pos])}" )
     
 
 get()
