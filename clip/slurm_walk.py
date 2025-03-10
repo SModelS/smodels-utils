@@ -9,7 +9,7 @@ from smodels_utils.helper.terminalcolors import *
 import subprocess
 from typing import Union, List, Tuple
 
-from protomodels.ptools.sparticleNames import SParticleNames
+from ptools.sparticleNames import SParticleNames
 namer = SParticleNames()
 
 def remove( fname, keep):
@@ -63,7 +63,7 @@ def mkdir ( Dir : str, symlinks : bool = True ):
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str,
-    maxsteps : int, select : str, do_srcombine : bool, record_history : bool,
+    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool,
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
     forbidden : List[int], wallpids : bool ):
     """ prepare everything for a single job
@@ -113,7 +113,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         f.write ( "from walker import factoryOfWalkers\n" )
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden}\n" )
         f.write ( ")\n" )
@@ -601,6 +601,8 @@ def main():
             type=str, default = None )
     argparser.add_argument ( '--do_srcombine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
+    argparser.add_argument ( '--test_param_space',
+            help='test the parameter space without keping constant K and TL', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
     argparser.add_argument ( '--uploadTo', help='specify directoy under smodels.github.io/protomodels to upload to [latest]', type=str, default='latest' )
@@ -776,7 +778,7 @@ def main():
                 for i in range(args.repeat):
                     runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_srcombine, args.record_history, seed,
+                      args.select, args.do_srcombine, args.record_history, seed, args.test_param_space,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
                       wallpids )
                 totjobs+=1
@@ -798,7 +800,7 @@ def main():
                     p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_srcombine, args.record_history, seed,
+                        args.select, args.do_srcombine, args.record_history, seed, args.test_param_space,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden,
                         wallpids ) )
                     jobs.append ( p )
