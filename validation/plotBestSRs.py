@@ -241,8 +241,12 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     """
     plt.clf()
     content = fetchContent ( validationfiles, dbpath, analysis )
-    xr = getAxisRange ( content["options"], "xaxis" )
-    yr = getAxisRange ( content["options"], "yaxis" )
+    xr = None
+    if max_x == None:
+        xr = getAxisRange ( content["options"], "xaxis" )
+    yr = None
+    if max_y == None:
+        yr = getAxisRange ( content["options"], "yaxis" )
     data, line = content["data"], content["line"]
     txnames, axisv = content["txnames"], content["axis"]
     bestSRs = getBestSRs ( data, max_x, max_y, rank )
