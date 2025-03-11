@@ -51,7 +51,10 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
     for validationfile in vfiles:
         if not "_" in validationfile:
             validationfile = validationfile+"_2EqMassAx_EqMassBy.py"
+        if "_combined" in validationfile:
+            print ( f"[plotBestSRs] weird validationfile is {validationfile}, ie with 'combined' in the file name. You sure it is the right one?" )
         ipath = getPathName ( dbpath, analysis, validationfile )
+        print ( f"[plotBestSRs] querying {ipath}" )
         smspath = getPathName ( dbpath, analysis, None )
         p1 = validationfile.find("_")
         topo = validationfile[:p1]
@@ -289,7 +292,9 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         ttl = f"{sr} best SR"
     ananame = analysis.replace("-eff","")
     topo = txnames[0]
-    axis = prettyAxes ( validationPlot )
+    axis = "???"
+    if validationPlot != None:
+        axis = prettyAxes ( validationPlot )
     fig = plt.gcf()
     plt.text(.95,.975,axis,transform=fig.transFigure, fontsize=9,
             horizontalalignment="right" )
