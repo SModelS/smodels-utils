@@ -206,6 +206,7 @@ class ValidationObjsBase():
 
     def savefig ( self, filename : str ):
         """ save the figure, never mind if root or matplotlib """
+        print ( f"[ValidationObjsBase] saving to {YELLOW}{filename}{RESET}" )
         if hasattr ( self.plot, "Print" ):
             self.plot.Print(filename)
         if hasattr ( self.plot, "savefig" ):
