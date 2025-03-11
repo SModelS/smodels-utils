@@ -684,17 +684,21 @@ class TxNameInput(Locker):
             TxnameInput object, together with the axis name """
         for p in self._planes:
            if hasattr ( p, "xrange" ):
-                line = str(p).replace(" ","")+":"+p.xrange
-                if not hasattr ( self, "xrange" ) or self.xrange in [ "", None ]:
-                    self.xrange = line
-                else:
-                    self.xrange += ";" + line
+               if type(p.xrange) == list:
+                   p.xrange=str(p.xrange)
+               line = str(p).replace(" ","")+":"+p.xrange
+               if not hasattr ( self, "xrange" ) or self.xrange in [ "", None ]:
+                   self.xrange = line
+               else:
+                   self.xrange += ";" + line
            if hasattr ( p, "yrange" ):
-                line = str(p).replace(" ","")+":"+p.yrange
-                if not hasattr ( self, "yrange" ) or self.yrange in [ "", None ]:
-                    self.yrange = line
-                else:
-                    self.yrange += ";" + line
+               if type(p.yrange) == list:
+                   p.yrange=str(p.yrange)
+               line = str(p).replace(" ","")+":"+p.yrange
+               if not hasattr ( self, "yrange" ) or self.yrange in [ "", None ]:
+                   self.yrange = line
+               else:
+                   self.yrange += ";" + line
 
     def __init__(self,txName):
 
