@@ -83,12 +83,13 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     :param do_srcombine: if true, then also perform combinations, either via
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
+    :param test_param_space: If True, walk over the param space keeping constant K and TL
     :param seed: the random seed for the walker
     :param update_hiscores: update the hiscores at the end
     :param stopTeleportationAfter: stop teleportation after this step.
            if -1, dont run teleportation at all.
     :param forbidden: any forbidden pids we dont touch
-    """
+    """ 
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
     line = f"run walkers {jmin} - {jmax-1}"
@@ -602,7 +603,7 @@ def main():
     argparser.add_argument ( '--do_srcombine',
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '--test_param_space',
-            help='test the parameter space without keping constant K and TL', action="store_true" )
+            help='test the parameter space by keeping constant K and TL', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
     argparser.add_argument ( '--uploadTo', help='specify directoy under smodels.github.io/protomodels to upload to [latest]', type=str, default='latest' )
@@ -778,7 +779,7 @@ def main():
                 for i in range(args.repeat):
                     runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_srcombine, args.record_history, seed, args.test_param_space,
+                      args.select, args.do_srcombine, args.record_history, args.test_param_space, seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
                       wallpids )
                 totjobs+=1
@@ -800,7 +801,7 @@ def main():
                     p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_srcombine, args.record_history, seed, args.test_param_space,
+                        args.select, args.do_srcombine, args.record_history, args.test_param_space, seed,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden,
                         wallpids ) )
                     jobs.append ( p )
