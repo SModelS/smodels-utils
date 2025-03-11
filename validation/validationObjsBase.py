@@ -749,6 +749,8 @@ class ValidationObjsBase():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+				if "style" in self.options:
+					meta["style"]=self.options["style"]
         if os.path.isfile ( self.slhaDir ):
             ## currently we have sha1sums only for named tarballs
             meta["sha1"]=sha1sum ( self.slhaDir )
