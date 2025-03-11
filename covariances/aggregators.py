@@ -55,7 +55,6 @@ def retrieve ( fname ):
                 ret[v]+=1000./(n*(idx+1)**2)
     return ret
 
-
 def useNames ( aggs, datasets ):
     """ given lists of lists of indices, return lists of lists of
         dataset names """
@@ -140,7 +139,35 @@ def obtainDictFromComment ( comment : str, analysis : str, level : int=1 ) -> Di
             D["triplet"] = lastnr % level
         D["branch"] = branch
         year = None
-        print ( tokens )
+        # print ( tokens )
+        if "201" in tokens[2]:
+            year = tokens[2]
+        if "SR" in tokens[1] or "bVeto" in tokens[1] or "nj" in tokens[1]:
+            D["subbranch"]=f"{tokens[1]}_{tokens[2]}"
+            D["unique"]=True
+        #if "SR" in tokens[1]:
+        #    D["subbranch"]=tokens[1]
+        if tokens[1].endswith("l"):
+            D["subbranch"]=tokens[1]
+        if year is not None:
+            D["year"] = year
+    if "CMS-SUS-19-012" in analysis:
+        p1 = comment.rfind("(")
+        tbranch = comment[p1:].replace("(","").replace(")","")
+        comment = comment[:p1-1]
+        branchvalues = tbranch.split(",")
+        branch,subanalysis = branchvalues
+        tokens = comment.split("_")
+        lastnr = None
+        try:
+            lastnr = int ( tokens[-1] )
+        except Exception as e:
+            pass
+        if lastnr != None:
+            D["triplet"] = lastnr % level
+        D["branch"] = branch
+        year = None
+        # print ( tokens )
         if "201" in tokens[2]:
             year = tokens[2]
         if "SR" in tokens[1] or "bVeto" in tokens[1] or "nj" in tokens[1]:
@@ -389,27 +416,14 @@ def describeDict ( aggs : Dict, dropped : List, n : Union[None,int] =None ):
 
 def check ( aggs, drops, n ):
     """ check if every SR is accounted for """
-    errors = 0
-    for i in range ( 1, n+1 ):
-        #print ( f"[aggregators] SR{i}:", end=" " )
-        accountedFor=0
-        if i in drops:
-            #print  ( "dropped." )
-            accountedFor+=1
-            continue
-        for aggnr,agg in enumerate( aggs ):
-            if i in agg:
-                #print ( f"in {aggnr+1}" )
-                accountedFor+=1
-        if accountedFor == 0:
-            #print ( "unaccounted for!!!" )
-            errors += 1
-        if accountedFor > 1:
-            #print ( f"accounted for {accountedFor} times!!!" )
-            errors += 1
-    if errors > 0:
-        print ( f"[aggregators] {errors} errors found." )
-
+    srs = set()
+    for name,agg in aggs.items():
+        for a in agg:
+            srs.add ( a )
+    if len(srs)==n:
+        return True
+    print ( f"[aggregators] mismatch in number of SRs: {len(srs)}!={n}" )
+    sys.exit()
 
 def describe ( aggs, dropped, n=None ):
     if type(aggs)==dict:
@@ -429,29 +443,6 @@ def describe ( aggs, dropped, n=None ):
     print ( f"# {n} regions -> {len(aggs)} agg regions with {len(dropped)} dropped and {nexclusives} exclusives:" )
     print ( f"aggregates={aggs}" )
     # print ( "with names", useNames ( aggs, getDatasets() ) )
-
-def check ( aggs, drops, n ):
-    """ check if every SR is accounted for """
-    errors = 0
-    for i in range ( 1, n+1 ):
-        #print ( f"[aggregators] SR{i}:", end=" " )
-        accountedFor=0
-        if i in drops:
-            #print  ( "dropped." )
-            accountedFor+=1
-            continue
-        for aggnr,agg in enumerate( aggs ):
-            if i in agg:
-                #print ( f"in {aggnr+1}" )
-                accountedFor+=1
-        if accountedFor == 0:
-            #print ( "unaccounted for!!!" )
-            errors += 1
-        if accountedFor > 1:
-            #print ( f"accounted for {accountedFor} times!!!" )
-            errors += 1
-    if errors > 0:
-        print ( f"[aggregators] {errors} errors found." )
 
 def main():
     """ redundant main function, see aggregate.py for usage """

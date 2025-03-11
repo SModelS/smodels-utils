@@ -72,8 +72,8 @@ def run():
                      default = None, type=float )
     ap.add_argument('-D','--database',help="path to database [../../smodels-database]",
                     default = "../../smodels-database", type=str )
-    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-21-008]",
-                    default = "CMS-SUS-21-008", type=str )
+    ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-19-012]",
+                    default = "CMS-SUS-19-012", type=str )
     args = ap.parse_args()
     path = various.getPathName ( args.database, args.analysis )
     files = glob.glob ( f"{path}/validation/T*_2EqMassAx_EqMassBy.py" )
@@ -107,7 +107,9 @@ def run():
     else:
         aggs, dropped = aggregators.aggregateByCorrs ( args.database, args.analysis, drops, exclusives, args.corr, args.verbose )
     aggregators.describe ( aggs, dropped, len(C) )
-    aggregators.check ( aggs, dropped, len(C) )
+    result  = aggregators.getExpResult ( args.database, args.analysis )
+    datasets, comments = aggregators.getDatasets( result, addReverse=False, verbose = args.verbose )
+    aggregators.check ( aggs, dropped, len(datasets) )
 
 if __name__ == "__main__":
     run()
