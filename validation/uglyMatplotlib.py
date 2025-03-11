@@ -221,7 +221,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     if len(cond_violated)>0:
         plt.plot ( get("x",cond_violated), get("y",cond_violated), marker="o", \
                 linestyle=None, c="gray", linewidth=0, label="condition violated")
-    if len(noresult)>0:
+    if len(noresult)>0 and len(xcontainer)>0:
         filterednoresult = []
         xRange = ( min(xcontainer)*.8-2, max(xcontainer)*1.1+2 )
         yRange = ( min(ycontainer)*.8-2, max(ycontainer)*1.1+2 )
