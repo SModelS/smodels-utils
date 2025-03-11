@@ -18,6 +18,8 @@ from validation.validationHelpers import getValidationFileContent, shortTxName, 
        mergeExclusionLines, mergeValidationData, widthOfStableParticles, \
        prettyAxes
 from typing import Union
+from plottingFuncs import getAxisRange, filterWithinRanges
+from smodels_utils.helper.terminalcolors import *
 
 __all__ = [ "plot" ]
         
@@ -48,6 +50,7 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
     contents = []
     txnames = []
     axisv = None
+    options = {}
     for validationfile in vfiles:
         if not "_" in validationfile:
             validationfile = validationfile+"_2EqMassAx_EqMassBy.py"
@@ -62,20 +65,24 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
         content = getValidationFileContent ( ipath )
         contents.append ( content )
         eljson = os.path.join ( smspath, "exclusion_lines.json" )
-        if "meta" in content and type(content["meta"]) == dict and "axes" in content["meta"]:
-            axisv = content["meta"]["axes"]
-            if os.path.exists ( eljson ):
-                ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
-                if ll is not None:
-                    if topo in ll:
-                        lines.append (  ll[topo] )
-                    else:
-                        print ( f"[plotBestSRs] {topo} is not in lines? {ll}" )
+        if "meta" in content and type(content["meta"]) == dict:
+            if "axes" in content["meta"]:
+                axisv = content["meta"]["axes"]
+                if os.path.exists ( eljson ):
+                    ll = getExclusionCurvesFor ( eljson, topo, content["meta"]["axes"] )
+                    if ll is not None:
+                        if topo in ll:
+                            lines.append (  ll[topo] )
+                        else:
+                            print ( f"[plotBestSRs] {topo} is not in lines? {ll}" )
+            if "style" in content["meta"]:
+                options["style"]=content["meta"]["style"]
 
     content = mergeValidationData ( contents )
     data = content["data"]
     line = mergeExclusionLines ( lines )
-    return { "data": data, "line": line, "txnames": txnames, "axis": axisv }
+    return { "data": data, "line": line, "txnames": txnames, "axis": axisv,
+             "options": options }
 
 def isWithinValue ( value, maxvalue ):
     if maxvalue == None:
@@ -234,6 +241,8 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     """
     plt.clf()
     content = fetchContent ( validationfiles, dbpath, analysis )
+    xr = getAxisRange ( content["options"], "xaxis" )
+    yr = getAxisRange ( content["options"], "yaxis" )
     data, line = content["data"], content["line"]
     txnames, axisv = content["txnames"], content["axis"]
     bestSRs = getBestSRs ( data, max_x, max_y, rank )
@@ -247,17 +256,20 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
             continue
         region = regions[i] # thats the region we are interested in
         xs, ys = fetchPoints ( bestSRs, region )
+        xs, ys = filterWithinRanges ( { "x": xs, "y": ys }, xr, yr )
         plt.scatter ( xs, ys, s=25, c=[ color ]*len(xs), label=region )
         miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
     if numpy.isinf ( maxy ):
         print ( f"[plotBestSRs] we have no finite points??" )
         return
     xs, ys = fetchAllOtherPoints ( bestSRs, regions )
+    xs, ys = filterWithinRanges ( { "x": xs, "y": ys }, xr, yr )
     miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
     if len(xs)>0:
         plt.scatter ( xs, ys, s=25, c=[ "k" ]*len(xs), label="others" )
     # plot also the no results
     xs, ys = fetchPoints ( bestSRs, None )
+    xs, ys = filterWithinRanges ( { "x": xs, "y": ys }, xr, yr )
     plt.scatter ( xs, ys, s=2, c=[ "grey" ]*len(xs), label="no result" )
     miny, maxy = min ( ys + [ miny ] ), max ( ys + [ maxy ] )
 
@@ -312,7 +324,7 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     if rank > 3:
         srank = f"{rank}nth"
     fname = fname.replace ( "@r", srank )
-    # print ( "[plotBestSRs] saving to %s" % fname )
+    print ( f"[plotBestSRs] saving to {YELLOW}{fname}{RESET}" )
     plt.savefig ( fname )
     if show:
         plt.kittyPlot()
