@@ -808,7 +808,7 @@ class ValidationObjsBase():
 
     def show ( self, filename ):
         """ we were asked to also show <filename> """
-        term = os.environ["TERM"]
+        # term = os.environ["TERM"]
         if not self.options["show"]: #  or not term == "xterm-kitty":
             return
         showPlot ( filename )

@@ -90,7 +90,11 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
         plots = json.load(file)
         plots.update(plot_dict)
 
-    print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {len(xobs)} points{RESET}")
+    npoints = 0
+    if len(xobs)>0:
+        npoints = len(xobs[0])
+
+    print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
 
     file = open(f'{vDir}/{file_js}','w')
     json.dump(plots,file)
