@@ -107,7 +107,9 @@ def run():
     else:
         aggs, dropped = aggregators.aggregateByCorrs ( args.database, args.analysis, drops, exclusives, args.corr, args.verbose )
     aggregators.describe ( aggs, dropped, len(C) )
-    aggregators.check ( aggs, dropped, len(C) )
+    result  = aggregators.getExpResult ( args.database, args.analysis )
+    datasets, comments = aggregators.getDatasets( result, addReverse=False, verbose = args.verbose )
+    aggregators.check ( aggs, dropped, len(datasets) )
 
 if __name__ == "__main__":
     run()
