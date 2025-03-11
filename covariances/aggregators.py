@@ -251,6 +251,14 @@ def getExpResult ( database, analysis ):
         sys.exit()
     return results[0]
 
+def toLetter ( index : int ) -> str:
+    """ translate an index to a letter:
+    0 -> a, 1 -> b, 25 -> z, 26 -> A, ... 
+    """
+    if index <= 25:
+        return chr(97+index)
+    return chr(65+index-26)
+
 def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
     """ run the aggregator based on SR names
     :param database: path to database
@@ -284,7 +292,7 @@ def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
             srprefix = srname[:p1]
             if not srprefix in srprefixes:
                 srprefixes[srprefix]=[]
-            newname=f"{srprefix}_{chr(97+len(srprefixes[srprefix]))}"
+            newname=f"{srprefix}_{toLetter(len(srprefixes[srprefix]))}"
             if "unique" in commdict.keys():
                 newname = srname
             srprefixes[srprefix].append(newname)
