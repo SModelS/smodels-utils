@@ -68,8 +68,8 @@ class Writer:
         >>> writer.createPngFile()
         """
         from smodels.experiment.databaseObj import Database
+        self.args = vars ( args )
         self.database = Database ( args.database )
-        self.minlumi = args.minlumi
         self.ignorenonvalidated = args.ignorenonvalidated
         #Creat analyses list:
         self.bibtex = None
@@ -85,7 +85,6 @@ class Writer:
             self.reference_results = ids
         self.getExpResults ( superseded = args.superseded )
         self.texfile = args.output
-        self.href = args.href
         self.experiment = args.experiment
         self.likelihoods = args.likelihoods
         self.extended_likelihoods = args.extended_likelihoods
@@ -112,34 +111,53 @@ class Writer:
         if args.longtable:
             self.table = "longtable"
 
+    def filterResults ( self, results : list, excludes : list ) -> list:
+        """ given the list of excludes, filter results """
+        import fnmatch
+        ret = []
+        for result in results:
+            anaId = result.globalInfo.id
+            isExcluded = False
+            for exclude in excludes:
+                if fnmatch.fnmatch ( anaId, exclude ):
+                    if exclude == anaId:
+                      print ( f"[plotBAM] dropping {anaId}" )
+                    else:
+                        print ( f"[plotBAM] dropping {anaId}: matches {exclude}" )
+                    isExcluded = True
+                    break
+            if not isExcluded:
+                ret.append ( result )
+        return ret
+
     def getExpResults ( self, superseded ):
         """ get the experimental results, and filter
         :param superseded: allow superseded results
         """
         self.listOfAnalyses = []
-        ers = self.database.getExpResults( 
+        ers = self.database.getExpResults(
             useNonValidated = not self.ignorenonvalidated )
         ers = filterFastLimFromList ( ers )
         if superseded == False:
             ers = filterSupersededFromList ( ers )
-        if self.minlumi > 0.:
+        if self.args["minlumi"] > 0.:
             ers = self.filterLowLumiResults ( ers )
         if self.ignorenonvalidated:
             ers = self.filterNonValidated ( ers )
-        self.listOfAnalyses = ers
+        self.listOfAnalyses = self.filterResults ( ers, self.args["exclude"].split(",") )
 
     def filterLowLumiResults ( self, expResults ):
-        """ filter out results with a lumi below self.minlumi
+        """ filter out results with a lumi below self.args['minlumi']
         """
         ret = []
         for er in expResults:
             lumi = er.globalInfo.lumi.asNumber(1/fb)
-            if lumi > self.minlumi:
+            if lumi > self.args['minlumi']:
                 ret.append ( er )
         return ret
 
     def filterNonValidated ( self, expResults ):
-        """ filter out results with a lumi below self.minlumi
+        """ filter out results with a lumi below self.args['minlumi']
         """
         ret = []
         for er in expResults:
@@ -214,7 +232,7 @@ class Writer:
 
     def hasChanged ( self, ana : ExpResult, nextAna : None|ExpResult,
                      reportOnlyNew : bool = False ) -> bool:
-        """ has the analysis changed with respect to the reference database? 
+        """ has the analysis changed with respect to the reference database?
         :param reportOnlyNew: if true, then only entirely new results count
         """
         hasChanged = False
@@ -256,7 +274,7 @@ class Writer:
             print ( f"dTs {dTs} refdTs {refdTs}" )
         return hasChanged
 
-    def writeSingleAna ( self, ana : ExpResult, nextIsSame : bool, 
+    def writeSingleAna ( self, ana : ExpResult, nextIsSame : bool,
             nextAna : Union[None,ExpResult] = None ):
         """ write the entry of a single analysis
         :param nextIsSame: true, if next is same
@@ -351,7 +369,7 @@ class Writer:
             # alltxes="xxx"
         #    Url="http://www.google.com"
         #    gi_id="vvv"
-        if self.href:
+        if self.args["href"]:
             Id = "\\href{%s}{%s}" % ( Url, gi_id )
         else:
             Id = gi_id
@@ -587,16 +605,16 @@ if __name__ == "__main__":
         argparser.add_argument ( '-d', '--database', nargs='?',
             help=f'path to database [{dbpath}]', type=str,
             default=dbpath )
-        argparser.add_argument ( '-r', '--reference_database', 
-            nargs='?', help=f'path to reference database, if given make new entries bold [None]', 
+        argparser.add_argument ( '-r', '--reference_database',
+            nargs='?', help=f'path to reference database, if given make new entries bold [None]',
             type=str, default=None )
-        argparser.add_argument ( '--minlumi', help="consider results only above a certain luminosity, in 1/fb [0.]", 
+        argparser.add_argument ( '--minlumi', help="consider results only above a certain luminosity, in 1/fb [0.]",
             type=float, default=0. )
         outfile = "tab.tex"
         argparser.add_argument ( '-o', '--output', nargs='?',
-            help=f'output file [{outfile}]', type=str, 
+            help=f'output file [{outfile}]', type=str,
             default=outfile )
-        argparser.add_argument('-k', '--keep', 
+        argparser.add_argument('-k', '--keep',
             help='keep tex files', action='store_true' )
         argparser.add_argument ( '-e', '--experiment', nargs='?',
             help='experiment [both]', type=str, default='both')
@@ -625,7 +643,7 @@ if __name__ == "__main__":
             action='store_true' )
         argparser.add_argument('--timg', '-T', help='run timg on picture',
             action='store_true' )
-        argparser.add_argument('--ignorenonvalidated', 
+        argparser.add_argument('--ignorenonvalidated',
             help='ignore non-validated results',
             action='store_true' )
         argparser.add_argument('-N', '--prettyNames',
@@ -639,6 +657,9 @@ if __name__ == "__main__":
             action='store_true' )
         argparser.add_argument( '--combinations', help='cycle through all combinations (8TeV/13TeV, CMS/ATLAS)',
             action='store_true' )
+        argparser.add_argument ( '--exclude',
+            help='exclude this comma-separated list of analysis, wildcards allowed [none]',
+            type=str, default='' )
         args=argparser.parse_args()
         if not args.combinations:
             writer = Writer ( args )
