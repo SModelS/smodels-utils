@@ -3,6 +3,8 @@
 ## this is the validation script for @@ANALYSES@@ @@TOPO@@
 ## the template inifile was @@ORIGINIFILE@@
 
+export CODEDIR=@@CODEDIR@@
+
 SCRIPT=$(readlink -f $0)
 
 # ml load texlive/20210324-gcccore-10.2.0
