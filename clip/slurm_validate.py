@@ -230,7 +230,7 @@ def validate ( args : Dict, idx ):
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
-            newline = line.replace("@@CODEDIR@@", codedir )
+            newline = newline.replace("@@CODEDIR@@", codedir )
             newline = newline.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@ORIGINIFILE@@", inifile  )
