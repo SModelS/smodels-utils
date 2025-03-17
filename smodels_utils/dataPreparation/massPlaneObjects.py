@@ -160,7 +160,8 @@ class MassPlane(MassPlaneBase):
         :param objectName: String with the object name stored in root-file or cMacro
         :param index: Index for objects in listOfPrimitives of ROOT.TCanvas,
                       if string and csv file, it specifies the value of the constraint
-                      (see coordinate map)
+                      (see coordinate map), if list then entries get added up
+                      if dictionary then entries get added up with values as weights
         :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...),
                      similar to "scale", can also be used to re-scale the data, either
                      via a '*' or a '/' symbol

@@ -1502,13 +1502,13 @@ class DataHandler(object):
 
         if type(self.index) in [ dict ]: ## for aggregation!
             ys = []
-            tot = sum ( self.index.values() )
+            # tot = sum ( self.index.values() )
             for i,w in self.index.items():
                 idfier = tree.file.file_path + ":" + tree.name + ":" + i
                 if not idfier in pointsCache:
                     self._cacheUpRootTreePoints ( tree )
                 for y in pointsCache[idfier]:
-                    y = ( *y[:-1], y[-1]*w/tot )
+                    y = ( *y[:-1], y[-1]*w ) # /tot )
                     # print ( "@@w", w, "y", y, "tot", tot )
                     ys.append ( y )
             ysDict = {}
