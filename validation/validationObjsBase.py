@@ -769,8 +769,9 @@ class ValidationObjsBase():
         from smodels.base import runtime
         if "spey" in runtime._experimental and \
                 runtime._experimental["spey"]==True:
-            import spey
-            meta["spey"]=spey.__version__
+            if self.expRes.datasets[0].dataInfo.dataId != None:
+                import spey
+                meta["spey"]=spey.__version__
         if hasattr ( self, "pointsInTarFile" ):
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
