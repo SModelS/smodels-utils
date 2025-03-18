@@ -768,6 +768,7 @@ if __name__ == "__main__":
                 "axis": None, ## the axes to plot. If not given, take from exclusion_lines.json
                 "style": "", # specify a plotting style, currently only
                 "plotInverse": False, # 1d plots only, plot ul(mu), not r
+                "limitsOnXSecs" : True, # 1d plots only, plot ul, not r
                 "ratioPlots": True, ## create ratioplots if possible
                 "bestSRPlots": True, ## create best SR plots if meaningful
                 # "" and "sabine" are known

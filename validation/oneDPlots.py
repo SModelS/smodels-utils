@@ -87,6 +87,9 @@ def create1DPlot( validationPlot, silentMode=True,
     inverse = False
     if "plotInverse" in options and options["plotInverse"]==True:
         inverse = True
+    limitsOnXSecs = False
+    if "limitsOnXSecs" in options and options["limitsOnXSecs"]==True:
+        limitsOnXSecs = True
     xrange = getAxisRange ( options, "xaxis" )
     print ( f"[oneDPlots] now create 1d plot for {validationPlot.expRes.globalInfo.id}, {validationPlot.txName}: {validationPlot.axes}" )
 
@@ -100,16 +103,17 @@ def create1DPlot( validationPlot, silentMode=True,
     plt.dontplot = False
     fig, ax = plt.subplots()
 
-    xvs, yvs = [], []
+    xvs, yvs, uls = [], [], []
     from copy import deepcopy as c
     empties = { "x": [], "y": [], "ex": [], "ey": [], "ul": [], "eul": [] }
     values = { "excluded": c(empties) }
+    values["signal"] = { "x": [], "y": [] }
     values["allowed"]= c(empties)
     values["error"]= c(empties)
     values["excluded_border"]= c(empties)
     values["allowed_border"]= c(empties)
     kfactor = None
-    limitsOnXSecs = True
+    toPb = 1000.
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
@@ -139,44 +143,60 @@ def create1DPlot( validationPlot, silentMode=True,
                 continue
             y, ey = float ( "nan" ), float ( "nan" )
             ul, eul = float ( "nan" ), float ( "nan" )
+            signal = float ( "nan" )
             if "signal" in pt and "UL" in pt:
                 y = pt["signal"] / pt["UL"]
-                ul = pt["UL"]
+                ul = pt["UL"] / toPb
+                if .2*ul<pt["signal"]/toPb<ul*5:
+                    signal = pt["signal"] / toPb
                 if "eUL" in pt:
                     if type(pt["eUL"])==str:
                         pt["eUL"]=eval(pt["eUL"])
                     ey = pt["signal"] / pt["eUL"]
-                    eul = pt["eUL"]
+                    eul = pt["eUL"] / toPb
             label = "error"
             append ( values, label, { "x": x, "y": y } )
             append ( values, label, { "ex": x, "ey": ey } )
             append ( values, label, { "ul": ul, "eul": eul } )
+            append ( values, "signal", { "x": x, "y": signal } )
             if math.isfinite ( y ):
                 yvs.append ( y )
                 xvs.append ( x )
+            if math.isfinite ( ul ):
+                uls.append ( ul )
             label = "excluded"
+            point = { "x": x, "y": y }
+            epoint = { "ex": x, "ey": ey }
+            if limitsOnXSecs:
+                point["y"]=ul
+                epoint["ey"]=eul
             if 1.1 < y < float("inf"):
-                append ( values, label, { "x": x, "y": y } )
+                append ( values, label, point )
             if 1.1 < ey < float("inf"):
-                append ( values, label, { "ex": x, "ey": ey } )
+                append ( values, label, epoint )
             label = "excluded_border"
             if 0.8 < y < 1.3:
-                append ( values, label, { "x": x, "y": y } )
+                append ( values, label, point )
             if 0.8 < ey < 1.3:
-                append ( values, label, { "ex": x, "ey": ey } )
+                append ( values, label, epoint )
             label = "allowed_border"
             if .3 < y < 1:
-                append ( values, label, { "x": x, "y": y } )
+                append ( values, label, point )
             if .3 < ey < 1:
-                append ( values, label, { "ex": x, "ey": ey } )
+                append ( values, label, epoint )
             label = "allowed"
             if y < 0.7:
-                append ( values, label, { "x": x, "y": y } )
+                append ( values, label, point )
             if ey < 0.7:
-                append ( values, label, { "ex": x, "ey": ey } )
+                append ( values, label, epoint )
     ylabel = r"r = $\sigma_\mathrm{signal}$ / $\sigma_\mathrm{UL}$"
     if inverse:
         ylabel = r"$\mathrm{UL}_\mu$"
+    if limitsOnXSecs:
+        ylabel = r"$\sigma$ [pb]"
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        ax.set_yscale('log')
+        
     plt.ylabel ( ylabel )
     plt.xlabel ( r"m(mother) [GeV]", labelpad=-1., loc="right" )
     colors = { "excluded": "r",
@@ -184,6 +204,8 @@ def create1DPlot( validationPlot, silentMode=True,
                "allowed_border": "g",
                "allowed": "lightgreen",
     }
+    if limitsOnXSecs:
+        plot ( values["signal"]["x"], values["signal"]["y"], marker="", color = "blue", label = "signal", linestyle="-" )
     for label in [ "excluded", "excluded_border", "allowed_border", "allowed" ]:
         c = colors[label]
         lbl = None
@@ -203,6 +225,7 @@ def create1DPlot( validationPlot, silentMode=True,
             ys = [ 1./y for y in ys ]
             for i,e in enumerate ( values[label]["ey"] ):
                 values[label]["ey"][i]=1./e
+        # print ( f"@@0 plotting xs {xs[:3]} ys {ys[:3]} lbl {lbl}" )
         plot ( xs, ys, color=c, marker="o", label=lbl, linestyle=linestyle )
         #if len(values[label]["ey"]) == len(values[label]["ex"]):
         if linestyle != "":
@@ -221,6 +244,8 @@ def create1DPlot( validationPlot, silentMode=True,
     for o in official:
         if o["name"].startswith ( "obsExclusion" ) and len( yvs ) > 0:
             rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
+            if limitsOnXSecs:
+                rmin, rmax = .7 * min(uls) , 1.5 * max ( uls )
             xvals = set(o["points"]["x"])
             ## we assume the exclusion lines to be "points", so
             ## we draw horizontal lines in each point
@@ -233,6 +258,8 @@ def create1DPlot( validationPlot, silentMode=True,
         # logger.info ( f"exclusion object: {o}" )
         if o["name"].startswith ( "expExclusion" ) and len ( yvs ) > 0:
             rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
+            if limitsOnXSecs:
+                rmin, rmax = .7 * min ( uls ), min ( 2., max ( uls ) )
             xvals = set(o["points"]["x"])
             label = "dashed lines are expected values"
             for xv in xvals:
