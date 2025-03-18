@@ -69,6 +69,11 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
                    label=label, linestyle=linestyle )
         label = ""
 
+def append ( values : dict , label : str, point : dict ):
+    """ convenience function to append a point """
+    for axis, value in point.items():
+        values[label][axis].append(value)
+
 def create1DPlot( validationPlot, silentMode=True,
         looseness = 1.2, options : dict = {} ):
     """
@@ -96,12 +101,15 @@ def create1DPlot( validationPlot, silentMode=True,
     fig, ax = plt.subplots()
 
     xvs, yvs = [], []
-    values = { "excluded": { "x": [], "y": [], "ex": [], "ey": [] } }
-    values["allowed"]= { "x": [], "y": [],"ex": [],  "ey": [] }
-    values["error"]= { "x": [], "y": [],"ex": [],  "ey": [] }
-    values["excluded_border"]= { "x": [], "y": [],"ex": [],  "ey": [] }
-    values["allowed_border"]= { "x": [], "y": [],"ex": [],  "ey": [] }
+    from copy import deepcopy as c
+    empties = { "x": [], "y": [], "ex": [], "ey": [], "ul": [], "eul": [] }
+    values = { "excluded": c(empties) }
+    values["allowed"]= c(empties)
+    values["error"]= c(empties)
+    values["excluded_border"]= c(empties)
+    values["allowed_border"]= c(empties)
     kfactor = None
+    limitsOnXSecs = True
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
@@ -130,48 +138,42 @@ def create1DPlot( validationPlot, silentMode=True,
             if not isWithinRange (xrange, x ):
                 continue
             y, ey = float ( "nan" ), float ( "nan" )
+            ul, eul = float ( "nan" ), float ( "nan" )
             if "signal" in pt and "UL" in pt:
                 y = pt["signal"] / pt["UL"]
+                ul = pt["UL"]
                 if "eUL" in pt:
                     if type(pt["eUL"])==str:
                         pt["eUL"]=eval(pt["eUL"])
                     ey = pt["signal"] / pt["eUL"]
+                    eul = pt["eUL"]
             label = "error"
-            values[label]["x"].append(x)
-            values[label]["y"].append(y)
-            values[label]["ex"].append(x)
-            values[label]["ey"].append(ey)
+            append ( values, label, { "x": x, "y": y } )
+            append ( values, label, { "ex": x, "ey": ey } )
+            append ( values, label, { "ul": ul, "eul": eul } )
             if math.isfinite ( y ):
                 yvs.append ( y )
                 xvs.append ( x )
             label = "excluded"
             if 1.1 < y < float("inf"):
-                values[label]["x"].append(x)
-                values[label]["y"].append(y)
+                append ( values, label, { "x": x, "y": y } )
             if 1.1 < ey < float("inf"):
-                values[label]["ex"].append(x)
-                values[label]["ey"].append(ey)
+                append ( values, label, { "ex": x, "ey": ey } )
             label = "excluded_border"
             if 0.8 < y < 1.3:
-                values[label]["x"].append(x)
-                values[label]["y"].append(y)
+                append ( values, label, { "x": x, "y": y } )
             if 0.8 < ey < 1.3:
-                values[label]["ex"].append(x)
-                values[label]["ey"].append(ey)
+                append ( values, label, { "ex": x, "ey": ey } )
             label = "allowed_border"
             if .3 < y < 1:
-                values[label]["x"].append(x)
-                values[label]["y"].append(y)
+                append ( values, label, { "x": x, "y": y } )
             if .3 < ey < 1:
-                values[label]["ex"].append(x)
-                values[label]["ey"].append(ey)
+                append ( values, label, { "ex": x, "ey": ey } )
             label = "allowed"
             if y < 0.7:
-                values[label]["x"].append(x)
-                values[label]["y"].append(y)
+                append ( values, label, { "x": x, "y": y } )
             if ey < 0.7:
-                values[label]["ex"].append(x)
-                values[label]["ey"].append(ey)
+                append ( values, label, { "ex": x, "ey": ey } )
     ylabel = r"r = $\sigma_\mathrm{signal}$ / $\sigma_\mathrm{UL}$"
     if inverse:
         ylabel = r"$\mathrm{UL}_\mu$"
