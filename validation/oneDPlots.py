@@ -83,9 +83,7 @@ def create1DPlot( validationPlot, silentMode=True,
     if "plotInverse" in options and options["plotInverse"]==True:
         inverse = True
     xrange = getAxisRange ( options, "xaxis" )
-    logger.error ( "now create 1d plot for %s, %s: %s" % \
-       ( validationPlot.expRes.globalInfo.id, validationPlot.txName,
-         validationPlot.axes ) )
+    print ( f"[oneDPlots] now create 1d plot for {validationPlot.expRes.globalInfo.id}, {validationPlot.txName}: {validationPlot.axes}" )
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
