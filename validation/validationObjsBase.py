@@ -249,14 +249,14 @@ class ValidationObjsBase():
                import subprocess
                o = subprocess.getoutput ( cmd )
         else:
-            logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
             self.savefig(filename)
-            filename = filename.replace('.'+fformat,'.png')
-            try:
-                self.savefig(filename)
-            except Exception as e:
-                # if fails because of missing dep, then just proceed
-                pass
+            if fformat != "png":
+                filename = filename.replace('.'+fformat,'.png')
+                try:
+                    self.savefig(filename)
+                except Exception as e:
+                    # if fails because of missing dep, then just proceed
+                    pass
         self.show ( filename )
 
         return True
