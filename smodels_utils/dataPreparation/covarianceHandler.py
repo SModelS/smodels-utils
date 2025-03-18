@@ -156,7 +156,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
             max_datasets : Union [int,None] = None,
             aggregate : Union[list,None] = None, aggprefix : str = "ar", 
             zeroIndexed : bool = False, scaleCov : float = 1.0,
-            blinded_regions : list = [] ):
+            blinded_regions : list = [], datasets : Union[list,None]=None ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
         from.
@@ -168,6 +168,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         :param scaleCov: scale the covariances down ever so slightly, to be
         sure the determinant stay negative.
         :param blinded_regions: list of regions we omit
+        :param datasets: a dataset list, so we can check
         """
         self.aggprefix = aggprefix
         import uproot
@@ -185,6 +186,9 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         skipped = 0
         for i in range ( self.n ):
             dsId = xaxis.labels()[i]
+            if datasets != None and dsId not in datasets:
+                print ( f"[covarianceHandler] skipping {dsId}: not in datasets" )
+                continue
             if i in self.blinded_regions or dsId in self.blinded_regions:
                 if skipped < 4:
                     print ( f"[covarianceHandler] skipping {i}/{dsId}: is mentioned in blinded_regions" )
@@ -192,6 +196,19 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                     print ( f"[covarianceHandler] ... " )
                 skipped += 1
                 continue
+            import fnmatch
+            skipIt = False
+            for br in self.blinded_regions:
+                if fnmatch.fnmatch ( dsId, br ):
+                    if skipped < 4:
+                        print ( f"[covarianceHandler] skipping {i}/{dsId}: is mentioned in blinded_regions" )
+                    if skipped == 4:
+                        print ( f"[covarianceHandler] ... " )
+                    skipped += 1
+                    skipIt = True
+            if skipIt:
+                continue
+                
             try:
                 dsId = f"SR{int(dsId)}"
             except Exception as e:
@@ -202,6 +219,18 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                 dsIdj = xaxis.labels()[j]
                 if j in self.blinded_regions or dsIdj in self.blinded_regions:
                     continue
+                skipIt = False
+                for br in self.blinded_regions:
+                    if fnmatch.fnmatch ( dsIdj, br ):
+                        if skipped < 4:
+                            print ( f"[covarianceHandler] skipping {i}/{dsId}: is mentioned in blinded_regions" )
+                        if skipped == 4:
+                            print ( f"[covarianceHandler] ... " )
+                        skipped += 1
+                        skipIt = True
+                if skipIt:
+                    continue
+                
                 el = h.values()[i][j]
                 if i==j and el < 1e-4:
                    logger.error ( f"variance in the covariance matrix at position {i} has a very small value ({el:g})" )
