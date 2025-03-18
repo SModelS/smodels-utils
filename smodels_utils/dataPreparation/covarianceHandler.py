@@ -40,6 +40,8 @@ def computeAggCov ( covariance : list[list], agg1 : list, agg2 : list,
     di = 0
     if not zeroIndexed:
         di = 1
+    if max(agg1+agg2)-di >= len(covariance):
+        print ( f"[covarianceHandler] error highest index {max(agg1+agg2)} is larger than covariance matrix {len(covariance)}" )
     for i in agg1:
         for j in agg2:
             C+=covariance[i-di][j-di]
