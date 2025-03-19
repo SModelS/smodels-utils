@@ -124,7 +124,10 @@ class DatabaseCreator(list):
                     shutil.rmtree ( f )
 
         if len(dirs)>0:
-            self.timeStamp ( "removing old dataset dirs: %s" % ", ".join(dirs) )
+            listOfDirs = ", ".join(dirs)
+            if len(listOfDirs)>60:
+                listOfDirs = listOfDirs[:57]+"..."
+            self.timeStamp ( f"removing old dataset dirs: {listOfDirs}" )
 
     def timeStamp(self, txt, c="info"):
         color, reset = '\x1b[32m', '\x1b[39m'
@@ -145,11 +148,11 @@ class DatabaseCreator(list):
             if c in colors:
                 color = colors[c]
             else:
-                self.timeStamp ( "do not know message level %s" % c, "error" )
+                self.timeStamp ( f"do not know message level {c}", "error" )
 
         dt = time.time() - self.t0
         name=""
-        print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
+        print ( f"[{name}{dt:.1f}s] {color}{txt}{reset}" )
 
     def addDatasets(self,datasetObjects):
         """
@@ -200,7 +203,7 @@ class DatabaseCreator(list):
             return
 
         if not datasetObject in self:
-            logger.error("Dataset %s can not be updated." %datasetObject._name)
+            logger.error( f"Dataset {datasetObject._name} can not be updated." )
             return
             # sys.exit()
 
@@ -234,7 +237,7 @@ class DatabaseCreator(list):
         or conditionDescription is set for this region
         """
 
-        self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "error" )
+        self.timeStamp ( f'create next database entry for {self.metaInfo.id}', "error" )
 
         if hasattr ( self, "datasetCreator" ):
             ## if we have a dataset creator, we let it define the order in globalInfo.txt.
@@ -264,8 +267,8 @@ class DatabaseCreator(list):
                 p.join(timeout=100000)
 
             if len(updatedDatasets) != len(self):
-                logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
-                        ( len(updatedDatasets), len(self) ) )
+                logger.error( f"Error, when creating datasets: some children didnt terminate within the timeout." )
+                logger.error ( f"I see {len(updateDataset)} out of {len(self)} children have terminated." )
                 sys.exit()
 
         for dataset in updatedDatasets:
@@ -407,7 +410,7 @@ class DatabaseCreator(list):
                         if not meetsConstraints:
                             continue
                     except ValueError:
-                        logger.info ( "cannot convert to coordinates: %s" % point )
+                        logger.info ( f"cannot convert to coordinates: {point}" )
                         continue
                     if type(point["x"])==str:
                         self.warn( f"trying to add strings as coordinates of points {point['x']}. skip it." )
@@ -466,7 +469,7 @@ class DatabaseCreator(list):
                         if not meetsConstraints:
                             continue
                     except ValueError:
-                        logger.info ( "cannot convert to coordinates: %s" % point )
+                        logger.info ( f"cannot convert to coordinates: {point}" )
                         continue
                     if type(point["x"])==str:
                         self.warn( f"trying to add strings as coordinates of points {point['x']}. skip it." )
@@ -513,7 +516,7 @@ class DatabaseCreator(list):
         """
 
         today = date.today()
-        today = '%s/%s/%s' %(today.year, today.month, today.day)
+        today = f'{today.year}/{today.month}/{today.day}' 
         self.metaInfo.lastUpdate = today
         self._setImplementedBy()
 
@@ -630,7 +633,7 @@ class DatabaseCreator(list):
             if os.path.isdir(path):
                 shutil.rmtree(path)
 
-        self.timeStamp ( "cleaning up in %s " % self.base )
+        self.timeStamp ( f"cleaning up in {self.base}" )
 
     def _createValidationFolder(self):
         """
@@ -727,7 +730,7 @@ class DatabaseCreator(list):
                 if attr == "dataId":
                     obj.dataId = None
                 else:
-                    logger.error("Attribute %s must be defined for object type %s" %(attr,type(obj)))
+                    logger.error( f"Attribute {attr} must be defined for object type {type(obj)}" )
                     sys.exit()
 
         for attr in obj.infoAttr:
@@ -749,9 +752,9 @@ class DatabaseCreator(list):
                     value = self.formatJsonFile ( value )
             if name == "dataInfo" and attr == "jsonfile":
                 # we copy the jsonfile and rewrite the value field
-                sourcefile = "%s/%s" % ( self.base, value )
+                sourcefile = f"{self.base}/{value}"
                 if not os.path.exists ( sourcefile ):
-                    logger.error ( "jsonfile %s not found." % sourcefile )
+                    logger.error ( f"jsonfile {sourcefile} not found." )
                     sys.exit(-3)
                 destfile = self.base + path
                 destfile = destfile.replace("dataInfo.txt", "BkgOnly.json" )
@@ -761,7 +764,7 @@ class DatabaseCreator(list):
                                        self.assignmentOperator, value)
 
         infoFile = open(self.base + path, 'w')
-        self.timeStamp ( "writing info file %s" % path )
+        self.timeStamp ( f"writing info file {path}" )
         infoFile.write(content)
         infoFile.close()
 
