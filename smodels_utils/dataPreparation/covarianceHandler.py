@@ -11,7 +11,7 @@
 import sys
 import copy
 import logging
-import numpy
+import numpy as np
 from typing import Union
 from smodels_utils.helper import prettyDescriptions
 
@@ -26,7 +26,7 @@ overrideWithConservativeErrors = True
 
 minVariance = 1e-4 ## the minimum value for variance
 
-def computeAggCov ( covariance : list[list], agg1 : list, agg2 : list, 
+def computeAggCov ( covariance : list[list], agg1 : list, agg2 : list,
         zeroIndexed : bool = False ) -> float:
     """ compute the covariance between agg1 and agg2
     :param covariance: the covariance matrix
@@ -47,7 +47,7 @@ def computeAggCov ( covariance : list[list], agg1 : list, agg2 : list,
             C+=covariance[i-di][j-di]
     return C
 
-def aggregateMe ( covariance : list[list], aggregate : list, 
+def aggregateMe ( covariance : list[list], aggregate : list,
           aggprefix : str ="AR", zeroIndexed : bool = False ) -> tuple[list,list]:
     """ aggregate the covariance matrix according to aggregate
     :param covariance: the matrix.
@@ -99,7 +99,36 @@ class CovarianceHandler:
     def interact ( self, stuff ):
         import IPython
         IPython.embed()
-        sys.exit() 
+        sys.exit()
+
+    def is_positive_definite(self,matrix):
+        """Checks if a symmetric matrix is positive definite and
+        identifies reasons if not."""
+        if not np.allclose(matrix, matrix.T):
+            print("[covarianceHandler] The matrix is not symmetric, so it cannot be positive definite.")
+            return False
+
+        try:
+            np.linalg.cholesky(matrix)
+            print("[covarianceHandler] The matrix is positive definite.")
+            return True
+        except np.linalg.LinAlgError:
+            print("[covarianceHandler] The matrix is not positive definite.")
+
+        # Check for non-positive eigenvalues
+        eigenvalues = np.linalg.eigvalsh(matrix)
+        if np.any(eigenvalues <= 0):
+            print("Reason: The matrix has non-positive eigenvalues:", eigenvalues)
+
+        # Check for leading principal minors having non-positive determinants
+        for i in range(1, matrix.shape[0] + 1):
+            minor = matrix[:i, :i]
+            det = np.linalg.det(minor)
+            if det <= 0:
+                print(f"Reason: Leading principal minor of size {i} has non-positive determinant ({det}).")
+                break
+
+        return False
 
     def checkCovarianceMatrix( self ):
         """ a quick check if the covariance matrix is invertible. """
@@ -116,11 +145,13 @@ class CovarianceHandler:
             sys.exit()
         try:
             from scipy import stats
-            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
+            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance,allow_singular=True)
         except Exception as e:
-            import numpy
             logger.error ( f"computation of logpdf failed: {e}" )
-            logger.error ( f"the first entries in the diagonal read:\n{numpy.diag ( m.covariance )[:10]}" )
+            logger.error ( f"the first entries in the diagonal read:\n{np.diag ( m.covariance )[:10]}" )
+            self.is_positive_definite ( m.covariance )
+            print ( f"covariance {type(m.covariance)}" )
+            import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             sys.exit()
 
     def removeSmallValues ( self ):
@@ -152,9 +183,9 @@ class CovarianceHandler:
         self.datasetOrder=newDSOrder
 
 class UPROOTCovarianceHandler ( CovarianceHandler ):
-    def __init__ ( self, filename : str, histoname : str, 
+    def __init__ ( self, filename : str, histoname : str,
             max_datasets : Union [int,None] = None,
-            aggregate : Union[list,None] = None, aggprefix : str = "ar", 
+            aggregate : Union[list,None] = None, aggprefix : str = "ar",
             zeroIndexed : bool = False, scaleCov : float = 1.0,
             blinded_regions : list = [], datasets : Union[list,None]=None ):
         """ constructor.
@@ -208,7 +239,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                     skipIt = True
             if skipIt:
                 continue
-                
+
             try:
                 dsId = f"SR{int(dsId)}"
             except Exception as e:
@@ -230,7 +261,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                         skipIt = True
                 if skipIt:
                     continue
-                
+
                 el = h.values()[i][j]
                 if i==j and el < 1e-4:
                    logger.error ( f"variance in the covariance matrix at position {i} has a very small value ({el:g})" )
@@ -281,7 +312,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         sys.exit()
 
 class PYROOTCovarianceHandler ( CovarianceHandler ):
-    def __init__ ( self, filename : str, histoname : str, 
+    def __init__ ( self, filename : str, histoname : str,
             max_datasets : Union[None,int] = None,
             aggregate : Union[list, None ] = None, aggprefix : str = "ar" ):
         """ constructor.
@@ -391,7 +422,7 @@ class CSVCovarianceHandler ( CovarianceHandler ):
         self.n = len ( tuples )
         for i in range(nmax):
             self.datasetOrder.append ( f"SR{i+1}" )
-        a = numpy.array ( [ [0.]*nmax ]*nmax, dtype=float )
+        a = np.array ( [ [0.]*nmax ]*nmax, dtype=float )
         for t in tuples:
             a[t[0]][t[1]]=t[2]
         a = a.tolist()
