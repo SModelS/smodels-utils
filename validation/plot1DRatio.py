@@ -76,7 +76,7 @@ def plot ( args : dict, points1 : list, points2 : list ):
         title = f"ratio plot, {ana}, {topo}"
     plt.title ( title )
     plt.legend()
-    print ( args )
+    # print ( args )
     filename = args["output"].replace("@a",args["analysis1"])
     filename = filename.replace("@t",topo)
     filename = filename.replace("@sr","")
@@ -158,10 +158,10 @@ def main():
     argparser.add_argument ( "-d", "--dbpath",
             help="path to database [../../smodels-database/]", type=str,
             default="../../smodels-database/" )
-    argparser.add_argument ( "-e1", "--eul", action="store_true",
-            help="for the first analysis, use expected, not observed, upper limits" )
-    argparser.add_argument ( "-e2", "--eul2", action="store_true",
-            help="for the second analysis, use expected, not observed, upper limits" )
+    #argparser.add_argument ( "-e1", "--eul", action="store_true",
+    #        help="for the first analysis, use expected, not observed, upper limits" )
+    #argparser.add_argument ( "-e2", "--eul2", action="store_true",
+    #        help="for the second analysis, use expected, not observed, upper limits" )
     #argparser.add_argument ( "-e", "--efficiencies", action="store_true",
     #        help="plot ratios of efficencies of best SRs, not ULs" )
     #argparser.add_argument ( "-c", "--copy", action="store_true",
