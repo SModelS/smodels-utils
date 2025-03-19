@@ -64,18 +64,21 @@ def plot ( args : dict, points1 : list, points2 : list ):
         else:
             ey_list.append ( points2[x]["er"] / points1[x]["er"] )
 
-    plt.plot ( x_list, y_list, color="k", linestyle="-", label="observed" )
-    plt.plot ( x_list, ey_list, color="k", linestyle="dotted", label="expected" )
+    plt.plot ( x_list, y_list, color="r", linestyle="-", label="observed" )
+    plt.plot ( x_list, ey_list, color="r", linestyle="dotted", label="expected" )
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
+    p1 = args["validationfile1"].find("_")
+    topo = args["validationfile1"][:p1]
     title = args["title"]
     if title == None:
-        title = "ratio plot, XXXX"
+        ana = args["analysis1"]
+        title = f"ratio plot, {ana}, {topo}"
     plt.title ( title )
     plt.legend()
     print ( args )
     filename = args["output"].replace("@a",args["analysis1"])
-    filename = filename.replace("@t","")
+    filename = filename.replace("@t",topo)
     filename = filename.replace("@sr","")
     plt.savefig ( filename )
 
