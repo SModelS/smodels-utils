@@ -144,12 +144,12 @@ def create1DPlot( validationPlot, silentMode=True,
             y, ey = float ( "nan" ), float ( "nan" )
             ul, eul = float ( "nan" ), float ( "nan" )
             signal = float ( "nan" )
-            if "signal" in pt and "UL" in pt:
+            if "signal" in pt and "UL" in pt and pt["UL"] != None:
                 y = pt["signal"] / pt["UL"]
                 ul = pt["UL"] / toPb
                 if .2*ul<pt["signal"]/toPb<ul*5:
                     signal = pt["signal"] / toPb
-                if "eUL" in pt:
+                if "eUL" in pt and pt["eUL"] != None:
                     if type(pt["eUL"])==str:
                         pt["eUL"]=eval(pt["eUL"])
                     ey = pt["signal"] / pt["eUL"]
