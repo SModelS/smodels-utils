@@ -238,7 +238,7 @@ def getExtremeValue(excl_line, extreme, type, width=False):
                 maxi = max(maxi, max(excl_line))
             return maxi
         else:
-            mini = 0. # np.inf
+            mini = np.inf
             if width:
                 excl = [10**y for y in excl_line]
                 if len(excl)>0:
@@ -246,6 +246,8 @@ def getExtremeValue(excl_line, extreme, type, width=False):
                 return mini
             if len(excl_line)>0:
                 mini = min(mini, min(excl_line))
+            else:
+                mini = 0.
             return mini
 
 def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
