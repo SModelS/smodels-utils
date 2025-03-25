@@ -1500,6 +1500,28 @@ class DataHandler(object):
                 yield t
             return
 
+        if type(self.index) in [ dict ]: ## for aggregation!
+            ys = []
+            # tot = sum ( self.index.values() )
+            for i,w in self.index.items():
+                idfier = tree.file.file_path + ":" + tree.name + ":" + i
+                if not idfier in pointsCache:
+                    self._cacheUpRootTreePoints ( tree )
+                for y in pointsCache[idfier]:
+                    y = ( *y[:-1], y[-1]*w ) # /tot )
+                    # print ( "@@w", w, "y", y, "tot", tot )
+                    ys.append ( y )
+            ysDict = {}
+            for y in ys:
+                tmpy = y[:-1]
+                if not tmpy in ysDict:
+                    ysDict[tmpy]=0.
+                ysDict[tmpy]+=y[-1]
+            for k,v in ysDict.items():
+                t = ( *k, v )
+                yield t
+            return
+
         idfier = tree.file.file_path + ":" + tree.name + ":" + self.index
         if not idfier in pointsCache:
             self._cacheUpRootTreePoints ( tree )
@@ -1528,7 +1550,7 @@ class DataHandler(object):
         effs = branches [ "AccEff" ]
         yields = []
         print ( f"[dataHandlerObjects] caching {len(branches[xvar])} ttree entries!" )
-        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         for i in range( len(branches[xvar]) ):
 #            if type(self.index) == str: # and \
 #                    self.index != branches["SearchBin"][i]:

@@ -35,7 +35,7 @@ def starting( expRes, txnameStr, axes, pretty ):
     #logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
-        db, kfactor=1., pretty=False, combine=False, namedTarball = None, 
+        db, kfactor=1., pretty=False, combine=False, namedTarball = None,
         keep = False ):
     """
     Creates a validation plot and saves its output.
@@ -101,18 +101,23 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         if options["pdfPlots"]:
             valPlot.toPdf()
     if options["drawPaperPlot"]:
-        from drawPaperPlot import drawPrettyPaperPlot
-        of = drawPrettyPaperPlot(valPlot)
-        if options["show"] and of is not None:
-            from validationHelpers import showPlot 
-            for f in of:
-                showPlot ( f )
+        axis = valPlot.niceAxes
+        if not "y" in axis:
+            ## for now skip the 1d versions
+            print ( f"[runValidation] axis is 1d, skipping drawPaperPlot" )
+        else:
+            from drawPaperPlot import drawPrettyPaperPlot
+            of = drawPrettyPaperPlot(valPlot)
+            if options["show"] and of is not None:
+                from validationHelpers import showPlot
+                for f in of:
+                    showPlot ( f )
     return valPlot
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     """ add a range condition to options, overwrite one if already there
     :param var: variable, "x" or "y"
-    :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]', 
+    :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]',
     '[[x,0.0],[x,0.0]]:[220,520]'], or '[200,500]'
     """
     ax = eval ( axis )
@@ -172,7 +177,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         return False
     axis = axis.replace(",","").replace("(","").replace(")","").\
                     replace("/","d").replace("*","")
-    if not combine: # if it isnt a combination, we dont want 
+    if not combine: # if it isnt a combination, we dont want
         return False # a ratio plot
     anaId = expRes.globalInfo.id
     dashes = anaId.count ( "-" )
@@ -199,7 +204,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana2origtest = os.path.dirname ( datafile ) + f"../../../{ana2}-orig"
     ana2origtest = os.path.abspath ( ana2origtest )
     if os.path.exists ( ana2origtest ) and not "-orig" in ana1:
-        ## if an -orig result exists with the same analysis id, 
+        ## if an -orig result exists with the same analysis id,
         ## compare against that one!
         ana2 = ana2 + "-orig"
         valfile2 = valfile1
@@ -273,7 +278,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if opts["bestSRPlots"]==False:
         return False
     if combine: # for combined plots, we dont do best SR plots
-        return False 
+        return False
     if len ( expRes.datasets ) == 1:
         return False ## obviously not needed, whether it is effmap or UL
     if not "y" in axis: # dont make these plots for 1d cases
@@ -297,7 +302,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"], validationPlot )
 
-def runForOneResult ( expRes, options : dict, 
+def runForOneResult ( expRes, options : dict,
                       keep : bool, db ) -> None:
     """
     Run for one experimental result
@@ -400,7 +405,7 @@ def runForOneResult ( expRes, options : dict,
             for cax,ax in enumerate(axes):
                 hasCorrectAxis_ = hasCorrectAxis
                 x,y,z,w = var("x y z w")
-                # print ( "ax", ax) 
+                # print ( "ax", ax)
                 ax = str(eval(str(ax))) ## standardize the string
                 kfactor = gkfactor
                 fname_ = "none"
@@ -477,9 +482,9 @@ def runForOneResult ( expRes, options : dict,
                     oldNamedTarball = pnamedTarball
                     validationDir = re.getValidationDir ( None )
                     datafile = re.getDataFile(validationDir)
-                checkForRatioPlots ( expRes, txnameStr, ax, db, combine, 
+                checkForRatioPlots ( expRes, txnameStr, ax, db, combine,
                                      localopts, datafile, re.niceAxes )
-                checkForBestSRPlots ( expRes, txnameStr, ax, db, combine, 
+                checkForBestSRPlots ( expRes, txnameStr, ax, db, combine,
                                      localopts, datafile, re )
         else: # axis is not None
             x,y,z = var("x y z")
@@ -528,7 +533,7 @@ def runForOneResult ( expRes, options : dict,
     id = expRes.globalInfo.id
     print( f"{RED}finished {id} validated in {dt:.1f} min {RESET}" )
 
-def run ( expResList : list, options : dict, 
+def run ( expResList : list, options : dict,
           keep : bool, db ) -> None:
     """
     Loop over experimental results and validate plots
@@ -685,7 +690,7 @@ if __name__ == "__main__":
 
     from validation import plottingFuncs, validationObjs, graphsValidationObjs
     from smodels.experiment.databaseObj import Database
-    from smodels.experiment.expResultObj import ExpResult    
+    from smodels.experiment.expResultObj import ExpResult
 
     #Control output level:
     #numeric_level = getattr(logging,args.verbose.upper(), None)
@@ -763,6 +768,7 @@ if __name__ == "__main__":
                 "axis": None, ## the axes to plot. If not given, take from exclusion_lines.json
                 "style": "", # specify a plotting style, currently only
                 "plotInverse": False, # 1d plots only, plot ul(mu), not r
+                "limitsOnXSecs" : True, # 1d plots only, plot ul, not r
                 "ratioPlots": True, ## create ratioplots if possible
                 "bestSRPlots": True, ## create best SR plots if meaningful
                 # "" and "sabine" are known
@@ -858,7 +864,7 @@ if __name__ == "__main__":
         if "spey" in runtime._experimental:
             runtime._experimental["spey"]=True
         else:
-            logger.error ( "asked for spey but don't see any support for it in this SModelS version" ) 
+            logger.error ( "asked for spey but don't see any support for it in this SModelS version" )
             sys.exit()
 
     #Run validation:

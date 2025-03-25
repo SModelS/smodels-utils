@@ -5,6 +5,7 @@
 from smodels.experiment.databaseObj import Database
 from smodels.base.smodelsLogging import setLogLevel
 import math, sys
+import numpy as np
 
 def getVariance( expRes, srName : str ):
     """ retrieve the variance of srName in expRes """
@@ -42,7 +43,7 @@ def getCovariance( expRes, srName1 : str, srName2 : str ):
     #print ( f"{srName1} is at {pos1}" )
     #print ( f"{srName2} is at {pos2}" )
     print ( f"cov({srName1},{srName2})={cov[pos1][pos2]:.3f}" )
-    # print ( f"rho({pos1},{pos})={math.sqrt(cov[pos][pos]):.3f}" )
+    print ( f"rho({pos1},{pos2})={cov[pos1][pos2]/np.sqrt(cov[pos1][pos1]*cov[pos2][pos2]):.3f}" )
 
 def getExample():
     anaId =  "CMS-SUS-21-002" 
@@ -53,6 +54,37 @@ def getExample():
                         dataTypes = [ "efficiencyMap" ] )
     print ( f"{len(e)} results" )
     getVariance ( e[0], sr )
+
+
+def checkAll( expRes ):
+    """ retrieve the variance of srName in expRes """
+    dsOrder = expRes.globalInfo.datasetOrder
+    cov = expRes.globalInfo.covariance
+    isPositiveDefinite = True
+    for i in range(len(cov)):
+        for j in range(i+1,len(cov)):
+            covij = cov[i][j]
+            vari = cov[i][i]
+            varj = cov[j][j]
+            det = vari * varj - covij * covij
+            rho = covij / np.sqrt ( vari * varj )
+            if det <= 0:
+                isPositiveDefinite = False
+                print ( f"=============================" )
+                print ( f"error, not positive definite" )
+                print ( i,j, rho, det )
+            if abs(rho) > .9:
+                print ( f"=============================" )
+                print ( f"warning, very high rho:" )
+                print ( f"{dsOrder[i]}[{i:3d}],{dsOrder[j]}[{j:3d}]: rho={rho:.3f}, det={det:.3f}" )
+                print ( f"var({dsOrder[i]})={vari}" )
+                print ( f"var({dsOrder[j]})={varj}" )
+                print ( f"cov({dsOrder[i]},{dsOrder[j]})={covij}" )
+    if isPositiveDefinite:
+        print ( f"[getCovElement] matrix seems to be positive definite." )
+    else:
+        print ( f"[getCovElement] ERROR: matrix is violating positive definiteness" )
+
 
 def get():
     import argparse
@@ -65,12 +97,17 @@ def get():
                     help='analysis id [CMS-SUS-21-002]' )
     ap.add_argument('-d', '--dbpath', type=str, default="../../smodels-database",
                     help='database path [../../smodels-database]' )
+    ap.add_argument('--check_all', help="check all sub-matrices",
+                    action="store_true" )
     args=ap.parse_args()
     d = Database ( args.dbpath )
     e=d.getExpResults ( analysisIDs = [ args.analysisId ], 
                         dataTypes = [ "efficiencyMap" ] )
     if len(e) == 0:
         print ( f"could not find {args.analysisId} in {args.dbpath}" )  
+        sys.exit()
+    if args.check_all:
+        checkAll ( e[0] )
         sys.exit()
 
     getVariance ( e[0], args.sr1 )

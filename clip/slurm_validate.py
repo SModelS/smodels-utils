@@ -99,7 +99,7 @@ def cancelRangerOfValiders( jrange : str ):
         nr = tokens[0]
         running.append ( int ( nr ) )
     if p1 == 0:
-        cancelRangerOfValiders( f"{min(running)}-{jrange[p1+1:]}" )
+        cancelRangeOfValidaters( f"{min(running)}-{jrange[p1+1:]}" )
         return
     if p1 == len(jrange)-1:
         cancelRangerOfValiders( f"{jrange[:p1]}-{max(running)}" )
@@ -230,6 +230,7 @@ def validate ( args : Dict, idx ):
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
+            newline = newline.replace("@@CODEDIR@@", codedir )
             newline = newline.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@ORIGINIFILE@@", inifile  )
@@ -361,7 +362,7 @@ def main():
         queryStats ( )
         sys.exit()
     if args.cancel:
-        cancelRangerOfValiders ( args.cancel )
+        cancelRangeOfValidaters ( args.cancel )
         return
     if args.cancel_all:
         cancelAllValidaters()

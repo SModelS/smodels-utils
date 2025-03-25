@@ -289,7 +289,8 @@ class MetaInfoInput(Locker):
                 import uproot
                 handler = UPROOTCovarianceHandler ( filename, histoname, 
                     max_datasets, aggregate, aggprefix, zeroIndexed, 
-                    scaleCov = scaleCov, blinded_regions = blinded_regions )
+                    scaleCov = scaleCov, blinded_regions = blinded_regions,
+                    datasets = datasets )
             except ModuleNotFoundError as e:
                 logger.error ( "could not import uproot, trying pyroot now" )
                 if zeroIndexed:

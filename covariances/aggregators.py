@@ -164,21 +164,19 @@ def obtainDictFromComment ( comment : str, analysis : str, level : int=1 ) -> Di
         except Exception as e:
             pass
         if lastnr != None:
-            D["triplet"] = lastnr % level
+            if level == 0:
+                D["nr"]=lastnr
+            else:
+                D["triplet"] = lastnr % level
         D["branch"] = branch
         year = None
-        # print ( tokens )
-        if "201" in tokens[2]:
+        if False and "201" in tokens[2]:
             year = tokens[2]
-        if "SR" in tokens[1] or "bVeto" in tokens[1] or "nj" in tokens[1]:
-            D["subbranch"]=f"{tokens[1]}_{tokens[2]}"
-            D["unique"]=True
-        #if "SR" in tokens[1]:
-        #    D["subbranch"]=tokens[1]
         if tokens[1].endswith("l"):
             D["subbranch"]=tokens[1]
         if year is not None:
             D["year"] = year
+        # print ( f"@@0 comment {comment} -> D {D}" )
     if "CMS-SUS-19-006" in analysis:
         tokens = comment.split("_")
         D["jets"]= int ( tokens[1].replace("Njet","") )
@@ -251,6 +249,16 @@ def getExpResult ( database, analysis ):
         sys.exit()
     return results[0]
 
+def toLetter ( index : int ) -> str:
+    """ translate an index to a letter:
+    0 -> a, 1 -> b, 25 -> z, 26 -> A, ... 
+    """
+    if True:
+        return str(index)
+    if index <= 25:
+        return chr(97+index)
+    return chr(65+index-26)
+
 def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
     """ run the aggregator based on SR names
     :param database: path to database
@@ -284,7 +292,7 @@ def aggregateByNames ( database, analysis, drops, exclusives, level, verbose ):
             srprefix = srname[:p1]
             if not srprefix in srprefixes:
                 srprefixes[srprefix]=[]
-            newname=f"{srprefix}_{chr(97+len(srprefixes[srprefix]))}"
+            newname=f"{srprefix}_{toLetter(len(srprefixes[srprefix]))}"
             if "unique" in commdict.keys():
                 newname = srname
             srprefixes[srprefix].append(newname)

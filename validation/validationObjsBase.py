@@ -206,6 +206,7 @@ class ValidationObjsBase():
 
     def savefig ( self, filename : str ):
         """ save the figure, never mind if root or matplotlib """
+        print ( f"[ValidationObjsBase] saving to {YELLOW}{filename}{RESET}" )
         if hasattr ( self.plot, "Print" ):
             self.plot.Print(filename)
         if hasattr ( self.plot, "savefig" ):
@@ -248,14 +249,14 @@ class ValidationObjsBase():
                import subprocess
                o = subprocess.getoutput ( cmd )
         else:
-            logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
             self.savefig(filename)
-            filename = filename.replace('.'+fformat,'.png')
-            try:
-                self.savefig(filename)
-            except Exception as e:
-                # if fails because of missing dep, then just proceed
-                pass
+            if fformat != "png":
+                filename = filename.replace('.'+fformat,'.png')
+                try:
+                    self.savefig(filename)
+                except Exception as e:
+                    # if fails because of missing dep, then just proceed
+                    pass
         self.show ( filename )
 
         return True
@@ -300,7 +301,8 @@ class ValidationObjsBase():
         if len(ys)>0:
             deltay = max(ys)-min(ys)
             if deltay < 1e-14:
-               logger.warn ( f"the range in y values {deltay} is quite small. sure you dont want to make a 1d plot? if yes, say forceOneD = True, in the options section in the ini file." )
+               logger.warn ( f"the range in y values {deltay} is quite small. let me make it a 1d plot!" )
+               return True
         return False
 
 
@@ -749,6 +751,8 @@ class ValidationObjsBase():
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if "style" in self.options:
+            meta["style"]=self.options["style"]
         if os.path.isfile ( self.slhaDir ):
             ## currently we have sha1sums only for named tarballs
             meta["sha1"]=sha1sum ( self.slhaDir )
@@ -766,8 +770,9 @@ class ValidationObjsBase():
         from smodels.base import runtime
         if "spey" in runtime._experimental and \
                 runtime._experimental["spey"]==True:
-            import spey
-            meta["spey"]=spey.__version__
+            if self.expRes.datasets[0].dataInfo.dataId != None:
+                import spey
+                meta["spey"]=spey.__version__
         if hasattr ( self, "pointsInTarFile" ):
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
@@ -806,7 +811,7 @@ class ValidationObjsBase():
 
     def show ( self, filename ):
         """ we were asked to also show <filename> """
-        term = os.environ["TERM"]
+        # term = os.environ["TERM"]
         if not self.options["show"]: #  or not term == "xterm-kitty":
             return
         showPlot ( filename )

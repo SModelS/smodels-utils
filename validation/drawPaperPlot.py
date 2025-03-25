@@ -524,7 +524,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         else:
             ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
 
-    if cr_excl is not None:
+    if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["obs_excl"]["x"]
         y_vals = cr_excl["obs_excl"]["y"]
         label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
@@ -644,7 +644,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
         else:
             ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
-    if cr_excl is not None:
+    if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
         label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
