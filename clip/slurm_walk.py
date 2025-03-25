@@ -63,7 +63,7 @@ def mkdir ( Dir : str, symlinks : bool = True ):
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str,
-    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool,
+    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool, run_mcmc: bool,
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
     forbidden : List[int], wallpids : bool ):
     """ prepare everything for a single job
@@ -84,6 +84,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
     :param test_param_space: If True, walk over the param space keeping constant K and TL
+    :param run_mcmc: if true, run mcmc walk without changing dimensions
     :param seed: the random seed for the walker
     :param update_hiscores: update the hiscores at the end
     :param stopTeleportationAfter: stop teleportation after this step.
@@ -114,7 +115,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         f.write ( "from walker import factoryOfWalkers\n" )
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden}\n" )
         f.write ( ")\n" )
@@ -604,6 +605,8 @@ def main():
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '--test_param_space',
             help='test the parameter space by keeping constant K and TL', action="store_true" )
+    argparser.add_argument ( '--run_mcmc',
+            help='run mcmc walk without changing dimensions', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
                              action="store_true" )
     argparser.add_argument ( '--uploadTo', help='specify directoy under smodels.github.io/protomodels to upload to [latest]', type=str, default='latest' )
@@ -779,7 +782,7 @@ def main():
                 for i in range(args.repeat):
                     runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_srcombine, args.record_history, args.test_param_space, seed,
+                      args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
                       wallpids )
                 totjobs+=1
@@ -801,7 +804,7 @@ def main():
                     p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_srcombine, args.record_history, args.test_param_space, seed,
+                        args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden,
                         wallpids ) )
                     jobs.append ( p )
