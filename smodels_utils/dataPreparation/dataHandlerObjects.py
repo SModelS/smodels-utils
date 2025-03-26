@@ -185,7 +185,7 @@ class DataHandler(object):
         """
 
         if not self.fileType:
-            logger.error("File type for %s has not been defined" %self.path)
+            logger.error( f"File type for {self.path} has not been defined" )
             sys.exit()
 
         if self.fileType == "csv" and type(self.path) == tuple:
@@ -194,13 +194,16 @@ class DataHandler(object):
                 errorcounts["pathtupleerror"]  = True
             self.fileType = "mcsv"
 
+        if self.fileType == "direct":
+            return
+
         #Load data
         self.data = []
         strictlyPositive = False
         if self._unit in [ "fb", "pb" ]:
             strictlyPositive = True
         if not hasattr ( self, self.fileType ):
-            logger.error ( "Format type '%s' is not defined. Try either one of 'root', 'csv', 'txt', 'embaked', 'mscv', 'effi', 'cMacro', 'canvas', 'svg', 'pdf' instead. " % self.fileType )
+            logger.error ( f"Format type '{self.fileType}' is not defined. Try either one of 'root', 'csv', 'txt', 'embaked', 'mscv', 'effi', 'cMacro', 'canvas', 'svg', 'pdf', 'direct' instead. " )
             sys.exit(-1)
         for point in getattr(self,self.fileType)():
             ptDict = self.mapPoint(point) #Convert point to dictionary
@@ -398,8 +401,14 @@ class DataHandler(object):
         :param scale: float to re-scale the data.
         """
         self.args = args
+        self.path = path
+        self.fileType = fileType
+        self.objectName = objectName
+        self.index = index
+        if type(path) in [ float, int ]: ## 1d exclusions can be given directly
+            self.data = [ [ path ] ]
 
-        if type(path) not in [ tuple, list ] and not os.path.isfile(path):
+        elif type(path) not in [ tuple, list ] and not os.path.isfile(path):
             logger.error( f"File {path} not found" )
             if type(self.dataUrl ) == str and os.path.basename(path) == os.path.basename ( self.dataUrl ):
                 logger.info( "But you supplied a dataUrl with same basename, so I try to fetch it" )
@@ -417,10 +426,6 @@ class DataHandler(object):
         if unit:
             self.unit = unit
 
-        self.path = path
-        self.fileType = fileType
-        self.objectName = objectName
-        self.index = index
         self.loadData()
         if scale:
             self.reweightBy(scale)
@@ -628,6 +633,12 @@ class DataHandler(object):
         yields.sort()
         return
 
+    def direct(self):
+        """ value was given directly """
+        for d in self.data:
+            yield d
+        # return
+
     def csv(self):
         """
         iterable method
@@ -720,7 +731,7 @@ class DataHandler(object):
                     values.append ( tmp )
             self.extendDataToZero ( values )
             for v in values:
-                # print ( "returning v", v, "coord map is", self.coordinateMap )
+                ## print ( "returning v", v, "coord map is", self.coordinateMap )
                 # print ( "name", self.index )
                 yield v
 
