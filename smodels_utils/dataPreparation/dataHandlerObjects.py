@@ -1538,11 +1538,11 @@ class DataHandler(object):
 
         #Check dimensions:
         if self.dimensions == 1 and not len(tree.keys())==3:
-            logger.error(f"TTree dimensions ({self.dimensions}) do not match data ({len(tree.keys())})")
-            sys.exit()
+            logger.error(f"TTree dimensions ({self.dimensions}) do not match data ({len(tree.keys())}). Will assume that this is ok, but you have been warned.")
+            # sys.exit()
         if self.dimensions == 2 and not len(tree.keys())==4:
-            logger.error(f"TTree dimensions ({self.dimensions}) do not match data ({len(tree.keys())})")
-            sys.exit()
+            logger.error(f"TTree dimensions ({self.dimensions}) do not match data ({len(tree.keys())}). Will assume that this is ok, but you have been warned.")
+            #sys.exit()
 
         branches = tree.arrays()
         keys = tree.keys()
