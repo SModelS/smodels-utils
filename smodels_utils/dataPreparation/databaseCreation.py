@@ -402,7 +402,8 @@ class DatabaseCreator(list):
                 for pointDict in exclusion:
                     point = dict([[str(xv),v] for xv,v in pointDict.items()])
                     if not 'y' in point:
-                        point['y'] = 0.0
+                        pass ## 1d-exclusion lines!
+                        # point['y'] = 0.0
                     try:
                         masses = plane.getParticleMasses ( **point )
 
@@ -415,7 +416,7 @@ class DatabaseCreator(list):
                     if type(point["x"])==str:
                         self.warn( f"trying to add strings as coordinates of points {point['x']}. skip it." )
                         continue
-                    if type(point["y"])==str:
+                    if "y" in point and type(point["y"])==str:
                         self.warn( f"trying to add strings as coordinates of points {point['y']}. skip it." )
                         continue
                     # stGraph.SetPoint(i,point['x'],point['y'])
@@ -460,8 +461,9 @@ class DatabaseCreator(list):
                 for pointDict in exclusion:
                     point = dict([[str(xv),v] for xv,v in pointDict.items()])
                     point["axisMap"] = saxes
-                    if not 'y' in point:
-                        point['y'] = 0.0
+                    if not 'y' in point: # 1d exclusion line!
+                        pass
+                        # point['y'] = 0.0
                     try:
                         masses = plane.getParticleMasses ( **point )
 
@@ -474,7 +476,7 @@ class DatabaseCreator(list):
                     if type(point["x"])==str:
                         self.warn( f"trying to add strings as coordinates of points {point['x']}. skip it." )
                         continue
-                    if type(point["y"])==str:
+                    if "y" in point and type(point["y"])==str:
                         self.warn( f"trying to add strings as coordinates of points {point['y']}. skip it." )
                         continue
                     stGraph["points"].append ( point )
@@ -679,7 +681,7 @@ class DatabaseCreator(list):
                     yv.append ( y )
                     xandy.append ( { "x": x, "y": y } )
                 else:
-                    xandy.append ( ( x, y ) )
+                    xandy.append ( { "x": x } )
                 #x = round_to_n ( exclusion.GetPointX(i), 4 )
                 #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
