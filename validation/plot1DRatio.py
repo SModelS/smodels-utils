@@ -66,6 +66,7 @@ def plot ( args : dict, points1 : list, points2 : list ):
 
     plt.plot ( x_list, y_list, color="r", linestyle="-", label="observed" )
     plt.plot ( x_list, ey_list, color="r", linestyle="dotted", label="expected" )
+    plt.plot ( [ min(x_list), max(x_list) ], [ 1., 1. ], color="k" )
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
     p1 = args["valfile1"].find("_")
