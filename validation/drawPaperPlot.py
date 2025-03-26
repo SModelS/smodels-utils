@@ -259,6 +259,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     :returns: filenames of plots
     """
+    if validationPlot.isOneDimensional():
+        print(f"[drawPaperPlot] currently we don't have 1d versions of the pretty plots. exiting." )
+        return []
     #get info about the analysis and txname from validationPlot
     analysis = validationPlot.expRes.globalInfo.id
     vDir = validationPlot.getValidationDir (validationDir=None)
