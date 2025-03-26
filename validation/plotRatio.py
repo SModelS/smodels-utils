@@ -117,8 +117,7 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
     print ( f"[plotRatio] have been asked to guess the label for {anaId1} re {anaId2}: {label}" )
     return label
 
-def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
-           analysis2 : str, valfile2 : PathLike, options : dict ):
+def draw ( options : dict ):
     """ plot.
     :param options: a dictionary of various options:
     :option zmin: the minimum z value, e.g. .5
@@ -128,6 +127,11 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
     :option show: show plot in terminal
     :option comment: a possible comment to be added to the plot
     """
+    analysis1 = options["analysis1"]
+    analysis2 = options["analysis2"]
+    valfile1 = options["valfile1"]
+    valfile2 = options["valfile2"]
+    dbpath = options["dbpath"]
     plt.clf()
     options = addDefaults ( options )
     contents = []
@@ -165,6 +169,18 @@ def draw ( dbpath : PathLike, analysis1 : str, valfile1 : PathLike,
             axis2 = content["meta"]["axes"]
         contents.append ( content )
     content2 = mergeValidationData ( contents )
+    if "meta" in content1 and len(content1["meta"])>0 and "axes" in \
+            content1["meta"][0] and not "y" in content1["meta"][0]["axes"]:
+        print ( f"[plotRatio.py] seems like a 1d plot, delegate to plot1DRatio" )
+        import plot1DRatio
+        plot1DRatio.draw ( options )
+        return
+    if "meta" in content2 and len(content2["meta"])>0 and "axes" in \
+            content2["meta"][0] and not "y" in content2["meta"][0]["axes"]:
+        print ( f"[plotRatio.py] seems like a 1d plot, delegate to plot1DRatio" )
+        import plot1DRatio
+        plot1DRatio.draw ( options )
+        return
 
     xlabel, ylabel = options["xlabel"], options["ylabel"]
     if xlabel in [  None, "" ]:
@@ -686,8 +702,9 @@ def main():
             valfile2 = valfile1
         if not "_" in valfile2:
             valfile2 = valfile2 + "_2EqMassAx_EqMassBy.py"
-        draw ( args.dbpath, args.analysis1, valfile1, args.analysis2, valfile2,
-               vars(args ) )
+        args.valfile1 = valfile1
+        args.valfile2 = valfile2
+        draw ( vars(args) )
 
     if args.meta:
         writeMDPage( args.copy )
