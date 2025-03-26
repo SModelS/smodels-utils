@@ -237,14 +237,19 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if "comment" in options:
         cmd += f" --comment '{options['comment']}'"
     print ( f"[runValidation] {cmd}" )
-    plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
+    options["dbpath"]=dbpath
+    options["analysis1"]=ana1
+    options["analysis2"]=ana2
+    options["valfile1"]=valfile1
+    options["valfile2"]=valfile2
+    plotRatio.draw ( options )
 
     ## now the expected case
     options["eul"] = True
     options["eul2"] = True
     output = os.path.dirname ( datafile ) + f"/expected_ratios_{txname}_{axis}.png"
     options["output"] = output
-    plotRatio.draw ( dbpath, ana1, valfile1, ana2, valfile2, options )
+    plotRatio.draw ( options )
 
     pathToValDir = os.path.dirname ( os.path.realpath ( __file__ ) )
     ratioscriptfile = f"{os.path.dirname(datafile)}/ratios.sh"
