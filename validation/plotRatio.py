@@ -171,12 +171,16 @@ def draw ( options : dict ):
     content2 = mergeValidationData ( contents )
     if "meta" in content1 and len(content1["meta"])>0 and "axes" in \
             content1["meta"][0] and not "y" in content1["meta"][0]["axes"]:
+        if "eul" in options:
+            return
         print ( f"[plotRatio.py] seems like a 1d plot, delegate to plot1DRatio" )
         import plot1DRatio
         plot1DRatio.draw ( options )
         return
     if "meta" in content2 and len(content2["meta"])>0 and "axes" in \
             content2["meta"][0] and not "y" in content2["meta"][0]["axes"]:
+        if "eul" in options:
+            return
         print ( f"[plotRatio.py] seems like a 1d plot, delegate to plot1DRatio" )
         import plot1DRatio
         plot1DRatio.draw ( options )
