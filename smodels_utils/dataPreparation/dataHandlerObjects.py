@@ -405,8 +405,14 @@ class DataHandler(object):
         self.fileType = fileType
         self.objectName = objectName
         self.index = index
-        if type(path) in [ float, int ]: ## 1d exclusions can be given directly
-            self.data = [ [ path ] ]
+        if fileType == "direct":
+            if type(path) in [ float, int ]: ## 1d exclusions can be given directly
+                self.data = [ [ path ] ]
+            elif type(path) in [ list ]:
+                self.data = [ path ]
+            else:
+                logger.error ( f"direct data source but cannot recognize data {path}" )
+                sys.exit()
 
         elif type(path) not in [ tuple, list ] and not os.path.isfile(path):
             logger.error( f"File {path} not found" )
@@ -961,7 +967,7 @@ class DataHandler(object):
         sys.exit()
 
     def uprootByName(self, name : str ) -> List:
-        """ generator of entries for UL and EM maps, 
+        """ generator of entries for UL and EM maps,
         retrieving from root files using uproot. we know the objects name
         in the root file
         :param name: the name of the object in the root file. if a "+" is in

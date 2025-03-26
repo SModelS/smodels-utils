@@ -293,7 +293,8 @@ class DatabaseCreator(list):
                 ret.append ( x.replace("orig/","") )
             if type(x) in [ tuple, list ]:
                 for y in x:
-                    ret.append ( y.replace("orig/","") )
+                    if type(y)==str:
+                        ret.append ( y.replace("orig/","") )
         return ret
 
     def saveFile ( self, name ):
