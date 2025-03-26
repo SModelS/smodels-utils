@@ -68,8 +68,8 @@ def plot ( args : dict, points1 : list, points2 : list ):
     plt.plot ( x_list, ey_list, color="r", linestyle="dotted", label="expected" )
     plt.xlabel ( xlabel )
     plt.ylabel ( ylabel )
-    p1 = args["validationfile1"].find("_")
-    topo = args["validationfile1"][:p1]
+    p1 = args["valfile1"].find("_")
+    topo = args["valfile1"][:p1]
     title = args["title"]
     if title == None:
         ana = args["analysis1"]
@@ -85,10 +85,10 @@ def plot ( args : dict, points1 : list, points2 : list ):
 def draw ( args : dict ):
     """ draw, with arguments given as a dictionary """
     ipath1 = getValidationDataPathName ( args["dbpath"], args["analysis1"], 
-            args["validationfile1"], args["folder1"] )
+            args["valfile1"], args["folder1"] )
     content1 = getValidationFileContent ( ipath1 )
     ipath2 = getValidationDataPathName ( args["dbpath"], args["analysis2"], 
-            args["validationfile2"], args["folder2"] )
+            args["valfile2"], args["folder2"] )
     content2 = getValidationFileContent ( ipath2 )
     data1 = content1["data"]
     data2 = content2["data"]
@@ -101,10 +101,10 @@ def draw ( args : dict ):
 def main():
     import argparse
     argparser = argparse.ArgumentParser( description = "1d ratio plot" )
-    argparser.add_argument ( "-v1", "--validationfile1",
+    argparser.add_argument ( "-v1", "--valfile1",
             help="first validation file [TChiHH_2EqMassAx_EqMassB1.py]",
             type=str, default="TChiHH_2EqMassAx_EqMassB1.py" )
-    argparser.add_argument ( "-v2", "--validationfile2",
+    argparser.add_argument ( "-v2", "--valfile2",
             help="second validation file. If empty, then same as v1. ['TChiHH_2EqMassAx_EqMassBy_combined.py']",
             type=str, default="TChiHH_2EqMassAx_EqMassBy_combined.py" )
     argparser.add_argument ( "-a1", "--analysis1",
@@ -178,17 +178,17 @@ def main():
     #    args.efficiencies = True
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
-    if not "_" in args.validationfile1:
-        args.validationfile1 = args.validationfile1 + "_2EqMassAx_EqMassBy.py"
-    if not args.validationfile1.endswith ( ".py" ):
-        args.validationfile1 += ".py"
+    if not "_" in args.valfile1:
+        args.valfile1 = args.valfile1 + "_2EqMassAx_EqMassBy.py"
+    if not args.valfile1.endswith ( ".py" ):
+        args.valfile1 += ".py"
 
     draw ( vars(args) )
 
     """
-    valfiles = [ args.validationfile1 ]
+    valfiles = [ args.valfile1 ]
     for valfile1 in valfiles:
-        valfile2 = args.validationfile2
+        valfile2 = args.valfile2
         if valfile2 in [ "", "none", "None", None ]:
             valfile2 = valfile1
         if not "_" in valfile2:
