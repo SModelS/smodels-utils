@@ -3,6 +3,8 @@
 .. raw:: html
     <style> .red {color:red} </style>
 
+.. role:: red
+
 =============
 smodels-utils
 =============
