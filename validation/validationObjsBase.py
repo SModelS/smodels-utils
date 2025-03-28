@@ -21,6 +21,42 @@ from smodels.base.smodelsLogging import logger
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
 
+class ProgressHandler:
+    """ a namespace to handle everything around the progressbar """
+    def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
+        """ store the pid of the progress bar in .progressbar.pid,
+        so the other process can kill it. """
+        f=open(".progressbar.pid","wt")
+        f.write ( f"{pid}\n" )
+        f.close()
+
+    def readPid ( pidfile : str = ".progressbar.pid" ) -> int:
+        """ read the progressbar pid from the pid file """
+        if not os.path.exists ( pidfile ):
+            return None
+        f=open(".progressbar.pid","rt")
+        pid = int ( f.read() )
+        f.close()
+        return pid
+
+    def rmFile ( pidfile : str = ".progressbar.pid" ):
+        if os.path.exists ( pidfile ):
+            try:
+                os.unlink ( pidfile )
+            except Exception as e:
+                pass
+
+    def killProgressbar ( pidfile : str = ".progressbar.pid" ):
+        """ kill the progressbar """
+        pid = ProgressHandler.readPid()
+        if pid == None:
+            return
+        import psutil
+        p = psutil.Process ( pid )
+        p.terminate()
+        ProgressHandler.rmFile()
+
+
 def sha1sum(filename : os.PathLike ) -> str:
     """ get sha1 hash sums for the tarballs
     :returns: sha1 hashsum
@@ -316,7 +352,6 @@ class ValidationObjsBase():
         command = f"convert {oldfilename} {newfilename}"
         import subprocess
         o = subprocess.getoutput ( command )
-        # print ( "toPdf", command, o )
 
     def resultExistsAlready(self,slhafilename : str ) -> bool:
         """ does a result exist already for the given slha file """
@@ -358,6 +393,7 @@ class ValidationObjsBase():
         else:
             self.data = []
 
+        import os
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
@@ -427,17 +463,21 @@ class ValidationObjsBase():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        if False: ## this is currently not working
+        if self.options["show"]:
             pid = os.fork()
-            if pid == 0: ## child process
-                dirname = os.path.basename ( self.currentSLHADir )
-                print ( f"@@0 child process, will need to run progress bar for {dirname}" )
+            ## pid == 0 continues on
+            if pid != 0:
+                ProgressHandler.storePid ( os.getpid() )
+                import time
                 from progress import Progress
-                p = Progress ( dirname, False )
-                sys.exit()
+                time.sleep(5) ## wait a little
+                dirs = [ self.outputDir.replace("/results","") ]
+                p = Progress ( dirs = dirs )
+                return 
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
+        ProgressHandler.killProgressbar()
         return fileList
 
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
@@ -446,7 +486,7 @@ class ValidationObjsBase():
         """
         tokens = filename.replace(".slha","").split("_")
         if not tokens[0].startswith ( "T" ):
-            print ( f"why does token 0 not start with a T??? {tokens[0]}" )
+            print ( f"[validationObjsBase] why does token 0 not start with a T??? {tokens[0]}" )
             sys.exit(-1)
         widths = []
         for t in tokens[1:]:
@@ -473,7 +513,7 @@ class ValidationObjsBase():
         """ try to guess the mass vector from the SLHA file name """
         tokens = filename.replace(".slha","").split("_")
         if not tokens[0].startswith ( "T" ):
-            print ( "why does token 0 not start with a T??? {tokens[0]}" )
+            print ( "[validationObjsBase] why does token 0 not start with a T??? {tokens[0]}" )
             sys.exit(-1)
         masses = []
         for t in tokens[1:]:
@@ -485,7 +525,7 @@ class ValidationObjsBase():
         for m in masses:
             if m>0. and m<1e-10:
                 continue
-                # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
+                # print ( "[validationObjsBase] it seems there are widths in the vector. make sure we use them correctly." )
                 # sys.exit()
         n=int(len(masses)/2)
         if len(masses) % 2 != 0:
@@ -493,7 +533,7 @@ class ValidationObjsBase():
                 n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
                 ## so all works out if we just slice at one after the half
             elif not "T3GQ" in filename and not "T5GQ" in filename and not "T2Disp" in filename:
-                print ( f"[validationObjs] mass vector {masses} is asymmetrical. dont know what to do" )
+                print ( f"[validationObjsBase] mass vector {masses} is asymmetrical. dont know what to do" )
             # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
         if "T5GQ" in filename:
@@ -727,7 +767,7 @@ class ValidationObjsBase():
         self.datafile = datafile
         lockfile = datafile + ".lock"
         self.lockFile ( lockfile )
-        print ( f"[validationObjs] saving {len(self.data)} points to {datafile}" )
+        print ( f"[validationObjsBase] saving {len(self.data)} points to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
         dataStr = str(self.data)
@@ -798,7 +838,7 @@ class ValidationObjsBase():
             useTevatronCLs = experimentalFeature ( "tevatroncls" )
             asimovIsExpected = experimentalFeature ( "asimovisexpected" )
         except Exception as e:
-            print ( f"[validationOjbsBase] experimentalFeature not yet available. its ok we can skip this" )
+            print ( f"[validationObjsBase] experimentalFeature not yet available. its ok we can skip this" )
         if useTevatronCLs:
             meta["tevatroncls"]= useTevatronCLs
         if asimovIsExpected:

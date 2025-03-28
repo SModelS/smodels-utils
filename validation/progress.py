@@ -6,12 +6,12 @@
 
 """
 
-import glob, time, sys
+import glob, time, sys, copy, os
 from tqdm import tqdm
 from typing import Dict, Union
 
 class Progress:
-    def __init__ ( self, dirs : Union[None,str] = None, 
+    def __init__ ( self, dirs : Union[None,str,list] = None, 
                    waitForDirs : bool = True ):
         """ initialise, and start.
         :param dirs: if None, look for _V* and tmp* directories, else
@@ -22,27 +22,41 @@ class Progress:
         self.waitForDirs = waitForDirs
         self.previous = {}
         self.stats = {}
-        self.parse( dirs )
+        self.dirs = dirs
+        self.parse( )
         self.show()
 
-    def parse( self, dirs : Union[None,str] = None ):
+    def getDirs ( self, dirs : Union[None,str,list] = None ) -> list:
+        """ given the user's specification of the directories,
+        obtain the actual list """
+        ndirs = []
+        if dirs == None: # default entries
+            ndirs = glob.glob ( "_V*" )
+            ndirs += glob.glob ( "tmp*" )
+        if type(dirs) == str: # entry with wildcards
+            ndirs = [ dirs ] # single entry
+            if "*" in dirs or "?" in dirs:
+                ndirs = glob.glob ( dirs )
+        if type(dirs) == list:
+            ndirs = copy.deepcopy ( dirs )
+        ret = []
+        for d in ndirs:
+            if d.endswith ( ".ini" ) or d.endswith ( ".py" ) or d.endswith(".png"):
+                continue
+            ret.append ( d )
+        return ret
+
+    def parse( self, dirs : Union[None,str,list] = None ):
         """ parse for directories
         :param dirs: if None, look for _V* and tmp* directories, else
         consider only the directories given.
         """
         if dirs == None:
-            dirs = glob.glob ( "_V*" )
-            dirs += glob.glob ( "tmp*" )
-        elif "*" in dirs or "?" in dirs:
-            dirs = glob.glob ( dirs )
-        ndirs = []
-        for d in dirs:
-            if d.endswith ( ".ini" ) or d.endswith ( ".py" ) or d.endswith(".png"):
-                continue
-            ndirs.append ( d )
-        dirs = ndirs
+            dirs = self.dirs
+        ndirs = self.getDirs ( dirs )
+
         ctr = 0
-        while len(dirs)==0:
+        while len(ndirs)==0:
             t = (2.+ctr)**2
             if not self.waitForDirs: 
                 return # asked to _not_ wait
@@ -52,29 +66,24 @@ class Progress:
             if ctr>10:
                 print ( f"[progress] waited enough, lets terminate." )
                 sys.exit()
-            dirs = glob.glob ( "_V*" )
-            dirs += glob.glob ( "tmp*" )
-            ndirs = []
-            for d in dirs:
-                if d.endswith ( ".ini" ) or d.endswith ( ".py" ) or d.endswith(".png"):
-                    continue
-                ndirs.append ( d )
-            dirs = ndirs
+            # refresh the list of dirs
+            ndirs = self.getDirs ( dirs )
+            sys.exit()
         ret = {}
-        for d in dirs:
+        for d in ndirs:
             npoints = len ( glob.glob ( f"{d}/T*slha" ) )
             ndone = len ( glob.glob ( f"{d}/results/T*.py" ) )
             ret[d]= { "npoints": npoints, "ndone": ndone }
-        # print ( ret )
         self.previous = self.stats
         self.stats = ret
 
     def pprint ( self ):
-        print ( "stats", self.stats )
+        print ( "[progress] stats", self.stats )
 
     def updateTQDM ( self, name : str, values : Dict, position : int ):
         """ update an entry in self.tqdms """
-        fullname = f"{name:10s}"
+        fullname = os.path.basename ( name )
+        fullname = f"{fullname:10s}"
         n = tqdm ( desc=fullname, total = values["npoints"], position = position,
                    unit = "pt", bar_format="{desc}: {percentage:3.0f}%|{bar:46}| {n_fmt}/{total_fmt} [{remaining}] {postfix}", colour = "green" )
         self.tqdms[name]=n
