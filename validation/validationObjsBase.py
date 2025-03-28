@@ -241,7 +241,7 @@ class ValidationObjsBase():
 
     def savefig ( self, filename : str ):
         """ save the figure, never mind if root or matplotlib """
-        print ( f"[ValidationObjsBase] saving to {YELLOW}{filename}{RESET}" )
+        self.pprint ( f"saving to {YELLOW}{filename}{RESET}" )
         if hasattr ( self.plot, "Print" ):
             self.plot.Print(filename)
         if hasattr ( self.plot, "savefig" ):
@@ -479,13 +479,17 @@ class ValidationObjsBase():
         ProgressHandler.killProgressBar()
         return fileList
 
+    def pprint ( self, *args ):
+        """ convenience """
+        print ( f"[validationObjsBase]", *args )
+
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
         """ try to guess the mass vector from the SLHA file name
         :returns: mass vector
         """
         tokens = filename.replace(".slha","").split("_")
         if not tokens[0].startswith ( "T" ):
-            print ( f"[validationObjsBase] why does token 0 not start with a T??? {tokens[0]}" )
+            self.pprint ( f"why does token 0 not start with a T??? {tokens[0]}" )
             sys.exit(-1)
         widths = []
         for t in tokens[1:]:
@@ -512,7 +516,7 @@ class ValidationObjsBase():
         """ try to guess the mass vector from the SLHA file name """
         tokens = filename.replace(".slha","").split("_")
         if not tokens[0].startswith ( "T" ):
-            print ( "[validationObjsBase] why does token 0 not start with a T??? {tokens[0]}" )
+            self.pprint ( f"why does token 0 not start with a T??? {tokens[0]}" )
             sys.exit(-1)
         masses = []
         for t in tokens[1:]:
@@ -524,7 +528,7 @@ class ValidationObjsBase():
         for m in masses:
             if m>0. and m<1e-10:
                 continue
-                # print ( "[validationObjsBase] it seems there are widths in the vector. make sure we use them correctly." )
+                # self.pprint ( "it seems there are widths in the vector. make sure we use them correctly." )
                 # sys.exit()
         n=int(len(masses)/2)
         if len(masses) % 2 != 0:
@@ -532,7 +536,7 @@ class ValidationObjsBase():
                 n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
                 ## so all works out if we just slice at one after the half
             elif not "T3GQ" in filename and not "T5GQ" in filename and not "T2Disp" in filename:
-                print ( f"[validationObjsBase] mass vector {masses} is asymmetrical. dont know what to do" )
+                self.pprint ( f"mass vector {masses} is asymmetrical. dont know what to do" )
             # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
         if "T5GQ" in filename:
@@ -766,7 +770,7 @@ class ValidationObjsBase():
         self.datafile = datafile
         lockfile = datafile + ".lock"
         self.lockFile ( lockfile )
-        print ( f"[validationObjsBase] saving {len(self.data)} points to {datafile}" )
+        self.pprint ( f"saving {len(self.data)} points to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
         dataStr = str(self.data)
@@ -837,7 +841,7 @@ class ValidationObjsBase():
             useTevatronCLs = experimentalFeature ( "tevatroncls" )
             asimovIsExpected = experimentalFeature ( "asimovisexpected" )
         except Exception as e:
-            print ( f"[validationObjsBase] experimentalFeature not yet available. its ok we can skip this" )
+            self.pprint ( f"experimentalFeature not yet available. its ok we can skip this" )
         if useTevatronCLs:
             meta["tevatroncls"]= useTevatronCLs
         if asimovIsExpected:
