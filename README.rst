@@ -1,19 +1,15 @@
 .. image:: https://smodels.github.io/pics/banner.png
 
-.. raw:: html
-    <style> .red {color:red} </style>
-
-.. role:: red
-
 =============
 smodels-utils
 =============
 
 **Welcome to the smodels-utils repository**
 
-This is a repository to store and preserve codes and data *around* smodels that
-are not actual part of smodels-proper.
-:red:`DISCLAIMER` the code in this repository is public but not published and comes with no guarantees. Your mileage may vary!
+This is a repository to store and preserve codes and data *around* `SModelS <http://github.com/SModelS/smodels>`_ that are not actual part of smodels-proper.
+
+.. image:: https://smodels.github.io/pics/exclamation.png
+the code in this repository is public but not published and comes with no guarantees. Your mileage may vary!
 
 Among the tools in this repository you will find:
 
