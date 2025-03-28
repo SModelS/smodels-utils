@@ -22,4 +22,5 @@ This is a repository to store and preserve codes and data *around* `SModelS <htt
 * code to port fastlim results to smodels: `fastlim_tools <https://github.com/SModelS/smodels-utils/tree/main/fastlim_tools>`_  
 * code to write bibtex files with all analysis results, visualise and plot simplified models, and SMS results, etc etc etc (a few directories)
 
-* this current main branch is intended to work with SModelS 3.x.
+
+This current main branch is intended to work with SModelS 3.x.
