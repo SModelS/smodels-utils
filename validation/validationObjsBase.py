@@ -46,7 +46,7 @@ class ProgressHandler:
             except Exception as e:
                 pass
 
-    def killProgressbar ( pidfile : str = ".progressbar.pid" ):
+    def killProgressBar ( pidfile : str = ".progressbar.pid" ):
         """ kill the progressbar """
         pid = ProgressHandler.readPid()
         if pid == None:
@@ -55,7 +55,6 @@ class ProgressHandler:
         p = psutil.Process ( pid )
         p.terminate()
         ProgressHandler.rmFile()
-
 
 def sha1sum(filename : os.PathLike ) -> str:
     """ get sha1 hash sums for the tarballs
@@ -466,7 +465,7 @@ class ValidationObjsBase():
         if self.options["show"]:
             pid = os.fork()
             ## pid == 0 continues on
-            if pid != 0:
+            if pid == 0:
                 ProgressHandler.storePid ( os.getpid() )
                 import time
                 from progress import Progress
@@ -477,7 +476,7 @@ class ValidationObjsBase():
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
-        ProgressHandler.killProgressbar()
+        ProgressHandler.killProgressBar()
         return fileList
 
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
