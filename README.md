@@ -9,7 +9,8 @@
 
 This is a repository to store and preserve codes and data *around* [SModelS](http://github.com/SModelS/smodels) that are not actual part of smodels-proper.
 
-**Warning: the code in this repository is public but not published and comes with no guarantees. Your mileage may vary**:exclamation:
+> [!CAUTION]
+> **Warning: the code in this repository is public but not published and comes with no guarantees. Your mileage may vary**:exclamation:
 
 **Among the tools in this repository you will find:**
 
