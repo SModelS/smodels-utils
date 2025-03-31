@@ -375,9 +375,8 @@ class Writer:
             Id = gi_id
         Id = self.addColor ( Id )
         if self.bibtex != None:
-            citeme = gi_id
             citeme = self.bibtex.query ( gi_id )
-            Id += r"~\cite{{{citeme}}}"
+            Id += rf"~\cite{{{citeme}}}"
         if self.numbers:
             lines[0]+=f"{self.addColor(ananr)} &"
         lines[0] += f"{Id} & "
@@ -586,7 +585,7 @@ class Writer:
         cmd = f"rm {pngfile.replace('.png','*.png')}"
         C.getoutput ( cmd )
         cmd = f"/usr/bin/convert {swbg} -antialias -density 600 -trim {pdffile} {pngfile}"
-        print ( cmd )
+        print ( f"[writeAnalysesTable] {cmd}" )
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )

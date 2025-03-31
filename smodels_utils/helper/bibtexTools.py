@@ -119,8 +119,8 @@ class BibtexWriter:
     def copy ( self ):
         """ copy the files to the database path. """
         if os.path.isdir ( self.databasepath ) and os.path.exists ( "database.bib" ) and os.path.exists ( "refs.bib" ) and os.stat ( "database.bib" ).st_size > 0 and os.stat ( "refs.bib" ).st_size > 0:
-            self.log ( "Copying database.bib to %s" % self.databasepath )
-            cmd = "cp ./database.bib %s" % self.databasepath
+            self.log ( f"Copying database.bib to {self.databasepath}" )
+            cmd = f"cp ./database.bib {self.databasepath}"
             o = commands.getoutput ( cmd )
             if len(o) != 0:
                 self.log ( f"cp: {o}" )
@@ -585,12 +585,19 @@ class BibtexWriter:
         :param search: if true, then search for it if not available
         :returns: bibtex label, eg Aaboud:2017vwy
         """
-        path = os.path.dirname ( __file__ )
-        refsfile = f"{path}/refs.bib"
+        # path = os.path.dirname ( __file__ )
+        path = os.getcwd()
+        refsfile = f"{path}/database.bib"
+        if not os.path.exists ( refsfile ):
+            db_bib = f"{self.databasepath}/database.bib"
+            if os.path.exists ( db_bib ):
+                print ( f"[bibtexTools] symlinking {db_bib} -> {refsfile}" )
+                os.symlink ( db_bib, refsfile )
         if os.path.exists ( refsfile ):
-            bibtex=bibtexparser.parse_file ( refsfile )
+            bibtex=self.getBibtex ( refsfile )
             biblabels = bibtex.entries_dict.keys()
             labels = self.getLabels ( bibtex )
+            # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             if anaid in labels:
                 return labels[anaid]
         if search:
@@ -610,11 +617,23 @@ class BibtexWriter:
         import IPython
         IPython.embed( colors="neutral" )
 
+    def getBibtex ( self, bibtexfile : str ):
+        """ get the bibtex content from file, hopefully working with
+        bibtexparser v1 and v2 alike """
+        # v1
+        if not hasattr ( bibtexparser, "parse_file" ):
+            with open( bibtexfile ) as handle:
+                bibtex = bibtexparser.load(handle)
+                handle.close()
+                return bibtex
+        # v2
+        return bibtexparser.parse_file ( bibtexfile )
+
     def addSummaries ( self, outfile : os.PathLike ):
         f=open("refs.bib")
         self.log ( f"adding summaries to {outfile}." )
         self.header()
-        bibtex=bibtexparser.parse_file ( "refs.bib" )
+        bibtex = self.getBibtex ( "refs.bib" )
         f.close()
         self.i.write ( "\n" )
         self.i.write ( self.createSummaryCitation ( bibtex, "CMS" ) )
