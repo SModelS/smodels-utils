@@ -376,6 +376,8 @@ class Writer:
         Id = self.addColor ( Id )
         if self.bibtex != None:
             citeme = self.bibtex.query ( gi_id )
+            if citeme.startswith ( "no entry" ):
+                citme = "FIXME"
             Id += rf"~\cite{{{citeme}}}"
         if self.numbers:
             lines[0]+=f"{self.addColor(ananr)} &"
