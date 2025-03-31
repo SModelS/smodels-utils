@@ -565,7 +565,9 @@ class Writer:
                 if False:
                     ## lets comment out the bibliography
                     bibtexstuff = bibtexstuff.replace(";",";%" )
-        cmd= f"cat ../share/AnalysesListTemplate.tex | sed -e 's/{repl}/{texfile}/' | sed -e 's/{bibtexrepl}/{bibtexstuff}/' | tr ';' '\n' > smodels.tex"
+        path = os.path.dirname ( os.path.abspath ( __file__ ) )
+        path = path.replace("/bin","/share")
+        cmd= f"cat {path}/AnalysesListTemplate.tex | sed -e 's/{repl}/{texfile}/' | sed -e 's/{bibtexrepl}/{bibtexstuff}/' | tr ';' '\n' > smodels.tex"
         o = C.getoutput ( cmd )
 
     def createPngFile ( self ):
