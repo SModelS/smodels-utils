@@ -525,7 +525,7 @@ class Writer:
             base = self.experiment
         if self.sqrts != "all":
             base += str(self.sqrts)
-        self.pprint ( "now latexing smodels.tex" )
+        self.pprint ( f"now latexing smodels.tex (which includes {self.texfile})" )
         o1 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         o2 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         o3 = C.getoutput ( "bibtex smodels" )
