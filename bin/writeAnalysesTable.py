@@ -658,7 +658,7 @@ if __name__ == "__main__":
         argparser.add_argument( '--combinations', help='cycle through all combinations (8TeV/13TeV, CMS/ATLAS)',
             action='store_true' )
         argparser.add_argument ( '--exclude',
-            help='exclude this comma-separated list of analysis, wildcards allowed [none]',
+            help='exclude this comma-separated list of analyses, wildcards allowed [none]',
             type=str, default='' )
         args=argparser.parse_args()
         if not args.combinations:
