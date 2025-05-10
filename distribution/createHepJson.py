@@ -48,7 +48,9 @@ class HepJsonCreator:
                 print ( f"[createHepJson] will use {entry1[k]}" )
         return entry1
 
-    def getHepData ( self, nr : int, ana_id : str ):
+    def getHepData ( self, nr : int, ana_id : str ) -> str:
+        """ get either the content of https://www.hepdata.net/record/ins{nr}, if evaluable,
+        or get this url, FIXME not used """
         hepdata = f"https://www.hepdata.net/record/ins{nr}"
         cachefile = f"cache/{nr}"
         if os.path.exists ( cachefile ):
@@ -188,9 +190,9 @@ class HepJsonCreator:
                             tmp = tmp[:p2]
                         # print ( "tmp", dU, "->", tmp )
                         inspire = tmp
-                        hepdata = self.getHepData  ( inspire, Id )
+                        #hepdata = self.getHepData  ( inspire, Id )
                         # inspire = f"https://inspirehep.net/literature/{tmp}"
-                        entry["hepdata"]=hepdata
+                        #entry["hepdata"]=hepdata
                         entry["inspire"]=inspire
                         break
             if SRcomb != None:
@@ -216,8 +218,8 @@ class HepJsonCreator:
                 inspire = self.getInspireFromWebPage ( gI )
                 if inspire != None:
                     entry["inspire"]=inspire
-                    hepdata = self.getHepData  ( inspire, Id )
-                    entry["hepdata"]= hepdata
+                    #hepdata = self.getHepData  ( inspire, Id )
+                    #entry["hepdata"]= hepdata
             if Id in entries:
                 merged = self.merge ( entries[Id], entry, Id )
                 entries[Id] = merged
