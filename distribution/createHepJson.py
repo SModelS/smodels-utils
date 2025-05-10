@@ -48,7 +48,7 @@ class HepJsonCreator:
                 print ( f"[createHepJson] will use {entry1[k]}" )
         return entry1
 
-    def getHepData ( self, nr ):
+    def getHepData ( self, nr : int, ana_id : str ):
         hepdata = f"https://www.hepdata.net/record/ins{nr}"
         cachefile = f"cache/{nr}"
         if os.path.exists ( cachefile ):
@@ -69,7 +69,7 @@ class HepJsonCreator:
                 f.close()
             return ret
         except SyntaxError as e:
-            print ( f"{RED}cannot read content for #{nr}:: {hepdata}: {str(req.content)[:80]} {e}{RESET}" )
+            print ( f"{RED}cannot read content for #{nr}[{ana_id}]:: {hepdata}: {str(req.content)[:80]} {e}{RESET}" )
             return hepdata
 
     def short_header ( self ):
@@ -188,7 +188,7 @@ class HepJsonCreator:
                             tmp = tmp[:p2]
                         # print ( "tmp", dU, "->", tmp )
                         inspire = tmp
-                        hepdata = self.getHepData  ( inspire )
+                        hepdata = self.getHepData  ( inspire, Id )
                         # inspire = f"https://inspirehep.net/literature/{tmp}"
                         entry["hepdata"]=hepdata
                         entry["inspire"]=inspire
@@ -216,7 +216,7 @@ class HepJsonCreator:
                 inspire = self.getInspireFromWebPage ( gI )
                 if inspire != None:
                     entry["inspire"]=inspire
-                    hepdata = self.getHepData  ( inspire )
+                    hepdata = self.getHepData  ( inspire, Id )
                     entry["hepdata"]= hepdata
             if Id in entries:
                 merged = self.merge ( entries[Id], entry, Id )
