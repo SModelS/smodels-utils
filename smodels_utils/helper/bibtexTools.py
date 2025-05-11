@@ -643,6 +643,7 @@ class BibtexWriter:
         self.i.write ( "\n" )
         self.i.write ( self.createSummaryCitation ( bibtex, "ATLAS" ) )
         self.i.write ( "\n" )
+        self.i.write ( "\n" )
         self.i.close()
         self.createTestTex ( bibtex )
         commands.getoutput ( f"cat refs.bib >> {outfile}" )
