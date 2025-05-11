@@ -15,7 +15,7 @@ __all__ = [ "BibtexWriter", "removeDoubleEntries" ]
 from smodels.base.smodelsLogging import setLogLevel
 import bibtexparser
 import urllib, subprocess
-import os, sys
+import os, sys, time
 from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
@@ -113,6 +113,7 @@ class BibtexWriter:
     def header ( self ):
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "% References for the analyses included in this version of the database %\n" )
+        self.i.write ( f"% This file was created at {time.asctime()} for db v{self.db.databaseVersion}         "[:71]+"%\n" )
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "\n" )
 
@@ -522,6 +523,8 @@ class BibtexWriter:
             else:
                 if "reportNumber" in entry:
                     label = entry["reportNumber"].split(",")[0].strip()
+                elif "reportnumber" in entry:
+                    label = entry["reportnumber"].split(",")[0].strip()
                 else:
                     self.warn ( f"label not defined in {entry}" )
                     import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
