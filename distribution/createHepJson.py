@@ -85,7 +85,8 @@ class HepJsonCreator:
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
         self.f.write (f'  "version": "{ver}",\n' )
-        self.f.write (f'  "tool_type": "analysis result",\n' )
+        self.f.write (f'  "tool_type": "reinterpretation",\n' )
+        self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
         self.f.write (f'  "created": "{time.asctime()}",\n' )
         self.f.write ( '  "link_types": [ "main_url", "val_url", "publication", "arXiv" ],\n' )
         self.f.write ( '  "url_templates": {\n' )
