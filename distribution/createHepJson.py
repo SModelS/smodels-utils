@@ -85,7 +85,6 @@ class HepJsonCreator:
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
         self.f.write (f'  "version": "{ver}",\n' )
-        self.f.write (f'  "tool_type": "reinterpretation",\n' )
         self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
         self.f.write (f'  "created": "{time.asctime()}",\n' )
         self.f.write ( '  "link_types": [ "main_url", "val_url", "publication", "arXiv" ],\n' )
@@ -304,7 +303,7 @@ class HepJsonCreator:
             for path in entry["path"].split(","):
                 implementation = f'{sqrts}TeV/{exp}/{path}/'
                 implementations.append ( implementation )
-            self.f.write ( f'      "implementations": [,\n' )
+            self.f.write ( f'      "implementations": [\n' )
             validations = []
             for resultType in resultTypes:
                 validations.append ( f'{anaId}_{resultType}' )
