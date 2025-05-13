@@ -11,9 +11,14 @@ from smodels_utils.helper.terminalcolors import *
 
 class HepJsonCreator:
     def __init__ ( self, long_version ):
+        """
+        :ivar extra_fields: if false, then add only fields required by hepdata, if true, add more info
+        like wiki page url, arxiv id, publication, etc
+        """
         ## the short version is this super simplistic version that
         ## hepdata is currently using
         self.long_version = long_version
+        self.extra_fields = True
         if not os.path.exists ( "cache" ):
             os.mkdir ( "cache" )
 
@@ -91,8 +96,9 @@ class HepJsonCreator:
         self.f.write ( '  "url_templates": {\n' )
         self.f.write ( '    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{main_path}",\n' )
         self.f.write ( '    "val_url": "https://smodels.github.io/docs/Validation#{val_name}",\n' )
-        self.f.write ( '    "publication": "https://doi.org/{publication_doi}",\n' )
-        self.f.write ( '    "arXiv": "https://arxiv.org/abs/{arXiv_id}"\n' )
+        if self.extra_fields:
+            self.f.write ( '    "publication": "https://doi.org/{publication_doi}",\n' )
+            self.f.write ( '    "arXiv": "https://arxiv.org/abs/{arXiv_id}"\n' )
         self.f.write ( '  },\n' )
         self.f.write ( '  "analyses" : [\n' )
 
@@ -293,7 +299,10 @@ class HepJsonCreator:
             inspire = entry["inspire"]
             self.f.write ( f'      "inspire_id": {inspire},\n' )
 
-            for label in [ "ana_id" ]:
+            labels = []
+            if self.extra_fields:
+                labels = [ "ana_id" ]
+            for label in labels:
                 writeLabel ( label, entry, isFirst=True )
             self.f.write ( ',\n' )
             sqrts = getSqrts ( anaId )
@@ -320,7 +329,10 @@ class HepJsonCreator:
 
             self.f.write ( f'\n      ],\n' )
             isFirst = True
-            for label in [ "pretty_name", "publication_doi", "arXiv_id", "SRcomb", "signature_type", "wiki" ]:
+            labels = [ "pretty_name", "signature_type" ]
+            if self.extra_fields:
+                labels = [ "pretty_name", "publication_doi", "arXiv_id", "SRcomb", "signature_type", "wiki" ]
+            for label in labels:
                 writeLabel ( label, entry, isFirst )
                 isFirst = False
             self.f.write ( '\n    }' )
