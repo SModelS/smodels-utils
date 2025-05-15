@@ -179,7 +179,7 @@ class BibtexWriter:
             if "@article" in line and label != None:
                 ret.append ( f'      label          = "{label}",\n' )
             if "@techreport" in line and label != None:
-                ret.append ( '      label          = "%s",\n' % label )
+                ret.append ( f'      label          = "{label}",\n' )
         return self.replaceUnicodes ( "".join ( ret ) )
 
     def replaceUnicodes ( self, source ):
@@ -193,8 +193,8 @@ class BibtexWriter:
         for ctr,letter in enumerate(source):
             o=ord(letter)
             if o>127:
-                print ( "foreign letter %d: %s" % ( o, letter) )
-                print ( "The context was: >>%s#%s<<" % ( source[ctr-20:ctr], source[ctr+1:ctr+20] ) )
+                print ( f"foreign letter {o}: {letter}" )
+                print ( f"The context was: >>{source[ctr-20:ctr]}#{source[ctr+1:ctr+20]}<<" )
                 sys.exit()
         if self.verbose in [ "debug", "info" ]:
             print ( source )
@@ -219,7 +219,7 @@ class BibtexWriter:
             txt = txt.decode("utf-8")
             if label != None:
                 p1 = txt.rfind("}")
-                txt = txt[:p1-1] + ',\n    label = "%s"\n}\n' % label
+                txt = txt[:p1-1] + f',\n    label = "{label}"\n}}\n'
             return txt
         except urllib.error.HTTPError as e:
             print ( f"[bibtexTools] Caught: {e}" )
@@ -257,7 +257,7 @@ class BibtexWriter:
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2-1]
-        self.log ( " * PasUrl: %s" % ret )
+        self.log ( f" * PasUrl: {ret}" )
         return ret
 
     def fetchCDSUrl ( self, line, label ):
@@ -276,7 +276,7 @@ class BibtexWriter:
         try:
             f=urlopen ( url )
         except urllib.error.HTTPError as e:
-            self.log( "   `- error %s, not fetching from wiki" % e )
+            self.log( f"   `- error {e}, not fetching from wiki" )
             return None
         lines = f.readlines()
         f.close()
@@ -293,13 +293,13 @@ class BibtexWriter:
         ## second pass, try CDS and everything else
         for l in lines:
             if "preliminary results are superseded by the following paper" in l:
-                self.log ( "    %s: superseded !!!!! " % label )
-                self.h.write ( "%s is superseded." % label )
+                self.log ( f"    {label}: superseded !!!!! " )
+                self.h.write ( f"{label} is superseded." )
                 self.nsuperseded += 1
                 return None
             if "404 - Not found" in l:
-                self.log ( "    %s is not found!" % label )
-                #self.h.write ( "%s is not found!" % label )
+                self.log ( f"    {label} is not found!" )
+                #self.h.write ( f"{label} is not found!" )
                 #self.not_found += 1
                 return None
             if 'CDS record' in l:
@@ -308,8 +308,7 @@ class BibtexWriter:
                     try:
                         return self.bibtexFromCDS ( cds, label )
                     except Exception as e:
-                        print ( "HTTPEerror when fetching %s/%s from CDS: %s" % \
-                                ( cds, label, e ) )
+                        print ( f"HTTPEerror when fetching {cds}/{label} from CDS: {e}" )
             if 'target="_blank">' in l:
             # if 'target="_blank">Link to ' in l:
                 pas = self.fetchPasUrl ( l )
@@ -337,7 +336,7 @@ class BibtexWriter:
     def tryFetchFromCache ( self, Id ):
         """ there is a local file with the entry?
         convenient! we use it! """
-        fname = "%s/%s.tex" % ( self.cachedir, Id )
+        fname = f"{self.cachedir}/{Id}.tex"
         if not os.path.exists ( fname ):
             return False
         self.log ( "A backup file exists. We use it." )
@@ -351,8 +350,8 @@ class BibtexWriter:
 
     def writeCache ( self, Id, bib ):
         """ write the cache entry for analysis id <Id>, bibtex text is <bib> """
-        self.log ( "Now write cache file %s/%s.tex" % ( self.cachedir, Id ) )
-        cachef = open ( "%s/%s.tex" % ( self.cachedir, Id ) , "w" )
+        self.log ( f"Now write cache file {self.cachedir}/{Id}.tex" )
+        cachef = open ( f"{self.cachedir}/{Id}.tex", "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
         cachef.close()
@@ -429,9 +428,9 @@ class BibtexWriter:
             return
         if "bin/view/CMSPublic" in url:
             oldurl = url
-            url = "http://cms-results.web.cern.ch/cms-results/public-results/publications/%s/index.html" % ( Id.replace ( "CMS-", "" ) )
-            self.log ( " * rewriting %s -> %s\n" % ( oldurl, url ) )
-            # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
+            shortId = Id.replace ( "CMS-", "" )
+            url = f"http://cms-results.web.cern.ch/cms-results/public-results/publications/{shortId}/index.html"
+            self.log ( f" * rewriting {oldurl} -> {url}\n" )
             bib = self.bibtexFromWikiUrl ( url, Id )
             if bib is not None and bib[0]:
                 self.writeBibEntry ( bib[1], Id )
@@ -552,7 +551,7 @@ class BibtexWriter:
             coll = getCollaboration ( label )
             if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
-            ret += "%s, " % ID
+            ret += f"{ID}, "
         ret = str(ret[:-2]+"}")
         return ret
 
@@ -664,7 +663,7 @@ class BibtexWriter:
         f.write ( "I={}\n" )
         for coll,anas in self.stats.items():
             for ana,values in anas.items():
-                f.write ( "D['%s']['%s'] = %s\n" % ( coll, ana, str(values) ) )
+                f.write ( f"D['{coll}']['{ana}'] = {str(values)}\n" )
                 if not "bibtex" in values:
                     print ( f"cannot find bibtex in {values} for {ana}" )
                     continue
@@ -672,7 +671,7 @@ class BibtexWriter:
                 ivalues = values
                 ivalues.pop ( "bibtex" )
                 ivalues["anaid"]=ana
-                f.write ( "I['%s'] = %s\n" % ( bibtex, str(ivalues) ) )
+                f.write ( f"I['{bibtex}'] = {str(ivalues)}\n" )
         f.close()
     def createPdf ( self ):
         """ create the pdf file, i.e. execute latex.sh """
