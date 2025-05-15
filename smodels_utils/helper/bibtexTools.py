@@ -152,7 +152,7 @@ class BibtexWriter:
         fullurl =  url+"/export/hx"
         fullurl = fullurl.replace ( "?ln=en", "" )
         fullurl = fullurl.replace ( "?ln=de", "" )
-        self.log ( " * fetching from CDS: %s" % fullurl )
+        self.log ( f" * fetching from CDS: {fullurl}" )
         f=urlopen (fullurl)
         lines = f.readlines()
         f.close()
@@ -177,7 +177,7 @@ class BibtexWriter:
                 continue
             ret.append ( line )
             if "@article" in line and label != None:
-                ret.append ( '      label          = "%s",\n' % label )
+                ret.append ( f'      label          = "{label}",\n' )
             if "@techreport" in line and label != None:
                 ret.append ( '      label          = "%s",\n' % label )
         return self.replaceUnicodes ( "".join ( ret ) )
@@ -230,20 +230,25 @@ class BibtexWriter:
 
     def fetchInspireUrl ( self, line : str, label : Union[None,str] ):
         """ from line in html page, extract the inspire url """
+        # line = line.lower()
         self.log ( f" * fetching Inspire url: {label}" )
         line = line.replace ( "net/literature", "net/api/literature" )
         line = line.replace(' id="inspire_link"','')
-        pos1 = line.find ( "HREF=" )
-        pos2 = line.find ( "<B>" )
-        # print  ( "pos", pos1, pos2 )
+        pos1 = line.find ( "href=" )
+        if pos1 < 0:
+            pos1 = line.find ( "HREF=" )
+        pos2 = line.find( "<b>" )
+        if pos2 < 0:
+            pos2 = line.find( "<B>" )
         if pos1 > 0 and pos2 > pos1:
             ret = line[pos1+6:pos2-2]
             return ret
         pos1 = line.find ( "href=" )
         pos2 = line.find ( "inSPIRE" )
-        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in line:
+        if pos1 > 0 and (pos2 > pos1 or pos2<0) and not "INSPIRE_ID" in line:
             ret=line[pos1+6:pos2-2]
             return ret
+        self.log ( f"    * fetching attempt failed!" ) 
         return "fetchInspireUrl failed"
 
     def fetchPasUrl ( self, line ):
@@ -256,13 +261,13 @@ class BibtexWriter:
         return ret
 
     def fetchCDSUrl ( self, line, label ):
-        self.log ( " * fetching CDS url: %s" % label )
+        self.log ( f" * fetching CDS url: {label}" )
         pos1 = line.find( 'href="' )
         pos2 = line.find( '">CDS' )
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2]
-        self.log ( " * CDS url: %s" % ret )
+        self.log ( f" * CDS url: {ret}" )
         return ret
 
     def bibtexFromWikiUrl ( self, url : str, label : Union[None,str]=None ):
@@ -279,9 +284,9 @@ class BibtexWriter:
 
         ## first pass, aim for inspire
         for l in lines:
-            if "nspire" in l:
+            if "nspire" in l and "href" in l.lower():
                 inspire = self.fetchInspireUrl ( l, label )
-                # self.log ( "   `- fetching from inspire: %s" % inspire )
+                self.log ( f"   `- fetching from inspire: {inspire}" )
                 if not "failed" in inspire:
                     return self.bibtexFromInspire ( inspire, label )
 
@@ -366,8 +371,8 @@ class BibtexWriter:
 
         self.f.write ( bib )
         self.f.write ( "\n" )
-        if "10.1103/PhysRevD.103.112006" in bib:
-            print ( f"XXX {Id}" )
+        if False and "10.1103/PhysRevD.103.112006" in bib:
+            print ( f"XXX {Id}:\n\n {bib}" )
         if self.write_cache:
             self.writeCache ( Id, bib )
         return
