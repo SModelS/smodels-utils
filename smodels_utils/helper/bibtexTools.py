@@ -206,11 +206,12 @@ class BibtexWriter:
     def bibtexFromInspire ( self, url : str, label : Union[None,str] = None ):
         """ get the bibtex entry from an inspire record """
         url = url.replace("record","api/literature" )
-        self.log ( f" * fetching from Inspire: {url}" )
         ## hack for now, this solution wont work in the future
         # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
         # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
         fullurl =  url +"?format=bibtex"
+        self.log ( f" * fetching from Inspire: {url}" )
+        self.log ( f" * fullurl {fullurl}" )
         # return fullurl
         try:
             f=urlopen (fullurl)
@@ -357,8 +358,10 @@ class BibtexWriter:
         cachef.close()
 
     def writeBibEntry ( self, bib : str , Id : str ):
+        """ given the bibtex text as "bib", write an entry for
+        analysis "Id" """
         self.success += 1
-        self.log ( f"{GREEN}Success!{RESET}" )
+        self.log ( f"{GREEN}writeBibEntry: Success for {Id}!{RESET}" )
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
@@ -370,8 +373,12 @@ class BibtexWriter:
 
         self.f.write ( bib )
         self.f.write ( "\n" )
-        if False and "10.1103/PhysRevD.103.112006" in bib:
-            print ( f"XXX {Id}:\n\n {bib}" )
+        if False and Id == "CMS-EXO-20-008":
+            print ( "XXX Id", Id )
+            print ( f"XXX {Id}:\n\n {bib[:50]}" )
+            print ( f"XXX we got: {bib[-50:]}" )
+            print ( f"XXX exiting" )
+            sys.exit(-1)
         if self.write_cache:
             self.writeCache ( Id, bib )
         return
@@ -386,7 +393,7 @@ class BibtexWriter:
         backup = self.tryFetchFromCache( Id )
         if backup != False:
             self.success += 1
-            self.log ( f"{GREEN}Success!{RESET}" )
+            self.log ( f"{GREEN}processExpRes: Success!{RESET}" )
             self.f.write ( backup )
             self.f.write ( "\n" )
             return
@@ -422,21 +429,14 @@ class BibtexWriter:
             self.nsuperseded += 1
             return
         self.log ( f" * Id, url: {Id}, {url}" )
+        # self.log ( f" * no publication DOI given (consider supplying one), trying via inspire" )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
             self.writeBibEntry ( bib, Id )
             return
-        if "bin/view/CMSPublic" in url:
-            oldurl = url
-            shortId = Id.replace ( "CMS-", "" )
-            url = f"http://cms-results.web.cern.ch/cms-results/public-results/publications/{shortId}/index.html"
-            self.log ( f" * rewriting {oldurl} -> {url}\n" )
-            bib = self.bibtexFromWikiUrl ( url, Id )
-            if bib is not None and bib[0]:
-                self.writeBibEntry ( bib[1], Id )
-                return
         ## try with doi2bib
         if hasattr ( expRes.globalInfo, "publicationDOI" ):
+            self.log ( f" * trying with doi2bib {expRes.globalInfo.publicationDOI}" )
             from doi2bib.crossref import get_bib_from_doi
             bib = get_bib_from_doi ( expRes.globalInfo.publicationDOI )
             if bib[0]:
@@ -447,12 +447,25 @@ class BibtexWriter:
                     ## replace author list with collaboration name
                     text = text[:p1] + "author={" + coll + " collaboration}" + bib[1][p2+1:]
                 text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>\n', r"$pp$" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>b</mml:mi></mml:math>\n', r"$b$" )
                 text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>', r"$pp$" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>\n', r"$\sqrt{s} =$ 17 TeV" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>', r"$\sqrt{s} =$ 18 TeV" )
                 text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>\n', r"$\sqrt{s} =$ 13 TeV" )
                 text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>', r"$\sqrt{s} =$ 13 TeV" )
 
                 text = text.replace(", ",", \n    ")
+                self.log ( f" * seems succesful! writing {Id}" )
                 self.writeBibEntry ( text, Id )
+                return
+        if "bin/view/CMSPublic" in url:
+            oldurl = url
+            shortId = Id.replace ( "CMS-", "" )
+            url = f"http://cms-results.web.cern.ch/cms-results/public-results/publications/{shortId}/index.html"
+            self.log ( f" * rewriting {oldurl} -> {url}\n" )
+            bib = self.bibtexFromWikiUrl ( url, Id )
+            if bib is not None and bib[0]:
+                self.writeBibEntry ( bib[1], Id )
                 return
         self.nfailed += 1
         self.nomatch.append ( Id )
@@ -718,6 +731,9 @@ if __name__ == "__main__":
         if args.long:
             ret = writer.query( args.query, search = False,
                                 return_bibtex = True )
+            if len(ret)!=2:
+                print ( f"query for {args.query} resulted in: {ret}" )
+                sys.exit()
             print ( f"query for {args.query} resulted in: {ret[0]}" )
             print ( f"      {ret[1]}" )
             sys.exit()
