@@ -586,10 +586,12 @@ class BibtexWriter:
         labels.update ( reverse )
         return labels
 
-    def query ( self, anaid: str, search : bool = False ) -> str:
+    def query ( self, anaid: str, search : bool = False,
+                return_bibtex : bool = False ) -> str:
         """ get the bibtex name of anaid
         :param anaid: eg CMS-SUS-16-050
         :param search: if true, then search for it if not available
+        :param return_bibtex: if true, return also full bibtex entry
         :returns: bibtex label, eg Aaboud:2017vwy
         """
         # path = os.path.dirname ( __file__ )
@@ -606,6 +608,8 @@ class BibtexWriter:
             labels = self.getLabels ( bibtex )
             # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             if anaid in labels:
+                if return_bibtex:
+                    return labels[anaid], bibtex.entries_dict[labels[anaid]]
                 return labels[anaid]
         if search:
             self.pprint ( f"not in cache: lets search for this!" )
@@ -694,6 +698,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-q", "--query",
             help="query the database for bibtex label of <anaId>",
             default = None, type = str )
+    argparser.add_argument ( "-l", "--long",
+            help="give more info", action="store_true" )
     argparser.add_argument ( "-c", "--copy",
             help="copy bibtex files to database folder (does not generate the files, however)",
             action="store_true" )
@@ -709,7 +715,14 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
     if args.query != None:
-        ret = writer.query( args.query, search = False )
+        if args.long:
+            ret = writer.query( args.query, search = False,
+                                return_bibtex = True )
+            print ( f"query for {args.query} resulted in: {ret[0]}" )
+            print ( f"      {ret[1]}" )
+            sys.exit()
+        ret = writer.query( args.query, search = False,
+                            return_bibtex = False )
         print ( f"query for {args.query} resulted in: {ret}" )
         sys.exit()
     if args.copy:
