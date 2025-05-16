@@ -58,9 +58,9 @@ def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
     ## for the time stamp we had modification time of pickle file
     ## lets try last modification time of info file instead, might be
     ## more conservative (i.e. triggers downloads faster)
-    # mtime = time.asctime(time.localtime(lastchanged))
-    mtime = time.asctime(time.localtime())
     sha = _getSHA1 ( pclfilename )
+    lastchanged = time.time()
+    mtime = time.asctime(time.localtime(lastchanged))
     Dict = { "lastchanged": lastchanged, "mtime": mtime, "size": os.stat(pclfilename).st_size,
              "url": f"https://smodels.web.cern.ch/smodels/database/{pclfilename}",
              "sha1": sha }
