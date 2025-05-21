@@ -544,9 +544,9 @@ class RefXSecComputer:
         """
         ret = {}
         if not os.path.exists ( path ):
-            logger.info ( "could not find %s" % path )
+            logger.info ( f"could not find {path}" )
             return ret
-        logger.info ( "getting xsecs from %s" % path )
+        logger.info ( f"getting xsecs from {path}" )
         f = open ( path, "rt" )
         lines=f.readlines()
         f.close()
@@ -711,6 +711,8 @@ class RefXSecComputer:
             logger.error ( f"{path} missing for pids=({pid1},{pid2})" )
             sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
+        if self.verbose:
+            print ( f"[refxsecComputer] returning: {xsecs}" )
         return xsecs,order,comment
 
 if __name__ == "__main__":
