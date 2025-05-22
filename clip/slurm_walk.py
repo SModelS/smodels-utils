@@ -105,9 +105,9 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
-        f.write ( "sys.path.insert(0,'%s/smodels-utils/')\n" % codedir )
-        f.write ( "sys.path.insert(0,'%s/protomodels')\n" % codedir )
-        f.write ( "os.chdir('%s')\n" % rundir )
+        f.write ( f"sys.path.insert(0,'{codedir}/smodels-utils/')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/protomodels')\n" )
+        f.write ( f"os.chdir('{rundir}')\n" )
         if not wallpids:
             f.write ( "## offshell run below ATLAS-SUSY-2019-09 threshold!\n" )
             f.write ( "from builder.manipulator import Manipulator\n" )
@@ -465,14 +465,12 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
 def clean_dirs( rundir, clean_all = False, verbose=True ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
-    # cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
-    cmd = "cd %s; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi hiscore.cache Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS" % rundir
+    cmd = f"cd {rundir}; rm -rf old*hi .*slha H*hi ssm*pcl *old *png decays* states.dict hiscore.hi hiscore.cache Kold.conf Zold.conf RUN* xsec* llhdscanner*sh walker*log $OUTPUTS"
     if clean_all:
-        cmd = "cd %s; rm -rf old*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf" % rundir
-        # cmd = "cd %s; rm -rf old*pcl H*hi hiscore*hi .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
+        cmd = f"cd {rundir}; rm -rf old*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf"
         cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi hiscore*cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
     if verbose:
-        print ( "[slurm.py] %s" % cmd )
+        print ( f"[slurm.py] {cmd}" )
     o = subprocess.getoutput ( cmd )
 
 def queryStats ( maxsteps : int ):
@@ -735,9 +733,9 @@ def main():
             dbpath = dbpath + ".pcl"
 
         if args.allscans:
-            subprocess.getoutput ( "./slurm.py -R %s -S 0" % rundir )
-            subprocess.getoutput ( "./slurm.py -R %s -S 0 --yvariable 0" % rundir )
-            subprocess.getoutput ( "./slurm.py -R %s -L 0" % rundir )
+            subprocess.getoutput ( f"./slurm.py -R {rundir} -S 0" )
+            subprocess.getoutput ( f"./slurm.py -R {rundir} -S 0 --yvariable 0" )
+            subprocess.getoutput ( f"./slurm.py -R {rundir} -L 0" )
             continue
 
         if args.query:
