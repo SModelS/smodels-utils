@@ -556,6 +556,9 @@ if __name__ == "__main__":
     argparser.add_argument('-8', '--pythia8', action='store_true',
         help="use pythia8 for LO cross sections [default]")
     args=argparser.parse_args()
+    if sum( [ args.pythia8, args.pythia6, args.reference_xsecs ] ) > 1:
+        print ( f"[slhaCreator] error: specified more than one of the following mutually exclusive options: pythia6, pythia8, reference_xsecs" )
+        sys.exit()
     if args.sqrts == None:
         args.sqrts = [ 8, 13 ]
     if args.clear:
