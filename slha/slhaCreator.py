@@ -285,6 +285,7 @@ class TemplateFile(object):
         :param comment: comment to be added to all files
         :return: list of SLHA file names generated.
         """
+        print ( f"@@A" )
 
         if sqrts == None:
            sqrts = [[8,13]]
@@ -309,6 +310,7 @@ class TemplateFile(object):
                           comment = c, ignore_pids = ignore_pids,
                           ewk = self.ewk )
 
+        print ( f"[slhaCreator] now calling xseccomputer {computeXsecs} {self.pythiaVersion}" )
         #Compute cross-sections
         if computeXsecs:
             if self.verbose:
@@ -539,8 +541,6 @@ if __name__ == "__main__":
         type=int, nargs="*", default=None )
     argparser.add_argument('-k', '--keep', action='store_true',
         help="keep temp files")
-    argparser.add_argument('-X', '--xsecs', action='store_true',
-        help="compute cross sections via pythia")
     argparser.add_argument('-r', '--reference_xsecs', action='store_true',
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
@@ -602,7 +602,7 @@ if __name__ == "__main__":
     sqrts = args.sqrts
     if sqrts == None:
         sqrts = [ 8, 13 ]
-    slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
+    slhafiles = tempf.createFilesFor( masses, computeXsecs = args.pythia6 or args.pythia8,
                    massesInFileName=True, nevents=args.nevents,
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
                    swapBranches = args.swapBranches,
