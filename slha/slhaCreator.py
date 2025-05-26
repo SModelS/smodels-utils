@@ -285,7 +285,6 @@ class TemplateFile(object):
         :param comment: comment to be added to all files
         :return: list of SLHA file names generated.
         """
-        print ( f"@@A" )
 
         if sqrts == None:
            sqrts = [[8,13]]
@@ -310,7 +309,7 @@ class TemplateFile(object):
                           comment = c, ignore_pids = ignore_pids,
                           ewk = self.ewk )
 
-        print ( f"[slhaCreator] now calling xseccomputer {computeXsecs} {self.pythiaVersion}" )
+        # print ( f"[slhaCreator] now calling xseccomputer {computeXsecs} {self.pythiaVersion}" )
         #Compute cross-sections
         if computeXsecs:
             if self.verbose:
