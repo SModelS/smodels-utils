@@ -336,6 +336,15 @@ class TemplateFile(object):
                 if self.verbose:
                     xargs.verbosity = 17
                 # xargs.filename = slhafiles
+                if type(ignore_pids) in [ str ]:
+                    try:
+                        ignore_pids = eval ( ignore_pids )
+                    except (SyntaxError,Exception) as e:
+                        logger.error ( f"I do not understand --ignore_pids {ignore_pids}: {e}. Aborting." )
+                        sys.exit()
+                if type(ignore_pids) in [ list, tuple ]:
+                    ssms = { x: 0.0 for x in ignore_pids }
+                    xargs.ssmultipliers = ssms
                 xargs.filename = self.tempdir
                 xsecComputer.main(xargs)
         return slhafiles
