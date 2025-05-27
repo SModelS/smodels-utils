@@ -28,6 +28,7 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
 from smodels_utils.helper.terminalcolors import *
 import signal
+from typing import Union
 
 __tempfiles__ = set()
 
@@ -57,8 +58,8 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,topology,axes,tempdir=None,pythiaVersion=6,
-                 keep=False, txName = None ):
+    def __init__(self,topology,axes,tempdir=None,pythiaVersion : int =6,
+                 keep : bool = False, txName : Union[None,str] = None ):
         """
         :param topology: the txname
         :param axes: string describing the axes for the template file
@@ -71,8 +72,7 @@ class TemplateFile(object):
         """
         template= f"../slha/templates/{topology}.template"
         if not os.path.exists ( template ):
-            print ( "[slhaCreator] error: templatefile %s not found." %
-                    template )
+            print ( f"[slhaCreator] error: templatefile {template} not found." )
             sys.exit()
 
         self.version = "1.2" ## slhaCreator version
@@ -92,17 +92,17 @@ class TemplateFile(object):
             self.tempdir = tempdir
         else:
             self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
-            print ( "[slhaCreator] tempdir at %s" % self.tempdir )
+            print ( f"[slhaCreator] tempdir at {self.tempdir}" )
             if not self.keep:
                 __tempfiles__.add ( self.tempdir )
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
-            logger.error("Template file %s not found." %template)
+            logger.error( f"Template file {template} not found." )
             sys.exit()
         try:
             self.slhaObj = pyslha.readSLHAFile(template)
         except pyslha.ParseError as e:
-            logger.error ( "This file cannot be parsed as an SLHA file: %s" % e )
+            logger.error ( f"This file cannot be parsed as an SLHA file: {e}" )
             sys.exit()
         for pdg,mass in self.slhaObj.blocks['MASS'].items():
             if isinstance(mass,str):
@@ -215,8 +215,7 @@ class TemplateFile(object):
         # print ( "massDict", massDict )
         #First check if all the axes labels defined in the template appears in massDict
         if not set(self.tags).issubset(set(massDict.keys())):
-            logger.info("Labels do not match the ones defined in %s. keys=%s. tags=%s (might imply only that we labels that wont get used)." % \
-                ( self.path, str(set(massDict.keys())), str(set(self.tags))) )
+            logger.info( f"Labels do not match the ones defined in {self.path}. keys={set(massDict.keys())}. tags={set(self.tags)} (might mean only that we dont use these labels)." )
             # sys.exit()
         #Replace the axes labels by their mass values:
         ftemplate = open(self.path,'r')
@@ -235,7 +234,7 @@ class TemplateFile(object):
                 os.close(slhaname[0])
                 slhaname = slhaname[1]
             else:
-                slhaname = "%s" % (templateName)
+                slhaname = f"{templateName}"
                 if swapBranches:
                     masses = [ masses[1], masses[0] ]
                 ctr = 1
@@ -400,7 +399,7 @@ class TemplateFile(object):
 
         #Check if a valid element was created:
         if not goodEl:
-            logger.warning("No macthing element for %s generated from template" %txnameObj.txName)
+            logger.warning( f"No macthing element for {txnameObj.txName} generated from template" )
             return False
 
         #Check if the masses match
@@ -595,9 +594,9 @@ if __name__ == "__main__":
         print ( "Dry-run: would create the following points:" )
         for pt in masses:
             if "z" in pt:
-                print ( " * x: %s, y: %s, z: %s" % (pt["x"], pt["y"], pt["z"]) )
+                print ( f" * x: {pt['x']}, y: {pt['y']}, z: {pt['z']}" )
             else:
-                print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
+                print ( f" * x: {pt['x']}, y: {pt['y']}" )
         sys.exit()
     sqrts = args.sqrts
     if sqrts == None:
@@ -615,9 +614,8 @@ if __name__ == "__main__":
     oldtarball = tarball
     if os.path.exists ( oldtarball ):
         subprocess.getoutput ( f"cp {oldtarball} prev.{oldtarball}" )
-    print ( "[slhaCreator] Now build new tarball in %s/" % newtemp )
-    subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
-                           ( newtemp, tarball ) )
+    print ( f"[slhaCreator] Now build new tarball in {newtemp}/" )
+    subprocess.getoutput ( f"cd {newtemp}; tar xzvf ../../slha/{tarball}" )
     cmd = "cp {tempf.tempdir}/{args.topology}*.slha {tempf.tempdir}/recipe {tempf.tempdir}/coordinates {newtemp}"
     # print ( "cmd", cmd )
     subprocess.getoutput ( cmd )
