@@ -20,15 +20,13 @@ logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha
 import math, numpy, subprocess, time, sys, os
-try: ## smodels <= 122
-    from smodels.theory import slhaDecomposer as decomposer
-except ImportError: ## smodels >= 200
-    from smodels.decomposition import decomposer
+from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.base import runtime
 from smodels.tools import xsecComputer
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
+from smodels_utils.helper.terminalcolors import *
 import signal
 
 __tempfiles__ = set()
@@ -120,8 +118,12 @@ class TemplateFile(object):
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
 
-    def writeOutCoordinates ( self, directory ):
-        """ the entry in ../validation/filenameCoords.py """
+    def writeOutCoordinates ( self, directory : os.PathLike ):
+        """ write the entry in ../validation/filenameCoords.py
+        """
+        if not hasattr ( self, "coordDicts" ):
+            print ( f"[slhaCreator] when trying to write out coordinates: no coordDicts available" )
+            return
         fpath = f"{directory}/coordinates"
         f = open ( fpath, "wt" )
         f.write ( f"{self.coordDicts}\n" )
@@ -149,9 +151,8 @@ class TemplateFile(object):
         else:
             cmd = f"cp {tempf} {fpath}"
             subprocess.getoutput ( cmd )
-            print ( f"Updated {fpath}, please make sure you git-push." )
+            print ( f"[slhaCreator] Updated {fpath}, please make sure you git-push." )
         os.unlink ( tempf )
-
 
     def findWidthTags ( self, filename ):
         """ in a template file <template>, search for "width tags",
@@ -568,7 +569,7 @@ if __name__ == "__main__":
         pythiaVersion = 6
     tarball = args.tarball.replace ( "@@topo@@", args.topology )
     if args.overwrite and os.path.exists ( tarball ):
-        print ( f"[slhaCreator] overwriting existing {tarball}" )
+        print ( f"[slhaCreator] {YELLOW}overwriting existing {tarball}{RESET}" )
         os.unlink ( tarball )
     if os.path.exists ( tarball ) and not args.overwrite:
         print ( f"[slhaCreator] NOT overwriting existing results from {tarball}!" )
