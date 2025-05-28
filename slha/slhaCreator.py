@@ -110,6 +110,8 @@ class TemplateFile(object):
                 if mass == 'M0' or mass == 'm0': self.motherPDGs.append(pdg)
         ## the tags for the widths are harder to get
         self.findWidthTags( template )
+        if "ISR" in self.txName:
+            self.motherPDGs.append ( 1000022 )
 
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
@@ -556,7 +558,7 @@ if __name__ == "__main__":
     argparser.add_argument('-o', '--overwrite', action='store_true',
         help="overwrite existing tarball")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
-        help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'. Currently works only with reference_xsecs.")
+        help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'.")
     argparser.add_argument('--swapBranches', action='store_true',
         help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -577,10 +579,10 @@ if __name__ == "__main__":
         pythiaVersion = 6
     tarball = args.tarball.replace ( "@@topo@@", args.topology )
     if args.overwrite and os.path.exists ( tarball ):
-        print ( f"[slhaCreator] {YELLOW}overwriting existing {tarball}{RESET}" )
+        print ( f"[slhaCreator] {YELLOW}overwriting existing {tarball}!{RESET}" )
         os.unlink ( tarball )
     if os.path.exists ( tarball ) and not args.overwrite:
-        print ( f"[slhaCreator] NOT overwriting existing results from {tarball}!" )
+        print ( f"[slhaCreator] {YELLOW}NOT overwriting existing results from {tarball}!{RESET}" )
 
     tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
                          keep=args.keep )
