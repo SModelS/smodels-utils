@@ -111,9 +111,11 @@ class TemplateFile(object):
         ## the tags for the widths are harder to get
         self.findWidthTags( template )
         if "ISR" in self.txName:
+            print ( f"[slhaCreator] this is an ISR topology, adding 1000022 to the mother pids" )
             self.motherPDGs.append ( 1000022 )
 
         if self.motherPDGs:
+            print ( f"[slhaCreator] setting things up with the following mother pids: {' '.join(map(str,self.motherPDGs))}" )
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
             if not self.keep:
                 __tempfiles__.add ( self.pythiaCard )
