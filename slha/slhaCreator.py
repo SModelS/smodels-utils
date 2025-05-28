@@ -125,7 +125,9 @@ class TemplateFile(object):
         if self.add_pids != None:
             for a in self.add_pids:
                 self.motherPDGs.append( a )
-        self.motherPDGs = list ( set ( self.motherPDGs ) )
+        if self.motherPDGs:
+            self.motherPDGs = list ( set ( self.motherPDGs ) )
+            self.motherPDGs.sort()
 
         if self.motherPDGs:
             print ( f"[slhaCreator] setting things up with the following potential mother pids: {' '.join(map(str,self.motherPDGs))}" )
