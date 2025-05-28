@@ -59,7 +59,8 @@ class TemplateFile(object):
     """
 
     def __init__(self,topology,axes,tempdir=None,pythiaVersion : int =6,
-                 keep : bool = False, txName : Union[None,str] = None ):
+                 keep : bool = False, txName : Union[None,str] = None,
+                 add_pids : Union[None,str] = None ):
         """
         :param topology: the txname
         :param axes: string describing the axes for the template file
@@ -68,6 +69,7 @@ class TemplateFile(object):
                         a temporary folder will be created at the current location.
         :param pythiaVersion: Version of pythia to use (6 or 8). It specifies how
                               the pythiaCard will be generated.
+        :param add_pids: if not None, list of pids to add to list of potential mother pids
         :param keep: keep temporary files
         """
         template= f"../slha/templates/{topology}.template"
@@ -77,6 +79,13 @@ class TemplateFile(object):
 
         self.version = "1.2" ## slhaCreator version
         self.verbose = False
+        self.add_pids = add_pids
+        if add_pids in [ "None" ]:
+            self.add_pids = None
+        if type ( add_pids ) == str:
+            self.add_pids = eval ( add_pids )
+        if type ( self.add_pids ) in [ int, float ]:
+            self.add_pids = [ int(self.add_pids) ]
         self.path = template
         self.txName = topology
         self.slhaObj = None
@@ -113,9 +122,13 @@ class TemplateFile(object):
         if "ISR" in self.txName:
             print ( f"[slhaCreator] this is an ISR topology, adding 1000022 to the mother pids" )
             self.motherPDGs.append ( 1000022 )
+        if self.add_pids != None:
+            for a in self.add_pids:
+                self.motherPDGs.append( a )
+        self.motherPDGs = list ( set ( self.motherPDGs ) )
 
         if self.motherPDGs:
-            print ( f"[slhaCreator] setting things up with the following mother pids: {' '.join(map(str,self.motherPDGs))}" )
+            print ( f"[slhaCreator] setting things up with the following potential mother pids: {' '.join(map(str,self.motherPDGs))}" )
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
             if not self.keep:
                 __tempfiles__.add ( self.pythiaCard )
@@ -274,7 +287,8 @@ class TemplateFile(object):
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
                         nevents = 10000, sqrts = None, reference_xsecs=False,
-                        swapBranches = False, ignore_pids = None, comment=None ):
+                        swapBranches = False, ignore_pids = None, 
+                        comment : Union[None,str] = None ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -561,6 +575,8 @@ if __name__ == "__main__":
         help="overwrite existing tarball")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
         help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'.")
+    argparser.add_argument('-A', '--add_pids', type=str, default=None,
+        help="add pids to list of candidate mother pids, e.g. '[1000022]'.")
     argparser.add_argument('--swapBranches', action='store_true',
         help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -587,7 +603,7 @@ if __name__ == "__main__":
         print ( f"[slhaCreator] {YELLOW}NOT overwriting existing results from {tarball}!{RESET}" )
 
     tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
-                         keep=args.keep )
+                         keep=args.keep, add_pids = args.add_pids )
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
@@ -617,8 +633,8 @@ if __name__ == "__main__":
     slhafiles = tempf.createFilesFor( masses, computeXsecs = args.pythia6 or args.pythia8,
                    massesInFileName=True, nevents=args.nevents,
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
-                   swapBranches = args.swapBranches,
-                   ignore_pids = args.ignore_pids, comment = args.comment )
+                   swapBranches = args.swapBranches, ignore_pids = args.ignore_pids, 
+                   comment = args.comment )
     print ( f"[slhaCreator] Produced {len(slhafiles)} slha files" )
     # newtemp = tempfile.mkdtemp(dir="./" ) # FIXME now idea what that was for
     newtemp = tempf.tempdir # FIXME anyways this does it correctly it seems
