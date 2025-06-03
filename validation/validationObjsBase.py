@@ -52,8 +52,9 @@ class ProgressHandler:
         if pid == None:
             return
         import psutil
-        p = psutil.Process ( pid )
-        p.terminate()
+        if psutil.pid_exists ( pid ):
+            p = psutil.Process ( pid )
+            p.terminate()
         ProgressHandler.rmFile()
 
 def sha1sum(filename : os.PathLike ) -> str:
