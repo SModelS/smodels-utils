@@ -441,7 +441,6 @@ class RefXSecComputer:
             if mass > 5000:
                 continue
 
-            print ( "pid", pid )
             if pid in schannel:
                 channels.append ( { "pids": (pid,None), "masses": ( mass,None ) } )
             if pid in samesignmodes:
@@ -545,9 +544,9 @@ class RefXSecComputer:
         """
         ret = {}
         if not os.path.exists ( path ):
-            logger.info ( "could not find %s" % path )
+            logger.info ( f"could not find {path}" )
             return ret
-        logger.info ( "getting xsecs from %s" % path )
+        logger.info ( f"getting xsecs from {path}" )
         f = open ( path, "rt" )
         lines=f.readlines()
         f.close()
@@ -585,7 +584,7 @@ class RefXSecComputer:
         isEWK=False
         comment = ""
         # comment="refxsec [pb]"
-        print ( "pids", pid1, pid2 )
+        print ( "[refxsecComputer.getXSecsFor] @@1 pids", pid1, pid2 )
         if pid1 in [ 35 ] and pid2 == None:
             filename = f"xsecScalar{sqrts}.txt"
             columns["xsec"]=1
@@ -610,7 +609,7 @@ class RefXSecComputer:
                 columns["xsec"]=3
                 pb = True
         if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
-            filename = "xsecN2C1p%d.txt" % sqrts
+            filename = f"xsecN2C1p{sqrts}.txt"
             order = NLL
             pb = False
             if sqrts == 8:
@@ -634,7 +633,7 @@ class RefXSecComputer:
                 return None, None, None
             dm = abs ( masses[1] - masses[0] ) / ( masses[1] + masses[0] )
             if dm > 1e-3:
-                filename = "xsecN2N1nondegen%d.txt" % sqrts
+                filename = f"xsecN2N1nondegen{sqrts}.txt"
                 columns["mass"]=(0,2)
                 columns["xsec"]=3
                 pb = True
@@ -704,14 +703,16 @@ class RefXSecComputer:
             filename = ewk
         if isEWK:
             if comment == "":
-                comment = " (%s)" % ewk
+                comment = f" ({ewk})"
         path = os.path.join ( self.shareDir, filename )
         if self.verbose:
-            print ( f"[refxsecComputer] will query {filename}" )
+            print ( f"[refxsecComputer] will query {filename}, columns {columns}" )
         if not os.path.exists ( path ):
             logger.error ( f"{path} missing for pids=({pid1},{pid2})" )
             sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
+        if self.verbose:
+            print ( f"[refxsecComputer] returning: {xsecs}" )
         return xsecs,order,comment
 
 if __name__ == "__main__":

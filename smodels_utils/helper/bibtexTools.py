@@ -15,7 +15,7 @@ __all__ = [ "BibtexWriter", "removeDoubleEntries" ]
 from smodels.base.smodelsLogging import setLogLevel
 import bibtexparser
 import urllib, subprocess
-import os, sys
+import os, sys, time
 from smodels.experiment.databaseObj import Database
 from smodels_utils import SModelSUtils 
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList, \
@@ -113,6 +113,7 @@ class BibtexWriter:
     def header ( self ):
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "% References for the analyses included in this version of the database %\n" )
+        self.i.write ( f"% This file was created at {time.asctime()} for db v{self.db.databaseVersion}         "[:71]+"%\n" )
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "\n" )
 
@@ -151,7 +152,7 @@ class BibtexWriter:
         fullurl =  url+"/export/hx"
         fullurl = fullurl.replace ( "?ln=en", "" )
         fullurl = fullurl.replace ( "?ln=de", "" )
-        self.log ( " * fetching from CDS: %s" % fullurl )
+        self.log ( f" * fetching from CDS: {fullurl}" )
         f=urlopen (fullurl)
         lines = f.readlines()
         f.close()
@@ -176,9 +177,9 @@ class BibtexWriter:
                 continue
             ret.append ( line )
             if "@article" in line and label != None:
-                ret.append ( '      label          = "%s",\n' % label )
+                ret.append ( f'      label          = "{label}",\n' )
             if "@techreport" in line and label != None:
-                ret.append ( '      label          = "%s",\n' % label )
+                ret.append ( f'      label          = "{label}",\n' )
         return self.replaceUnicodes ( "".join ( ret ) )
 
     def replaceUnicodes ( self, source ):
@@ -192,8 +193,8 @@ class BibtexWriter:
         for ctr,letter in enumerate(source):
             o=ord(letter)
             if o>127:
-                print ( "foreign letter %d: %s" % ( o, letter) )
-                print ( "The context was: >>%s#%s<<" % ( source[ctr-20:ctr], source[ctr+1:ctr+20] ) )
+                print ( f"foreign letter {o}: {letter}" )
+                print ( f"The context was: >>{source[ctr-20:ctr]}#{source[ctr+1:ctr+20]}<<" )
                 sys.exit()
         if self.verbose in [ "debug", "info" ]:
             print ( source )
@@ -205,11 +206,12 @@ class BibtexWriter:
     def bibtexFromInspire ( self, url : str, label : Union[None,str] = None ):
         """ get the bibtex entry from an inspire record """
         url = url.replace("record","api/literature" )
-        self.log ( f" * fetching from Inspire: {url}" )
         ## hack for now, this solution wont work in the future
         # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
         # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
         fullurl =  url +"?format=bibtex"
+        self.log ( f" * fetching from Inspire: {url}" )
+        self.log ( f" * fullurl {fullurl}" )
         # return fullurl
         try:
             f=urlopen (fullurl)
@@ -218,7 +220,7 @@ class BibtexWriter:
             txt = txt.decode("utf-8")
             if label != None:
                 p1 = txt.rfind("}")
-                txt = txt[:p1-1] + ',\n    label = "%s"\n}\n' % label
+                txt = txt[:p1-1] + f',\n    label = "{label}"\n}}\n'
             return txt
         except urllib.error.HTTPError as e:
             print ( f"[bibtexTools] Caught: {e}" )
@@ -229,20 +231,25 @@ class BibtexWriter:
 
     def fetchInspireUrl ( self, line : str, label : Union[None,str] ):
         """ from line in html page, extract the inspire url """
+        # line = line.lower()
         self.log ( f" * fetching Inspire url: {label}" )
         line = line.replace ( "net/literature", "net/api/literature" )
         line = line.replace(' id="inspire_link"','')
-        pos1 = line.find ( "HREF=" )
-        pos2 = line.find ( "<B>" )
-        # print  ( "pos", pos1, pos2 )
+        pos1 = line.find ( "href=" )
+        if pos1 < 0:
+            pos1 = line.find ( "HREF=" )
+        pos2 = line.find( "<b>" )
+        if pos2 < 0:
+            pos2 = line.find( "<B>" )
         if pos1 > 0 and pos2 > pos1:
             ret = line[pos1+6:pos2-2]
             return ret
         pos1 = line.find ( "href=" )
         pos2 = line.find ( "inSPIRE" )
-        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in line:
+        if pos1 > 0 and (pos2 > pos1 or pos2<0) and not "INSPIRE_ID" in line:
             ret=line[pos1+6:pos2-2]
             return ret
+        self.log ( f"    * fetching attempt failed!" ) 
         return "fetchInspireUrl failed"
 
     def fetchPasUrl ( self, line ):
@@ -251,17 +258,17 @@ class BibtexWriter:
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2-1]
-        self.log ( " * PasUrl: %s" % ret )
+        self.log ( f" * PasUrl: {ret}" )
         return ret
 
     def fetchCDSUrl ( self, line, label ):
-        self.log ( " * fetching CDS url: %s" % label )
+        self.log ( f" * fetching CDS url: {label}" )
         pos1 = line.find( 'href="' )
         pos2 = line.find( '">CDS' )
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2]
-        self.log ( " * CDS url: %s" % ret )
+        self.log ( f" * CDS url: {ret}" )
         return ret
 
     def bibtexFromWikiUrl ( self, url : str, label : Union[None,str]=None ):
@@ -270,7 +277,7 @@ class BibtexWriter:
         try:
             f=urlopen ( url )
         except urllib.error.HTTPError as e:
-            self.log( "   `- error %s, not fetching from wiki" % e )
+            self.log( f"   `- error {e}, not fetching from wiki" )
             return None
         lines = f.readlines()
         f.close()
@@ -278,22 +285,22 @@ class BibtexWriter:
 
         ## first pass, aim for inspire
         for l in lines:
-            if "nspire" in l:
+            if "nspire" in l and "href" in l.lower():
                 inspire = self.fetchInspireUrl ( l, label )
-                # self.log ( "   `- fetching from inspire: %s" % inspire )
+                self.log ( f"   `- fetching from inspire: {inspire}" )
                 if not "failed" in inspire:
                     return self.bibtexFromInspire ( inspire, label )
 
         ## second pass, try CDS and everything else
         for l in lines:
             if "preliminary results are superseded by the following paper" in l:
-                self.log ( "    %s: superseded !!!!! " % label )
-                self.h.write ( "%s is superseded." % label )
+                self.log ( f"    {label}: superseded !!!!! " )
+                self.h.write ( f"{label} is superseded." )
                 self.nsuperseded += 1
                 return None
             if "404 - Not found" in l:
-                self.log ( "    %s is not found!" % label )
-                #self.h.write ( "%s is not found!" % label )
+                self.log ( f"    {label} is not found!" )
+                #self.h.write ( f"{label} is not found!" )
                 #self.not_found += 1
                 return None
             if 'CDS record' in l:
@@ -302,8 +309,7 @@ class BibtexWriter:
                     try:
                         return self.bibtexFromCDS ( cds, label )
                     except Exception as e:
-                        print ( "HTTPEerror when fetching %s/%s from CDS: %s" % \
-                                ( cds, label, e ) )
+                        print ( f"HTTPEerror when fetching {cds}/{label} from CDS: {e}" )
             if 'target="_blank">' in l:
             # if 'target="_blank">Link to ' in l:
                 pas = self.fetchPasUrl ( l )
@@ -331,7 +337,7 @@ class BibtexWriter:
     def tryFetchFromCache ( self, Id ):
         """ there is a local file with the entry?
         convenient! we use it! """
-        fname = "%s/%s.tex" % ( self.cachedir, Id )
+        fname = f"{self.cachedir}/{Id}.tex"
         if not os.path.exists ( fname ):
             return False
         self.log ( "A backup file exists. We use it." )
@@ -345,15 +351,17 @@ class BibtexWriter:
 
     def writeCache ( self, Id, bib ):
         """ write the cache entry for analysis id <Id>, bibtex text is <bib> """
-        self.log ( "Now write cache file %s/%s.tex" % ( self.cachedir, Id ) )
-        cachef = open ( "%s/%s.tex" % ( self.cachedir, Id ) , "w" )
+        self.log ( f"Now write cache file {self.cachedir}/{Id}.tex" )
+        cachef = open ( f"{self.cachedir}/{Id}.tex", "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
         cachef.close()
 
     def writeBibEntry ( self, bib : str , Id : str ):
+        """ given the bibtex text as "bib", write an entry for
+        analysis "Id" """
         self.success += 1
-        self.log ( f"{GREEN}Success!{RESET}" )
+        self.log ( f"{GREEN}writeBibEntry: Success for {Id}!{RESET}" )
         sqrts = getSqrts ( Id )
         coll = getCollaboration ( Id )
         self.stats[coll][Id]={"cached":0 }
@@ -365,8 +373,12 @@ class BibtexWriter:
 
         self.f.write ( bib )
         self.f.write ( "\n" )
-        if "10.1103/PhysRevD.103.112006" in bib:
-            print ( f"XXX {Id}" )
+        if False and Id == "CMS-EXO-20-008":
+            print ( "XXX Id", Id )
+            print ( f"XXX {Id}:\n\n {bib[:50]}" )
+            print ( f"XXX we got: {bib[-50:]}" )
+            print ( f"XXX exiting" )
+            sys.exit(-1)
         if self.write_cache:
             self.writeCache ( Id, bib )
         return
@@ -381,7 +393,7 @@ class BibtexWriter:
         backup = self.tryFetchFromCache( Id )
         if backup != False:
             self.success += 1
-            self.log ( f"{GREEN}Success!{RESET}" )
+            self.log ( f"{GREEN}processExpRes: Success!{RESET}" )
             self.f.write ( backup )
             self.f.write ( "\n" )
             return
@@ -417,21 +429,14 @@ class BibtexWriter:
             self.nsuperseded += 1
             return
         self.log ( f" * Id, url: {Id}, {url}" )
+        # self.log ( f" * no publication DOI given (consider supplying one), trying via inspire" )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
             self.writeBibEntry ( bib, Id )
             return
-        if "bin/view/CMSPublic" in url:
-            oldurl = url
-            url = "http://cms-results.web.cern.ch/cms-results/public-results/publications/%s/index.html" % ( Id.replace ( "CMS-", "" ) )
-            self.log ( " * rewriting %s -> %s\n" % ( oldurl, url ) )
-            # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
-            bib = self.bibtexFromWikiUrl ( url, Id )
-            if bib is not None and bib[0]:
-                self.writeBibEntry ( bib[1], Id )
-                return
         ## try with doi2bib
         if hasattr ( expRes.globalInfo, "publicationDOI" ):
+            self.log ( f" * trying with doi2bib {expRes.globalInfo.publicationDOI}" )
             from doi2bib.crossref import get_bib_from_doi
             bib = get_bib_from_doi ( expRes.globalInfo.publicationDOI )
             if bib[0]:
@@ -442,12 +447,25 @@ class BibtexWriter:
                     ## replace author list with collaboration name
                     text = text[:p1] + "author={" + coll + " collaboration}" + bib[1][p2+1:]
                 text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>\n', r"$pp$" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>b</mml:mi></mml:math>\n', r"$b$" )
                 text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>', r"$pp$" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>\n', r"$\sqrt{s} =$ 17 TeV" )
+                text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>', r"$\sqrt{s} =$ 18 TeV" )
                 text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>\n', r"$\sqrt{s} =$ 13 TeV" )
                 text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>13</mml:mn><mml:mtext> </mml:mtext><mml:mtext> </mml:mtext><mml:mi>TeV</mml:mi></mml:math>', r"$\sqrt{s} =$ 13 TeV" )
 
                 text = text.replace(", ",", \n    ")
+                self.log ( f" * seems succesful! writing {Id}" )
                 self.writeBibEntry ( text, Id )
+                return
+        if "bin/view/CMSPublic" in url:
+            oldurl = url
+            shortId = Id.replace ( "CMS-", "" )
+            url = f"http://cms-results.web.cern.ch/cms-results/public-results/publications/{shortId}/index.html"
+            self.log ( f" * rewriting {oldurl} -> {url}\n" )
+            bib = self.bibtexFromWikiUrl ( url, Id )
+            if bib is not None and bib[0]:
+                self.writeBibEntry ( bib[1], Id )
                 return
         self.nfailed += 1
         self.nomatch.append ( Id )
@@ -522,6 +540,8 @@ class BibtexWriter:
             else:
                 if "reportNumber" in entry:
                     label = entry["reportNumber"].split(",")[0].strip()
+                elif "reportnumber" in entry:
+                    label = entry["reportnumber"].split(",")[0].strip()
                 else:
                     self.warn ( f"label not defined in {entry}" )
                     import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
@@ -544,7 +564,7 @@ class BibtexWriter:
             coll = getCollaboration ( label )
             if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
-            ret += "%s, " % ID
+            ret += f"{ID}, "
         ret = str(ret[:-2]+"}")
         return ret
 
@@ -579,10 +599,12 @@ class BibtexWriter:
         labels.update ( reverse )
         return labels
 
-    def query ( self, anaid: str, search : bool = False ) -> str:
+    def query ( self, anaid: str, search : bool = False,
+                return_bibtex : bool = False ) -> str:
         """ get the bibtex name of anaid
         :param anaid: eg CMS-SUS-16-050
         :param search: if true, then search for it if not available
+        :param return_bibtex: if true, return also full bibtex entry
         :returns: bibtex label, eg Aaboud:2017vwy
         """
         # path = os.path.dirname ( __file__ )
@@ -599,6 +621,8 @@ class BibtexWriter:
             labels = self.getLabels ( bibtex )
             # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             if anaid in labels:
+                if return_bibtex:
+                    return labels[anaid], bibtex.entries_dict[labels[anaid]]
                 return labels[anaid]
         if search:
             self.pprint ( f"not in cache: lets search for this!" )
@@ -640,6 +664,7 @@ class BibtexWriter:
         self.i.write ( "\n" )
         self.i.write ( self.createSummaryCitation ( bibtex, "ATLAS" ) )
         self.i.write ( "\n" )
+        self.i.write ( "\n" )
         self.i.close()
         self.createTestTex ( bibtex )
         commands.getoutput ( f"cat refs.bib >> {outfile}" )
@@ -655,7 +680,7 @@ class BibtexWriter:
         f.write ( "I={}\n" )
         for coll,anas in self.stats.items():
             for ana,values in anas.items():
-                f.write ( "D['%s']['%s'] = %s\n" % ( coll, ana, str(values) ) )
+                f.write ( f"D['{coll}']['{ana}'] = {str(values)}\n" )
                 if not "bibtex" in values:
                     print ( f"cannot find bibtex in {values} for {ana}" )
                     continue
@@ -663,7 +688,7 @@ class BibtexWriter:
                 ivalues = values
                 ivalues.pop ( "bibtex" )
                 ivalues["anaid"]=ana
-                f.write ( "I['%s'] = %s\n" % ( bibtex, str(ivalues) ) )
+                f.write ( f"I['{bibtex}'] = {str(ivalues)}\n" )
         f.close()
     def createPdf ( self ):
         """ create the pdf file, i.e. execute latex.sh """
@@ -686,6 +711,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-q", "--query",
             help="query the database for bibtex label of <anaId>",
             default = None, type = str )
+    argparser.add_argument ( "-l", "--long",
+            help="give more info", action="store_true" )
     argparser.add_argument ( "-c", "--copy",
             help="copy bibtex files to database folder (does not generate the files, however)",
             action="store_true" )
@@ -701,7 +728,17 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )
     if args.query != None:
-        ret = writer.query( args.query, search = False )
+        if args.long:
+            ret = writer.query( args.query, search = False,
+                                return_bibtex = True )
+            if len(ret)!=2:
+                print ( f"query for {args.query} resulted in: {ret}" )
+                sys.exit()
+            print ( f"query for {args.query} resulted in: {ret[0]}" )
+            print ( f"      {ret[1]}" )
+            sys.exit()
+        ret = writer.query( args.query, search = False,
+                            return_bibtex = False )
         print ( f"query for {args.query} resulted in: {ret}" )
         sys.exit()
     if args.copy:

@@ -7,13 +7,20 @@ import os, sys, time
 from typing import Union
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
          filterSupersededFromList
-
+from smodels_utils.helper.terminalcolors import *
 
 class HepJsonCreator:
     def __init__ ( self, long_version ):
+        """
+        :ivar extra_fields: if false, then add only fields required by hepdata, if true, add more info
+        like wiki page url, arxiv id, publication, etc
+        """
         ## the short version is this super simplistic version that
         ## hepdata is currently using
         self.long_version = long_version
+        self.extra_fields = True
+        if not os.path.exists ( "cache" ):
+            os.mkdir ( "cache" )
 
     def merge ( self, entry1, entry2, anaId ):
         """ merge two entries """
@@ -41,15 +48,15 @@ class HepJsonCreator:
                 # take the shorter!
                 if v in entry1[k]:
                     entry1[k]=v
-            if v != entry1[k]:
-                print ( f"[createHepJson] entry {k} differs for {anaId}: '{v}' != '{entry1[k]}'" )
+            if str(v) != str(entry1[k]):
+                print ( f"[createHepJson] {RED}entry {k} differs for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
                 print ( f"[createHepJson] will use {entry1[k]}" )
         return entry1
 
-    def getHepData ( self, nr ):
+    def getHepData ( self, nr : int, ana_id : str ) -> str:
+        """ get either the content of https://www.hepdata.net/record/ins{nr}, if evaluable,
+        or get this url, FIXME not used """
         hepdata = f"https://www.hepdata.net/record/ins{nr}"
-        if not os.path.exists ( "cache" ):
-            os.mkdir ( "cache" )
         cachefile = f"cache/{nr}"
         if os.path.exists ( cachefile ):
             try:
@@ -58,7 +65,7 @@ class HepJsonCreator:
                     f.close()
                     return content
             except Exception as e:
-                print ( f"cannot read cachefile {cachefile}: {e}" )
+                print ( f"{RED}cannot read cachefile '{cachefile}': '{e}'{RESET}" )
         import requests
         req = requests.request ( url=hepdata, method="GET" )
         try:
@@ -69,7 +76,7 @@ class HepJsonCreator:
                 f.close()
             return ret
         except SyntaxError as e:
-            print ( f"cannot read content for {nr}: {e}" )
+            print ( f"{RED}cannot read content for #{nr}[{ana_id}]:: {hepdata}: {str(req.content)[:80]} {e}{RESET}" )
             return hepdata
 
     def short_header ( self ):
@@ -79,26 +86,32 @@ class HepJsonCreator:
         """ header of the json file """
         import smodels
         self.f.write ( "{\n" )
-        self.f.write ( '    "tool": "SModelS",\n' )
+        self.f.write ( '  "tool": "SModelS",\n' )
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
-        self.f.write (f'    "version": "{ver}",\n' )
-        self.f.write (f'    "created": "{time.asctime()}",\n' )
-        self.f.write ( '    "link_types": [ "implementation", "validation", "publication", "arXiv" ],\n' )
-        self.f.write ( '    "url_templates": {\n' )
-        self.f.write ( '        "implementation": "https://github.com/SModelS/smodels-database-release/tree/main/%s",\n' )
-        self.f.write ( '        "validation": "https://smodels.github.io/docs/Validation#%s",\n' )
-        self.f.write ( '        "publication": "https://doi.org/%s",\n' )
-        self.f.write ( '        "arXiv": "https://arxiv.org/abs/%s"\n' )
-        self.f.write ( '    },\n' )
-        self.f.write ( '    "analyses" : {\n' )
+        self.f.write (f'  "version": "{ver}",\n' )
+        self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
+        self.f.write (f'  "created": "{time.asctime()}",\n' )
+        self.f.write ( '  "link_types": [ "main_url", "val_url", "publication", "arXiv" ],\n' )
+        self.f.write ( '  "url_templates": {\n' )
+        self.f.write ( '    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{main_path}",\n' )
+        self.f.write ( '    "val_url": "https://smodels.github.io/docs/Validation#{val_name}",\n' )
+        if self.extra_fields:
+            self.f.write ( '    "publication": "https://doi.org/{publication_doi}",\n' )
+            self.f.write ( '    "arXiv": "https://arxiv.org/abs/{arXiv_id}"\n' )
+        self.f.write ( '  },\n' )
+        self.f.write ( '  "analyses" : [\n' )
 
     def short_footer ( self ):
         self.f.write ( '\n}\n' )
 
     def footer(self):
         """ footer of the json file """
-        self.f.write ( '    }\n' )
+        self.f.write ( '  ],\n' )
+        self.f.write ( '  "implementations_license": {\n' )
+        self.f.write ( '      "name": "cc-by-4.0",\n' )
+        self.f.write ( '      "url": "https://creativecommons.org/licenses/by/4.0"\n' )
+        self.f.write ( '  }\n' )
         self.f.write ( '}\n' )
 
     def getInspireFromWebPage ( self, gI ) -> Union[None,int]:
@@ -156,15 +169,12 @@ class HepJsonCreator:
             Id = gI.id
             for ext in [ "-ma5", "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
                Id = Id.replace(ext,"")
-            entry = { "exp": coll, "anaID": Id, "resultType": resultType }
+            entry = { "exp": coll, "ana_id": Id, "resultType": resultType }
             path = gI.path.replace("/globalInfo.txt","")
             p1 = path.rfind("/")
             entry["path"]=path[p1+1:]
-            # signatureType = "prompt"
             if hasattr ( gI, "type" ):
-                # signatureType = gI.type
-                # entry["signatureType"]=signatureType
-                entry["signatureType"]=gI.type
+                entry["signature_type"]=gI.type
             for ds in dses:
                 if hasattr ( ds.dataInfo, "thirdMoment" ):
                     SRcomb = "SLv2"
@@ -186,9 +196,9 @@ class HepJsonCreator:
                             tmp = tmp[:p2]
                         # print ( "tmp", dU, "->", tmp )
                         inspire = tmp
-                        hepdata = self.getHepData  ( inspire )
+                        #hepdata = self.getHepData  ( inspire, Id )
                         # inspire = f"https://inspirehep.net/literature/{tmp}"
-                        entry["hepdata"]=hepdata
+                        #entry["hepdata"]=hepdata
                         entry["inspire"]=inspire
                         break
             if SRcomb != None:
@@ -196,16 +206,16 @@ class HepJsonCreator:
             if hasattr ( gI, "arxiv" ):
                 ar = gI.arxiv
                 p1 = ar.rfind("/")
-                entry["arXiv"]=ar[p1+1:]
+                entry["arXiv_id"]=ar[p1+1:]
             if hasattr ( gI, "prettyName" ):
-                entry["prettyName"]=gI.prettyName
+                entry["pretty_name"]=gI.prettyName
             if True and hasattr ( gI, "publication" ):
                 entry["paper"]=gI.publication
             if hasattr ( gI, "publicationDOI" ):
                 doi = gI.publicationDOI
                 # doi = doi.replace("http://doi.org/","")
                 doi = doi.replace("https://doi.org/","")
-                entry["publication"]=doi
+                entry["publication_doi"]=doi
             wiki = gI.url
             if ";" in wiki:
                 wiki = wiki.find(";")
@@ -214,14 +224,15 @@ class HepJsonCreator:
                 inspire = self.getInspireFromWebPage ( gI )
                 if inspire != None:
                     entry["inspire"]=inspire
-                    hepdata = self.getHepData  ( inspire )
-                    entry["hepdata"]= hepdata
+                    #hepdata = self.getHepData  ( inspire, Id )
+                    #entry["hepdata"]= hepdata
             if Id in entries:
                 merged = self.merge ( entries[Id], entry, Id )
                 entries[Id] = merged
             else:
                 entries[Id] = entry
-            print ( f"[createHepJson] {entry}" )
+            if False:
+                print ( f"[createHepJson] {entry}" )
         return entries
 
     def short_body( self ):
@@ -244,7 +255,7 @@ class HepJsonCreator:
             if not first:
                 self.f.write ( ',\n' )
             inspire = entry["inspire"]
-            self.f.write ( f'        "{inspire}": [\n' )
+            self.f.write ( f'      "{inspire}": [\n' )
 
             resultTypes = entry["resultType"].lower().split(",")
             validations = set()
@@ -255,12 +266,12 @@ class HepJsonCreator:
                     validations.add ( f'"{baseUrl}{anaId}"' )
                 #validations.append ( f'"{baseUrl}{anaId}_{resultType}"' )
             for i,validation in enumerate(validations):
-                self.f.write ( f'                {validation}' )
+                self.f.write ( f'              {validation}' )
                 isLast = ( i == len(validations)-1 )
                 if not isLast:
                     self.f.write ( ',' )
                 self.f.write ( '\n' )
-            self.f.write ( "        ]" )
+            self.f.write ( "\n      ]" )
             first = False
 
     def body( self):
@@ -269,6 +280,14 @@ class HepJsonCreator:
         entries = self.collectEntries ( expResList )
         from smodels_utils.helper.various import getSqrts
         first = True
+        def writeLabel ( label : str, entry : list, isFirst : bool ):
+            """ from entry, write 'label' """
+            if not label in entry:
+                return
+            if not isFirst:
+                self.f.write ( ',\n' )
+            l = entry[label]
+            self.f.write ( f'      "{label}": "{l}"' )
 
         for anaId,entry in entries.items():
             if not "inspire" in entry:
@@ -276,36 +295,48 @@ class HepJsonCreator:
             if not first:
                 self.f.write ( ',\n' )
             first = False
+            self.f.write ( '    {\n' )
             inspire = entry["inspire"]
-            self.f.write ( f'        "{inspire}": {{\n' )
+            self.f.write ( f'      "inspire_id": {inspire},\n' )
+
+            labels = []
+            if self.extra_fields:
+                labels = [ "ana_id" ]
+            for label in labels:
+                writeLabel ( label, entry, isFirst=True )
+            self.f.write ( ',\n' )
             sqrts = getSqrts ( anaId )
             exp = entry["exp"]
             resultTypes = entry["resultType"].lower().split(",")
             implementations = []
             for path in entry["path"].split(","):
-                implementation = f'"{sqrts}TeV/{exp}/{path}/"'
+                implementation = f'{sqrts}TeV/{exp}/{path}/'
                 implementations.append ( implementation )
-            simplementations = ", ".join ( implementations )
-            self.f.write ( f'            "implementation": [{simplementations}],\n' )
+            self.f.write ( f'      "implementations": [\n' )
             validations = []
             for resultType in resultTypes:
-                validations.append ( f'"{anaId}_{resultType}"' )
-            svalidations = ", ".join(validations)
-            self.f.write ( f'            "validation": [{svalidations}]' )
-            #for label in [ "publication", "anaID" ]:
-            #    if label in entry:
-            #        f.write ( ',\n' )
-            #        l = entry[label]
-            #        f.write ( f'            "{label}": ["{l}"]' )
-            for label in [ "publication", "anaID", "arXiv", "SRcomb", "signatureType", "prettyName", "wiki" ]:
-                if label in entry:
-                    self.f.write ( ',\n' )
-                    l = entry[label]
-                    self.f.write ( f'            "{label}": "{l}"' )
-            self.f.write ( '\n        }' )
-        self.f.write('\n' )
+                validations.append ( f'{anaId}_{resultType}' )
 
-        #  [ "exp", "anaID", "arXiv", "inspire", "paper", "publication", "hepdata", "resultType", "SRcomb", "signatureType", "prettyName", "wiki"]
+            isFirst=True
+            for implementation,validation in zip(implementations,validations):
+                if not isFirst:
+                    self.f.write ( ",\n" )
+                self.f.write ( '        {\n' )
+                self.f.write ( f'          "val_name": "{validation}",\n' )
+                self.f.write ( f'          "main_path": "{implementation}"\n' )
+                self.f.write ( '        }' )
+                isFirst=False
+
+            self.f.write ( f'\n      ],\n' )
+            isFirst = True
+            labels = [ "pretty_name", "signature_type" ]
+            if self.extra_fields:
+                labels = [ "pretty_name", "publication_doi", "arXiv_id", "SRcomb", "signature_type", "wiki" ]
+            for label in labels:
+                writeLabel ( label, entry, isFirst )
+                isFirst = False
+            self.f.write ( '\n    }' )
+        self.f.write('\n' )
 
     def create( self, dbpath : os.PathLike, outputfile : os.PathLike ):
         """ create smodels-analyses.json """
@@ -336,10 +367,14 @@ if __name__ == "__main__":
     ap.add_argument('-o', '--outputfile',
             help='path to database [smodels-analyses.json]',
             default='smodels-analyses.json')
-    ap.add_argument('-l', '--long_version',
-            help='create long version, not short',
+    #ap.add_argument('-l', '--long_version',
+    #        help='create long version, not short',
+    #        action='store_true' )
+    ap.add_argument('-s', '--short_version',
+            help='create short version, not long',
             action='store_true' )
     args = ap.parse_args()
+    args.long_version = not args.short_version
     # args.dbpath = "official"
     creator = HepJsonCreator( args.long_version )
     creator.create( args.dbpath, args.outputfile )

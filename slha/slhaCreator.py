@@ -20,16 +20,15 @@ logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha
 import math, numpy, subprocess, time, sys, os
-try: ## smodels <= 122
-    from smodels.theory import slhaDecomposer as decomposer
-except ImportError: ## smodels >= 200
-    from smodels.decomposition import decomposer
+from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV, TeV
 from smodels.base import runtime
 from smodels.tools import xsecComputer
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
+from smodels_utils.helper.terminalcolors import *
 import signal
+from typing import Union
 
 __tempfiles__ = set()
 
@@ -59,8 +58,9 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,topology,axes,tempdir=None,pythiaVersion=6,
-                 keep=False, txName = None ):
+    def __init__(self,topology,axes,tempdir=None,pythiaVersion : int =6,
+                 keep : bool = False, txName : Union[None,str] = None,
+                 add_pids : Union[None,str] = None ):
         """
         :param topology: the txname
         :param axes: string describing the axes for the template file
@@ -69,16 +69,23 @@ class TemplateFile(object):
                         a temporary folder will be created at the current location.
         :param pythiaVersion: Version of pythia to use (6 or 8). It specifies how
                               the pythiaCard will be generated.
+        :param add_pids: if not None, list of pids to add to list of potential mother pids
         :param keep: keep temporary files
         """
         template= f"../slha/templates/{topology}.template"
         if not os.path.exists ( template ):
-            print ( "[slhaCreator] error: templatefile %s not found." %
-                    template )
+            print ( f"[slhaCreator] error: templatefile {template} not found." )
             sys.exit()
 
         self.version = "1.2" ## slhaCreator version
         self.verbose = False
+        self.add_pids = add_pids
+        if add_pids in [ "None" ]:
+            self.add_pids = None
+        if type ( add_pids ) == str:
+            self.add_pids = eval ( add_pids )
+        if type ( self.add_pids ) in [ int, float ]:
+            self.add_pids = [ int(self.add_pids) ]
         self.path = template
         self.txName = topology
         self.slhaObj = None
@@ -94,17 +101,17 @@ class TemplateFile(object):
             self.tempdir = tempdir
         else:
             self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
-            print ( "[slhaCreator] tempdir at %s" % self.tempdir )
+            print ( f"[slhaCreator] tempdir at {self.tempdir}" )
             if not self.keep:
                 __tempfiles__.add ( self.tempdir )
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
-            logger.error("Template file %s not found." %template)
+            logger.error( f"Template file {template} not found." )
             sys.exit()
         try:
             self.slhaObj = pyslha.readSLHAFile(template)
         except pyslha.ParseError as e:
-            logger.error ( "This file cannot be parsed as an SLHA file: %s" % e )
+            logger.error ( f"This file cannot be parsed as an SLHA file: {e}" )
             sys.exit()
         for pdg,mass in self.slhaObj.blocks['MASS'].items():
             if isinstance(mass,str):
@@ -112,16 +119,30 @@ class TemplateFile(object):
                 if mass == 'M0' or mass == 'm0': self.motherPDGs.append(pdg)
         ## the tags for the widths are harder to get
         self.findWidthTags( template )
+        if "ISR" in self.txName:
+            print ( f"[slhaCreator] this is an ISR topology, adding 1000022 to the mother pids" )
+            self.motherPDGs.append ( 1000022 )
+        if self.add_pids != None:
+            for a in self.add_pids:
+                self.motherPDGs.append( a )
+        if self.motherPDGs:
+            self.motherPDGs = list ( set ( self.motherPDGs ) )
+            self.motherPDGs.sort()
 
         if self.motherPDGs:
+            print ( f"[slhaCreator] setting things up with the following potential mother pids: {' '.join(map(str,self.motherPDGs))}" )
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
             if not self.keep:
                 __tempfiles__.add ( self.pythiaCard )
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
 
-    def writeOutCoordinates ( self, directory ):
-        """ the entry in ../validation/filenameCoords.py """
+    def writeOutCoordinates ( self, directory : os.PathLike ):
+        """ write the entry in ../validation/filenameCoords.py
+        """
+        if not hasattr ( self, "coordDicts" ):
+            print ( f"[slhaCreator] when trying to write out coordinates: no coordDicts available" )
+            return
         fpath = f"{directory}/coordinates"
         f = open ( fpath, "wt" )
         f.write ( f"{self.coordDicts}\n" )
@@ -149,9 +170,8 @@ class TemplateFile(object):
         else:
             cmd = f"cp {tempf} {fpath}"
             subprocess.getoutput ( cmd )
-            print ( f"Updated {fpath}, please make sure you git-push." )
+            print ( f"[slhaCreator] Updated {fpath}, please make sure you git-push." )
         os.unlink ( tempf )
-
 
     def findWidthTags ( self, filename ):
         """ in a template file <template>, search for "width tags",
@@ -214,8 +234,7 @@ class TemplateFile(object):
         # print ( "massDict", massDict )
         #First check if all the axes labels defined in the template appears in massDict
         if not set(self.tags).issubset(set(massDict.keys())):
-            logger.info("Labels do not match the ones defined in %s. keys=%s. tags=%s (might imply only that we labels that wont get used)." % \
-                ( self.path, str(set(massDict.keys())), str(set(self.tags))) )
+            logger.info( f"Labels do not match the ones defined in {self.path}. keys={set(massDict.keys())}. tags={set(self.tags)} (might mean only that we dont use these labels)." )
             # sys.exit()
         #Replace the axes labels by their mass values:
         ftemplate = open(self.path,'r')
@@ -234,7 +253,7 @@ class TemplateFile(object):
                 os.close(slhaname[0])
                 slhaname = slhaname[1]
             else:
-                slhaname = "%s" % (templateName)
+                slhaname = f"{templateName}"
                 if swapBranches:
                     masses = [ masses[1], masses[0] ]
                 ctr = 1
@@ -270,7 +289,8 @@ class TemplateFile(object):
 
     def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
                         nevents = 10000, sqrts = None, reference_xsecs=False,
-                        swapBranches = False, ignore_pids = None, comment=None ):
+                        swapBranches = False, ignore_pids = None, 
+                        comment : Union[None,str] = None ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
@@ -309,6 +329,7 @@ class TemplateFile(object):
                           comment = c, ignore_pids = ignore_pids,
                           ewk = self.ewk )
 
+        # print ( f"[slhaCreator] now calling xseccomputer {computeXsecs} {self.pythiaVersion}" )
         #Compute cross-sections
         if computeXsecs:
             if self.verbose:
@@ -335,6 +356,15 @@ class TemplateFile(object):
                 if self.verbose:
                     xargs.verbosity = 17
                 # xargs.filename = slhafiles
+                if type(ignore_pids) in [ str ]:
+                    try:
+                        ignore_pids = eval ( ignore_pids )
+                    except (SyntaxError,Exception) as e:
+                        logger.error ( f"I do not understand --ignore_pids {ignore_pids}: {e}. Aborting." )
+                        sys.exit()
+                if type(ignore_pids) in [ list, tuple ]:
+                    ssms = { x: 0.0 for x in ignore_pids }
+                    xargs.ssmultipliers = ssms
                 xargs.filename = self.tempdir
                 xsecComputer.main(xargs)
         return slhafiles
@@ -398,7 +428,7 @@ class TemplateFile(object):
 
         #Check if a valid element was created:
         if not goodEl:
-            logger.warning("No macthing element for %s generated from template" %txnameObj.txName)
+            logger.warning( f"No macthing element for {txnameObj.txName} generated from template" )
             return False
 
         #Check if the masses match
@@ -539,8 +569,6 @@ if __name__ == "__main__":
         type=int, nargs="*", default=None )
     argparser.add_argument('-k', '--keep', action='store_true',
         help="keep temp files")
-    argparser.add_argument('-X', '--xsecs', action='store_true',
-        help="compute cross sections via pythia")
     argparser.add_argument('-r', '--reference_xsecs', action='store_true',
         help="compute cross sections via refxsecComputer")
     argparser.add_argument('-d', '--dry_run', action='store_true',
@@ -548,7 +576,9 @@ if __name__ == "__main__":
     argparser.add_argument('-o', '--overwrite', action='store_true',
         help="overwrite existing tarball")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
-        help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'. Currently works only with reference_xsecs.")
+        help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'.")
+    argparser.add_argument('-A', '--add_pids', type=str, default=None,
+        help="add pids to list of candidate mother pids, e.g. '[1000022]'.")
     argparser.add_argument('--swapBranches', action='store_true',
         help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -556,6 +586,9 @@ if __name__ == "__main__":
     argparser.add_argument('-8', '--pythia8', action='store_true',
         help="use pythia8 for LO cross sections [default]")
     args=argparser.parse_args()
+    if sum( [ args.pythia8, args.pythia6, args.reference_xsecs ] ) > 1:
+        print ( f"[slhaCreator] error: specified more than one of the following mutually exclusive options: pythia6, pythia8, reference_xsecs" )
+        sys.exit()
     if args.sqrts == None:
         args.sqrts = [ 8, 13 ]
     if args.clear:
@@ -566,13 +599,13 @@ if __name__ == "__main__":
         pythiaVersion = 6
     tarball = args.tarball.replace ( "@@topo@@", args.topology )
     if args.overwrite and os.path.exists ( tarball ):
-        print ( f"[slhaCreator] overwriting existing {tarball}" )
+        print ( f"[slhaCreator] {YELLOW}overwriting existing {tarball}!{RESET}" )
         os.unlink ( tarball )
     if os.path.exists ( tarball ) and not args.overwrite:
-        print ( f"[slhaCreator] NOT overwriting existing results from {tarball}!" )
+        print ( f"[slhaCreator] {YELLOW}NOT overwriting existing results from {tarball}!{RESET}" )
 
     tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
-                         keep=args.keep )
+                         keep=args.keep, add_pids = args.add_pids )
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
@@ -592,18 +625,18 @@ if __name__ == "__main__":
         print ( "Dry-run: would create the following points:" )
         for pt in masses:
             if "z" in pt:
-                print ( " * x: %s, y: %s, z: %s" % (pt["x"], pt["y"], pt["z"]) )
+                print ( f" * x: {pt['x']}, y: {pt['y']}, z: {pt['z']}" )
             else:
-                print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
+                print ( f" * x: {pt['x']}, y: {pt['y']}" )
         sys.exit()
     sqrts = args.sqrts
     if sqrts == None:
         sqrts = [ 8, 13 ]
-    slhafiles = tempf.createFilesFor( masses, computeXsecs = args.xsecs,
+    slhafiles = tempf.createFilesFor( masses, computeXsecs = args.pythia6 or args.pythia8,
                    massesInFileName=True, nevents=args.nevents,
                    sqrts = [ sqrts ], reference_xsecs = args.reference_xsecs,
-                   swapBranches = args.swapBranches,
-                   ignore_pids = args.ignore_pids, comment = args.comment )
+                   swapBranches = args.swapBranches, ignore_pids = args.ignore_pids, 
+                   comment = args.comment )
     print ( f"[slhaCreator] Produced {len(slhafiles)} slha files" )
     # newtemp = tempfile.mkdtemp(dir="./" ) # FIXME now idea what that was for
     newtemp = tempf.tempdir # FIXME anyways this does it correctly it seems
@@ -612,9 +645,8 @@ if __name__ == "__main__":
     oldtarball = tarball
     if os.path.exists ( oldtarball ):
         subprocess.getoutput ( f"cp {oldtarball} prev.{oldtarball}" )
-    print ( "[slhaCreator] Now build new tarball in %s/" % newtemp )
-    subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s" % \
-                           ( newtemp, tarball ) )
+    print ( f"[slhaCreator] Now build new tarball in {newtemp}/" )
+    subprocess.getoutput ( f"cd {newtemp}; tar xzvf ../../slha/{tarball}" )
     cmd = "cp {tempf.tempdir}/{args.topology}*.slha {tempf.tempdir}/recipe {tempf.tempdir}/coordinates {newtemp}"
     # print ( "cmd", cmd )
     subprocess.getoutput ( cmd )
