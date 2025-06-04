@@ -188,7 +188,7 @@ if __name__ == "__main__":
             default='../../smodels-database/')
     ap.add_argument('-a', '--analysisId',
             help='analysis id [ATLAS-SUSY-2018-06-eff]', type=str,
-            default='ATLAS-SUSY-2018-06-eff')
+            default='ATLAS-SUSY-2018-32-eff')
     ap.add_argument('-x', '--xrange',
             help='user-specified x-range, e.g. "[0,200]" [None]', type=str,
             default=None )
@@ -197,7 +197,7 @@ if __name__ == "__main__":
             default=None )
     ap.add_argument('-v', '--validationfiles',
             help='validation files, comma separated [TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py]',
-            type=str, default='TChiWZoff_2EqMassAx_EqMassBy.py, TChiWZ_2EqMassAx_EqMassBy.py')
+            type=str, default='TChiWW_x_y_combined.py')
 
     args = ap.parse_args()
     plotter = ValidationCombiner ( args.database, args.analysisId, 

@@ -371,6 +371,11 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ver = "(pyhf)"    #how to differentiate between simplified and full?
             for js,files in validationPlot.expRes.globalInfo.jsonFiles.items():
                 num_cr += len(files)
+        elif hasattr ( validationPlot.expRes.globalInfo, "mlModels" ): 
+            ver = "ONNX"    #how to differentiate between simplified and full?
+            for js,files in validationPlot.expRes.globalInfo.mlModels.items():
+                num_cr += len(files)
+
         if hasattr ( validationPlot.expRes.globalInfo, "covariance" ): ver = "(SLv1)"   #SLv1 vs SLv2
     
     if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):

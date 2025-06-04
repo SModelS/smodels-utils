@@ -334,7 +334,7 @@ def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
                 if dicts:
                     ret[txn]={}
             if dicts:
-                ret[txn][cname]= points
+                ret[txn][name]= points
             else:
                 ret[txn].append( { "points": points, "name": name } )
         return ret
