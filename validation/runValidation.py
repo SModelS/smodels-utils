@@ -799,6 +799,7 @@ if __name__ == "__main__":
                 "databasepath": "../../smodels-database", ## smodels database
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
+                "minmassgapISR": 1.0, ## the min mass gap for ISR in SModelS
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
                 "useTevatronCLsConstruction": False, ## use tevatron CLs construction
                 "asimovIsExpected": False, ## asimov data is expected data (for comparison pyhf <-> nn)
