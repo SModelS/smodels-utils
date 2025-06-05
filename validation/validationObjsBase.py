@@ -592,12 +592,15 @@ class ValidationObjsBase():
                 f.write ( "reportAllSRs = True\n" )
             sigmacut = 0.000000001
             minmassgap = 2.0
+            minmassgapISR = 1.0
             maxcond = 1.0
             promptWidth=1.1
             if "sigmacut" in self.options:
                 sigmacut = self.options["sigmacut"]
             if "minmassgap" in self.options:
                 minmassgap = self.options["minmassgap"]
+            if "minmassgapISR" in self.options:
+                minmassgapISR = self.options["minmassgapISR"]
             if "maxcond" in self.options:
                 maxcond = self.options["maxcond"]
             if "promptWidth" in self.options:
@@ -617,7 +620,8 @@ class ValidationObjsBase():
                 f.write ( f"tevatroncls = {useTevatron}\n" )
             if asimovIsExpected:
                 f.write ( f"asimovisexpected = {asimovIsExpected}\n" )
-            f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
+            f.write(f"[parameters]\nsigmacut = {sigmacut}\nminmassgap = {minmassgap}\n")
+            f.write(f"minmassgapISR = {minmassgapISR}\nmaxcond = {maxcond}\nncpus = {self.ncpus}\n" )
             f.write(f"[database]\npath = {self.databasePath}\nanalyses = {expId}\ntxnames = {txname}\ndataselector = {dataselector}\n" )
             f.write(f"[printer]\noutputFormat = version{outputformat}\noutputType = python\n")
             f.write(f"[particles]\n")
