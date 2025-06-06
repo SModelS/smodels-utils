@@ -87,7 +87,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     yrange = getAxisRange ( options, "yaxis" )
     tgr, etgr, tgrchi2 = [], [], []
     kfactor=None
-    xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"$r = \sigma_{signal}/\sigma_{UL}$"
+    xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]', r"$r = \sigma_{signal}/\sigma_{UL}$"
     logY = yIsLog ( validationPlot )
 
     if not validationPlot.data:
@@ -167,7 +167,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 x,y = xvals['x'],r
                 if logY:
                     y = np.log10 ( y )
-                ylabel = "r = $\sigma_{signal}/\sigma_{UL}$"
+                ylabel = r"r = $\sigma_{signal}/\sigma_{UL}$"
             else:
                 x = xvals["x"]
                 if "y" in xvals:
@@ -393,7 +393,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         x_cs, y_cs = [], []
         x_ecs, y_ecs = [],[]
 
-        if len(cs.collections)>0:
+        if hasattr ( cs, "collections" ) and len(cs.collections)>0:
             paths_cs = cs.collections[0].get_paths()  #collections[0] refers to the 1st level
             if len ( paths_cs ) > 0:
                 for paths in paths_cs:
@@ -407,7 +407,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                             transform = fig.transFigure, linestyle="dotted" )
             #convert contour to a list of x,y values
-            if len (cs.collections)>0:
+            if hasattr ( cs, "collections" ) and len(cs.collections)>0:
                 paths_ecs = cs.collections[0].get_paths()
                 if len(paths_ecs)>0:
                     for paths in paths_ecs:
