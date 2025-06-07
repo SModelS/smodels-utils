@@ -365,7 +365,7 @@ class ValidationObjsBase():
         :param outputformat: define if the output is v2 or v3
         :returns: list of slha files that we ran over (is this true?)
         """
-
+        import os
         self.getSLHAdir()  #Path to the folder containing the SLHA files
         logger.debug( f"SLHA files for validation at {self.currentSLHADir}" )
 
@@ -393,7 +393,6 @@ class ValidationObjsBase():
         else:
             self.data = []
 
-        import os
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
         if os.path.exists ( outputDir ):
