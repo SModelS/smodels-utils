@@ -17,7 +17,7 @@ from smodels_utils.helper.terminalcolors import *
 def removeAnaIdSuffices ( anaId : str ) -> str:
     """ given  analysis id <anaId>, remove all kinds of suffices """
     for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
-               "-hino", "-wino" ]:
+               "-hino", "-wino", "-incl", "-trim" ]:
         anaId = anaId.replace(i,"")
     return anaId
 

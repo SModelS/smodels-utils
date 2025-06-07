@@ -193,7 +193,7 @@ class Lister:
         self.f.write ( "<a name='A4'>(4)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         if self.includeFastlim:
             self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
-        self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
+        self.f.write ( f"\nThis page was created {time.asctime()}.\n" )
         self.f.close()
 
     def listTables ( self ):
@@ -255,7 +255,7 @@ class Lister:
                         flim = f" (of which {nfastlim} FastLim)"
                         aflim = f" (of which {a_fastlim} FastLim)"
                     if nres_hscp>0:
-                        llp=" (of which %d LLP)" % nres_hscp
+                        llp= f" (of which {nres_hscp} LLP)"
                     mapsCountS = ""
                     if "efficiency" in tpe:
                         mapsCountS = f", {nMaps} individual maps"
@@ -298,7 +298,7 @@ class Lister:
         self.f.write ( f"## {experiment}, {sqrts} TeV ({nr} analyses)\n\n" )
         lengths = []
         for i in self.fields ( ):
-            # f.write ( "||<#EEEEEE:> '''%s'''" % i )
+            # f.write ( f"||<#EEEEEE:> '''{i}'''" )
             self.f.write ( f"| **{i}** " )
             # lengths.append ( len(i)+2 ) # for mdcat
             lengths.append ( len(i)+6 ) # ideal for direct viewing
@@ -447,7 +447,7 @@ class Lister:
         Id = removeAnaIdSuffices ( Id )
         self.f.write ( f'| [{Id}]({url})<a name="{Id}"></a>' )
         if not hasattr ( ana.globalInfo, "prettyName" ):
-            print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
+            print ( f"Analysis {ana.globalInfo.id} has no pretty name defined." )
             print ( "Please add a pretty name and repeat." )
             sys.exit()
         short_desc = self.convert ( ana.globalInfo.prettyName )
@@ -488,7 +488,7 @@ class Lister:
         statsfile = "analyses.py"
         print ( f"[listOfAnalyses] Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
-        f.write ( "# superseded: %d\n" % self.includeSuperseded )
+        f.write ( f"# superseded: {self.includeSuperseded}\n" )
         f.write ( "A=" + str ( self.stats )+"\n" )
         f.close()
 
@@ -531,16 +531,16 @@ class Lister:
     def backup( self ):
         if not os.path.exists ( self.filename ):
             return
-        o = C.getoutput ( "cp %s Old%s" % ( self.filename, self.filename ) )
+        o = C.getoutput ( f"cp {self.filename} Old{self.filename}" )
         if len(o):
-            print ( "backup: %s" % o )
+            print ( f"backup: {o}" )
 
     def diff( self ):
-        o = C.getoutput ( "diff %s Old%s" % ( self.filename, self.filename ) )
+        o = C.getoutput ( f"diff {self.filename} Old{self.filename}" )
         if len(o)==0:
-            print ( "No changes in %s since last call." % self.filename )
+            print ( f"No changes in {self.filename} since last call." )
             return
-        print ( "[listOfAnalyses] %s has changed (%d changes)" % ( self.filename, len(o.split() ) ) )
+        print ( f"[listOfAnalyses] {self.filename} has changed ({len(o.split())} changes)" )
 
     def createSuperseded ( self ):
         """ create the database of superseded results """
@@ -615,7 +615,7 @@ class Lister:
         for sqrts in [ 13, 8 ]:
             for experiment in experiments:
                 self.writeExperiment ( experiment, sqrts )
-        print ( "[listOfAnalyses] %d home-grown now" % self.n_homegrown )
+        print ( f"[listOfAnalyses] {self.n_homegrown} home-grown now" )
         self.footer ( )
         self.diff()
         if not args.no_pngs:
