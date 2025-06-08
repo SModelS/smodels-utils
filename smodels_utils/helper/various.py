@@ -57,11 +57,14 @@ def getCollaboration ( anaid : Union[Text,Dict] ) -> str:
             collaboration = "CMS"
     return collaboration
 
-def getSqrts ( Id : str ) -> str:
-    """ given analysis id <Id>, determine sqrts """
-    if Id.startswith ( "CMS-EXO-16-057" ): # an exceptional case
+def getSqrts ( anaId : str ) -> Union[int,float]:
+    """ given analysis id <anaId>, determine sqrts
+    :param anaId: e.g. 'CMS-SUS-20-004'
+    :returns: e.g. 13 or 13.6
+    """
+    if anaId.startswith ( "CMS-EXO-16-057" ): # an exceptional case
         return 8
-    year = Id.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
+    year = anaId.replace("ATLAS-","").replace("CMS-","").replace("SUSY-","")
     year = year.replace("EXOT-","")
     year = year.replace("EXO-","").replace("SUS-","").replace("PAS-","")
     year = year.replace("CONF-","").replace("CERN-EP-","")

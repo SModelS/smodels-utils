@@ -223,6 +223,8 @@ class Lister:
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
                     aids = set ( [ removeAnaIdSuffices ( x.globalInfo.id ) for x in a ] )
+                    if tpe == "efficiency maps" and False:
+                        print ( f"{exp}{sqrts}={list(aids)}" )
                     a_fastlim = 0
                     nres = 0
                     nres_hscp = set()
