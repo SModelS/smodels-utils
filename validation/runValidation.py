@@ -13,6 +13,7 @@ from smodels_utils.helper.terminalcolors import *
 import argparse,time
 from sympy import var
 from validationHelpers import getAxisType, compareTwoAxes, translateAxisV2
+from typing import Union
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -329,7 +330,7 @@ def runForOneResult ( expRes, options : dict,
         txnamesStr.append(tx.txName)
 
     if not txnames:
-        logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
+        logger.warning( f"No valid txnames found for {expRes} (not assigned constraints?)" )
         return
     pretty = str(options["prettyPlots"]).lower()
     if pretty in [ "false", "no", "0" ]:
@@ -550,8 +551,8 @@ def run ( expResList : list, options : dict,
         runForOneResult ( expRes, options, keep, db )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-         options : dict, tarfiles=None,verbosity='error', combine=False, force_load = None,
-         keep = False ):
+         options : dict, tarfiles=None,verbosity : str ='error',
+         combine : bool =False, force_load : Union[str,None]= None, keep : bool = False ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -571,6 +572,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
            binary database ("pcl"), dont force anything if None
     :param keep: keep temporary directories
     """
+    databasePath = os.path.expanduser ( databasePath )
 
     if not os.path.isdir(databasePath):
         logger.error(f'{databasePath} is not a folder')
@@ -652,7 +654,7 @@ def doGenerate ( parser ):
         if generateData.lower() in [ "false", "no" ]:
             return False
         if not generateData in [ None, True, False ]:
-            logger.error ( "generateData value %s is not understood. Set to 'ondemand'." % generateData )
+            logger.error ( f"generateData value {generateData} is not understood. Set to 'ondemand'." )
             return None
     logger.info ( "generateData is not defined in ini file. Set to 'ondemand'." )
     return None
@@ -675,10 +677,10 @@ if __name__ == "__main__":
     args = ap.parse_args()
 
     if not os.path.isfile(args.parfile):
-        logger.error("Parameters file ''%s'' not found" %args.parfile)
+        logger.error( f"Parameters file ''{args.parfile}'' not found" )
         sys.exit(-1)
     else:
-        logger.info("Reading validation parameters from %s" %args.parfile)
+        logger.info( f"Reading validation parameters from {args.parfile}" )
 
     parser = None
     try:
@@ -688,8 +690,8 @@ if __name__ == "__main__":
     parser.read(args.parfile)
 
     #Add smodels and smodels-utils to path
-    smodelsPath = parser.get("path", "smodelsPath")
-    utilsPath = parser.get("path", "utilsPath")
+    smodelsPath = parser.get("path", "smodelsPath", fallback = "../../smodels" )
+    utilsPath = parser.get("path", "utilsPath", fallback = "../../smodels-utils" )
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
 
@@ -847,7 +849,7 @@ if __name__ == "__main__":
             if spretty in [ "dictonly" ]:
                 options["prettyPlots"] = "dictonly"
             if options["prettyPlots"] == False and spretty not in [ "false", "0", "no", "dictonly" ]:
-                logger.error ( "prettyPlots %s unknown" % spretty )
+                logger.error ( f"prettyPlots {spretty} unknown" )
                 sys.exit()
 
         if parser.has_option("options","legendplacement"):
