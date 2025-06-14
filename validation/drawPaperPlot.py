@@ -418,9 +418,12 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         massg = '$ m_{\\tilde{\\chi}_1^0} = 0.0 $'
     
     if '2018-31' in analysis:
-        if '130' in axis_label[2]: massg = '$ m_{\\tilde{\\chi}_1^0} = m_{\\tilde{\\chi}_2^0} - ' + axis_label[2].split('-')[1]
+        if '130' in axis_label[2]: massg = '$m_{\\tilde{\\chi}_1^0} = m_{\\tilde{\\chi}_2^0}$ - ' + axis_label[2].split('-')[1]
         elif '60' in axis_label[2]: massg = '$m_{\\tilde{\\chi}_1^0}$ = 60'
         else: massg = '$m_{\\tilde{\\chi}_1^0}$ = ' + axis_label[2].split('=')[1]
+    if massg.count("$") % 2 == 1:
+        print ( f"[drawPaperPlot] something is wrong with the math modes in {massg}" )
+        import sys; sys.exit(-1)
 
     if '2018-13' in analysis:
         if 'TRPV1' in txname:
