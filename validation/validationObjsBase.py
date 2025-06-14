@@ -815,7 +815,7 @@ class ValidationObjsBase():
         if hasattr ( self.expRes.globalInfo, "resultType" ):
             meta["resultType"]=self.expRes.globalInfo.resultType
         from smodels.base import runtime
-        if "spey" in runtime._experimental and \
+        if type(runtime._experimental)==dict and "spey" in runtime._experimental and \
                 runtime._experimental["spey"]==True:
             if self.expRes.datasets[0].dataInfo.dataId != None:
                 import spey
@@ -840,8 +840,8 @@ class ValidationObjsBase():
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         useTevatronCLs = False
         asimovIsExpected = False
-        from smodels.base.runtime import experimentalFeature
         try:
+            from smodels.base.runtime import experimentalFeature
             useTevatronCLs = experimentalFeature ( "tevatroncls" )
             asimovIsExpected = experimentalFeature ( "asimovisexpected" )
         except Exception as e:
