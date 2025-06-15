@@ -6,7 +6,7 @@ import os, random
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array
-import json
+import json, tokenize, sys
 import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -31,7 +31,8 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
     excl_lines = {}
     
     if type == "official":
-        file = open(f"{anaDir}/exclusion_lines.json")
+        fname = f"{anaDir}/exclusion_lines.json"
+        file = open( fname )
         excl_file = json.load(file)
         axes = axes.replace(" ", "")
         import sympy
@@ -53,7 +54,11 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
                         sv = parse_expr ( v )
                         isInTokens = False
                         for t in tokens:
-                            st = parse_expr ( t )
+                            try:
+                                st = parse_expr ( t )
+                            except tokenize.TokenError as e:
+                                print ( f"[drawPaperPlot] token error '{e}': '{t}' in {fname}" )
+                                sys.exit(-1)
                             if st == sv:
                                 isInTokens = True
                                 break
