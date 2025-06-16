@@ -602,6 +602,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     except Exception as e:
         logger.error( f"Error loading database at {databasePath}" )
         logger.error( f"Error: {type(e)}, {str(e)}" )
+        import traceback
+        print ( traceback.format_exc() )
         sys.exit()
 
     logger.info('-- Running validation...')
