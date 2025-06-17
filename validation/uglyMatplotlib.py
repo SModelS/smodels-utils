@@ -162,7 +162,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     for ctr,coords in enumerate(origdata):
         #masses = removeUnits ( pt[0], standardUnits=GeV )
         #coords = massPlane.getXYValues(masses)
-        if coords != None and "y" in coords:
+        if coords != None and "y" in coords and coords["y"] != None:
             if logY and coords["y"]>1e-8:
                 coords["y"]=math.exp(-coords["y"])
             if xrange != None and not ( xrange[0] < coords["x"] < xrange[1] ):
