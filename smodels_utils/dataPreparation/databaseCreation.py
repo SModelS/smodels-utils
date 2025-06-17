@@ -268,7 +268,7 @@ class DatabaseCreator(list):
 
             if len(updatedDatasets) != len(self):
                 logger.error( f"Error, when creating datasets: some children didnt terminate within the timeout." )
-                logger.error ( f"I see {len(updateDataset)} out of {len(self)} children have terminated." )
+                logger.error ( f"I see {len(updatedDatasets)} out of {len(self)} children have terminated." )
                 sys.exit()
 
         for dataset in updatedDatasets:
