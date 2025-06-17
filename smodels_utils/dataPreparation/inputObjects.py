@@ -1271,7 +1271,11 @@ class TxNameInput(Locker):
                 for ext in  [ "+", "-", "" ]:
                     el = el.replace( f"[{m}{ext}",f"['{m}{ext}'" )
                     el = el.replace( f",{m}{ext}",f",'{m}{ext}'" )
-            particles = eval(el)
+            try:
+                particles = eval(el)
+            except SyntaxError as e:
+                print ( f"[inputObjects] syntax error {e} for {self.constraint}" )
+                import sys; sys.exit(-1)
             #Compute minimum mass difference (sum over SM final state masses)
             elConstraint = []
             for branch in particles:
