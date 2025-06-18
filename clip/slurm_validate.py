@@ -297,9 +297,21 @@ def logCall ():
     f.close()
 
 def clean():
+    """ clean out the temporary files """
     files = glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
     files += glob.glob ( f"{codedir}/smodels-utils/clip/temp/_V*" )
     files += glob.glob ( f"{outputsdir}/validate*out" )
+    for f in files:
+        if os.path.exists ( f ):
+            print ( f"[slurm_validate] removing {f}" )
+            if os.path.isdir ( f ):
+                shutil.rmtree ( f, ignore_errors=True )
+            else:
+                os.unlink ( f )
+def clean_more():
+    """ be even more thorough when cleaning """
+    files = glob.glob ( f"{os.environ['OUTPUTS']}/_V" )
+    files += glob.glob ( f"{codedir}/smodels-utils/validation/_V*" )
     for f in files:
         if os.path.exists ( f ):
             print ( f"[slurm_validate] removing {f}" )
@@ -314,6 +326,8 @@ def main():
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
     argparser.add_argument ( '-c','--clean', help='clean out all temp files',
+                             action="store_true" )
+    argparser.add_argument ( '-C','--clean_all', help='be thorough when cleaning',
                              action="store_true" )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered [None]',
                         type=str, default=None )
@@ -358,6 +372,10 @@ def main():
     args=argparser.parse_args()
     if args.clean:
         clean()
+        sys.exit()
+    if args.clean_all:
+        clean()
+        clean_more()
         sys.exit()
     if args.query:
         queryStats ( )

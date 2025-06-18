@@ -390,8 +390,8 @@ class ValidationPlot( ValidationObjsBase ):
                     eff = txname.txnameData.getValueFor(massGeV)
                     if eff != None:
                         Dict['efficiency'] = round ( eff, 8 )
-                except SModelSError as e:
-                    logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                except (SModelSError,ValueError) as e:
+                    logger.error ( f"could not handle {slhafile}: {e} ({type(e)}) massGeV={massGeV}" )
                     Dict=None
         logger.debug('expres keys : {}'.format(expRes.keys()))
         if 'best combination' in expRes.keys():
