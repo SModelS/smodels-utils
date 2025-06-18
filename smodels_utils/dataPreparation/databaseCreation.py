@@ -706,6 +706,9 @@ class DatabaseCreator(list):
         for jsonFileName, SRs in value.items():
             ret += f"  '{jsonFileName}': [\n"
             for SR in SRs:
+                if type(SR)==str: 
+                    SR = f"'{SR}'"
+                    newline = ""
                 ret += f"    {str(SR)},\n"
             ret = ret[:-2]+"],\n"
         ret = ret[:-2]+ "\n  }"
