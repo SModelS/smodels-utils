@@ -47,7 +47,7 @@ errormsgs = {}
 # if on, will check for overlapping constraints
 _complainAboutOverlappingConstraints = False
 
-complainAbout = { "sympy obj": 0, "x in datamap": 0 }
+complainAbout = { "sympy obj": 0, "x in datamap": 0, "axesMap": 0 }
 
 def elementsInStr(instring : str,removeQuotes : bool = True) -> list: ## from V2
     """
@@ -848,7 +848,15 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
-        self.addAxesMap ( plane )
+        if type(plane)==list:
+            complainAbout["axesMap"]+=1
+            if complainAbout["axesMap"]<3:
+               logger.error ( f"skipping adding axesMap, hope it is ok, else fix in inputObjects!" )
+            if complainAbout["axesMap"]==3:
+               logger.error ( f"... " )
+
+        else:
+            self.addAxesMap ( plane )
         if isinstance(plane,MassPlane):
             self._planes.append(plane)
             return plane
