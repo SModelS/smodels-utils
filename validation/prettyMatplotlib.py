@@ -428,7 +428,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         x_ecs, y_ecs = [],[]
         x_cs, y_cs = retrievePoints ( cs )
 
-        if options["drawExpected"] in [ "auto", True ]:
+        if options["drawExpected"] in [ "auto", True ] and not np.all ( np.isnan(eT) ):
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
