@@ -147,7 +147,7 @@ def significanceFromNLLs ( nll_SM : float, nll_BSM : float, ndf : int = 2)->floa
         Z = -3.
     return Z
 
-def prettyAxesV3 ( axesStr : str ) -> bool:
+def prettyAxesV3 ( axesStr : str ) -> str:
     """ make an axes v3 description readable
 
     :param axesStr: e.g. {0:'x',1:'0.5*x+0.5*y',2:'y',3:'x',4:'0.5*x+0.5*y',5:'y'}

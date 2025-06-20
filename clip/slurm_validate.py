@@ -312,7 +312,7 @@ def clean():
                 os.unlink ( f )
 def clean_more():
     """ be even more thorough when cleaning """
-    files = glob.glob ( f"{os.environ['OUTPUTS']}/_V" )
+    files = glob.glob ( f"{os.environ['OUTPUTS']}/_V*" )
     files += glob.glob ( f"{codedir}/smodels-utils/validation/_V*" )
     for f in files:
         if os.path.exists ( f ):
