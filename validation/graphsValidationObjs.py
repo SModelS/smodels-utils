@@ -242,7 +242,8 @@ class ValidationPlot( ValidationObjsBase ):
             ## still get the masses from the slhafile name
             axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
             ## log also the errors in the py file
-            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
+            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes,
+                     'comment': 'no ExptRes in smodelsOutput' }
             self.data.append ( Dict )
             return 1
         dt = None
@@ -574,8 +575,8 @@ class ValidationPlot( ValidationObjsBase ):
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
-                D = { "slhafile": slhafile, "error": "no result here",
-                      "axes": axes }
+                D = { "slhafile": slhafile, "error": "no results here",
+                      "axes": axes, "comment": "No ExptRes in smodelsOutput" }
                 self.data.append ( D )
                 continue
             dt = None
@@ -627,8 +628,8 @@ class ValidationPlot( ValidationObjsBase ):
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
-                D = { "slhafile": slhafile, "error": "masses are None",
-                      "axes": axes }
+                D = { "slhafile": slhafile, "error": "no results here",
+                      "axes": axes, "comment": "masses are None" }
                 self.data.append ( D )
                 continue
             parameters = self.constructParameterVector ( masses, widths, nodesMap )

@@ -325,7 +325,8 @@ class ValidationPlot( ValidationObjsBase ):
             ## still get the masses from the slhafile name
             axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
             ## log also the errors in the py file
-            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
+            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes,
+                     'comment': 'no ExptRes in smodelsOutput' }
             self.data.append ( Dict )
             return 1
         dt = None

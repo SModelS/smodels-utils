@@ -192,6 +192,8 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@GENERATEDATA@@", generatedata )
             newline = newline.replace("@@DATASELECTOR@@", dataselector )
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
+            if args["model"] in [ "omit" ] and "@@MODEL@@" in newline:
+                newline = "" ## omit model line altogether
             newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
@@ -338,7 +340,7 @@ def main():
             help='number of processes to run [10]',
             type=int, default=10 )
     argparser.add_argument ( '-m', '--model', nargs='?',
-            help='model to use [default]',
+            help='model to use (mssm,nmssm,idm,zprime.slha,omit) [default]',
             type=str, default="default" )
     argparser.add_argument ( '-g', '--generate_data', nargs='?',
             help='generateData [False,True,ondemand]. In combination with --repeat we switch to ondemand after the first [ondemand]',
