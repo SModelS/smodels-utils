@@ -182,13 +182,19 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
-        plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
+        try:
+            plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
+        except ValueError as e:
+            print ( f"[uglyMatplotlib] ValueError: {e}" )
         label = "official exclusion"
         linestyle = "-"
         if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
             label = ""
             linestyle = "dotted"
-        plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
+        try:
+            plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
+        except ValueError as e:
+            print ( f"[uglyMatplotlib] ValueError: {e}" )
     ax = plt.gca()
     if logY:
         ax.set_yscale('log')
