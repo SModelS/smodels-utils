@@ -198,12 +198,16 @@ class ValidationPlot( ValidationObjsBase ):
         addedpoints = len(self.data)
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
+            self.meta["runs"]=f"{len(self.data)}"
+            """ # we had this behavior before: report all runs, concatenated with a '+' sign.
+            # seems too contrived now. WW
             if not "runs" in self.meta:
                 self.meta["runs"]=f"{len(self.data)}"
             else:
                 prev = eval ( self.meta["runs"] )
                 addedpoints = len(self.data)-prev
                 self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
+            """
         # self.data = content["data"]
         ndata = 0
         if self.data != None:
