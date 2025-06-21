@@ -162,9 +162,9 @@ class ValidationPlot( ValidationObjsBase ):
         datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
             if self.options["generateData"] == False:
-                logger.error("Validation datafile %s not found" %datafile)
+                logger.error( f"Validation datafile {datafile} not found" )
             else:
-                logger.info("Validation datafile %s not found" %datafile)
+                logger.info( f"Validation datafile {datafile} not found" )
             if overwrite:
                 self.data = []
             return
@@ -300,9 +300,8 @@ class ValidationPlot( ValidationObjsBase ):
             import inspect
             frame = inspect.currentframe()
             line = frame.f_lineno
-            #print ( "roundmass is not given in validationObjs.py:%s" % line )
-            #print ( "we try to extract the info from the slha file name %s" % \
-            #        slhafile )
+            #print ( f"roundmass is not given in validationObjs.py:{line}" )
+            #print ( f"we try to extract the info from the slha file name {slhafile}" )
             roundmass = self.getMassesFromSLHAFileName ( slhafile )
         # print ( "after", slhafile, roundmass )
         mass = [br[:] for br in roundmass]
@@ -550,8 +549,7 @@ class ValidationPlot( ValidationObjsBase ):
                 if ct_nooutput>4:
                     ## suppress subsequently same error messages
                     continue
-                logger.error("No SModelS output found for %s (should be %s)" % \
-                              ( slhafile, fout ) )
+                logger.error( f"No SModelS output found for {slhafile} (should be {fout})" )
                 ct_nooutput+=1
                 if ct_nooutput==5:
                     logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
@@ -580,7 +578,7 @@ class ValidationPlot( ValidationObjsBase ):
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
                 D = { "slhafile": slhafile, "error": "no results here",
-                      "axes": axes, "comment": "No ExptRes in smodelsOutput" }
+                      "axes": axes, "comment": "no ExptRes in smodelsOutput" }
                 self.data.append ( D )
                 continue
             dt = None
