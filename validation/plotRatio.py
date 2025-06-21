@@ -521,7 +521,7 @@ def draw ( options : dict ):
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
-    figname = f'{analysis.replace( options["folder1"],"ratio" )}_{topo}.png' )
+    figname = f'{analysis.replace( options["folder1"],"ratio" )}_{topo}.png'
     output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
