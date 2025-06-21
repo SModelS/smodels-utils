@@ -192,7 +192,7 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@GENERATEDATA@@", generatedata )
             newline = newline.replace("@@DATASELECTOR@@", dataselector )
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
-            if args["model"] in [ "omit" ] and "@@MODEL@@" in newline:
+            if args["model"] in [ "omit", "default" ] and "@@MODEL@@" in newline:
                 newline = "" ## omit model line altogether
             newline = newline.replace("@@MODEL@@", args["model"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )

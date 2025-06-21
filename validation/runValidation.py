@@ -200,7 +200,9 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana1 = ana1[p2+1:]
     valfile1 = os.path.basename ( datafile )
     ana2 = anaId # expRes.globalInfo.id
-    output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{axis}.png"
+    saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
+    saxes = saxes.replace('130.0','130').replace('0.0','0')
+    output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{saxes}.png"
     options = { "show": opts["show"], "output": output }
     ana2origtest = os.path.dirname ( datafile ) + f"../../../{ana2}-orig"
     ana2origtest = os.path.abspath ( ana2origtest )
