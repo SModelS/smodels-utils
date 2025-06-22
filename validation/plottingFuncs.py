@@ -286,6 +286,8 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
     """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
     subtitle = f"best of {len(validationPlot.expRes.datasets)} SRs: "
+    if len(validationPlot.expRes.datasets)==1:
+        subtitle = f"single SR: "
     if validationPlot.validationType == "tpredcomb":
         subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
 
