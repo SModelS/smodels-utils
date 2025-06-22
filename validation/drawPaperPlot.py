@@ -158,19 +158,21 @@ def drawOffshell(excl_lines, excl_off, min_off_y = 0.0, official=False):
         if excl_off[type]["y"][-1] < excl_off[type]["y"][0]:# and official:
             print("[drawPaperPlot] yes ")
             index = [i for i,y  in enumerate(excl_off[type]["y"]) if y>excl_off[type]["y"][0]+50]
-            excl_off[type]["x"] = excl_off[type]["x"][:index[-1]]
-            excl_off[type]["y"] = excl_off[type]["y"][:index[-1]]
+            if len(index)>0:
+                excl_off[type]["x"] = excl_off[type]["x"][:index[-1]]
+                excl_off[type]["y"] = excl_off[type]["y"][:index[-1]]
         
-        if excl["x"][0] > excl["x"][-1]:
+        if len(excl["x"])>0 and excl["x"][0] > excl["x"][-1]:
             print("[drawPaperPlot] on reverse")
             excl["x"].reverse()
             excl["y"].reverse()
         
-        if excl_off[type]["x"][-1] > excl["x"][0]:
+        if len(excl_off[type]["x"])>0 and len(excl["x"])>0 and excl_off[type]["x"][-1] > excl["x"][0]:
             index = [i for i,x  in enumerate(excl["x"]) if x>excl_off[type]["x"][-1]+20]
             print("[drawPaperPlot] cut off ", excl["x"][index[0]])
-            excl["x"] = excl["x"][index[0]:]
-            excl["y"] = excl["y"][index[0]:]
+            if len(index)>0:
+                excl["x"] = excl["x"][index[0]:]
+                excl["y"] = excl["y"][index[0]:]
         
         
         excl["x"] = excl_off[type]["x"] + excl["x"]
