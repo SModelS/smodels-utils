@@ -336,7 +336,7 @@ class ValidationObjsBase():
                     ys.append ( yvalue )
         if len(ys)>0:
             deltay = max(ys)-min(ys)
-            if deltay < 1e-14:
+            if deltay < 1e-17:
                logger.warn ( f"the range in y values {deltay} is quite small. let me make it a 1d plot!" )
                return True
         return False
