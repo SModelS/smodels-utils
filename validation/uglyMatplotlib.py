@@ -169,8 +169,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                 continue
             if yrange != None and not ( yrange[0] < coords["y"] < yrange[1] ):
                 continue
-            gridpoints.append( { "i": len(gridpoints), "x": coords["x"],
-                                 "y": coords["y"] } )
+            pt = { "i": len(gridpoints), "x": coords["x"], "y": coords["y"] }
+            gridpoints.append( pt )
 
     if countPts == 0:
         logger.warning ( "no good points??" )
