@@ -14,6 +14,7 @@ from array import array
 import math
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
+from smodels.experiment import expAuxiliaryFuncs
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
@@ -164,7 +165,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         #coords = massPlane.getXYValues(masses)
         if coords != None and "y" in coords and coords["y"] != None:
             if logY and coords["y"]>1e-8:
-                coords["y"]=math.exp(-coords["y"])
+                # coords["y"]=math.exp(-coords["y"]) * 10**(-3)
+                coords["y"]=expAuxiliaryFuncs.unscaleWidth ( coords["y"] )
             if xrange != None and not ( xrange[0] < coords["x"] < xrange[1] ):
                 continue
             if yrange != None and not ( yrange[0] < coords["y"] < yrange[1] ):
