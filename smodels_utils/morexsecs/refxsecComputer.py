@@ -584,7 +584,6 @@ class RefXSecComputer:
         isEWK=False
         comment = ""
         # comment="refxsec [pb]"
-        print ( "[refxsecComputer.getXSecsFor] @@1 pids", pid1, pid2 )
         if pid1 in [ 35 ] and pid2 == None:
             filename = f"xsecScalar{sqrts}.txt"
             columns["xsec"]=1
