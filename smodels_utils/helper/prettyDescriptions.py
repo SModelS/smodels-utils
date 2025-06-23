@@ -650,11 +650,9 @@ def prettyProduction(txname,latex=True,protons=True):
     if not txname in motherDict:
         logging.error( f"Txname {txname} not found in motherDict" )
         return None
-    #print ( f"@@A prettyProduction txname {txname} latex {latex}" )
 
     prodString = motherDict[txname].lstrip().rstrip().split()
     #Check if a single mother was given. If so, duplicate it
-    #print ( f"@@A prodString {prodString}" )
     prodString = " ".join ( prodString )
     """
     if len(prodString) == 1:
@@ -671,7 +669,6 @@ def prettyProduction(txname,latex=True,protons=True):
         prodString = "pp --> "+prodString
     if latex:
         prodString = latexfy(prodString)
-    # print ( f"@@A finally {prodString}" )
     return prodString.lstrip().rstrip()
 
 def prettyDecay(txname,latex=True):
@@ -946,6 +943,9 @@ def prettyAxesV3( txn : str, axes : str ) -> str:
     #                         1: (3, 'mass', 1.00E+00 [GeV]),
     #                         2: (3, 'totalwidth', 1.00E+00 [GeV]),
     axisMap = eval ( axes )
+    for k,v in axisMap.items():
+        if v.endswith ( ".0" ):
+            axisMap[k]=v[:-2]
 
     def compressSQuarks ( pid : Union[int,Set] ):
         """ compress all squarks, i am only interested in ~q """
@@ -991,8 +991,12 @@ def prettyAxesV3( txn : str, axes : str ) -> str:
             vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
             for frm,to in vplacements.items():
                 v = str(v).replace(frm,to)
-            namesOnAxes[v]=f"m({name})"
+            value = f"m({name})"
+            if not "x" in v and not "y" in v:
+                v,value = value, v
+            namesOnAxes[v]=value
         wk = k - len(pids)
+    for wk,v in axisMap.items():
         if wk in wpids:
             name = wpids[wk]
             pid = compressSQuarks ( wpids[wk] )
@@ -1007,7 +1011,12 @@ def prettyAxesV3( txn : str, axes : str ) -> str:
             vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
             for frm,to in vplacements.items():
                 v = str(v).replace(frm,to)
-            namesOnAxes[v]=f"$\\Gamma$({name})"
+            value = f"$\\Gamma$({name})"
+            if not v in namesOnAxes:
+                namesOnAxes[v]=value
+            elif v == "x" and not "y" in namesOnAxes:
+                namesOnAxes["y"]=value
+
     terms = []
     for k,v in namesOnAxes.items():
         term = f"{k}={v}"
@@ -1021,8 +1030,6 @@ def prettyAxesV3( txn : str, axes : str ) -> str:
         #    ret += r"\\"
     if len(ret)>0:
         ret = ret[:-2]
-    # print ( f"@@9 returning {ret}" )
-    # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
     return ret
 
 def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
