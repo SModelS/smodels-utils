@@ -59,6 +59,9 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
         ipath = getPathName ( dbpath, analysis, validationfile )
         print ( f"[plotBestSRs] querying {ipath}" )
         smspath = getPathName ( dbpath, analysis, None )
+        if smspath == None:
+            print ( f"[plotBestSRs] got no sms path: returning" )
+            return
         p1 = validationfile.find("_")
         topo = validationfile[:p1]
         txnames.append ( topo )
@@ -241,6 +244,9 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     """
     plt.clf()
     content = fetchContent ( validationfiles, dbpath, analysis )
+    if content is None:
+        print ( f"[plotBestSRs] got no content: returning" )
+        return None
     xr = None
     if max_x == None:
         xr = getAxisRange ( content["options"], "xaxis" )
