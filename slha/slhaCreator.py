@@ -574,7 +574,7 @@ if __name__ == "__main__":
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
     argparser.add_argument('-o', '--overwrite', action='store_true',
-        help="overwrite existing tarball")
+        help="overwrite existing tarball, default is to append")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
         help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'.")
     argparser.add_argument('-A', '--add_pids', type=str, default=None,
