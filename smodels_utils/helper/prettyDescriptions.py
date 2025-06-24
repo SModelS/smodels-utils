@@ -94,7 +94,7 @@ highstrings = {
     '^mp' : '^{#mp}',
     '^p' : '^{+}',
     '^m' : '^{-}',
-    '^*' : '*',
+    '^*' : '^{*}',
 }
 
 lowstrings = {
@@ -537,7 +537,7 @@ motherDict = {"T1" :  "gluino gluino",
     "TChiWH4q" :  "neutralino_3 chargino^pm_2"    
 }
 
-def latexfy(instr):
+def latexfy(instr : str ) -> str:
     """
     Tries to convert the string to its latex form,
     using ROOT conventions
@@ -685,7 +685,7 @@ def prettyDecay(txname,latex=True):
     """
 
     if not txname in decayDict:
-        logging.error("Txname %s not found in decayDict" %txname)
+        logging.error( f"Txname {txname} not found in decayDict" )
         return None
     decayString = decayDict[txname]
     if latex:
