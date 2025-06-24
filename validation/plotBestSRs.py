@@ -108,11 +108,11 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
             err = point["error"]
             if "axes" in point and point["axes"] != None:
                 axes = convertNewAxes ( point["axes"] )
+                if axes == None:
+                    continue
                 if not isWithinValue ( axes[1], max_x ):
                     continue
                 if not isWithinValue ( axes[0], max_y ):
-                    continue
-                if axes == None:
                     continue
                 bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": None } )
             continue
