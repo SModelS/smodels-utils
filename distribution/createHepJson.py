@@ -90,8 +90,10 @@ class HepJsonCreator:
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
         self.f.write (f'  "version": "{ver}",\n' )
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        # now = datetime.now(timezone.utc)
+        now = datetime.now(ZoneInfo("Europe/Vienna"))
         timestamp = now.isoformat()
         self.f.write (f'  "date_created": "{timestamp}",\n' )
         self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
