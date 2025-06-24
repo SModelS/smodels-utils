@@ -578,6 +578,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     for a in axes: fig_axes_title += str(a) + '_'
     fig_axes_title = fig_axes_title.replace('x-y', 'y')
     fig_axes_title = fig_axes_title.replace('00', '0')
+    fig_axes_title = fig_axes_title.replace('.0', '')
     outfiles = []
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"
