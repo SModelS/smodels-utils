@@ -3,7 +3,7 @@
 """ simple script to create smodels-database.json that will be used
 to mark SModelS entries at hepdata """
 
-import os, sys, time
+import os, sys
 from typing import Union
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
          filterSupersededFromList
@@ -90,8 +90,11 @@ class HepJsonCreator:
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
         self.f.write (f'  "version": "{ver}",\n' )
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        timestamp = now.isoformat()
+        self.f.write (f'  "date_created": "{timestamp}",\n' )
         self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
-        self.f.write (f'  "created": "{time.asctime()}",\n' )
         self.f.write ( '  "link_types": [ "main_url", "val_url", "publication", "arXiv" ],\n' )
         self.f.write ( '  "url_templates": {\n' )
         self.f.write ( '    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{main_path}",\n' )
