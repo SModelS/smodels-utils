@@ -36,26 +36,28 @@ class ExclComparisonWriter:
 
     def header( self ):
         self.f.write (
-"""# Validation plots: comparison of best-SR vs SR combination
-A first draft of a page that collects all validation plots that show comparisons of statistical models:
+f"""# Validation plots: comparison of best-SR vs SR combination
+This page collects all validation plots that show comparisons of statistical models:
 best signal region only versus statistical models at varying degrees of complexity.
-The list has been created from the database version %s, considering also superseded results.
+The list has been created from the database version {self.database.databaseVersion}, considering also superseded results.
+Go to [ATLAS 13 TeV results](#ATLAS), [CMS 13 TeV results](#CMS).
+There are no 8 TeV results with statistical models.
 
-There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses%s), a [ListOfAnalyses%sWithSuperseded](https://smodels.github.io/docs/ListOfAnalyses%sWithSuperseded), and [Validation%s](Validation%s).
+There is also a [ListOfAnalyses{self.ver}](https://smodels.github.io/docs/ListOfAnalyses{self.ver}), 
+a [ListOfAnalyses{self.ver}WithSuperseded](https://smodels.github.io/docs/ListOfAnalyses{self.ver}WithSuperseded), and [Validation{self.ver}](Validation{self.ver}).
 
-""" % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver, self.ver, self.ver ) )
-        self.f.write ( f"\n## [ATLAS](#ATLAS) [CMS](#CMS)\n" )
+"""
+        # self.f.write ( f"\n## [ATLAS](#ATLAS) [CMS](#CMS)\n" )
 
     def footer( self ):
-        self.f.write ( "\n<font color='grey'>This page was created %s</font>\n" % \
-                       time.asctime() )
+        self.f.write ( f"\n<font color='grey'>This page was created {time.asctime()}</font>\n" )
         return
 
     def tableHeader ( self ):
         columns=[ "#", "Analysis ID", "TxName", "Plot" ]
         lengths=[]
         for header in columns:
-            #self.f.write ( "|<#EEEEEE:> **%s** " % header )
+            #self.f.write ( f"|<#EEEEEE:> **{header}** " )
             self.f.write ( f"| **{header}** " )
             lengths.append ( len(header)+4 )
         self.f.write ( "|\n" )
