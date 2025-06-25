@@ -46,7 +46,7 @@ There are no 8 TeV results with statistical models.
 There is also a [ListOfAnalyses{self.ver}](https://smodels.github.io/docs/ListOfAnalyses{self.ver}), 
 a [ListOfAnalyses{self.ver}WithSuperseded](https://smodels.github.io/docs/ListOfAnalyses{self.ver}WithSuperseded), and [Validation{self.ver}](Validation{self.ver}).
 
-"""
+""" )
         # self.f.write ( f"\n## [ATLAS](#ATLAS) [CMS](#CMS)\n" )
 
     def footer( self ):
