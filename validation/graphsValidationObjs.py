@@ -542,6 +542,8 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             if "coordinates" in slhafile:
                 continue
+            if "comment" in slhafile:
+                continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
             fout = os.path.join(self.outputDir,slhafile + '.py')
