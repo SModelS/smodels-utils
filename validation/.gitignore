@@ -1,3 +1,5 @@
 *.old
 *.log
 cache
+inifiles/1*ini
+inifiles/2*ini
