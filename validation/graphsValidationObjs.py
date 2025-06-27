@@ -594,7 +594,7 @@ class ValidationPlot( ValidationObjsBase ):
                 for eR in res:
                     if eR == None:
                         continue
-                    if "combined" in eR["DataSetID"]:
+                    if "DataSetID" in eR and eR["DataSetID"] != None and "combined" in eR["DataSetID"]:
                         logger.debug ( "found a combined result. will use it." )
                         found_combined=True
                         expRes = eR
@@ -617,10 +617,10 @@ class ValidationPlot( ValidationObjsBase ):
                 logger.error( f"Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
                 sys.exit(-1)
                 # return False
-            if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
+            if self.txName not in expRes['TxNames']: # [0] or len(expRes['TxNames']) != 1:
                 logger.error(f"Something went wrong. Obtained results for the wrong txname: {self.txName} != {expRes['TxNames']}")
-                sys.exit()
-                continue
+                # sys.exit()
+                # continue
                 # return False
 
             masses = expRes["Mass (GeV)"]
