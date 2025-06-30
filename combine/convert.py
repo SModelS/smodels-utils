@@ -19,10 +19,22 @@ class DatacardConverter:
         with open( datacard, 'r') as f:
             opts = type("opts", (object,), dict(bin=True, noJMax=False, stat=False, nuisancesToExclude=[], allowNoSignal=True, allowNoBackground=True))
             self.datacard = DatacardParser.parseCard(f, opts)
+            signalRegions = list ( self.datacard.obs.keys() )
+            signalRegions.sort()
+            self.signalRegions = signalRegions
 
 
     def writeObservations ( self ):
         self.fhandle.write ( '    "observations": [\n' )
+        for i,sr in enumerate(self.signalRegions):
+            value = int ( self.datacard.obs[sr] )
+            self.fhandle.write ( '        {\n' )
+            self.fhandle.write ( '            "data": [\n' )
+            self.fhandle.write ( f'                {value}\n' )
+            self.fhandle.write ( '            ],\n' )
+            self.fhandle.write ( f'            "name": "{sr}"\n' )
+            comma = "," if i+1 < len(self.datacard.obs) else ""
+            self.fhandle.write ( f'        }}{comma}\n' )
         self.fhandle.write ( '    ],\n' )
 
     def writeJsonFile ( self, outfile : os.PathLike ):
