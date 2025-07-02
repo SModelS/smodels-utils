@@ -16,7 +16,7 @@ class DatacardConverter:
         self.datacard = None
 
     def readCombineCard ( self, datacard : os.PathLike ):
-        print ( f"converting {datacard}" )
+        self.pprint ( f"converting {datacard}" )
         import DatacardParser
         with open( datacard, 'r') as f:
             opts = type("opts", (object,), dict(bin=True, noJMax=False, stat=False, nuisancesToExclude=[], 
