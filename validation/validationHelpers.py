@@ -45,7 +45,7 @@ def showPlot ( filename : str ) -> bool:
 
 def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
     """ determine whether a given axis is v2-type ([[x,y],[x,y]]) or v3-type
-    { 0: x, 1: y }. FIXME shouldnt be needed once we completed migrated to v3.
+    { 0: x, 1: y }. FIXME shouldnt be needed once we completed migration to v3.
     :returns: v2 or v3 or None
     """
     if type(axis)==str:
