@@ -23,6 +23,12 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
+import numpy
+if numpy.__version__[0]!="1":
+    print ( f"[publishDatabasePickle] numpy version is {numpy.__version__}. Downgrade to 1.26.4 for pickling:" )
+    print ( f"pip install numpy==1.26.4" )
+    sys.exit()
+
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
         if abs(num) < 1024.:
