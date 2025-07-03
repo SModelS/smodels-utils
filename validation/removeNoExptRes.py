@@ -32,15 +32,17 @@ def removeInDict ( dictfile : str ):
     d={}
     exec(f.read(),d)
     print ( d.keys() )
-    meta = d["meta"]
     oldData = d["validationData"]
     newData = []
-    for d in oldData:
-        if not "error" in d:
-            newData.append ( d )
+    for x in oldData:
+        if not "error" in x:
+            newData.append ( x )
     validationData = streamlineValidationData ( str ( newData ) )
     g=open("dict.py","wt")
     g.write( f"validationData = {validationData}\n" )
+    meta = d["meta"]
+    meta["nerr"]=0
+    meta["npoints"]=len(newData)
     g.write( f"meta = {str(meta)}\n" )
     g.close()
     print ( f"cp dict.py {dictfile}" )
