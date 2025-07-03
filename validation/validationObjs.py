@@ -33,6 +33,8 @@ from validationObjsBase import ValidationObjsBase
 
 logger.setLevel(level=logging.ERROR)
 
+complaints = { "NoResultsFor": 0 }
+
 class ValidationPlot( ValidationObjsBase ):
     """
     Encapsulates all the data necessary for creating a single validation plot.
@@ -58,7 +60,7 @@ class ValidationPlot( ValidationObjsBase ):
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
-        super ( ValidationPlot, self ).__init__ ( ) 
+        super ( ValidationPlot, self ).__init__ ( )
         anaID = ExptRes.globalInfo.id
         if databasePath:
             if os.path.isdir(databasePath):
@@ -298,7 +300,7 @@ class ValidationPlot( ValidationObjsBase ):
                 ret = [ ret[0] ]
         return ret
 
-    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int: 
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int:
         """ returns 1 if success else 0 """
         fout = resultsfile
         if not os.path.isfile(fout):
@@ -320,17 +322,25 @@ class ValidationPlot( ValidationObjsBase ):
         try:
             exec( cmd, myglobals )
         except SyntaxError as e:
-            logger.error ( f"when reading {fout}: {e}. will skip" ) 
+            logger.error ( f"when reading {fout}: {e}. will skip" )
             os.unlink ( fout )
             return 0
         ff.close()
         if not 'ExptRes' in smodelsOutput:
-            logger.debug( f"No results for {slhafile}" )
+            complaints["NoResultsFor"]+=1
+            if complaints["NoResultsFor"]<4:
+                logger.info( f"No results for {slhafile}" )
+            if complaints["NoResultsFor"]==4:
+                logger.info( f"(quenching more info msgs)" )
             ## still get the masses from the slhafile name
             axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
             ## log also the errors in the py file
-            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes,
-                     'comment': 'no ExptRes in smodelsOutput' }
+            comment = "no ExptRes in smodelsOutput"
+            if "OutputStatus" in smodelsOutput:
+                if "warnings" in smodelsOutput["OutputStatus"]:
+                    comment = smodelsOutput["OutputStatus"]["warnings"]
+            Dict = { 'slhafile': slhafile, 'error': 'no result', 'axes': axes,
+                     'comment': comment }
             self.data.append ( Dict )
             return 1
         dt = None
@@ -435,7 +445,7 @@ class ValidationPlot( ValidationObjsBase ):
             Dict["nll_min"]= nll_min
             nll_SM = 900.
             if expRes["l_SM"]>0.:
-                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 ) 
+                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
             Dict['nll_SM']= nll_SM
             if not "chi2" in expRes:
                 try:

@@ -10,7 +10,7 @@
 """
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
-from validationHelpers import getDefaultModel, showPlot
+from validationHelpers import getDefaultModel, showPlot, streamlineValidationData
 from smodels.matching import modelTester
 from typing import Union, List, Dict
 from validationHelpers import point_in_hull
@@ -777,12 +777,7 @@ class ValidationObjsBase():
         self.pprint ( f"saving {len(self.data)} points to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
-        dataStr = str(self.data)
-        dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
-        dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
-        dataStr = dataStr.replace( "}, {" , "},\n{" )
-        if "inf" in dataStr:
-            dataStr = dataStr.replace("inf,","float('inf')," )
+        dataStr = streamlineValidationData ( self.data )
         f.write("validationData = "+dataStr+"\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
