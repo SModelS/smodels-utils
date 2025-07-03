@@ -163,7 +163,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if xvals == None: ## happens when not on the plane I think
             continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
-            logger.warning( "no UL for %s: %s" % (xvals, pt ) )
+            logger.warning( f"no UL for {xvals}: {pt}" )
         r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             if pt["UL"]!=None:
