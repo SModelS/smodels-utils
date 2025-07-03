@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """ combine_to_pyhf converter, copied from https://github.com/peterridolfi/Pyhf-to-Combine-converter.
-If we turn this into something useful we will of course contribute back upstream!
+If we turn this into something more useful we will of course contribute back upstream!
 Credits where credits are due, of course.
 """
 
@@ -299,7 +299,7 @@ class CombineToPyhf:
                                 )
 
             else:  ##lnU or gmN
-                self.pprint ( f"mod_type {mod_type} not implemented yet. skip it." )
+                self.pprint ( f"mod_type {mod_type} not implemented yet ({syst}). skip it." )
                 # raise NotImplementedError
 
         for idxc, channel in enumerate(channels):  ##staterror/shapesys
