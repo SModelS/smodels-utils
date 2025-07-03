@@ -305,9 +305,9 @@ def mergeExclusionLines ( lines : list ):
             line["y"].append ( ly )
     return line
 
-def streamlineValidationData ( data : str )-> str:
+def streamlineValidationData ( data : dict )-> str:
     """ clean up the validation data before it goes into the dict file """
-    out = data.replace('[fb]','*fb').replace('[pb]','*pb')
+    out = str(data).replace('[fb]','*fb').replace('[pb]','*pb')
     out = out.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
     out = out.replace( "}, {" , "},\n{" )
     if "inf" in out:
