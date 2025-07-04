@@ -327,25 +327,8 @@ class ValidationPlot( ValidationObjsBase ):
             return 0
         ff.close()
         if not 'ExptRes' in smodelsOutput:
-            complaints["NoResultsFor"]+=1
-            if complaints["NoResultsFor"]<4:
-                logger.info( f"No results for {slhafile}" )
-            if complaints["NoResultsFor"]==4:
-                logger.info( f"(quenching more info msgs)" )
             ## still get the masses from the slhafile name
-            axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
-            ## log also the errors in the py file
-            comment = "no ExptRes in smodelsOutput"
-            Dict = { 'slhafile': slhafile, 'error': 'no result', 'axes': axes,
-                     'comment': comment }
-            if "OutputStatus" in smodelsOutput:
-                if 'file status' in smodelsOutput["OutputStatus"]:
-                    Dict["file_status"]=smodelsOutput["OutputStatus"]["file status"]
-                if 'decomposition status' in smodelsOutput["OutputStatus"]:
-                    Dict["decomposition_status"]=smodelsOutput["OutputStatus"]["decomposition status"]
-                if "warnings" in smodelsOutput["OutputStatus"]:
-                    Dict["warnings"] = smodelsOutput["OutputStatus"]["warnings"]
-            self.data.append ( Dict )
+            self.addDictionaryForFailedPoint ( smodelsOutput )
             return 1
         dt = None
         if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:

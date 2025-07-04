@@ -21,6 +21,8 @@ from smodels.base.smodelsLogging import logger
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
 
+complaints = { "NoResultsFor": 0 }
+
 class ProgressHandler:
     """ a namespace to handle everything around the progressbar """
     def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
@@ -472,7 +474,7 @@ class ValidationObjsBase():
                 time.sleep(5) ## wait a little
                 dirs = [ self.outputDir.replace("/results","") ]
                 p = Progress ( dirs = dirs )
-                return 
+                return
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
@@ -482,6 +484,36 @@ class ValidationObjsBase():
     def pprint ( self, *args ):
         """ convenience """
         print ( f"[validationObjsBase]", *args )
+
+    def addDictionaryForFailedPoint ( self, smodelsOutput : dict ):
+        """ a point has failed, no "ExptRes" is in smodelsOutput.
+        create the dict that describes the failure.
+        :returns: empty dictionary if axes not in plane
+        """
+        slhafile = os.path.basename ( smodelsOutput["OutputStatus"]["input file"] )
+        folder = os.path.dirname ( smodelsOutput["OutputStatus"]["input file"] )
+        axes = self.getAxesFromSLHAFileName ( slhafile )
+        if axes == None or len(axes)==0:
+            return
+
+        complaints["NoResultsFor"]+=1
+        if complaints["NoResultsFor"]<4:
+            logger.info( f"No results for {slhafile}" )
+        if complaints["NoResultsFor"]==4:
+            logger.info( f"(quenching more info msgs)" )
+
+        Dict = { 'slhafile': slhafile, 'error': 'no result', 'axes': axes,
+                 'comment': "no ExptRes in smodelsOutput" }
+        if "OutputStatus" in smodelsOutput:
+            if 'file status' in smodelsOutput["OutputStatus"]:
+                Dict["file status"]=smodelsOutput["OutputStatus"]["file status"]
+            if 'decomposition status' in smodelsOutput["OutputStatus"]:
+                Dict["decomposition status"]=smodelsOutput["OutputStatus"]["decomposition status"]
+            if "warnings" in smodelsOutput["OutputStatus"]:
+                warning = smodelsOutput["OutputStatus"]["warnings"]
+                warning = warning.replace( folder+"/", "" ).replace ( folder, "" )
+                Dict["warnings"] = warning
+        self.data.append ( Dict )
 
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
         """ try to guess the mass vector from the SLHA file name
