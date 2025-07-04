@@ -590,9 +590,16 @@ class ValidationPlot( ValidationObjsBase ):
                 if "OutputStatus" in smodelsOutput:
                     if "warnings" in smodelsOutput["OutputStatus"]:
                         comment = smodelsOutput["OutputStatus"]["warnings"]
-                D = { "slhafile": slhafile, "error": "no result",
-                      "axes": axes, "comment": comment }
-                self.data.append ( D )
+                Dict = { 'slhafile': slhafile, 'error': 'no result', 'axes': axes,
+                         'comment': 'no ExptRes in smodelsOutput' }
+                if 'OutputStatus' in smodelsOutput:
+                    if 'file status' in smodelsOutput["OutputStatus"]:
+                        Dict["file_status"]=smodelsOutput["OutputStatus"]["file status"]
+                    if 'decomposition status' in smodelsOutput["OutputStatus"]:
+                        Dict["decomposition_status"]=smodelsOutput["OutputStatus"]["decomposition status"]
+                    if "warnings" in smodelsOutput["OutputStatus"]:
+                        Dict["warnings"] = smodelsOutput["OutputStatus"]["warnings"]
+                self.data.append ( Dict )
                 continue
             dt = None
             if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
@@ -614,7 +621,6 @@ class ValidationPlot( ValidationObjsBase ):
                 if self.options["keepTopNSRs"] not in [ None, 0 ]:
                     maxR, expRes = -1., None
                     for eR in res:
-                        # print ( f"@@0 eR {eR}" )
                         if "r_expected" in eR:
                             r = eR["r_expected"]
                             while r in leadingDSes: # make sure it's unique
@@ -714,8 +720,6 @@ class ValidationPlot( ValidationObjsBase ):
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
                 if not "efficiency" in Dict.keys():
                     try:
-                        #print ( f"@@12 Dict {Dict}" )
-                        #print ( f"@@13 parameters {parameters}" )
                         for i,p in enumerate(parameters):
                             if p=="stable":
                                 parameters[i]=0.
