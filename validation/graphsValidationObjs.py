@@ -254,7 +254,7 @@ class ValidationPlot( ValidationObjsBase ):
                 if 'decomposition status' in smodelsOutput["OutputStatus"]:
                     Dict["decomposition_status"]=smodelsOutput["OutputStatus"]["decomposition status"]
                 if "warnings" in smodelsOutput["OutputStatus"]:
-                    Dict["comment"] = smodelsOutput["OutputStatus"]["warnings"]
+                    Dict["warnings"] = smodelsOutput["OutputStatus"]["warnings"]
             self.data.append ( Dict )
             return 1
         dt = None
