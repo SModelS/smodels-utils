@@ -6,7 +6,7 @@ def removeFor ( files : str ):
     import glob, os
     files = glob.glob ( "_VWZoff/results/TChiWZoff*py" )
     for f in files:
-        print ( f )
+        # print ( f )
         with open ( f ) as h:
             try:
                 d = {}
@@ -31,7 +31,7 @@ def removeInDict ( dictfile : str ):
     f=open(dictfile,"r")
     d={}
     exec(f.read(),d)
-    print ( d.keys() )
+    # print ( d.keys() )
     oldData = d["validationData"]
     newData = []
     for x in oldData:
@@ -48,7 +48,7 @@ def removeInDict ( dictfile : str ):
     print ( f"cp dict.py {dictfile}" )
 
 def main():
-    # removeFor ( "_VWZoff/results/TChiWZoff*py" )
+    removeFor ( "_VWZoff/results/TChiWZoff*py" )
     removeInDict ( "../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2019-09-eff/validationFull/TChiWZoff_x_x-y_combined.py" )
 
 if __name__ == "__main__":
