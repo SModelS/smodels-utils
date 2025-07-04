@@ -246,8 +246,15 @@ class ValidationPlot( ValidationObjsBase ):
             ## still get the masses from the slhafile name
             axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
             ## log also the errors in the py file
-            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes,
+            Dict = { 'slhafile': slhafile, 'error': 'no result', 'axes': axes,
                      'comment': 'no ExptRes in smodelsOutput' }
+            if 'OutputStatus' in smodelsOutput:
+                if 'file status' in smodelsOutput["OutputStatus"]:
+                    Dict["file_status"]=smodelsOutput["OutputStatus"]["file status"]
+                if 'decomposition status' in smodelsOutput["OutputStatus"]:
+                    Dict["decomposition_status"]=smodelsOutput["OutputStatus"]["decomposition status"]
+                if "warnings" in smodelsOutput["OutputStatus"]:
+                    Dict["comment"] = smodelsOutput["OutputStatus"]["warnings"]
             self.data.append ( Dict )
             return 1
         dt = None
@@ -636,7 +643,7 @@ class ValidationPlot( ValidationObjsBase ):
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
-                D = { "slhafile": slhafile, "error": "no results here",
+                D = { "slhafile": slhafile, "error": "no result",
                       "axes": axes, "comment": "masses are None" }
                 self.data.append ( D )
                 continue
