@@ -23,13 +23,15 @@ def clean ( tarball : os.PathLike ):
     members=tar.getmembers()
     newtarball = []
     for m in members:
+        tar.extract ( m )
         if m.name.endswith ( ".slha" ):
-            tar.extract ( m )
             if not hasXSecs ( m.name ):
                 print ( f"removing {m.name}" )
                 os.unlink ( m.name )
             else:
                 newtarball.append ( m.name )
+        else:
+            newtarball.append ( m.name )
     os.rename ( tarball, tarball+".backup" )
     with tarfile.open( tarball, mode="w:gz") as tar:
          for file in newtarball:
