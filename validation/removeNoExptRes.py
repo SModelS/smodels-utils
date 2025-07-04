@@ -2,9 +2,8 @@
 
 """ remove all output files that dont have an ExptRes """
 
-def removeFor ( files : str ):
-    import glob, os
-    files = glob.glob ( "_VWZoff/results/TChiWZoff*py" )
+def removeFor ( files : list, dry_run : bool = True ):
+    print ( f"[removeNoExptRes] removing temporary files in result folder" )
     for f in files:
         # print ( f )
         with open ( f ) as h:
@@ -13,21 +12,24 @@ def removeFor ( files : str ):
                 e = exec(h.read(), d )
                 if not "smodelsOutput" in d:
                     print ( f"{f}: no smodelsOutput: unlink!" )
-                    os.unlink ( f )
+                    if not dry_run:
+                        os.unlink ( f )
                     continue
                 smodelsOutput = d["smodelsOutput"]
                 if not "ExptRes" in d:
                     print ( f"{f}: no ExptRes: unlink!" )
-                    os.unlink ( f )
+                    if not dry_run:
+                        os.unlink ( f )
                     continue
                 print ( f, "d", d["smodelsOutput"] )
             except SyntaxError as e:
                 print ( f"{f}: SyntaxError {e}: unlink!" )
-                os.unlink ( f )
+                if not dry_run:
+                    os.unlink ( f )
 
 def removeInDict ( dictfile : str ):
     from validationHelpers import streamlineValidationData
-    print ( f"remove from {dictfile}" )
+    print ( f"[removeNoExptRes] remove entries from {dictfile}" )
     f=open(dictfile,"r")
     d={}
     exec(f.read(),d)
@@ -45,10 +47,12 @@ def removeInDict ( dictfile : str ):
     meta["npoints"]=len(newData)
     g.write( f"meta = {str(meta)}\n" )
     g.close()
-    print ( f"cp dict.py {dictfile}" )
+    # print ( f"cp dict.py {dictfile}" )
 
 def main():
-    removeFor ( "_VWZoff/results/TChiWZoff*py" )
+    import glob, os
+    files = glob.glob ( "_VWZoff/results/TChiWZoff*py" )
+    removeFor ( files, dry_run = True )
     removeInDict ( "../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2019-09-eff/validationFull/TChiWZoff_x_x-y_combined.py" )
 
 if __name__ == "__main__":
