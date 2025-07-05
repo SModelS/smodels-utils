@@ -238,6 +238,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiQ': 'squark --> q lsp',
     'TChiZoff': 'neutralino_1 --> Z^* lsp',
     'TChiZZ':'neutralino_2 --> Z lsp  ',
+    'TChiISR':'neutralino_2 neutralino_1 --> lsp lsp',
+    'TChiZISRqq':'neutralino_2 neutralino_1 --> q q lsp lsp',
+    'TChiZISRll':'neutralino_2 neutralino_1 --> l l lsp lsp',
+    'TChiWISRll': 'chargino^pm_1 neutralino_1 --> l neutrino lsp lsp',
     'TChiZZoff':'neutralino_2 --> Z^* lsp  ',
     'TChiWWoff':'chargino^pm_1 --> W^* lsp ',
     'TDTM1F':'chargino^pm_1 --> pion^pm lsp ',
@@ -449,6 +453,10 @@ motherDict = {"T1" :  "gluino gluino",
     "TChiHHG" :  "neutralino_2 neutralino_2",
     "TChiWW" :  "chargino^pm_1 chargino^mp_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
+    "TChiWISRll": "chargino^pm_1 neutralino_1",
+    "TChiZISRll": "neutralino_2 neutralino_1",
+    "TChiZISRqq": "neutralino_2 neutralino_1",
+    "TChiISR": "neutralino_2 neutralino_1",
     "TDTM1F" :  "chargino^pm_1 chargino^mp_1",
     "TDTM2F" :  "chargino^pm_1 neutralino_1",
     "TDTM1S" :  "H^pm H^mp",
@@ -635,7 +643,7 @@ def getDaughters(txname):
     return list(daughters)
 
 
-def prettyProduction(txname,latex=True,protons=True):
+def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> str:
     """
     FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY production process
