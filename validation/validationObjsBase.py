@@ -485,14 +485,13 @@ class ValidationObjsBase():
         """ convenience """
         print ( f"[validationObjsBase]", *args )
 
-    def addDictionaryForFailedPoint ( self, smodelsOutput : dict ):
+    def addDictionaryForFailedPoint ( self, smodelsOutput : dict, axes ):
         """ a point has failed, no "ExptRes" is in smodelsOutput.
         create the dict that describes the failure.
         :returns: empty dictionary if axes not in plane
         """
         slhafile = os.path.basename ( smodelsOutput["OutputStatus"]["input file"] )
         folder = os.path.dirname ( smodelsOutput["OutputStatus"]["input file"] )
-        axes = self.getAxesFromSLHAFileName ( slhafile )
         if axes == None or len(axes)==0:
             return
 

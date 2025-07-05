@@ -328,7 +328,8 @@ class ValidationPlot( ValidationObjsBase ):
         ff.close()
         if not 'ExptRes' in smodelsOutput:
             ## still get the masses from the slhafile name
-            self.addDictionaryForFailedPoint ( smodelsOutput )
+            axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
+            self.addDictionaryForFailedPoint ( smodelsOutput, axes )
             return 1
         dt = None
         if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
