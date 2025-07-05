@@ -195,6 +195,9 @@ def validate ( args : Dict, idx ):
             if args["model"] in [ "omit", "default" ] and "@@MODEL@@" in newline:
                 newline = "" ## omit model line altogether
             newline = newline.replace("@@MODEL@@", args["model"] )
+            if args["axis"] in [ "omit", "default", None ] and "@@AXIS@@" in newline:
+                newline = "" ## omit axis line altogether
+            newline = newline.replace("@@AXIS@@",  args["axis"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
             newline = newline.replace("@@DATABASEPATH@@", databasepath )
@@ -342,6 +345,9 @@ def main():
     argparser.add_argument ( '-m', '--model', nargs='?',
             help='model to use (mssm,nmssm,idm,zprime.slha,omit) [default]',
             type=str, default="default" )
+    argparser.add_argument ( '--axis', nargs='?',
+            help='optionally specify the axis [omit]',
+            type=str, default="omit" )
     argparser.add_argument ( '-g', '--generate_data', nargs='?',
             help='generateData [False,True,ondemand]. In combination with --repeat we switch to ondemand after the first [ondemand]',
             type=str, default="ondemand" )
