@@ -25,7 +25,7 @@ def showPlot ( filename : str ) -> bool:
     term = os.environ["TERM"]
     import subprocess, distutils.spawn
     for viewer in [ "timg", "see", "display" ]:
-        v = distutils.spawn.find_executable( viewer, "/bin:/usr/bin:/usr/sbin:/usr/local/bin"  )
+        v = distutils.spawn.find_executable( viewer, f"{os.environ['HOME']}/.local/bin:/bin:/usr/bin:/usr/sbin:/usr/local/bin"  )
         if viewer == "timg" and os.path.exists ( "/bin/timg" ):
             # override python install
             v = "/bin/timg"
