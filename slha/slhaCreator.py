@@ -313,6 +313,7 @@ class TemplateFile(object):
            sqrts = [[8,13]]
 
         slhafiles = []
+        first = True
         for pt in pts:
             slhafile = self.createFileFor( pt, computeXsecs=False,
                      massesInFileName=massesInFileName, nevents=nevents, sqrts=sqrts,
@@ -322,7 +323,7 @@ class TemplateFile(object):
 
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
-                computer = RefXSecComputer( self.verbose )
+                computer = RefXSecComputer( self.verbose, first )
                 c = f"produced via slhaCreator v{self.version}"
                 if comment != None:
                     c+= f": {comment}"
@@ -331,6 +332,7 @@ class TemplateFile(object):
                 computer.computeForOneFile ( sqrts[0], slhafile, True, \
                           comment = c, ignore_pids = ignore_pids,
                           ewk = self.ewk )
+                first = False
 
         # print ( f"[slhaCreator] now calling xseccomputer {computeXsecs} {self.pythiaVersion}" )
         #Compute cross-sections

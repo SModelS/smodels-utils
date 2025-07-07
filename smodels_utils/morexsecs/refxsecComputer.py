@@ -40,11 +40,13 @@ class RefXSecComputer:
     version = "1.0" ## make sure we can trace changes in the tables
     hasWarned = { "omitted": 0 }
 
-    def __init__( self, verbose = False ):
+    def __init__( self, verbose : bool = False, first : bool = False ):
         """
         :param verbose: turn on verbose mode, for debugging
+        :param first: is it the first instance? then we are a bit more verbose
         """
         self.verbose = verbose
+        self.first = first
         if verbose:
             setLogLevel ( "debug" )
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
@@ -710,6 +712,9 @@ class RefXSecComputer:
             logger.error ( f"{path} missing for pids=({pid1},{pid2})" )
             sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
+        if self.first:
+            print ( f"[refxsecComputer] xsecs from {path}" )
+            self.first = False
         if self.verbose:
             print ( f"[refxsecComputer] returning: {xsecs}" )
         return xsecs,order,comment
