@@ -52,6 +52,8 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+complaints = { "removingSLHAFile": 0 }
+
 class TemplateFile(object):
     """
     Holds the information for a given template file as well as convenient methods
@@ -656,6 +658,16 @@ if __name__ == "__main__":
             argvs[i]=f'"{a}"'
     tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
     tempf.writeOutCoordinates ( newtemp )
+    from slhaHelpers import hasXSecs
+    import glob
+    for slhafile in glob.glob ( f"{newtemp}/{args.topology}*slha" ):
+        if not hasXSecs ( slhafile ) and not args.keep:
+            complaints["removingSLHAFile"]+=1
+            if complaints["removingSLHAFile"]<3:
+                print ( f"[slhaCreator] removing {slhafile}: has no cross sections (use --keep if you want to keep them)" )
+            if complaints["removingSLHAFile"]==3:
+                print ( f"[slhaCreator] quenching more such messsages" )
+            os.unlink ( slhafile )
     cmd = f"cd {newtemp}; tar czvf ../{tarball} {args.topology}*slha recipe coordinates"
     if False:
         print ( f"[slhaCreator] {cmd}" )

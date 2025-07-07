@@ -9,13 +9,7 @@
 """
 
 import os
-
-def hasXSecs ( slhafile : os.PathLike ):
-    import pyslha
-    p = pyslha.readSLHAFile ( slhafile )
-    if len (p.xsections)>0:
-        return True
-    return False
+from slhaHelpers import hasXSecs
 
 def clean ( tarball : os.PathLike ):
     import tarfile
