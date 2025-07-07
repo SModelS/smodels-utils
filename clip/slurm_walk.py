@@ -62,7 +62,7 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
-    dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str,
+    dry_run : bool, keep : bool, time : float, cheatmodel : Union[str,int], rundir : str,
     maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool, run_mcmc: bool,
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
     forbidden : List[int], wallpids : bool ):
@@ -75,7 +75,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     :param dry_run: dont act, just tell us what you would do
     :param keep: keep temporary files, for debugging
     :param time: time in hours
-    :param cheatcode: in case we wish to start with a cheat model
+    :param cheatmodel: in case we wish to start with a cheat model
     :param rundir: the run directory
     :param maxsteps: max number of steps
     :param select: select for certain results, e.g. "all", "ul", "em",
@@ -113,7 +113,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
             f.write ( "from builder.manipulator import Manipulator\n" )
             f.write ( "Manipulator.walledpids[1000024]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
-        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
+        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatmodel={cheatmodel},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
         f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
@@ -642,8 +642,8 @@ def main():
                         type=int, default=1 )
     argparser.add_argument ( '--seed', nargs='?', help='the random seed. 0 means random. None means, do not set. [None]',
                         type=int, default=None )
-    argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
-                        type=int, default=0 )
+    argparser.add_argument ( '-C', '--cheatmodel', nargs='?', help='use a cheat model [no_cheat]',
+                        type=str, default="no_cheat" )
     argparser.add_argument ( '-N', '--nmax', nargs='?',
                         help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
@@ -760,7 +760,7 @@ def main():
         #with open("run_walker.sh","rt") as f:
         #    lines=f.readlines()
         nmin, nmax, cont = args.nmin, args.nmax, args.cont
-        cheatcode = args.cheatcode
+        cheatmodel = args.cheatmodel
         if nmax == 0 or nmax < nmin:
             nmax = nmin
         nworkers = nmax - nmin + 1
@@ -779,7 +779,7 @@ def main():
             if nprocesses == 1:
                 for i in range(args.repeat):
                     runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
-                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
+                      args.keep, args.time, cheatmodel, rundir, args.maxsteps,
                       args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
                       wallpids )
@@ -801,7 +801,7 @@ def main():
                         seed += (1+len(rundirs))*(1+nprocesses)
                     p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
-                        args.keep, args.time, cheatcode, rundir, args.maxsteps,
+                        args.keep, args.time, cheatmodel, rundir, args.maxsteps,
                         args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden,
                         wallpids ) )
