@@ -287,10 +287,6 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     txnameOff = ''
     axes_on = None
     if 'off' in txname:
-        print ( f"@@ vDir {vDir}" )
-        print ( f"@@ validationFolder {validationFolder}" )
-        print ( f"@@ anaDir {anaDir}" )
-        print ( f"@@- os.path.dirname {anaDir}" )
         axes_on = getOnshellAxesForOffshell( anaDir, txname.split('off')[0], validationFolder )
         if axes_on:
             print("[drawPaperPlot] yes offshell")
