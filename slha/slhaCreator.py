@@ -62,7 +62,7 @@ class TemplateFile(object):
 
     def __init__(self,topology,axes,tempdir=None,pythiaVersion : int =6,
                  keep : bool = False, txName : Union[None,str] = None,
-                 add_pids : Union[None,str] = None ):
+                 add_pids : Union[None,str] = None, verbose : bool = False ):
         """
         :param topology: the txname
         :param axes: string describing the axes for the template file
@@ -73,6 +73,7 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         :param add_pids: if not None, list of pids to add to list of potential mother pids
         :param keep: keep temporary files
+        :param verbose: if true, then print more info
         """
         template= f"../slha/templates/{topology}.template"
         if not os.path.exists ( template ):
@@ -80,7 +81,7 @@ class TemplateFile(object):
             sys.exit()
 
         self.version = "1.2" ## slhaCreator version
-        self.verbose = False
+        self.verbose = verbose
         self.add_pids = add_pids
         if add_pids in [ "None" ]:
             self.add_pids = None
@@ -607,7 +608,7 @@ if __name__ == "__main__":
         print ( f"[slhaCreator] {YELLOW}NOT overwriting existing results from {tarball}!{RESET}" )
 
     tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
-                         keep=args.keep, add_pids = args.add_pids )
+                         keep=args.keep, add_pids = args.add_pids, verbose = args.verbose )
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
