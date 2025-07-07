@@ -828,6 +828,7 @@ class ValidationObjsBase():
             meta["style"]=self.options["style"]
         if os.path.isfile ( self.slhaDir ):
             ## currently we have sha1sums only for named tarballs
+            meta["sha1for"] = os.path.basename ( self.slhaDir )
             meta["sha1"]=sha1sum ( self.slhaDir )
         if hasattr ( self.expRes.globalInfo, "includeCRs" ):
             meta["includeCRs"]=self.expRes.globalInfo.includeCRs
