@@ -59,7 +59,7 @@ def getMinJobId() -> int:
             nmin = nr
     return nmin
 
-def cancelRangerOfValiders( jrange : str ):
+def cancelRangeOfValidaters( jrange : str ):
     """ cancel only the jrange of runners """
     import re
     jrange = jrange.strip(" ")

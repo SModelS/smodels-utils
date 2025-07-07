@@ -57,6 +57,10 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     :return: ValidationPlot object or False
     """
     starting( expRes, txnameStr, axes, pretty )
+    if options["useFullJsonLikelihoods"]==True:
+        if hasattr ( expRes.globalInfo, "jsonFiles_FullLikelihood" ):
+            expRes.globalInfo.jsonFiles = expRes.globalInfo.jsonFiles_FullLikelihood
+            logger.info ( f"{YELLOW} full pyhf likelihood mode enabled{RESET}" )
     axisType = getAxisType(axes)
     if axisType=="v3":
         valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
@@ -798,6 +802,7 @@ if __name__ == "__main__":
                 ## do we weight the points for the agreement factor?
                 "extraInfo": False, ## add extra info to the plot?
                 "validationFolder": "validation", # you can change the folder that stores the validation files
+                "useFullJsonLikelihoods": False, # if 'jsonFiles_FullLikelihood' is given, use this entry instead of 'jsonFiles'
                 "forceOneD": False, # force the plot to be interpreted as 1d
                 "tempdir": None, ## specify the name of the tempdir, if you wish
                 "timeOut": 5000, # change the timeout per point, in seconds

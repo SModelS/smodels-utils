@@ -80,7 +80,7 @@ class TemplateFile(object):
             print ( f"[slhaCreator] error: templatefile {template} not found." )
             sys.exit()
 
-        self.version = "1.2" ## slhaCreator version
+        self.version = "1.3" ## slhaCreator version
         self.verbose = verbose
         self.add_pids = add_pids
         if add_pids in [ "None" ]:
@@ -378,7 +378,7 @@ class TemplateFile(object):
         """ add our current command to the recipe file """
         # print ( f"adding to recipe {directory}" )
         with open ( f"{directory}/recipe", "at" ) as f:
-            f.write ( f"[slhaCreator v{self.version}::{time.asctime()}] {command}\n" )
+            f.write ( f"\n# slhaCreator v{self.version}, {time.asctime()}:\n{command}\n" )
             f.close()
 
     def checkFor(self,txnameObj,x,y,z=None):
