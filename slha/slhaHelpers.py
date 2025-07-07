@@ -9,6 +9,7 @@
 """
 
 import os
+import numpy as np
 
 def hasXSecs ( slhafile : os.PathLike ):
     """ does the given slha file have xsecs? """
@@ -16,6 +17,11 @@ def hasXSecs ( slhafile : os.PathLike ):
         return None
     import pyslha
     p = pyslha.readSLHAFile ( slhafile )
+    hasValidXSec = False
     if len (p.xsections)>0:
-        return True
-    return False
+        for k,v in p.xsections.items():
+            for xsec in v.xsecs:
+                if not np.isnan ( xsec.value ):
+                    hasValidXSec = True
+        return hasValidXSec
+    return hasValidXSec
