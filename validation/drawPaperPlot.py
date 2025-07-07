@@ -122,7 +122,7 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
     
     return excl_lines
 
-def getOnshellAxesForOffshell(anaDir, tx_onshell):
+def getOnshellAxesForOffshell(anaDir, tx_onshell, validationFolder ):
     sm_file = open(f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json","r")
     file = open(f"{anaDir}/exclusion_lines.json")
     excl_file = json.load(file)
@@ -274,6 +274,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     vDir = validationPlot.getValidationDir (validationDir=None)
     validationFolder = os.path.basename ( vDir )
     anaDir = os.path.dirname(vDir)
+    if anaDir.endswith ( "validation" ):
+        anaDir = anaDir[:-10]
+        validationFolder = f"validation/{validationFolder}"
     txname = validationPlot.txName
     axes = validationPlot.axes
     eval_axes = True
@@ -284,7 +287,11 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     txnameOff = ''
     axes_on = None
     if 'off' in txname:
-        axes_on = getOnshellAxesForOffshell(anaDir, txname.split('off')[0])
+        print ( f"@@ vDir {vDir}" )
+        print ( f"@@ validationFolder {validationFolder}" )
+        print ( f"@@ anaDir {anaDir}" )
+        print ( f"@@- os.path.dirname {anaDir}" )
+        axes_on = getOnshellAxesForOffshell( anaDir, txname.split('off')[0], validationFolder )
         if axes_on:
             print("[drawPaperPlot] yes offshell")
             offshell=True
@@ -579,6 +586,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     fig_axes_title = fig_axes_title.replace('x-y', 'y')
     fig_axes_title = fig_axes_title.replace('00', '0')
     fig_axes_title = fig_axes_title.replace('.0', '')
+    fig_axes_title = fig_axes_title.replace('/', 'd')
     outfiles = []
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"
