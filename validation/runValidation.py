@@ -232,7 +232,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if not "folder2" in options:
         options["folder2"]="validation"
     options["comment"]=opts["ratio_comment"]
-    cmd = f"./plotRatio.py -d {dbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
+    sdbpath = dbpath.replace(f"/scratch-cbe{os.environ['HOME']}","~").replace(f"{os.environ['HOME']}","~")
+    cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
     if "folder1" in options and options["folder1"]!="validation":
         cmd += f" -f1 {options['folder1']}"
     if "folder2" in options and options["folder2"]!="validation":
@@ -255,6 +256,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plotRatio.draw ( options )
 
     pathToValDir = os.path.dirname ( os.path.realpath ( __file__ ) )
+    pathToValDir = pathToValDir.replace( f'/scratch-cbe{os.environ["HOME"]}', "~" )
     pathToValDir = pathToValDir.replace( os.environ["HOME"], "~" )
     ratioscriptfile = f"{os.path.dirname(datafile)}/ratios_{txname}_{axis}.sh"
     print ( f"[runValidation] now producing {ratioscriptfile}" )
