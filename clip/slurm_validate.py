@@ -197,6 +197,10 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@MODEL@@", args["model"] )
             if args["axis"] in [ "omit", "default", None ] and "@@AXIS@@" in newline:
                 newline = "" ## omit axis line altogether
+            if "@@USEFULLJSONLIKELIHOODS@@" in newline and args["usefulljsonlikelihoods"]==False:
+                newline = ""
+            else:
+                newline = newline.replace ( "@@USEFULLJSONLIKELIHOODS@@", "True" )
             newline = newline.replace("@@AXIS@@",  args["axis"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
@@ -338,6 +342,9 @@ def main():
                         type=str, default=None )
     argparser.add_argument ( '-k','--keep',
             help='keep the temporary files,do not remove them afterwards',
+            action="store_true" )
+    argparser.add_argument ( '-j','--usefulljsonlikelihoods',
+            help='use the json file specification given in jsonFiles_FullLikelihoods (if defined)',
             action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to run [10]',
