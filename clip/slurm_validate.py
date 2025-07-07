@@ -302,7 +302,7 @@ def logCall ():
     if line == lastline: # skip duplicates
         return
     f=open(logfile,"at")
-    f.write ( f"[slurm_validate.py-{time.strftime('%H:%M:%S')}] {line}\n" )
+    f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
     f.close()
 
 def clean():
@@ -385,6 +385,9 @@ def main():
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run', action="store_true" )
     args=argparser.parse_args()
+    if args.usefulljsonlikelihoods and args.validationfolder == None:
+        print ( f"[slurm_validate] full json likelihoods and no folder given: will change to validation/fullStats" )
+        args.validationfolder = "validation/fullStats"
     if args.clean:
         clean()
         sys.exit()
