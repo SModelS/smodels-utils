@@ -593,7 +593,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     fig_axes_title = getNiceAxes ( axes )
     outfiles = []
 
-    outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"
+    outfile = f"{vDir}/{txname}_{fig_axes_title}_obs.png"
     print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
     plt.savefig(outfile, dpi=250)
     plt.clf()
@@ -700,7 +700,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.tight_layout()
-    outfile = f"{vDir}/{txname}_{fig_axes_title}exp.png"
+    outfile = f"{vDir}/{txname}_{fig_axes_title}_exp.png"
     print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
     plt.savefig( outfile, dpi=250)
     plt.clf()
