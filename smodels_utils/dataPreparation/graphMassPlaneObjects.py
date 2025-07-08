@@ -36,20 +36,23 @@ class GraphMassPlane(MassPlaneBase):
     """
 
     @classmethod
-    def getNiceAxes(cls,axesStr):
+    def getNiceAxes(cls, axesStr : Union[dict,str] ) -> str:
         """
         Convert the axes definition format, e.g. {0 : 'x', 1 : 'y', 2 : 'x', 3 : 'y'}
         to a nicer format: x_y_
 
         :param axesStr: string defining axes in the old format
-        :return: string with a nicer representation of the axes (more suitable for printing)
+        :return: string with a nicer representation of the axes
+        (more suitable for printing, in filenames)
         """
 
         if axesStr == "":
             logger.error ( "Axes field is empty: cannot validate." )
             return None
         x,y,z,w = var('x y z w')
-        axesDict = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
+        axesDict = axesStr
+        if type(axesDict)==str:
+            axesDict = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
 
         def isSymmetrical ( axesDict : Dict ) -> bool:
             """ check if dicionary is symmetrical """
@@ -65,6 +68,7 @@ class GraphMassPlane(MassPlaneBase):
             for i in range(n,2*n):
                 axesDict.pop(i)
         ret = "_".join ( map ( str, axesDict.values() ) )
+        ret = ret.replace("/","d")
         # print ( f"@@ graphMassPlaneObjects {axesDict} turned into {ret}" )
         return ret
 
@@ -218,7 +222,7 @@ class GraphMassPlane(MassPlaneBase):
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         # print ( f"@@11 getXYValues {parameters}" )
-        
+
         ret = {}
         eqs = set()
         from sympy.parsing.sympy_parser import parse_expr

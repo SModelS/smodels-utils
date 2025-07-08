@@ -23,6 +23,7 @@ from smodels_utils.helper.various import getValidationDataPathName
 #from smodels_utils.helper.various import getValidationModule
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
+import validationHelpers
 from validation.plottingFuncs import convertNewAxes
 from smodels_utils.helper.terminalcolors import *
 import warnings
@@ -497,11 +498,12 @@ def draw ( options : dict ):
                 label = ""
     smodels_root = f"{analysis}/{topo}.root"
     if not os.path.exists ( smodels_root ):
-        print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
+        # print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
         # print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
         # smodels_line = []
         el2 = getSModelSExclusionFromContent ( content1 )
     else:
+        print ( f"[plotRatio] warn: {smodels_root} does exist. Maybe switch to jsons?" )
         smodels_line = getSModelSExclusion ( smodels_root )
         el2 = getExclusionLine ( smodels_line )
     print ( f"[plotRatio] Found SModelS exclusion line with {len(el2)} points." )
@@ -521,7 +523,8 @@ def draw ( options : dict ):
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
-    figname = f'{analysis.replace( options["folder1"],"ratio" )}_{topo}.png'
+
+    figname = f'{analysis.replace( options["folder1"],"ratio" )}_{topo}_{validationHelpers.getNiceAxes(axes)}.png'
     output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )

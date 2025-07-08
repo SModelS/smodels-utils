@@ -12,7 +12,7 @@ import sys,os,copy
 from smodels_utils.helper.terminalcolors import *
 import argparse,time
 from sympy import var
-from validationHelpers import getAxisType, compareTwoAxes, translateAxisV2
+from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
 from typing import Union
 
 try:
@@ -432,7 +432,7 @@ def runForOneResult ( expRes, options : dict,
                     myaxis,fname_= namedTarball.split(":")[:2]
                     myaxis = str ( eval ( myaxis ) )
                     if axisType == "v3":
-                        myaxis = translateAxisV2 ( myaxis )
+                        myaxis = axisV2ToV3 ( myaxis )
                     if compareTwoAxes ( myaxis, ax ):
                         hasCorrectAxis_ = True
                         if os.path.join(slhadir,fname_) != tarfile:

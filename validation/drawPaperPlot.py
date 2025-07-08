@@ -11,7 +11,7 @@ import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
-from validationHelpers import getAxisType, prettyAxes, translateAxisV2
+from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 
@@ -574,15 +574,23 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     
     #get_name_of_plot
     if getAxisType(axes) == "v2":
-        axes = translateAxisV2(axes)
+        axes = axisV2ToV3(axes)
+    """
+    oaxes = axes
     axes = eval(axes).values()
     # print("[drawPaperPlot] fig ", axes)
     fig_axes_title = ""
     for a in axes: fig_axes_title += str(a) + '_'
+    fig_axes_title_old = fig_axes_title
     fig_axes_title = fig_axes_title.replace('x-y', 'y')
     fig_axes_title = fig_axes_title.replace('00', '0')
     fig_axes_title = fig_axes_title.replace('.0', '')
     fig_axes_title = fig_axes_title.replace('/', 'd')
+    print ( f"FIXME this code should use .getNiceAxes! {fig_axes_title_old} {fig_axes_title}" )
+    print ( f"FIXME this code should use .getNiceAxes! {fig_axes_title_old} {fig_axes_title} {na}" )
+    import sys; sys.exit()
+    """
+    fig_axes_title = getNiceAxes ( axes )
     outfiles = []
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"

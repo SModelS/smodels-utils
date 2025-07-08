@@ -100,7 +100,16 @@ def prettyAxes( validationPlot ) -> str:
         return prettyDescriptions.prettyAxesV2 ( validationPlot.txName, validationPlot.axes )
     return prettyDescriptions.prettyAxesV3 ( validationPlot.txName, validationPlot.axes )
 
-def translateAxisV2 ( axisv2 : str ) -> str:
+def getNiceAxes ( axes : str ) -> str:
+    """ get a representation of axes that is suitable as part of a filename """
+    v = getAxisType ( axes )
+    if v == "v2":
+        from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+        return MassPlane.getNiceAxes ( axes )
+    from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
+    return GraphMassPlane.getNiceAxes ( axes )
+
+def axisV2ToV3 ( axisv2 : str ) -> str:
     """ translate a v2 axis to v3 syntax """
     from sympy import var
     x,y,z,w = var("x y z w")
