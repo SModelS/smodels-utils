@@ -425,7 +425,7 @@ def draw ( options : dict ):
             title = anaId2
         if anaId in anaId2:
             title = anaId
-    if "eul" in options:
+    if "eul" in options and options["eul"]==True:
         title += " (expected)"
     else:
         title += " (observed)"
