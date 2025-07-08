@@ -105,19 +105,29 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"]:
             valPlot.toPdf()
-    if options["drawPaperPlot"]:
-        axis = valPlot.niceAxes
-        if not "y" in axis:
-            ## for now skip the 1d versions
-            print ( f"[runValidation] axis is 1d, skipping drawPaperPlot" )
-        else:
-            from drawPaperPlot import drawPrettyPaperPlot
-            of = drawPrettyPaperPlot(valPlot)
-            if options["show"] and of is not None:
-                from validationHelpers import showPlot
-                for f in of:
-                    showPlot ( f )
+    drawPaperPlot ( valPlot, options )
     return valPlot
+
+def drawPaperPlot ( valPlot, options : dict ) -> bool:
+    # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+    if not options["drawPaperPlot"]:
+        return
+    axis = valPlot.niceAxes
+    if not "y" in axis:
+        ## for now skip the 1d versions
+        print ( f"[runValidation] axis is 1d, skipping drawPaperPlot" )
+        return False
+    if not hasattr ( valPlot, "combine" ) or valPlot.combine == False:
+        print ( f"[runValidation] this is not an sr-combine plot: skipping production of red-black paper plot." )
+        return False
+
+    from drawPaperPlot import drawPrettyPaperPlot
+    of = drawPrettyPaperPlot(valPlot)
+    if options["show"] and of is not None:
+        from validationHelpers import showPlot
+        for f in of:
+            showPlot ( f )
+    return True
 
 def addRange ( var : str, opts : dict, xrange : str, axis : str ):
     """ add a range condition to options, overwrite one if already there
@@ -829,7 +839,7 @@ if __name__ == "__main__":
                 "show": False, ## show image after producing it?
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
-                "drawPaperPlot": False,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
+                "drawPaperPlot": True,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
                 "createSModelSExclJson": False     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
     }
 
