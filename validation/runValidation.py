@@ -254,6 +254,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         cmd += f" -f2 {options['folder2']}"
     if "comment" in options:
         cmd += f" --comment '{options['comment']}'"
+    cmd += f" --output 'ratios_{txname}_{axis}.png'"
     print ( f"[runValidation] {cmd}" )
     options["dbpath"]=dbpath
     options["analysis1"]=ana1
@@ -282,7 +283,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
             f.write ( "\n" )
             scmd = cmd.replace( "./plotRatio.py", f"{pathToValDir}/plotRatio.py" )
             f.write ( f"{scmd}\n\n" )
-            scmd += f" --eul --eul2 --output 'expected_ratios_{txname}_{axis}.png'"
+            scmd += f" --eul --eul2" # --output 'expected_ratios_{txname}_{axis}.png'"
+            scmd = scmd.replace ( "output 'ratios_", "output 'expected_ratios_" )
             f.write ( f"{scmd}\n\n" )
             f.close()
             os.chmod ( ratioscriptfile, 0o755 )
