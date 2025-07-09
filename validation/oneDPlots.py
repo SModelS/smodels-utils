@@ -91,7 +91,7 @@ def create1DPlot( validationPlot, silentMode=True,
     if "limitsOnXSecs" in options and options["limitsOnXSecs"]==True:
         limitsOnXSecs = True
     xrange = getAxisRange ( options, "xaxis" )
-    print ( f"[oneDPlots] now create 1d plot for {validationPlot.expRes.globalInfo.id}, {validationPlot.txName}: {validationPlot.axes}" )
+    print ( f"[oneDPlots] create 1d plot for {validationPlot.expRes.globalInfo.id}, {validationPlot.txName}: {str(validationPlot.axes).replace(' ','')}" )
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
@@ -103,7 +103,7 @@ def create1DPlot( validationPlot, silentMode=True,
     plt.dontplot = False
     fig, ax = plt.subplots()
 
-    xvs, yvs, uls = [], [], []
+    xvs, yvs, eyvs, uls, euls = [], [], [], [], []
     from copy import deepcopy as c
     empties = { "x": [], "y": [], "ex": [], "ey": [], "ul": [], "eul": [] }
     values = { "excluded": c(empties) }
@@ -162,8 +162,12 @@ def create1DPlot( validationPlot, silentMode=True,
             if math.isfinite ( y ):
                 yvs.append ( y )
                 xvs.append ( x )
+            if math.isfinite ( ey ):
+                eyvs.append ( ey )
             if math.isfinite ( ul ):
                 uls.append ( ul )
+            if math.isfinite ( eul ):
+                euls.append ( eul )
             label = "excluded"
             point = { "x": x, "y": y }
             epoint = { "ex": x, "ey": ey }
@@ -225,7 +229,6 @@ def create1DPlot( validationPlot, silentMode=True,
             ys = [ 1./y for y in ys ]
             for i,e in enumerate ( values[label]["ey"] ):
                 values[label]["ey"][i]=1./e
-        # print ( f"@@0 plotting xs {xs[:3]} ys {ys[:3]} lbl {lbl}" )
         plot ( xs, ys, color=c, marker="o", label=lbl, linestyle=linestyle )
         #if len(values[label]["ey"]) == len(values[label]["ex"]):
         if linestyle != "":
@@ -242,10 +245,11 @@ def create1DPlot( validationPlot, silentMode=True,
     eofficial = validationPlot.expectedOfficialCurves
     rmin, rmax = 0, 1
     for o in official:
+        frac = .8 #  4/5
         if o["name"].startswith ( "obsExclusion" ) and len( yvs ) > 0:
             rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
             if limitsOnXSecs:
-                rmin, rmax = .7 * min(uls) , 1.5 * max ( uls )
+                rmin, rmax = frac * min(uls) , max ( uls ) / frac
             xvals = set(o["points"]["x"])
             ## we assume the exclusion lines to be "points", so
             ## we draw horizontal lines in each point
@@ -256,10 +260,10 @@ def create1DPlot( validationPlot, silentMode=True,
                 label = ""
     for o in eofficial:
         # logger.info ( f"exclusion object: {o}" )
-        if o["name"].startswith ( "expExclusion" ) and len ( yvs ) > 0:
-            rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
+        if o["name"].startswith ( "expExclusion" ) and len ( eyvs ) > 0:
+            rmin, rmax = .7 * min ( eyvs ), min ( 2., max ( eyvs ) )
             if limitsOnXSecs:
-                rmin, rmax = .7 * min ( uls ), min ( 2., max ( uls ) )
+                rmin, rmax = frac * min ( euls ), max ( euls ) / frac
             xvals = set(o["points"]["x"])
             label = "dashed lines are expected values"
             for xv in xvals:
