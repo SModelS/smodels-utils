@@ -435,7 +435,10 @@ def draw ( options : dict ):
     if options["SR"] != None:
         txStr+=f' [{options["SR"]}]'
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
-    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1 ) #, outputtype="latex" )
+    dataMap = None
+    if "meta" in content and "dataMap" in content["meta"]:
+        dataMap = content["meta"]["dataMap"]
+    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, dataMap ) #, outputtype="latex" )
     if axis1 != axis2:
         print ( f"[plotRatio] error, different axes: {axis1}!={axis2}" )
         # return
