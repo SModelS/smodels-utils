@@ -22,13 +22,16 @@ def interpolate ( p1 : dict, p2 : dict, xi : Union[float,str]="half", method : s
         xi= .5*p1["x"]+.5*p2["x"]
     from scipy.interpolate import interp1d
     import numpy as np
-    if method == "expo":
+    import copy
+    p1 = copy.deepcopy ( p1 )
+    p2 = copy.deepcopy ( p2 )
+    if method=="expo":
         p1["y"]= np.log ( p1["y"] )
         p2["y"]= np.log ( p2["y"] )
     x= [ p1["x"], p2["x"] ]
     y= [ p1["y"], p2["y"] ]
-    log_interp = interp1d(x,y, kind='linear')
-    y_new = log_interp(xi)
+    interp = interp1d(x,y, kind='linear')
+    y_new = interp(xi)
     if method == "expo":
         y_new = np.exp(y_new)
     return { "x": xi, "y": float(y_new) }
@@ -36,6 +39,8 @@ def interpolate ( p1 : dict, p2 : dict, xi : Union[float,str]="half", method : s
 if __name__ == "__main__":
     p1 = { "x": 100, "y": 1.460000E+00 }
     p2 = { "x": 125, "y": 1.200000E+00 }
+    print ( "p1", p1 )
+    print ( "p2", p2 )
     expo = interpolate( p1, p2, "half", "expo" )
     lin = interpolate( p1, p2, "half", "linear" )
     print ( "expo", expo )
