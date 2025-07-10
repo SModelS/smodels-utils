@@ -32,10 +32,10 @@ def newWsMaker ( self, apriori : bool = False ) -> list:
     """ this is our replacement wsMaker method. it calls the old wsMaker method,
     but then (potentially) writes out the workspaces.
     """
+    ws = oldWsMaker ( self, apriori )
     if apriori:
         # for now lets not write out the a priori versions
-        return
-    ws = oldWsMaker ( self, apriori )
+        return ws
     if not hasattr ( self, "scale" ): #  or abs ( self.scale - 1 ) < 1e-5:
         # we want to write out only the first patched version, the others are due to rescaling
         # (i think)
