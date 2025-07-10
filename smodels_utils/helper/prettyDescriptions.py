@@ -925,13 +925,42 @@ def getParticleNames ( smsstring : str ) -> Dict:
         ret[int(numbers[0])]=name
     return ret
 
-def prettyAxes ( txn: str, axes : str ) -> str:
-    """ get pretty axes, v2 and v3 alike """
+def prettyAxes ( txn: str, axes : str, dataMap : Union[dict,None] = None ) -> str:
+    # get pretty axes, v2 and v3 alike
     if "{" in axes:
-        return prettyAxesV3 ( txn, axes )
+        return prettyAxesV3 ( txn, axes, dataMap )
     return prettyAxesV2 ( txn, axes )
 
-def prettyAxesV3( txn : str, axes : str ) -> str:
+def compressSQuarks ( pid : Union[int,Set] ) -> Set:
+    """ compress all squarks, i am only interested in ~q """
+    allquarks = [ 1000001, 1000002, 1000003, 1000004,
+                  2000001, 2000002, 2000003, 2000004 ]
+    if type(pid) in [ int ]:
+        if pid in allquarks:
+            return 1000001
+        return pid
+    ret = set()
+    for p in pid:
+        if p in allquarks:
+            ret.add ( 1000001 )
+        else:
+            ret.add ( p )
+    return ret
+
+def compressSLeptons ( pid : Union[int,Set] ) -> Set:
+    """ compress all sleptons, i am only interested in ~q """
+    if type(pid) in [ int ]:
+        return pid
+    ret = set()
+    for p in pid:
+        if p in [ 2000011, 2000013, 2000015 ]:
+            p -= 1000000
+        if p in [ 1000014, 1000016, 2000012, 2000014, 2000016 ]:
+            p = 1000012
+        ret.add ( p )
+    return ret
+
+def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
     """
     get a description of the axes of validation plot
 
@@ -942,95 +971,54 @@ def prettyAxesV3( txn : str, axes : str ) -> str:
     from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
     from smodels_utils.helper.sparticleNames import SParticleNames
     namer = SParticleNames ( susy = True )
-    allpids = getParticleIdsForTemplateFile ( txn )
-    pids = allpids["masses"]
-    wpids = allpids["widths"]
+    opids = getParticleIdsForTemplateFile ( txn )
+    pids = {}
+    for label,pid in opids.items():
+        pid = compressSQuarks ( compressSLeptons ( pid ) )
+        name = namer.texName ( pid, addDollars=True )
+        replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
+        replacements["^+"] = "^\\pm"
+        replacements["^-"] = "^\\pm"
+        for frm,to in replacements.items():
+            name = name.replace(frm,to)
+        if "m" in label or "M" in label:
+            name = f"m({name})"
+        if "w" in label or "W" in label:
+            name = f"\\Gamma({name})"
+        pids[label]=name
     namesOnAxes = {}
-    # the axisMap looks e.g. like: {0: 2400.0, 1: 'x', 2: 'y'}
+    # the axisMap looks e.g. like: {0: 'x', 1: 'x-y', 2: 'x-y/2', 3: 'x-y'}
     # the dataMap looks like {0: (1, 'mass', 1.00E+00 [GeV]),
     #                         1: (3, 'mass', 1.00E+00 [GeV]),
     #                         2: (3, 'totalwidth', 1.00E+00 [GeV]),
+    # the opids look like {'M1': 1000022, 'M0': 1000023, 'm0': 1000024}
+    # the pids look like {'M1': 'm($\\tilde{\\chi}_1^0$)', 'M0': 'm($\\tilde{\\chi}_2^0$)', 'm0': 'm($\\tilde{\\chi}_1^\\pm$)'}
     axisMap = eval ( axes )
     for k,v in axisMap.items():
         if v.endswith ( ".0" ):
             axisMap[k]=v[:-2]
-
-    def compressSQuarks ( pid : Union[int,Set] ):
-        """ compress all squarks, i am only interested in ~q """
-        allquarks = [ 1000001, 1000002, 1000003, 1000004,
-                      2000001, 2000002, 2000003, 2000004 ]
-        if type(pid) in [ int ]:
-            if pid in allquarks:
-                return 1000001
-            return pid
-        ret = set()
-        for p in pid:
-            if p in allquarks:
-                ret.add ( 1000001 )
-            else:
-                ret.add ( p )
-        return ret
-
-    def compressSLeptons ( pid : Union[int,Set] ):
-        """ compress all sleptons, i am only interested in ~q """
-        if type(pid) in [ int ]:
-            return pid
-        ret = set()
-        for p in pid:
-            if p in [ 2000011, 2000013, 2000015 ]:
-                p -= 1000000
-            if p in [ 1000014, 1000016, 2000012, 2000014, 2000016 ]:
-                p = 1000012
-            ret.add ( p )
-        return ret
-
+    cMap = {}
     for k,v in axisMap.items():
-        if k in pids:
-            name = pids[k]
-            pid = compressSQuarks (  pids[k] )
-            pid = compressSLeptons ( pid )
-            name = namer.texName ( pid, addDollars=True )
-            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
-            replacements["^+"] = "^\\pm"
-            replacements["^-"] = "^\\pm"
-            for frm,to in replacements.items():
-                name = name.replace(frm,to)
-            vplacements = {}
-            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
-            for frm,to in vplacements.items():
-                v = str(v).replace(frm,to)
-            value = f"m({name})"
-            if not "x" in v and not "y" in v:
-                v,value = value, v
-            namesOnAxes[v]=value
-        wk = k - len(pids)
-    for wk,v in axisMap.items():
-        if wk in wpids:
-            name = wpids[wk]
-            pid = compressSQuarks ( wpids[wk] )
-            pid = compressSLeptons ( pid )
-            name = namer.texName ( pid, addDollars=True )
-            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
-            replacements["^+"] = "^\\pm"
-            replacements["^-"] = "^\\pm"
-            for frm,to in replacements.items():
-                name = name.replace(frm,to)
-            vplacements = {}
-            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
-            for frm,to in vplacements.items():
-                v = str(v).replace(frm,to)
-            value = f"$\\Gamma$({name})"
-            if not v in namesOnAxes:
-                namesOnAxes[v]=value
-            elif v == "x" and not "y" in namesOnAxes:
-                namesOnAxes["y"]=value
+        label = f"W{k}"
+        if dataMap is None or dataMap[k][1]=="mass":
+            label = f"M{k}"
+        if k < 2:
+            cMap[v]=pids[label]
+        else:
+            label = f"w{k-2}"
+            if dataMap is None or dataMap[k][1]=="mass":
+                label = f"m{k-2}"
+            if axisMap[k-2]==axisMap[k]: ## same entry!
+                if label in pids:
+                    cMap[v]=f"{cMap[v]},{pids[label]}"
+            else:
+                cMap[v]=pids[label]
 
     terms = []
-    for k,v in namesOnAxes.items():
+    for k,v in cMap.items():
         term = f"{k}={v}"
         term = term.replace("0.0","0")
         terms.append ( term )
-    # ret = ", ".join ( terms )
     ret = ""
     for ctr,t in enumerate ( terms ):
         ret += t + ", "

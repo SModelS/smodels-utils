@@ -98,7 +98,7 @@ def prettyAxes( validationPlot ) -> str:
     v = getAxisType ( validationPlot.axes )
     if v == "v2":
         return prettyDescriptions.prettyAxesV2 ( validationPlot.txName, validationPlot.axes )
-    return prettyDescriptions.prettyAxesV3 ( validationPlot.txName, validationPlot.axes )
+    return prettyDescriptions.prettyAxesV3 ( validationPlot.txName, validationPlot.axes, validationPlot.getDataMap() )
 
 def getNiceAxes ( axes : str ) -> str:
     """ get a representation of axes that is suitable as part of a filename """
