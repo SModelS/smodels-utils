@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-# coding: utf-8
+
+"""
+.. module:: patchesFromSModelS
+   :synopsis: neat trick to patch into PyhfUpperLimitComputer to force it
+   to write out the patched json files. use like runSModelS.py!
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+"""
 
 from smodels.statistics.pyhfInterface import PyhfUpperLimitComputer
 
