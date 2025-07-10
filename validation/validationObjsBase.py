@@ -841,6 +841,18 @@ class ValidationObjsBase():
                 meta["commentary"]=txt
         if hasattr ( self.expRes.globalInfo, "resultType" ):
             meta["resultType"]=self.expRes.globalInfo.resultType
+        if hasattr ( self, "getDataMap" ): # V3
+            dm = self.getDataMap()
+            dmn = {}
+            for k,v in dm.items():
+                unit = str(v[2])
+                if unit == "1.00E+00 [GeV]":
+                    unit = "GeV"
+                if unit == "1.00E+00 [MeV]":
+                    unit = "MeV"
+                vn = ( v[0], v[1], unit )
+                dmn[k]=vn
+            meta["dataMap"] = dmn
         from smodels.base import runtime
         if type(runtime._experimental)==dict and "spey" in runtime._experimental and \
                 runtime._experimental["spey"]==True:
