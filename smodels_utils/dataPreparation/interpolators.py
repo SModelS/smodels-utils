@@ -37,8 +37,13 @@ def interpolate ( p1 : dict, p2 : dict, xi : Union[float,str]="half", method : s
     return { "x": xi, "y": float(y_new) }
 
 if __name__ == "__main__":
+    ## 5 gev line
     p1 = { "x": 100, "y": 1.460000E+00 }
     p2 = { "x": 125, "y": 1.200000E+00 }
+    p3 = { "x": 150, "y": 1.260000E+00 }
+    p3 = { "x": 175, "y": 1.270000E+00 }
+    p3 = { "x": 200, "y": 1.060000E+00 }
+    p3 = { "x": 225, "y": 1.360000E+00 }
     print ( "p1", p1 )
     print ( "p2", p2 )
     expo = interpolate( p1, p2, "half", "expo" )
