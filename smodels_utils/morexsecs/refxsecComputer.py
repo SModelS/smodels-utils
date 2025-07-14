@@ -727,7 +727,7 @@ if __name__ == "__main__":
             type=str, default="./simplyGluino.slha" )
     argparser.add_argument ( '-s', '--sqrts',
             help='center-of-mass energies [8 13]',
-            type=int, nargs="*", default=None )
+            type=float, nargs="*", default=None )
     argparser.add_argument ( "-i", "--ignore_pids",
             help="ignore pids", type=str, default=None )
     argparser.add_argument ( "-v", "--verbose",
@@ -737,6 +737,9 @@ if __name__ == "__main__":
     sqrts = args.sqrts
     if sqrts == None:
         sqrts = [ 8, 13 ]
+    for i,s in enumerate(sqrts):
+        if int(s)==s:
+            sqrts[i]=int(s)
     setLogLevel ( "debug" )
     tool = RefXSecComputer( args.verbose )
     slhapaths = args.inputfile
