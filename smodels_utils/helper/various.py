@@ -389,7 +389,7 @@ def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
         if not analysis.endswith  ( "-eff" ):
             oldana = analysis
             analysis += "-eff"
-            for sqrts in [ 8, 13, 14, -1 ]:
+            for sqrts in [ 8, 13, 13.6, 14, -1 ]:
                 anadir = f"{dbpath}{sqrts}TeV/{experiment}/{analysis}"
                 if os.path.exists ( anadir ):
                     print ( f"[various] added -eff to '{oldana}'." )
