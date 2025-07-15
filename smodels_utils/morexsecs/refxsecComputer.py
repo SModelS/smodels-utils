@@ -593,7 +593,7 @@ class RefXSecComputer:
             order = LO
         if pid1 in [ 1000021 ] and pid2 == pid1:
             filename = "xsecgluino%d.txt" % sqrts
-            columns["xsec"]=2
+            columns["xsec"]=1
             isEWK=False
             order = NNLL # 4
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
@@ -731,7 +731,7 @@ if __name__ == "__main__":
     argparser.add_argument ( "-i", "--ignore_pids",
             help="ignore pids", type=str, default=None )
     argparser.add_argument ( "-v", "--verbose",
-            help="Verbose level", type=str, default='info' )
+            help="Verbose level", action="store_true" ) # , type=str, default='info' )
 
     args = argparser.parse_args()
     sqrts = args.sqrts
