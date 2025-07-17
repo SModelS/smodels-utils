@@ -122,8 +122,13 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
     
     return excl_lines
 
-def getOnshellAxesForOffshell(anaDir, tx_onshell, validationFolder ):
-    sm_file = open(f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json","r")
+def getOnshellAxesForOffshell(anaDir : os.PathLike, tx_onshell : str, 
+        validationFolder : os.PathLike ):
+    fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
+    if not os.path.exists ( fname ):
+        print ( f"[drawPaperPlot] {fname} does not exist" )
+        return None
+    sm_file = open(fname,"r")
     file = open(f"{anaDir}/exclusion_lines.json")
     excl_file = json.load(file)
     excl_sm = json.load(sm_file)
@@ -138,7 +143,7 @@ def getOnshellAxesForOffshell(anaDir, tx_onshell, validationFolder ):
         return None
     else:
         axes = sm_file_keys[0].split('_')[-1]
-        print("[drawPaperPlot]", axes)
+        print("[drawPaperPlot]", axes, type(axes))
         return axes
         
     

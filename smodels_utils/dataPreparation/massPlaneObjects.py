@@ -95,7 +95,8 @@ class MassPlane(MassPlaneBase):
 
         return massPlane
 
-    def getNiceAxes(self,axesStr):
+    @classmethod
+    def getNiceAxes(cls,axesStr):
         """
         Convert the axes definition format ('[[x,y],[x,y]]')
         to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
