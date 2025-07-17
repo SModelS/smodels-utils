@@ -278,7 +278,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         print ( f"[runValidation] now producing {ratioscriptfile}" )
         with open ( ratioscriptfile, "wt" ) as f:
             f.write ( "#!/bin/sh\n" )
-            f.write ( "# this script was automatically generated at {time.asctime()}\n" )
+            f.write ( f"# this script was automatically generated at {time.asctime()}\n" )
             f.write ( "# by runValidation.py. adapt at will, adaptations will not be overwritten.\n" )
             f.write ( "\n" )
             scmd = cmd.replace( "./plotRatio.py", f"{pathToValDir}/plotRatio.py" )
