@@ -2,7 +2,8 @@
 
 """
 .. module:: rootPlottingFuncs
-   :synopsis: Some helpers for the root backend
+   :synopsis: Some helpers for the root backend.
+   This is very very obsolete by now!!
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
