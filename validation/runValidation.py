@@ -10,6 +10,7 @@ __all__ = [ "validatePlot" ]
 
 import sys,os,copy
 from smodels_utils.helper.terminalcolors import *
+from smodels.base.physicsUnits import TeV
 import argparse,time
 from sympy import var
 from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
@@ -343,6 +344,10 @@ def runForOneResult ( expRes, options : dict,
     """
     expt0 = time.time()
     logger.info( f"--- {GREEN} validating {expRes.globalInfo.id} {RESET}" )
+    sqrts = expRes.globalInfo.sqrts.asNumber(TeV)
+    if sqrts == int(sqrts): ## needed for run-specific tarballs
+        sqrts = int(sqrts)
+    rundir = f"{sqrts}TeV" # dirname of this run
     #Loop over pre-selected txnames:
     txnamesStr = []
     txnames = []
@@ -406,7 +411,9 @@ def runForOneResult ( expRes, options : dict,
                 if fname == "skip": ## we are asked to skip this
                     tarfile = "skip"
                     continue
-                tarfile = os.path.join(slhadir,fname )
+                tarfile = os.path.join(slhadir, rundir, fname )
+                if not os.path.isfile ( tarfile ):
+                    tarfile = os.path.join(slhadir,fname )
                 if not os.path.isfile ( tarfile ):
                     logger.info( f'Missing {tarfile} file for {txnameStr}.' )
             # continue
@@ -447,9 +454,11 @@ def runForOneResult ( expRes, options : dict,
                         myaxis = axisV2ToV3 ( myaxis )
                     if compareTwoAxes ( myaxis, ax ):
                         hasCorrectAxis_ = True
-                        if os.path.join(slhadir,fname_) != tarfile:
+                        if os.path.join(slhadir,fname_) != tarfile and os.path.join(slhadir,rundir, fname_ ) != tarfile: 
                             # different tarfile! change also ltarfile!
-                            tarfile = os.path.join(slhadir,fname_)
+                            tarfile = os.path.join(slhadir,rundir, fname_)
+                            if not os.path.exists ( tarfile ):
+                                tarfile = os.path.join(slhadir,fname_)
                             ltarfile = tarfile
                 elif type(namedTarball) == list:
                     # looks like were given multiples
@@ -467,8 +476,10 @@ def runForOneResult ( expRes, options : dict,
                             if compareTwoAxes ( myaxis, ax ):
                                 hasCorrectAxis_ = True
                                 pnamedTarball = fname_
-                                if os.path.join(slhadir,fname_) != tarfile:
-                                    tarfile = os.path.join(slhadir,fname_)
+                                if os.path.join(slhadir,fname_) != tarfile and os.path.join(slhadir,rundir, fname_ ) != tarfile:
+                                    tarfile = os.path.join(slhadir,rundir, fname_)
+                                    if not os.path.exists ( tarfile ):
+                                        tarfile = os.path.join(slhadir,fname_)
                                     ltarfile = tarfile
                                 break
                 if fname_ in kfactorDict:
@@ -490,8 +501,10 @@ def runForOneResult ( expRes, options : dict,
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
-                        if os.path.join(slhadir,txnameStr+".tar.gz") != tarfile:
-                            tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+                        if os.path.join(slhadir,txnameStr+".tar.gz") != tarfile and os.path.join(slhadir,rundir,txnameStr+".tar.gz") != tarfile:
+                            tarfile = os.path.join(slhadir,rundir,txnameStr+".tar.gz")
+                            if not os.path.exists ( tarfile ):
+                                tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
                             ltarfile = tarfile
 
                 if tarfile == "skip":
@@ -527,7 +540,9 @@ def runForOneResult ( expRes, options : dict,
                 else:
                     myaxis = str ( eval ( myaxis ) )
                     if compareTwoAxes ( myaxis, ax ):
-                        tarfile = os.path.join(slhadir,fname_)
+                        tarfile = os.path.join(slhadir,rundir,fname_)
+                        if not os.path.exists ( tarfile ):
+                            tarfile = os.path.join(slhadir,fname_)
                         hasCorrectAxis = True
             if type(namedTarball) == list:
                 # looks like were given multiples
@@ -547,7 +562,9 @@ def runForOneResult ( expRes, options : dict,
                 pnamedTarball = namedTarball
             if not hasCorrectAxis and pnamedTarball != "skip":
                 pnamedTarball = None
-                tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+                tarfile = os.path.join(slhadir,rundir,txnameStr+".tar.gz")
+                if not os.path.exists ( tarfile ):
+                    tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
             localopts = copy.deepcopy ( options )
             if hasattr ( txname, "xrange" ):
                 localopts = addRange ( "x", localopts, txname.xrange, ax )
