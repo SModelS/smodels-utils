@@ -95,7 +95,8 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
             # return excl_lines
         if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
-            print (f"[drawPaperPlot] we have {txname}_bestSR_{axes} as an exclusion line" )
+            saxes = axes.eplace(" ","").replace("'","")
+            print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
             excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
             excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
             exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
@@ -110,7 +111,8 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             col = CYAN
             if len(excl_x)==0:
                 col = RED
-            print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
+            scurve = curve.replace(" ","").replace("'","")
+            print (f"[drawPaperPlot] {col}we have {scurve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
             
     excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
 
