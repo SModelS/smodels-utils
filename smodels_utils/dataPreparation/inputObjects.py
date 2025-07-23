@@ -511,14 +511,16 @@ class DataSetInput(Locker):
             return ulspey, ulspeyE
         alpha = .05
         try:
-            from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
-            comp = UpperLimitComputer ( 1. - alpha )
+            from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
+            from smodels.statistics.basicStats import aposteriori
             try:
                 # new API
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                llhdComp = LikelihoodComputer  ( m )
+                comp = UpperLimitComputer ( llhdComp, 1. - alpha )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
