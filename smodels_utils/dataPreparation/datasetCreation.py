@@ -112,8 +112,8 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     try:
         ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber(fb)
     except Exception as e:
-        print ( "Exception", e )
-        print ( "observed:",newds.observedN )
+        print ( f"[datasetCreation] Exception {e}" )
+        print ( f"[datasetCreation] observed: {newds.observedN}" )
         sys.exit()
     if False: # the spey version
         from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
