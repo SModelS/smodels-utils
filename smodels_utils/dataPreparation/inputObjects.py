@@ -287,8 +287,8 @@ class MetaInfoInput(Locker):
             """
             try:
                 import uproot
-                handler = UPROOTCovarianceHandler ( filename, histoname, 
-                    max_datasets, aggregate, aggprefix, zeroIndexed, 
+                handler = UPROOTCovarianceHandler ( filename, histoname,
+                    max_datasets, aggregate, aggprefix, zeroIndexed,
                     scaleCov = scaleCov, blinded_regions = blinded_regions,
                     datasets = datasets )
             except ModuleNotFoundError as e:
@@ -511,10 +511,11 @@ class DataSetInput(Locker):
             return ulspey, ulspeyE
         alpha = .05
         try:
-            from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
-            from smodels.statistics.basicStats import aposteriori
             try:
+                # v3.1.0
                 # new API
+                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
+                from smodels.statistics.basicStats import aposteriori
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
                 llhdComp = LikelihoodComputer  ( m )
@@ -527,9 +528,26 @@ class DataSetInput(Locker):
                 return ul, ulExpected
 
             except Exception as e:
+                print ( f"[inputObjects] Exception {e}, will try with older version" )
+            try:
+                # v3.0.0
+                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
+                # new API
+                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
+                           lumi = lumi )
+                comp = UpperLimitComputer ( 1. - alpha )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                if type(ul) == type(None):
+                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                ul, ulExpected = round_list(( ul, ulExpected ), 4)
+                print ( f"[inputObjects] older version worked!" )
+                return ul, ulExpected
+
+            except Exception as e:
                 print ( "Exception", e  )
         except Exception as e:
-            print ( "Exception", e  )
+            print ( f"[inputObjects] Exception {e}" )
         # print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
         # print ( "SModelS ul", ul, "ule", ulExpected )
         # print ( "spey ul", ulspey, ulspeyE )
