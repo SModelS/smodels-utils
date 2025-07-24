@@ -21,6 +21,10 @@ model.logger.setLevel ( logging.WARNING )
 from smodels.base.physicsUnits import GeV, fb
 from smodels.decomposition import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
+try:
+    from smodels.statistics.basicStats import observed, apriori, aposteriori, NllEvalType
+except Exception as e:
+    pass
 import multiprocessing
 
 def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts ):
@@ -47,8 +51,11 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
         return
     combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
     combiner.computeStatistics()
-    r = combiner.getRValue ( expected=False )
-    rexp = combiner.getRValue ( expected=True )
+    r = combiner.getRValue ( )
+    try:
+        rexp = combiner.getRValue ( evaluationType=apriori )
+    except Exception as e:
+        rexp = combiner.getRValue ( expected = True )
     maxcond = combiner.getmaxCondition()
     xsec =float(combiner.totalXsection().asNumber(fb))
     chi2 = combiner.chi2()
