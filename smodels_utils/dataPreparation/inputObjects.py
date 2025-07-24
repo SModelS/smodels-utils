@@ -504,8 +504,12 @@ class DataSetInput(Locker):
             dataset = SimpleSpeyDataSet ( float(self.observedN),
                         float(self.expectedBG), float(self.bgError), lumi )
             computer = SpeyComputer ( dataset, 1. )
-            ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
-            ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
+            try:
+                ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
+                ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
+            except Exception as e:
+                ulspey = computer.poi_upper_limit ( evaluationType = observed, limit_on_xsec = True )
+                ulspeyE = computer.poi_upper_limit ( evaluationType = apriori, limit_on_xsec = True )
             #Round numbers:
             ulspey, ulspeyE = round_list(( ulspey.asNumber(fb),ulspeyE.asNumber(fb)), 4)
             return ulspey, ulspeyE
@@ -521,7 +525,10 @@ class DataSetInput(Locker):
                 llhdComp = LikelihoodComputer  ( m )
                 comp = UpperLimitComputer ( llhdComp, 1. - alpha )
                 ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
+                try:
+                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
+                except Exception as e:
+                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( evaluationType=aposteriori ).asNumber ( fb )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
