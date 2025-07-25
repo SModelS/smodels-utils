@@ -1004,10 +1004,10 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
         label = f"W{k}"
         if dataMap is None or dataMap[k][1]=="mass":
             label = f"M{k}"
-        if k < 2:
+        if k < 3:
             cMap[v]=pids[label]
         else:
-            label = f"w{k-2}"
+            label = f"w{k-3}"
             if dataMap is None or dataMap[k][1]=="mass":
                 label = f"m{k-2}"
             if axisMap[k-2]==axisMap[k]: ## same entry!
@@ -1018,10 +1018,17 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
                     cMap[v]=pids[label]
                 else:
                     logging.error ( f"we did not find {label} in {pids.keys()} -- hope this is fine." )
+                    if False:
+                        print ( f"@@XX k,v {k,v}" )
+                        print ( f"@@XX dataMap {dataMap}" )
+                        print ( f"@@XX axisMap {axisMap}" )
+                        print ( f"@@XX pids {pids}" )
+                        print ( f"@@XX cMap {cMap}" )
+                        print ( )
 
     terms = []
     for k,v in cMap.items():
-        term = f"{k}={v}"
+        term = f"{v}={k}"
         term = term.replace("0.0","0")
         terms.append ( term )
     ret = ""
