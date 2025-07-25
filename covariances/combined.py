@@ -31,5 +31,5 @@ for txname,analyses in txnames.items():
     for ctr,a in enumerate(analyses):
         for b in analyses[ctr+1:]:
             if a.isUncorrelatedWith ( b ) == True:
-                print ( "%s: %s <-> %s" % ( txname, a.id(), b.id() ) )
+                print ( f"{txname}: {a.id()} <-> {b.id()}" )
     # sys.exit()

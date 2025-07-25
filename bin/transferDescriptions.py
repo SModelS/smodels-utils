@@ -19,7 +19,7 @@ def convert ( string ):
     ret = ret.replace ( ",,CT,,", "_CT" )
     return ret
 
-files = glob.glob ( "%s/*/*/*/globalInfo.txt" % dbf )
+files = glob.glob ( f"{dbf}/*/*/*/globalInfo.txt" )
 for fle in files:
     print ( fle )
     f=open (fle,"r" )
@@ -32,11 +32,11 @@ for fle in files:
     for line in lines:
         if "id:" in line:
             Id=line.replace("id: ","" ).strip()
-            print ( "Id=>%s<" % Id )
+            print ( f"Id=>{Id}<" )
         if "prettyName" in line and Id in SDs.keys():
             oldline=line
-            line = "prettyName: %s\n" % convert(SDs[Id])
-            print ( "replacing %s -> %s" % ( oldline, line ) )
+            line = f"prettyName: {convert(SDs[Id])}\n"
+            print ( f"replacing {oldline} -> {line}" )
             hasPrettyName = True
         ret.append ( line )
     newlines = ret
@@ -45,11 +45,11 @@ for fle in files:
         for l in ret:
             newlines.append ( l )
             if "lumi:" in l:
-                newlines.append ( "prettyName: %s\n" % convert(SDs[Id]) )
+                newlines.append ( f"prettyName: {convert(SDs[Id])}\n" )
     g.write ( "".join ( newlines ) )
     g.close()
 
-files = glob.glob ( "%s/*/*/*/convert.py" % dbf )
+files = glob.glob ( f"{dbf}/*/*/*/convert.py" )
 for fle in files:
     print ( fle )
     f=open (fle,"r" )
@@ -64,12 +64,12 @@ for fle in files:
             pos1=line.find( "('" )
             pos2=line.find( "')" )
             Id=line[pos1+2:pos2]
-            print ( "Id=>%s<" % Id )
+            print ( f"Id=>{Id}<" )
         if "info.prettyName" in line and Id in SDs.keys():
             hasPrettyName = True
             oldline=line
-            line = "info.prettyName = '%s'\n" % convert(SDs[Id])
-            print ( "replacing %s -> %s" % ( oldline, line ) )
+            line = f"info.prettyName = '{convert(SDs[Id])}'\n"
+            print ( f"replacing {oldline} -> {line}" )
         ret.append ( line )
     newlines = ret
     if not hasPrettyName and Id in SDs.keys():
@@ -77,6 +77,6 @@ for fle in files:
         for l in ret:
             newlines.append ( l )
             if "info.lumi" in l:
-                newlines.append ( "info.prettyName = '%s'\n" % convert(SDs[Id]) )
+                newlines.append ( f"info.prettyName = '{convert(SDs[Id])}'\n" )
     g.write ( "".join ( newlines ) )
     g.close()

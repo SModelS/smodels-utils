@@ -46,12 +46,12 @@ def fastlimParser(outputfile,useBestDataset=True,expResID=None,datasetID=None,tx
     
 
     if not os.path.isfile(outputfile):
-        logger.error("Output file %s not found" % (outputfile))
+        logger.error(f"Output file {outputfile} not found")
         return False
         
     if txname:
         if not smodels2fastlim(txname):
-            logger.error("Txname %s not found in dictionary" % (txname))
+            logger.error(f"Txname {txname} not found in dictionary")
             return False
     
     outfile = open(outputfile,'r')

@@ -130,11 +130,11 @@ class DatasetBuilder():
 			if os.path.isfile(self.externalFile):
 				self.massColumns = parameter["massColumns"]
 			else:
-				logger.warning("can't find external file (%s) -> will instead try to load grid points from database" %self.externalFile)
+				logger.warning(f"can't find external file ({self.externalFile}) -> will instead try to load grid points from database")
 				self.externalFile = None
 			
 			
-		logger.info("builder completed for %s" % self.txnameData)
+		logger.info(f"builder completed for {self.txnameData}")
 
 
 
@@ -154,12 +154,12 @@ class DatasetBuilder():
 
 		if self.externalFile == None:
 
-			logger.info("loading gridpoints from %s.txt" % self.txnameData)
+			logger.info(f"loading gridpoints from {self.txnameData}.txt")
 			self._gridPoints, self._gridTargets = loadInternalGridPoints(self.expres, self.txnameData, self.dataselector, self.signalRegion, stripUnits = True)[:-1]
 
 		else:
 
-			logger.info("loading gridpoints from %s" % self.externalFile)
+			logger.info(f"loading gridpoints from {self.externalFile}")
 			self._gridPoints, self._gridTargets = loadExternalGridPoints(self.externalFile, self.massColumns, includeExtremata, targetMinimum)
 
 		
@@ -175,11 +175,11 @@ class DatasetBuilder():
 
 				if fac < 1e-2:
 					
-					logger.debug("refXsec: %s at %s is below threshhold (%s)" % (point, self._gridTargets[n], fac))
+					logger.debug(f"refXsec: {point} at {self._gridTargets[n]} is below threshhold ({fac})")
 					self._gridTargets[n] = targetMinimum
 					count += 1
 
-			logger.info("refXsec: %s/%s gridpoints were set to %s" % (count, len(self._gridTargets), targetMinimum))
+			logger.info(f"refXsec: {count}/{len(self._gridTargets)} gridpoints were set to {targetMinimum}")
 					
 		else:
 			logger.info("no refXsec file specified")
@@ -452,7 +452,7 @@ class DatasetBuilder():
 
 			mean = np.mean(cluster, axis = 0)
 			std = np.std(cluster, axis = 0)
-			logger.debug("cluster %s/%s" % (n+1, len(self._origCluster)))
+			logger.debug(f"cluster {n + 1}/{len(self._origCluster)}")
 			pointsLeft = pointsToDrawPerCluster[n]
 
 			while pointsLeft > 0:
@@ -487,7 +487,7 @@ class DatasetBuilder():
 					drawnMasses.append(strippedUnits)
 					drawnTargets.append(val)
 
-		logger.debug("%s%% are zero." % round(100.*(zeroes/len(drawnMasses)), 3))
+		logger.debug(f"{round(100.0 * (zeroes / len(drawnMasses)), 3)}% are zero.")
 
 		self.masses = np.array(drawnMasses)
 		self.targets = np.array(drawnTargets)
@@ -558,7 +558,7 @@ class DatasetBuilder():
 						samplesLeft -= 1
 						samplesPerHullPointLeft -= 1
 
-						logger.debug("points drawn: %s" % len(drawnMasses))
+						logger.debug(f"points drawn: {len(drawnMasses)}")
 
 			
 		samplesLeft = 0
@@ -621,7 +621,7 @@ class DatasetBuilder():
 		else:
 			self._drawRandomPointsClassification()
 
-		logger.info("dataset generation completed (%ss)" % (round(time() - t0, 3)))
+		logger.info(f"dataset generation completed ({round(time() - t0, 3)}s)")
 
 
 	def createDataset(self, nettype):
@@ -694,7 +694,7 @@ class DatasetBuilder():
 			logger.info("masses will not be rescaled")
 
 		else:
-			logger.error("%s: unrecognized rescale method." % method)
+			logger.error(f"{method}: unrecognized rescale method.")
 
 
 
@@ -720,7 +720,7 @@ class DatasetBuilder():
 			else:
 				self.targets = boxcox(self.targets, lmbda)
 
-			logger.info("lambda: %f" % lmbda)
+			logger.info(f"lambda: {lmbda:f}")
 
 			if not "rescale" in self.__dict__:
 				self.rescale = {}

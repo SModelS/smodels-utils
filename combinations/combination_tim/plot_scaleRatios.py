@@ -55,5 +55,5 @@ for ana in outputDict:
     cbar.set_label(r'$\Delta$ heaviest scale - second-to-heaviest scale',rotation=90)
     # cbar.set_label(r'$c \tau_{\tilde \chi^\pm_1}$ [m]',rotation=90)
     plt.legend()
-    plt.savefig('scaleRatios_%s.png' %ana)
+    plt.savefig(f'scaleRatios_{ana}.png')
     plt.close()

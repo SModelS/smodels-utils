@@ -56,7 +56,7 @@ class SPhenoReader:
           for pdgid,value in masses.items():
             self.masses[pdgid]=float(value)
         except Exception as e:
-            logger.error ( "Exception in ``parseNamesAndMasses'': %s" % e )
+            logger.error ( f"Exception in ``parseNamesAndMasses'': {e}" )
 
     def fullName ( self, pdgid, integrated=False ):
         """ get the full name of pdgid """
@@ -166,7 +166,7 @@ class SPhenoReader:
         n1=self.ids[p1]
         n2=self.ids[p2]
         if math.fabs ( m2 - m1 ) > 25:
-          logger.error ( "cannot merge %s with %s" % ( n1,n2 ) )
+          logger.error ( f"cannot merge {n1} with {n2}" )
           return
         self.masses[p1]=(m1+m2)/2.
         self.masses.pop(p2)
@@ -216,10 +216,10 @@ class SPhenoReader:
             mname = self.name ( mother )
             mmass = self.masses[mother]
             if mmass < 90000.:
-                logger.error ( "[sphenoReader:warning] %s branchings add up to %.2f, mass of %s is %s " % ( mname, rtotal, mname, self.masses[mother] ) )
+                logger.error ( f"[sphenoReader:warning] {mname} branchings add up to {rtotal:.2f}, mass of {mname} is {self.masses[mother]} " )
             return
           if absdiff > 0.01:
-            logger.warn ( "[sphenoReader:warning] %s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )
+            logger.warn ( f"[sphenoReader:warning] {self.name(mother)} branchings add up to {rtotal:.2f}" )
             return
 
     def integratePdgs ( self, pdgid ):
@@ -296,10 +296,10 @@ class SPhenoReader:
             except ParseException as e:
               logger.error ( "error, failed while trying to interpret "\
                     "the following line as a decay line" )
-              logger.debug ( "line >>%s<<" % line )
+              logger.debug ( f"line >>{line}<<" )
           self.checkDecayTable()
         except Exception as e:
-          logger.error ( "exception in ``parseBranchings'': %s" %e )
+          logger.error ( f"exception in ``parseBranchings'': {e}" )
 
     def pdgId ( self, name ):
         if type(name)==type(3):
@@ -353,7 +353,7 @@ class SPhenoReader:
             pos=particle.find(" ")
             p=particle[:pos]
             particle=particle[pos:]
-            logger.debug ( "p=->%s<- pp=->%s<=" % ( p, particle ) )
+            logger.debug ( f"p=->{p}<- pp=->{particle}<=" )
           return ret
         return 0.0
 

@@ -66,7 +66,7 @@ def copyExclusionline ( expRes ):
     keys = []
     for i in range(n):
         name = t.GetListOfKeys().At(i).GetName()
-        keys.append ( f.Get("TGQ/%s" % name ) )
+        keys.append ( f.Get(f"TGQ/{name}" ) )
         # keys.append ( t.GetListOfKeys().At(i).Clone() )
     f2 = ROOT.TFile ( "new.root", "recreate" )
     f2.mkdir ("TGQ12" )
@@ -75,11 +75,11 @@ def copyExclusionline ( expRes ):
         k.Write()
     f2.Write()
     f2.Close()
-    subprocess.getoutput ( "cp new.root %s" % smsfile )
+    subprocess.getoutput ( f"cp new.root {smsfile}" )
 
 def writeTextFile ( dataset, effs ):
     """ write the TGQ12.txt text file """
-    Txname = "%s.txt" % dataset.dataInfo.dataId
+    Txname = f"{dataset.dataInfo.dataId}.txt"
     # print ( "path", dataset.dataInfo.path )
     Txname = dataset.dataInfo.path.replace("dataInfo","TGQ12" )
     if True:
@@ -112,7 +112,7 @@ def main():
                                 dataTypes = [ "efficiencyMap" ],
                                 useNonValidated=True )
     if len(expRes)!= 1:
-        print ( "error, I have %d results. dont know what to do" % len(expRes) )
+        print ( f"error, I have {len(expRes)} results. dont know what to do" )
         sys.exit()
     expRes = expRes[0]
     if False:

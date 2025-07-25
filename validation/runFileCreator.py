@@ -63,11 +63,11 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
 
     ngraphs = sum([len(tg) for tg in tgraphs.values()])
     if ngraphs == 0:
-        logger.info("No exclusion curves found for %s" %txnameStr)
+        logger.info(f"No exclusion curves found for {txnameStr}")
        
     #Get SLHA points and create files for each axes
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
-    logger.debug("tempdir is %s" % tempdir )
+    logger.debug(f"tempdir is {tempdir}" )
     pythiaVersion = 6
     totalPoints = 0
     if xargs.pythia6 and not xargs.pythia8:
@@ -76,7 +76,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
         pythiaVersion = 8
     for (axes,ntgraph) in tgraphs.items():
         pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, Npts)
-        logger.info("\033[31m %i SLHA files for axes %s \033[0m " %(len(pts),axes))
+        logger.info(f"\x1b[31m {len(pts)} SLHA files for axes {axes} \x1b[0m ")
         totalPoints += len(pts)
         if len(pts)==0:
             continue
@@ -155,12 +155,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     """
 
     if not os.path.isdir(databasePath):
-        logger.error('%s is not a folder' %databasePath)
+        logger.error(f'{databasePath} is not a folder')
     
     try:
         db = Database(databasePath)
     except Exception as e:
-        logger.error("Error loading database at %s: %s" % (databasePath,e) )
+        logger.error(f"Error loading database at {databasePath}: {e}" )
         
     
     logger.info('----- Running creation...')
@@ -187,15 +187,15 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
         templateFile = os.path.join(templatedir,txname+'.template')
         tarFile = os.path.join(slhadir,txname+'.tar.gz')
         if addToFile and os.path.isfile(tarFile):
-            logger.info("--------  \033[32m Extending %s \033[0m" %tarFile)
+            logger.info(f"--------  \x1b[32m Extending {tarFile} \x1b[0m")
         else:
-            logger.info("--------  \033[32m Generating %s \033[0m" %tarFile)            
+            logger.info(f"--------  \x1b[32m Generating {tarFile} \x1b[0m")            
         t0 = time.time()
         createFiles(expResList,txname,templateFile,tarFile,addToFile,xargs,Npts,computexsecs)
         if addToFile and os.path.isfile(tarFile):                
-            logger.info("--------  \033[32m File %s extended in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
+            logger.info(f"--------  \x1b[32m File {tarFile} extended in {(time.time() - t0) / 60.0:.1f} min. \x1b[0m \n")
         else:
-            logger.info("--------  \033[32m File %s generated in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))            
+            logger.info(f"--------  \x1b[32m File {tarFile} generated in {(time.time() - t0) / 60.0:.1f} min. \x1b[0m \n")            
     
     logger.info("\n\n----- Finished file creation.")
 
@@ -215,9 +215,9 @@ if __name__ == "__main__":
     args = ap.parse_args()
     
     if not os.path.isfile(args.parfile):
-        logger.error("Parameters file %s not found" %args.parfile)
+        logger.error(f"Parameters file {args.parfile} not found")
     else:
-        logger.info("Reading validation parameters from %s" %args.parfile)
+        logger.info(f"Reading validation parameters from {args.parfile}")
 
     try:
         parser = ConfigParser( inline_comment_prefixes=( ';', ) )

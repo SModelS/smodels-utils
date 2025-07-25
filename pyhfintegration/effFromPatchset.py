@@ -40,7 +40,7 @@ with open('EWKinos_patchset.json', 'r') as f:
     patchset = json.load(f)
 
 for i,sr in enumerate(chPath):
-    name = "%s_winobino(+)_efficiency.csv" % sr
+    name = f"{sr}_winobino(+)_efficiency.csv"
     goodpath = chPath[sr]
     if i <= 5: # CRs
         BR =  0.6741*(0.03363+0.03366)
@@ -78,6 +78,6 @@ for i,sr in enumerate(chPath):
                 #     print(sr)
                 #     selectEff += eff
                 # print("{},{},{}".format(massvector[0], massvector[1], eff))
-                out.write("{},{},{}\n".format(massvector[1], massvector[1]-massvector[2], eff))
+                out.write(f"{massvector[1]},{massvector[1] - massvector[2]},{eff}\n")
 # print('"""%s"""' % selectSR)
 # print("{},{},{}".format(selectMass[0], selectMass[0]-selectMass[1], selectEff))

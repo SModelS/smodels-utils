@@ -12,7 +12,7 @@ except:
     import subprocess as executor
 
 
-f=open("log%s" % version(),"w")
+f=open(f"log{version()}","w")
 # dir = "./database/"
 dir = "../../smodels-database/"
 
@@ -20,9 +20,9 @@ def write ( line ):
     f.write ( line + "\n" )
     print ( line )
 
-write ( "version: %s" % version() )
+write ( f"version: {version()}" )
 
-pcl = "%sdatabase.pcl" % dir
+pcl = f"{dir}database.pcl"
 
 if os.path.exists ( pcl ):
     os.unlink ( pcl )
@@ -32,12 +32,12 @@ write ( "start" )
 d=Database( dir )
 write( str(d) )
 t1=time.time()
-write ( "Building the database took %.2f seconds." % ( t1 - t0 ) )
+write ( f"Building the database took {t1 - t0:.2f} seconds." )
 s = os.stat ( pcl )
-write ( "Database is %.1f MB." % ( s.st_size / 1000. / 1000. ) )
+write ( f"Database is {s.st_size / 1000.0 / 1000.0:.1f} MB." )
 d=Database( dir )
 t2=time.time()
-write ( "Reading the database took %.2f seconds." % ( t2 - t1 ) )
+write ( f"Reading the database took {t2 - t1:.2f} seconds." )
 
 statistics = []
 
@@ -48,7 +48,7 @@ for i in range(10):
     d=Database( dir )
     t4=time.time()
     dt = t4 - t3
-    write ( "Reading the database (flushed) took %.2f seconds." % dt )
+    write ( f"Reading the database (flushed) took {dt:.2f} seconds." )
     statistics.append ( dt )
 
 write ( "avg time reading database: %.2f +- %.2f" % \

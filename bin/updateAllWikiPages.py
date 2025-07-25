@@ -7,7 +7,7 @@ from typing import Union, Text
 from smodels_utils.helper.terminalcolors import *
 
 def execute(cmd):
-    print ( "[cmd] %s" % " ".join ( cmd ) )
+    print ( f"[cmd] {' '.join(cmd)}" )
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line 
@@ -45,7 +45,7 @@ def gitPush( dry_run, commit, version : Union[None,Text] ):
     if dry_run:
         return
     o = subprocess.getoutput ( cmd )
-    print ( "[updateAllWikiPages.py] %s" % o )
+    print ( f"[updateAllWikiPages.py] {o}" )
 
 def main():
     import argparse

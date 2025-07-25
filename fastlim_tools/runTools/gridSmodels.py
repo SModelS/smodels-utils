@@ -48,7 +48,7 @@ def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
     
     #Several checks to make sure SModelS will run with the correct input    
     if not os.path.isfile(slhafile):
-        logger.error("File: %s not found" %slhafile)
+        logger.error(f"File: {slhafile} not found")
         return False
     elif not os.path.isabs(slhafile) or not os.path.isabs(outfile):
         logger.error("Please provide absolute paths for files")
@@ -120,7 +120,7 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=None)
         database = browser.database
         database.expResultList = browser._selectedExpResults            
     else:
-        logger.error('Database folder %s not found' %databasePath)
+        logger.error(f'Database folder {databasePath} not found')
         return False
 
     #Get SLHA files

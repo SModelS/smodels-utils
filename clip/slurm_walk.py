@@ -331,7 +331,7 @@ def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
     cmd += [ "-c", "10" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "--time", f"{time * 60 - 1}" ]
     nprcs = 2 # was at 10
     script = produceLLHDScanScript ( pid, yvariable, rewrite, rundir, nprcs,
             select, do_srcombine, uploadTo  )
@@ -383,7 +383,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
     cmd += [ "-c", f"8" ]
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "--time", f"{time * 60 - 1}" ]
     nprc = 2
     fname = produceScanScript ( pid, rewrite, yvariable, rundir, nprc, dbpath, select,
                                 do_srcombine, uploadTo )
@@ -452,7 +452,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         cmd += [ "--reservation", "interactive" ]
     cmd += [ "--error", f"{outputdir}/hi-%j.out",
              "--output", f"{outputdir}/hi-%j.out" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "--time", f"{time * 60 - 1}" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"

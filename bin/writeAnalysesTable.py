@@ -304,7 +304,7 @@ class Writer:
             else:
                 if not isIn ( i, txnames ):
                     txnames.append ( i )
-        alltxes = "%d: " % len(txnames)
+        alltxes = f"{len(txnames)}: "
         maxn = 40
         if self.prettyNames:
             maxn=15
@@ -313,7 +313,7 @@ class Writer:
             if not first:
                 alltxes+=", "
             first=False
-            alltxes+= "%s" % i
+            alltxes+= f"{i}"
             if len(alltxes)>maxn:
                 alltxes+="..."
                 break
@@ -502,7 +502,7 @@ class Writer:
         toprint += "\\hline\n"
         if self.caption:
             caption = "\\caption{SModelS database"
-            if self.experiment != "both": caption += " (%s)" % self.experiment
+            if self.experiment != "both": caption += f" ({self.experiment})"
             toprint += "%s}\n" % caption
             toprint += "\\label{tab:SModelS database}\n"
         toprint += "\\end{%s}\n" % self.table
@@ -536,13 +536,13 @@ class Writer:
         o6 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
-        self.pprint ( "done latexing, see %s.pdf" % base )
+        self.pprint ( f"done latexing, see {base}.pdf" )
         if os.path.exists ( "/bin/pdftrimwhite" ):
-            trimcmd = "pdftrimwhite %s.pdf %strimmed.pdf" % ( base, base )
+            trimcmd = f"pdftrimwhite {base}.pdf {base}trimmed.pdf"
             C.getoutput ( trimcmd )
             self.pprint ( f"trimmed version: {base}trimmed.pdf" )
         if self.experiment != "both":
-            C.getoutput ( "mv smodels.pdf %s.pdf" % base )
+            C.getoutput ( f"mv smodels.pdf {base}.pdf" )
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
         for i in [ "smodels.log", "smodels.out", "smodels.aux" ]:
             if os.path.exists ( i ):

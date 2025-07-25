@@ -169,7 +169,7 @@ def convertNewAxes ( newa ):
             axes.append ( newa["z"] )
         return axes[::-1]
     if not errMsgIssued["axis"]:
-        print ( "[plotRatio] cannot convert axis '%s'" % newa )
+        print ( f"[plotRatio] cannot convert axis '{newa}'" )
         errMsgIssued["axis"]=True
     return None
 
@@ -367,7 +367,7 @@ def getFigureUrl( validationPlot ):
     pos = [i for i,x in enumerate(txaxes) if x==validationPlot.axes ]
 
     if len(pos)!=1:
-        logger.error("found axes %d times. Did you declare several maps for the same analysis/dataset/topology combo? Will exit, please fix!" % len(pos))
+        logger.error(f"found axes {len(pos)} times. Did you declare several maps for the same analysis/dataset/topology combo? Will exit, please fix!")
         sys.exit()
     return txurl[pos[0]]
 

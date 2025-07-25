@@ -44,7 +44,7 @@ def run ( n, selected, denominator, plot ):
     fname=checkN( n )
     D=__import__( fname )
     data=D.d
-    print ( "I have a total of %d points." % len(data) )
+    print ( f"I have a total of {len(data)} points." )
 
     #max number of bins
     bmax = max( [ x["nbins"] for x in data ] )
@@ -76,15 +76,15 @@ def run ( n, selected, denominator, plot ):
         if denominator=="mean":
             denom=numpy.mean ( [row["ul_nick"],row["ul_prof"],row["ul_marg10"] ] )
         else:
-            denom= row["ul_%s" % denominator ]
+            denom= row[f"ul_{denominator}" ]
 
         for a in algos.keys():
-            T[a][nbins].append( row["t_%s" % a ] )
-            r = row["ul_%s" % a ]
+            T[a][nbins].append( row[f"t_{a}" ] )
+            r = row[f"ul_{a}" ]
             if type(r)==float:
-                R[a][nbins].append( row["ul_%s" % a ] / denom )
+                R[a][nbins].append( row[f"ul_{a}" ] / denom )
             else:
-                print ( "skipping ul: %s" % r )
+                print ( f"skipping ul: {r}" )
 
     def mean ( Rx ):
         x=[]

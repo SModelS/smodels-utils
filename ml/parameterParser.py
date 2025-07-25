@@ -157,7 +157,7 @@ class Parameter(dict):
 		:param logLevel: verbosity level of our logger
 		"""
 
-		print("reading %s.." %fileName)
+		print(f"reading {fileName}..")
 
 		parser = ConfigParser( inline_comment_prefixes=(';', ) )
 		parser.allow_no_value = True
@@ -192,7 +192,7 @@ class Parameter(dict):
 					loadedValues[keyword] = param
 
 			else:
-				print("no '{}' section found. Skipping..".format(key)) #logger.info
+				print(f"no '{key}' section found. Skipping..") #logger.info
 				loadedValues = None
 
 
@@ -252,7 +252,7 @@ class Parameter(dict):
 			expres = self["smodels-db"].getExpResults(analysisIDs = analysis, txnames = txName, dataTypes = dataSelector, useSuperseded = True, useNonValidated = True)[0]
 			txList = expres.getDataset(signalRegion).txnameList
 		except:
-			print("No result found for %s: %s [%s] (%s)" % (analysis, txName, signalRegion, dataSelector))
+			print(f"No result found for {analysis}: {txName} [{signalRegion}] ({dataSelector})")
 			return False
 
 		for tx in txList:

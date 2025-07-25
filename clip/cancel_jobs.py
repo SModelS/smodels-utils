@@ -26,7 +26,7 @@ def main():
     if args.all:
         grp = ""
     if args.pattern != None:
-        grp = "| grep %s" % args.pattern
+        grp = f"| grep {args.pattern}"
     if args.bake:
         grp = "| grep ' B'"
     if args.pending:
@@ -37,15 +37,15 @@ def main():
         grp = "| grep SERVER"
     if args.run:
         grp = "| grep RUN_"
-    a= subprocess.getoutput ( "slurm q %s" % grp )
+    a= subprocess.getoutput ( f"slurm q {grp}" )
     if args.dry_run:
         print ( "dry run, but here is what I would do:" )
     print ( "cancelling", end=" " )
     for line in a.split("\n" ):
         jobid = line[:8].strip()
-        print ( "%s" % jobid, end=" " )
+        print ( f"{jobid}", end=" " )
         if not args.dry_run:
-            subprocess.getoutput ( "scancel %s" % jobid )
+            subprocess.getoutput ( f"scancel {jobid}" )
     print ( "done." )
 
 main()

@@ -25,10 +25,10 @@ def downGrade ( n, noCov, skip=[] ):
     for i in glob.iglob ( "sr*" ):
         srN = int ( i[2:] )
         if srN >= n or srN in skip:
-            if os.path.exists ( ".backup/%s" % i ):
-                subprocess.getoutput ( "rm -r %s" % i )
+            if os.path.exists ( f".backup/{i}" ):
+                subprocess.getoutput ( f"rm -r {i}" )
             else:
-                subprocess.getoutput ( "mv %s .backup/" % i )
+                subprocess.getoutput ( f"mv {i} .backup/" )
     f=open("globalInfo.txt","r")
     lines=f.readlines()
     f.close()

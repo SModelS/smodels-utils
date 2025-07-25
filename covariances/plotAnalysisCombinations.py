@@ -301,7 +301,7 @@ def main():
     options = { "mumin": args.mumin, "mumax": args.mumax,
                 "output": args.output }
     fig = getPlot(args.filename, args.parameterFile, options)
-    print('Done in %1.2f s' %(timeit.default_timer()-t0))
+    print(f'Done in {timeit.default_timer() - t0:1.2f} s')
 
 if __name__ == "__main__":
     main()

@@ -267,7 +267,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         types.append(dataset.dataInfo.dataType)
     types = list(set(types))
     if len(types) == 1: types = types[0]
-    resultType = "%s" %str(types)
+    resultType = f"{str(types)}"
     if len ( validationPlot.expRes.datasets ) > 1 and validationPlot.combine:
         hasCombinedInfo = False
         for i in [ "covariance", "jsonFiles", "mlModels" ]:

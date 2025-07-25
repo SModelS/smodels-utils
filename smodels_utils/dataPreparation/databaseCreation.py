@@ -766,8 +766,7 @@ class DatabaseCreator(list):
                 destfile = destfile.replace("dataInfo.txt", "BkgOnly.json" )
                 shutil.copy ( sourcefile, destfile )
                 value = "BkgOnly.json"
-            content = '%s%s%s%s\n' % (content, attr,\
-                                       self.assignmentOperator, value)
+            content = f'{content}{attr}{self.assignmentOperator}{value}\n'
 
         infoFile = open(self.base + path, 'w')
         self.timeStamp ( f"writing info file {path}" )

@@ -37,13 +37,13 @@ if __name__ == "__main__":
     if  len(sys.argv) > 1:
         databasePath = sys.argv[1]
     if not os.path.isdir(databasePath) and not os.path.isfile(databasePath):
-        Logger.error("Database %s not found!" %databasePath)
+        Logger.error(f"Database {databasePath} not found!")
         sys.exit()
     
     #Load the Browser and check if it is a valid database   
     browser = Browser(databasePath)
     if not browser:
-        Logger.error("Error loading database in %s" %databasePath)
+        Logger.error(f"Error loading database in {databasePath}")
         sys.exit()
     
     #Launches the browser GUI    

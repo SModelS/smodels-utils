@@ -13,8 +13,8 @@ from __future__ import print_function
 import sys,glob,os,time,inspect
 from subprocess import Popen,PIPE
 home=os.environ["HOME"]
-sys.path.append('%s/smodels-utils' % home )
-sys.path.append('%s/smodels' % home )
+sys.path.append(f'{home}/smodels-utils' )
+sys.path.append(f'{home}/smodels' )
 
 thisdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 thisdir = thisdir.replace ( "/smodels_utils/dataPreparation", "" )
@@ -27,7 +27,7 @@ template = open("convertNew_template.py",'r')
 header = template.read()
 template.close()
 
-databasePath = '%s/smodels-database' % home
+databasePath = f'{home}/smodels-database'
     
 def getObjectNames(f,objType):
     """
@@ -67,7 +67,7 @@ def getObjectLines(f,objName,objType):
     
     f.seek(0,0)
     objLines = []
-    instanceTag = "%s=%s(" %(objName,objType)
+    instanceTag = f"{objName}={objType}("
     start,stop = False,False
     for l in f.readlines():
         if l.lstrip() and l.lstrip()[0] == '#':
@@ -148,7 +148,7 @@ def newMassFormat(line):
         newAxes.append(xeq)
     
     newAxes = str(newAxes).replace("'","")
-    newAxes = "2*[%s]" %newAxes
+    newAxes = f"2*[{newAxes}]"
     
     return lA+newAxes+lC
     
@@ -234,11 +234,11 @@ def getSources(planeLines):
                  dataFiles= %s,\n\
                  dataFormats= %s" %(dataLabels,dataFiles,dataFormats)
     if objNames.count(None) != len(objNames) and objNames.count('None') != len(objNames):
-        newSourceStr += ",objectNames= %s" %objNames                 
+        newSourceStr += f",objectNames= {objNames}"                 
     if indices.count(None) != len(indices) and indices.count('None') != len(indices):
-        newSourceStr += ",indices= %s" %indices
+        newSourceStr += f",indices= {indices}"
     if units.count(None) != len(units) and units.count('None') != len(units):
-        newSourceStr += ",units= %s" %units
+        newSourceStr += f",units= {units}"
 
     return newSourceStr+")"
 
@@ -251,7 +251,7 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     
     hasConstraint = False
     for l in txOffLines:
-        if "%s.off.constraint" %txname in l:
+        if f"{txname}.off.constraint" in l:
             hasConstraint = True
             break
     
@@ -264,10 +264,10 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     
     #Ignore mass constraints for on-shell txname 
     #everytime off-shell also exists (include full data):
-    fnew.write('%s.massConstraint = None\n' %txname)
+    fnew.write(f'{txname}.massConstraint = None\n')
     
     #Define off-shell txname:
-    fnew.write("%soff = dataset.addTxName('%soff')\n" %(txname,txname))
+    fnew.write(f"{txname}off = dataset.addTxName('{txname}off')\n")
     for l in txOffLines:
         l = l.replace('.off.','off.')
         fnew.write(l)
@@ -275,7 +275,7 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     massConstraint = getMassConstraint(txname,onshellConstraint) #Get on-shell constraints
     massConstraintOff = str(massConstraint).replace('>','<') #Get off-shell constraints
     massConstraintOff = massConstraintOff.replace("'dm <= 0.0'","'dm >= 0.0'") #Revert back dummy constraints
-    fnew.write('%soff.massConstraint = %s\n' %(txname,massConstraintOff))
+    fnew.write(f'{txname}off.massConstraint = {massConstraintOff}\n')
     return True
 
 
@@ -343,12 +343,12 @@ def main(f,fnew):
         else:
             dataFolder = dataId.replace(" ","")
             dataType = 'efficiencyMap'
-        datasetStr = "dataset = DataSetInput('%s')\n" %dataFolder #Dataset folder name                
-        datasetStr += "dataset.setInfo(dataType = '%s', dataId = %s)" %(dataType,dataId)
+        datasetStr = f"dataset = DataSetInput('{dataFolder}')\n" #Dataset folder name                
+        datasetStr += f"dataset.setInfo(dataType = '{dataType}', dataId = {dataId})"
         fnew.write(datasetStr+'\n\n')
         
     if datasets != [None]:
-        print ( 'efficiency map result not yet implemented (%s)' %f.replace('convert.py','') )
+        print ( f"efficiency map result not yet implemented ({f.replace('convert.py', '')})" )
         fold.close()
         fnew.close()        
         return None
@@ -358,7 +358,7 @@ def main(f,fnew):
     txnames = getObjectNames(fold, 'TxNameInput')
     for txname in txnames:
         if txnames.count(txname) > 1:
-            print ( 'Txname %s is defined multiple times' %txname )
+            print ( f'Txname {txname} is defined multiple times' )
             return False
         
         fnew.write("#+++++++ next txName block ++++++++++++++\n")
@@ -372,7 +372,7 @@ def main(f,fnew):
                 txOffLines.append(l)
                 continue
             elif '.on.' in l:
-                if '%s.on.constraint'%txname in l:
+                if f'{txname}.on.constraint' in l:
                     onshellConstraint = l.split('=')[1].strip()
                 l = l.replace('.on.','.')
             fnew.write(l)
@@ -384,22 +384,22 @@ def main(f,fnew):
         else:
             source = None
         if source:
-            fnew.write('%s.source = "%s"\n' %(txname,source))
+            fnew.write(f'{txname}.source = "{source}\"\n')
         #Add txnameOff definitions:
         if txOffLines:
             addedTxOff = addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint)
             if addedTxOff and source:
-                    fnew.write('%soff.source = "%s"\n' %(txname,source))
+                    fnew.write(f'{txname}off.source = "{source}\"\n')
 
 
         #Get mass planes for txname:
-        massPlanes = getObjectNames(fold, '%s.addMassPlane'%txname)
+        massPlanes = getObjectNames(fold, f'{txname}.addMassPlane')
         for plane in massPlanes:
             fnew.write("#+++++++ next mass plane block ++++++++++++++\n")
             if massPlanes.count(plane) > 1:
-                print ( 'Plane %s for %s is defined multiple times' %(plane,txname) )
+                print ( f'Plane {plane} for {txname} is defined multiple times' )
                 return False
-            planeLines = getObjectLines(fold, plane, '%s.addMassPlane'%txname)
+            planeLines = getObjectLines(fold, plane, f'{txname}.addMassPlane')
             hasDataUrl = False            
             for l in planeLines:
                 if '.addMassPlane(' in l:
@@ -415,7 +415,7 @@ def main(f,fnew):
                 fnew.write(l)
             #Write down dataUrl if not yet appears:
             if not hasDataUrl:
-                fnew.write("%s.dataUrl = 'Not defined'\n" %plane)
+                fnew.write(f"{plane}.dataUrl = 'Not defined'\n")
             #Extract sources from file:
             sourceStr = plane+getSources(planeLines)
             fnew.write(sourceStr+'\n')
@@ -423,7 +423,7 @@ def main(f,fnew):
             #Add plane to off-shell txname, if off-shell lines
             #have been added
             if txOffLines and addedTxOff:          
-                fnew.write("%s.addMassPlane(%s)\n" %(txname+"off",plane))
+                fnew.write(f"{txname + 'off'}.addMassPlane({plane})\n")
             
         fnew.write('\n')
             
@@ -483,18 +483,18 @@ if __name__ == "__main__":
             r = main(f,fnew)
                 
             if not r:
-                print ( '\033[31m Error generating %s \033[0m' %fnew )
+                print ( f'\x1b[31m Error generating {fnew} \x1b[0m' )
                 sys.exit()        
                 
         #Make file executable
-        run = Popen('chmod +x %s' %fnew,shell=True)
+        run = Popen(f'chmod +x {fnew}',shell=True)
         run.wait()
         if args.dont_run:
             continue
         #Execute file
         rdir = fnew.replace(os.path.basename(fnew),'')
         t0 = time.time()
-        run = Popen(fnew+' -smodelsPath %s/smodels -utilsPath %s/smodels-utils' % (home, home),
+        run = Popen(fnew+f' -smodelsPath {home}/smodels -utilsPath {home}/smodels-utils',
                     shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
         
         rstatus = None
@@ -503,19 +503,19 @@ if __name__ == "__main__":
             rstatus = run.poll()
         if time.time() - t0 > timeOut:
             run.terminate()
-            print ('\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut))
+            print (f'\x1b[31m Running {fnew} exceeded timeout {timeOut} \x1b[0m')
             sys.exit()
         
 #         print run.stdout.read()
 #         print run.stderr.read()
 
         if rstatus:
-            print ('\033[31m Error running %s \033[0m' %fnew)
+            print (f'\x1b[31m Error running {fnew} \x1b[0m')
             print (rstatus)
             sys.exit()
         rerror = run.stderr.read()
         if rerror:
-            print ('\033[31m Error running %s: \033[0m' %fnew)
+            print (f'\x1b[31m Error running {fnew}: \x1b[0m')
             print (rerror )
             sys.exit()
         
@@ -526,15 +526,15 @@ if __name__ == "__main__":
                 ignore = True
                 break
         if ignore:
-            print ("\033[31m Not checking %s \033[0m" %f.replace('convert.py',''))
+            print (f"\x1b[31m Not checking {f.replace('convert.py', '')} \x1b[0m")
             continue
 
         
-        oldir = rdir.replace(databasePath,'%s/smodels-database-master' % home )
+        oldir = rdir.replace(databasePath,f'{home}/smodels-database-master' )
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
-            print ('\033[31m Error comparing %s \033[0m' %rdir)
+            print (f'\x1b[31m Error comparing {rdir} \x1b[0m')
             sys.exit()
             
-        print ("\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0))
+        print (f"\x1b[32m {f} OK (runtime = {time.time() - t0:.1f} s) \x1b[0m")
         

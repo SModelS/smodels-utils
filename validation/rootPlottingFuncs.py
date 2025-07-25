@@ -55,12 +55,12 @@ def clean ( obj ):
         ret.GetPoint(i,x,y)
         if x.value < 0.:
             if not warnedY:
-                print ( "[plottingFuncs] ERROR: x value %s of %s smaller than zero! Will set to zero and suppress future warnings." % ( x.value, obj.GetName() ) )
+                print ( f"[plottingFuncs] ERROR: x value {x.value} of {obj.GetName()} smaller than zero! Will set to zero and suppress future warnings." )
                 warnedX = True
             ret.SetPoint ( i, 0., y.value )
         if y.value < 0.:
             if not warnedY:
-                print ( "[plottingFuncs] ERROR: y value %s of %s smaller than zero! Will set to zero and suppress future warnings." % ( y.value, obj.GetName() ) )
+                print ( f"[plottingFuncs] ERROR: y value {y.value} of {obj.GetName()} smaller than zero! Will set to zero and suppress future warnings." )
                 warnedY = True
             ret.SetPoint ( i, x.value, 0. )
     return ret
@@ -227,7 +227,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,
         l1=TLatex()
         l1.SetNDC()
         l1.SetTextSize(.02)
-        l1.DrawLatex(.12,.1,"%s" % figureUrl)
+        l1.DrawLatex(.12,.1,f"{figureUrl}")
         base.l1=l1
 
     if not validationPlot.data:
@@ -269,7 +269,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,
                     eff = str(eff)
                 lk.DrawLatex(x, y, eff)
             else:
-                logger.error( "dont know how to draw %s" % what )
+                logger.error( f"dont know how to draw {what}" )
                 sys.exit()
             labels.append(lk )
 
@@ -296,7 +296,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,
     l2=TLatex()
     l2.SetNDC()
     l2.SetTextSize(.04)
-    l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor)
+    l2.DrawLatex(.15,.78,f"k-factor {kfactor:.2f}")
     base.l2=l2
     l3=TLatex()
     l3.SetNDC()
@@ -315,7 +315,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,
         l4=TLatex()
         l4.SetNDC()
         l4.SetTextSize(.04)
-        l4.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
+        l4.DrawLatex(.15,.62, f"signal factor {signal_factor:.1f}" )
         base.l4=l4
 
     plane.base = base
@@ -374,7 +374,7 @@ def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
             elif what == 'crosssections':
                 z = pt['signal'].asNumber(pb)
             else:
-                logger.error("Unknown plotting variable: %s" %what)
+                logger.error(f"Unknown plotting variable: {what}")
                 return None
             grTemp.SetPoint(grTemp.GetN(),x,y,z)
             if pt['signal'] > pt['UL']:
@@ -433,7 +433,7 @@ def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
         sigFac=TLatex()
         sigFac.SetNDC()
         sigFac.SetTextSize(.04)
-        sigFac.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
+        sigFac.DrawLatex(.15,.62, f"signal factor {signal_factor:.1f}" )
         base.sigFac = sigFac
     leg = TLegend(0.5,0.5,0.7,0.7,"")
     leg.AddEntry(official,"Official Exclusion","L")
@@ -592,7 +592,7 @@ def getContours(tgraph,contVals, name ):
     from array import array
 
     if tgraph.GetN() == 0:
-        logger.info("No excluded points found for %s" %tgraph.GetName())
+        logger.info(f"No excluded points found for {tgraph.GetName()}")
         return None
 
     cVals = sorted(contVals)
@@ -625,7 +625,7 @@ def getEnvelope(excludedGraph):
     :return: a TGraph object containing the envelope curve
     """
     if excludedGraph.GetN() == 0:
-        logger.info("No excluded points found for %s" %excludedGraph.GetName())
+        logger.info(f"No excluded points found for {excludedGraph.GetName()}")
         return excludedGraph
 
     envelop = TGraph()

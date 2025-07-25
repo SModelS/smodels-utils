@@ -203,7 +203,7 @@ class BestCombinationFinder(object):
         if self.combiner_list == []:
             if len(self.listoftp) == 1 and self.listoftp[0].analysisId() in self.cM.keys():
                 r = self.listoftp[0].getRValue(expected = True)
-                print("\n R-value of analysis %s is "%(self.listoftp[0].analysisId()), r )
+                print(f"\n R-value of analysis {self.listoftp[0].analysisId()} is ", r )
                 return r
             else: return 0
             
@@ -223,7 +223,7 @@ class BestCombinationFinder(object):
         comb_rvalues = []
         for c in self.combiner_list:
             if c: comb_rvalues.append(c.getRValue(expected = True))
-        print("\n R-Values of top combinations ", comb_rvalues, " and R-value of most sensitive analysis %s is " %(bestResult), rmax)
+        print("\n R-Values of top combinations ", comb_rvalues, f" and R-value of most sensitive analysis {bestResult} is ", rmax)
         if comb_rvalues[0] >= rmax:
             if comb_rvalues[0] == max(comb_rvalues):
                 if bestResult in self.combiner_list[0].analysisId(): return comb_rvalues[0]
@@ -235,7 +235,7 @@ class BestCombinationFinder(object):
                 logger.error("sensitivity of best combination is lower than that of the combination ranked %i " %(comb_rvalues.index(max(comb_rvalues))+1))
                 return 0
         else:
-            logger.error("sensitivity of best combination is lower than that of the most sensitive analysis: %s" %(bestResult))
+            logger.error(f"sensitivity of best combination is lower than that of the most sensitive analysis: {bestResult}")
             return 0
             
         

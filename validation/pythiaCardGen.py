@@ -53,12 +53,12 @@ def getPythia8CardFor(momPDGs,filename=None):
 
     if len(momPDGs) == 1:
         momPDGs.append ( momPDGs[0] )
-    susyIdA = "SUSY:idA = %s" % momPDGs[0]
-    susyIdB = "SUSY:idB = %s" % momPDGs[1]
+    susyIdA = f"SUSY:idA = {momPDGs[0]}"
+    susyIdB = f"SUSY:idB = {momPDGs[1]}"
     if len(momPDGs)>2:
         pdgids = ",".join ( map ( str, momPDGs ) ) 
-        susyIdA = "SUSY:idVecA = %s" % pdgids
-        susyIdB = "SUSY:idVecB = %s" % pdgids
+        susyIdA = f"SUSY:idVecA = {pdgids}"
+        susyIdB = f"SUSY:idVecB = {pdgids}"
 #Define initial block:
     header = "! pythia8.cfg\n\
 ! This file contains commands to be read in for a Pythia8 run.\n\
@@ -224,7 +224,7 @@ def getProcessesFor(pidPair):
             elif pids[0] in ptcDic[pair[1]] and pids[1] in ptcDic[pair[0]]:
                 return isub
     
-    logger.warning("Pythia process for %s not found" %str(pidPair))
+    logger.warning(f"Pythia process for {str(pidPair)} not found")
 #     import sys
 #     sys.exit()
     return False

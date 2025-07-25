@@ -6,7 +6,7 @@ import subprocess, re, os, shutil
 
 def resubmit ( keyw ):
     """ check for keyword """
-    out = subprocess.getoutput ( "slurm q | grep %s" % keyw )
+    out = subprocess.getoutput ( f"slurm q | grep {keyw}" )
     lines = out.split ("\n" )
     nrs = set()
     for line in lines:

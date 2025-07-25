@@ -115,8 +115,7 @@ def loadDatabase(path, db):
                                 discard_zeroes=discard_zeroes)
         databaseVersion = database.databaseVersion
     except DatabaseNotFoundException:
-        print("Database not found in ``%s''" %
-                     os.path.realpath(databasePath))
+        print(f"Database not found in ``{os.path.realpath(databasePath)}''")
         sys.exit()
     return database, databaseVersion
 
@@ -207,7 +206,7 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
         model = Model(BSMparticles=BSMList, SMparticles=SMList)
         model.updateParticles(inputFile=inputFile, promptWidth=promptWidth, stableWidth=stableWidth)
     except SModelSError as e:
-        print("Exception %s %s" % (e, type(e)))
+        print(f"Exception {e} {type(e)}")
         """ Update status to fail, print error message and exit """
         outputStatus.updateStatus(-1)
         return {os.path.basename(inputFile): masterPrinter}
@@ -224,7 +223,7 @@ def testPoint(inputFile, outputDir, databaseVersion, listOfExpRes):
                                           doInvisible=doInvisible,
                                           minmassgap=minmassgap)
     except SModelSError as e:
-        print("Exception %s %s" % (e, type(e)))
+        print(f"Exception {e} {type(e)}")
         """ Update status to fail, print error message and exit """
         outputStatus.updateStatus(-1)
         return {os.path.basename(inputFile): masterPrinter}
@@ -412,11 +411,10 @@ def main(slhaFolder,nb_cpu_to_use,output):
 
     # Collect output to build global summary:
     summaryFile = os.path.join(outputDir, 'summary.txt')
-    print("A summary of the results can be found in %s" %
-                summaryFile)
+    print(f"A summary of the results can be found in {summaryFile}")
 
     printScanSummary(outputDict, summaryFile)
-    print("Done in %3.2f min" % ((time.time()-t0)/60.))
+    print(f"Done in {(time.time() - t0) / 60.0:3.2f} min")
 
 # if __name__ == '__main__':
 #     main('./testDir/',2,'./outputFullScan/')

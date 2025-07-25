@@ -148,7 +148,7 @@ class ValidationPlot( ValidationObjsBase ):
     def __str__(self):
 
         vstr = "Validation plot for\n"
-        vstr += 'id: %s\n' % self.expRes.globalInfo.id
+        vstr += f'id: {self.expRes.globalInfo.id}\n'
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.axes
         return vstr
@@ -481,9 +481,9 @@ class ValidationPlot( ValidationObjsBase ):
                     if eff != None:
                         Dict['efficiency'] = round ( eff, 8 )
                 except SModelSError as e:
-                    logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                    logger.error ( f"could not handle {slhafile}: {e}" )
                     Dict=None
-        logger.debug('expres keys : {}'.format(expRes.keys()))
+        logger.debug(f'expres keys : {expRes.keys()}')
         if 'best combination' in expRes.keys():
             Dict['best combination'] = expRes['best combination']
 

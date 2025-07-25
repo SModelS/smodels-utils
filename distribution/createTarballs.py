@@ -94,7 +94,7 @@ def cleanDatabase(dirname : str, verbose : bool ):
                     os.unlink ( g )
         for r in removals:
             if r in File:
-                cmd = "rm -rf %s" % File
+                cmd = f"rm -rf {File}"
                 runCmd( cmd, prtMsg = False )
         for rf in rmFiles:
             fullpath = os.path.join( File, rf )
@@ -116,7 +116,7 @@ def moveFastlim ( filename , dirname ):
     runCmd( cmd )
 
 def clearTxtFiles(dirname):
-    clearGlobalInfos( "%s/smodels-database/" % dirname )
+    clearGlobalInfos( f"{dirname}/smodels-database/" )
     clearGlobalInfos( "./smodels-fastlim/" )
 
 def removePickles ( dirname ):

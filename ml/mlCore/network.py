@@ -158,7 +158,7 @@ class DatabaseNetwork(nn.Module):
 		path += "/" + str(txNameData) + ".pth"
 
 		torch.save(self, path)
-		logger.info("model saved at '%s'" % path)
+		logger.info(f"model saved at '{path}'")
 
 
 	def load(expres, txNameData):
@@ -197,22 +197,22 @@ class Net_cla(nn.Module):
 
 			nin, nout = netShape[i][0], netShape[i][1]
 
-			self.seq.add_module('lin{}'.format(i), nn.Linear(nin,nout))
+			self.seq.add_module(f'lin{i}', nn.Linear(nin,nout))
 
 			if activFunc == "rel" and i != lastLayer:
-				self.seq.add_module('rel{}'.format(i), nn.ReLU()) #nn.BatchNorm1d(nout))
+				self.seq.add_module(f'rel{i}', nn.ReLU()) #nn.BatchNorm1d(nout))
 
 			if activFunc == "prel" and i != lastLayer:
-				self.seq.add_module('prel{}'.format(i), nn.PReLU())
+				self.seq.add_module(f'prel{i}', nn.PReLU())
 
 			if activFunc == "sel" and i != lastLayer:
-				self.seq.add_module('sel{}'.format(i), nn.SELU())
+				self.seq.add_module(f'sel{i}', nn.SELU())
 
 			if activFunc == "lrel" and i != lastLayer:
-				self.seq.add_module('lrel{}'.format(i), nn.LeakyReLU())
+				self.seq.add_module(f'lrel{i}', nn.LeakyReLU())
 
 			if i == lastLayer:
-				self.seq.add_module('sgm{}'.format(i), nn.Sigmoid())
+				self.seq.add_module(f'sgm{i}', nn.Sigmoid())
 			#elif i == 0:
 				#self.seq.add_module('drp{}'.format(i), nn.Dropout(0.2))			
 
@@ -290,19 +290,19 @@ class Net_reg(nn.Module):
 
 			nin, nout = netShape[i][0], netShape[i][1]
 
-			self.seq.add_module('lin{}'.format(i), nn.Linear(nin,nout))
+			self.seq.add_module(f'lin{i}', nn.Linear(nin,nout))
 
 			if activFunc == "rel" and i != lastLayer:
-				self.seq.add_module('rel{}'.format(i), nn.ReLU())
+				self.seq.add_module(f'rel{i}', nn.ReLU())
                     
 			if activFunc == "prel" and i != lastLayer:
-				self.seq.add_module('prel{}'.format(i), nn.PReLU())
+				self.seq.add_module(f'prel{i}', nn.PReLU())
 
 			if activFunc == "sel" and i != lastLayer:
-				self.seq.add_module('sel{}'.format(i), nn.SELU())
+				self.seq.add_module(f'sel{i}', nn.SELU())
 
 			if activFunc == "lrel" and i != lastLayer:
-				self.seq.add_module('lrel{}'.format(i), nn.LeakyReLU()) 
+				self.seq.add_module(f'lrel{i}', nn.LeakyReLU()) 
 
     	
 

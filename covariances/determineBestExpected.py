@@ -45,7 +45,7 @@ def createFile ():
         topos=["T1tttt","T2tt" ]
     random.shuffle ( topos )
     topo=topos[0]
-    template="./template_%s.slha" % topo
+    template=f"./template_{topo}.slha"
     # tempfile = "tmp.slha"
     tfile = tempfile.mktemp(suffix=".slha")
     glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ 1e6, 1e6 ],
@@ -71,10 +71,10 @@ def createFile ():
     f.close()
     g=open(tfile,"w")
     for line in lines:
-        line=line.replace("MGLUINO","%s" % mgl )
-        line=line.replace("MSTOP","%s" % mstop )
-        line=line.replace("MGL","%s" % mgl )
-        line=line.replace("MLSP","%s" % mlsp )
+        line=line.replace("MGLUINO",f"{mgl}" )
+        line=line.replace("MSTOP",f"{mstop}" )
+        line=line.replace("MGL",f"{mgl}" )
+        line=line.replace("MLSP",f"{mlsp}" )
         g.write ( line )
     g.close()
     return topo,mgl,mstop,mlsp,tfile
@@ -102,13 +102,13 @@ def runSingleFile( slhafile ):
     return dpreds
 
 def main():
-    subprocess.getoutput ( "cp %s.txt .%s.bu" % ( ids[0], ids[0] ) )
-    subprocess.getoutput ( "cp %s.pcl .%s.pcl.bu" % ( ids[0], ids[0] ) )
+    subprocess.getoutput ( f"cp {ids[0]}.txt .{ids[0]}.bu" )
+    subprocess.getoutput ( f"cp {ids[0]}.pcl .{ids[0]}.pcl.bu" )
     datasets=getDatasets()
     #print ( datasets ) 
     #sys.exit()
-    g=open("%s.txt" % ids[0],"w")
-    g2=open("%s.pcl" % ids[0],"wb")
+    g=open(f"{ids[0]}.txt","w")
+    g2=open(f"{ids[0]}.pcl","wb")
     i=0
     while True:
         topo,mgl,mstop,mlsp,tfile=createFile()

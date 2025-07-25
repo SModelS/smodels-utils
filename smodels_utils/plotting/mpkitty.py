@@ -58,6 +58,7 @@ def timg( filename ):
     if ver.startswith ( "1.1" ):
         cmd = f"{exe} -s 80 -c extended {filename}"
 
+    print () # make sure we start in a fresh line
     o = subprocess.getoutput ( cmd )
     # print ( f"[mpkitty] {o}" )
     print ( o )

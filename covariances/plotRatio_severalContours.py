@@ -50,7 +50,7 @@ def convertNewAxes ( newa ):
             axes.append ( newa["z"] )
         return axes[::-1]
     if not errMsgIssued["axis"]:
-        print ( "[plotRatio] cannot convert axis '%s'" % newa )
+        print ( f"[plotRatio] cannot convert axis '{newa}'" )
         errMsgIssued["axis"]=True
     return None
 
@@ -75,7 +75,7 @@ def getExclusionsFrom ( rootpath, txname, axes ):
         if txname and txname != objName: continue
         txnames[objName] = obj.ReadObj()
     if not txnames:
-        logger.warning("[plotRatio] Exclusion curve for %s not found in %s" %(txname,rootpath))
+        logger.warning(f"[plotRatio] Exclusion curve for {txname} not found in {rootpath}")
         return False
 
     #For each Txname/Directory get list of exclusion curves
@@ -237,7 +237,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             if noaxes < 5:
                 f1 = imp1.__file__.replace(dbpath,"")
                 slhapoint = point["slhafile"].replace(".slha","")
-                print ( "INFO: no axes in %s:%s" % ( f1, slhapoint ) )
+                print ( f"INFO: no axes in {f1}:{slhapoint}" )
             if noaxes == 5:
                 print ( " ... (more error msgs like these) " )
             continue
@@ -375,7 +375,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
     title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
     if anaId2 == anaId:
-        title = "ratio: %s, %s" % ( anaId, topo )
+        title = f"ratio: {anaId}, {topo}"
     plt.title ( title )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
@@ -422,7 +422,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             plt.plot ( E["x"], E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
             label = ""
         """
-    smodels_root = "%s/%s.root" % ( analysis, topo )
+    smodels_root = f"{analysis}/{topo}.root"
     #!TP-begin
     if not os.path.exists ( smodels_root ):
         print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
@@ -432,7 +432,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     else:
         smodels_line = getSModelSExclusion ( smodels_root )
         el2 = getExclusionLine ( smodels_line )
-    print ( "[plotRatio] Found SModelS exclusion line with %d points." % ( len(el2) ) )
+    print ( f"[plotRatio] Found SModelS exclusion line with {len(el2)} points." )
     a1, a2 = options["label1"], options["label2"]
     label="SModelS exclusion " + a1
     for E in el2:
@@ -451,7 +451,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     else:
         smodels_line = getSModelSExclusion ( smodels_root )
         el3 = getExclusionLine ( smodels_line )
-    print ( "[plotRatio] Found SModelS exclusion line with %d points." % ( len(el3) ) )
+    print ( f"[plotRatio] Found SModelS exclusion line with {len(el3)} points." )
     label="SModelS exclusion " + a2
     for E in el3:
         hasLegend = True
@@ -468,8 +468,8 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     if abs ( maxy - 80. ) < 3.:
         maxy = 79.9
     if nsr != "":
-        plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
-    figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
+        plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}" , fontsize=14 )
+    figname = f"{analysis.replace('validation', 'ratio')}_{topo}.png"
     output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
@@ -482,21 +482,21 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
     plt.text ( xpos+50, ypos,   #!TP
                "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ),
                fontsize=13, rotation = 90)
-    print ( "[plotRatio] Saving to %s" % figname )
+    print ( f"[plotRatio] Saving to {figname}" )
     if hasLegend:
         plt.legend()
     plt.savefig ( figname )
     if options["show"]:
         plt.show()
     if copy:
-      cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
-      print ( "plotRatio] %s" % cmd )
+      cmd=f"cp {figname} ../../smodels.github.io/ratioplots/"
+      print ( f"plotRatio] {cmd}" )
       subprocess.getoutput ( cmd )
     rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
-            f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
-    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
+            f.write ( f"{figname} {rmean:.2f} +/- {rstd:.2f}\n" )
+    print ( f"[plotRatio] ratio={rmean:.2f} +/- {rstd:.2f}" )
     plt.clf()
 
 def writeMDPage( copy ):
@@ -504,7 +504,7 @@ def writeMDPage( copy ):
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
         f.write ( "# ratio plots on the upper limits\n" )
-        f.write ( "as of %s\n\n" % time.asctime() )
+        f.write ( f"as of {time.asctime()}\n\n" )
         # f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
@@ -516,7 +516,7 @@ def writeMDPage( copy ):
         ctr = 0
         t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
-            src = "https://smodels.github.io/ratioplots/%s" % i
+            src = f"https://smodels.github.io/ratioplots/{i}"
             f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
@@ -606,10 +606,10 @@ def main():
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
-        print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
+        print ( f"[plotRatio] now performing {cmd}: {o}" )
         o = subprocess.getoutput ( cmd )
     else:
         if args.copy:
-            print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
+            print ( f"[plotRatio] now you could do:\n{cmd}: {o}" )
 
 main()

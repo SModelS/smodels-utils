@@ -4,15 +4,15 @@
 
 import glob, subprocess, os, sys
 
-source = "%s/git/smodels/smodels-database" % os.environ["HOME"]
-dest = "%s/git/smodels-database" % os.environ["HOME"]
+source = f"{os.environ['HOME']}/git/smodels/smodels-database"
+dest = f"{os.environ['HOME']}/git/smodels-database"
 
-Dirs = glob.glob ( "%s/*/*/*" % source )
+Dirs = glob.glob ( f"{source}/*/*/*" )
 
 for d in Dirs:
     dnew = d.replace ( source, dest )
     if os.path.exists ( dnew ):
-        print ( "%s exists already" % dnew )
+        print ( f"{dnew} exists already" )
     else:
-        print ( "%s is new" % dnew )
+        print ( f"{dnew} is new" )
         sys.exit()

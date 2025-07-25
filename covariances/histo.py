@@ -41,7 +41,7 @@ def main():
     for i in range(1,regions[fname]+1):
         histo[i]=0
     print ( "opening",fname )
-    f=open("%s.pcl" % fname,"rb")
+    f=open(f"{fname}.pcl","rb")
     ctr=0
     skipped = []
     while True:
@@ -64,7 +64,7 @@ def main():
             break
 
     if len ( skipped ):
-        print ( "skipped: %s" % ( skipped ) )
+        print ( f"skipped: {skipped}" )
     tot_points = sum ( histo.values() )
     print ( "read %d lines. %d points total. topo: %s" % ( ctr, tot_points, onlyTopo) )
 
@@ -85,9 +85,9 @@ def main():
 
     for ctr,k in enumerate(keys[::-1]):
         v = occurs[k]
-        SRs="%s" % v
+        SRs=f"{v}"
         if len(v) == 1:
-            SRs = "%s" % v[0]
+            SRs = f"{v[0]}"
         if ctr<3:
             print ( "%d points: %s" % ( k, SRs ) )
 
@@ -105,11 +105,11 @@ def main():
             tmp=[]
             cur = 0
 
-    print ( "proposed aggregation %s SRs: %s" % ( len(agg), agg ) )
+    print ( f"proposed aggregation {len(agg)} SRs: {agg}" )
     print ()
-    print ( "%s SRs have < %s points: %s" % ( len(almostnever), threshold, almostnever ) )
+    print ( f"{len(almostnever)} SRs have < {threshold} points: {almostnever}" )
     print ()
-    print ( "%s SRs have 0 points: %s" % ( len(never), never ) )
+    print ( f"{len(never)} SRs have 0 points: {never}" )
 
 if __name__ == "__main__":
     main()

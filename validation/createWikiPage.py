@@ -160,7 +160,7 @@ CMS are for on- and off-shell at once.
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion,
         self.dotlessv, self.dotlessv, self.dotlessv ) )
         if self.ugly:
-            self.file.write ( "\nTo [official validation plots](Validation%s)\n\n" % self.db.databaseVersion.replace(".","") )
+            self.file.write ( f"\nTo [official validation plots](Validation{self.db.databaseVersion.replace('.', '')})\n\n" )
 
     def writeTableHeader ( self, tpe ):
         fields = [ "Result", "Txname", "L [1/fb]", "Validation plots", "comment" ]
@@ -332,10 +332,10 @@ CMS are for on- and off-shell at once.
             line += f'| <a name="{id}_{shorttpe[tpe]}">[{id}]({url})</a> '
 
             hadTxname = True
-            line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
-            line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
+            line += f'| [{txnbrs}](SmsDictionary{self.dotlessv}#{txn})'
+            line += f"| {txname.globalInfo.lumi.asNumber(1 / fb):.1f}"
             if self.ugly:
-                line += '| %s ' % ( sval )
+                line += f'| {sval} '
                 #line += '||<style="color: %s;"> %s ' % ( color, sval )
             line += "|"
             #line += "||"
@@ -397,21 +397,21 @@ CMS are for on- and off-shell at once.
                 font, endfont = "", ""
                 if txname.validated in [ "False", False ]:
                     font, endfont = "<font color='red'>", "</font>"
-                line += "%svalidated: %s%s<br>" % (font, txname.validated, endfont )
+                line += f"{font}validated: {txname.validated}{endfont}<br>"
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
                 commentPath = dirPath+"/"+txname.txName+".comment"
                 txtPath = commentPath.replace(".comment", ".txt" )
                 githubRepo = "../../smodels.github.io"
-                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
+                mvCmd = f"cp {githubRepo}/{commentPath} {githubRepo}/{txtPath}"
                 subprocess.getoutput ( mvCmd )
                 line += "[comment](https://smodels.github.io"+txtPath+ ")"
-            srplot = valDir + "/bestSR_%s.png" % ( txname.txName )
+            srplot = valDir + f"/bestSR_{txname.txName}.png"
             if os.path.isfile( srplot ) and self.ugly:
                 srPath = dirPath+"/bestSR_"+txname.txName+".png"
                 githubRepo = "../../smodels.github.io"
-                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, srPath, githubRepo, srPath )
+                mvCmd = f"cp {githubRepo}/{srPath} {githubRepo}/{srPath}"
                 subprocess.getoutput ( mvCmd )
                 addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
                 line += addl

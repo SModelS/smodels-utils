@@ -17,7 +17,7 @@ def main():
                 ooms.append ( lines[0] )
                 oofs.append ( f )
                 print ( "[listFailedWalks] in file:", f )
-                print ( "[listFailedWalks] line 0: >>>%s<<<" % lines[0] )
+                print ( f"[listFailedWalks] line 0: >>>{lines[0]}<<<" )
                 print ( "[listFailedWalks] line with error:", line )
                 print ( )
                 break

@@ -35,7 +35,7 @@ def runCmd ( cmd : str, prtMsg : bool = True ):
     if prtMsg:
         print( f"{GREEN}[cmd] {cmd}{RESET}" )
     f=open("/tmp/create.log","a")
-    f.write( "cmd: %s\n" %(cmd) )
+    f.write( f"cmd: {cmd}\n" )
     # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
@@ -137,11 +137,11 @@ def removeNonValidated( db : Database, dirname : str = "database/" ):
     comment( f"starting removeNonValidated" )
     comment( "Now remove non-validated results." )
     ers = db.getExpResults ( useNonValidated = True )
-    comment( "Loaded the database with %d results." %( len(ers) ) )
+    comment( f"Loaded the database with {len(ers)} results." )
     for er in ers:
         if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
-            comment( "%s is private. delete!" %( er.globalInfo.id ) )
-            cmd = "rm -r %s" %( er.path )
+            comment( f"{er.globalInfo.id} is private. delete!" )
+            cmd = f"rm -r {er.path}"
             runCmd( cmd )
         else:
             hasDataSets=False
@@ -151,21 +151,20 @@ def removeNonValidated( db : Database, dirname : str = "database/" ):
 #                    if txn.validated in [ None, False ]:
                     if txn.validated in [ False ]:
                         comment( f"{er}/{dataset}/{txn} is not validated. Delete it." )
-                        cmd="rm '%s'" % txn.path
+                        cmd=f"rm '{txn.path}'"
                         runCmd( cmd )
                     else:
                         hasTxNames=True
                 if not hasTxNames:
                         comment( "%s/%s has no validated txnames. remove folder." %\
                                  (er, dataset ) )
-                        cmd = "rm -r '%s'" % dataset.path
+                        cmd = f"rm -r '{dataset.path}'"
                         runCmd( cmd )
                 if hasTxNames:
                     hasDataSets=True
             if not hasDataSets:
-                comment( "%s has no validated datasets. remove folder." % \
-                         (er) )
-                cmd = "rm -rf %s" % er.path
+                comment( f"{er} has no validated datasets. remove folder." )
+                cmd = f"rm -rf {er.path}"
                 runCmd( cmd )
     base = db.subs[0].url
     # comment( "base=%s" % base )
@@ -179,14 +178,14 @@ def removeNonValidated( db : Database, dirname : str = "database/" ):
             if not os.path.isdir( exppath ):
                 continue
             if os.listdir( exppath ) == []:
-                comment( "%s/%s is empty. Delete it!" %( tev, experiment ) )
-                cmd = "rm -rf %s" % exppath
+                comment( f"{tev}/{experiment} is empty. Delete it!" )
+                cmd = f"rm -rf {exppath}"
                 runCmd( cmd )
             else:
                 tevHasResults=True
         if not tevHasResults:
-            comment( "%s is empty. Delete it!" %( tev ) )
-            cmd = "rm -rf %s" % fullpath
+            comment( f"{tev} is empty. Delete it!" )
+            cmd = f"rm -rf {fullpath}"
             runCmd( cmd )
     return db
 

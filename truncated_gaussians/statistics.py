@@ -77,7 +77,7 @@ def likelihoodFromLimits( upperLimit, expectedUpperLimit, nsig, nll=False, under
     dr = 2. * ( upperLimit - expectedUpperLimit ) / ( expectedUpperLimit + upperLimit )
     if dr>runtime._drmax:
         if runtime._cap_likelihoods == False:
-            logger.warn("asking for likelihood from limit but difference between oUL(%.2f) and eUL(%.2f) is too large (dr=%.2f>%.2f)" % ( upperLimit, expectedUpperLimit, dr, runtime._drmax ) )
+            logger.warn(f"asking for likelihood from limit but difference between oUL({upperLimit:.2f}) and eUL({expectedUpperLimit:.2f}) is too large (dr={dr:.2f}>{runtime._drmax:.2f})" )
             return None
         oldUL = upperLimit
         upperLimit = expectedUpperLimit * ( 2. + runtime._drmax ) / ( 2. - runtime._drmax )
@@ -134,7 +134,7 @@ def rvsFromLimits( upperLimit, expectedUpperLimit, n=1 ):
     fA,fB = root_func ( 0. ), root_func ( max(upperLimit,expectedUpperLimit) )
     if np.sign(fA*fB) > 0.:
         ## the have the same sign
-        logger.error ( "when computing likelihood for %s: fA and fB have same sign" % self.analysisId() )
+        logger.error ( f"when computing likelihood for {self.analysisId()}: fA and fB have same sign" )
         return None
     mumax = optimize.brentq ( root_func, 0., max(upperLimit, expectedUpperLimit), rtol=1e-03, xtol=1e-06 )
     ret = []
@@ -236,7 +236,7 @@ def llhdFromLimits_moments ( upperLimit, expectedUpperLimit, nll=False, underflu
     dr = 2. * ( upperLimit - expectedUpperLimit ) / ( expectedUpperLimit + upperLimit )
     if dr>runtime._drmax:
         if runtime._cap_likelihoods == False:
-            logger.warn("asking for likelihood from limit but difference between oUL(%.2f) and eUL(%.2f) is too large (dr=%.2f>%.2f)" % ( upperLimit, expectedUpperLimit, dr, runtime._drmax ) )
+            logger.warn(f"asking for likelihood from limit but difference between oUL({upperLimit:.2f}) and eUL({expectedUpperLimit:.2f}) is too large (dr={dr:.2f}>{runtime._drmax:.2f})" )
             return None
         oldUL = upperLimit
         upperLimit = expectedUpperLimit * ( 2. + runtime._drmax ) / ( 2. - runtime._drmax )

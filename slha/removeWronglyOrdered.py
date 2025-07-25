@@ -13,10 +13,10 @@ def main():
         hasEquals = False
         for ctr,m1 in enumerate(masses[:-1]):
             if m1 == masses[ctr+1]:
-                print ( "%s has equals" % f )
+                print ( f"{f} has equals" )
                 if True:
                     print ( "removing", masses )
-                    cmd = "rm %s" % f
+                    cmd = f"rm {f}"
                     if not pretend:
                         subprocess.getoutput ( cmd )
         smasses = copy.deepcopy( masses)
@@ -24,7 +24,7 @@ def main():
         issorted = (smasses == masses )
         if not issorted:
             print ( "removing", masses )
-            cmd = "rm %s" % f
+            cmd = f"rm {f}"
             if not pretend:
                 subprocess.getoutput ( cmd )
 

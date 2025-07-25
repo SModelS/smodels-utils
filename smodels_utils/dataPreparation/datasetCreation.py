@@ -127,9 +127,9 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         # lumi = lumi.asNumber(1./fb)
         ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
         ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
-    newds.upperLimit = str("%f*fb" % ul )
+    newds.upperLimit = str(f"{ul:f}*fb" )
     ule = comp.getUpperLimitOnSigmaTimesEff ( m, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
-    newds.expectedUpperLimit =  str("%f*fb" % ule )
+    newds.expectedUpperLimit =  str(f"{ule:f}*fb" )
     # print ( f"@@@ UL {ul:.2f} {ulspey:.2f}" )
     # print ( f"@@@ ULE {ule:.2f} {ulspeyE:.2f}" )
     newds.aggregated = aggregated[:-1]
@@ -272,7 +272,7 @@ class DatasetsFromLatex:
 
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-                self.datasetOrder.append ( '%s' % dataId )
+                self.datasetOrder.append ( f'{dataId}' )
                 # self.datasetOrder.append ( '"%s"' % dataId )
                 self.datasets.append ( dataset )
         if self.aggregate != None:
@@ -293,7 +293,7 @@ class DatasetsFromLatex:
         databaseCreator.clear() ## reset list in databasecreator
         for i in self.datasets:
             databaseCreator.addDataset ( i )
-        logger.info ( "Aggregated %d to %d datasets" % ( len(self.origDataSets), len(self.datasets) ) )
+        logger.info ( f"Aggregated {len(self.origDataSets)} to {len(self.datasets)} datasets" )
 
     def __next__ ( self ):
         """ return next dataset. """
@@ -328,8 +328,7 @@ class DatasetsFromRoot:
         self.histo_bg = self.file_bg.Get ( hname_bg )
         self.readDatasetNames = readDatasetNames
         if not self.histo_obs:
-            logger.error ( "could not get histo ``%s'' file ``%s''" % \
-                             ( hname_obs, fname_obs ) )
+            logger.error ( f"could not get histo ``{hname_obs}'' file ``{fname_obs}''" )
             sys.exit()
         self.create()
         databaseCreator.datasetCreator = self
@@ -492,7 +491,7 @@ class DatasetsFromEmbaked:
                     bg=minimumBackgroundEstimate
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-                self.datasetOrder.append ( '"%s"' % dataId )
+                self.datasetOrder.append ( f'"{dataId}"' )
                 self.datasets.append ( dataset )
         if self.aggregate != None:
             self.aggregateDSs()
@@ -512,7 +511,7 @@ class DatasetsFromEmbaked:
         databaseCreator.clear() ## reset list in databasecreator
         for i in self.datasets:
             databaseCreator.addDataset ( i )
-        logger.info ( "Aggregated %d to %d datasets" % ( len(self.origDataSets), len(self.datasets) ) )
+        logger.info ( f"Aggregated {len(self.origDataSets)} to {len(self.datasets)} datasets" )
 
     def __next__ ( self ):
         """ return next dataset. """

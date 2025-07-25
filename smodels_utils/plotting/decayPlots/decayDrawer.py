@@ -63,14 +63,14 @@ class DecayDrawer:
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
-            self.logger.debug ( "%s created with %s." % ( wout, prog ) )
+            self.logger.debug ( f"{wout} created with {prog}." )
 
         if self.options["dot"]:
             # wout=out+".dot"
             wout=out+".dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
-            self.logger.debug ( "%s created with dot." % ( wout ) )
+            self.logger.debug ( f"{wout} created with dot." )
 
         #if not self.options["nopng"]:
             ## wout=out+".dot.png"
@@ -80,7 +80,7 @@ class DecayDrawer:
             wout=out+".pdf"
 
             self.G.draw(wout,prog='dot')
-            self.logger.log ( "%s created with dot." % ( wout ) )
+            self.logger.log ( f"{wout} created with dot." )
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
@@ -110,7 +110,7 @@ class DecayDrawer:
             try:
                 llabel+=" (%d)" % mass
             except:
-                llabel+=" (%s)" % str( mass )
+                llabel+=f" ({str(mass)})"
 
         label=llabel
         ## massctr+=1
@@ -145,7 +145,7 @@ class DecayDrawer:
         node.attr['shape']='none' # 'egg'
         #if not isFermionic:
         #    node.attr['shape']="box" # 'egg'
-        node.attr['label']="%s" % label
+        node.attr['label']=f"{label}"
 
     def addOneEdge ( self, name, daughter, rmin, labels ):
         """ add one edge with labels, etc """
@@ -229,7 +229,7 @@ class DecayDrawer:
             #print ( "Here2, adding", m )
             self.G.add_node ( str(m) )
             node=self.G.get_node( str(m) )
-            node.attr['pos']="%f,%f" % ( 0, m )
+            node.attr['pos']=f"{0:f},{m:f}"
             node.attr['color']='#FFFFFF'
             node.attr['label']=str(m)+' GeV'
 
@@ -278,14 +278,14 @@ class DecayDrawer:
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
-        fname = "%s.tex"%out 
+        fname = f"{out}.tex" 
         if not os.path.exists ( fname ):
             return
         self.logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
         f=open( fname )
         lines=f.readlines()
         f.close()
-        f=open("%s.tex"%out,"w")
+        f=open(f"{out}.tex","w")
         for line in lines:
             if "enlargethispage" in line:
                 continue
@@ -302,10 +302,10 @@ class DecayDrawer:
             print ( "sudo apt install dot2tex" )
         self.logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
-        cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
-        self.logger.info (  "%s" % cmd )
+        cmd=f"dot2tex --autosize --nominsize --crop {out}.dot -traw -o {out}.tex"
+        self.logger.info (  f"{cmd}" )
         output=subprocess.getoutput( cmd )
-        self.logger.debug ( "out=%s" % output )
+        self.logger.debug ( f"out={output}" )
         self.logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out )
@@ -313,7 +313,7 @@ class DecayDrawer:
             outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        self.logger.error (  "%s" % pdfcmd )
+        self.logger.error (  f"{pdfcmd}" )
         output=subprocess.getoutput(pdfcmd )
         self.logger.debug ( output )
 
@@ -328,4 +328,4 @@ class DecayDrawer:
             self.logger.info ( cmd )
             o = subprocess.getoutput ( cmd )
             if len(o)>0:
-                self.logger.error ( "conversion output %s" % o )
+                self.logger.error ( f"conversion output {o}" )

@@ -39,9 +39,9 @@ def fullmatch(regex, line):
 
 def quadratureAdd(pdf, val1, val2, context=None):
     if type(val1) == list and len(val1) != 2:
-        raise RuntimeError("{} is a list of length != 2".format(val1))
+        raise RuntimeError(f"{val1} is a list of length != 2")
     if type(val2) == list and len(val2) != 2:
-        raise RuntimeError("{} is a list of length != 2".format(val2))
+        raise RuntimeError(f"{val2} is a list of length != 2")
 
     if type(val1) == list and type(val2) == list:
         return [
@@ -61,12 +61,12 @@ def quadratureAdd(pdf, val1, val2, context=None):
     if pdf in ["lnN", "lnU"]:
         if log(val1) * log(val2) < 0:
             raise RuntimeError(
-                "Can't add in quadrature nuisances of pdf %s with values %s, %s that go in different directions (at %s)" % (pdf, val1, val2, context)
+                f"Can't add in quadrature nuisances of pdf {pdf} with values {val1}, {val2} that go in different directions (at {context})"
             )
         ret = exp(hypot(abs(log(val1)), abs(log(val2))))
         return ret if val1 > 1 else 1.0 / ret
     else:
-        raise RuntimeError("Quadrature add not implemented for pdf %s (at %s)" % (pdf, context))
+        raise RuntimeError(f"Quadrature add not implemented for pdf {pdf} (at {context})")
 
 
 def doAddNuisance(datacard, args):
@@ -83,7 +83,7 @@ def doAddNuisance(datacard, args):
     for lsyst, nofloat, pdf0, args0, errline0 in datacard.systs:
         if lsyst == name:
             if pdf != pdf0:
-                raise RuntimeError("Can't add nuisance %s with pdf %s ad it already exists as %s" % (name, pdf, pdf0))
+                raise RuntimeError(f"Can't add nuisance {name} with pdf {pdf} ad it already exists as {pdf0}")
             found = True
             errline = errline0
     if not found:
@@ -109,7 +109,7 @@ def doAddNuisance(datacard, args):
                                 pdf,
                                 errline[b][p],
                                 value,
-                                context="nuisance edit add, args = %s" % args,
+                                context=f"nuisance edit add, args = {args}",
                             )
                         elif "overwrite" in opts:
                             errline[b][p] = value
@@ -121,9 +121,9 @@ def doAddNuisance(datacard, args):
                     else:
                         errline[b][p] = value
     if not foundChann:
-        sys.stderr.write("Warning: no channel found matching nuisance edit add with args = %s\n" % args)
+        sys.stderr.write(f"Warning: no channel found matching nuisance edit add with args = {args}\n")
     if not foundProc:
-        sys.stderr.write("Warning: no process found matching nuisance edit add with args = %s\n" % args)
+        sys.stderr.write(f"Warning: no process found matching nuisance edit add with args = {args}\n")
 
 
 def doDropNuisance(datacard, args):
@@ -152,9 +152,9 @@ def doDropNuisance(datacard, args):
             #        sys.stderr.write("Warning1: nuisance edit drop %s found nothing in channel %s\n" % (args, channel))
     if not foundProc and channel != "*":
         if "ifexists" not in opts:
-            raise RuntimeError("Error: nuisance edit drop %s found nothing" % (args))
+            raise RuntimeError(f"Error: nuisance edit drop {args} found nothing")
         else:
-            sys.stderr.write("Warning2: nuisance edit drop %s found nothing\n" % (args))
+            sys.stderr.write(f"Warning2: nuisance edit drop {args} found nothing\n")
 
 
 def checkRenameSafety(id, datacard, newname):
@@ -206,7 +206,7 @@ def doRenameNuisance(datacard, args):
                 )
             if newname in list(datacard.systIDMap.keys()):
                 if not checkRenameSafety(id, datacard, newname):
-                    raise RuntimeError("Error: Cannot rename %s to %s, which exists and is incompatible" % (oldname, newname))
+                    raise RuntimeError(f"Error: Cannot rename {oldname} to {newname}, which exists and is incompatible")
 
             if isGlobal:  # easy case
                 # print " global command, ", " looking at "
@@ -260,7 +260,7 @@ def doRenameNuisance(datacard, args):
                                 % (args, channel)
                             )
                 if not foundChan and "ifexists" not in opts:
-                    raise RuntimeError("Error: no channel found matching nuisance edit rename with args = %s (and option 'ifexists' not specified)\n" % args)
+                    raise RuntimeError(f"Error: no channel found matching nuisance edit rename with args = {args} (and option 'ifexists' not specified)\n")
                 # if the result was to rename across everything, meaning 0s get put there, remove that id from the map
                 # Double check if all elements are actually zeroes (int and float), not something else.
                 # If an element is a list of two floats, it is an asymmetric log-normal uncertainty.
@@ -280,7 +280,7 @@ def doRenameNuisance(datacard, args):
             datacard.systIDMap.pop(oldname)
 
     else:
-        raise RuntimeError("No nuisance parameter found with name %s in the datacard" % oldname)
+        raise RuntimeError(f"No nuisance parameter found with name {oldname} in the datacard")
     # print " map after -> " , datacard.systIDMap
     # for dcs in datacard.systs: print " --> ", dcs
 
@@ -318,9 +318,9 @@ def doChangeNuisancePdf(datacard, args):
             if ok:
                 datacard.systs[i][2] = newpdf
             else:
-                raise RuntimeError("I can't convert pdf %s from pdf %s to %s" % (lsyst, pdf, newpdf))
+                raise RuntimeError(f"I can't convert pdf {lsyst} from pdf {pdf} to {newpdf}")
     if not found:
-        sys.stderr.write("Warning: no pdf found for changepdf with args %s\n" % args)
+        sys.stderr.write(f"Warning: no pdf found for changepdf with args {args}\n")
 
 
 def doMergeNuisance(datacard, args):
@@ -349,9 +349,9 @@ def doMergeNuisance(datacard, args):
 
     if not foundProc and channel != "*":
         if "ifexists" not in opts:
-            raise RuntimeError("Error: nuisance edit merge %s found nothing" % (args))
+            raise RuntimeError(f"Error: nuisance edit merge {args} found nothing")
         else:
-            sys.stderr.write("Warning2: nuisance edit merge %s found nothing\n" % (args))
+            sys.stderr.write(f"Warning2: nuisance edit merge {args} found nothing\n")
 
 
 def doSplitNuisance(datacard, args):
@@ -378,9 +378,9 @@ def doSplitNuisance(datacard, args):
 
     if not foundProc and channel != "*":
         if "ifexists" not in opts:
-            raise RuntimeError("Error: nuisance edit split %s found nothing" % (args))
+            raise RuntimeError(f"Error: nuisance edit split {args} found nothing")
         else:
-            sys.stderr.write("Warning2: nuisance edit split %s found nothing\n" % (args))
+            sys.stderr.write(f"Warning2: nuisance edit split {args} found nothing\n")
 
 
 def doFreezeNuisance(datacard, args):
@@ -405,9 +405,9 @@ def doFreezeNuisance(datacard, args):
     # Warn user/exit
     if not found:
         if "ifexists" not in opts:
-            raise RuntimeError("Error: nuisance edit freeze %s found nothing" % args[0])
+            raise RuntimeError(f"Error: nuisance edit freeze {args[0]} found nothing")
         else:
-            sys.stderr.write("Warning2: nuisance edit freeze %s found nothing\n" % args[0])
+            sys.stderr.write(f"Warning2: nuisance edit freeze {args[0]} found nothing\n")
 
 
 def doFlipNuisance(datacard, args):
@@ -422,12 +422,12 @@ def doFlipNuisance(datacard, args):
         cchannel = re.compile(channel.replace("+", r"\+"))
     opts = args[3:]
     if "n2p" not in opts and "p2n" not in opts:
-        raise RuntimeError("Error: nuisance edit flip %s missed option n2p and/or p2n" % (args))
+        raise RuntimeError(f"Error: nuisance edit flip {args} missed option n2p and/or p2n")
     foundProc = False
     for lsyst, nofloat, pdf, args0, errline in datacard.systs:
         if fullmatch(name, lsyst):
             if pdf not in ["lnN"]:
-                raise RuntimeError("Error: nuisance edit flip %s currently not support pdftype %s" % (args, pdf))
+                raise RuntimeError(f"Error: nuisance edit flip {args} currently not support pdftype {pdf}")
             for b in errline.keys():
                 if channel == "*" or fullmatch(cchannel, b):
                     for p in datacard.exp[b]:
@@ -453,9 +453,9 @@ def doFlipNuisance(datacard, args):
 
     if not foundProc and channel != "*":
         if "ifexists" not in opts:
-            raise RuntimeError("Error: nuisance edit flip %s found nothing" % (args))
+            raise RuntimeError(f"Error: nuisance edit flip {args} found nothing")
         else:
-            sys.stderr.write("Warning2: nuisance edit flip %s found nothing\n" % (args))
+            sys.stderr.write(f"Warning2: nuisance edit flip {args} found nothing\n")
 
 
 def doEditNuisance(datacard, command, args):
@@ -476,4 +476,4 @@ def doEditNuisance(datacard, command, args):
     elif command == "flip":
         doFlipNuisance(datacard, args)
     else:
-        raise RuntimeError("Error, unknown nuisance edit command %s (args %s)" % (command, args))
+        raise RuntimeError(f"Error, unknown nuisance edit command {command} (args {args})")

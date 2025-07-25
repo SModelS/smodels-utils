@@ -419,7 +419,7 @@ class LikelihoodComputer:
                 ret = gaussian * ( reduce(lambda x, y: x*y, poisson) )
             return ret
         except ValueError as e:
-            raise Exception("ValueError %s, %s" % ( e, self.model.V ))
+            raise Exception(f"ValueError {e}, {self.model.V}")
             #raise Exception("ValueError %s, %s" % ( e, self.model.totalCovariance(self.nsig) ))
             # raise Exception("ValueError %s, %s" % ( e, self.model.V ))
 
@@ -512,7 +512,7 @@ class LikelihoodComputer:
                     d1 = distance ( thetamaxes[-2], thetamax )
                     d2 = distance ( thetamaxes[-3], thetamaxes[-2] )
                     if d1 > d2:
-                        raise Exception("diverging when computing thetamax: %f > %f" % ( d1, d2 ))
+                        raise Exception(f"diverging when computing thetamax: {d1:f} > {d2:f}")
                     if d1 < 1e-5:
                         return thetamax
             return thetamax
@@ -565,8 +565,8 @@ class LikelihoodComputer:
                 ret = ret_c[0]
                 return ret,-2
             except (IndexError,ValueError) as e:
-                logger.error("exception: %s. ini[-3:]=%s" % (e,ini[-3:]) )
-                raise Exception("cov-1=%s" % (self.model.covariance+self.model.var_s(nsig))**(-1))
+                logger.error(f"exception: {e}. ini[-3:]={ini[-3:]}" )
+                raise Exception(f"cov-1={(self.model.covariance + self.model.var_s(nsig)) ** -1}")
             return ini,-1
 
     def marginalizedLLHD1D(self, nsig, nll):
@@ -757,8 +757,7 @@ class LikelihoodComputer:
             chi2=2*(llhd-maxllhd)
 
             if not NP.isfinite ( chi2 ):
-                logger.error("chi2 is not a finite number! %s,%s,%s" % \
-                               (chi2, llhd,maxllhd))
+                logger.error(f"chi2 is not a finite number! {chi2},{llhd},{maxllhd}")
             # Return the test statistic -2log(H0/H1)
             return chi2
 
@@ -890,8 +889,8 @@ class UpperLimitComputer:
                 ctr+=1
                 if ctr>20: ## but stop after 20 trials
                     if toys > 20000:
-                        logger.error("cannot find brent bracket after 20 trials. a,b=%s(%s),%s(%s), mu_hat=%.2f, sigma_mu=%.2f" % ( root_func(a),a,root_func(b),b,mu_hat, sigma_mu ) )
-                        logger.error("nll0=%s" % ( nll0 ) )
+                        logger.error(f"cannot find brent bracket after 20 trials. a,b={root_func(a)}({a}),{root_func(b)}({b}), mu_hat={mu_hat:.2f}, sigma_mu={sigma_mu:.2f}" )
+                        logger.error(f"nll0={nll0}" )
                         if marginalize == True:
                             return self.ulSigma ( model, marginalize = False,
                                                   toys = toys, expected = expected,

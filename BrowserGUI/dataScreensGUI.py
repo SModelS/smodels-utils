@@ -395,7 +395,7 @@ class ValuesScreen(BoxLayout):
             valList.children[0].bar_width = sp(5)
             valList.size_hint_y = 0.9
             
-            valLabel = Label(text='Values for %s' %self.name, font_size = sp(20))
+            valLabel = Label(text=f'Values for {self.name}', font_size = sp(20))
             valLabel.size_hint_y = 0.1
             
             self.add_widget(valLabel)
@@ -445,7 +445,7 @@ class TxnameScreen(BoxLayout):
             txnameInfoList = ListView(adapter=list_adapter)
             txnameInfoList.children[0].bar_width = sp(5)
             txnameInfoList.size_hint_y = 0.6
-            txnameLabel = Label(text='%s Info:' %self.txname.txName, font_size = sp(20))
+            txnameLabel = Label(text=f'{self.txname.txName} Info:', font_size = sp(20))
             txnameLabel.size_hint_y = 0.1
             
             if os.path.isfile('./feyn/'+self.txname.txName+'_feyn.png'):
@@ -553,7 +553,7 @@ class ULgetter(FloatLayout):
         if not self.dataset.getValuesFor('dataType')[0] == 'upperLimit':
             return
         self.txname = txname
-        self.ulLabel.text = "UL for %s :" %txname.txName
+        self.ulLabel.text = f"UL for {txname.txName} :"
         #if not txname.txnameData._data:
         #    txname.txnameData.loadData()
         # massarray =  txname.txnameData._data[0][0]
@@ -630,7 +630,7 @@ class myLabel(Label):
         try:            
             webbrowser.open(link)
         except:
-            Logger.error("Failed to open link: %s" %link)
+            Logger.error(f"Failed to open link: {link}")
 
 def selectResults(button):
     """

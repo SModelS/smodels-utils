@@ -62,7 +62,7 @@ def compareLines(new,old,ignore=['#']):
         
         
     if len(newLines) != len(oldLines):
-        logger.debug('Number of lines in %s and %s differ' %(new,old))
+        logger.debug(f'Number of lines in {new} and {old} differ')
         return False
     
     for i,l in enumerate(newLines):
@@ -83,22 +83,22 @@ def checkValue(value,oldValue,reps):
     
     if isinstance(value,str):
         if value.strip() != oldValue.strip():
-            logger.error('New value = %s \nOld value = %s' %(value,oldValue))
+            logger.error(f'New value = {value} \nOld value = {oldValue}')
             return False
     elif isinstance(value,list):
         if len(value) != len(oldValue):
-            logger.error('\nNew value length = %i \nOld value length = %i' %(len(value),len(oldValue)))
+            logger.error(f'\nNew value length = {len(value)} \nOld value length = {len(oldValue)}')
             return False
         for i,v in enumerate(value):
             c = checkValue(v,oldValue[i],reps)
             if not c:
                 if len(oldValue) < 4:
-                    logger.error("Old: %s \nNew: %s" %(oldValue,value))
+                    logger.error(f"Old: {oldValue} \nNew: {value}")
                 return False
     else:
         vdiff = abs(value-oldValue)/(abs(value+oldValue))
         if vdiff > reps:
-            logger.error('New value = %s \nOld value = %s' %(value,oldValue))
+            logger.error(f'New value = {value} \nOld value = {oldValue}')
             return False                
     
     return True
@@ -157,7 +157,7 @@ def compareFields(new,old,ignoreFields=['susyProcess'],skipFields=[],reps=0.01):
 
     #Check fields:
     if len(newFields) != len(oldFields):
-        logger.error("Number of fields in %s differ" %new)
+        logger.error(f"Number of fields in {new} differ")
         for key in set(newFields.keys()).symmetric_difference(set(oldFields.keys())):
             if key in newFields:
                 print ( 'Missing in old:',key )
@@ -165,7 +165,7 @@ def compareFields(new,old,ignoreFields=['susyProcess'],skipFields=[],reps=0.01):
                 print ( 'Missing in new:',key )
         return False
     if sorted(newFields.keys()) != sorted(oldFields.keys()):
-        logger.error("Fields in %s differ" %new)
+        logger.error(f"Fields in {new} differ")
         return False
 
     
@@ -176,7 +176,7 @@ def compareFields(new,old,ignoreFields=['susyProcess'],skipFields=[],reps=0.01):
         if key == 'upperLimits' or key == 'expectedUpperLimits' or key == 'efficiencyMap':
             oldValue  = removeRepeated(oldValue)
         if not checkValue(value, oldValue, reps):
-            logger.error("Field %s value differ in %s:\n old = %s ...\n new = %s ..." %(key,new,str(oldValue)[:80],str(value)[:80]))
+            logger.error(f"Field {key} value differ in {new}:\n old = {str(oldValue)[:80]} ...\n new = {str(value)[:80]} ...")
             return False
 
     return True
@@ -235,9 +235,9 @@ def checkNewOutput(new,old,setValidated=True):
     ignoreFiles += newOrigFolders
     comp = filecmp.dircmp(new,old,ignoreFiles)
     if comp.left_only:
-        logger.warning('Only in new: %s' %comp.left_only)
+        logger.warning(f'Only in new: {comp.left_only}')
     if comp.right_only:
-        logger.warning('Only in old: %s' %comp.right_only)
+        logger.warning(f'Only in old: {comp.right_only}')
 
     for f in comp.diff_files:
         if f == 'sms.root':
@@ -248,7 +248,7 @@ def checkNewOutput(new,old,setValidated=True):
             if '.txt' in f:
                 if compareFields(fnew,fold,ignoreFields=[]):
                     continue            
-            logger.error('File %s differ' %f)
+            logger.error(f'File {f} differ')
             return False
     
     for subdir in comp.subdirs:
@@ -256,9 +256,9 @@ def checkNewOutput(new,old,setValidated=True):
             continue
         sdir = comp.subdirs[subdir]
         if sdir.left_only:
-            logger.warning('Only in new: %s/%s' %(subdir,sdir.left_only))
+            logger.warning(f'Only in new: {subdir}/{sdir.left_only}')
         if sdir.right_only:
-            logger.warning('Only in old: %s/%s' %(subdir,sdir.right_only))
+            logger.warning(f'Only in old: {subdir}/{sdir.right_only}')
 
         for f in sdir.diff_files:
             if f == 'sms.root':
@@ -301,7 +301,7 @@ if __name__ == "__main__":
                 ignore = True
                 break
         if ignore:
-            print ( "\033[31m Not checking %s \033[0m" %os.path.dirname(f) )
+            print ( f"\x1b[31m Not checking {os.path.dirname(f)} \x1b[0m" )
             continue
 
 
@@ -310,7 +310,7 @@ if __name__ == "__main__":
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=False)
         if not check:
-            print ( '\033[31m Error comparing %s \033[0m' %rdir )
+            print ( f'\x1b[31m Error comparing {rdir} \x1b[0m' )
             
-        print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
+        print ( f"\x1b[32m {f} OK (runtime = {time.time() - t0:.1f} s) \x1b[0m" )
         

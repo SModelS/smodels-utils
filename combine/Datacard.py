@@ -348,5 +348,5 @@ MB.doModel()
                     self.systematicsParamMap[oldname] = newname
 
         if not found:
-            raise RuntimeError("Error: no parameter found with = %s\n" % oldname)
+            raise RuntimeError(f"Error: no parameter found with = {oldname}\n")
         return 0

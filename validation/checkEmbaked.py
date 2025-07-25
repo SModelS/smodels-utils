@@ -26,19 +26,19 @@ def main():
     argparser.add_argument ( '-a', '--analysis', nargs='?', help='analysis to check [ATLAS-SUSY-2016-07]',
                              type=str, default='ATLAS-SUSY-2016-07' )
     args=argparser.parse_args()
-    ana = "%s-eff" % args.analysis
+    ana = f"{args.analysis}-eff"
     exp = "ATLAS"
     if "CMS" in ana:
         exp = "CMS"
     sqrts="13"
     topo=args.topology
-    fname = "../../smodels-database/%sTeV/%s/%s/orig/%s.embaked" % ( sqrts, exp, ana, topo)
+    fname = f"../../smodels-database/{sqrts}TeV/{exp}/{ana}/orig/{topo}.embaked"
     with open(fname) as f:
         g=eval(f.read())
     stats ( g )
 
 def stats ( g ):
-    print ( "we have %d points" % len(g) )
+    print ( f"we have {len(g)} points" )
     checkRegions ( g )
     tuples = list(g.keys())
     ntuples = np.array ( tuples )
@@ -72,9 +72,9 @@ def stats ( g ):
         multsonedim.append ( tmponedim )
         multsonedimt [ tmponedim ] = t
 
-    print ( "largest at meridian %s - %s" % ( multst[min(mults)], multst[max(mults)] ) )
-    print ( "largest with small LSP %s - %s" % ( multslastdimt[min(multslastdim)], multslastdimt[max(multslastdim)] ) )
-    print ( "largest with small intermediate %s - %s" % ( multsonedimt[min(multsonedim)], multsonedimt[max(multsonedim)] ) )
+    print ( f"largest at meridian {multst[min(mults)]} - {multst[max(mults)]}" )
+    print ( f"largest with small LSP {multslastdimt[min(multslastdim)]} - {multslastdimt[max(multslastdim)]}" )
+    print ( f"largest with small intermediate {multsonedimt[min(multsonedim)]} - {multsonedimt[max(multsonedim)]}" )
     # print ( g.keys() )
 
 if __name__ == "__main__":

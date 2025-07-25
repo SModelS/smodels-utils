@@ -111,7 +111,7 @@ class ModelTrainer():
 
 		if self.type == "regression" and secondRun:
 			subset = self._getWrongPredictions()
-			logger.debug("subset length: %s" %len(subset))
+			logger.debug(f"subset length: {len(subset)}")
 			self.trainModel(training = subset)
 		
 		self.meanError = getModelError(self.model, self.validation, self.type)[0]
@@ -250,7 +250,7 @@ class ModelTrainer():
 
 		epo = [n+1 for n in range(len(trainingLoss))]
 
-		title = "epoch loss for %s:%s" % (str(self.txnameData), self.type)
+		title = f"epoch loss for {str(self.txnameData)}:{self.type}"
 
 		plt.figure(11)
 		plt.title(title, fontsize=20)
@@ -261,5 +261,5 @@ class ModelTrainer():
 		plt.legend()
 		plt.savefig(path)
 		plt.close(11)
-		logger.info("lossplot saved at %s" % path)
+		logger.info(f"lossplot saved at {path}")
 

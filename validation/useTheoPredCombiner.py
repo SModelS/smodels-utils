@@ -127,7 +127,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             logger.warning("SLHA folder not defined")
             return False
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.debug("SLHA files for validation at %s" %slhaDir)
+        logger.debug(f"SLHA files for validation at {slhaDir}")
 
         from smodels.matching import modelTester
         #Get list of input files to be tested

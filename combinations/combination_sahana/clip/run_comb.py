@@ -102,17 +102,17 @@ class SModelsOutput(object):
                 if bestThPred == []:
                     print("\n M_nlsp: ", self.m_nlsp, "\t M_lsp: ", self.m_lsp, "\t Combination: None")
                     print("\n Not running smodels on file as no tp available")
-                    out.write('\n {}, {}, {}, \t N/A,  \t \t N/A, \t N/A, \t N/A, \t N/A, \t N/A, \t N/A'.format(filename, self.m_nlsp, self.m_lsp))
+                    out.write(f'\n {filename}, {self.m_nlsp}, {self.m_lsp}, \t N/A,  \t \t N/A, \t N/A, \t N/A, \t N/A, \t N/A, \t N/A')
         
                 else:
                     print("\n M_nlsp: ", self.m_nlsp, "\t M_lsp: ", self.m_lsp, "\t Combination: ", bestThPred[0].analysisId())
                     self.runSmodels(bestThPred, file)
                     self.readSModelSFile(file)
-                    out.write('\n {}, {}, {}, {}, {}, {}, {}, {}, {}, {}'.format(filename, self.m_nlsp, self.m_lsp, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1]))
+                    out.write(f'\n {filename}, {self.m_nlsp}, {self.m_lsp}, {self.output_r[2]}, {self.output_r[3]}, {self.output_ana[-1]}, {self.output_r[0]}, {self.output_ana[0]}, {self.output_r[1]}, {self.output_ana[1]}')
                 
         
     def runSmodels(self, bestThPred, file):
-        parameterFile='%s/smodels/./parameters.ini'%(os.path.expanduser('~/git'))
+        parameterFile=f"{os.path.expanduser('~/git')}/smodels/./parameters.ini"
         parser = modelTester.getParameters(parameterFile)
         
         #database, databaseVersion = modelTester.loadDatabase(parser,db=None)
@@ -124,7 +124,7 @@ class SModelsOutput(object):
         parser.set('database', 'analyses', bestThPred[0].analysisId())
         
         filename = file
-        outputDir = '%s/smodels-utils/combinations/results'%(os.path.expanduser('~/git'))
+        outputDir = f"{os.path.expanduser('~/git')}/smodels-utils/combinations/results"
         #run SModelS with input file:
         output = modelTester.testPoint(filename, outputDir, parser, '2.3.0', listOfExpRes)
         for x in output.values(): x.flush()
@@ -137,7 +137,7 @@ class SModelsOutput(object):
         self.output_str = ['The highest r value is =', 'CMS analysis with highest available r_expected:', 'ATLAS analysis with highest available r_expected:', 'Combined Analyses:','combined r-value:','combined r-value (expected):']
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
-        with open('results/%s.smodels'%(file), 'r') as file:
+        with open(f'results/{file}.smodels', 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
                 if row == []:continue

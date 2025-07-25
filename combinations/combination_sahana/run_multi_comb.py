@@ -167,7 +167,7 @@ class SModelsOutput(object):
     def runSmodels(self, bestThPred, file):
         '''run SModelS on the best combination using parameter.ini '''
 
-        parameterFile="%s/./parameters.ini"%(os.path.expanduser('~/smodels'))
+        parameterFile=f"{os.path.expanduser('~/smodels')}/./parameters.ini"
         parser = modelTester.getParameters(parameterFile)
         
         #list of analyses present in combination dictionary
@@ -182,7 +182,7 @@ class SModelsOutput(object):
         print("Running SModelS on model point for the best combination of analyses")
         
         filename = file
-        outputDir = '%s/combinations/combination_sahana/results'%(os.path.expanduser('~/smodels-utils'))
+        outputDir = f"{os.path.expanduser('~/smodels-utils')}/combinations/combination_sahana/results"
         
         #run SModelS with input file:
         output = modelTester.testPoint(filename, outputDir, parser, '2.3.0', listOfExpRes)
@@ -201,7 +201,7 @@ class SModelsOutput(object):
         #r = [max_r_obs, max_r_exp, comb_r_obs, comb_r_exp]
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
         
-        with open('results/%s.smodels'%(file), 'r') as file:
+        with open(f'results/{file}.smodels', 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
                 if row == []:continue
@@ -231,7 +231,7 @@ class SModelsOutput(object):
         import ast
         
         file = file.split('/')[-1]
-        f = open('results/%s.py'%(file), 'r')
+        f = open(f'results/{file}.py', 'r')
         
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         
@@ -319,7 +319,7 @@ if __name__ == "__main__":
         for i in range(10):
             item = queue.get()
             print(item)
-            out.write('\n{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10],item[11],item[12],item[13], item[14]))
+            out.write(f'\n{item[0]}\t{item[1]}\t{item[2]}\t{item[3]}\t{item[4]}\t{item[5]}\t{item[6]}\t{item[7]}\t{item[8]}\t{item[9]}\t{item[10]}\t{item[11]}\t{item[12]}\t{item[13]}\t{item[14]}')
 
 
     

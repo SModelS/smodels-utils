@@ -264,7 +264,7 @@ def validate ( args : Dict, idx ):
         if 8 < time <= 48:
             qos = "c_medium"
         cmd += [ "--qos", qos ]
-        cmd += [ "--time", "%s" % ( time*60-1 ) ]
+        cmd += [ "--time", f"{time * 60 - 1}" ]
     #ram = 1. * nproc
     # ram = int ( 12. + .8 * nproc ) # crazy high, no
     # ram = int ( 5. + .7 * nprocesses )
@@ -278,7 +278,7 @@ def validate ( args : Dict, idx ):
     print ( f"[slurm_validate.py] validating {' '.join ( cmd )}" )
     if not dry_run:
         a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
+        print ( f"returned: {a}" )
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm_validate.py] %s %s" % ( cmd, o ) )
@@ -288,7 +288,7 @@ def logCall ():
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
-            i = '"%s"' % i
+            i = f'"{i}"'
         line += i + " "
     line = line.strip()
     lastline = ""

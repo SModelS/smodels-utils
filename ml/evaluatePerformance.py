@@ -158,7 +158,7 @@ class NetworkEvaluater():
 			else:
 				labels[n] = "1e-" + str(n-1) + " - 1e-" + str(n) + " " + units
 
-			labels[n] += " (n = {})".format(str(len(bins[n])))
+			labels[n] += f" (n = {str(len(bins[n]))})"
 
 
 		x = np.arange(len(bins))  # the label locations
@@ -169,14 +169,14 @@ class NetworkEvaluater():
 
 
 		ax.set_ylabel('mean relative error')
-		ax.set_title('mean error binned by %s (n = %s)' % (whichData, len(self.dataset)))
+		ax.set_title(f'mean error binned by {whichData} (n = {len(self.dataset)})')
 		ax.set_xticks(x)
 		ax.set_xticklabels(labels, rotation=45, rotation_mode="anchor", ha="right")
 		#ax.legend()
 
 		for rect in rects:
 			height = round(rect.get_height(), 3)
-			ax.annotate('{}'.format(height),
+			ax.annotate(f'{height}',
 				xy=(rect.get_x() + rect.get_width() / 2, height), 
 				xytext=(0, 3),  # 3 points vertical offset
 				textcoords="offset points",
@@ -356,7 +356,7 @@ class NetworkEvaluater():
 			else: affix = value["affix"]
 
 			plt.figure(index)
-			plt.title("{} (regression)\n{}mean error: {:4.2f}% max error: {:4.2f}%".format(str(self.txnameData), affix, meanError, maxError), fontsize=14)
+			plt.title(f"{str(self.txnameData)} (regression)\n{affix}mean error: {meanError:4.2f}% max error: {maxError:4.2f}%", fontsize=14)
 			plt.xlabel(value["xlabel"])
 			plt.ylabel(value["ylabel"])
 			plt.scatter(value["xaxis"], value["yaxis"], c=value["error"], cmap='rainbow', vmin=0, vmax=vMax)
@@ -420,18 +420,18 @@ class NetworkEvaluater():
 		error = round(100.*(1. - (onHull_correct_total + offHull_correct_total)/samples_total), 3)
 		delim = round(model._delimiter, 3)
 
-		onShell  = "%s / %s (%s%%)" % (onHull_correct_total, onHull_total, round(100.*onHull_correct_total/onHull_total, 3))
-		offShell = "%s / %s (%s%%)" % (offHull_correct_total, offHull_total, round(100.*offHull_correct_total/offHull_total, 3))
-		total    = "%s / %s (%s%%)" % (onHull_correct_total + offHull_correct_total, samples_total, error)
+		onShell  = f"{onHull_correct_total} / {onHull_total} ({round(100.0 * onHull_correct_total / onHull_total, 3)}%)"
+		offShell = f"{offHull_correct_total} / {offHull_total} ({round(100.0 * offHull_correct_total / offHull_total, 3)}%)"
+		total    = f"{onHull_correct_total + offHull_correct_total} / {samples_total} ({error}%)"
 
-		print("onShell:   %s" %onShell)
-		print("offShell:  %s" %offShell)
-		print("total:     %s" %total)
-		print("delimiter: %s" %delim)
+		print(f"onShell:   {onShell}")
+		print(f"offShell:  {offShell}")
+		print(f"total:     {total}")
+		print(f"delimiter: {delim}")
 
 
 		plt.figure(0)
-		plt.title('{} (regression)\nerror: {}% (delimiter: {})'.format(str(self.txnameData), error, delim), fontsize=14)
+		plt.title(f'{str(self.txnameData)} (regression)\nerror: {error}% (delimiter: {delim})', fontsize=14)
 		plt.xlabel('mass mother [GeV]')
 		plt.ylabel('mass daughter [GeV]')
 

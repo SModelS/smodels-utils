@@ -15,5 +15,4 @@ def rgbValue ( fraction ):
     green = [0.00, 0.81, 0.80, 0.20, 0.00]
     blue  = [0.51, 1.00, 0.08, 0.00, 0.00]
     x=int ( fraction*4. )
-    return "#%s%s%s" % ( singlevalue ( red[x] ), singlevalue ( green[x] ), \
-                         singlevalue ( blue[x] ) )
+    return f"#{singlevalue(red[x])}{singlevalue(green[x])}{singlevalue(blue[x])}"

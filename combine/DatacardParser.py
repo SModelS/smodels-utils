@@ -338,8 +338,8 @@ def addRateParam(lsyst, f, ret):
             tmp_exp = [[lsyst, f[4], f[5], 1], ""]
     # check for malformed bin/process
     if f[2] not in ret.bins or f[3] not in ret.processes:
-        raise RuntimeError(" No such channel/process '%s/%s', malformed line:\n   %s" % (f[2], f[3], " ".join(f)))
-    key = "%sAND%s" % (f[2], f[3])
+        raise RuntimeError(f" No such channel/process '{f[2]}/{f[3]}', malformed line:\n   {' '.join(f)}")
+    key = f"{f[2]}AND{f[3]}"
     if key in ret.rateParams:
         ret.rateParams[key].append(tmp_exp)
     else:
@@ -392,7 +392,7 @@ def parseCard(file, options):
                 if f[2] not in ret.shapeMap:
                     ret.shapeMap[f[2]] = {}
                 if f[1] in ret.shapeMap[f[2]]:
-                    raise RuntimeError("Duplicate definition for process '%s', channel '%s'" % (f[1], f[2]))
+                    raise RuntimeError(f"Duplicate definition for process '{f[1]}', channel '{f[2]}'")
                 ret.shapeMap[f[2]][f[1]] = f[3:]
                 if "$CHANNEL" in l:
                     shapesUseBin = True
@@ -414,7 +414,7 @@ def parseCard(file, options):
                 binline = []
                 for b in f[1:]:
                     if re.match("[0-9]+", b):
-                        raise RuntimeError("Error: Bin %(b)s starts with a digit!" % locals())
+                        raise RuntimeError(f"Error: Bin {locals()['b']} starts with a digit!")
                     binline.append(b)
             if f[0] == "process":
                 if processline == []:  # first line contains names
@@ -434,7 +434,7 @@ def parseCard(file, options):
                     ret.keyline.append((b, processline[i], s))
                     if hadBins:
                         if b not in ret.bins:
-                            raise RuntimeError("Bin %s not among the declared bins %s" % (b, ret.bins))
+                            raise RuntimeError(f"Bin {b} not among the declared bins {ret.bins}")
                     else:
                         if b not in ret.bins:
                             ret.bins.append(b)
@@ -457,7 +457,7 @@ def parseCard(file, options):
                     if ret.isSignal[p] == None:
                         ret.isSignal[p] = s
                     elif ret.isSignal[p] != s:
-                        raise RuntimeError("Process %s is declared as signal in some bin and as background in some other bin" % p)
+                        raise RuntimeError(f"Process {p} is declared as signal in some bin and as background in some other bin")
                 ret.signals = [p for p, s in ret.isSignal.items() if s]
                 if len(ret.signals) == 0 and not options.allowNoSignal:
                     raise RuntimeError("You must have at least one signal process (id <= 0)")
@@ -467,7 +467,7 @@ def parseCard(file, options):
                 if sigline == []:
                     raise RuntimeError("Missing line with process id before rate line")
                 if len(f[1:]) != len(ret.keyline):
-                    raise RuntimeError("Malformed rate line: length %d, while bins and process lines have length %d" % (len(f[1:]), len(ret.keyline)))
+                    raise RuntimeError(f"Malformed rate line: length {len(f[1:])}, while bins and process lines have length {len(ret.keyline)}")
                 for (b, p, s), r in zip(ret.keyline, f[1:]):
                     ret.exp[b][p] = float(r)
                 break  # rate is the last line before nuisances
@@ -493,16 +493,16 @@ def parseCard(file, options):
                 types = [ret.systs[j][2] for j in ret.systIDMap[lsyst]]
                 if "shape" in types:
                     if pdf == "lnN":
-                        raise RuntimeError("Cannot have shape and lnN in same datacard for systematic %s. Use 'shape?'" % lsyst)
+                        raise RuntimeError(f"Cannot have shape and lnN in same datacard for systematic {lsyst}. Use 'shape?'")
                 elif "lnN" in types:
                     if pdf == "shape":
-                        raise RuntimeError("Cannot have shape and lnN in same datacard for systematic %s. Use 'shape?'" % lsyst)
+                        raise RuntimeError(f"Cannot have shape and lnN in same datacard for systematic {lsyst}. Use 'shape?'")
             if lsyst.endswith("[nofloat]"):
                 lsyst = lsyst.replace("[nofloat]", "")
                 nofloat = True
             if options.nuisancesToExclude and isVetoed(lsyst, options.nuisancesToExclude):
                 if options.verbose > 0:
-                    stderr.write("Excluding nuisance %s selected by a veto pattern among %s\n" % (lsyst, options.nuisancesToExclude))
+                    stderr.write(f"Excluding nuisance {lsyst} selected by a veto pattern among {options.nuisancesToExclude}\n")
                 if nuisances != -1:
                     nuisances -= 1
                 continue
@@ -559,7 +559,7 @@ def parseCard(file, options):
                             addRateParam(lsyst, f_tmp, ret)
                             found = True
                     if not found:
-                        raise RuntimeError("rateParam %s with process %r bin %r doesn't match anything." % (lsyst, f[3], f[2]))
+                        raise RuntimeError(f"rateParam {lsyst} with process {f[3]!r} bin {f[2]!r} doesn't match anything.")
                 else:
                     addRateParam(lsyst, f, ret)
                 continue
@@ -574,7 +574,7 @@ def parseCard(file, options):
                     if options.verbose > 1:
                         print("Before edit: \n\t%s\n" % ("\n\t".join([str(x) for x in ret.systs])))
                     if options.verbose > 1:
-                        print("Edit command: %s\n" % numbers)
+                        print(f"Edit command: {numbers}\n")
                     doEditNuisance(ret, numbers[0], numbers[1:])
                     if options.verbose > 1:
                         print("After edit: \n\t%s\n" % ("\n\t".join([str(x) for x in ret.systs])))
@@ -590,18 +590,18 @@ def parseCard(file, options):
                 groupNuisances = numbers
 
                 if not groupNuisances:
-                    raise RuntimeError("Syntax error for group '%s': empty line after 'group'." % groupName)
+                    raise RuntimeError(f"Syntax error for group '{groupName}': empty line after 'group'.")
 
                 defToks = ("=", "+=")
                 defTok = groupNuisances.pop(0)
                 if defTok not in defToks:
-                    raise RuntimeError("Syntax error for group '%s': first thing after 'group' is not '[+]=' but '%s'." % (groupName, defTok))
+                    raise RuntimeError(f"Syntax error for group '{groupName}': first thing after 'group' is not '[+]=' but '{defTok}'.")
 
                 if groupName not in ret.groups:
                     if defTok == "=":
                         ret.groups[groupName] = set(groupNuisances)
                     else:
-                        raise RuntimeError("Cannot append to group '%s' as it was not yet defined." % groupName)
+                        raise RuntimeError(f"Cannot append to group '{groupName}' as it was not yet defined.")
                 else:
                     if defTok == "+=":
                         ret.groups[groupName].update(set(groupNuisances))
@@ -626,14 +626,14 @@ def parseCard(file, options):
                         ret.binParFlags[b] = statFlags
                 else:
                     if lsyst not in ret.bins:
-                        raise RuntimeError(" No such channel '%s', malformed line:\n   %s" % (lsyst, " ".join(f)))
+                        raise RuntimeError(f" No such channel '{lsyst}', malformed line:\n   {' '.join(f)}")
                     ret.binParFlags[lsyst] = statFlags
                 continue
             else:
-                raise RuntimeError("Unsupported pdf %s" % pdf)
+                raise RuntimeError(f"Unsupported pdf {pdf}")
             if len(numbers) < len(ret.keyline):
                 raise RuntimeError(
-                    "Malformed systematics line %s of length %d: while bins and process lines have length %d" % (lsyst, len(numbers), len(ret.keyline))
+                    f"Malformed systematics line {lsyst} of length {len(numbers)}: while bins and process lines have length {len(ret.keyline)}"
                 )
             errline = dict([(b, {}) for b in ret.bins])
             nonNullEntries = 0
@@ -644,14 +644,14 @@ def parseCard(file, options):
                     errline[b][p] = [float(x) for x in r.split("/")]
                     for v in errline[b][p]:
                         if v <= 0.00:
-                            raise ValueError('Found "%s" in the nuisances affecting %s for %s. This would lead to NANs later on, so please fix it.' % (r, p, b))
+                            raise ValueError(f'Found "{r}" in the nuisances affecting {p} for {b}. This would lead to NANs later on, so please fix it.')
                 else:
                     if r == "-" * len(r):
                         r = 0.0
                     errline[b][p] = float(r)
                     # values of 0.0 are treated as 1.0; scrap negative values.
                     if pdf not in ["trG", "dFD", "dFD2"] and errline[b][p] < 0:
-                        raise ValueError('Found "%s" in the nuisances affecting %s in %s. This would lead to NANs later on, so please fix it.' % (r, p, b))
+                        raise ValueError(f'Found "{r}" in the nuisances affecting {p} in {b}. This would lead to NANs later on, so please fix it.')
                 # set the rate to epsilon for backgrounds with zero observed sideband events.
                 if pdf == "gmN" and ret.exp[b][p] == 0 and float(r) != 0:
                     ret.exp[b][p] = 1e-6
@@ -676,11 +676,11 @@ def parseCard(file, options):
         ns_bin = sum([(ret.exp[b][p] != 0) for (b1, p, s) in ret.keyline if b1 == b and s])
         nb_bin = sum([(ret.exp[b][p] != 0) for (b1, p, s) in ret.keyline if b1 == b and not s])
         if np_bin == 0:
-            raise RuntimeError("Bin %s has no processes contributing to it" % b)
+            raise RuntimeError(f"Bin {b} has no processes contributing to it")
         if ns_bin == 0 and not options.allowNoSignal:
-            stderr.write("Warning: Bin %s has no signal processes contributing to it\n" % b)
+            stderr.write(f"Warning: Bin {b} has no signal processes contributing to it\n")
         if nb_bin == 0 and not options.allowNoBackground:
-            raise RuntimeError("Bin %s has no background processes contributing to it" % b)
+            raise RuntimeError(f"Bin {b} has no background processes contributing to it")
     # cleanup systematics that have no effect to avoid zero derivatives
     syst2 = []
     for lsyst, nofloat, pdf, args, errline in ret.systs:
@@ -715,7 +715,7 @@ def parseCard(file, options):
 
 
 def FloatToString(inputValue):
-    return ("%.10f" % inputValue).rstrip("0").rstrip(".")
+    return (f"{inputValue:.10f}").rstrip("0").rstrip(".")
 
 
 def FloatToStringScientific(inputValue, etype="g"):

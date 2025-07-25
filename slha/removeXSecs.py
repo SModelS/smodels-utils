@@ -29,7 +29,7 @@ def getSqrtsString ( sqrts ):
         return "8.00E+03"
     if sqrts == 13:
         return "1.30E+04"
-    print ( "[removeXSecs] sqrts is %s, dont know how to handle" % sqrts )
+    print ( f"[removeXSecs] sqrts is {sqrts}, dont know how to handle" )
     return None
 
 def removeForPid ( fl, pid, sqrts, pid2 ):
@@ -41,7 +41,7 @@ def removeForPid ( fl, pid, sqrts, pid2 ):
     isInXsec = False
     spid2 = ""
     if pid2 != 0:
-        spid2 = " %s" % str(pid2)
+        spid2 = f" {str(pid2)}"
     for line in lines:
         p1 = line.find ( " "+str(pid) )
         p2 = line.find ( spid2 )
@@ -56,7 +56,7 @@ def removeForPid ( fl, pid, sqrts, pid2 ):
 
 def removeAll ( fl, sqrts ):
     """ remove all xsecs, if sqrts is not zero, then remove all of a certain sqrts """
-    print ( "cleaning %s" % fl )
+    print ( f"cleaning {fl}" )
     f = open ( fl, "rt" )
     lines = f.readlines()
     f.close()
@@ -71,10 +71,10 @@ def removeAll ( fl, sqrts ):
 def zipThem ( files ):
     """ zip them up """
     topo = files[0][:files[0].find("_")]
-    cmd = "tar czvf %s.tar.gz %s*slha" % ( topo, topo )
+    cmd = f"tar czvf {topo}.tar.gz {topo}*slha"
     print ( cmd )
     subprocess.getoutput ( cmd )
-    cmd = "rm %s*slha" % topo
+    cmd = f"rm {topo}*slha"
     print ( cmd )
     subprocess.getoutput ( cmd )
     cmd = "rm -r T*slha"
@@ -108,7 +108,7 @@ def main():
         ## remove cruft slha files, unpack tarball
         cmd = "rm -rf T*slha" 
         subprocess.getoutput ( cmd )
-        cmd = "tar xzvf %s" % args.files
+        cmd = f"tar xzvf {args.files}"
         subprocess.getoutput ( cmd )
         args.files = "T*slha"
     files = glob.glob( args.files )

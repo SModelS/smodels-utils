@@ -32,7 +32,7 @@ def version(astuple=False):
     Print version number of smodels-utils
 
     """
-    f = open("%s/version" % installDirectory())
+    f = open(f"{installDirectory()}/version")
     l = f.readline()
     f.close()
     l = l.replace("\n", "")

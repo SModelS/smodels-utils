@@ -72,7 +72,7 @@ class PyhfData:
             wsChannelsInfo['signalRegions'] = []
             wsChannelsInfo['otherRegions'] = []
             if not 'channels' in ws.keys():
-                logger.error("Json file number {} is corrupted (channels are missing)".format(self.inputJsons.index(ws)))
+                logger.error(f"Json file number {self.inputJsons.index(ws)} is corrupted (channels are missing)")
                 self.channelsInfo = None
                 return
             for i_ch, ch in enumerate(ws['channels']):
@@ -107,7 +107,7 @@ class PyhfData:
             for sr in wsInfo['signalRegions']:
                 nBinsJson += sr['size']
             if nBinsJson != len(subSig):
-                logger.error('The number of signals provided is different from the number of bins for json number {} and channel number {}'.format(self.channelsInfo.index(wsInfo), self.nsignals.index(subSig)))
+                logger.error(f'The number of signals provided is different from the number of bins for json number {self.channelsInfo.index(wsInfo)} and channel number {self.nsignals.index(subSig)}')
                 self.errorFlag = True
             allZero = all([s == 0 for s in subSig])
             # Checking if all signals matching this json are zero
@@ -136,7 +136,7 @@ class PyhfUpperLimitComputer:
         """
         self.data = data
         self.nsignals = self.data.nsignals
-        logger.debug("Signals : {}".format(self.nsignals))
+        logger.debug(f"Signals : {self.nsignals}")
         self.inputJsons = self.data.inputJsons
         self.channelsInfo = self.data.channelsInfo
         self.zeroSignalsFlag = self.data.zeroSignalsFlag
@@ -212,7 +212,7 @@ class PyhfUpperLimitComputer:
             try:
                 return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
             except (pyhf.exceptions.InvalidSpecification, KeyError) as e:
-                logger.error("The json file is corrupted:\n{}".format(e))
+                logger.error(f"The json file is corrupted:\n{e}")
                 return None
         else:
             workspaces = []
@@ -221,7 +221,7 @@ class PyhfUpperLimitComputer:
                 try:
                     ws = pyhf.Workspace(wsDict)
                 except (pyhf.exceptions.InvalidSpecification, KeyError) as e:
-                    logger.error("Json file number {} is corrupted:\n{}".format(self.inputJsons.index(json), e))
+                    logger.error(f"Json file number {self.inputJsons.index(json)} is corrupted:\n{e}")
                     return None
                 workspaces.append(ws)
             return workspaces
@@ -315,12 +315,12 @@ class PyhfUpperLimitComputer:
             start = time.time()
             result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, qtilde=True, return_expected = expected)
             end = time.time()
-            logger.debug("Hypotest elapsed time : %1.4f secs" % (end - start))
+            logger.debug(f"Hypotest elapsed time : {end - start:1.4f} secs")
             if expected:
-                logger.debug("expected = {}, mu = {}, result = {}".format(expected, mu, result))
+                logger.debug(f"expected = {expected}, mu = {mu}, result = {result}")
                 CLs = float(result[1].tolist()[0])
             else:
-                logger.debug("expected = {}, mu = {}, result = {}".format(expected, mu, result))
+                logger.debug(f"expected = {expected}, mu = {mu}, result = {result}")
                 CLs = float(result[0])
             # logger.debug("Call of root_func(%f) -> %f" % (mu, 1.0 - CLs))
             return 1.0 - self.cl - CLs
@@ -365,13 +365,13 @@ class PyhfUpperLimitComputer:
                 workspace = updateWorkspace()
                 continue
         # Finding the root (Brent bracketing part)
-        logger.debug("Final scale : %f" % self.scale)
+        logger.debug(f"Final scale : {self.scale:f}")
         hi_mu = 10.
         lo_mu = 1.
         logger.debug("Starting brent bracketing")
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
         endUL = time.time()
-        logger.debug("ulSigma elpased time : %1.4f secs" % (endUL - startUL))
+        logger.debug(f"ulSigma elpased time : {endUL - startUL:1.4f} secs")
         return ul*self.scale # self.scale has been updated whithin self.rescale() method
 
 if __name__ == "__main__":

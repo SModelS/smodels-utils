@@ -66,7 +66,7 @@ def matches ( f, args ):
         return False
     if args.lifetime != None and not args.lifetime in f:
         return False
-    if args.mlsp != None and not "_%s_" % args.mlsp in f:
+    if args.mlsp != None and not f"_{args.mlsp}_" in f:
         return False
     return True
 
@@ -93,7 +93,7 @@ def create():
         mlsp = 1
 
     for txname in [ args.txname ]: # , "TSmuSmuDisp" ]:
-        tarball="../slha/%s.tar.gz" % txname
+        tarball=f"../slha/{txname}.tar.gz"
         tar = tarfile.open(tarball,"r:gz")
 
         files = [f for f in tar.getnames() if matches ( f, args ) ]

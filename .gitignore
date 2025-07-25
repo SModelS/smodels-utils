@@ -50,6 +50,7 @@ bin/failed.txt
 bin/log.txt
 bin/refs.bib
 EM_Creator/LLP/ufo2slha
+slha/prev*tar.gz
 EM_Creator/LLP/pythia8
 EM_Creator/LLP/MG5
 */.DS_Store

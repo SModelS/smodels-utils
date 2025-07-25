@@ -26,7 +26,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
     if ssmultipliers not in [ None, "", "None", "none" ]:
         ## suppress everything but ( '*200000?', '*100000?' )
         # D = { ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }
-        ssms = ' --ssmultipliers "%s" ' % str(ssmultipliers)
+        ssms = f' --ssmultipliers "{str(ssmultipliers)}" '
         # print ( "ssm", ssmultipliers )
     for f in files:
         has_lo  = False
@@ -55,7 +55,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
         xsecc = xsecc + ms
         if not has_nlo:
             if not has_lo:
-                print ( "%s has neither LO nor NLO" % f )
+                print ( f"{f} has neither LO nor NLO" )
                 cmd = "%s -e %d -N -P -%d %s -f %s" % \
                        ( xsecc, nevents, pythia, ssms, f )
                 if pretend:
@@ -66,7 +66,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
                     print ( a )
                 not_lo += 1
             else:
-                print  ("%s has only LO" % f )
+                print  (f"{f} has only LO" )
                 cmd = "%s -e %d -N -P -%d -O -f %s" % \
                        ( xsecc, nevents, pythia, f )
                 if pretend:
@@ -77,7 +77,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
                     print ( a )
                 not_nlo += 1
         if not has_13 and sqrtS in [ 0, 13 ]:
-            print ( "%s has not sqrts 13 " % f )
+            print ( f"{f} has not sqrts 13 " )
             cmd = "%s -e %d -N -P -%d %s -f %s" % \
                    ( xsecc, nevents, pythia, ssms, f )
             if pretend:
@@ -89,7 +89,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
             not_13 += 1
         # print ( "here sqrts", sqrts, "has8", has_8 )
         if not has_8 and sqrtS in [ 0, 8 ]:
-            print ( "%s has not sqrts 8 " % f )
+            print ( f"{f} has not sqrts 8 " )
             cmd = "%s -e %d -N -P -%d %s -f %s" % \
                    ( xsecc, nevents, pythia, ssms, f )
             if pretend:
@@ -112,7 +112,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
 def zipThem ( files ):
     """ zip them up """
     topo = files[0][:files[0].find("_")]
-    cmd = "tar czvf %s.tar.gz %s*slha" % ( topo, topo )
+    cmd = f"tar czvf {topo}.tar.gz {topo}*slha"
     print ( cmd )
     subprocess.getoutput ( cmd )
 
@@ -150,7 +150,7 @@ def main():
         ## remove cruft slha files, unpack tarball
         cmd = "rm -rf T*slha" 
         subprocess.getoutput ( cmd )
-        cmd = "tar xzvf %s" % args.files
+        cmd = f"tar xzvf {args.files}"
         subprocess.getoutput ( cmd )
         args.files = "T*slha"
         repack = True
@@ -165,7 +165,7 @@ def main():
     pat = "T*slha"
     pretend = args.pretend
     pat = args.files
-    print ( "[check_nlo] checking for %s" % pat )
+    print ( f"[check_nlo] checking for {pat}" )
 
     files = glob.glob ( pat )
     random.shuffle ( files )

@@ -91,7 +91,7 @@ def main(allPredictions):
 
     combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
     for i,combo in enumerate(combosDict.keys()):
-        retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
+        retDict.update( { f'combo{i}': {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
 
     return retDict
 

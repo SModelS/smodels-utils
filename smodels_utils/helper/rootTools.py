@@ -238,7 +238,7 @@ def getRootLibraryPath ( ):
             import os
             ret=os.getenv("ROOTSYS")
             for Dir in [ "lib/x86_64-linux-gnu", "lib64/root", "lib/root" ]:
-                F="%s/%s/libRint.so" % ( ret, Dir )
+                F=f"{ret}/{Dir}/libRint.so"
                 if os.path.exists ( F ):
                     return F
             log.error ( "no suitable libdir found." )

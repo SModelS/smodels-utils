@@ -79,9 +79,9 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
     retDict['bestAna'] = {'name':bestResult.dataset.globalInfo.id, 'r_exp': r_exp_MSA}
     # Print the most constraining experimental result
     # print("\n ",allPredictions)
-    print("\n The most sensitive analysis is %s with an expected r-value of %1.3E" % (bestResult.dataset.globalInfo.id,r_exp_MSA))
+    print(f"\n The most sensitive analysis is {bestResult.dataset.globalInfo.id} with an expected r-value of {r_exp_MSA:1.3E}")
 
-    print("\n Theory Predictions done in %1.2fs\n" %(time.time()-t0))
+    print(f"\n Theory Predictions done in {time.time() - t0:1.2f}s\n")
     t0 = time.time()
 
     # Find best combination of analyses among the available theory predictions.
@@ -91,7 +91,7 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
 
     bestCombo,ZCombo,llhdCombo,muhatCombo = protoCombiner.findHighestSignificance(allPredictions,strategy='',expected=True)
 
-    print("\n Best combination of analyses found in %1.2fs" %(time.time()-t0))
+    print(f"\n Best combination of analyses found in {time.time() - t0:1.2f}s")
     # t0 = time.time()
 
     # Make sure each analysis appears only once:
@@ -108,20 +108,20 @@ def main(inputFile='./ew_bvrs3m3v.slha', sigmacut=0.005*fb, mingap = 5.*GeV, dat
         # lsm = combiner.lsm()
         r_comb_obs = combiner.getRValue()
         r_comb_exp = combiner.getRValue(expected=True)
-        print("\n Combined r value: %1.3E\n" % r_comb_obs)
-        print("\n Combined r value (expected): %1.3E" % r_comb_exp)
+        print(f"\n Combined r value: {r_comb_obs:1.3E}\n")
+        print(f"\n Combined r value (expected): {r_comb_exp:1.3E}")
         # print("Likelihoods: L, L_max, L_SM = %10.3E, %10.3E, %10.3E\n" % (llhd, lmax, lsm))
 
-    print("\n Combination of analyses done in %1.2fs" %(time.time()-t0))
+    print(f"\n Combination of analyses done in {time.time() - t0:1.2f}s")
     t0 = time.time()
     # Find out missing topologies for sqrts=13*TeV:
     uncovered = coverage.Uncovered(toplist, sqrts=13.*TeV)
-    print("\n Coverage done in %1.2fs" %(time.time()-t0))
+    print(f"\n Coverage done in {time.time() - t0:1.2f}s")
     # First sort coverage groups by label
     groups = sorted(uncovered.groups[:], key=lambda g: g.label)
     # Print uncovered cross-sections:
     for group in groups:
-        print("\nTotal cross-section for %s (fb): %10.3E\n" % (group.description, group.getTotalXSec()))
+        print(f"\nTotal cross-section for {group.description} (fb): {group.getTotalXSec():10.3E}\n")
 
     missingTopos = uncovered.getGroup('missing (prompt)')
     # Print some of the missing topologies:

@@ -49,20 +49,20 @@ def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
                 continue
             if dcur >= d1[idx-1]:
                 if verbose:
-                    print ( "Inverted masses %s" % d1 )
+                    print ( f"Inverted masses {d1}" )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
             mgap = mgaps[idx-1]
             if mgap > 0. and dcur > ( d1[idx-1] - mgap ):
                 if verbose:
-                    print ( "Minimum massgap not fulfilled %s" % d1 )
+                    print ( f"Minimum massgap not fulfilled {d1}" )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
             if mgap < 0. and dcur < ( d1[idx-1] + mgap ):
                 if verbose:
-                    print ( "Maximum massgap not fulfilled %s" % d1 )
+                    print ( f"Maximum massgap not fulfilled {d1}" )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
@@ -72,13 +72,13 @@ def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
                 continue
             if dcur >= dhalf[idx-1]:
                 if verbose:
-                    print ( "Inverted masses %s" % d1 )
+                    print ( f"Inverted masses {d1}" )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
             if dcur > dhalf[idx-1] - mgaps[idx-1]:
                 if verbose:
-                    print ( "Massgap not fulfilled %s" % d1 )
+                    print ( f"Massgap not fulfilled {d1}" )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
@@ -94,7 +94,7 @@ def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
             d= distance(d1,d2)
             if d < maxDistance:
                 if verbose:
-                    print ( "kick out %s: too close to %s (d=%.1f)." % (sd2,sd1,sqrt(d)) )
+                    print ( f"kick out {sd2}: too close to {sd1} (d={sqrt(d):.1f})." )
                 keepIt[sd2]=False
                 nWeeded+=1
                 # break
@@ -119,13 +119,13 @@ def main():
     ap.add_argument ( '--keep60s', help='keep points with m(LSP)=60 GeV', 
                       action='store_true' )
     args = ap.parse_args()
-    tarball = "../slha/%s.tar.gz" % args.topo
+    tarball = f"../slha/{args.topo}.tar.gz"
     if not os.path.exists ( tarball ):
-        print ( "tarball %s does not exist." % tarball )
+        print ( f"tarball {tarball} does not exist." )
         sys.exit()
     tempdir = tempfile.mkdtemp ( dir="./" )
-    subprocess.getoutput ( "cd %s; tar xzvf ../%s" % (tempdir, tarball ) )
-    files = glob.glob("%s/%s*slha" % ( tempdir, args.topo ) )
+    subprocess.getoutput ( f"cd {tempdir}; tar xzvf ../{tarball}" )
+    files = glob.glob(f"{tempdir}/{args.topo}*slha" )
     dists = []
     for fname in files:
         f = fname.replace(args.topo+"_","").replace(".slha","")
@@ -155,13 +155,13 @@ def main():
         f = fname.replace(args.topo+"_","").replace(".slha","")
         f = f.replace(tempdir+"/","")
         if f not in weeded:
-            subprocess.getoutput ( "rm %s/%s_%s.slha" % ( tempdir, args.topo, f ) )
-    subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha" % ( tempdir, args.topo, args.topo ) )
-    subprocess.getoutput ( "rm -rf %s" % tempdir )
+            subprocess.getoutput ( f"rm {tempdir}/{args.topo}_{f}.slha" )
+    subprocess.getoutput ( f"cd {tempdir}; tar czvf ../{args.topo}.tar.gz {args.topo}*slha" )
+    subprocess.getoutput ( f"rm -rf {tempdir}" )
     print ( "To keep the changes (I wont do this automatically): " )
-    cmd = "cp %s.tar.gz ../slha/" % args.topo
+    cmd = f"cp {args.topo}.tar.gz ../slha/"
     print ( cmd )
-    subprocess.getoutput ( "echo '%s' | xsel -i" % cmd )
+    subprocess.getoutput ( f"echo '{cmd}' | xsel -i" )
 
 
 if __name__ == "__main__":

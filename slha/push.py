@@ -8,7 +8,7 @@ import sys, os, glob
 import commands as C
 
 def usage ():
-    print ( "Usage: %s [Txname] [Txname]" % sys.argv[0] )
+    print ( f"Usage: {sys.argv[0]} [Txname] [Txname]" )
     print ( "       pushes slha tarballs to smodels server." )
     print ( "       if no arguments are given, pushes all that are found in working directory." )
     sys.exit()
@@ -22,6 +22,6 @@ for ctr,w in enumerate(which):
     if w[-4:]!=".tar": which[ctr]+=".tar"
 
 
-cmd="scp %s smodels.hephy.at:/var/www/downloads/tarballs" % ( str(" ".join(which)) )
+cmd=f"scp {str(' '.join(which))} smodels.hephy.at:/var/www/downloads/tarballs"
 print ( cmd )
 C.getoutput ( cmd )

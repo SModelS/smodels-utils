@@ -176,7 +176,7 @@ def bake ( args : Dict ):
         if 8 < time <= 48:
             qos = "c_medium"
         cmd += [ "--qos", qos ]
-        cmd += [ "--time", "%s" % ( time*60-1 ) ]
+        cmd += [ "--time", f"{time * 60 - 1}" ]
     # ma5 seems to not need much RAM
     ram = 3.5 * nprocesses
     if nevents >= 50000:
@@ -211,7 +211,7 @@ def logCall ():
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
-            i = '"%s"' % i
+            i = f'"{i}"'
         line += i + " "
     line = line.strip()
     lastline = ""

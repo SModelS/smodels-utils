@@ -39,4 +39,4 @@ for txname,analyses in txnames.items():
 
 for k,v in sets.items():
     for pair in v:
-        print ( "%s: %s" % ( k, pair ) )
+        print ( f"{k}: {pair}" )

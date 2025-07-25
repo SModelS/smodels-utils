@@ -14,7 +14,7 @@ def convert ( path = "." ):
         # print root,dirs,files
         if not "-eff" in root: continue
         if "T2gg.effi" in files:
-            cmd = "mv %s/T2gg.effi %s/T2.effi" % ( root, root )
+            cmd = f"mv {root}/T2gg.effi {root}/T2.effi"
             commands.getoutput ( cmd )
         if not "T2gg.txt" in files: continue
         ginfo = open(root[:root.find("-eff")+4]+"/globalInfo.txt",'r')

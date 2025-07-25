@@ -15,20 +15,20 @@ def xsel():
 def backup():
     o = commands.getoutput ( "cp SubDimensionalResults OldSubDimensionalResults" )
     if len(o):
-        print ( "backup: %s" % o )
+        print ( f"backup: {o}" )
 
 def diff():
     o = commands.getoutput ( "diff SubDimensionalResults OldSubDimensionalResults" )
     if len(o)==0:
         print ( "No changes in SubDimensionalResults since last call." )
         return
-    print ( "SubDimensionalResults has changed (%d changes)" % ( len(o.split() ) ) )
+    print ( f"SubDimensionalResults has changed ({len(o.split())} changes)" )
 
 def header( f, version ):
     f.write (
 # """#acl +DeveloperGroup:read,write,revert -All:write,read Default
 # <<LockedPage()>>
-"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
+f"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
 
 = List Of Sub-Dimensional Results =
 The following is a list of SMS results with additional constraints 
@@ -40,14 +40,14 @@ are usually not applicable, since it is often highly unlikely that your
 full model satisfies the constraints. They are anyhow kept in the SModelS database
 for reasons of documentation and completeness.
 
-The list has been created from the database version `%s`.
+The list has been created from the database version `{version}`.
 
-""" % version )
+""" )
 
 def tableHeader ( f ):
     fields = [ "id", "topology", "SModelS<<BR>>constraint", "data<<BR>>constraint" ]
     for i in fields:
-        f.write ( "||<#EEEEEE:> '''%s'''" % i )
+        f.write ( f"||<#EEEEEE:> '''{i}'''" )
     f.write ( "||\n" )
 
 def writeEntry ( f, id, tx ):
@@ -56,13 +56,13 @@ def writeEntry ( f, id, tx ):
     mother = "m,,mother,,"
     lsp = "m,,lsp,,"
     replacements = { "2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,y-20.0)":\
-                            "%s = %s + 20 GeV" % ( inter, lsp ),
+                            f"{inter} = {lsp} + 20 GeV",
                      "2*Eq(mother,x)_Eq(inter0,y+1.8e+2)_Eq(lsp,y)": \
-                            "%s = %s + 180 GeV" % ( inter, lsp ),
+                            f"{inter} = {lsp} + 180 GeV",
                      "2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)": \
-                            "%s = 0.5 (%s + %s)" % ( inter, mother, lsp ),
+                            f"{inter} = 0.5 ({mother} + {lsp})",
                      "2*Eq(mother,1000.00000000000)_Eq(inter0,x)_Eq(lsp,y)": \
-                            "%s = 1000 GeV" % ( mother )
+                            f"{mother} = 1000 GeV"
     }
     constraint = tx.constraint.strip()
     constraint = constraint.replace( " ", "" )
@@ -71,7 +71,7 @@ def writeEntry ( f, id, tx ):
     waxes = axes
     if axes in replacements:
         waxes = replacements[axes]
-    f.write ( "|| %s || %s || `%s` || %s ||\n" % ( id, tx.txName, constraint, waxes ) )
+    f.write ( f"|| {id} || {tx.txName} || `{constraint}` || {waxes} ||\n" )
 
 def main():
     backup()

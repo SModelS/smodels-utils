@@ -66,9 +66,9 @@ def getSuperFrame(tgraphs):
         miny = min(miny,frame["y"][0])
         maxy = max(maxy,frame["y"][1])
     if minx is None:
-        logger.info("Could not find points for %s" %str(tgraphs))
+        logger.info(f"Could not find points for {str(tgraphs)}")
         return None
-    logger.info ( "the super frame (which covers all exclusion curves) is %g < x < %g, %g < y < %g" % ( minx, maxx, miny, maxy ) )
+    logger.info ( f"the super frame (which covers all exclusion curves) is {minx:g} < x < {maxx:g}, {miny:g} < y < {maxy:g}" )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
 def getExtendedFrame(txnameObjs,axes):
@@ -105,7 +105,7 @@ def getExtendedFrame(txnameObjs,axes):
                 maxVars[xLabel] = max(maxVars[xLabel],xValue)
 
     if None in minVars or None in maxVars:
-        logger.info("Could not find points for %s" %axes)
+        logger.info(f"Could not find points for {axes}")
         return None
 
     for xLabel in minVars:
@@ -114,7 +114,7 @@ def getExtendedFrame(txnameObjs,axes):
     rangesDict = dict([[xLabel,[minVars[xLabel],maxVars[xLabel]]] for xLabel in minVars])
     infoMsg = "the extended frame (which covers all data points) is:"
     for xstr,r in list(rangesDict.items()):
-        infoMsg += " %g < %s < %g," %(r[0],str(xstr),r[1])
+        infoMsg += f" {r[0]:g} < {str(xstr)} < {r[1]:g},"
     infoMsg = infoMsg.rstrip(',')
     logger.info( infoMsg)
     return rangesDict
@@ -154,7 +154,7 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     txnameInput.constraint = txnameObjs[0].constraint
     vertexChecker = lambda mass: txnameInput.checkMassConstraints(mass)
 
-    logger.debug ( "get points %s" % massPlane )    
+    logger.debug ( f"get points {massPlane}" )    
 
     # First generate points for the extended frame (= from the ul/eff maps)
     # with a lower density:
@@ -176,7 +176,7 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
 
     pts = ptsA + ptsB
 
-    logger.debug( "pts[:3]=%s" % pts[:3] )
+    logger.debug( f"pts[:3]={pts[:3]}" )
 
     return pts
 
@@ -351,11 +351,11 @@ if __name__ == "__main__":
     f=ROOT.TFile(filename)
     axes="2*Eq(mother,x)_Eq(lsp,y)"
     txname="T2tt"
-    graph=f.Get("%s/exclusion_%s" % ( txname, axes) )
+    graph=f.Get(f"{txname}/exclusion_{axes}" )
     filename2="/home/walten/git/smodels-database/8TeV/ATLAS/ATLAS-SUSY-2013-05/sms.root"
     f2=ROOT.TFile(filename2)
     print ("ls=",f2.ls() )
-    graph2=f2.Get("%s/exclusion_%s" % ( "T2bb", axes) )
+    graph2=f2.Get(f"T2bb/exclusion_{axes}" )
     print ("graph1,2=",graph,graph2 )
 
     pts = getPoints ( [graph, graph2], txname, axes, "[[[t+]],[[t-]]]", onshell=True, offshell=False )

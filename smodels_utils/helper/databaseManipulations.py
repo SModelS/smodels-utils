@@ -331,7 +331,7 @@ def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     supers, newers = [], []
     olders = db.expResultList
     supers = filterSupersededFromList ( olders, invert )
-    print('Found %i non-superseded results' %len(supers))
+    print(f'Found {len(supers)} non-superseded results')
     db.subs[0]._allExpResults = supers
     db.subs[0]._activeResults = supers[:]
     db.subs = [ db.subs[0] ]

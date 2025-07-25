@@ -95,15 +95,15 @@ class Lister:
             dotlessv = version.replace(".","")
         self.dotlessv = dotlessv
         titleplus = ""
-        referToOther = "Link to list of results [including superseded and fastlim results](ListOfAnalyses%sWithSuperseded)" % dotlessv
+        referToOther = f"Link to list of results [including superseded and fastlim results](ListOfAnalyses{dotlessv}WithSuperseded)"
         if self.includeSuperseded:
-            referToOther = "Link to list of results [without superseded results](ListOfAnalyses%s)" % dotlessv
+            referToOther = f"Link to list of results [without superseded results](ListOfAnalyses{dotlessv})"
             add=", including superseded results."
             titleplus = "(including superseded results)"
             if self.includeFastlim:
                 add=", including superseded and fastlim results"
                 titleplus = "(including superseded and fastlim results)"
-                referToOther = "Link to list of results [without superseded and fastlim results](ListOfAnalyses%s)" % dotlessv
+                referToOther = f"Link to list of results [without superseded and fastlim results](ListOfAnalyses{dotlessv})"
         n_maps = 0
         n_results = 0
         n_topos = set()
@@ -159,7 +159,7 @@ class Lister:
         self.f.write ( "<a name='A4'>(4)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n" )
         if self.includeFastlim:
             self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
-        self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
+        self.f.write ( f"\nThis page was created {time.asctime()}.\n" )
         self.f.close()
 
     def listTables ( self ):
@@ -263,7 +263,7 @@ class Lister:
         lengths = []
         for i in self.fields ( isEffMap  ):
             # f.write ( "||<#EEEEEE:> '''%s'''" % i )
-            self.f.write ( "| **%s** " % i )
+            self.f.write ( f"| **{i}** " )
             lengths.append ( len(i)+6 )
         self.f.write ( "|\n" )
         for l in lengths:
@@ -366,7 +366,7 @@ class Lister:
 
                 if homegrown !="" : self.n_homegrown+=1
                 # topos_s += ", [[SmsDictionary%s#%s|%s]]%s" % ( dotlessv, i, i, homegrown )
-                topos_s += ", [%s](SmsDictionary%s#%s)%s" % ( i, dotlessv, i, homegrown )
+                topos_s += f", [{i}](SmsDictionary{dotlessv}#{i}){homegrown}"
             topos_s = topos_s[2:]
             if fastlim:
                 # topos_s += " (from FastLim (2))"
@@ -383,29 +383,29 @@ class Lister:
                 if t.find(" " ) > 0:
                     t=t[:t.find(" ")]
                 # ssuperseded = "[[#%s|%s]]" % ( t, s )
-                ssuperseded = "[%s](#%s)" % ( s, t )
+                ssuperseded = f"[{s}](#{t})"
             sId = Id
             if not sId.endswith ( "-eff" ) and not sId.endswith( "-ma5" ) and \
                not sId.endswith ( "-agg" ):
                    sId += "-eff"
             Id = removeAnaIdSuffices ( Id )
-            self.f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, sId ) )
+            self.f.write ( f'| [{Id}]({url})<a name="{sId}"></a>' )
             if not hasattr ( ana.globalInfo, "prettyName" ):
-                print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
+                print ( f"Analysis {ana.globalInfo.id} has no pretty name defined." )
                 print ( "Please add a pretty name and repeat." )
                 sys.exit()
             short_desc = self.convert ( ana.globalInfo.prettyName )
             self.f.write ( " | %s | %s | %s |" % ( short_desc,
                    ana.globalInfo.lumi.asNumber(), topos_s ) )
             if self.includeSuperseded:
-                self.f.write ( "%s |" % ssuperseded )
+                self.f.write ( f"{ssuperseded} |" )
             if self.likelihoods:
                 if isEffMap:
                     llhd = self.whatLlhdInfo ( ana )
-                    self.f.write ( " %s |" % llhd )
+                    self.f.write ( f" {llhd} |" )
                 else:
                     llhd = self.yesno ( hasLLHD ( ana ) )
-                    self.f.write ( " %s |" % llhd )
+                    self.f.write ( f" {llhd} |" )
             self.f.write ( "\n" )
 
     def yesno ( self, B ):
@@ -457,16 +457,16 @@ class Lister:
     def backup( self ):
         if not os.path.exists ( self.filename ):
             return
-        o = C.getoutput ( "cp %s Old%s" % ( self.filename, self.filename ) )
+        o = C.getoutput ( f"cp {self.filename} Old{self.filename}" )
         if len(o):
-            print ( "backup: %s" % o )
+            print ( f"backup: {o}" )
 
     def diff( self ):
-        o = C.getoutput ( "diff %s Old%s" % ( self.filename, self.filename ) )
+        o = C.getoutput ( f"diff {self.filename} Old{self.filename}" )
         if len(o)==0:
-            print ( "No changes in %s since last call." % self.filename )
+            print ( f"No changes in {self.filename} since last call." )
             return
-        print ( "[listOfAnalyses] %s has changed (%d changes)" % ( self.filename, len(o.split() ) ) )
+        print ( f"[listOfAnalyses] {self.filename} has changed ({len(o.split())} changes)" )
 
     def createSuperseded ( self ):
         """ create the database of superseded results """
@@ -508,9 +508,9 @@ class Lister:
             ver = self.database.databaseVersion.replace(".","")
         if "+" in ver:
             ver = ver [ :ver.find("+") ]
-        filename = "ListOfAnalyses%s" % ver
+        filename = f"ListOfAnalyses{ver}"
         if self.includeSuperseded:
-            filename = "ListOfAnalyses%sWithSuperseded" % ver
+            filename = f"ListOfAnalyses{ver}WithSuperseded"
         self.filename = filename
         self.add_version = args.add_version ## add version number
         self.ignore = args.ignore ## ignore validation flags

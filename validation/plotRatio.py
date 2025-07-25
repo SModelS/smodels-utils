@@ -589,7 +589,7 @@ def writeMDPage( copy ):
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
         f.write ( "# ratio plots on the upper limits\n" )
-        f.write ( "as of %s\n\n" % time.asctime() )
+        f.write ( f"as of {time.asctime()}\n\n" )
         # f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
@@ -601,7 +601,7 @@ def writeMDPage( copy ):
         ctr = 0
         t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
-            src = "https://smodels.github.io/plots/%s" % i
+            src = f"https://smodels.github.io/plots/{i}"
             f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
@@ -722,11 +722,11 @@ def main():
     cmd = "cd ~/git/smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
-        print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
+        print ( f"[plotRatio] now performing {cmd}: {o}" )
         o = subprocess.getoutput ( cmd )
     else:
         if args.copy:
-            print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
+            print ( f"[plotRatio] now you could do:\n{cmd}: {o}" )
 
 if __name__ == "__main__":
     main()

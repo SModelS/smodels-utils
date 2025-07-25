@@ -11,7 +11,7 @@ except Exception as e:
     import subprocess as C
 
 def usage ():
-    print ( "Usage: %s [-h|--help] [Txname] [Txname]" % sys.argv[0] )
+    print ( f"Usage: {sys.argv[0]} [-h|--help] [Txname] [Txname]" )
     print ( "       fetches slha tarballs from smodels server." )
     print ( "       if no arguments are given, fetch all." )
     sys.exit()
@@ -21,7 +21,7 @@ def fetch ( which ):
 
     if len(which) == 0:
         """ ok, fetch the 'ls' file """
-        d=urllib.urlopen ( "%s/ls" % url )
+        d=urllib.urlopen ( f"{url}/ls" )
         for l in d.readlines():
             which.append ( l.replace("\n","" ) )
 
@@ -32,13 +32,13 @@ def fetch ( which ):
             which[ctr]=w+".tar"
 
     for w in which:
-        print ( "Trying to fetch %s ... " % w, end="" )
+        print ( f"Trying to fetch {w} ... ", end="" )
         destdir = os.path.dirname ( __file__ )
-        cmd = "wget -a wget.log -O %s/%s %s/%s" % ( destdir, w, url, w )        
+        cmd = f"wget -a wget.log -O {destdir}/{w} {url}/{w}"        
         #print ( cmd, "argv0=", destdir  )
         a=C.getoutput ( cmd )
         if len(a):
-            print ( "Error: %s" % a )
+            print ( f"Error: {a}" )
             return False
         else:
             print ( " done." )

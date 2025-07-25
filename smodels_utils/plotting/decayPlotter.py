@@ -67,7 +67,7 @@ def draw( slhafile, outfile, options, offset=0.,
 
     if options["verbose"]==True and not options["html"]:
         reader.printDecay("~g")
-        logger.debug ( "%s" % reader.getDecays("~g",0.9) )
+        logger.debug ( f"{reader.getDecays('~g', 0.9)}" )
 
     # tmp=[    "~g", "~q", "~b", "~t", "~t_1", "~t_2", "~b_1", "~b_2" ]
     tmp = { 1000021, 1000001, 1000005, 1000006, 2000005, 2000006 }
@@ -141,7 +141,7 @@ def draw( slhafile, outfile, options, offset=0.,
     htmlend="</font>"
     if options["verbose"]:
         if options["html"]: print ( "<br>", htmlbegin )
-        logger.debug ( "We start from %s" % starters )
+        logger.debug ( f"We start from {starters}" )
         if options["html"]: print ( htmlend,"<br>" )
     drawer=decayPlots.DecayDrawer ( options, ps, offset, extra, verbosity )
 

@@ -23,12 +23,12 @@ def Print ( line ):
 def checkUrl ( url, id ):
     if url in [ "Not defined", None, "None" ]:
         return
-    Print ( "Now checking %s: %s" % (id, url ) )
+    Print ( f"Now checking {id}: {url}" )
     f=urlopen ( url )
     lines=f.readlines()
     f.close()
-    Print ( " done. %d lines." % ( len(lines) ) )
-    Print ( "first line: %s" % lines[0][:30] )
+    Print ( f" done. {len(lines)} lines." )
+    Print ( f"first line: {lines[0][:30]}" )
 
 def checkUrls ( urls, id ):
     if urls == None:
@@ -56,10 +56,10 @@ for expRes in e:
     txnames = expRes.getTxNames()
     for t in txnames:
         if hasattr ( t, "figureUrl" ):
-            Print ( "\n\nfigureUrl=%s" % t.figureUrl )
+            Print ( f"\n\nfigureUrl={t.figureUrl}" )
             checkUrls ( t.figureUrl, id )
         if hasattr ( t, "dataUrl" ):
-            Print ( "\n\ndataUrl=%s" % t.dataUrl )
+            Print ( f"\n\ndataUrl={t.dataUrl}" )
             checkUrls ( t.dataUrl, id )
 
 log.close()

@@ -80,13 +80,13 @@ class TxDecay(object):
 
         """
         if self._name in decays.keys():
-            logger.info('found decay for topology %s' %self._name)
+            logger.info(f'found decay for topology {self._name}')
             return decays[self._name]
         if self._slackExpTopologyName() in decays.keys():
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
             return decays[self._slackExpTopologyName()]
-        logger.warning('no decay found for topology %s' %self._name)
+        logger.warning(f'no decay found for topology {self._name}')
         return None
 
     @property
@@ -170,7 +170,7 @@ class TxDecay(object):
             return 'c0'
         if  'neutralino_2' in motherPart and 'neutralino_3' in motherPart:#
             return 'c02c03'
-        logger.error('could not identify mother particle for  %s' %self._name)
+        logger.error(f'could not identify mother particle for  {self._name}')
         return None
 
     @property

@@ -126,14 +126,13 @@ class MassPlane(MassPlaneBase):
                     mList.append('Eq(%s,%s)'
                                    %(var(wStr+string.ascii_uppercase[im]),eq[1]))
                 else:
-                    mList.append('Eq(%s,%s)'
-                                   %(var(mStr+string.ascii_uppercase[im]),eq))
+                    mList.append(f'Eq({var(mStr + string.ascii_uppercase[im])},{eq})')
             mStr = "_".join(mList)
             eqList.append(mStr)
 
         #Simplify symmetric branches:
         if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:
-            eqStr = "2*%s"%eqList[0]
+            eqStr = f"2*{eqList[0]}"
         else:
             eqStr = "__".join(eqList)
 
@@ -217,7 +216,7 @@ class MassPlane(MassPlaneBase):
             if in_hull == -1: ## not in a cut-out region
                 newdata.append ( i )
             else:
-                logger.info ( "removing point %s as it is in cut-out region." % ( p ) )
+                logger.info ( f"removing point {p} as it is in cut-out region." )
         obj.data = newdata
 
     def removeArea(self,points):
@@ -262,7 +261,7 @@ class MassPlane(MassPlaneBase):
         # print ( "@@0 massArray", massArray )
 
         if len(massArray) != len(self.branches):
-            logger.error("dimension of mass array (%d) inconsistent with branches length (%d)" % ( len(massArray), len(self.branches) ) )
+            logger.error(f"dimension of mass array ({len(massArray)}) inconsistent with branches length ({len(self.branches)})" )
             sys.exit()
         if widthArray != None and len(widthArray) != len(self.branches):
             logger.error("Width array inconsistent with branches length")

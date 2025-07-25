@@ -49,9 +49,9 @@ def discussExperiment ( anas, experiment, title, verbose ):
             n_results_em += len ( topos )
         n_results += len ( topos )
 
-    print ( "%d analyses." % len(ianas) )
+    print ( f"{len(ianas)} analyses." )
     if verbose:
-        print ( "   `- %s" % ( ", ".join(ianas) ) )
+        print ( f"   `- {', '.join(ianas)}" )
     print ( "%d results total" % n_results )
     print ( "%d upper limits analyses" % ul )
     print ( "%d efficiency map analyses" % em )
@@ -70,7 +70,7 @@ def discuss ( db, update, sqrts, verbose, lumi ):
     if sqrts == "all":
         title += "all runs, "
     else:
-        title += "%s TeV only, " % sqrts
+        title += f"{sqrts} TeV only, "
     if sqrts not in [ "all", "both" ]:
         anas = manips.filterSqrtsFromList ( anas, sqrts )
     anas = manips.filterByLumi  ( anas, lumi, invert=False )

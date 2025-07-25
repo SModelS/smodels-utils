@@ -42,14 +42,13 @@ def getNiceAxes(axesStr):
             mStr = 'mass'
         mList = []
         for im,eq in enumerate(br):
-            mList.append('Eq(%s,%s)'
-                           %(var(mStr+string.ascii_uppercase[im]),eq))
+            mList.append(f'Eq({var(mStr + string.ascii_uppercase[im])},{eq})')
         mStr = "_".join(mList)
         eqList.append(mStr)
 
     #Simplify symmetric branches:
     if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:
-        eqStr = "2*%s"%eqList[0]
+        eqStr = f"2*{eqList[0]}"
     else:
         eqStr = "__".join(eqList)
 
@@ -93,7 +92,7 @@ def checkPlotsFor(txname,update):
         logger.error('\033[36m       No plots found \033[0m')
     else:
         for plot in missingPlots:
-            logger.error('\033[36m        plot %s not found \033[0m' %valplot)
+            logger.error(f'\x1b[36m        plot {valplot} not found \x1b[0m')
 
     #Check the plots
     plots = []
@@ -158,12 +157,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     """
 
     if not os.path.isdir(databasePath):
-        logger.error('%s is not a folder' %databasePath)
+        logger.error(f'{databasePath} is not a folder')
 
     try:
         db = Database(databasePath)
     except:
-        logger.error("Error loading database at %s" %databasePath)
+        logger.error(f"Error loading database at {databasePath}")
 
 
     logger.info('----- Checking plots...')
@@ -181,7 +180,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     for expRes in expResList:
 
         expt0 = time.time()
-        logger.info("--------- \033[32m Checking  %s \033[0m" %os.path.basename(expRes.path))
+        logger.info(f"--------- \x1b[32m Checking  {os.path.basename(expRes.path)} \x1b[0m")
         txnameList = []
         txnameStrs = []
         for dataset in expRes.datasets:
@@ -192,7 +191,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 txnameStrs.append(tx.txName)
         txnameList = sorted(txnameList, key=lambda tx: tx.txName)
         if not txnameList:
-            logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
+            logger.warning(f"No valid txnames found for {str(expRes)} (not assigned constraints?)")
             continue
         cfile = os.path.join(expRes.path,"general.comment")
         if os.path.isfile(cfile):
@@ -205,7 +204,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
             txnameStr = txname.txName
             if not txname.validated in check:
                 continue
-            logger.info("------------ \033[31m Checking  %s \033[0m" %txnameStr)
+            logger.info(f"------------ \x1b[31m Checking  {txnameStr} \x1b[0m")
             if not showPlots:
                 continue
             validationResult = checkPlotsFor(txname,update)
@@ -220,7 +219,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 txfiles += [tx.path for tx in dset.txnameList if tx.txName == txname.txName]
             for txfile in txfiles:
                 if not os.path.isfile(txfile):
-                    logger.error('\n\n ******\n Txname file %s NOT FOUND!!! \n**** \n\n' %(txfile))
+                    logger.error(f'\n\n ******\n Txname file {txfile} NOT FOUND!!! \n**** \n\n')
                     continue
                 tf = open(txfile,'r')
                 tdata = ""
@@ -233,9 +232,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 tf.write(tdata)
                 tf.close()
 
-            logger.info("------------ \033[31m %s checked as validated = %s \033[0m" %(txnameStr,str(validationResult)))
-        logger.info("--------- \033[32m %s checked in %.1f min \033[0m" %(os.path.basename(expRes.path),(time.time()-expt0)/60.))
-    logger.info("\n\n----- Finished checking in %.1f min." %((time.time()-tval0)/60.))
+            logger.info(f"------------ \x1b[31m {txnameStr} checked as validated = {str(validationResult)} \x1b[0m")
+        logger.info(f"--------- \x1b[32m {os.path.basename(expRes.path)} checked in {(time.time() - expt0) / 60.0:.1f} min \x1b[0m")
+    logger.info(f"\n\n----- Finished checking in {(time.time() - tval0) / 60.0:.1f} min.")
 
     #Print summary output, if selected.
     if printSummary:
@@ -259,9 +258,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 else:
                     validated_none.append(txname)
         #Print results
-        logger.info('\033[32m %i Txnames with Validated = True \033[0m' %len(validated_true))
-        logger.info('\033[32m %i Txnames with Validated = False \033[0m' %len(validated_false))
-        logger.info('\033[32m %i Txnames with Validated = "other" \033[0m' %len(validated_none))
+        logger.info(f'\x1b[32m {len(validated_true)} Txnames with Validated = True \x1b[0m')
+        logger.info(f'\x1b[32m {len(validated_false)} Txnames with Validated = False \x1b[0m')
+        logger.info(f'\x1b[32m {len(validated_none)} Txnames with Validated = "other" \x1b[0m')
 
 
 
@@ -277,9 +276,9 @@ if __name__ == "__main__":
     args = ap.parse_args()
 
     if not os.path.isfile(args.parfile):
-        logger.error("Parameters file %s not found" %args.parfile)
+        logger.error(f"Parameters file {args.parfile} not found")
     else:
-        logger.info("Reading validation parameters from %s" %args.parfile)
+        logger.info(f"Reading validation parameters from {args.parfile}")
 
     try:
         parser = SafeConfigParser()

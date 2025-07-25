@@ -43,7 +43,7 @@ class CovMatrixEstimator ( object ):
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[covMatrixEstimator] %s" % (" ".join(map(str,args))) )
+        print ( f"[covMatrixEstimator] {' '.join(map(str, args))}" )
 
     def download( self, force=False ):
         hepdataids = { "ATLAS-SUSY-2018-04": 1406212, "ATLAS-SUSY-2018-06": 1404698,
@@ -231,9 +231,9 @@ class CovMatrixEstimator ( object ):
             smatrix += "["
             for col in row:
                 if pprint:
-                    smatrix += "%6.2f, " % col
+                    smatrix += f"{col:6.2f}, "
                 else:
-                    smatrix += "%.3f, " % col
+                    smatrix += f"{col:.3f}, "
             if len(row)>0:
                 smatrix = smatrix[:-2]
             # smatrix += "],\n             "
@@ -251,7 +251,7 @@ class CovMatrixEstimator ( object ):
         if len ( self.getSkewness() ) > 1 :
             skewness = "["
             for i in self.getSkewness():
-                skewness += "%5.2f, " % i
+                skewness += f"{i:5.2f}, "
             skewness = skewness[:-2]+"]"
         print ( f"[covMatrixEstimator] skewness: {skewness}{RESET}" )
 

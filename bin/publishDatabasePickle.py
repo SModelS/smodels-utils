@@ -32,9 +32,9 @@ if numpy.__version__[0]!="1":
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
         if abs(num) < 1024.:
-            return "%3.1f%s%s" % (num, unit, suffix)
+            return f"{num:3.1f}{unit}{suffix}"
         num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return f"{num:.1f}Yi{suffix}"
 
 def prepareCommandsFile ( ) :
     """ prepare the commands.sh file """
@@ -132,7 +132,7 @@ def main():
         picklefile = dbname
     else:
         if not os.path.isdir ( dbname ):
-            print ( "supplied --build option, but %s is not a directory." % dbname )
+            print ( f"supplied --build option, but {dbname} is not a directory." )
             sys.exit()
         tarballs = glob.glob ( f"{dbname}/*.tar.gz" )
         tarballs += glob.glob ( f"{dbname}/*.tgz" )
@@ -224,21 +224,21 @@ def main():
     if fastlim:
         sfastlim="_fastlim"
 
-    infofile = "official%s%s" % ( ver, sfastlim )
-    pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
+    infofile = f"official{ver}{sfastlim}"
+    pclfilename = f"official{ver}{sfastlim}.pcl"
     if args.txnamevalues:
         d.subs[0].databaseVersion="debug"+dbver
-        infofile = "debug%s" % ( ver.replace("debug","") )
-        pclfilename = "debug%s.pcl" % ( ver.replace("debug","") )
+        infofile = f"debug{ver.replace('debug', '')}"
+        pclfilename = f"debug{ver.replace('debug', '')}.pcl"
     if "nonaggregated" in ver:
-        infofile = "nonaggregated%s" % ( ver.replace("nonaggregated","") )
-        pclfilename = "nonaggregated%s.pcl" % ( ver.replace("nonaggregated","") )
+        infofile = f"nonaggregated{ver.replace('nonaggregated', '')}"
+        pclfilename = f"nonaggregated{ver.replace('nonaggregated', '')}.pcl"
     if "full_llhds" in ver:
-        infofile = "full_llhds%s" % ( ver.replace("full_llhds","") )
-        pclfilename = "full_llhds%s.pcl" % ( ver.replace("full_llhds","") )
+        infofile = f"full_llhds{ver.replace('full_llhds', '')}"
+        pclfilename = f"full_llhds{ver.replace('full_llhds', '')}.pcl"
     if "superseded" in ver:
-        infofile = "superseded%s" % ( ver.replace("superseded","") )
-        pclfilename = "superseded%s.pcl" % ( ver.replace("superseded","") )
+        infofile = f"superseded{ver.replace('superseded', '')}"
+        pclfilename = f"superseded{ver.replace('superseded', '')}.pcl"
     if "fastlim" in ver:
         # infofile = "fastlim%s" % ( ver.replace("fastlim","") )
         #pclfilename = "fastlim%s.pcl" % ( ver.replace("fastlim","") )
@@ -276,7 +276,7 @@ def main():
         sexec="suppressing execution of:"
     if not ssh:
         print ( "eos exists on this machine! copy file!" )
-        cmd = "cp %s %s/" % ( pcfilename, eosdir )
+        cmd = f"cp {pcfilename} {eosdir}/"
         a=CMD.getoutput ( cmd )
         if len(a)>0:
             print ( f"[publishDatabasePickle] {a}" )
@@ -329,7 +329,7 @@ def main():
             o = CMD.getoutput ( cmd2 )
             print ( f"[publishDatabasePickle] {cmd2}: {o}" )
         addToCommandsFile ( cmd2 )
-        o = CMD.getoutput ( "echo '%s' | xsel -i" % cmd2 )
+        o = CMD.getoutput ( f"echo '{cmd2}' | xsel -i" )
         if not reallyDo:
             print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
         print ( )
