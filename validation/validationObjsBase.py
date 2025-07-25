@@ -659,10 +659,8 @@ class ValidationObjsBase():
                 model = f"share.models.{model}"
             f.write(f"model={model}\n" )
             f.write(f"promptWidth={promptWidth}\n" )
-            #expected = "posteriori"
-            #expected = "priori"
             expected = self.options["expectationType"]
-            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
+            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues={expected}\nprinttimespent=True\n")
             if outputformat == 3:
                 f.write ( "addNodesMap=True\n" )
             f.close()
