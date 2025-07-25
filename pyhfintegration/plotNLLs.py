@@ -167,8 +167,6 @@ def create():
                 else:
                     print ( "comb mass", mmother , "nll", - math.log ( cllhd ) )
                     yPyhf.append ( - math.log ( cllhd ) )
-            # oul = eru.getUpperLimitFor ( None, expected=False, txname=txname, mass = massvec )
-            # print ( oul )
             os.unlink ( slhafile )
     D = { "x": x, "yUL": yUL, "yBestSR": yBestSR, "yPyhf": yPyhf }
     writeToPickle( D )
