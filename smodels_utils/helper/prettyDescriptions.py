@@ -1014,7 +1014,10 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
                 if label in pids:
                     cMap[v]=f"{cMap[v]},{pids[label]}"
             else:
-                cMap[v]=pids[label]
+                if label in pids:
+                    cMap[v]=pids[label]
+                else:
+                    logging.error ( f"we did not find {label} in {pids.keys()} -- hope this is fine." )
 
     terms = []
     for k,v in cMap.items():
