@@ -204,8 +204,10 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
         return ret
 
 
-def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
-                          expected=False, dicts=False, ranges=None ):
+def getExclusionCurvesFor(jsonfile : os.PathLike , txname : Union[str,None]=None,
+        axes : Union[str,None]= None, get_all : bool =False,
+        expected : bool=False, dicts : bool =False,
+        ranges : Union[dict,None] = None ) -> dict:
     """
     Reads exclusion_lines.json and returns the dictionary objects for the
     exclusion curves. If txname is defined, returns only the curves
