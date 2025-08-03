@@ -1038,6 +1038,7 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
         #    ret += r"\\"
     if len(ret)>0:
         ret = ret[:-2]
+    ret += " [GeV]"
     return ret
 
 def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:

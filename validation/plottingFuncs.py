@@ -282,7 +282,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )
 
-def getDatasetDescription ( validationPlot, maxLength = 100 ):
+def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
     """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
     subtitle = f"best of {len(validationPlot.expRes.datasets)} SRs: "

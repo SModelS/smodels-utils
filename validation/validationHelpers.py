@@ -180,6 +180,7 @@ def prettyAxesV3 ( axesStr : str ) -> str:
             axesDict.pop(i)
     saxes = "_".join ( map ( str, axesDict.values() ) )
     saxes =  saxes.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
+    saxes += " [GeV]"
     return saxes
 
 def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:

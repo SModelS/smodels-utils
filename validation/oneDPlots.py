@@ -55,7 +55,7 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
     chunk = { "x": [ xvalues[0] ], "y": [ ceilY ( yvalues[0] ) ] }
     for i in range(len(xvalues)-1):
         dx_ = xvalues[i+1]-xvalues[i]
-        if dx_ < dxmax*33.1:
+        if dx_ < dxmax*133.1:
             chunk["x"].append ( xvalues[i+1] )
             chunk["y"].append ( ceilY ( yvalues[i+1] ) )
         else:
@@ -211,7 +211,6 @@ def create1DPlot( validationPlot, silentMode=True,
                "allowed": "lightgreen",
     }
     if limitsOnXSecs:
-        print ( f"signal {values['signal']['x']} {values['signal']['y']}" )
         plt.plot ( values["signal"]["x"], values["signal"]["y"], marker="", color = "blue", label = "signal", linestyle="-" )
     for label in [ "excluded", "excluded_border", "allowed_border", "allowed" ]:
         c = colors[label]
