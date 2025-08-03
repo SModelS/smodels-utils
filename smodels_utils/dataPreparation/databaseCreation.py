@@ -663,10 +663,13 @@ class DatabaseCreator(list):
                 content = json.load ( f )
                 f.close()
         for exclusion in self.exclusions:
+            name = exclusion["title"]
+            if "_None" in name:
+                ## FIXME where does that come from??
+                continue
             dirname = exclusion["txname"]
             if not dirname in content:
                 content[dirname] = {}
-            name = exclusion["title"]
             name = name.strip()
             name = name.replace(" ","")
             xv,yv=[],[]
@@ -695,7 +698,11 @@ class DatabaseCreator(list):
                 if axisMap is not None:
                     content[dirname][name]["axisMap"]=axisMap
         with open ( fname, "wt" ) as handle:
-            json.dump ( content, handle, indent = 1 )
+            # json.dump ( content, handle, indent = 1 )
+            c = json.dumps ( content, indent = 2 )
+            import re
+            cc = re.sub(r'(\d),\s+', r'\1, ', c )
+            handle.write ( cc )
             handle.close()
 
     def formatJsonFile ( self, value : Dict ):
