@@ -50,7 +50,7 @@ def _Hash ( lst ): ## simple hash function for our masses
 # (given that allowTrimming is true, see below)
 max_nbins = 12000
 allowTrimming=True ## allow big grids to be trimmed down
-trimmingFactor = [ None ] ## the factor by which to trim
+trimmingFactor = [ None ] ## the factor by which to trim, if none then determine automatically
 
 fileCache  = {} ## a file cache for input files, to speed things up
 pointsCache = {}
