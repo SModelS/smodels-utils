@@ -514,12 +514,10 @@ def runForOneResult ( expRes, options : dict,
                     lkeep = keep
                     if cax < len(axes)-1: ## not the last run!!!
                         keep = True # we keep stuff
-                    # print ( f"@@C validatePlot {expRes}, ltarfile {ltarfile}, txnameStr {txnameStr}, ax {ax}, keep {keep} {namedTarball} {pnamedTarball}" )
                     re = validatePlot(expRes,txnameStr,ax, ltarfile, localopts,
                         db, kfactor, p, combine, namedTarball = pnamedTarball,
                         keep = keep )
                     if re.currentSLHADir != None:
-                        # print ( f"@@D change ltarfile from {ltarfile} to {re.currentSLHADir}, {re.slhaDir}" )
                         ltarfile = re.currentSLHADir ## keep stuff!
                     # if not ":" in namedTarball:
                     localopts["generateData"]=False
