@@ -50,11 +50,12 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
         return
     dxmax = getMinGap ( xvalues )
     from smodels_utils.plotting import mpkitty as plt
+    # from matplotlib import pyplot as plt
     chunks = []
     chunk = { "x": [ xvalues[0] ], "y": [ ceilY ( yvalues[0] ) ] }
     for i in range(len(xvalues)-1):
         dx_ = xvalues[i+1]-xvalues[i]
-        if dx_ < dxmax*2.1:
+        if dx_ < dxmax*33.1:
             chunk["x"].append ( xvalues[i+1] )
             chunk["y"].append ( ceilY ( yvalues[i+1] ) )
         else:
@@ -158,7 +159,8 @@ def create1DPlot( validationPlot, silentMode=True,
             append ( values, label, { "x": x, "y": y } )
             append ( values, label, { "ex": x, "ey": ey } )
             append ( values, label, { "ul": ul, "eul": eul } )
-            append ( values, "signal", { "x": x, "y": signal } )
+            if not numpy.isnan(x) and not numpy.isnan(signal):
+                append ( values, "signal", { "x": x, "y": signal } )
             if math.isfinite ( y ):
                 yvs.append ( y )
                 xvs.append ( x )
@@ -209,7 +211,8 @@ def create1DPlot( validationPlot, silentMode=True,
                "allowed": "lightgreen",
     }
     if limitsOnXSecs:
-        plot ( values["signal"]["x"], values["signal"]["y"], marker="", color = "blue", label = "signal", linestyle="-" )
+        print ( f"signal {values['signal']['x']} {values['signal']['y']}" )
+        plt.plot ( values["signal"]["x"], values["signal"]["y"], marker="", color = "blue", label = "signal", linestyle="-" )
     for label in [ "excluded", "excluded_border", "allowed_border", "allowed" ]:
         c = colors[label]
         lbl = None
@@ -245,11 +248,11 @@ def create1DPlot( validationPlot, silentMode=True,
     eofficial = validationPlot.expectedOfficialCurves
     rmin, rmax = 0, 1
     for o in official:
-        frac = .8 #  4/5
+        frac = .92 #  4/5
         if o["name"].startswith ( "obsExclusion" ) and len( yvs ) > 0:
-            rmin, rmax = .7 * min ( yvs ), min ( 2., max ( yvs ) )
+            rmin, rmax = .7 * min ( yvs ), min ( 1.6, max ( yvs ) )
             if limitsOnXSecs:
-                rmin, rmax = frac * min(uls) , max ( uls ) / frac
+                rmin, rmax = frac * frac * frac * min(uls) , max ( uls ) / frac
             xvals = set(o["points"]["x"])
             ## we assume the exclusion lines to be "points", so
             ## we draw horizontal lines in each point
