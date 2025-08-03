@@ -50,7 +50,7 @@ def _Hash ( lst ): ## simple hash function for our masses
 # (given that allowTrimming is true, see below)
 max_nbins = 12000
 allowTrimming=True ## allow big grids to be trimmed down
-trimmingFactor = [ 2 ] ## the factor by which to trim
+trimmingFactor = [ None ] ## the factor by which to trim
 
 fileCache  = {} ## a file cache for input files, to speed things up
 pointsCache = {}
@@ -527,7 +527,7 @@ class DataHandler(object):
         xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
         ## FIXME should we ever sort here?
         # lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
-        if len(lines) > max_nbins:
+        if len(lines) > max_nbins and trimmingFactor[0] == None:
             trimmingFactor[0] = int ( round ( math.sqrt ( len(lines) / 6000. ) ) )
             trimmingFactor[0] = trimmingFactor[0]**2
             newyields = []
@@ -701,7 +701,7 @@ class DataHandler(object):
                         fr[1]=frx
                 yields.append ( fr )
             csvfile.close()
-            if len(yields) > max_nbins:
+            if len(yields) > max_nbins and trimmingFactor[0] == None:
                 trimmingFactor[0] = int ( round ( math.sqrt ( len(yields) / 6000. ) ) )
                 trimmingFactor[0] = trimmingFactor[0]**2
                 newyields = []
@@ -1176,7 +1176,7 @@ class DataHandler(object):
             yRange = range(len(yAxis))
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
-            if total_points > 6000.:
+            if total_points > 6000. and trimmingFactor[0]==None:
                 trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
                 logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
         if len(hist.axes) > 2:
@@ -1282,7 +1282,7 @@ class DataHandler(object):
             yRange = range(len(yAxis))
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
-            if total_points > 6000.:
+            if total_points > 6000. and trimmingFactor[0] == None:
                 trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
                 logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
         if self.dimensions > 2:
