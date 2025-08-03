@@ -988,7 +988,7 @@ class TxNameInput(Locker):
                 hasNone = False
                 ## remove Nones, but only if there are other values.
                 for i in infoList:
-                    if i not in [ None, "None" ]:
+                    if i not in [ None, "None" ] and i not in myInfoList:
                         myInfoList.append ( i )
                     else:
                         hasNone = True
