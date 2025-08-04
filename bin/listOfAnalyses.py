@@ -487,6 +487,8 @@ class Lister:
 
     def writeStatsFile ( self ):
         """ write out the stats file """
+        if not self.write_stats:
+            return
         statsfile = "analyses.py"
         print ( f"[listOfAnalyses] Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
@@ -576,12 +578,15 @@ class Lister:
                                  help='create also fudged version of significance plot' )
         argparser.add_argument ( '-a', '--add_version', action='store_true',
                                  help='add version labels to links' )
+        argparser.add_argument ( '-S', '--write_stats', action='store_true',
+                                 help='write the analyses.py stats file' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
         self.keep = args.keep
         self.fudged = args.fudged
         self.includeSuperseded = not args.no_superseded
         self.likelihoods = args.likelihoods
+        self.write_stats = args.write_stats
         self.dbpath = args.database
         self.createSuperseded()
         dbpath = self.dbpath
