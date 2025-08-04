@@ -12,7 +12,7 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol, core, Float
+from sympy import var, Eq, lambdify, linsolve, solve, N, And, sqrt, Symbol, core, Float
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import \
@@ -224,7 +224,7 @@ class GraphMassPlane(MassPlaneBase):
         # print ( f"@@11 getXYValues {parameters}" )
 
         ret = {}
-        eqs = set()
+        eqs, free_symbols = set(), set()
         from sympy.parsing.sympy_parser import parse_expr
         for index,param in self.parametersMap.items():
             rhs = float("nan")
@@ -232,15 +232,15 @@ class GraphMassPlane(MassPlaneBase):
             # print ( f"parameters are {parameters}" )
             if type(parameters[index]) in [ float ]:
                 # ret[str(param)] = float ( parameters[index] )
-                rhs = round_to_n ( float ( parameters[index] ), 5 )
+                rhs = round_to_n ( float ( parameters[index] ), 8 )
             elif type(parameters[index]) in [ tuple, list ]:
                 # ret[str(param)] = float ( parameters[index][1] )
-                rhs = round_to_n ( float ( parameters[index][1] ), 5 )
+                rhs = round_to_n ( float ( parameters[index][1] ), 8 )
             elif parameters[index]=="stable":
                 rhs = 0.
             lhs = parse_expr ( str(param) )
             if type(lhs)==core.numbers.Float:
-                lhs = round_to_n ( float(lhs), 5 )
+                lhs = round_to_n ( float(lhs), 8 )
             if lhs == 0. and rhs == 1.:
               continue # hack for now FIXME
             if type(lhs)==Float and type(rhs)==Float and \
@@ -253,8 +253,24 @@ class GraphMassPlane(MassPlaneBase):
                 return ret
             if True: # not self.hasSimilarEquationAlready ( eqs, e ):
                 eqs.add ( e )
-        # print ( f"@@11 eqs={eqs}" )
-        d = solve ( list(eqs) )
+            for xhs in [ lhs, rhs ]:
+                if hasattr ( xhs, "free_symbols" ):
+                    for x in xhs.free_symbols:
+                        free_symbols.add ( x )
+
+        eqs = list(eqs)
+        free_symbols = list(free_symbols)
+        try:
+            d = linsolve ( eqs, free_symbols )
+            if len(d)>0:
+                d = dict(zip(free_symbols,list(d)[0]))
+            else:
+                d = {}
+        except Exception as e:
+            print ( f"[GraphMassPlane] linsolve failed: {e}, trying solve now" )
+            d = solve ( eqs, simplify=False )
+        # print ( f"@@11 eqs={eqs} d {d}" )
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         #print ( f"@@11 solved {parameters}: {d}" )
         ret = {}
         if d == []:
