@@ -216,13 +216,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         dx = .53
     if len(allowed)>0:
         plt.plot ( get("x",allowed), get("y",allowed), marker="o", \
-                   linestyle=None, c="limegreen", linewidth=0, label="allowed", zorder = 3 )
+                   linestyle=None, c="darkgreen", linewidth=0, label="allowed", zorder = 3 )
     if len(excluded)>0:
         plt.plot ( get("x",excluded), get("y",excluded), marker="o", \
                    linestyle=None, c="red", linewidth=0, label="excluded", zorder = 4 )
     if len(allowed_border)>0:
         plt.plot ( get("x",allowed_border), get("y",allowed_border), marker="o", \
-                   linestyle=None, c="darkgreen", linewidth=0, label="allowed (but close)", zorder = 5)
+                   linestyle=None, c="limegreen", linewidth=0, label="allowed (but close)", zorder = 5)
     if len(excluded_border)>0:
         plt.plot ( get("x",excluded_border), get("y",excluded_border), marker="o", \
                    linestyle=None, c="orange", linewidth=0, label="excluded (but close)", zorder = 6)
