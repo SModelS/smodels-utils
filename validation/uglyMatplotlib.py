@@ -69,14 +69,15 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         nmax = 20
     ndots = 30
     ndigits = int(math.ceil(math.log10(nmax)))
+    ntext = 29
     try:
-        ndots = shutil.get_terminal_size().columns - 45-ndigits
+        ndots = shutil.get_terminal_size().columns - ntext-2-ndigits
     except Exception as e:
         pass
     if "COLUMNS" in os.environ:
-        ndots = int(os.environ["COLUMNS"])-45-ndigits
+        ndots = int(os.environ["COLUMNS"])-ntext-2-ndigits
     dn = int(math.ceil(nmax/ndots))
-    print ( " "*int(43+ndigits+ndots), end="<\r" )
+    print ( " "*int(ntext+ndigits+ndots-5), end="<\r" )
     print ( f"[uglyMatplotlib] checking {nmax} validation points >", end="" )
     xcontainer,ycontainer=[],[]
     for ctPoints,pt in enumerate(validationPlot.data):
