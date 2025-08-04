@@ -181,7 +181,7 @@ class SParticleNames:
         """ rootify <name>, currently not doing anything """
         return name
 
-    def htmlify ( self, name, addBrackets ):
+    def htmlify ( self, name : str, addBrackets : bool ) -> str:
         """ htmlify <name> """
         import re
         html = name
@@ -199,7 +199,7 @@ class SParticleNames:
             html = f"{html[:m.start()]}<sub>{repl}</sub>{html[m.end():]}"
 
         while True:
-            m = re.search ( "\^{[0-9&;A-Za-z-+]*}", html)
+            m = re.search ( r"\^{[0-9&;A-Za-z-+]*}", html)
             if m == None:
                 break
             repl = html[m.start()+2:m.end()-1]
@@ -213,7 +213,6 @@ class SParticleNames:
         if html == "nu":
             html="&nu;"
         # print ( "htmlify", name, "->", html )
-
         return html
 
     def rootName ( self, pid, addSign = False ):
