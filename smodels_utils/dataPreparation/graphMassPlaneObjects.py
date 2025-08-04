@@ -232,15 +232,15 @@ class GraphMassPlane(MassPlaneBase):
             # print ( f"parameters are {parameters}" )
             if type(parameters[index]) in [ float ]:
                 # ret[str(param)] = float ( parameters[index] )
-                rhs = round_to_n ( float ( parameters[index] ), 8 )
+                rhs = round_to_n ( float ( parameters[index] ), 10 )
             elif type(parameters[index]) in [ tuple, list ]:
                 # ret[str(param)] = float ( parameters[index][1] )
-                rhs = round_to_n ( float ( parameters[index][1] ), 8 )
+                rhs = round_to_n ( float ( parameters[index][1] ), 10 )
             elif parameters[index]=="stable":
                 rhs = 0.
             lhs = parse_expr ( str(param) )
             if type(lhs)==core.numbers.Float:
-                lhs = round_to_n ( float(lhs), 8 )
+                lhs = round_to_n ( float(lhs), 10 )
             if lhs == 0. and rhs == 1.:
               continue # hack for now FIXME
             if type(lhs)==Float and type(rhs)==Float and \
@@ -267,9 +267,13 @@ class GraphMassPlane(MassPlaneBase):
             else:
                 d = {}
         except Exception as e:
-            print ( f"[GraphMassPlane] linsolve failed: {e}, trying solve now" )
+            pass
+        if d == {}:
+            # print ( f"[GraphMassPlane] linsolve failed: {e}, trying solve now" )
             d = solve ( eqs, simplify=False )
         # print ( f"@@11 eqs={eqs} d {d}" )
+        #if d == {}:
+        #    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         #print ( f"@@11 solved {parameters}: {d}" )
         ret = {}
