@@ -73,7 +73,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
             lengths.append ( len(header)+4 )
         self.f.write ( "|\n" )
         for l in lengths:
-            self.f.write ( "| "+"-"*l+ " " )
+            self.f.write ( f"| {'-' * l} " )
         self.f.write ( "|\n" )
 
     def getConstraint ( self, txname : TxName ) -> str:
@@ -192,7 +192,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 for ua in unabbrv:
                     if txnameabb.find ( ua ) in [6,7,9]:
                         pos = txnameabb.find ( ua )
-                txnameabb=txnameabb[:pos]+"-<br>"+txnameabb[pos:]
+                txnameabb=f"{txnameabb[:pos]}-<br>{txnameabb[pos:]}"
             ltxes.append ( f'<a name="{txname}"></a>**{txnameabb}**<br>' )
         entries.append ( "<BR>".join ( ltxes ) )
         # FIXME v3
@@ -217,7 +217,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         maps = self.constraintsToTxNames[txname][constraint].smsMap
         for k,v in shortnames.items():
             constraint = constraint.replace( k, v )
-        constraint = "`" + constraint + "`"
+        constraint = f"`{constraint}`"
         entries.append ( constraint ) # "Topology" column
         images = ""
         for i in range ( len(maps) ):

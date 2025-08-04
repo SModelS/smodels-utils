@@ -304,8 +304,8 @@ def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
             continue
         dataId = str(dataset.dataInfo.dataId)
         if len(dataId)>8:
-            dataId = dataId[:7]+"*"
-        subtitle+=dataId+", "
+            dataId = f"{dataId[:7]}*"
+        subtitle+=f"{dataId}, "
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
             validationPlot.combine == True:
@@ -327,7 +327,7 @@ def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
         p1 = idx[idx<maxLength]
         if len(p1)>0:
             pos = p1[-1]
-        subtitle = subtitle[:pos] + ", ..."
+        subtitle = f"{subtitle[:pos]}, ..."
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""

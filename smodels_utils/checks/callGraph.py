@@ -37,7 +37,7 @@ def main():
 
     depth = ""
     if args.max_depth:
-        depth = '--max-depth ' + str(args.max_depth) + ' '
+        depth = f"--max-depth {args.max_depth!s} "
 
     arguments = ('--include "theory.*" --include "experiment.*" '
                  '--include "tools.*" ' + depth + 'graphviz -- '
@@ -50,9 +50,9 @@ def main():
         print("    input file:", inputFile)
         print("     arguments:", str(arguments))
 
-        os.system('pycallgraph ' + arguments)
+        os.system(f"pycallgraph {arguments}")
 
-        filename = os.path.splitext(os.path.basename(inputFile))[0] + ".png"
+        filename = f"{os.path.splitext(os.path.basename(inputFile))[0]}.png"
 
         print("renaming output file to", filename)
 

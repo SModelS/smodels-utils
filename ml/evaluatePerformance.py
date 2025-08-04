@@ -43,7 +43,7 @@ class NetworkEvaluater():
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
-		self.savePath = os.getcwd() + "/" + dbPath + "/performance/"
+		self.savePath = f"{os.getcwd()}/{dbPath}/performance/"
 		Path(self.savePath).mkdir(parents=True, exist_ok=True)
 
 		self.builder = builder
@@ -150,13 +150,13 @@ class NetworkEvaluater():
 		for n in range(binNum):
 			
 			if n == 0.:
-				labels[n] = "0 " + units
+				labels[n] = f"0 {units}"
 
 			elif n == 1:
-				labels[n] = ">1e-1 " + units
+				labels[n] = f">1e-1 {units}"
 
 			else:
-				labels[n] = "1e-" + str(n-1) + " - 1e-" + str(n) + " " + units
+				labels[n] = f"1e-{n - 1!s} - 1e-{n!s} {units}"
 
 			labels[n] += f" (n = {str(len(bins[n]))})"
 
@@ -334,13 +334,13 @@ class NetworkEvaluater():
 						spliceERR.append(E[n])
 
 				if len(spliceERR) > 0:
-					key = "m0=" + str(int(tmass))
+					key = f"m0={int(tmass)!s}"
 					thingsToPlot[key] = {"yaxis": spliceEFF, 
 										"ylabel": "efficiencies (log)", 
 										"xaxis": spliceWID, "xlabel":  
 										"widths (log)", 
 										"error": spliceERR, 
-										"affix": r"$m_{HSCP}$ = " + str(int(tmass)) + " GeV "}
+										"affix": rf"$m_{{HSCP}}$ = {int(tmass)!s} GeV "}
 		
 		
 		index = 5
@@ -363,7 +363,7 @@ class NetworkEvaluater():
 			cbar = plt.colorbar()
 			cbar.set_label('relative error', rotation=90)
 			plt.tight_layout()
-			fileName = str(self.txnameData) + "_regression_scatterPlot_" + key + ".png" #eps
+			fileName = f"{self.txnameData!s}_regression_scatterPlot_{key}.png" #eps
 			plt.savefig(self.savePath + fileName)
 			index += 1
 
@@ -451,7 +451,7 @@ class NetworkEvaluater():
 
 		plt.legend((plt_cor_on, plt_cor_off, plt_wrg_on, plt_wrg_off), ('on hull correct', 'off hull correct', 'should be on hull', 'should be off hull'), scatterpoints=1, loc='upper right', ncol=1, fontsize=8)
 
-		fileName = str(self.txnameData) + "_classification_scatterPlot.eps"
+		fileName = f"{self.txnameData!s}_classification_scatterPlot.eps"
 		plt.savefig(self.savePath + fileName)
 
 		if showPlots: plt.show()

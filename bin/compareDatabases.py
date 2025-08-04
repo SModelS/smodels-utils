@@ -220,7 +220,7 @@ def discussDBs ( oldD, newD ):
         if not k in oldERDict.keys():
             newResultNotInNew ( v )
 
-    print ( "%d/%d txnames failed." % ( tx["err"], tx["tot"] ) )
+    print ( f"{int(tx['err'])}/{int(tx['tot'])} txnames failed." )
 
 def compare():
     import argparse

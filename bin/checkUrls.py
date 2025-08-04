@@ -18,7 +18,7 @@ log=open("urls.log", "w" )
 
 def Print ( line ):
     print ( line )
-    log.write ( line + "\n" )
+    log.write ( f"{line}\n" )
 
 def checkUrl ( url, id ):
     if url in [ "Not defined", None, "None" ]:

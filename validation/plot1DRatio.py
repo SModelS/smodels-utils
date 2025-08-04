@@ -180,7 +180,7 @@ def main():
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
     if not "_" in args.valfile1:
-        args.valfile1 = args.valfile1 + "_2EqMassAx_EqMassBy.py"
+        args.valfile1 = f"{args.valfile1}_2EqMassAx_EqMassBy.py"
     if not args.valfile1.endswith ( ".py" ):
         args.valfile1 += ".py"
 

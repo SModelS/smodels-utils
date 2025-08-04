@@ -22,7 +22,7 @@ iCh = 0
 for ch in bkg['channels']:
     srName = ch['name']
     # if srName[:2] == 'SR':
-    chPath[srName] = '/channels/%d/samples/' % iCh
+    chPath[srName] = f'/channels/{int(iCh)}/samples/'
     iCh += 1
 
 # Preparing the cross sections

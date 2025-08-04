@@ -39,8 +39,8 @@ def runCmd ( cmd : str, prtMsg : bool = True ):
     # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
-        print("[distribution] %.80s" % o )
-        f.write( str(o) + "\n" )
+        print(f"[distribution] {o:>.80}" )
+        f.write( f"{o!s}\n" )
     f.close()
     return str(o)
 

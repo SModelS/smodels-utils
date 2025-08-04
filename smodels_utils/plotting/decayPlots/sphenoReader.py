@@ -109,7 +109,7 @@ class SPhenoReader:
         print ( "SPhenoReader Mass Table" )
         print ( "-----------------------" )
         for (k,v) in self.masses.items():
-          print ( "%10s: %d GeV" % ( self.name ( k ), v ) )
+          print ( f"{self.name(k):>10}: {int(v)} GeV" )
 
     def getMass ( self, name ):
         pdgid=self.pdgId ( name )
@@ -172,7 +172,7 @@ class SPhenoReader:
         self.masses.pop(p2)
         self.ids.pop(p2)
         self.ids.pop(n2)
-        n3=n1+","+n2[-1:]
+        n3=f"{n1},{n2[-1:]}"
         self.ids[p1]=n3
 
     def getMasses ( self ):
@@ -264,8 +264,8 @@ class SPhenoReader:
             if not pdgIdMother in self.decays.keys ( ):
               self.decays[pdgIdMother]={}
               self.fulldecays[pdgIdMother]={}
-            nbody=Word ( nums+"eE+-." )+Word ( nums+"-" )+ Word ( nums+"-" ) +\
-                  Word ( nums+"-" ) + Optional ( Word ( nums+"-" ) )
+            nbody=Word ( f"{nums}eE+-." )+Word ( f"{nums}-" )+ Word ( f"{nums}-" ) +\
+                  Word ( f"{nums}-" ) + Optional ( Word ( f"{nums}-" ) )
             try:
               parsed=nbody.parseString ( line )
               r=float(parsed[0])
@@ -277,13 +277,13 @@ class SPhenoReader:
               radiate=self.name(self.integratePdgs(ps[1]),integrated=True)
               fradiate=self.fullName(self.integratePdgs(ps[1]),integrated=True)
               if len(parsed)>4:
-                radiate+=" "+self.name(self.integratePdgs(ps[2]),integrated=True)
-                fradiate+=" "+self.fullName(self.integratePdgs(ps[2]),integrated=True)
+                radiate+=f" {self.name(self.integratePdgs(ps[2]), integrated=True)}"
+                fradiate+=f" {self.fullName(self.integratePdgs(ps[2]), integrated=True)}"
               if self.verbose:
                 if len(parsed)<=4:
-                  logger.debug ( "%d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r ) )
+                  logger.debug ( f"{int(pdgIdMother)} -> {int(ps[0])}  {int(ps[1])}   ({r})" )
                 else:
-                  logger.debug ( "%d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate ) )
+                  logger.debug ( f"{int(pdgIdMother)} -> {int(ps[0])}  {int(ps[1])}  {int(ps[2])}  ({r}) radiate={radiate} fradiate={fradiate}" )
               if not ps[0] in self.decays[pdgIdMother].keys ( ):
                 self.decays[pdgIdMother][ps[0]]={}
                 self.fulldecays[pdgIdMother][ps[0]]={}

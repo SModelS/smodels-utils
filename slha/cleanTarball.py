@@ -26,7 +26,7 @@ def clean ( tarball : os.PathLike ):
                 newtarball.append ( m.name )
         else:
             newtarball.append ( m.name )
-    os.rename ( tarball, tarball+".backup" )
+    os.rename ( tarball, f"{tarball}.backup" )
     with tarfile.open( tarball, mode="w:gz") as tar:
          for file in newtarball:
             tar.add ( file, arcname=file )

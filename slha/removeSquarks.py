@@ -10,5 +10,5 @@ for i in [ 1,2,3,4 ]:
                 pid1=p*1000000+i*np.sign(p)
                 pid2=q*1000000+j*np.sign(q)
                 print ( pid1, pid2 )
-                cmd = "./removeXSecs.py -p %d -q %d" % ( pid1, pid2 )
+                cmd = f"./removeXSecs.py -p {int(pid1)} -q {int(pid2)}"
                 subprocess.getoutput ( cmd )

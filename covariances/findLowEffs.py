@@ -45,14 +45,14 @@ def main():
                 kick=True
                 nkicked += 1
                 skick="kicking"
-                ana = args.analysis+ "-eff"
+                ana = f"{args.analysis}-eff"
                 cmd = f"rm -rf {args.database}/13TeV/CMS/{ana}/{ds.dataInfo.dataId}/{txn.txName}.txt"
                 print ( cmd )
                 if not args.dry_run:
                     subprocess.getoutput ( cmd )
 
             print ( skick, "dataset", ds.dataInfo.dataId, "txn", txn.txName, "m", maxeff, "kick", kick )
-    print ( "kicking %d/%d txnames" % ( nkicked, ntot ) )
+    print ( f"kicking {int(nkicked)}/{int(ntot)} txnames" )
 
 
 main()

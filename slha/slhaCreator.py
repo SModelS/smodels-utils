@@ -159,7 +159,7 @@ class TemplateFile(object):
         tempf = "../validation/filenameCoords2.py"
         g = open ( tempf, "wt" )
         for line in lines:
-            if not '"'+self.txName+'"' in line:
+            if not f"\"{self.txName}\"" in line:
                 g.write ( line )
         g.write ( f'coords["{self.txName}"]={self.coordDicts}\n' )
         g.close()
@@ -244,7 +244,7 @@ class TemplateFile(object):
         fdata = ftemplate.read()
         ftemplate.close()
         for tag in massDict:
-            fdata = fdata.replace(tag+"-5",str(massDict[tag]-5))
+            fdata = fdata.replace(f"{tag}-5",str(massDict[tag]-5))
             fdata = fdata.replace(tag,str(massDict[tag]))
 
         self.coordDicts = { "masses": [], "widths": None }
@@ -252,7 +252,7 @@ class TemplateFile(object):
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
             if not massesInFileName:
-                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=self.tempdir)
+                slhaname = tempfile.mkstemp(prefix=f"{templateName}_",suffix=".slha",dir=self.tempdir)
                 os.close(slhaname[0])
                 slhaname = slhaname[1]
             else:
@@ -267,14 +267,14 @@ class TemplateFile(object):
                     for m in br:
                         if type(m)==tuple:
                             self.coordDicts["masses"][-1].append(ctr)
-                            slhaname += "_%d_%.2g" % (m[0],m[1] )
+                            slhaname += f"_{int(m[0])}_{m[1]:.2g}"
                             if self.coordDicts["widths"]==None:
                                 self.coordDicts["widths"]=[[]]
                             self.coordDicts["widths"][-1].append(ctr+1)
                             ctr+=2
                         else:
                             self.coordDicts["masses"][-1].append(ctr)
-                            slhaname += "_%d" % m
+                            slhaname += f"_{int(m)}"
                             ctr+=1
                 slhaname += ".slha"
                 slhaname = os.path.join(self.tempdir,slhaname)

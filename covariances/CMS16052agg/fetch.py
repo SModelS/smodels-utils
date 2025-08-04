@@ -16,7 +16,7 @@ for dir in dirs:
     ars = glob.glob ( f"{dir}/13TeV/CMS/{anaId}/ar*" )
     nr = len ( ars )
     f=open("__init__.py","w")
-    f.write ( "nSRs=%d\n" % nr )
+    f.write ( f"nSRs={int(nr)}\n" )
     f.close()
     files = glob.glob ( f"{dir}/13TeV/CMS/{anaId}/validation/T*py" )
     print ( nr, dir, files )

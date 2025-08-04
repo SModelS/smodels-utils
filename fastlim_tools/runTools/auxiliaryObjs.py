@@ -47,7 +47,7 @@ def prepareSLHA(slhafile,newfile):
     for pid in pyslhaData.blocks['MASS'].keys():
         if not pid in pyslhaData.decays:
             slha.write("#         PDG            Width\n")
-            slha.write("DECAY   "+str(pid)+"     0.00000000E+00\n")
+            slha.write(f"DECAY   {pid!s}     0.00000000E+00\n")
     slha.close()
         
     return True
@@ -152,26 +152,26 @@ def formatOutput(slhafile,predictions,extraInfo={},minval=0.00005):
     for key in res.blocks['NMIX'].entries:
         val = res.blocks['NMIX'].entries[key]
         if key[0] != 1: continue
-        newkey = 'N'+str(key[0])+str(key[1])
+        newkey = f"N{key[0]!s}{key[1]!s}"
         chimix[newkey] = val
     chamix = {}
     for key in res.blocks['UMIX'].entries:
         val = res.blocks['UMIX'].entries[key]
-        newkey = 'U'+str(key[0])+str(key[1])
+        newkey = f"U{key[0]!s}{key[1]!s}"
         chamix[newkey] = val  
     for key in res.blocks['VMIX'].entries:
         val = res.blocks['VMIX'].entries[key]
-        newkey = 'V'+str(key[0])+str(key[1])
+        newkey = f"V{key[0]!s}{key[1]!s}"
         chamix[newkey] = val  
     stopmix = {}
     for key in res.blocks['STOPMIX'].entries:
         val = res.blocks['STOPMIX'].entries[key]
-        newkey = 'ST'+str(key[0])+str(key[1])
+        newkey = f"ST{key[0]!s}{key[1]!s}"
         stopmix[newkey] = val  
     sbotmix = {}  
     for key in res.blocks['SBOTMIX'].entries:
         val = res.blocks['SBOTMIX'].entries[key]
-        newkey = 'SB'+str(key[0])+str(key[1])
+        newkey = f"SB{key[0]!s}{key[1]!s}"
         sbotmix[newkey] = val  
 
     #Order ExptRes according to tval:

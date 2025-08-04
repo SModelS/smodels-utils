@@ -199,8 +199,8 @@ class Axes(object):
         #Define mass and width variables:
         massVars,widthVars = [], []
         for im in range(len(massEqs)):
-            massVars.append(var('Mass'+string.ascii_uppercase[im]))
-            widthVars.append(var('Width'+string.ascii_uppercase[im]))
+            massVars.append(var(f"Mass{string.ascii_uppercase[im]}"))
+            widthVars.append(var(f"Width{string.ascii_uppercase[im]}"))
 
         #New format:
         allEqs = []

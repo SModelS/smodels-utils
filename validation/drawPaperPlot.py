@@ -203,11 +203,11 @@ def getPrettyAxisLabels(label):
     particle = label.split('m(')[-1]
     particle = label.replace('(','').replace(')','').replace('$','').split('m_')[-1]
     #print("particle = ", particle)
-    if 'm' in particle[0]: label = '$m_{' + particle[1:] +'}$ [GeV]'
+    if 'm' in particle[0]: label = f"$m_{{{particle[1:]}}}$ [GeV]"
     elif 'Gamma' in particle:
         if 'Gamma_' not in particle: label = '$\\Gamma_{' + particle.split('Gamma')[-1] + '}$ [GeV]'
-        else: label = '$' + particle + '$ [GeV]'
-    else : label = '$m_{' + particle +'}$ [GeV]'
+        else: label = f"${particle}$ [GeV]"
+    else : label = f"$m_{{{particle}}}$ [GeV]"
     return label
 
 def widthToLifetime(y):
@@ -572,7 +572,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label)
 
     if 'Gamma' in y_label: ax.set_yscale('log')
-    if massg != "":plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
+    if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
     #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
     
     plt.text(0.55,0.65, r"$\bf observed~exclusion$", transform=fig.transFigure, fontsize = 10)
@@ -702,7 +702,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     
     if 'Gamma' in y_label: ax.set_yscale('log')
     
-    if massg != "":plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
+    if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
     #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
     plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
     plt.legend(loc='best', frameon=True, fontsize = 10)

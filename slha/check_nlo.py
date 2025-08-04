@@ -56,8 +56,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
         if not has_nlo:
             if not has_lo:
                 print ( f"{f} has neither LO nor NLO" )
-                cmd = "%s -e %d -N -P -%d %s -f %s" % \
-                       ( xsecc, nevents, pythia, ssms, f )
+                cmd = f"{xsecc} -e {int(nevents)} -N -P -{int(pythia)} {ssms} -f {f}"
                 if pretend:
                     pass
                 else:
@@ -67,8 +66,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
                 not_lo += 1
             else:
                 print  (f"{f} has only LO" )
-                cmd = "%s -e %d -N -P -%d -O -f %s" % \
-                       ( xsecc, nevents, pythia, f )
+                cmd = f"{xsecc} -e {int(nevents)} -N -P -{int(pythia)} -O -f {f}"
                 if pretend:
                     pass
                 else:
@@ -78,8 +76,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
                 not_nlo += 1
         if not has_13 and sqrtS in [ 0, 13 ]:
             print ( f"{f} has not sqrts 13 " )
-            cmd = "%s -e %d -N -P -%d %s -f %s" % \
-                   ( xsecc, nevents, pythia, ssms, f )
+            cmd = f"{xsecc} -e {int(nevents)} -N -P -{int(pythia)} {ssms} -f {f}"
             if pretend:
                 pass
             else:
@@ -90,8 +87,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
         # print ( "here sqrts", sqrts, "has8", has_8 )
         if not has_8 and sqrtS in [ 0, 8 ]:
             print ( f"{f} has not sqrts 8 " )
-            cmd = "%s -e %d -N -P -%d %s -f %s" % \
-                   ( xsecc, nevents, pythia, ssms, f )
+            cmd = f"{xsecc} -e {int(nevents)} -N -P -{int(pythia)} {ssms} -f {f}"
             if pretend:
                 pass
             else:
@@ -101,13 +97,13 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
             not_8 += 1
 
     if pretend:
-        print ( "%d/%d with NLL." % ( total - not_lo - not_nlo, total ) )
-        print ( "%d/%d with LO only." %  ( not_nlo, total ) )
+        print ( f"{int(total - not_lo - not_nlo)}/{int(total)} with NLL." )
+        print ( f"{int(not_nlo)}/{int(total)} with LO only." )
         if sqrtS in [ 0, 13 ]:
-            print ( "%d/%d with no 13 TeV." %  ( not_13, total ) )
+            print ( f"{int(not_13)}/{int(total)} with no 13 TeV." )
         if sqrtS in [ 0, 8 ]:
-            print ( "%d/%d with no  8 TeV." %  ( not_8, total ) )
-        print ( "%d/%d with no xsecs." % ( not_lo, total ) )
+            print ( f"{int(not_8)}/{int(total)} with no  8 TeV." )
+        print ( f"{int(not_lo)}/{int(total)} with no xsecs." )
 
 def zipThem ( files ):
     """ zip them up """

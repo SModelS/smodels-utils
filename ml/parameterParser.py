@@ -228,8 +228,8 @@ class Parameter(dict):
 		except: device = self["device"]
 		deviceCount = torch.cuda.device_count()
 		if isinstance(device, int) and torch.cuda.is_available() and device < deviceCount:
-			device = torch.device("cuda:" + str(device))
-			logger.info("running on GPU:%d" %device)
+			device = torch.device(f"cuda:{device!s}")
+			logger.info(f"running on GPU:{int(device)}")
 		else:
 			device = torch.device("cpu")
 			logger.info("running on CPU")

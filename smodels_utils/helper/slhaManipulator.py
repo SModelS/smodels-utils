@@ -62,7 +62,7 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
             p1 = slhafile.find("_",p1+1)
         import os, tarfile
         from smodels_utils import SModelSUtils
-        tarf = slhafile[:p1]+".tar.gz"
+        tarf = f"{slhafile[:p1]}.tar.gz"
         tarball = os.path.join ( SModelSUtils.installDirectory(), "slha", tarf )
     if not os.path.exists ( tarball ): ## no tarball!
         print ( f"[slhaManipulator] tarball {tarball} does not exist!" )

@@ -71,7 +71,7 @@ def main():
         else:
             Ver = dbname[m.start():]
         ver2 = Ver[2:].replace("_fastlim","")
-        ver = "v" + Ver[0]+"."+Ver[1]+"."+ver2
+        ver = f"v{Ver[0]}.{Ver[1]}.{ver2}"
         description=f"[Official database, {ver}](ListOfAnalyses{Ver[0]}{Ver[1]}{ver2})"
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
@@ -112,7 +112,7 @@ def oldmain():
         else:
             Ver = dbname[m.start():]
         ver2 = Ver[2:].replace("_fastlim","")
-        ver = "v" + Ver[0]+"."+Ver[1]+"."+ver2
+        ver = f"v{Ver[0]}.{Ver[1]}.{ver2}"
         description=f"[[ListOfAnalyses{Ver[0]}{Ver[1]}{ver2}|Official database, {ver}]]"
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )

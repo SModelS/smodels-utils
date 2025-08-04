@@ -155,7 +155,7 @@ MSEL=0        ! All MSSM processes, except Higgs production\n"
             continue
             # return False
         for p in procs:
-            f.write("MSUB("+str(p)+")=1\n")
+            f.write(f"MSUB({p!s})=1\n")
     
     #Write footer:
     footer = "end\nNEVENTS,0,0,SQRTSD0\nend\n"

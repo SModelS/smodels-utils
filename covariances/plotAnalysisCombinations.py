@@ -204,7 +204,7 @@ def getPlot(inputFile, parameterFile,options):
             #Draw vertical lines for muhat
             if muvals[0] <= muhat <= muvals[-1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
+            x = plt.plot(muvals,l,label=f"{anaID}\n{'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' % (robs, rexp)}",zorder=zorder,linestyle=linestyle,linewidth=2)
         else:
             if 'prev' in anaID:
                 linestyle = ':'
@@ -216,7 +216,7 @@ def getPlot(inputFile, parameterFile,options):
                 ulmu = tpDict[anaID]['ulmu']
                 robs = tpDict[anaID]['r_obs']
                 rexp = tpDict[anaID]['r_exp']
-                x = plt.plot(muvals,l,label=anaID + '\n' + r'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' %(robs,rexp),zorder=zorder,linestyle=linestyle,linewidth=2)
+                x = plt.plot(muvals,l,label=f"{anaID}\n{'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' % (robs, rexp)}",zorder=zorder,linestyle=linestyle,linewidth=2)
             lbl=None
 
         #Draw vertical lines for ulmu
@@ -234,10 +234,10 @@ def getPlot(inputFile, parameterFile,options):
         ylab = 'observed '
         shortExpType = 'obs'
     if setup["normalize"]:
-        ylab = ylab + 'normalized likelihood'
+        ylab = f"{ylab}normalized likelihood"
         plt.ylabel(ylab, fontsize=18)
     else:
-        ylab = ylab + 'likelihood'
+        ylab = f"{ylab}likelihood"
         plt.ylabel(ylab, fontsize=18)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
@@ -251,7 +251,7 @@ def getPlot(inputFile, parameterFile,options):
             endFileName = 'combined'
             CSR = True
 
-    outputFile = outputFile.replace('.png','_'+endFileName+'_'+shortExpType+'.png')
+    outputFile = outputFile.replace('.png',f"_{endFileName}_{shortExpType}.png")
     data = pyslha.read(inputFile)
     m1 = data.blocks['EXTPAR'][1]
     m2 = data.blocks['EXTPAR'][2]

@@ -143,7 +143,7 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
     Dir = getPathName ( dbpath, anaid, None )
 
     if "bestsr" in compare:
-        dataEff = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}.py" ).validationData
+        dataEff = getValidationModule ( dbpath, f"{anaid}-eff", f"{txname}_{axes}.py" ).validationData
         #Get points to compute exclusion curves:
         xpts = []
         ypts = []
@@ -167,7 +167,7 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
             rpts.append(pt['signal']/pt['UL'])
         excCurveUL = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
     if "pyhf" in compare:
-        dataComb = getValidationModule ( dbpath, anaid+"-eff", f"{txname}_{axes}_combined.py" ).validationData
+        dataComb = getValidationModule ( dbpath, f"{anaid}-eff", f"{txname}_{axes}_combined.py" ).validationData
         xpts = []
         ypts = []
         rpts = []
@@ -179,7 +179,7 @@ def plot( dbpath, anaid, txname, axes, xaxis, yaxis, compare ):
             rpts.append(pt['signal']/pt['UL'])
         excCurveComb = getContour(xpts,ypts,rpts,levels=[1.0],ylog=False)
     if "sl" in compare:
-        dataSL = getValidationModule ( dbpath, anaid+"-SL", f"{txname}_{axes}_combined.py" ).validationData
+        dataSL = getValidationModule ( dbpath, f"{anaid}-SL", f"{txname}_{axes}_combined.py" ).validationData
         xpts = []
         ypts = []
         rpts = []

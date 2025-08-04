@@ -221,7 +221,7 @@ def test(filename,dirname):
     comment( "    Test the setup ...    " )
     comment( "--------------------------" )
     rmdir(dirname)
-    explode(filename.strip()+'.tgz')
+    explode(f"{filename.strip()}.tgz")
     make(dirname)
     runExample(dirname)
 

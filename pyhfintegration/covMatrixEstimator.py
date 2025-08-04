@@ -55,7 +55,7 @@ class CovMatrixEstimator ( object ):
         from pyhf.contrib import utils
         url = f"https://www.hepdata.net/record/resource/{hepdataid}?view=true"
         shortanaid = self.anaid.replace("ATLAS-","")
-        Dir = shortanaid+"_likelihoods/"
+        Dir = f"{shortanaid}_likelihoods/"
         self.pprint ( f"downloading {hepdataid} to {Dir}" )
         utils.download( url, Dir )
         return
@@ -68,7 +68,7 @@ class CovMatrixEstimator ( object ):
         patchcmds["ATLAS-SUSY-2019-08"] = 'jsonpatch @@Dir@@/BkgOnly.json <(pyhf patchset extract @@Dir@@/patchset.json --name "C1N2_Wh_hbb_1000_400")'
         patchcmd = patchcmds[self.anaid]
         shortanaid = self.anaid.replace("ATLAS-","")
-        Dir = shortanaid+"_likelihoods/"
+        Dir = f"{shortanaid}_likelihoods/"
         patchcmd = patchcmd.replace ( "@@Dir@@", Dir )
 
         cmd = f"{patchcmd} > {self.jsonfile}"
@@ -77,7 +77,7 @@ class CovMatrixEstimator ( object ):
         tmpf = "./tmp.sh"
         with open ( tmpf, "wt" ) as f:
             f.write ( "#!/bin/bash\n\n" )
-            f.write ( cmd+"\n" )
+            f.write ( f"{cmd}\n" )
             f.close()
         os.chmod ( tmpf, 0o755 )
         o = subprocess.getoutput ( tmpf )
@@ -237,13 +237,13 @@ class CovMatrixEstimator ( object ):
             if len(row)>0:
                 smatrix = smatrix[:-2]
             # smatrix += "],\n             "
-            smatrix += "]" + appendix
+            smatrix += f"]{appendix}"
         if len(row)>0:
             nlast = -2
             if pprint:
                 nlast = -14
             # smatrix = smatrix[:-14] + "]"
-            smatrix = smatrix[:-2] + "]"
+            smatrix = f"{smatrix[:-2]}]"
 
         self.covariance = smatrix
         print ( "covariance:", smatrix )
@@ -252,7 +252,7 @@ class CovMatrixEstimator ( object ):
             skewness = "["
             for i in self.getSkewness():
                 skewness += f"{i:5.2f}, "
-            skewness = skewness[:-2]+"]"
+            skewness = f"{skewness[:-2]}]"
         print ( f"[covMatrixEstimator] skewness: {skewness}{RESET}" )
 
     def retrieveMatrix( self ):

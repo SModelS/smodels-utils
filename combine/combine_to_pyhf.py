@@ -119,14 +119,14 @@ class CombineToPyhf:
     def getUncertUp( self, shapeMap: dict, channel, sample, name):
         ##get shape uncertainty shifted up
         file = uproot.open(getShapeFile(shapeMap, channel, sample))
-        hist = file[getUncertPath(shapeMap, channel, sample, name) + "Up"]
+        hist = file[f"{getUncertPath(shapeMap, channel, sample, name)}Up"]
         return hist
 
 
     def getUncertDown( self, shapeMap: dict, channel, sample, name):
         ## get shape uncertaint shifted down
         file = uproot.open(getShapeFile(shapeMap, channel, sample))
-        hist = file[getUncertPath(shapeMap, channel, sample, name) + "Down"]
+        hist = file[f"{getUncertPath(shapeMap, channel, sample, name)}Down"]
         return hist
 
 
@@ -320,7 +320,7 @@ class CombineToPyhf:
                             err = hist.errors().tolist()
                             spec["channels"][idxc]["samples"][idxs]["modifiers"].append(
                                 {
-                                    "name": "my_shapesys" + channel + sample,
+                                    "name": f"my_shapesys{channel}{sample}",
                                     "type": "shapesys",
                                     "data": err,
                                 }

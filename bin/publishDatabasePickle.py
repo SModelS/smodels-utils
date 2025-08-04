@@ -46,7 +46,7 @@ def prepareCommandsFile ( ) :
 
 def addToCommandsFile ( cmd ):
     f=open( "commands.sh", "at" )
-    f.write ( cmd + "\n" )
+    f.write ( f"{cmd}\n" )
     f.close()
 
 def _getSHA1 ( filename ):                                                                         return hashlib.sha1( pathlib.Path(filename).read_bytes() ).hexdigest()
@@ -137,7 +137,7 @@ def main():
         tarballs = glob.glob ( f"{dbname}/*.tar.gz" )
         tarballs += glob.glob ( f"{dbname}/*.tgz" )
         if len(tarballs)>0:
-            t = [ x.replace(dbname+"/","").replace(dbname,"") for x in tarballs ]
+            t = [ x.replace(f"{dbname}/","").replace(dbname,"") for x in tarballs ]
             print ( f"there are tarballs [{','.join(t)}] in {dbname}. Will explode them." )
             for t in tarballs:
                 shutil.unpack_archive( filename=t, extract_dir=dbname)
@@ -186,7 +186,7 @@ def main():
         d.pcl_meta.hasFastLim = False
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
-        e.subs[0].databaseVersion="fastlim"+dbver
+        e.subs[0].databaseVersion=f"fastlim{dbver}"
         del e
     if args.remove_nonaggregated:
         # e = copy.deepcopy( d )
@@ -197,7 +197,7 @@ def main():
         d.pcl_meta.hasFastLim = False
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
-        e.subs[0].databaseVersion="nonaggregated"+dbver
+        e.subs[0].databaseVersion=f"nonaggregated{dbver}"
         del e
     if args.full_llhds:
         f = Database ( picklefile, progressbar=True )
@@ -227,7 +227,7 @@ def main():
     infofile = f"official{ver}{sfastlim}"
     pclfilename = f"official{ver}{sfastlim}.pcl"
     if args.txnamevalues:
-        d.subs[0].databaseVersion="debug"+dbver
+        d.subs[0].databaseVersion=f"debug{dbver}"
         infofile = f"debug{ver.replace('debug', '')}"
         pclfilename = f"debug{ver.replace('debug', '')}.pcl"
     if "nonaggregated" in ver:
@@ -296,7 +296,7 @@ def main():
             print ( f"[publishDatabasePickle] update latest: {cmd} {a}" )
     backupfile = None
     if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
-        backupfile = "backup"+ver
+        backupfile = f"backup{ver}"
         #if not args.remove_fastlim:
         #    backupfile = "backup_fastlim"
         cmd = "cp ../../smodels.github.io/database/%s ../../smodels.github.io/database/%s" %\

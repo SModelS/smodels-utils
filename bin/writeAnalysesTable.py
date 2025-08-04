@@ -39,7 +39,7 @@ def isIn ( i, txnames ):
     """ is i in list txnames, leaving out onshell versions """
     for x in txnames:
         if i == x: return True
-        if i == x+"(off)": return True
+        if i == f"{x}(off)": return True
     return False
 
 
@@ -290,7 +290,7 @@ class Writer:
         if anaid != self.last_ana:
             self.n_anas += 1
             self.last_ana = anaid
-            ananr="%d" % self.n_anas
+            ananr=f"{int(self.n_anas)}"
         ret = ""
         txnobjs = ana.getTxNames()
         t_txnames = [ x.txName for x in txnobjs ]
@@ -442,16 +442,16 @@ class Writer:
         """
         frmt = "|l"
         if self.numbers:
-            frmt = "|r" + frmt
+            frmt = f"|r{frmt}"
         if not self.extended_likelihoods:
             frmt += "|l"
         if self.prettyNames:
             frmt += "|l"
         frmt += "|c|c|c|"
         if self.likelihoods:
-            frmt = frmt + "r|"
+            frmt = f"{frmt}r|"
         if self.extended_likelihoods:
-            frmt = frmt + "c|c|c|c|"
+            frmt = f"{frmt}c|c|c|c|"
         toprint = rf"\begin{{{self.table}}}{{{frmt}}}"
         toprint += "\n"
         toprint += r"\hline"
@@ -577,8 +577,8 @@ class Writer:
             base = self.experiment
         if self.sqrts != "all":
             base += str(self.sqrts)
-        pngfile= base + ".png"
-        pdffile= base + ".pdf"
+        pngfile= f"{base}.png"
+        pdffile= f"{base}.pdf"
         self.pprint ( f"now creating {base}.png" )
         whiteBG = True
         swbg=""

@@ -38,7 +38,7 @@ for l in m2:
     if not l[0] in [ x[0] for x in m1 ]:
         print ( "in m2, not in m1", l )
 
-print ( "%d duplicates in m2" % duplicates2 )
+print ( f"{int(duplicates2)} duplicates in m2" )
 
 for l in m1:
     if m1.count(l) > 1:
@@ -46,5 +46,5 @@ for l in m1:
     if not l[0] in [ x[0] for x in m2 ]:
         print ( "in m1, not in m2", l )
 
-print ( "%d duplicates in m1" % duplicates1 )
+print ( f"{int(duplicates1)} duplicates in m1" )
 

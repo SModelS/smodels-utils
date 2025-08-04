@@ -36,7 +36,7 @@ def weed ( dists, maxDistance, massgaps, verbose, keep60s = False ):
     print ( "[weed] massgap considered", mgaps )
     for x,d1 in enumerate(dists):
         if x % 200 == 0:
-            print ( "Checking point #%d %.1f [s]. weeded: %d" % (x,time.time()-t0, nWeeded ) )
+            print ( f"Checking point #{int(x)} {time.time() - t0:.1f} [s]. weeded: {int(nWeeded)}" )
         sd1=mkstring(d1)
         if keep60s and abs ( d1[2] - 60. ) < 1e-5:
             ## keep all at mlsp=60
@@ -128,13 +128,13 @@ def main():
     files = glob.glob(f"{tempdir}/{args.topo}*slha" )
     dists = []
     for fname in files:
-        f = fname.replace(args.topo+"_","").replace(".slha","")
-        f = f.replace(tempdir+"/","")
+        f = fname.replace(f"{args.topo}_","").replace(".slha","")
+        f = f.replace(f"{tempdir}/","")
         tokens = list(map(float,f.split("_")))
         dists.append ( tokens )
     dists.sort()
     npoints=len(dists)
-    print ( "%d points before weeding." % ( npoints ) )
+    print ( f"{int(npoints)} points before weeding." )
     t0=time.time()
     massgaps = args.massgaps
     if massgaps == "auto":
@@ -146,14 +146,14 @@ def main():
         massgaps = ""
     keep60s = args.keep60s # False
     weeded = weed ( dists, args.distance**2, massgaps, args.verbose, keep60s )
-    print ( "%d points after weeding, from %d points before." % ( len(weeded ), npoints ) )
-    print ( "(Took %d seconds)" % ( time.time() - t0 ) )
+    print ( f"{len(weeded)} points after weeding, from {int(npoints)} points before." )
+    print ( f"(Took {int(time.time() - t0)} seconds)" )
     #a = open("weed.pcl","wb")
     # pickle.dump(weeded,a)
     # a.close()
     for fname in files:
-        f = fname.replace(args.topo+"_","").replace(".slha","")
-        f = f.replace(tempdir+"/","")
+        f = fname.replace(f"{args.topo}_","").replace(".slha","")
+        f = f.replace(f"{tempdir}/","")
         if f not in weeded:
             subprocess.getoutput ( f"rm {tempdir}/{args.topo}_{f}.slha" )
     subprocess.getoutput ( f"cd {tempdir}; tar czvf ../{args.topo}.tar.gz {args.topo}*slha" )

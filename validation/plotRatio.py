@@ -102,9 +102,9 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
             label = "combined"
     if anaId1 in anaId2:
         label = anaId2.lower()
-    if anaId2 == anaId1 + "-eff":
+    if anaId2 == f"{anaId1}-eff":
         label = "ul"
-    if anaId2 == anaId1 + "-agg":
+    if anaId2 == f"{anaId1}-agg":
         label = "ul"
     if anaId2 == anaId1:
         label = "ul"
@@ -406,7 +406,7 @@ def draw ( options : dict ):
         stopos.append ( stopo )
     stopo = "+".join ( stopos )
     if len(topos)==1:
-        stopo = "".join(topos)+": "+stopo
+        stopo = f"{''.join(topos)}: {stopo}"
 
     isEff = False
     if "-eff" in analysis1 or "-eff" in analysis2:
@@ -534,7 +534,7 @@ def draw ( options : dict ):
         figname = figname.replace( "@a",anaId )
     sr = ""
     if options["SR"] != None:
-        sr="_"+options["SR"]
+        sr=f"_{options['SR']}"
 
     figname = figname.replace("@sr",sr)
     a1, a2 = options["label1"], options["label2"]
@@ -602,7 +602,7 @@ def writeMDPage( copy ):
         t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
             src = f"https://smodels.github.io/plots/{i}"
-            f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
+            f.write ( f'| <img src="{src}?{int(t0)}" /> ' )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
         if ctr % 2 == 0:
@@ -701,7 +701,7 @@ def main():
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
     if not "_" in args.validationfile1:
-        args.validationfile1 = args.validationfile1 + "_2EqMassAx_EqMassBy.py"
+        args.validationfile1 = f"{args.validationfile1}_2EqMassAx_EqMassBy.py"
     if not args.validationfile1.endswith ( ".py" ):
         args.validationfile1 += ".py"
 
@@ -711,7 +711,7 @@ def main():
         if valfile2 in [ "", "none", "None", None ]:
             valfile2 = valfile1
         if not "_" in valfile2:
-            valfile2 = valfile2 + "_2EqMassAx_EqMassBy.py"
+            valfile2 = f"{valfile2}_2EqMassAx_EqMassBy.py"
         args.valfile1 = valfile1
         args.valfile2 = valfile2
         draw ( vars(args) )

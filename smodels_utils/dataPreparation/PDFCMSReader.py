@@ -88,7 +88,7 @@ class PDFLimitReader():
                 fname += "."
             fname+="pdf"
         if not os.path.exists ( fname ):
-            gname = "pdfconfigs/"+fname
+            gname = f"pdfconfigs/{fname}"
             if os.path.exists ( gname ):
                 fname = gname
         pdffile = open(fname, 'rb')

@@ -190,12 +190,12 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         if fformat.startswith("."):
             fformat = fformat[1:]
 
-        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
+        filename = f"{self.expRes.globalInfo.id}_{self.txName}_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","").\
                     replace("/","d")
-        filename += '_tpredcomb.'+fformat
+        filename += f"_tpredcomb.{fformat}"
 
-        filename = filename.replace(self.expRes.globalInfo.id+"_","")
+        filename = filename.replace(f"{self.expRes.globalInfo.id}_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
 

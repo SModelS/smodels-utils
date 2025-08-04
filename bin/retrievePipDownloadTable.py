@@ -53,7 +53,7 @@ for line in lines:
         if ctr<10:
             print ( thisline )
         if lastDate > datefirst:
-            g.write ( thisline + "\n" )
+            g.write ( f"{thisline}\n" )
 
 for line in oldlines:
     g.write ( str(line) )

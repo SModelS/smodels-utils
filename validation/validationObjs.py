@@ -66,11 +66,11 @@ class ValidationPlot( ValidationObjsBase ):
             if os.path.isdir(databasePath):
                 self.databasePath = databasePath
             else:
-                logger.error("Database folder "+databasePath+" does not exist")
+                logger.error(f"Database folder {databasePath} does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
             if not os.path.isdir(self.databasePath):
@@ -125,12 +125,12 @@ class ValidationPlot( ValidationObjsBase ):
             if os.path.isdir(databasePath):
                 self.databasePath = databasePath
             else:
-                logger.error("Database folder "+databasePath+" does not exist")
+                logger.error(f"Database folder {databasePath} does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
             anaID = ExptRes.globalInfo.id
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
             if not os.path.isdir(self.databasePath):
@@ -149,8 +149,8 @@ class ValidationPlot( ValidationObjsBase ):
 
         vstr = "Validation plot for\n"
         vstr += f'id: {self.expRes.globalInfo.id}\n'
-        vstr += 'TxName: '+self.txName+'\n'
-        vstr += 'Axes: '+self.axes
+        vstr += f"TxName: {self.txName}\n"
+        vstr += f"Axes: {self.axes}"
         return vstr
 
     def loadData(self, overwrite = True ):
@@ -526,7 +526,7 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
-            fout = os.path.join(self.outputDir,slhafile + '.py')
+            fout = os.path.join(self.outputDir,f"{slhafile}.py")
             self.addResultToData ( slhafile, fout )
 
         #Remove temporary folder

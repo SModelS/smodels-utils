@@ -70,7 +70,7 @@ for fname in sorted(matches):
                     while not tagFound and len(lines) > 0:
                         line = lines.pop(-1)
                         if not line.replace('\n', '').strip(): continue  #ignore empty lines                      
-                        codesnippet = line + "\n" + codesnippet                    
+                        codesnippet = f"{line}\n{codesnippet}"                    
                         for tag in tagLinesWith:
                             if tag in line: tagFound = True
                     if not codesnippet: codesnippet = "NOT FOUND"

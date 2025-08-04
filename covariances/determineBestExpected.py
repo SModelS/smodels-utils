@@ -122,13 +122,13 @@ def main():
         sid=""
         first_n = 20
         for ctr,k in enumerate(keys[:first_n]):
-            sid+="id%d='%s'; r%d=%.2f; n%d=%d; " % ( ctr, preds[k], ctr, float(k)/10**6, ctr, datasets[preds[k]] )
-            D["r%d" % ctr]= float(k)/10**6
-            D["n%d" % ctr] = datasets[preds[k]]
-            D["id%d" % ctr] = preds[k] 
+            sid+=f"id{int(ctr)}='{preds[k]}'; r{int(ctr)}={float(k) / 10 ** 6:.2f}; n{int(ctr)}={int(datasets[preds[k]])}; "
+            D[f"r{int(ctr)}"]= float(k)/10**6
+            D[f"n{int(ctr)}"] = datasets[preds[k]]
+            D[f"id{int(ctr)}"] = preds[k] 
         sid=sid[:-2]
-        print ( "file %d, topo=%s, m=%d,%d,%d -> %s" % ( i, topo, mgl,mstop, mlsp, keys[:first_n] ) )
-        line="X: nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; %s.\n" % ( i, topo, mgl, mstop, mlsp, sid ) 
+        print ( f"file {int(i)}, topo={topo}, m={int(mgl)},{int(mstop)},{int(mlsp)} -> {keys[:first_n]}" )
+        line=f"X: nr={int(i)}; t='{topo}'; mgl={mgl:.1f}; mstop={mstop:.1f}; mlsp={mlsp:.1f}; {sid}.\n" 
         g.write ( line )
         g.flush()
         pickle.dump ( D, g2 )

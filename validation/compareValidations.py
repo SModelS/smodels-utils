@@ -112,11 +112,11 @@ def getValidationStatus ( f, db ):
 def compareDetails ( D1, D2, f ):
     lD1, lD2 = len(D1), len(D2)
     if lD1 < lD2:
-        error ( "%s: number of validation points decreased! %d versus %d" % ( f, lD1, lD2 ) )
-        return "number of validation points decreased! %d versus %d" % ( lD1, lD2 )
+        error ( f"{f}: number of validation points decreased! {int(lD1)} versus {int(lD2)}" )
+        return f"number of validation points decreased! {int(lD1)} versus {int(lD2)}"
     if lD1 > lD2:
-        pprint ( "%s: number of validation points increased! %d versus %d" % ( f, lD1, lD2 ) )
-        return "number of validation points increased! %d versus %d" % ( lD1, lD2 )
+        pprint ( f"{f}: number of validation points increased! {int(lD1)} versus {int(lD2)}" )
+        return f"number of validation points increased! {int(lD1)} versus {int(lD2)}"
     for d1,d2 in zip ( D1, D2 ):
         r = compareDicts ( d1, d2 )
         if r!="ok":
@@ -184,7 +184,7 @@ def compareDatabases ( db1, db2, db ):
             addToOk ( f )
             npassed+=1
         ntot+=1
-    print ( "%d/%d validation objects are ok" % ( npassed, ntot ) )
+    print ( f"{int(npassed)}/{int(ntot)} validation objects are ok" )
 
 def loadDatabase():
     from smodels.experiment.databaseObj import Database

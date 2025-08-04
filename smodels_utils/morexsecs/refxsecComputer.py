@@ -130,14 +130,14 @@ class RefXSecComputer:
             writeXsec = True
             # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
             if hasattr ( xsec, "comment" ) and xsec.comment not in [ None, "", "None", " (None)" ]:
-                xseccomment += " " + xsec.comment
+                xseccomment += f" {xsec.comment}"
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
                     writeXsec = False
                     break
             if writeXsec:
                 nxsecs += 1
-                outfile.write( self.xsecToBlock(xsec, (2212, 2212), xseccomment) + "\n")
+                outfile.write( f"{self.xsecToBlock(xsec, (2212, 2212), xseccomment)}\n")
         outfile.close()
 
         return nxsecs
@@ -159,22 +159,22 @@ class RefXSecComputer:
             logger.error("Wrong input")
             raise SModelSError()
         # Sqrt(s) in GeV
-        header = "XSECTION  " + str(xsec.info.sqrts / GeV)
+        header = f"XSECTION  {xsec.info.sqrts / GeV!s}"
         for pdg in inPDGs:
             # PDGs of incoming states
-            header += " " + str(pdg)
+            header += f" {pdg!s}"
         # Number of outgoing states
-        header += " " + str(len(xsec.pid))
+        header += f" {len(xsec.pid)!s}"
         for pid in xsec.pid:
             # PDGs of outgoing states
-            header += " " + str(pid)
+            header += f" {pid!s}"
         if comment:
-            header += " # " + str(comment)  # Comment
+            header += f" # {comment!s}"  # Comment
         entry = "  0  " + str(xsec.info.order) + "  0  0  0  0  " + \
                 str( f"{xsec.value / xsecUnit:16.8E}" ) + " SModelSv" + \
                      smodelsinstallation.version()
 
-        return "\n" + header + "\n" + entry
+        return f"\n{header}\n{entry}"
 
     def computeForOneFile ( self, sqrtses, inputFile,
                  tofile, ssmultipliers = None, comment = None,
@@ -282,7 +282,7 @@ class RefXSecComputer:
         tokens = []
         for k,v in ssmultipliers.items():
             tokens.append ( f"{k}:{v:.4g}" )
-        newline = "# Signal strength multipliers: " + ", ".join ( tokens )
+        newline = f"# Signal strength multipliers: {', '.join(tokens)}"
         with open(slhaFile, 'r' ) as r:
             lines = r.readlines()
             r.close()
@@ -294,7 +294,7 @@ class RefXSecComputer:
                     logger.debug ( "Signal strength multipliers have alread been applied." )
                 else:
                     logger.error ( "Different signal strength multipliers have alread been applied!!!" )
-                    rewrite.append ( line+" ERROR inconsistent!" )
+                    rewrite.append ( f"{line} ERROR inconsistent!" )
             else:
                 if not "produced at step" in line:
                     rewrite.append ( line )
@@ -486,10 +486,10 @@ class RefXSecComputer:
         """ check if masses are out of bounds """
         if type(mass) in [ int, float ]:
             if mass > max(xsecs):
-                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mass, max(xsecs ) ) )
+                logger.info ( f"mass {int(mass)}>{int(max(xsecs))} too high to interpolate, leave it as is." )
                 return True
             if mass < min(xsecs):
-                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mass, min(xsecs ) ) )
+                logger.info ( f"mass {int(mass)}<{int(min(xsecs))} too low to interpolate, leave it as is." )
                 return True
             return False
         ## masses are tuple
@@ -592,12 +592,12 @@ class RefXSecComputer:
             isEWK=False
             order = LO
         if pid1 in [ 1000021 ] and pid2 == pid1:
-            filename = "xsecgluino%d.txt" % sqrts
+            filename = f"xsecgluino{int(sqrts)}.txt"
             columns["xsec"]=1
             isEWK=False
             order = NNLL # 4
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
-            filename = "xsecN2C1m%d.txt" % sqrts
+            filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
             pb = False
@@ -605,7 +605,7 @@ class RefXSecComputer:
                 pb = True
             smass = masses[0]+masses[1]
             if type(masses) == tuple and smass > 1e-6 and abs(masses[1]-masses[0])/smass > 1e-3:
-                filename = "xsecN2C1mnondegen%d.txt" % sqrts
+                filename = f"xsecN2C1mnondegen{int(sqrts)}.txt"
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
@@ -618,7 +618,7 @@ class RefXSecComputer:
             isEWK=True
             smasses = masses[1]+masses[0]
             if type(masses) == tuple and smasses > 1e-6 and abs(masses[1]-masses[0])/smasses > 1e-3:
-                filename = "xsecN2C1pnondegen%d.txt" % sqrts
+                filename = f"xsecN2C1pnondegen{int(sqrts)}.txt"
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
@@ -639,7 +639,7 @@ class RefXSecComputer:
                 columns["xsec"]=3
                 pb = True
             else:
-                filename = "xsecN2N1%d.txt" % sqrts
+                filename = f"xsecN2N1{int(sqrts)}.txt"
                 pb = False
             order = NLL
             isEWK=True
@@ -653,31 +653,31 @@ class RefXSecComputer:
             if pid2 == 1000025:
                 s2 = "N3"
             self.warn ( f"asked to compute {s1,pid1} {s2,pid2} production xsecs, will recycle the N2 N1 ones!" )
-            filename = "xsecN2N1%d.txt" % sqrts
+            filename = f"xsecN2N1{int(sqrts)}.txt"
             if ewk == "degenerate":
-                filename = "xsecEWKdegenerate%d.txt" % sqrts
+                filename = f"xsecEWKdegenerate{int(sqrts)}.txt"
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
             pb = False
             isEWK=True
         if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
-            filename = "xsecN2C1p%d.txt" % sqrts
+            filename = f"xsecN2C1p{int(sqrts)}.txt"
             order = NLL
             pb = False
             isEWK=True
         if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
-            filename = "xsecN2C1m%d.txt" % sqrts
+            filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
             pb = False
         if pid1 in [ -1000005, -1000006, -2000006 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
-            filename = "xsecstop%d.txt" % sqrts
+            filename = f"xsecstop{int(sqrts)}.txt"
             order = NNLL #3
             columns["xsec"]=2
             pb = True
         if pid1 in [ -1000024 ] and pid2 == -pid1:
-            filename = "xsecC1C1%d.txt" % sqrts
+            filename = f"xsecC1C1{int(sqrts)}.txt"
             pb = False
             order = NLL #3
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ] and ewk == "degenerate":
@@ -688,10 +688,10 @@ class RefXSecComputer:
             columns["xsec"]=1
         if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
-            filename = "xsecslepLslepL%d.txt" % sqrts
+            filename = f"xsecslepLslepL{int(sqrts)}.txt"
             order = NLL #3
         if pid1 in [ -2000011, -2000013, -2000015 ] and pid2 == -pid1:
-            filename = "xsecslepRslepR%d.txt" % sqrts
+            filename = f"xsecslepRslepR{int(sqrts)}.txt"
             order = NLL # 3
         if filename == None:
             logger.info ( f"could not identify filename for xsecs for {pid1,pid2}" )

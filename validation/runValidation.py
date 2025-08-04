@@ -160,7 +160,7 @@ def addRange ( var : str, opts : dict, xrange : str, axis : str ):
             hasFound=True
     if "style" in opts:
         # if xy-axis is already in, we dont overwrite
-        if not var+"axis" in opts["style"]:
+        if not f"{var}axis" in opts["style"]:
             styles = opts["style"].split(";")
             newstyles=[ f"{var}axis{xrange}" ]
             for style in styles:
@@ -217,14 +217,14 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ana2 = anaId # expRes.globalInfo.id
     saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
     saxes = saxes.replace('130.0','130').replace('0.0','0')
-    output = os.path.dirname ( datafile ) + f"/ratios_{txname}_{saxes}.png"
+    output = f"{os.path.dirname(datafile)}/ratios_{txname}_{saxes}.png"
     options = { "show": opts["show"], "output": output }
-    ana2origtest = os.path.dirname ( datafile ) + f"../../../{ana2}-orig"
+    ana2origtest = f"{os.path.dirname(datafile)}../../../{ana2}-orig"
     ana2origtest = os.path.abspath ( ana2origtest )
     if os.path.exists ( ana2origtest ) and not "-orig" in ana1:
         ## if an -orig result exists with the same analysis id,
         ## compare against that one!
-        ana2 = ana2 + "-orig"
+        ana2 = f"{ana2}-orig"
         valfile2 = valfile1
         options["label1"]="NN"
         options["label2"]="original"
@@ -267,7 +267,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     ## now the expected case
     options["eul"] = True
     options["eul2"] = True
-    output = os.path.dirname ( datafile ) + f"/expected_ratios_{txname}_{axis}.png"
+    output = f"{os.path.dirname(datafile)}/expected_ratios_{txname}_{axis}.png"
     options["output"] = output
     plotRatio.draw ( options )
 
@@ -327,7 +327,7 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     rank = 1
     nmax = 6
     saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
-    output = os.path.dirname ( datafile ) + f"/bestSR_{txname}_{saxes}.png"
+    output = f"{os.path.dirname(datafile)}/bestSR_{txname}_{saxes}.png"
     logger.info ( f"saving bestSR plot to {YELLOW}{output}{RESET}" )
     defcolors = None
     from plotBestSRs import plot
@@ -379,7 +379,7 @@ def runForOneResult ( expRes, options : dict,
         logger.info( f"------ {GREEN} validating {txnameStr}{stype} {RESET}" )
         namedTarball = None
         if not tarfiles:
-            tarfile = txnameStr+".tar.gz"
+            tarfile = f"{txnameStr}.tar.gz"
         else:
             tarfile = os.path.basename(tarfiles[itx])
         if hasattr ( txname, "validationTarball" ):
@@ -501,10 +501,10 @@ def runForOneResult ( expRes, options : dict,
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
                         pnamedTarball = None
-                        if os.path.join(slhadir,txnameStr+".tar.gz") != tarfile and os.path.join(slhadir,rundir,txnameStr+".tar.gz") != tarfile:
-                            tarfile = os.path.join(slhadir,rundir,txnameStr+".tar.gz")
+                        if os.path.join(slhadir,f"{txnameStr}.tar.gz") != tarfile and os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz") != tarfile:
+                            tarfile = os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz")
                             if not os.path.exists ( tarfile ):
-                                tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+                                tarfile = os.path.join(slhadir,f"{txnameStr}.tar.gz")
                             ltarfile = tarfile
 
                 if tarfile == "skip":
@@ -560,9 +560,9 @@ def runForOneResult ( expRes, options : dict,
                 pnamedTarball = namedTarball
             if not hasCorrectAxis and pnamedTarball != "skip":
                 pnamedTarball = None
-                tarfile = os.path.join(slhadir,rundir,txnameStr+".tar.gz")
+                tarfile = os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz")
                 if not os.path.exists ( tarfile ):
-                    tarfile = os.path.join(slhadir,txnameStr+".tar.gz")
+                    tarfile = os.path.join(slhadir,f"{txnameStr}.tar.gz")
             localopts = copy.deepcopy ( options )
             if hasattr ( txname, "xrange" ):
                 localopts = addRange ( "x", localopts, txname.xrange, ax )

@@ -622,7 +622,7 @@ def writeDictFile ( dictname, llhds, times, fits, uls, setup ):
         for k,v in l.items():
             sl+=f"{k:.3f}: {v:.3g}, "
         if len(sl)>3:
-            sl=sl[:-2]+"}"
+            sl=f"{sl[:-2]}}}"
         g.write ( f"'{Id}': {sl},\n" )
     g.write("}\n" )
     g.write("times={" )
@@ -631,11 +631,11 @@ def writeDictFile ( dictname, llhds, times, fits, uls, setup ):
             g.write ( ", " )
         g.write ( f"'{k}': {v:.3f}" )
     g.write("}\n")
-    g.write("fits="+str(fits)+"\n" )
-    g.write("uls="+str(uls)+"\n" )
+    g.write(f"fits={fits!s}\n" )
+    g.write(f"uls={uls!s}\n" )
     setup.pop("SR")
     setup.pop("comb")
-    g.write("setup="+str(setup)+"\n" )
+    g.write(f"setup={setup!s}\n" )
     g.close()
 
 
@@ -774,7 +774,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
         l = values [ "lulmu" ]
         label = None
         if addVerticalLabels:
-            label = r"ul$_\mu$ (%s)" % Id
+            label = rf"ul$_\mu$ ({Id})"
         # label = None
         if not "combo" in Id:
             plt.plot ( [ ul ] *2, [ llmin, l ], linestyle="dotted", c=colors[Id], label= label )
@@ -794,7 +794,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
         slha = slha[:p]
     label = ""
     if "label" in setup:
-        label = setup["label"]+" "
+        label = f"{setup['label']} "
     title = f"{label}likelihoods for {slha}"
     print  ("setup", setup )
     if "title" in setup:
@@ -834,7 +834,7 @@ def createLlhds ( tpreds, setup ):
         if dId == None:
             dId = "UL"
         if len(dId)>20:
-            dId = dId[:10]+"..."
+            dId = f"{dId[:10]}..."
         #if dId.find("_")>-1:
         #    dId = dId[:dId.find("_")]
         Id = f"{t.dataset.globalInfo.id}:{dId}"

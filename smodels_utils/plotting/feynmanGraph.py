@@ -47,7 +47,7 @@ def printParticle_ ( label ):
     if label in [ "hi", "higgs" ]: label="H"
     if label in [ "f" ]: return r"\Pfermion"
     if label in [ "b" ]: return r"b"
-    label=label+"     "
+    label=f"{label}     "
     return label[:3]
 
 def segment_ ( p1, p2, spin, Bend=None ):
@@ -383,15 +383,15 @@ if __name__ == "__main__":
                 constraints = constraint.split("]+[")
                 # print ( "[feynmanGraph] sum of elements" )
                 for i,c in enumerate(constraints):
-                    out = outdir + "/" + outfile.replace(".","%d." % i ).replace(".png",".pdf")
-                    df = outdir + "/"+  outfile.replace(".","%d." % i )
-                    mergefiles += out + " "
-                    delfiles += out + " "
+                    out = f"{outdir}/{outfile.replace('.', f'{int(i)}.').replace('.png', '.pdf')}"
+                    df = f"{outdir}/{outfile.replace('.', f'{int(i)}.')}"
+                    mergefiles += f"{out} "
+                    delfiles += f"{out} "
                     if i < (len(constraints)-1):
                         c+="]"
                         # mergefiles += "plus.pdf "
                     if i > 0:
-                        c="["+c
+                        c=f"[{c}"
                     cc = cleanConstraint ( c )
                     model = Model( BSMparticles=BSMList, SMparticles=SMList )
                     E = element.Element ( cc, model=model )
@@ -406,7 +406,7 @@ if __name__ == "__main__":
                 if len(constraints)>2:
                     ny = 2
                 pdfout = args.output.replace(".png",".pdf")
-                C = "pdfjam %s --nup %dx%s --landscape --outfile %s" % ( mergefiles, nx, ny, pdfout )
+                C = f"pdfjam {mergefiles} --nup {int(nx)}x{ny} --landscape --outfile {pdfout}"
                 print ( "C=", C )
                 o = subprocess.getoutput ( C )
                 if len(o)>0:

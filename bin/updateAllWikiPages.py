@@ -84,8 +84,8 @@ def main():
     ref_db = A.reference_database
     ref_db = os.path.expanduser( ref_db )
     ver = None ## version, if exists
-    if os.path.exists ( db+"/version" ):
-        with open ( db+"/version","rt" ) as f:
+    if os.path.exists ( f"{db}/version" ):
+        with open ( f"{db}/version","rt" ) as f:
             ver = f.read().replace(".","").replace("v","")
             ver = ver.strip()
     ## list of analyses, with and without superseded

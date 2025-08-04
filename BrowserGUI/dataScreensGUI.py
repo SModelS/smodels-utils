@@ -221,10 +221,10 @@ class InfoScreen(BoxLayout):
         info_items = []
         for name,val in expRes.globalInfo.__dict__.items():            
             if 'http' in str(val):
-                iline = '[b] [size=17]'+str(name) + '[/size] [/b] : [ref='+str(val)+'] [color=ff9999] '
-                iline  += str(val) + '[/color] [/ref]'
+                iline = f"[b] [size=17]{name!s}[/size] [/b] : [ref={val!s}] [color=ff9999] "
+                iline  += f"{val!s}[/color] [/ref]"
             else:
-                iline = '[b] [size=17]'+str(name) + '[/size] [/b] : ' + str(val)
+                iline = f"[b] [size=17]{name!s}[/size] [/b] : {val!s}"
             info_items.append(iline)
         list_adapter = SimpleListAdapter(data=sorted(info_items),
                                      cls=myLabel, selection_mode='single')        
@@ -298,7 +298,7 @@ class DataInfoScreen(BoxLayout):
         #First block is dataset Info
         info_items = []
         for name,val in dataset.dataInfo.__dict__.items():
-            info_items.append('[b] [size=17]'+str(name) + '[/size] [/b] : ' + str(val))
+            info_items.append(f"[b] [size=17]{name!s}[/size] [/b] : {val!s}")
         list_adapter = SimpleListAdapter(data=sorted(info_items),
                                      cls=myLabel, selection_mode='single')        
         dataInfoList = ListView(adapter=list_adapter)
@@ -435,10 +435,10 @@ class TxnameScreen(BoxLayout):
                 if name.lower() == 'globalinfo': continue
                 if name[0] == '_': continue
                 if 'http' in str(val):
-                    iline = '[b] [size=17]'+str(name) + '[/size] [/b] : [ref='+str(val)+'] [color=ff9999] '
-                    iline  += str(val) + '[/color] [/ref]'
+                    iline = f"[b] [size=17]{name!s}[/size] [/b] : [ref={val!s}] [color=ff9999] "
+                    iline  += f"{val!s}[/color] [/ref]"
                 else:
-                    iline = '[b] [size=17]'+str(name) + '[/size] [/b] : ' + str(val)                
+                    iline = f"[b] [size=17]{name!s}[/size] [/b] : {val!s}"                
                 self.infoItems.append(iline)
             list_adapter = SimpleListAdapter(data=sorted(self.infoItems),
                                          cls=myLabel, selection_mode='single')        
@@ -448,8 +448,8 @@ class TxnameScreen(BoxLayout):
             txnameLabel = Label(text=f'{self.txname.txName} Info:', font_size = sp(20))
             txnameLabel.size_hint_y = 0.1
             
-            if os.path.isfile('./feyn/'+self.txname.txName+'_feyn.png'):
-                txImage = Image(source='./feyn/'+self.txname.txName+'_feyn.png')
+            if os.path.isfile(f"./feyn/{self.txname.txName}_feyn.png"):
+                txImage = Image(source=f"./feyn/{self.txname.txName}_feyn.png")
                 txImage.size_hint = (0.2,0.5)
                 with txImage.canvas.before:
                     Color(1.,1.,1.,1.)            
@@ -603,7 +603,7 @@ class ULgetter(FloatLayout):
         if  ul is False:
             self.resLabel.text = 'Error computing limit'
         else:
-            self.resLabel.text = "UL  = " + str(ul)
+            self.resLabel.text = f"UL  = {ul!s}"
         
     
 

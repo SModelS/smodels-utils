@@ -181,8 +181,8 @@ class BestCombinationFinder(object):
                 if best_comb == []: self.combiner_list.append(None)
                 else: self.combiner_list.append(TheoryPredictionsCombiner(best_comb))
             for comb in self.combiner_list:
-                if comb: print("\n %i : " %(self.combiner_list.index(comb)+1), comb.analysisId())
-                else: print("\n %i : " %(self.combiner_list.index(comb)+1), comb)
+                if comb: print(f"\n {int(self.combiner_list.index(comb) + 1)} : ", comb.analysisId())
+                else: print(f"\n {int(self.combiner_list.index(comb) + 1)} : ", comb)
             return self.combiner_list
         
         #return list of theory predictions for which the combination has max weight
@@ -232,7 +232,7 @@ class BestCombinationFinder(object):
                     return 0
                     
             else:
-                logger.error("sensitivity of best combination is lower than that of the combination ranked %i " %(comb_rvalues.index(max(comb_rvalues))+1))
+                logger.error(f"sensitivity of best combination is lower than that of the combination ranked {int(comb_rvalues.index(max(comb_rvalues)) + 1)} ")
                 return 0
         else:
             logger.error(f"sensitivity of best combination is lower than that of the most sensitive analysis: {bestResult}")

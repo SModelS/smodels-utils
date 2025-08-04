@@ -45,7 +45,7 @@ def getObjectNames(f,objType):
         if l.lstrip() and l.lstrip()[0] == '#':
             continue
         
-        if objType+'(' in l:            
+        if f"{objType}(" in l:            
             objName = l.split('=')[0].strip() #Store name of objType instance
             if objName:
                 objects.append(objName)        
@@ -82,9 +82,9 @@ def getObjectLines(f,objName,objType):
             break
         
         newl = l.replace(" ","")[:len(objName)+1] #Get beginning of line
-        if  objName+'=' == newl and start:  #Object name is being redefined. Stop it
+        if  f"{objName}=" == newl and start:  #Object name is being redefined. Stop it
             stop = True
-        elif objName+'.' == newl:
+        elif f"{objName}." == newl:
             objLines.append(l) # Line belongs to metablock
 
     return objLines
@@ -240,7 +240,7 @@ def getSources(planeLines):
     if units.count(None) != len(units) and units.count('None') != len(units):
         newSourceStr += f",units= {units}"
 
-    return newSourceStr+")"
+    return f"{newSourceStr})"
 
 
 def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
@@ -329,7 +329,7 @@ def main(f,fnew):
     #Get metainfo lines:
     metaData += "".join(getObjectLines(fold,infoName,'MetaInfoInput'))
     #Write meta info block
-    fnew.write(metaData+'\n\n')
+    fnew.write(f"{metaData}\n\n")
     
     #Collect datasets
     datasets = getDatasetIds(fold)    
@@ -345,7 +345,7 @@ def main(f,fnew):
             dataType = 'efficiencyMap'
         datasetStr = f"dataset = DataSetInput('{dataFolder}')\n" #Dataset folder name                
         datasetStr += f"dataset.setInfo(dataType = '{dataType}', dataId = {dataId})"
-        fnew.write(datasetStr+'\n\n')
+        fnew.write(f"{datasetStr}\n\n")
         
     if datasets != [None]:
         print ( f"efficiency map result not yet implemented ({f.replace('convert.py', '')})" )
@@ -418,12 +418,12 @@ def main(f,fnew):
                 fnew.write(f"{plane}.dataUrl = 'Not defined'\n")
             #Extract sources from file:
             sourceStr = plane+getSources(planeLines)
-            fnew.write(sourceStr+'\n')
+            fnew.write(f"{sourceStr}\n")
 
             #Add plane to off-shell txname, if off-shell lines
             #have been added
             if txOffLines and addedTxOff:          
-                fnew.write(f"{txname + 'off'}.addMassPlane({plane})\n")
+                fnew.write(f"{f"{txname}off"}.addMassPlane({plane})\n")
             
         fnew.write('\n')
             
@@ -460,7 +460,7 @@ if __name__ == "__main__":
     os.environ["SMODELS_NOUPDATE"] = 'True'
     timeOut = 150.
     
-    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[:]:               
+    for f in sorted(glob.glob(f"{databasePath}/*/*/*/convert.py"))[:]:               
         print ( "now checking",f )
         
         if '-eff' in f:
@@ -494,7 +494,7 @@ if __name__ == "__main__":
         #Execute file
         rdir = fnew.replace(os.path.basename(fnew),'')
         t0 = time.time()
-        run = Popen(fnew+f' -smodelsPath {home}/smodels -utilsPath {home}/smodels-utils',
+        run = Popen(f"{fnew} -smodelsPath {home}/smodels -utilsPath {home}/smodels-utils",
                     shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
         
         rstatus = None

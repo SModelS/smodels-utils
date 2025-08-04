@@ -85,7 +85,7 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
     file_js = "SModelS_ExclusionLines.json"
     import json
     plots = plot_dict
-    if os.path.exists(vDir+'/'+file_js):
+    if os.path.exists(f"{vDir}/{file_js}"):
         file = open(f'{vDir}/{file_js}','r')
         try:
             plots = json.load(file)
@@ -226,7 +226,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if "condition" in pt.keys() and pt['condition'] and pt['condition'] > 0.05:
             condV += 1
             if condV < 5:
-                logger.warning("Condition violated for file " + pt['slhafile'])
+                logger.warning(f"Condition violated for file {pt['slhafile']}")
             if condV == 5:
                 logger.warning("Condition violated for more points (not shown)")
         else:
@@ -276,7 +276,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 resultType = "combined"
         if not hasCombinedInfo:
             resultType = "efficiencyMap"
-    title = title + " ("+resultType+")"
+    title = f"{title} ({resultType})"
 
     plt.dontplot = False
     plt.clf()
@@ -463,7 +463,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if backend!="":
         plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure, 
                  fontsize=9 )
-    txStr = validationPlot.txName +': '+pName
+    txStr = f"{validationPlot.txName}: {pName}"
     plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )
     axStr = prettyAxes(validationPlot)
     axStr = axStr.replace("*","")

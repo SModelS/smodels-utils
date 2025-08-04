@@ -289,7 +289,7 @@ def logCall ():
     for i in sys.argv:
         if " " in i or "," in i:
             i = f'"{i}"'
-        line += i + " "
+        line += f"{i} "
     line = line.strip()
     lastline = ""
     if os.path.exists( logfile ):

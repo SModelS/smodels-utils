@@ -35,7 +35,7 @@ def statusOneValidation( directory : os.PathLike, D : Dict ) -> Tuple:
     jobid="          "
     if directory in D:
         jobid=f"({D[directory]})"
-    print ( f"{directory}{jobid}  {analysis+':'+txname:30s} {pre}{len(results)}/{len(slhas)}{post}" )
+    print ( f"{directory}{jobid}  {f"{analysis}:{txname}":30s} {pre}{len(results)}/{len(slhas)}{post}" )
     return len(results),len(slhas)
 
 def sort ( dirs : list ) -> list:

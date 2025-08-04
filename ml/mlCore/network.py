@@ -153,9 +153,9 @@ class DatabaseNetwork(nn.Module):
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
-		path = os.getcwd() + "/" + dbPath + "/models"
+		path = f"{os.getcwd()}/{dbPath}/models"
 		Path(path).mkdir(parents=True, exist_ok=True)
-		path += "/" + str(txNameData) + ".pth"
+		path += f"/{txNameData!s}.pth"
 
 		torch.save(self, path)
 		logger.info(f"model saved at '{path}'")
@@ -168,7 +168,7 @@ class DatabaseNetwork(nn.Module):
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
-		path = os.getcwd() + "/" + dbPath + "/models/" + str(txNameData) + ".pth"
+		path = f"{os.getcwd()}/{dbPath}/models/{txNameData!s}.pth"
 
 		try:
 			model = torch.load(path)

@@ -38,7 +38,7 @@ class Validator:
 
     def write ( self, line : str ):
         print ( line )
-        self.f.write ( line + "\n" )
+        self.f.write ( f"{line}\n" )
 
     def writeSingleTopo ( self, topo, ana, anaType ):
         # print ( "ana", ana, "topo", topo, "type", anaType )

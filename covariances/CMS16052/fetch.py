@@ -13,7 +13,7 @@ for dir in dirs:
     ars = glob.glob ( f"{path}/sr*" )
     nr = len ( ars ) 
     f=open("__init__.py","w")
-    f.write ( "nSRs=%d\n" % nr )
+    f.write ( f"nSRs={int(nr)}\n" )
     f.close()
     commands.getoutput ( f"cp {path}/sms.root ." )
     files = glob.glob ( f"{path}/validation/T*py" )

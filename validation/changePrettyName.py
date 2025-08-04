@@ -65,7 +65,7 @@ def changeInFile ( prettyName : str, filename : PathLike ):
         newline = f"{line[:p1+1]} '{prettyName}'"
         if isGlobalInfo:
             newline = f"{line[:p1+1]} {prettyName}"
-        g.write ( newline+"\n" )
+        g.write ( f"{newline}\n" )
     g.close()
 
 def commandline():

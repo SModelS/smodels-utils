@@ -170,7 +170,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,
             else:
                 x,y = pt['axes']
             if pt['condition'] and max(pt['condition'].values())> 0.05:
-                logger.warning("Condition violated for file " + pt['slhafile'])
+                logger.warning(f"Condition violated for file {pt['slhafile']}")
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
             elif signal_factor * pt['signal'] > pt['UL']:
                 if signal_factor * pt['signal'] < pt ['UL']* looseness:

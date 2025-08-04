@@ -58,17 +58,17 @@ def prettyPrint ( myset : set ):
     for tseq in seqs:
         dt = tseq[1]-tseq[0]
         if dt == 0:
-            ret += "%d," % tseq[0]
+            ret += f"{int(tseq[0])},"
         elif dt == 1:
-            ret += "%d,%d,"% ( tseq[0], tseq[1] )
+            ret += f"{int(tseq[0])},{int(tseq[1])},"
         else:
-            ret += "%d-%d," % ( tseq[0], tseq[1] )
+            ret += f"{int(tseq[0])}-{int(tseq[1])},"
     if len(ret)>1:
         ret = ret[:-1]
     if len(ret)==0:
         ret="none"
     if len(ret)>150:
-        ret=ret[:147]+"..."
+        ret=f"{ret[:147]}..."
     return ret
 
 def walker_stats():

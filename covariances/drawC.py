@@ -23,21 +23,21 @@ def addLine ( ax, X, c, legend, style='-', ul=False ):
         ax.add_line(lm)
 
 def checkN ( n ):
-    fname="results%d" % n
-    files = glob.glob(fname+"_*.py")
+    fname=f"results{int(n)}"
+    files = glob.glob(f"{fname}_*.py")
     lines=[]
     for fil in files:
         f = open ( fil, "r" )
         for L in f.readlines():
             lines.append ( L )
         f.close()
-    g=open(fname+"tmp.py","w")
+    g=open(f"{fname}tmp.py","w")
     g.write ( "d=[" )
     for line in lines:
         g.write ( line )
     g.write("]\n" )
     g.close()
-    return fname+"tmp"
+    return f"{fname}tmp"
 
 def run ( n, selected, denominator, plot ):
     """ run for results<n>.py, drawing <selected> algos. """

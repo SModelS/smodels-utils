@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # Set the path to the database
     database = Database('official')
 
-    for i,fin in enumerate(glob.glob(slhaFolder+'*')):
+    for i,fin in enumerate(glob.glob(f"{slhaFolder}*")):
         print(f'Processing {i}/18557')
 
         model = Model(BSMparticles=BSMList, SMparticles=SMList)
@@ -103,4 +103,4 @@ if __name__ == '__main__':
                 outputDictTopo[topo] = [os.path.basename(fin)]
 
         with open(outputFile,'w') as fout:
-            fout.write('outputDictAna = ' + str(outputDictAna) + '\noutputDictTopo = ' + str(outputDictTopo))
+            fout.write(f"outputDictAna = {outputDictAna!s}\noutputDictTopo = {outputDictTopo!s}")

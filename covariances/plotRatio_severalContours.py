@@ -318,7 +318,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
             print ( "pt", x[i], y[i], yx[i] )
 
     if err_msgs > 0:
-        print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( content2["data"] ) ) )
+        print ( f"[plotRatio] couldnt find data for {int(err_msgs)}/{len(content2['data'])} points" )
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
@@ -434,7 +434,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         el2 = getExclusionLine ( smodels_line )
     print ( f"[plotRatio] Found SModelS exclusion line with {len(el2)} points." )
     a1, a2 = options["label1"], options["label2"]
-    label="SModelS exclusion " + a1
+    label=f"SModelS exclusion {a1}"
     for E in el2:
         hasLegend = True
         plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=3, label="" )
@@ -452,7 +452,7 @@ def draw ( dbpath, analysis1, valfile1, analysis2, valfile2, options ):
         smodels_line = getSModelSExclusion ( smodels_root )
         el3 = getExclusionLine ( smodels_line )
     print ( f"[plotRatio] Found SModelS exclusion line with {len(el3)} points." )
-    label="SModelS exclusion " + a2
+    label=f"SModelS exclusion {a2}"
     for E in el3:
         hasLegend = True
         plt.plot ( E["x"], E["y"], color='white', linestyle='-', linewidth=3, label="" )
@@ -517,7 +517,7 @@ def writeMDPage( copy ):
         t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
             src = f"https://smodels.github.io/ratioplots/{i}"
-            f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
+            f.write ( f'| <img src="{src}?{int(t0)}" /> ' )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
         if ctr % 2 == 0:

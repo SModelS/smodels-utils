@@ -331,7 +331,7 @@ def runSingleFile(inputFile, outputDir, databaseVersion, listOfExpRes, timeout, 
                 res[fname] = mprinter.flush()
             return res
     except Exception as e:
-        print("\n\n\n ****** Computation failed for",inputFile," because:",e+'\n\n\n')
+        print("\n\n\n ****** Computation failed for",inputFile," because:",f"{e}\n\n\n")
         # crashReportFacility = crashReport.CrashReport()
         #
         # if development:
@@ -364,7 +364,7 @@ def main(slhaFolder,nb_cpu_to_use,output):
     else: print("\n***** RUNNING WITH SR COMBINATION *****\n")
 
     alreadyDone = []
-    for file in glob.glob(outputDir+'/*.py'):
+    for file in glob.glob(f"{outputDir}/*.py"):
         alreadyDone.append(os.path.basename(file).replace('.py',''))
 
     fileList = [file for file in os.listdir(slhaFolder) if file not in alreadyDone]
@@ -400,7 +400,7 @@ def main(slhaFolder,nb_cpu_to_use,output):
         if fracDone >= iprint:
             while fracDone >= iprint:
                 iprint += nprint
-            logger.info('%i%% of processes done in %1.2f min' %(iprint-nprint, (time.time()-t0)/60.))
+            logger.info(f'{int(iprint - nprint)}% of processes done in {(time.time() - t0) / 60.0:1.2f} min')
         if done == len(children):
             break
         time.sleep(2)

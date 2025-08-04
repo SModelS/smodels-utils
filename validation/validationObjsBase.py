@@ -148,14 +148,14 @@ class ValidationObjsBase():
         if fformat.startswith("."):
             fformat = fformat[1:]
 
-        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
+        filename = f"{self.expRes.globalInfo.id}_{self.txName}_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","").\
                     replace("/","d")
         if self.combine:
             filename += '_combined'
-        filename += '.'+fformat
+        filename += f".{fformat}"
 
-        filename = filename.replace(self.expRes.globalInfo.id+"_","")
+        filename = filename.replace(f"{self.expRes.globalInfo.id}_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
         return filename
@@ -182,7 +182,7 @@ class ValidationObjsBase():
                     if "/" in tdir or "." in tdir:
                         logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
                     tempdir = os.path.join ( os.getcwd(), tdir )
-                    nfiles = len(glob.glob(tempdir+'/T*slha')) + 2
+                    nfiles = len(glob.glob(f"{tempdir}/T*slha")) + 2
                 else:
                     tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 p1 = tempdir.rfind("/")
@@ -277,11 +277,11 @@ class ValidationObjsBase():
         if self.pretty:
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
-            filename = filename.replace('.'+fformat,'_pretty.'+fformat)
+            filename = filename.replace(f".{fformat}",f"_pretty.{fformat}")
             logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
-            newfilename = filename.replace('.'+fformat,'.pdf')
+            newfilename = filename.replace(f".{fformat}",'.pdf')
             if self.options["pdfPlots"]:
                cmd = f"convert {filename} {newfilename}"
                import subprocess
@@ -289,7 +289,7 @@ class ValidationObjsBase():
         else:
             self.savefig(filename)
             if fformat != "png":
-                filename = filename.replace('.'+fformat,'.png')
+                filename = filename.replace(f".{fformat}",'.png')
                 try:
                     self.savefig(filename)
                 except Exception as e:
@@ -510,7 +510,7 @@ class ValidationObjsBase():
                 Dict["decomposition status"]=smodelsOutput["OutputStatus"]["decomposition status"]
             if "warnings" in smodelsOutput["OutputStatus"]:
                 warning = smodelsOutput["OutputStatus"]["warnings"]
-                warning = warning.replace( folder+"/", "" ).replace ( folder, "" )
+                warning = warning.replace( f"{folder}/", "" ).replace ( folder, "" )
                 Dict["warnings"] = warning
         self.data.append ( Dict )
 
@@ -801,13 +801,13 @@ class ValidationObjsBase():
         if not datafile:
             datafile = self.getDataFile(validationDir)
         self.datafile = datafile
-        lockfile = datafile + ".lock"
+        lockfile = f"{datafile}.lock"
         self.lockFile ( lockfile )
         self.pprint ( f"saving {len(self.data)} points to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
         dataStr = streamlineValidationData ( self.data )
-        f.write("validationData = "+dataStr+"\n")
+        f.write(f"validationData = {dataStr}\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
         nerr = 0
@@ -1058,4 +1058,4 @@ class ValidationObjsBase():
         datafile = datafile.rstrip(fformat)
         if not datafile.endswith ( "." ):
             datafile += "."
-        return datafile+'py'
+        return f"{datafile}py"

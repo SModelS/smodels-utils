@@ -290,7 +290,7 @@ class SLParams(object):
                 if mu == 0:
                     self.llnosig = (minres, llopt) #< mu=0 caching
             if not minres.success:
-                print("mu = "+f"{mu:6.2f}"+", fit success = "+str(minres.success))
+                print(f"mu = {mu:6.2f}, fit success = {minres.success!s}")
         print ( f"log(lmax)({mu}) = {llopt}, x={minres.x}" )
         if rtnparams:
             return llopt, minres.x

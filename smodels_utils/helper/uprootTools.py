@@ -31,9 +31,9 @@ def getExclusionLine ( dirname, topo, axes = "[[x, y], [x, y]]",
         pm = "P1"
     if pm in [ "m", "m1", "-" ]:
         pm = "M1"
-    exclname = "obsExclusion"+pm
+    exclname = f"obsExclusion{pm}"
     if expected:
-        exclname = "expExclusion"+pm
+        exclname = f"expExclusion{pm}"
     K = f"{topo}/{exclname}_{axes};1" ## for now we hardcode this
     if not K in F:
         if verbose:
@@ -47,6 +47,6 @@ def getExclusionLine ( dirname, topo, axes = "[[x, y], [x, y]]",
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
     dbpath = "~/git/smodels-database/"
-    dirname = dbpath + "13TeV/ATLAS/ATLAS-SUSY-2018-04/"
+    dirname = f"{dbpath}13TeV/ATLAS/ATLAS-SUSY-2018-04/"
     el = getExclusionLine ( dirname, "TStauStau" )
     print ( "Exclusion line", el["x"][:3], el["y"][:3] )

@@ -557,7 +557,7 @@ def latexfy(instr : str ) -> str:
     :return: String converted to its latex form (if possible)
     """
 
-    outstr = ' '+instr[:]
+    outstr = f" {instr[:]}"
     for key,rep in highstrings.items():
         if key in outstr:
             outstr = outstr.replace(key,rep)
@@ -568,10 +568,10 @@ def latexfy(instr : str ) -> str:
     #(e.g. stau -> #tilde{#tau} happens before tau -> #tilde{#tau}
     for key,rep in sorted(prettyParticle.items(),
                           key=lambda pair: len(pair[0]), reverse=True):
-        if ' '+key in outstr:
-            outstr = outstr.replace(' '+key,' '+rep)
-        if '/'+key in outstr:
-            outstr = outstr.replace('/'+key,'/'+rep)
+        if f" {key}" in outstr:
+            outstr = outstr.replace(f" {key}",f" {rep}")
+        if f"/{key}" in outstr:
+            outstr = outstr.replace(f"/{key}",f"/{rep}")
     outstr = outstr.replace('-->','#rightarrow')
     outstr = outstr.lstrip().rstrip()
     return outstr
@@ -676,7 +676,7 @@ def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> 
     """
 
     if protons:
-        prodString = "pp --> "+prodString
+        prodString = f"pp --> {prodString}"
     if latex:
         prodString = latexfy(prodString)
     return prodString.lstrip().rstrip()
@@ -767,7 +767,7 @@ def prettyTxname(txname : str, protons : bool =True,
         decayString = decayString.replace ( "H0", "H^0" )
 
     if prodString and decayString:
-        return prodString + ", " + decayString
+        return f"{prodString}, {decayString}"
     else:
         return None
 
@@ -871,9 +871,9 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("final state","")
     if dropEtmiss:
         for etm in [ "ETmiss", "Etmiss", "MET" ]:
-            pn = pn.replace(" + "+etm,"")
-            pn = pn.replace("+ "+etm,"")
-            pn = pn.replace("+"+etm,"")
+            pn = pn.replace(f" + {etm}","")
+            pn = pn.replace(f"+ {etm}","")
+            pn = pn.replace(f"+{etm}","")
             pn = pn.replace(etm,"")
     pn = pn.replace("ETmiss",r"$\not{\!\!E}_T$")
     pn = pn.replace("Etmiss",r"$\not{\!\!E}_T$")
@@ -902,9 +902,9 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
             sqrts = sqrts.asNumber(TeV)
         except Exception as e:
             pass
-        pn += ", %d TeV" % sqrts
+        pn += f", {int(sqrts)} TeV"
     if collaboration != None:
-        pn = collaboration + " " + pn
+        pn = f"{collaboration} {pn}"
     return pn
 
 def getParticleNames ( smsstring : str ) -> Dict:
@@ -1033,7 +1033,7 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
         terms.append ( term )
     ret = ""
     for ctr,t in enumerate ( terms ):
-        ret += t + ", "
+        ret += f"{t}, "
         #if ctr == 1 and len(terms)>2: ## newline after second?
         #    ret += r"\\"
     if len(ret)>0:
@@ -1110,17 +1110,17 @@ def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
     #Get mother particles:
     motherList = list(set(getMothers(txname)))
     #Convert to latex for mass:
-    motherList = ['m_{'+latexfy(mother)+'}' for mother in motherList]
+    motherList = [f"m_{{{latexfy(mother)}}}" for mother in motherList]
     motherStr = str(motherList).replace(']','').replace('[','')
     #Get intermediate particles:
     interList = list(set(getIntermediates(txname)))
     #Convert to latex for mass:
-    interList = ['m_{'+latexfy(inter)+'}' for inter in interList]
+    interList = [f"m_{{{latexfy(inter)}}}" for inter in interList]
     interStr = str(interList).replace(']','').replace('[','')
     #Daugther particles are always trivial:
     daughterList = list(set(getDaughters(txname)))
     #Convert to latex for mass:
-    daughterList = ['m_{'+latexfy(daughter)+'}' for daughter in daughterList]
+    daughterList = [f"m_{{{latexfy(daughter)}}}" for daughter in daughterList]
     daughterStr = str(daughterList).replace(']','').replace('[','')
 
     #Define mass strings for each axes format:
@@ -1147,7 +1147,7 @@ def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
 
     for i,eq in enumerate(ax):
         eq = roundme(eq )
-        axStr = massStrings[i].strip()+'='+str(eq)
+        axStr = f"{massStrings[i].strip()}={eq!s}"
         niceAxes.append(axStr.replace("'",""))
 
     return rootToLatex ( niceAxes, outputtype )

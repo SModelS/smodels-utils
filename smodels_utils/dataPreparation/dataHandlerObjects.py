@@ -1197,7 +1197,7 @@ class DataHandler(object):
                     else:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+                            logger.warning ( f"Very large map (nbins in z is {int(n_bins)}), but trimming turned off." )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
@@ -1211,7 +1211,7 @@ class DataHandler(object):
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
-                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+                        logger.warning ( f"Very large map (nbins in y is {int(n_bins)}), but trimming turned off." )
         if n_bins > max_nbins:
             if allowTrimming:
                 xRange = range(0,len(xAxis), trimmingFactor[0] )
@@ -1224,7 +1224,7 @@ class DataHandler(object):
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                    logger.warning ( f"Very large map (nbins in x is {int(n_bins)}), but trimming turned off." )
 
         if False: # total_points > n_bins:
             logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
@@ -1303,7 +1303,7 @@ class DataHandler(object):
                     else:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+                            logger.warning ( f"Very large map (nbins in z is {int(n_bins)}), but trimming turned off." )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
@@ -1317,7 +1317,7 @@ class DataHandler(object):
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
-                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+                        logger.warning ( f"Very large map (nbins in y is {int(n_bins)}), but trimming turned off." )
         if n_bins > max_nbins:
             if allowTrimming:
                 xRange = range(0,len(xAxis),  trimmingFactor[0] )
@@ -1330,7 +1330,7 @@ class DataHandler(object):
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                    logger.warning ( f"Very large map (nbins in x is {int(n_bins)}), but trimming turned off." )
 
         if False: # total_points > n_bins:
             logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
@@ -1405,7 +1405,7 @@ class DataHandler(object):
                     else:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+                            logger.warning ( f"Very large map (nbins in z is {int(n_bins)}), but trimming turned off." )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
@@ -1418,7 +1418,7 @@ class DataHandler(object):
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
-                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+                        logger.warning ( f"Very large map (nbins in y is {int(n_bins)}), but trimming turned off." )
         if n_bins > max_nbins:
             if allowTrimming:
                 xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor[0] )
@@ -1431,7 +1431,7 @@ class DataHandler(object):
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                    logger.warning ( f"Very large map (nbins in x is {int(n_bins)}), but trimming turned off." )
 
         if False: # total_points > n_bins:
             logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
@@ -1500,7 +1500,7 @@ class DataHandler(object):
         if type(self.index) in [ tuple, list ]: ## for aggregation!
             ys = []
             for i in self.index:
-                idfier = tree.file.file_path + ":" + tree.name + ":" + i
+                idfier = f"{tree.file.file_path}:{tree.name}:{i}"
                 if not idfier in pointsCache:
                     self._cacheUpRootTreePoints ( tree )
                 for y in pointsCache[idfier]:
@@ -1520,7 +1520,7 @@ class DataHandler(object):
             ys = []
             # tot = sum ( self.index.values() )
             for i,w in self.index.items():
-                idfier = tree.file.file_path + ":" + tree.name + ":" + i
+                idfier = f"{tree.file.file_path}:{tree.name}:{i}"
                 if not idfier in pointsCache:
                     self._cacheUpRootTreePoints ( tree )
                 for y in pointsCache[idfier]:
@@ -1538,7 +1538,7 @@ class DataHandler(object):
                 yield t
             return
 
-        idfier = tree.file.file_path + ":" + tree.name + ":" + self.index
+        idfier = f"{tree.file.file_path}:{tree.name}:{self.index}"
         if not idfier in pointsCache:
             self._cacheUpRootTreePoints ( tree )
         for y in pointsCache[idfier]:
@@ -1573,7 +1573,7 @@ class DataHandler(object):
 #                continue
             eff = float(effs[i])
             x = float(branches[ xvar ][i])
-            tidfier = tree.file.file_path + ":" + tree.name + ":" + branches["SearchBin"][i]
+            tidfier = f"{tree.file.file_path}:{tree.name}:{branches['SearchBin'][i]}"
             if not tidfier in pointsCache:
                 pointsCache[tidfier] = []
             if self.dimensions == 1:

@@ -43,9 +43,9 @@ def removeForPid ( fl, pid, sqrts, pid2 ):
     if pid2 != 0:
         spid2 = f" {str(pid2)}"
     for line in lines:
-        p1 = line.find ( " "+str(pid) )
+        p1 = line.find ( f" {pid!s}" )
         p2 = line.find ( spid2 )
-        if "XSECTION" in line and " "+str(pid) in line and getSqrtsString ( sqrts ) in line and spid2 in line and p2 != p1:
+        if "XSECTION" in line and f" {pid!s}" in line and getSqrtsString ( sqrts ) in line and spid2 in line and p2 != p1:
             isInXsec = True
             continue
         if isInXsec == True:

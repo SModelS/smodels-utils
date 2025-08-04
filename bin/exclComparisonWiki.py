@@ -62,7 +62,7 @@ a [ListOfAnalyses{self.ver}WithSuperseded](https://smodels.github.io/docs/ListOf
             lengths.append ( len(header)+4 )
         self.f.write ( "|\n" )
         for l in lengths:
-            self.f.write ( "| "+"-"*l+ " " )
+            self.f.write ( f"| {'-' * l} " )
         self.f.write ( "|\n" )
 
     def oneTable ( self, obsfiles ):

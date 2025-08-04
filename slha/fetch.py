@@ -29,7 +29,7 @@ def fetch ( which ):
         if w[0] != "T":
             usage()
         if w[-4:]!=".tar":
-            which[ctr]=w+".tar"
+            which[ctr]=f"{w}.tar"
 
     for w in which:
         print ( f"Trying to fetch {w} ... ", end="" )

@@ -17,7 +17,7 @@ f=open(f"log{version()}","w")
 dir = "../../smodels-database/"
 
 def write ( line ):
-    f.write ( line + "\n" )
+    f.write ( f"{line}\n" )
     print ( line )
 
 write ( f"version: {version()}" )

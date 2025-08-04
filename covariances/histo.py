@@ -57,7 +57,7 @@ def main():
                 continue
 
             for i in range(20):
-                nr=d["n%d" % i ]
+                nr=d[f"n{int(i)}" ]
                 points = 2**(-i)
                 add(nr,points)
         except EOFError as e:
@@ -66,7 +66,7 @@ def main():
     if len ( skipped ):
         print ( f"skipped: {skipped}" )
     tot_points = sum ( histo.values() )
-    print ( "read %d lines. %d points total. topo: %s" % ( ctr, tot_points, onlyTopo) )
+    print ( f"read {int(ctr)} lines. {int(tot_points)} points total. topo: {onlyTopo}" )
 
     almostnever,never = [],[]
     occurs = {}
@@ -89,7 +89,7 @@ def main():
         if len(v) == 1:
             SRs = f"{v[0]}"
         if ctr<3:
-            print ( "%d points: %s" % ( k, SRs ) )
+            print ( f"{int(k)} points: {SRs}" )
 
     agg=[]
 

@@ -1,7 +1,7 @@
 def singlevalue ( fraction ):
     r=int(255.*( fraction ))
     s=hex(r)[2:]
-    s="0"+s
+    s=f"0{s}"
     s=s[-2:]
     return s
     ## return "%2s" % ( hex(r)[2:] ) ## , hex(b)[2:] )

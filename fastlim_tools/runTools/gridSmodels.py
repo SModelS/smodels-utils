@@ -59,9 +59,9 @@ def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
         if doXsecs:
             prepareSLHA(slhafile,slhafile)
             subprocess.call([os.path.join(home,'smodels','runTools.py'), 
-                                    'xseccomputer', '-s 8', '-e 10000', '-p', '-f '+slhafile],)
+                                    'xseccomputer', '-s 8', '-e 10000', '-p', f"-f {slhafile}"],)
             subprocess.call([os.path.join(home,'smodels','runTools.py'), 
-                                    'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', '-f '+slhafile],)
+                                    'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', f"-f {slhafile}"],)
     
     
         sigmacut = 0.0000001 * fb

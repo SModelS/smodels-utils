@@ -80,8 +80,8 @@ def checkPlotsFor(txname,update):
     missingPlots = []
     for axe in axes:
         ax = getNiceAxes(axe)
-        plotfile = txname.txName+"_"+ax+".png"
-        valplot = os.path.join(txname.path,'../../validation/'+plotfile)
+        plotfile = f"{txname.txName}_{ax}.png"
+        valplot = os.path.join(txname.path,f"../../validation/{plotfile}")
         valplot = os.path.abspath(valplot)
         if not os.path.isfile(valplot):
             missingPlots.append(valplot)
@@ -98,15 +98,15 @@ def checkPlotsFor(txname,update):
     plots = []
     for fig in valPlots:
         try:
-            plots.append(subprocess.Popen('eog -n '+fig,shell=True, preexec_fn=os.setsid,
+            plots.append(subprocess.Popen(f"eog -n {fig}",shell=True, preexec_fn=os.setsid,
                                           stdout=subprocess.PIPE))
         except:
             plots.append(subprocess.Popen(['open',fig]))
-    cfile = os.path.join(os.path.dirname(txname.path),"../validation/"+txname.txName+".comment")
+    cfile = os.path.join(os.path.dirname(txname.path),f"../validation/{txname.txName}.comment")
     if os.path.isfile(cfile):
         logger.info('\033[96m  == Txname Comment file found: == \033[0m')
         cf = open(cfile,'r')
-        print("\033[96m"+cf.read()+"\033[0m")
+        print(f"\x1b[96m{cf.read()}\x1b[0m")
         cf.close()
 
 
@@ -197,7 +197,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         if os.path.isfile(cfile):
             logger.info('\033[96m  == General Comment file found: == \033[0m')
             cf = open(cfile,'r')
-            print("\033[96m"+cf.read()+"\033[0m")
+            print(f"\x1b[96m{cf.read()}\x1b[0m")
             cf.close()
 
         for txname in txnameList:
@@ -225,7 +225,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 tdata = ""
                 for l in tf.readlines():
                     if 'validated:' in l:
-                        l = 'validated: '+str(validationResult)+'\n'
+                        l = f"validated: {validationResult!s}\n"
                     tdata += l
                 tf.close()
                 tf = open(txfile,'w')

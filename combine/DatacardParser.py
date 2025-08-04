@@ -403,10 +403,10 @@ def parseCard(file, options):
                 if nbins == -1:
                     nbins = len(ret.obs)
                 if len(ret.obs) != nbins:
-                    raise RuntimeError("Found %d observations but %d bins have been declared" % (len(ret.obs), nbins))
+                    raise RuntimeError(f"Found {len(ret.obs)} observations but {int(nbins)} bins have been declared")
                 if binline != []:
                     if len(binline) != len(ret.obs):
-                        raise RuntimeError("Found %d bins (%s) but %d bins have been declared" % (len(ret.bins), ret.bins, nbins))
+                        raise RuntimeError(f"Found {len(ret.bins)} bins ({ret.bins}) but {int(nbins)} bins have been declared")
                     ret.bins = binline
                     ret.obs = dict([(b, ret.obs[i]) for i, b in enumerate(ret.bins)])
                     binline = []
@@ -446,9 +446,9 @@ def parseCard(file, options):
                     nbins = len(ret.bins)
                 if not options.noJMax:
                     if nprocesses != len(ret.processes):
-                        raise RuntimeError("Found %d processes (%s), declared jmax = %d" % (len(ret.processes), ret.processes, nprocesses))
+                        raise RuntimeError(f"Found {len(ret.processes)} processes ({ret.processes}), declared jmax = {int(nprocesses)}")
                 if nbins != len(ret.bins):
-                    raise RuntimeError("Found %d bins (%s), declared imax = %d" % (len(ret.bins), ret.bins, nbins))
+                    raise RuntimeError(f"Found {len(ret.bins)} bins ({ret.bins}), declared imax = {int(nbins)}")
                 ret.exp = dict([(b, {}) for b in ret.bins])
                 ret.isSignal = dict([(p, None) for p in ret.processes])
                 if ret.obs != [] and type(ret.obs) == list:  # still as list, must change into map with bin names
@@ -507,7 +507,7 @@ def parseCard(file, options):
                     nuisances -= 1
                 continue
             if re.match("[0-9]+", lsyst):
-                lsyst = "theta" + lsyst
+                lsyst = f"theta{lsyst}"
             if pdf == "lnN" or pdf == "lnU" or pdf == "gmM" or pdf == "trG" or pdf.startswith("shape"):
                 pass  # nothing special to do
             elif pdf == "gmN":
@@ -661,11 +661,11 @@ def parseCard(file, options):
         if lineNumber != None:
             if lineNumber2 != None:
                 lineNumber += lineNumber2 + 1  # lineNumber2 also started at 0
-            msg = "Error reading line %d" % (lineNumber + 1)
+            msg = f"Error reading line {int(lineNumber + 1)}"
             if hasattr(file, "name"):
-                msg += " of file " + file.name
+                msg += f" of file {file.name}"
 
-            msg += ": " + ex.args[0]
+            msg += f": {ex.args[0]}"
             ex.args = (msg,) + ex.args[1:]
 
         raise
@@ -707,7 +707,7 @@ def parseCard(file, options):
     if nuisances == -1:
         nuisances = len(ret.systs)
     elif len(ret.systs) != nuisances:
-        raise RuntimeError("Found %d systematics, expected %d" % (len(ret.systs), nuisances))
+        raise RuntimeError(f"Found {len(ret.systs)} systematics, expected {int(nuisances)}")
     # set boolean to know about shape
     ret.hasShapes = len(ret.shapeMap) > 0
     # return result
@@ -722,5 +722,5 @@ def FloatToStringScientific(inputValue, etype="g"):
     s = FloatToString(inputValue)
     q = s.replace(".", "").lstrip("0")
     nq = max(len(q) - 1, 4)
-    strcmd = "%%%c%i%c" % (".", nq, etype)
+    strcmd = f"%{'.':c}{int(nq)}{etype:c}"
     return strcmd % inputValue

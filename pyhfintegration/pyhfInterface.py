@@ -77,10 +77,10 @@ class PyhfData:
                 return
             for i_ch, ch in enumerate(ws['channels']):
                 if 'SR' in ch['name']:
-                    wsChannelsInfo['signalRegions'].append({'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
+                    wsChannelsInfo['signalRegions'].append({'path':f"/channels/{i_ch!s}/samples/0", # Path of the new sample to add (signal prediction)
                                                             'size':len(ch['samples'][0]['data'])}) # Number of bins
                 if 'VR' in ch['name'] or 'CR' in ch['name']:
-                    wsChannelsInfo['otherRegions'].append('/channels/'+str(i_ch))
+                    wsChannelsInfo['otherRegions'].append(f"/channels/{i_ch!s}")
             wsChannelsInfo['otherRegions'].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
             self.channelsInfo.append(wsChannelsInfo)
 
@@ -237,7 +237,7 @@ class PyhfUpperLimitComputer:
             workspace = self.workspaces[0]
         elif workspace_index != None:
             if self.zeroSignalsFlag[workspace_index] == True:
-                logger.warning("Workspace number %d has zero signals" % workspace_index)
+                logger.warning(f"Workspace number {int(workspace_index)} has zero signals")
                 return None
             else:
                 workspace = self.workspaces[workspace_index]
@@ -299,7 +299,7 @@ class PyhfUpperLimitComputer:
                 logger.error("There are several workspaces but no workspace index was provided")
                 return None
             elif self.zeroSignalsFlag[workspace_index] == True:
-                logger.debug("Workspace number %d has zero signals" % workspace_index)
+                logger.debug(f"Workspace number {int(workspace_index)} has zero signals")
                 return None
         def updateWorkspace():
             if self.nWS == 1:

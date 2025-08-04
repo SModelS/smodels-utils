@@ -165,7 +165,7 @@ class Lister:
         if self.includeFastlim:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{self.dotlessv}) and a [validation page](Validation{self.dotlessv}).\n" )
-        self.f.write ( referToOther + ".\n" )
+        self.f.write ( f"{referToOther}.\n" )
         sigsplot = self.significancesPlotFileName()
         self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.</sub></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
@@ -306,7 +306,7 @@ class Lister:
             lengths.append ( len(i)+6 ) # ideal for direct viewing
         self.f.write ( "|\n" )
         for l in lengths:
-            self.f.write ( "|" +"-"*l )
+            self.f.write ( f"|{'-' * l}" )
         self.f.write ( "|\n" )
 
     def getLabel ( self, ana_name ):
@@ -491,7 +491,7 @@ class Lister:
         print ( f"[listOfAnalyses] Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
         f.write ( f"# superseded: {self.includeSuperseded}\n" )
-        f.write ( "A=" + str ( self.stats )+"\n" )
+        f.write ( f"A={self.stats!s}\n" )
         f.close()
 
     def selectAnalyses ( self, sqrts, experiment, Type ):

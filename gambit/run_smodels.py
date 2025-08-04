@@ -59,7 +59,7 @@ def run_smodels ( slha : Text ) -> Dict:
 
     ## from these results, lets create a dictionary for gambit
     for theoryPrediction in allPredictions:
-        tpId = theoryPrediction.analysisId()+":"+theoryPrediction.dataType ( short=True )
+        tpId = f"{theoryPrediction.analysisId()}:{theoryPrediction.dataType(short=True)}"
         robs = theoryPrediction.getRValue()
         rexp = theoryPrediction.getRValue( expected = True )
         tp_dict = { "robs": robs, "rexp": rexp }

@@ -343,7 +343,7 @@ def doMergeNuisance(datacard, args):
                             foundProc = True
                             doAddNuisance(
                                 datacard,
-                                [p + "$", b + "$", name1, pdf2, errline2[b][p], "addq"],
+                                [f"{p}$", f"{b}$", name1, pdf2, errline2[b][p], "addq"],
                             )
                             errline2[b][p] = 0
 
@@ -386,7 +386,7 @@ def doSplitNuisance(datacard, args):
 def doFreezeNuisance(datacard, args):
     if len(args) < 1 or len(args) > 2:
         raise RuntimeError("Missing arguments: the syntax is: nuisance edit freeze name [ifexists] (name can be a pattern)")
-    pat = re.compile("^" + args[0] + "$")
+    pat = re.compile(f"^{args[0]}$")
     opts = args[1:]
     found = []
 

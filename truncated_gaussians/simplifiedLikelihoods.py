@@ -136,7 +136,7 @@ class Data:
         return array(obj)
 
     def __str__(self):
-        return self.name + " (%d dims)" % self.n
+        return f"{self.name} ({int(self.n)} dims)"
 
     def _convertCov(self, obj):
 
@@ -275,7 +275,7 @@ class LikelihoodComputer:
                 #    logger.debug("zero denominator, but numerator also zero, so we set denom to 1.")
                     denominator[ctr]=1.
                 else:
-                    raise Exception("we have a zero value in the denominator at pos %d, with a non-zero numerator. dont know how to handle." % ctr)
+                    raise Exception(f"we have a zero value in the denominator at pos {int(ctr)}, with a non-zero numerator. dont know how to handle.")
         ret = self.model.observed*signal_rel/denominator - signal_rel
 
         if type(ret) in [ array, ndarray, list ]:
@@ -816,7 +816,7 @@ class UpperLimitComputer:
         """
         #print ( "aModeldata=", aModel.observed )
         #aModel.observed = array ( [ round(x) for x in model.backgrounds ] )
-        aModel.name = aModel.name + "A"
+        aModel.name = f"{aModel.name}A"
         compA = LikelihoodComputer(aModel, toys)
         ## compute
         mu_hatA = compA.findMuHat(aModel.signal_rel)

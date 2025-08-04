@@ -76,12 +76,12 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     db.subs[0]._activeResults = filtered[:]    
     db.subs[0]._allExpResults = filtered
     if invert:
-        db.subs[0].txt_meta.databaseVersion = "fastlim" + dbverold
+        db.subs[0].txt_meta.databaseVersion = f"fastlim{dbverold}"
     db.subs = [ db.subs[0] ]
     print ( f"[databaseManipulations] after {removalOrSelection(invert)} of fastlim {len(db.expResultList)} results" )
     if not invert:
         db.txt_meta.hasFastLim = False
-        db.txt_meta.databaseVersion = "fastlim" + dbverold # FIXME why?
+        db.txt_meta.databaseVersion = f"fastlim{dbverold}" # FIXME why?
         db.subs[0].pcl_meta.hasFastLim = False
     if picklefile not in [ None, "" ]:
         db.createBinaryFile( picklefile )
@@ -99,7 +99,7 @@ def selectFullLikelihoodsFromDB ( db, picklefile = "temp.pcl" ):
     db.subs[0].expResultList = filtered
     dbver = dbverold
     if not "full_llhds" in dbver:
-        dbver = "full_llhds" + dbverold
+        dbver = f"full_llhds{dbverold}"
     db.subs[0].txt_meta.databaseVersion = dbver
     db.subs = [ db.subs[0] ]
     #print ( f"[databaseManipulations] oldver {dbverold} newver {db.databaseVersion}" )
@@ -120,7 +120,7 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     db.subs[0]._allExpResults = filtered
     db.subs[0]._activeResults = filtered[:]    
     if invert:
-        db.subs[0].txt_meta.databaseVersion = "nonaggregated" + dbverold
+        db.subs[0].txt_meta.databaseVersion = f"nonaggregated{dbverold}"
     db.subs = [ db.subs[0] ]
     print ( f"[databaseManipulations] after {removalOrSelection(invert)} of nonaggregated {len(db.expResultList)} results" )
     if not invert:
@@ -337,7 +337,7 @@ def removeSupersededFromDB ( db, invert=False, outfile="temp.pcl" ):
     db.subs = [ db.subs[0] ]
     print ( f"[databaseManipulations] after {removalOrSelection(invert)} of superseded {len(db.expResultList)} results" )
     if invert:
-        db.subs[0].databaseVersion = "superseded" + db.databaseVersion
+        db.subs[0].databaseVersion = f"superseded{db.databaseVersion}"
     db.createBinaryFile( outfile )
     return db
 

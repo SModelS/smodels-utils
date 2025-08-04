@@ -31,7 +31,7 @@ class SLTest(unittest.TestCase):
         for i in range(ni,n):
             C.append ( C_[ni+ncov*i:ncov*i+n] )
         m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S, 
-                    nsignal=sig, name="model%d" % n, deltas_rel=deltas_rel )
+                    nsignal=sig, name=f"model{int(n)}", deltas_rel=deltas_rel )
         return m
 
     def printDict ( self, d ):

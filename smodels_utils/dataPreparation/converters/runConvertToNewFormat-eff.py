@@ -46,7 +46,7 @@ def getObjectNames(f,objType):
         if l.lstrip() and l.lstrip()[0] == '#':
             continue
 
-        if objType+'(' in l:
+        if f"{objType}(" in l:
             objName = l.split('=')[0].strip() #Store name of objType instance
             if objName:
                 objects.append(objName)
@@ -88,9 +88,9 @@ def getObjectLines(f,objName,objType=None):
             break
 
         newl = l.replace(" ","")[:len(objName)+1] #Get beginning of line
-        if  objName+'=' == newl and start:  #Object name is being redefined. Stop it
+        if  f"{objName}=" == newl and start:  #Object name is being redefined. Stop it
             stop = True
-        elif objName+'.' == newl:
+        elif f"{objName}." == newl:
             objLines.append(l) # Line belongs to metablock
 
     return objLines
@@ -160,12 +160,12 @@ def getDatasetBlock(f,datasetId):
     blocks = f.read().split('databaseCreator.create')
     datasetLines = []
     for b in blocks:
-        if not '"'+datasetId+'"' in b:
+        if not f"\"{datasetId}\"" in b:
             continue
         for l in b.split('\n'):
             if not l.strip():
                 continue
-            datasetLines.append(l+'\n')
+            datasetLines.append(f"{l}\n")
 
     return datasetLines
 
@@ -181,7 +181,7 @@ def getValueFor(dataLines,key):
             except:
                 pass
             if isinstance(val,str):
-                val = '"'+val+'"'
+                val = f"\"{val}\""
             return val
 
 
@@ -286,10 +286,10 @@ def main(f,fnew):
         for l in templateLines:
             if not l.strip():
                 continue
-            l = l + '\n'
+            l = f"{l}\n"
             datasetLines = getDatasetBlock(fold, dataset)
-            dataDict = {'dataset' : '"'+dataset+'"',
-                        'datasetFolder' : '"'+dataset.replace(" ","")+'"',
+            dataDict = {'dataset' : f"\"{dataset}\"",
+                        'datasetFolder' : f"\"{dataset.replace(' ', '')}\"",
                         'datasetStr' : dataset}
             dataDict.update(getDatasetStatistics(datasetLines))
 
@@ -298,9 +298,9 @@ def main(f,fnew):
             lineVars = [v for v in lineVars[1::2] if v]
             for v in lineVars:
                 if v in dataDict:
-                    l  = l.replace('$'+v+'$',str(dataDict[v]))
+                    l  = l.replace(f"${v}$",str(dataDict[v]))
                 elif v in locals() or v in globals():
-                    l  = l.replace('$'+v+'$',str(eval(f'{v}["{dataset}"]')))
+                    l  = l.replace(f"${v}$",str(eval(f'{v}["{dataset}"]')))
 
             if '.efficiencyMap.dataUrl' in l:
                 l = l.replace('efficiencyMap.dataUrl','dataUrl')
@@ -311,7 +311,7 @@ def main(f,fnew):
             elif '$$' in l:
                 key = l.split('=')[0]
                 val = getValueFor(datasetLines,key)
-                l = key + ' = ' + str(val)+'\n'
+                l = f"{key} = {val!s}\n"
                 fnew.write(l)
             else:
                 print ( f'Something wrong with line {l}' )
@@ -359,7 +359,7 @@ if __name__ == "__main__":
 
     nres = 0
     # files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
-    files = sorted(glob.glob(databasePath+'/*/*/*/convert.py')  )
+    files = sorted(glob.glob(f"{databasePath}/*/*/*/convert.py")  )
     t0 = time.time()
     analysis = args.analysis
     if analysis == ".":
@@ -405,7 +405,7 @@ if __name__ == "__main__":
         if args.dont_run:
             continue
         #Execute file
-        run = Popen(fnew+f' -smodelsPath {home}/smodels -utilsPath {home}/smodels-utils',
+        run = Popen(f"{fnew} -smodelsPath {home}/smodels -utilsPath {home}/smodels-utils",
                     shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
 
         rstatus = None

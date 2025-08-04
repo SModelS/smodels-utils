@@ -105,7 +105,7 @@ def elementsInStr(instring : str,removeQuotes : bool = True) -> list: ## from V2
 
     # Check if there are not unmatched ['s and/or ]'s in the string
     if nc != 0:
-        raise SModelSError("Wrong input (incomplete elements?) " + instring)
+        raise SModelSError(f"Wrong input (incomplete elements?) {instring}")
 
     return elements
 
@@ -339,8 +339,8 @@ class MetaInfoInput(Locker):
                             err = 2.*(dsVar-x ) / (dsVar+x)
                             logger.debug ( f"relative error on variance {100*err:.1f} percent" )
                     self.covariance += f"{x:.4g}, "
-                self.covariance = self.covariance[:-2] + "], "
-            self.covariance = self.covariance[:-2]+"]"
+                self.covariance = f"{self.covariance[:-2]}], "
+            self.covariance = f"{self.covariance[:-2]}]"
 
     def __init__(self, ID):
 
@@ -482,7 +482,7 @@ class DataSetInput(Locker):
             if type(val) == type(None):
                 continue
             if key in [ "upperLimit", "expectedUpperLimit" ] and type(val) == type(fb):
-                val = str(val.asNumber(fb))+"*fb"
+                val = f"{val.asNumber(fb)!s}*fb"
             setattr(self,key,val)
 
     def computeULs ( self ):
@@ -580,8 +580,8 @@ class DataSetInput(Locker):
             sys.exit()
 
         ul, ulExpected = self.computeULs ( )
-        self.upperLimit = str(ul)+'*fb'
-        self.expectedUpperLimit = str(ulExpected)+'*fb'
+        self.upperLimit = f"{ul!s}*fb"
+        self.expectedUpperLimit = f"{ulExpected!s}*fb"
 
     def addTxName( self,txname : str ):
         """
@@ -701,11 +701,11 @@ class TxNameInput(Locker):
                 if p.validationTarball == None:
                     # p.validationTarball = "skip"
                     continue
-                line = str(p).replace(" ","")+":"+p.validationTarball
+                line = f"{str(p).replace(' ', '')}:{p.validationTarball}"
                 if not hasattr ( self, "validationTarball" ) or self.validationTarball in [ "", None ]:
                     self.validationTarball = line
                 else:
-                    self.validationTarball += ";" + line
+                    self.validationTarball += f";{line}"
 
     def addXYRangesFromPlanes ( self ):
         """ if a mass plane has xrange or yrange defined, add it to this
@@ -714,19 +714,19 @@ class TxNameInput(Locker):
            if hasattr ( p, "xrange" ):
                if type(p.xrange) == list:
                    p.xrange=str(p.xrange)
-               line = str(p).replace(" ","")+":"+p.xrange
+               line = f"{str(p).replace(' ', '')}:{p.xrange}"
                if not hasattr ( self, "xrange" ) or self.xrange in [ "", None ]:
                    self.xrange = line
                else:
-                   self.xrange += ";" + line
+                   self.xrange += f";{line}"
            if hasattr ( p, "yrange" ):
                if type(p.yrange) == list:
                    p.yrange=str(p.yrange)
-               line = str(p).replace(" ","")+":"+p.yrange
+               line = f"{str(p).replace(' ', '')}:{p.yrange}"
                if not hasattr ( self, "yrange" ) or self.yrange in [ "", None ]:
                    self.yrange = line
                else:
-                   self.yrange += ";" + line
+                   self.yrange += f";{line}"
 
     def __init__(self,txName):
 

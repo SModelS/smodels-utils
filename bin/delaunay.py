@@ -132,9 +132,9 @@ for i in zeroes:
             if not allZeroSimplex ( s, zeroes ):
                 allSimplicesZero = False
     if allSimplicesZero and not inHull:
-        print ( "we can remove point %d!!!" % i )
+        print ( f"we can remove point {int(i)}!!!" )
 
-    print ( "point %d: inHull: %d. in %d simplices." % ( i, inHull, ct ) )
+    print ( f"point {int(i)}: inHull: {int(inHull)}. in {int(ct)} simplices." )
 
 zero_points = np.array  ( zero_Points )
 # IPython.embed()

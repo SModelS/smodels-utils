@@ -53,7 +53,7 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
     options = {}
     for validationfile in vfiles:
         if not "_" in validationfile:
-            validationfile = validationfile+"_2EqMassAx_EqMassBy.py"
+            validationfile = f"{validationfile}_2EqMassAx_EqMassBy.py"
         if "_combined" in validationfile:
             print ( f"[plotBestSRs] weird validationfile is {validationfile}, ie with 'combined' in the file name. You sure it is the right one?" )
         ipath = getPathName ( dbpath, analysis, validationfile )

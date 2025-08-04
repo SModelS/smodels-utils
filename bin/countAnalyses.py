@@ -52,11 +52,11 @@ def discussExperiment ( anas, experiment, title, verbose ):
     print ( f"{len(ianas)} analyses." )
     if verbose:
         print ( f"   `- {', '.join(ianas)}" )
-    print ( "%d results total" % n_results )
-    print ( "%d upper limits analyses" % ul )
-    print ( "%d efficiency map analyses" % em )
-    print ( "%d upper limits results" % n_results_ul )
-    print ( "%d efficiency map results" % n_results_em )
+    print ( f"{int(n_results)} results total" )
+    print ( f"{int(ul)} upper limits analyses" )
+    print ( f"{int(em)} efficiency map analyses" )
+    print ( f"{int(n_results_ul)} upper limits results" )
+    print ( f"{int(n_results_em)} efficiency map results" )
 
     print ()
 

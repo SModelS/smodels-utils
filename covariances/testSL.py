@@ -47,7 +47,7 @@ def createBinnedModel(bins):
                 col.append ( e )
         C.append ( col )
     m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S,
-                efficiencies=sig, name="model%d" % n )
+                efficiencies=sig, name=f"model{int(n)}" )
     m._bins=bins
     return m
 
@@ -103,7 +103,7 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     # print ( "[nick] model=", model.name )
 
     # CHECK we don't go over the max
-    if model.nbins > ROOT.MAXBINS: sys.exit("Too many bins (nbins > %d), you should modify MAXBINS in .C code"%ROOT.MAXBINS)
+    if model.nbins > ROOT.MAXBINS: sys.exit(f"Too many bins (nbins > {int(ROOT.MAXBINS)}), you should modify MAXBINS in .C code")
 
     # print ( "[nick] Simplified Likelihood for model file --> ", end="" )
     #try : print ( model.name )
@@ -162,7 +162,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
     ulComp100 = UpperLimitComputer ( lumi = 1. / fb, ntoys=100, cl=.95 )
     ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
-    print ( "- Run #%d with %d bins:" % (nrun, len(bins)) )
+    print ( f"- Run #{int(nrun)} with {len(bins)} bins:" )
 
     gul= [ None ]
     if runAlgo("profl"):
@@ -348,7 +348,7 @@ def run ( R, n, sub, max_bins, algos ):
     """ one run. """
     import random
     random.seed(sub)
-    f=open("results%d_%d.py" % (R,sub),"w")
+    f=open(f"results{int(R)}_{int(sub)}.py","w")
     # f.write ( "d=[" )
     for i in range(n):
         r = one_turn( i+n*sub, None, args.max_bins, algos )
@@ -388,7 +388,7 @@ if __name__ == "__main__":
     if ncpus == -1: ncpus = nCPUs()
     R=int(math.ceil( args.nruns / ncpus)) * ncpus
     n= int ( args.nruns / ncpus  )
-    print ( "Running %d jobs per process" % n )
+    print ( f"Running {int(n)} jobs per process" )
     pids=[]
     for cpu in range(ncpus):
         pid=os.fork()

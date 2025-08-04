@@ -67,7 +67,7 @@ def compareLines(new,old,ignore=['#']):
     
     for i,l in enumerate(newLines):
         if l != oldLines[i]:
-            logger.debug('Line %i in %s and %s differ:\n\t %s\n\t %s' %(i,new,old,l,oldLines[i]))
+            logger.debug(f'Line {int(i)} in {new} and {old} differ:\n\t {l}\n\t {oldLines[i]}')
             return False
     
     return True
@@ -230,7 +230,7 @@ def checkNewOutput(new,old,setValidated=True):
     
     
     #Check if folders have the same required structure:
-    newOrigFolders = ['data-cut%i-orig'%i for i in range(20)]
+    newOrigFolders = [f'data-cut{int(i)}-orig' for i in range(20)]
     ignoreFiles = ['convertNew.py','convertNew.py~','convert.py~','convertNew_template.py']
     ignoreFiles += newOrigFolders
     comp = filecmp.dircmp(new,old,ignoreFiles)
@@ -289,7 +289,7 @@ if __name__ == "__main__":
                   'ATLAS-SUSY-2013-15',   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand -> Only axes and figureUrl differ
                   'CMS-SUS-13-013'] #The on/off-shell splitting in master is inconsistent with the constraints
     
-    for f in sorted(glob.glob(databasePath+'/*/*/*/convertNew.py'))[:]:               
+    for f in sorted(glob.glob(f"{databasePath}/*/*/*/convertNew.py"))[:]:               
         
         ignore = False
         for igF in ignoreList:

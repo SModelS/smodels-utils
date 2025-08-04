@@ -67,7 +67,7 @@ def draw( validationfile ):
         bestSRs.append ( ( axes[1], axes[0], point["best combination"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
-        print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( f"[drawBestSRs] skipped {int(skipped)}/{len(validationData)} points: {err}" )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}

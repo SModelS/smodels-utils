@@ -127,13 +127,13 @@ def addQuotationMarks ( constraint ):
     ret=""
     for i in range(len(constraint)):
         if constraint[i] == "[" and constraint[i+1] not in [ "[", "]" ]:
-            ret+=constraint[i]+"'"
+            ret+=f"{constraint[i]}'"
             continue
         if constraint[i] == "]" and constraint[i-1] not in [ "[", "]" ]:
-            ret+="'" + constraint[i]
+            ret+=f"'{constraint[i]}"
             continue
         if constraint[i] == "," and constraint[i-1] not in [ "[", "]" ]:
-            ret+="'" + constraint[i] + "'"
+            ret+=f"'{constraint[i]}'"
             continue
         ret+=constraint[i]
 

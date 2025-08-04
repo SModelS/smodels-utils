@@ -92,7 +92,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     :param forbidden: any forbidden pids we dont touch
     """ 
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
-        dbpath = rundir + "/" + dbpath
+        dbpath = f"{rundir}/{dbpath}"
     line = f"run walkers {jmin} - {jmax-1}"
     if jmax == jmin:
         jmax = jmin + 1
@@ -463,7 +463,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
     if maxiterations > 5:
         cmd += [ "--pty", "bash" ]
     cmd += [ runner ]
-    print ( "updater: " + " ".join ( cmd ) )
+    print ( f"updater: {' '.join(cmd)}" )
     if dry_run:
         return
     subprocess.run ( cmd )
@@ -499,7 +499,7 @@ def logCall ():
     for i in sys.argv:
         if " " in i or "," in i or "[" in i:
             i = f'"{i}"'
-        args += i + " "
+        args += f"{i} "
     f.write ( f'[slurm.py-{time.strftime("%H:%M:%S")}] {args.strip()}\n' )
     f.close()
 
@@ -736,7 +736,7 @@ def main():
             # dbpath = rundir + "/default.pcl"
             dbpath = "official"
         if "fake" in dbpath and not dbpath.endswith(".pcl"):
-            dbpath = dbpath + ".pcl"
+            dbpath = f"{dbpath}.pcl"
 
         if args.allscans:
             subprocess.getoutput ( f"./slurm.py -R {rundir} -S 0" )

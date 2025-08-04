@@ -42,7 +42,7 @@ def addXSecs( dirname, pretend = False, parallel : bool = False ):
     if "*" in dirname:
         files = glob.glob ( dirname )
     if os.path.isdir ( dirname ):
-        files = glob.glob( dirname+"T*slha" )
+        files = glob.glob( f"{dirname}T*slha" )
     ctr=0
     hasXS = 0
     locked = 0

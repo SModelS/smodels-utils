@@ -134,7 +134,7 @@ class Lister:
         if self.includeFastlim:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{dotlessv}) and a [validation page](Validation{dotlessv}).\n" )
-        self.f.write ( referToOther + ".\n" )
+        self.f.write ( f"{referToOther}.\n" )
         sigsplot = self.significancesPlotFileName()
         self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution ist expected if no new physics is in the data. New physics would manifest itself as an overabundance of large significances.</sub></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
@@ -167,7 +167,7 @@ class Lister:
         for sqrts in [ 13, 8 ]:
             run = 1
             if sqrts == 13: run = 2
-            self.f.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            self.f.write ( f"\n### Run {int(run)} - {int(sqrts)} TeV\n" )
             anas = { "CMS": set(), "ATLAS": set() }
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
@@ -176,7 +176,7 @@ class Lister:
                     for ana in a:
                         shortid = removeAnaIdSuffices ( ana.globalInfo.id )
                         anas[exp].add ( shortid )
-            self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
+            self.f.write ( f"In total, we have results from {len(anas['ATLAS'])} ATLAS and {len(anas['CMS'])} CMS {int(sqrts)} TeV searches.\n" )
 
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
@@ -212,13 +212,13 @@ class Lister:
                     aflim=""
                     llp=""
                     if nfastlim:
-                        flim = " (of which %d FastLim)" % nfastlim
-                        aflim = " (of which %d FastLim)" % a_fastlim
+                        flim = f" (of which {int(nfastlim)} FastLim)"
+                        aflim = f" (of which {int(a_fastlim)} FastLim)"
                     if nres_hscp>0:
-                        llp=" (of which %d LLP)" % nres_hscp
+                        llp=f" (of which {int(nres_hscp)} LLP)"
                     mapsCountS = ""
                     if "efficiency" in tpe:
-                        mapsCountS = ", %d individual maps" % nMaps
+                        mapsCountS = f", {int(nMaps)} individual maps"
 
                     line = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {len(aids)}{aflim} analyses, {nres}{flim}{llp} results{mapsCountS}\n"
                     self.f.write ( line )
@@ -267,7 +267,7 @@ class Lister:
             lengths.append ( len(i)+6 )
         self.f.write ( "|\n" )
         for l in lengths:
-            self.f.write ( "|" +"-"*l )
+            self.f.write ( f"|{'-' * l}" )
         self.f.write ( "|\n" )
 
     def getLabel ( self, ana_name ):
@@ -418,8 +418,8 @@ class Lister:
         statsfile = "analyses.py"
         print ( f"[listOfAnalyses] Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
-        f.write ( "# superseded: %d\n" % self.includeSuperseded )
-        f.write ( "A=" + str ( self.stats )+"\n" )
+        f.write ( f"# superseded: {int(self.includeSuperseded)}\n" )
+        f.write ( f"A={self.stats!s}\n" )
         f.close()
 
     def selectAnalyses ( self, sqrts, experiment, Type ):
@@ -529,7 +529,7 @@ class Lister:
         for sqrts in [ 13, 8 ]:
             for experiment in experiments:
                 self.writeExperiment ( experiment, sqrts )
-        print ( "[listOfAnalyses] %d home-grown now" % self.n_homegrown )
+        print ( f"[listOfAnalyses] {int(self.n_homegrown)} home-grown now" )
         self.footer ( )
         self.diff()
         self.metaStatisticsPlot()

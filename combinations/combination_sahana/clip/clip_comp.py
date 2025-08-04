@@ -289,7 +289,7 @@ if __name__ == "__main__":
     
     #sm = SModelsOutput(files)
     #output_name = 'summary_array2.csv'
-    output_name = args.summaryfilename + '.csv'
+    output_name = f"{args.summaryfilename}.csv"
     
     with open(f'results_2/{output_name}','w') as out:
         out.write(f'#Has files from {fs * 100} to {(fs + 1) * 100}')

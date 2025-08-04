@@ -84,7 +84,7 @@ def completeROOTGraph ( curve ):
         from smodels_utils.helper.rootTools import exclusionCurveToTGraph
         curve = exclusionCurveToTGraph ( curve )
     if not ( curve.GetN() > 3 ):
-        print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
+        print ( f"problem, i am trying to complete a graph with {int(curve.GetN())} points" )
     if curve.GetN() <= 3:
         return
     import ctypes
@@ -259,10 +259,10 @@ def getRootPythonPath ( ):
     libpath = getRootLibraryPath()
     if not version or not libpath:
         return None
-    V=str(version[0])+"."+str(version[1])
-    for SubDir in [ V, "root"+V ,""]:
-        Dir=libpath+"/"+SubDir
-        if os.path.exists ( Dir+"/ROOT.py" ):
+    V=f"{version[0]!s}.{version[1]!s}"
+    for SubDir in [ V, f"root{V}" ,""]:
+        Dir=f"{libpath}/{SubDir}"
+        if os.path.exists ( f"{Dir}/ROOT.py" ):
             return Dir
     return None
 

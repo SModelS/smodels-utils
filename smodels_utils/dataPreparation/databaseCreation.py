@@ -86,7 +86,7 @@ class DatabaseCreator(list):
             os.unlink ( "validation_commentary.txt" )
         self.exclusions = []
         self.metaInfo = None
-        self.base = os.getcwd() + '/'
+        self.base = f"{os.getcwd()}/"
         self.allInputFiles = []
         self.copyTempCruftFiles()
         self.origPath = './orig/'
@@ -126,7 +126,7 @@ class DatabaseCreator(list):
         if len(dirs)>0:
             listOfDirs = ", ".join(dirs)
             if len(listOfDirs)>60:
-                listOfDirs = listOfDirs[:57]+"..."
+                listOfDirs = f"{listOfDirs[:57]}..."
             self.timeStamp ( f"removing old dataset dirs: {listOfDirs}" )
 
     def timeStamp(self, txt, c="info"):
@@ -334,7 +334,7 @@ class DatabaseCreator(list):
         """
 
         for dataset in datasetList:
-            newDatasets.append(self._createDatasetAt(dataset,'./'+dataset._name))
+            newDatasets.append(self._createDatasetAt(dataset,f"./{dataset._name}"))
 
     def _createDatasetAt(self,dataset,datasetFolder):
         """
@@ -542,11 +542,11 @@ class DatabaseCreator(list):
             if lastUpdate:
                 while True:
                     m = 'if one of the following data are changed, '
-                    m = m + 'lastUpdate should be overwritten:\n'
-                    m = m + 'number or name of txNames, arXiv, publication,'
-                    m = m + ' upperLimits\n'
-                    m = m + '(You can turn this off via the environment variable SMODELS_NOUPDATE)\n'
-                    m = m + 'overwrite lastUpdate (y/n)?: '
+                    m = f"{m}lastUpdate should be overwritten:\n"
+                    m = f"{m}number or name of txNames, arXiv, publication,"
+                    m = f"{m} upperLimits\n"
+                    m = f"{m}(You can turn this off via the environment variable SMODELS_NOUPDATE)\n"
+                    m = f"{m}overwrite lastUpdate (y/n)?: "
                     answer = 'n'
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
@@ -564,7 +564,7 @@ class DatabaseCreator(list):
                 #Check if validation fields should be overwritten/reset
                 while True:
                     m = 'If the data has changed, the validated fields should be reset.\n'
-                    m = m + 'Reset the validated fields (y/n)?: '
+                    m = f"{m}Reset the validated fields (y/n)?: "
                     answer = 'n'
                     try:
                         if "SMODELS_RESETVALIDATION" in os.environ.keys():
@@ -717,8 +717,8 @@ class DatabaseCreator(list):
                     SR = f"'{SR}'"
                     newline = ""
                 ret += f"    {str(SR)},\n"
-            ret = ret[:-2]+"],\n"
-        ret = ret[:-2]+ "\n  }"
+            ret = f"{ret[:-2]}],\n"
+        ret = f"{ret[:-2]}\n  }}"
         return ret
 
     def _createInfoFile(self, name, obj, folder):
@@ -819,7 +819,7 @@ class DatabaseCreator(list):
             if attr == "dataMap":
                 value = str(value)
                 for i in [ "1.00", "1.000", "1.0000", "1.00000", "1.000000" ]:
-                    value = value.replace(i+"E+00 [GeV]","GeV")
+                    value = value.replace(f"{i}E+00 [GeV]","GeV")
             if value=="":
                 continue
             #Leave data for last
@@ -834,7 +834,7 @@ class DatabaseCreator(list):
                     value=""
                     for t in tokens:
                         if not "z" in t:
-                            value+= t+"; "
+                            value+= f"{t}; "
                     if value[-2:]=="; ":
                         value=value[:-2]
                     if "z" in value:
@@ -928,7 +928,7 @@ class DatabaseCreator(list):
 
         #Convert to string:
         #Make sure unum numbers are printed with sufficient precision
-        Unum.VALUE_FORMAT = "%."+"%iE"%(n-1)
+        Unum.VALUE_FORMAT = f"%.{int(n - 1)}E"
         vStr = str(value)
         #Replace units:
         vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')

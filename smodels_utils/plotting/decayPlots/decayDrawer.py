@@ -46,7 +46,7 @@ class DecayDrawer:
             prog=prog[prog.rfind("/")+1:]
         dprog='dot'
         dargs='-n2 -Tsvg:svg:core'
-        wout=out+".svg"
+        wout=f"{out}.svg"
         # dargs='-n2 -Tpng:cairo'
         #wout=out+".png"
         if self.options["neato"]:
@@ -59,7 +59,7 @@ class DecayDrawer:
             prog='neato'
             args='-x -Ln10 -LT1000 -LO -Lg -v'
             if self.options["pdf"]:
-                wout=out+".neato.pdf"
+                wout=f"{out}.neato.pdf"
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
@@ -67,7 +67,7 @@ class DecayDrawer:
 
         if self.options["dot"]:
             # wout=out+".dot"
-            wout=out+".dot"
+            wout=f"{out}.dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
             self.logger.debug ( f"{wout} created with dot." )
@@ -77,7 +77,7 @@ class DecayDrawer:
         #    wout=out+".xxx"
         if self.options["pdf"]:
             # wout=out+".dot.pdf"
-            wout=out+".pdf"
+            wout=f"{out}.pdf"
 
             self.G.draw(wout,prog='dot')
             self.logger.log ( f"{wout} created with dot." )
@@ -108,7 +108,7 @@ class DecayDrawer:
         llabel=self.prettyName ( name )
         if include_masses:
             try:
-                llabel+=" (%d)" % mass
+                llabel+=f" ({int(mass)})"
             except:
                 llabel+=f" ({str(mass)})"
 
@@ -217,7 +217,7 @@ class DecayDrawer:
                         continue
                     rname=self.prettyName(radiator) # .replace(" ","")
                     if rname in self.extra.keys ( ):
-                        rname += "->" + self.extra[rname]
+                        rname += f"->{self.extra[rname]}"
                     labels.append ( (r,rname) )
             labels.sort( key=lambda x: x[0], reverse=True )
             self.addOneEdge ( name, daughter, rmin, labels )
@@ -231,7 +231,7 @@ class DecayDrawer:
             node=self.G.get_node( str(m) )
             node.attr['pos']=f"{0:f},{m:f}"
             node.attr['color']='#FFFFFF'
-            node.attr['label']=str(m)+' GeV'
+            node.attr['label']=f"{m!s} GeV"
 
     def texName ( self, pid, color = False, dollars = True ):
         """ get tex name for pid 

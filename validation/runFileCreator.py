@@ -184,8 +184,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     
     #Loop over txnames and create tar.gz files
     for txname in txnameList:
-        templateFile = os.path.join(templatedir,txname+'.template')
-        tarFile = os.path.join(slhadir,txname+'.tar.gz')
+        templateFile = os.path.join(templatedir,f"{txname}.template")
+        tarFile = os.path.join(slhadir,f"{txname}.tar.gz")
         if addToFile and os.path.isfile(tarFile):
             logger.info(f"--------  \x1b[32m Extending {tarFile} \x1b[0m")
         else:

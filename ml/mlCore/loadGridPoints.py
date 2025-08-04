@@ -32,9 +32,9 @@ def loadInternalGridPoints(expres, txnameData, dataselector, signalRegion, singl
 
 
 	if dataselector == "upperLimit":
-		filePath = expres.path + '/data/' + tx + '.txt'
+		filePath = f"{expres.path}/data/{tx}.txt"
 	else:
-		filePath = expres.path + '/' + signalRegion + '/' + tx + '.txt'
+		filePath = f"{expres.path}/{signalRegion}/{tx}.txt"
 
 	with open(filePath) as txtFile:
 		txdata = txtFile.read()

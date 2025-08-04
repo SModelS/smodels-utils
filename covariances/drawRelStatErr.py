@@ -21,7 +21,7 @@ def getTopo ( validation ):
 
 def getEmbakedDict ( basedir, topo ):
     """ get the embaked file """
-    path = basedir+"orig/"+topo+".embaked"
+    path = f"{basedir}orig/{topo}.embaked"
     if not os.path.exists( path ):
         print ( f"cannot find {path}" )
         return {}
@@ -104,7 +104,7 @@ def draw( validationfile, suffix ):
         axes = convertNewAxes ( point["axes"] )
         effs.append ( ( axes[1], axes[0], point["efficiency"] ) )
     if skipped > 0:
-        print ( "[drawRelStatErr] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( f"[drawRelStatErr] skipped {int(skipped)}/{len(validationData)} points: {err}" )
     effs.sort()
     basedir = validationfile[:p3]
     nevents = getEmbakedDict ( basedir, topo )
@@ -131,7 +131,7 @@ def draw( validationfile, suffix ):
     rse = {}
     suff = ""
     if suffix != None:
-        suff = "_" + str(suffix)
+        suff = f"_{suffix!s}"
     fname = f"relstaterr_{anaId}_{topo}{suff}.png"
     print ( f"[drawRelStatErr] saving to {fname}" )
     plt.savefig ( fname )
@@ -172,7 +172,7 @@ def writeMDPage( push = False ):
                     continue
                 if ctr > 0:
                     g.write ( ", " )
-                g.write ( f"[{topo}](#{ana + '_' + topo})" )
+                g.write ( f"[{topo}](#{f"{ana}_{topo}"})" )
                 prevtopo = topo
             g.write ( "\n" )
         g.write ( "\n" )
@@ -191,7 +191,7 @@ def writeMDPage( push = False ):
                 print ( "[drawRelStatErr] skipping TGQ12" )
                 continue
             t0 = int(time.time() )-1590000000
-            img = '<img src="%s?%d" />' % ( src, t0 ) 
+            img = f'<img src="{src}?{int(t0)}" />' 
             anchor = f'{tokens[0]}, {tokens[1]}<a name="{f}"></a>'
             g.write ( f'| {anchor} | {img} |\n' )
         g.write ( "\n" )
@@ -232,7 +232,7 @@ if __name__ == "__main__":
             analyses = []
         validations = [ args.validationfile ]
         if "*" in args.validationfile:
-            path = args.dbpath + "*/*/" + args.analysis + "/validation/" + args.validationfile 
+            path = f"{args.dbpath}*/*/{args.analysis}/validation/{args.validationfile}" 
             print ( "searching", path )
             tmp = glob.glob ( path )
             validations = []
