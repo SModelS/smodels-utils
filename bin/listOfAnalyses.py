@@ -139,9 +139,20 @@ class Lister:
         n_results = 0
         n_topos = set()
         n_anas = set()
+        hasAgg = []
+        for expR in self.expRes:
+            if "-agg" in expR.id():
+                ## when we have -agg results, we dont count the maps
+                ## of the non-aggregated ones
+                anaId = removeAnaIdSuffices ( expR.id() )
+                hasAgg.append ( anaId )
         for expR in self.expRes:
             self.stats.add ( expR.id() )
             expId = removeAnaIdSuffices ( expR.id() )
+            if expR.id() in hasAgg and expR.datasets[0].dataInfo.dataId != None:
+                # we have the non-aggregate result here, skip it. count only
+                # the aggregate
+                continue
             n_anas.add ( expId )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )
@@ -150,13 +161,22 @@ class Lister:
             dataIds = [ x.dataInfo.dataId for x in expR.datasets if x != None ]
             # print ( ">>> XataIds", dataIds )
             for d in dataIds:
+                #if "CMS" in expR.id():
+                #    print ( f"now at {expR.id()}:{d}" )
                 ds = expR.getDataset ( d )
                 n_results += 1
                 if ds == None:
                     print ( f"warning, {expR.id()},{d} is empty" )
                     # sys.exit(-1)
                     continue
-                n_maps += len ( ds.txnameList )
+                topos = set()
+                for i in ds.txnameList:
+                    if i.validated in [ True, "N/A", "n/a" ]:
+                        topos.add ( i.txName )
+                    else:
+                        print ( f"[listOfAnalyses] skipping {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i}: validated={i.validated}" )
+                n_maps += len(topos)
+                # n_maps += len ( ds.txnameList )
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
         self.f.write ( "List of analyses and topologies in the SMS results database, " )
         self.f.write ( f"comprising {n_maps} individual maps from {n_results} distinct signal regions, ")
