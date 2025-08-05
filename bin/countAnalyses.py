@@ -25,17 +25,21 @@ from typing import Union
 def discussExperiment ( anas : list, experiment : str, title : str, verbose : bool ):
     print ( f"{GREEN}{title}{experiment}:{RESET}" )
     ianas = set()
-    ul,em=0,0
+    ul,em=set(),set()
     n_maps = 0
     n_maps_ul = 0
     n_maps_em = 0
+    n_datasets = 0
+    n_datasets_sronly = 0
     for expRes in anas:
         Id = removeAnaIdSuffices ( expRes.globalInfo.id )
         ianas.add ( Id )
+        ulType = False
         if expRes.datasets[0].dataInfo.dataType=="upperLimit":
-            ul+=1
+            ul.add ( Id )
+            ulType = True
         else:
-            em+=1
+            em.add ( Id )
         for dataset in expRes.datasets:
             topos = set()
             for i in dataset.txnameList:
@@ -43,6 +47,12 @@ def discussExperiment ( anas : list, experiment : str, title : str, verbose : bo
                     topos.add ( i.txName )
                 else:
                     print ( f"[discussExperiment] {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i} validated {i.validated}" )
+            if len(topos)>0 and ulType == False:
+                n_datasets += 1
+                if not dataset.dataInfo.dataId.startswith ( "CR_" ):
+                    n_datasets_sronly += 1
+                if verbose:
+                    print ( f"[countAnalyses] adding #{n_datasets} {Id}:{dataset.dataInfo.dataId}" )
             if dataset.dataInfo.dataType=="upperLimit":
                 n_maps_ul += len ( topos )
             else:
@@ -52,11 +62,13 @@ def discussExperiment ( anas : list, experiment : str, title : str, verbose : bo
     print ( f"{len(ianas)} analyses." )
     if verbose:
         print ( f"   `- {', '.join(ianas)}" )
-    print ( f"{int(n_maps)} maps total" )
-    print ( f"{int(ul)} upper limits analyses" )
-    print ( f"{int(em)} efficiency map analyses" )
-    print ( f"{int(n_maps_ul)} upper limit maps" )
-    print ( f"{int(n_maps_em)} efficiency maps" )
+    print ( f"{n_maps} maps total" )
+    print ( f"{len(ul)} upper limits analyses" )
+    print ( f"{len(em)} efficiency map analyses" )
+    print ( f"{n_maps_ul} upper limit maps" )
+    print ( f"{n_maps_em} efficiency maps" )
+    print ( f"{n_datasets_sronly} signal regions" )
+    print ( f"{n_datasets} signal and control regions" )
 
     print ()
 
