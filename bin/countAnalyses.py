@@ -18,49 +18,49 @@ from smodels.base.smodelsLogging import setLogLevel
 from smodels_utils.helper import databaseManipulations as manips
 from smodels_utils.helper.various import removeAnaIdSuffices
 from smodels_utils.helper.terminalcolors import *
-setLogLevel("debug")
 
-def discussExperiment ( anas, experiment, title, verbose ):
+from typing import Union
+# setLogLevel("debug")
+
+def discussExperiment ( anas : list, experiment : str, title : str, verbose : bool ):
     print ( f"{GREEN}{title}{experiment}:{RESET}" )
     ianas = set()
     ul,em=0,0
-    n_results = 0
-    n_results_ul = 0
-    n_results_em = 0
+    n_maps = 0
+    n_maps_ul = 0
+    n_maps_em = 0
     for expRes in anas:
         Id = removeAnaIdSuffices ( expRes.globalInfo.id )
-        contact = ""
-        if hasattr ( expRes.globalInfo, "contact" ):
-            contact = expRes.globalInfo.contact
-        # print ( "id", Id )
         ianas.add ( Id )
-        topos = set()
-        for dataset in expRes.datasets:
-            for i in dataset.txnameList:
-                # print ( "validated=",i.validated )
-                if i.validated not in [ True, "N/A", "n/a" ]:
-                    continue
-                topos.add ( i.txName )
         if expRes.datasets[0].dataInfo.dataType=="upperLimit":
             ul+=1
-            n_results_ul += len ( topos )
         else:
             em+=1
-            n_results_em += len ( topos )
-        n_results += len ( topos )
+        for dataset in expRes.datasets:
+            topos = set()
+            for i in dataset.txnameList:
+                if i.validated in [ True, "N/A", "n/a" ]:
+                    topos.add ( i.txName )
+                else:
+                    print ( f"[discussExperiment] {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i} validated {i.validated}" )
+            if dataset.dataInfo.dataType=="upperLimit":
+                n_maps_ul += len ( topos )
+            else:
+                n_maps_em += len ( topos )
+            n_maps += len ( topos )
 
     print ( f"{len(ianas)} analyses." )
     if verbose:
         print ( f"   `- {', '.join(ianas)}" )
-    print ( f"{int(n_results)} results total" )
+    print ( f"{int(n_maps)} maps total" )
     print ( f"{int(ul)} upper limits analyses" )
     print ( f"{int(em)} efficiency map analyses" )
-    print ( f"{int(n_results_ul)} upper limits results" )
-    print ( f"{int(n_results_em)} efficiency map results" )
+    print ( f"{int(n_maps_ul)} upper limit maps" )
+    print ( f"{int(n_maps_em)} efficiency maps" )
 
     print ()
 
-def discuss ( db, update, sqrts, verbose, lumi ):
+def discuss ( db, update, sqrts, verbose : bool, lumi : Union[None,float] ):
     print ()
     print ( "---------------" )
     title = ""
@@ -80,9 +80,15 @@ def discuss ( db, update, sqrts, verbose, lumi ):
         if "CMS" in Id: cms.append ( expRes )
         if "ATLAS" in Id: atlas.append ( expRes )
     discussExperiment ( cms, "CMS", title, verbose )
+    print ( "---------------" )
     discussExperiment ( atlas, "ATLAS", title, verbose )
+    print ( "---------------" )
+    discussExperiment ( anas, "both", title, verbose )
 
-def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
+def countTopos ( superseded, filter_fastlim, db, update : str, verbose : bool = True ):
+    """ count the topologies
+    :param update: consider entries only after this date (yyyy/mm/dd)
+    """
     e = db.getExpResults( useSuperseded = superseded )
     anas = manips.filterFastlimFromList ( e, False, filter_fastlim, update )
     topos = set()
@@ -91,8 +97,7 @@ def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
         for t in i.getTxNames():
             topos.add ( t.txName )
             topos_roff.add ( t.txName.replace("off","") )
-    print ( "%d topologies (%d, not counting off-shell separately)" % \
-            ( len(topos), len(topos_roff) ) )
+    print ( f"{len(topos)} topologies ({len(topos_roff)}, not counting off-shell separately)" )
     if verbose:
         print ( ", ".join ( sorted ( topos ) ) )
 
