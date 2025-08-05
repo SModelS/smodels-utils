@@ -189,7 +189,7 @@ class Lister:
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{self.dotlessv}) and a [validation page](Validation{self.dotlessv}).\n" )
         self.f.write ( f"{referToOther}.\n" )
         sigsplot = self.significancesPlotFileName()
-        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions [(0)](#A0). A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.</sub></p>\n" )
+        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions [(1)](#A1). A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.</sub></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
     def significancesPlotFileName ( self, postfix : str = "" ):
@@ -208,17 +208,17 @@ class Lister:
         return pvaluesplot
 
     def footer ( self ):
-        # previous version self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        # previous version self.f.write ( "\n\n<a name='A2'>(2)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
         aggnonagg = "non-aggregated"
         if self.use_aggregated:
             aggnonagg = "aggregated"
-        self.f.write ( f"\n\n<a name='A0'>(0)</a> For analyses with both non-aggregated and aggregated signal regions, we use the {aggnonagg} ones.\n\n" )
-        self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): allow SModelS to determine the sensitivity of UL results. Moreover, they may be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian (currently an experimental feature).\n\n" )
-        self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
+        self.f.write ( f"\n\n<a name='A1'>(1)</a> For analyses with both non-aggregated and aggregated signal regions, we use the {aggnonagg} ones.\n\n" )
+        self.f.write ( "\n\n<a name='A2'>(2)</a> Expected upper limits ('exp. ULs'): allow SModelS to determine the sensitivity of UL results. Moreover, they may be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian (currently an experimental feature).\n\n" )
+        self.f.write ( "<a name='A3'>(3)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
+        self.f.write ( "<a name='A4'>(4)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
+        self.f.write ( "<a name='A5'>(5)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         if self.includeFastlim:
-            self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
+            self.f.write ( "<a name='A6'>(6)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( f"\nThis page was created {time.asctime()}.\n" )
         self.f.close()
 
@@ -302,10 +302,10 @@ class Lister:
             ret.append ( "superseded by" )
         ret.append ( "obs. ULs" )
         if self.likelihoods:
-            ret.append ( "exp. ULs [(1)](#A1)" )
+            ret.append ( "exp. ULs [(2)](#A2)" )
         ret.append ( "EMs" )
         if self.likelihoods:
-            ret.append ( "SR comb. [(2)](#A2)" )
+            ret.append ( "SR comb. [(3)](#A3)" )
         return ret
 
     def moveToGithub( self ):
@@ -442,10 +442,10 @@ class Lister:
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
-                    homegrownd[str(i)] = " [(3)](#A3)"
+                    homegrownd[str(i)] = " [(4)](#A4)"
                 if has["agg"]:
                 # if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                    homegrownd[str(i)] = " [(4)](#A4)"
+                    homegrownd[str(i)] = " [(5)](#A5)"
 
         topos.sort()
         topos_s = ""
@@ -459,7 +459,7 @@ class Lister:
         topos_s = topos_s[2:]
         if fastlim:
             # topos_s += " (from FastLim (2))"
-            topos_s += " (from FastLim [(5)](#A5))"
+            topos_s += " (from FastLim [(6)](#A6))"
             pass
         url = ana.globalInfo.url
         if url.find ( " " ) > 0:

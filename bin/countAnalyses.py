@@ -25,12 +25,16 @@ from typing import Union
 def discussExperiment ( anas : list, experiment : str, title : str, verbose : bool ):
     print ( f"{GREEN}{title}{experiment}:{RESET}" )
     ianas = set()
+    ianas_MET = set()
     ul,em=set(),set()
     n_maps = 0
     n_maps_ul = 0
     n_maps_em = 0
+    n_maps_em_MET = 0
     n_datasets = 0
     n_datasets_sronly = 0
+    em_MET=set()
+    n_datasets_MET = 0
     for expRes in anas:
         Id = removeAnaIdSuffices ( expRes.globalInfo.id )
         ianas.add ( Id )
@@ -42,37 +46,59 @@ def discussExperiment ( anas : list, experiment : str, title : str, verbose : bo
             em.add ( Id )
         for dataset in expRes.datasets:
             topos = set()
+            topos_MET = set()
+            hasMET = False
             for i in dataset.txnameList:
+                if hasattr ( i, "finalState" ) and i.finalState is not None:
+                    for fs in i.finalState:
+                        if fs == "MET":
+                            hasMET = True
+                if "PV" in i.constraint and "MET" in i.constraint:
+                    hasMET = True
                 if i.validated in [ True, "N/A", "n/a" ]:
                     topos.add ( i.txName )
+                    if hasMET:
+                        topos_MET.add ( i.txName )
                 else:
                     print ( f"[discussExperiment] {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i} validated {i.validated}" )
+            if hasMET:
+                ianas_MET.add ( Id )
+            if not ulType and hasMET:
+                em_MET.add ( Id )
             if len(topos)>0 and ulType == False:
                 n_datasets += 1
                 if not dataset.dataInfo.dataId.startswith ( "CR_" ):
                     n_datasets_sronly += 1
+                if hasMET:
+                    n_datasets_MET += 1
                 if verbose:
                     print ( f"[countAnalyses] adding #{n_datasets} {Id}:{dataset.dataInfo.dataId}" )
             if dataset.dataInfo.dataType=="upperLimit":
                 n_maps_ul += len ( topos )
             else:
                 n_maps_em += len ( topos )
+                n_maps_em_MET += len ( topos_MET )
             n_maps += len ( topos )
 
     print ( f"{len(ianas)} analyses." )
     if verbose:
         print ( f"   `- {', '.join(ianas)}" )
+    print ( f"{len(ianas_MET)} analyses with MET." )
     print ( f"{n_maps} maps total" )
     print ( f"{len(ul)} upper limits analyses" )
     print ( f"{len(em)} efficiency map analyses" )
+    print ( f"{len(em_MET)} efficiency map analyses with MET" )
     print ( f"{n_maps_ul} upper limit maps" )
     print ( f"{n_maps_em} efficiency maps" )
+    print ( f"{n_maps_em_MET} efficiency maps with MET" )
     print ( f"{n_datasets_sronly} signal regions" )
+    print ( f"{n_datasets_MET} signal regions with MET in fs" )
     print ( f"{n_datasets} signal and control regions" )
 
     print ()
 
-def discuss ( db, update, sqrts, verbose : bool, lumi : Union[None,float] ):
+def discuss ( db, sqrts : Union[str,int,float], 
+              verbose : bool, lumi : Union[None,float] ):
     print ()
     print ( "---------------" )
     title = ""
@@ -134,7 +160,7 @@ def main():
     sqrts = args.sqrts.lower()
     if sqrts in [ "*" ]:
         sqrts = "all"
-    discuss ( db, args.update, sqrts, args.verbose, args.lumi )
+    discuss ( db, sqrts, args.verbose, args.lumi )
     if args.topologies:
         countTopos ( db, args.update, args.verbose )
 if __name__ == '__main__':
