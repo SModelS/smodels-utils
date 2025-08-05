@@ -56,6 +56,8 @@ class Lister:
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
         poptions["nosuperseded"]= not self.includeSuperseded
+        poptions["use_aggregated"]= self.use_aggregated
+        poptions["keep"]= False
         poptions["nofastlim"]= not self.includeFastlim
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
@@ -187,7 +189,7 @@ class Lister:
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{self.dotlessv}) and a [validation page](Validation{self.dotlessv}).\n" )
         self.f.write ( f"{referToOther}.\n" )
         sigsplot = self.significancesPlotFileName()
-        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.</sub></p>\n" )
+        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions[(0)](#A0). A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.</sub></p>\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
     def significancesPlotFileName ( self, postfix : str = "" ):
@@ -207,6 +209,10 @@ class Lister:
 
     def footer ( self ):
         # previous version self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        aggnonagg = "non-aggregated"
+        if self.use_aggregated:
+            aggnonagg = "aggregated"
+        self.f.write ( f"\n\n<a name='A0'>(0)</a> For analyses with both non-aggregated and aggregated signal regions, we use the {aggnonagg} ones.\n\n" )
         self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): allow SModelS to determine the sensitivity of UL results. Moreover, they may be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian (currently an experimental feature).\n\n" )
         self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
         self.f.write ( "<a name='A3'>(3)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
@@ -576,6 +582,8 @@ class Lister:
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
         argparser.add_argument ( '-n', '--no_superseded', action='store_true',
                                  help='ignore (filter out) superseded results' )
+        argparser.add_argument ( '-A', '--use_aggregated', action='store_true',
+                                 help='ignore (filter out) superseded results' )
         argparser.add_argument ( '-d', '--database',
                                  help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
@@ -605,6 +613,7 @@ class Lister:
         self.keep = args.keep
         self.fudged = args.fudged
         self.includeSuperseded = not args.no_superseded
+        self.use_aggregated = args.use_aggregated
         self.likelihoods = args.likelihoods
         self.write_stats = args.write_stats
         self.dbpath = args.database

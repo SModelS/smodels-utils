@@ -94,7 +94,7 @@ def main():
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd + [ "-f" ], A.dry_run )
-    exec ( cmd + [ "-n" ], A.dry_run )
+    exec ( cmd + [ "-n", "-A" ], A.dry_run )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
         cmd = [ "./listOfAnalyses.py", "-l", "-d", db ]
