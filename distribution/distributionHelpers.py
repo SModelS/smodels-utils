@@ -37,7 +37,7 @@ def runCmd ( cmd : str, prtMsg : bool = True ):
     f=open("/tmp/create.log","a")
     f.write( f"cmd: {cmd}\n" )
     # print('CMD=',cmd)
-    o=subprocess.check_output( cmd, shell=True )
+    o=(subprocess.check_output( cmd, shell=True )).decode("utf-8")
     if len(o)>0:
         print(f"[distribution] {o:>.80}" )
         f.write( f"{o!s}\n" )
