@@ -234,7 +234,7 @@ def moveNonAggregated( db : Database, dirname : str = "database/",
     comment ( f"created {tarball}" )
     return db
 
-def cloneDatabase( tag : str = "3.0.0", dirname : os.PathLike = "database/",
+def cloneDatabase( tag : str = "3.1.0", dirname : os.PathLike = "database/",
        pretend : bool = False ):
     """
     Execute 'git clone' to retrieve the database.
