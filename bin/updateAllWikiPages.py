@@ -6,6 +6,12 @@ import sys, subprocess, argparse, os
 from typing import Union, Text
 from smodels_utils.helper.terminalcolors import *
 
+from smodels_utils.helper.various import checkNumpyVersion
+from smodels.base.runtime import checkForIncompatibleModuleVersions
+
+checkNumpyVersion()
+smodels_check = checkForIncompatibleModuleVersions()
+
 def execute(cmd):
     print ( f"[cmd] {' '.join(cmd)}" )
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)

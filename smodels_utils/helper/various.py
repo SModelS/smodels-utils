@@ -14,6 +14,15 @@ from smodels.experiment.expResultObj import ExpResult
 from typing import Union, Text, Dict, List
 from smodels_utils.helper.terminalcolors import *
 
+def checkNumpyVersion ():
+    """ for pickling we want numpy < 2.0.0, so that the pickle files work for
+    both v1 and v2. """
+    import numpy
+    if numpy.__version__[0]!="1":
+        print ( f"[various] numpy version is {numpy.__version__}. Downgrade to 1.26.4 for pickling:" )
+        print ( f"pip install numpy==1.26.4" )
+        sys.exit()
+
 def removeAnaIdSuffices ( anaId : str ) -> str:
     """ given  analysis id <anaId>, remove all kinds of suffices """
     for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
