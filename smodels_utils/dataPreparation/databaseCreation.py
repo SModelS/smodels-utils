@@ -820,7 +820,7 @@ class DatabaseCreator(list):
                 value = str(value)
                 for i in [ "1.00", "1.000", "1.0000", "1.00000", "1.000000" ]:
                     value = value.replace(f"{i}E+00 [GeV]","GeV")
-            if value=="":
+            if value in [ "", None ]:
                 continue
             #Leave data for last
             if attr in dataLabels:
