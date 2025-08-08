@@ -200,7 +200,7 @@ class Lister:
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
-        directory = f"validation/{self.dotlessv}"
+        directory = f"validation/{self.orig_ver}"
         fullname = f"{self.github_io}/{directory}"
         if not os.path.exists ( fullname ):
             os.mkdir ( fullname )
@@ -632,6 +632,8 @@ class Lister:
             filename += "WithSuperseded"
         self.filename = filename
         self.add_version = args.add_version ## add version number
+        self.orig_ver = ver # original version, whether we are in versionless
+        # mode or not
         self.dotlessv = ""
         if self.add_version:
             self.dotlessv = ver
