@@ -31,6 +31,9 @@ class Lister:
         self.github_io = "../../smodels.github.io/"
 
     def metaStatisticsPlot ( self ):
+        if not self.add_version:
+            ## dont plot again
+            return
         # return ## FIXME remove
         import sys
         sys.path.insert(0,"../../protomodels/ptools")
