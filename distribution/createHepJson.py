@@ -346,11 +346,16 @@ class HepJsonCreator:
     def create( self, dbpath : os.PathLike, outputfile : os.PathLike ):
         """ create smodels-analyses.json """
         from smodels.experiment.databaseObj import Database
-        if not os.path.exists ( dbpath ) and not dbpath in [ "official", "superseded",
-                "fastlim", "full_llhds", "nonaggregated", "backup", "latest",
-                "backupunittest", "unittest", "debug", ]:
-            print ( f"[createHepJson] {dbpath} not found" )
-            sys.exit()
+        dbpaths = dbpath.split("+")
+        validNames = [ "official", "superseded", "fastlim", "full_llhds", 
+            "nonaggregated", "backup", "latest", "backupunittest", 
+            "unittest", "debug" ]
+        for dbp in dbpaths:
+            dbp = dbp.strip()
+            if not os.path.exists ( dbp ):
+               if not dbp in validNames:
+                   print ( f"[createHepJson] {dbpath} not found" )
+                   sys.exit()
         self.db = Database ( dbpath )
         self.f=open(outputfile,"wt")
         if self.long_version:
