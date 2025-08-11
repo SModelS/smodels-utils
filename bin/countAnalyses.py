@@ -22,6 +22,13 @@ from smodels_utils.helper.terminalcolors import *
 from typing import Union
 # setLogLevel("debug")
 
+mets = set()
+
+def writeMETs():
+    with open ( "mets", "wt" ) as f:
+        f.write ( '{'+','.join([ f"'{x}'" for x in mets ])+"}\n" )
+        f.close()
+
 def discussExperiment ( anas : list, experiment : str, title : str, verbose : bool ):
     print ( f"{GREEN}{title}{experiment}:{RESET}" )
     ianas = set()
@@ -59,6 +66,7 @@ def discussExperiment ( anas : list, experiment : str, title : str, verbose : bo
                     topos.add ( i.txName )
                     if hasMET:
                         topos_MET.add ( i.txName )
+                        mets.add ( Id )
                 else:
                     print ( f"[discussExperiment] {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i} validated {i.validated}" )
             if hasMET:
@@ -98,7 +106,8 @@ def discussExperiment ( anas : list, experiment : str, title : str, verbose : bo
     print ()
 
 def discuss ( db, sqrts : Union[str,int,float], 
-              verbose : bool, lumi : Union[None,float] ):
+              verbose : bool, lumi : Union[None,float],
+              mets ):
     print ()
     print ( "---------------" )
     title = ""
@@ -122,6 +131,8 @@ def discuss ( db, sqrts : Union[str,int,float],
     discussExperiment ( atlas, "ATLAS", title, verbose )
     print ( "---------------" )
     discussExperiment ( anas, "both", title, verbose )
+    if mets:
+        writeMETs()
 
 def countTopos ( superseded, filter_fastlim, db, update : str, verbose : bool = True ):
     """ count the topologies
@@ -153,6 +164,8 @@ def main():
     argparser.add_argument ( '-t', '--topologies', help='list topologies, also', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official]',
               type=str,default='official' )
+    argparser.add_argument ( '--mets', help='write mets file',
+              action="store_true" )
     args = argparser.parse_args()
     db = Database ( args.database )
     ss = [ True, False ]
@@ -160,7 +173,7 @@ def main():
     sqrts = args.sqrts.lower()
     if sqrts in [ "*" ]:
         sqrts = "all"
-    discuss ( db, sqrts, args.verbose, args.lumi )
+    discuss ( db, sqrts, args.verbose, args.lumi, args.mets )
     if args.topologies:
         countTopos ( db, args.update, args.verbose )
 if __name__ == '__main__':
