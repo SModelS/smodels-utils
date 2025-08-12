@@ -62,10 +62,12 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
-    dry_run : bool, keep : bool, time : float, cheatcode : Union[str,int], rundir : str,
-    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool, run_mcmc: bool,
+    dry_run : bool, keep : bool, time : float, 
+    cheatcode : Union[str,int], rundir : str,
+    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, 
+    test_param_space : bool, run_mcmc: bool,
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
-    forbidden : List[int], wallpids : bool ):
+    forbidden : List[int], wallpids : bool, templateSLHA : os.PathLike ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -90,6 +92,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     :param stopTeleportationAfter: stop teleportation after this step.
            if -1, dont run teleportation at all.
     :param forbidden: any forbidden pids we dont touch
+    :param templateSLHA: name of the templateSLHA file
     """ 
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = f"{rundir}/{dbpath}"
@@ -123,7 +126,8 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
         f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
-        f.write ( f"    forbiddenparticles={forbidden}\n" )
+        f.write ( f"    forbiddenparticles={forbidden},\n" )
+        f.write ( f"    templateSLHA='{templateSLHA}'\n" )
         f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
@@ -665,6 +669,9 @@ def main():
     argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
+    argparser.add_argument ( '-T', '--templateSLHA',
+                        help='path to template SLHA [template1g.slha]',
+                        type=str, default=None )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
@@ -788,7 +795,7 @@ def main():
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
                       args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
-                      wallpids )
+                      wallpids, args.templateSLHA )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -810,7 +817,7 @@ def main():
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
                         args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden,
-                        wallpids ) )
+                        wallpids, args.templateSLHA ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
