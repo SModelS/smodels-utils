@@ -414,7 +414,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
         ver = "(SLv2)"
 
-    print ( f"@@and here num_cr {num_cr}" )
+    # print ( f"@@and here num_cr {num_cr}" )
 
     #now plot figure
     # print("[drawPaperPlot] Drawing pretty obs and exp plots")
@@ -549,7 +549,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 
-    print ( f"@@XX here num_sr {num_sr} num_cr {num_cr} mlmodels {hasattr ( validationPlot.expRes.globalInfo, 'mlModels' )}" )
+    # print ( f"@@XX here num_sr {num_sr} num_cr {num_cr} mlmodels {hasattr ( validationPlot.expRes.globalInfo, 'mlModels' )}" )
 
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
