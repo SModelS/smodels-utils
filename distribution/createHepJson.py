@@ -86,6 +86,7 @@ class HepJsonCreator:
         """ header of the json file """
         import smodels
         self.f.write ( "{\n" )
+        self.f.write ( '  "schema_version": "1.0.0",\n' )
         self.f.write ( '  "tool": "SModelS",\n' )
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
