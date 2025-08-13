@@ -115,10 +115,11 @@ class RulerPlot:
         minvalue=min(self.masses)
         maxvalue = min ( [ 1.05*maxvalue, 3100. ] )
         minvalue = max ( [ 0, .95*minvalue ] )
-        if minvalue > 480:
-            minvalue = 480
-        if maxvalue < 620:
-            maxvalue = 620
+        if minvalue > 500:
+            minvalue = 500
+        if maxvalue < 260:
+            maxvalue = 260
+        assert minvalue < maxvalue, f"when determining range for ruler plot {minvalue} > {maxvalue}"
         dm = maxvalue - minvalue
         if self.range[0] != None and self.range[0] >=0.:
             minvalue=self.range[0]
@@ -197,7 +198,10 @@ class RulerPlot:
             yoff = 0. ## yoffset, put every second one halfway down
             if ctr % 2 == 1:
                 yoff=.5
-            plt.text ( m, .8-yoff, label, c = coldark, size=30, fontweight="bold" )
+            ytop = .8
+            #if maxvalue < 350.:
+            #    ytop = 1.
+            plt.text ( m, ytop-yoff, label, c = coldark, size=30, fontweight="bold" )
             lctr=0
             keys = []
 
@@ -285,7 +289,7 @@ class RulerPlot:
                     dtext = .2
                 if ctr == 0:
                     dtext = -.01
-            #print  ( "ctr", ctr, "mass", label, m, "xoff", xoff, "dtext", dtext )
+            # print  ( "@@XX5 ctr", ctr, "mass", label, "m", m, "xoff", xoff, "dtext", dtext )
             plt.text ( xoff + dtext, m, label, c = coldark, size=fontsize, 
                        fontweight="bold", ha="left" )
             x1 = xoff + side * .05
@@ -295,7 +299,7 @@ class RulerPlot:
             ## small horizontal lines next to the particle names
             if self.style != "andre":
             ## thats the line to the right
-                plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
+                plt.plot ( [ x1, x2 ], [m , m ], c= coldark )
 
             ## the LBP gets horizontal lines in both directions 
             if ctr == 0:
@@ -303,9 +307,9 @@ class RulerPlot:
                 x2 = .03
                 ## thats the line to the left
                 # print ( "line m=", m, "x=", x1, x2 )
-                plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
+                plt.plot ( [ x1, x2 ], [m , m ], c= coldark )
                 if len(sortedpids)>2:
-                    plt.plot ( [ xoff + dtext+.1, .7 ], [m+10. , m+10. ], c= coldark )
+                    plt.plot ( [ xoff + dtext+.1, .7 ], [m , m ], c= coldark )
 
             ## 
             ## at the center of the decay line
