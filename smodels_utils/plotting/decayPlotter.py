@@ -76,48 +76,23 @@ def draw( slhafile, outfile, options, offset=0.,
         for pre in [ 1, 2 ]:
             for post in [ 1, 2, 3, 4 ]:
                 tmp.add ( pre*1000000 + post )
-        """
-        for i in [ "u", "d", "c", "s", "b", "t", "q" ]:
-            for c in ["L", "R", "1", "2" ]:
-                tmp.append ("~%s_%s" % ( i, c) )
-                tmp.append ("~%s%s" % ( i, c) )
-        """
 
     if options["sleptons"]:
         for pre in [ 1, 2 ]:
             for post in [ 11, 12, 13, 14, 15, 16 ]:
                 tmp.add ( pre*1000000 + post )
-        """
-        for i in [ "l", "e", "mu", "tau", "nu", "nu_e", "nu_mu", "nu_tau" ]:
-            for c in ["L", "R", "1", "2" ]:
-                tmp.append ("~%s_%s" % ( i, c) )
-                tmp.append ("~%s%s" % ( i, c) )
-        """
 
     if options["weakinos"]:
         weakinos = { 1000022, 1000023, 1000024, 1000025, 1000035, 1000037 }
         tmp.update ( weakinos )
-        """
-        for p_ in [ "~chi1+", "~chi2+", "~chi20", "~chi30" ]:
-            tmp.append ( p_ )
-        """
 
     starters=[]
 
     for i in tmp:
         if reader.hasTeVScaleMass(i):
             starters.append ( i )
-        """
-        if type ( reader.getMass(i) ) == type ( 5.0 ) or \
-           type ( reader.getMass(i) ) == type ( 5 ):
-            if reader.getMass(i)<100000:
-                starters.append ( i )
-        else:
-            # add all else
-            starters.append ( i )
-        """
 
-    print ( "[decayPlotters] we start with", starters )
+    print ( f"[decayPlotters] we start with {starters}" )
     namer = sparticleNames.SParticleNames ( susy=False )
 
     ps=reader.getRelevantParticles ( reader.filterNames(starters), 
