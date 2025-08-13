@@ -671,7 +671,7 @@ def main():
                         type=str, default=None )
     argparser.add_argument ( '-T', '--templateSLHA',
                         help='path to template SLHA [template1g.slha]',
-                        type=str, default=None )
+                        type=str, default="template1g.slha" )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
