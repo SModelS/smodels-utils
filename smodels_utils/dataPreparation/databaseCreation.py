@@ -107,7 +107,6 @@ class DatabaseCreator(list):
         except:
             self.ncpus = 1
 	
-        self.ncpus = 1
         list.__init__(self)
 
     def removeOldDataSetDirs ( self ):
