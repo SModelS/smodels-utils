@@ -62,10 +62,15 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
+<<<<<<< Updated upstream
     dry_run : bool, keep : bool, time : float, 
     cheatcode : Union[str,int], rundir : str,
     maxsteps : int, select : str, do_srcombine : bool, record_history : bool, 
     test_param_space : bool, run_mcmc: bool,
+=======
+    dry_run : bool, keep : bool, time : float, cheatcode : Union[str,int], rundir : str,
+    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool, run_mcmc: bool, cap_ssm:float,
+>>>>>>> Stashed changes
     seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
     forbidden : List[int], wallpids : bool, templateSLHA : os.PathLike ):
     """ prepare everything for a single job
@@ -86,6 +91,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
     :param test_param_space: If True, walk over the param space keeping constant K and TL
+    :param cap_ssm: set the maximum value of the signal strength multipler (default=100)
     :param run_mcmc: if true, run mcmc walk without changing dimensions
     :param seed: the random seed for the walker
     :param update_hiscores: update the hiscores at the end
@@ -124,7 +130,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
             pass
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={scheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, run_mcmc = {run_mcmc},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden},\n" )
         f.write ( f"    templateSLHA='{templateSLHA}'\n" )
@@ -613,6 +619,8 @@ def main():
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '--test_param_space',
             help='test the parameter space by keeping constant K and TL', action="store_true" )
+    argparser.add_argument ( '--cap_ssm',
+            help='set the maximum value for the signal strength multipliers', type=float, default=100. )
     argparser.add_argument ( '--run_mcmc',
             help='run mcmc walk without changing dimensions', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
