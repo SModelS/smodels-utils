@@ -164,6 +164,12 @@ class RefXSecComputer:
             # PDGs of incoming states
             header += f" {pdg!s}"
         # Number of outgoing states
+        reducedPids = [] ## take out Nones from xsec.pid
+        for pid in xsec.pid:
+            if pid != None:
+                reducedPids.append ( pid )
+        xsec.pid = tuple ( reducedPids )
+
         header += f" {len(xsec.pid)!s}"
         for pid in xsec.pid:
             # PDGs of outgoing states
@@ -171,7 +177,7 @@ class RefXSecComputer:
         if comment:
             header += f" # {comment!s}"  # Comment
         entry = "  0  " + str(xsec.info.order) + "  0  0  0  0  " + \
-                str( f"{xsec.value / xsecUnit:16.8E}" ) + " SModelSv" + \
+                str( f"{float(xsec.value / xsecUnit):16.8E}" ) + " SModelSv" + \
                      smodelsinstallation.version()
 
         return f"\n{header}\n{entry}"
@@ -386,6 +392,8 @@ class RefXSecComputer:
             pids = channel["pids"]
             if pids[1]!=None and pids[1] < pids[0]:
                 pids = [ pids[1], pids[0] ]
+            #if pids[1] == None:
+            #    pids = [ pids[0] ]
             xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1],
                     sqrts, ewk, channel["masses"] )
             # print ( f"for channel {pids}: {str(xsecall)[:10]}" )
@@ -578,7 +586,10 @@ class RefXSecComputer:
         """ get the xsec dictionary for pid1/pid2, sqrts
         :param ewk: specify the ewkino process (hino, or wino, or None)
         """
-        logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
+        if pid2 == None:
+            logger.debug ( f"asking for cross sections for pids={pid1}, {sqrts} TeV" )
+        else:
+            logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
         filename=None
         order = 0
         pb = True
