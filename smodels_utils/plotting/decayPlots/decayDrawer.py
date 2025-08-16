@@ -165,6 +165,8 @@ class DecayDrawer:
             splabels = label.split(" ")
             newlabels = []
             for label in splabels:
+                # if these guys arent working,
+                # fix them maybe in .meddleWithTexFile
                 if label == "e":
                     label= "$e$"
                 if label == "ee":
@@ -172,7 +174,7 @@ class DecayDrawer:
                 if label == "mu":
                     label= "$\\mu$"
                 if label == "nu":
-                    label= "$v$"
+                    label= "@@nu@@"
                 if label == "nue":
                     label= "$v_{e}$"
                 if label == "numu":
@@ -276,8 +278,10 @@ class DecayDrawer:
             return ret
         return self.htmlName ( name )
 
-    def meddleWithTexFile ( self,out ):
-        """ this changes the tex file! """
+    def meddleWithTexFile ( self, out : os.PathLike ):
+        """ here we meddle with decays.tex file 
+        hacks that are easier to do here
+        """
         fname = f"{out}.tex" 
         if not os.path.exists ( fname ):
             return
@@ -289,6 +293,7 @@ class DecayDrawer:
         for line in lines:
             if "enlargethispage" in line:
                 continue
+            line = line.replace("@@nu@@",r"$\nu$")
             f.write ( line )
         f.close()
 
