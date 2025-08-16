@@ -62,17 +62,12 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
-<<<<<<< Updated upstream
-    dry_run : bool, keep : bool, time : float, 
-    cheatcode : Union[str,int], rundir : str,
-    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, 
-    test_param_space : bool, run_mcmc: bool,
-=======
-    dry_run : bool, keep : bool, time : float, cheatcode : Union[str,int], rundir : str,
-    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool, run_mcmc: bool, cap_ssm:float,
->>>>>>> Stashed changes
-    seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
-    forbidden : List[int], wallpids : bool, templateSLHA : os.PathLike ):
+    dry_run : bool, keep : bool, time : float, cheatcode : Union[str,int], 
+    rundir : str, maxsteps : int, select : str, do_srcombine : bool, 
+    record_history : bool, test_param_space : bool, run_mcmc: bool, 
+    cap_ssm:float, seed : Union[None,int], update_hiscores : bool, 
+    stopTeleportationAfter : int, forbidden : List[int], wallpids : bool, 
+    templateSLHA : os.PathLike ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -91,8 +86,8 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
                         simplified likelihoods or via pyhf
     :param record_history: if true, turn on the history recorder
     :param test_param_space: If True, walk over the param space keeping constant K and TL
-    :param cap_ssm: set the maximum value of the signal strength multipler (default=100)
     :param run_mcmc: if true, run mcmc walk without changing dimensions
+    :param cap_ssm: set the maximum value of the signal strength multipler (default=100)
     :param seed: the random seed for the walker
     :param update_hiscores: update the hiscores at the end
     :param stopTeleportationAfter: stop teleportation after this step.
@@ -801,7 +796,8 @@ def main():
                 for i in range(args.repeat):
                     runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
                       args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
+                      args.select, args.do_srcombine, args.record_history, 
+                      args.test_param_space, args.run_mcmc, 100., seed,
                       update_hiscores, args.stopTeleportationAfter, args.forbidden,
                       wallpids, args.templateSLHA )
                 totjobs+=1
@@ -823,7 +819,8 @@ def main():
                     p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, dbpath, args.dry_run,
                         args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
+                        args.select, args.do_srcombine, args.record_history, 
+                        args.test_param_space, args.run_mcmc, 100., seed,
                         update_hiscores, args.stopTeleportationAfter, args.forbidden,
                         wallpids, args.templateSLHA ) )
                     jobs.append ( p )
