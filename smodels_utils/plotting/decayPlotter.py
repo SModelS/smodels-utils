@@ -21,15 +21,14 @@ try:
     from . import setPath
 except ImportError as e:
     pass
-from smodels_utils.plotting import decayPlots
 import os
 from ptools import sparticleNames
 
-def draw( slhafile, outfile, options, offset=0.,
-          verbosity="info", ssmultipliers = None ):
+def draw( slhafile : os.PathLike, outfile : os.PathLike, options : dict , 
+          offset : float = 0., verbosity : str = "info" ):
     """ draw a decay plot from an slhafile
+    :param options: dictionary with all optional parameters
     :param offset: FIXME what does that one do?
-    :param ssmultipliers: signal strength multipliers
     """
     verbosity = verbosity.lower()
     levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
@@ -60,6 +59,7 @@ def draw( slhafile, outfile, options, offset=0.,
 
     verbosereader=False
     if options["verbose"]==True and not options["html"]: verbosereader=True
+    from smodels_utils.plotting import decayPlots
     reader=decayPlots.SPhenoReader ( slhafile, verbose=verbosereader, \
             integrateLeptons=(not options["leptons"]),
             integrateSquarks=options["integratesquarks"],
