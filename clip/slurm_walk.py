@@ -61,40 +61,42 @@ def mkdir ( Dir : str, symlinks : bool = True ):
     if not os.path.exists ( f'{os.environ["HOME"]}/{bDir}' ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
-def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
-    dry_run : bool, keep : bool, time : float, cheatcode : Union[str,int], 
-    rundir : str, maxsteps : int, select : str, do_srcombine : bool, 
-    record_history : bool, test_param_space : bool, run_mcmc: bool, 
-    cap_ssm:float, seed : Union[None,int], update_hiscores : bool, 
-    stopTeleportationAfter : int, forbidden : List[int], wallpids : bool, 
-    templateSLHA : os.PathLike ):
+def runOneJob ( rvars: dict ):
     """ prepare everything for a single job
-    :params pid: process id, integer that idenfies the process
-    :param jmin: id of first walker
-    :param jmax: id of last walker
-    :param cont: pickle file to start with, "" means start from SM
-    :param dbpath: path to database
-    :param dry_run: dont act, just tell us what you would do
-    :param keep: keep temporary files, for debugging
-    :param time: time in hours
-    :param cheatcode: in case we wish to start with a cheat model
-    :param rundir: the run directory
-    :param maxsteps: max number of steps
-    :param select: select for certain results, e.g. "all", "ul", "em",
+ 
+    rvars ( dict ):
+        - pid (int): process id, integer that idenfies the process
+        - jmin (int): id of first walker
+        - jmax (int): id of last walker
+        - cont (str): pickle file to start with, "" means start from SM
+        - dbpath (os.PathLike): path to database
+        - dry_run (bool): dont act, just tell us what you would do
+        - keep (bool): keep temporary files, for debugging
+        - time (float): time in hours
+        - cheatcode (Union[str,int]): in case we wish to start with a cheat model
+        - rundir (os.PathLike): the run directory
+        - maxsteps (int): max number of steps
+        - select (str): select for certain results, e.g. "all", "ul", "em",
                    "txnames:T1,T2"
-    :param do_srcombine: if true, then also perform combinations, either via
+        - do_srcombine (bool): if true, then also perform combinations, either via
                         simplified likelihoods or via pyhf
-    :param record_history: if true, turn on the history recorder
-    :param test_param_space: If True, walk over the param space keeping constant K and TL
-    :param run_mcmc: if true, run mcmc walk without changing dimensions
-    :param cap_ssm: set the maximum value of the signal strength multipler (default=100)
-    :param seed: the random seed for the walker
-    :param update_hiscores: update the hiscores at the end
-    :param stopTeleportationAfter: stop teleportation after this step.
+        - record_history (bool): if true, turn on the history recorder
+        - test_param_space (bool): If True, walk over the param space keeping constant K and TL
+        - run_mcmc (bool): if true, run mcmc walk without changing dimensions
+        - cap_ssm (float): set the maximum value of the signal strength multipler (default=100)
+        - seed (Union[None,int]): the random seed for the walker
+        - update_hiscores (bool): update the hiscores at the end
+        - stopTeleportationAfter (int): stop teleportation after this step.
            if -1, dont run teleportation at all.
-    :param forbidden: any forbidden pids we dont touch
-    :param templateSLHA: name of the templateSLHA file
+        - forbidden (List[int]): any forbidden pids we dont touch
+        - wallpids (bool): put up mass walls for pids
+        - templateSLHA (os.PathLike): name of the templateSLHA file
     """ 
+    globals().update ( rvars ) # doesnt work for all
+    dbpath = rvars["dbpath"]
+    jmax = rvars["jmax"]
+    cheatcode = rvars["cheatcode"]
+    do_srcombine = rvars["do_srcombine"]
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = f"{rundir}/{dbpath}"
     line = f"run walkers {jmin} - {jmax-1}"
@@ -791,15 +793,24 @@ def main():
         if args.maxsteps == None:
             args.maxsteps = 1000
         wallpids = not args.dont_wallpids
+        rvars = { "jmin": nmin, "jmax": nmax, "cont": cont, "dbpath": dbpath,
+                 "dry_run": args.dry_run, "keep": args.keep, "time": args.time,
+                 "cheatcode": cheatcode, "rundir": rundir, 
+                 "maxsteps": args.maxsteps, "select": args.select, 
+                 "do_srcombine": args.do_srcombine, 
+                 "record_history": args.record_history,
+                 "test_param_space": args.test_param_space,
+                 "run_mcmc": args.run_mcmc, "cap_ssm": 100.,
+                 "seed": seed, "update_hiscores": update_hiscores,
+                 "stopTeleportationAfter": args.stopTeleportationAfter,
+                 "forbidden": args.forbidden, "wallpids": wallpids,
+                 "templateSLHA": args.templateSLHA }
+
         while True:
             if nprocesses == 1:
                 for i in range(args.repeat):
-                    runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
-                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_srcombine, args.record_history, 
-                      args.test_param_space, args.run_mcmc, 100., seed,
-                      update_hiscores, args.stopTeleportationAfter, args.forbidden,
-                      wallpids, args.templateSLHA )
+                    rvars["pid"]=0
+                    runOneJob ( rvars )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -816,13 +827,11 @@ def main():
                     imax = imin + nwalkers
                     if seed != None: ## we count up
                         seed += (1+len(rundirs))*(1+nprocesses)
-                    p = multiprocessing.Process ( target = runOneJob,
-                        args = ( i, imin, imax, cont, dbpath, args.dry_run,
-                        args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_srcombine, args.record_history, 
-                        args.test_param_space, args.run_mcmc, 100., seed,
-                        update_hiscores, args.stopTeleportationAfter, args.forbidden,
-                        wallpids, args.templateSLHA ) )
+                    rvars["pid"]=i
+                    rvars["jmin"]=imin
+                    rvars["jmax"]=imax
+                    p = multiprocessing.Process ( target = runOneJob, 
+                                                  args = ( rvars, ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
