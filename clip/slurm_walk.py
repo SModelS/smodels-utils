@@ -107,7 +107,7 @@ def runOneJob ( rvars: dict ):
     slurmdir = f"{rundir}/slurm/" 
     if not os.path.exists ( slurmdir ):
         os.mkdir ( slurmdir )
-    runner = f"{slurmdir}/RUNNER_{jmin}.py"
+    runner = f"{slurmdir}/WALKER_{jmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -511,11 +511,11 @@ def logCall ():
     f.close()
 
 def cancelAllRunners():
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     cancelled = []
     for line in lines:
-        if not "RUNNER" in line:
+        if not "WALKER" in line:
             continue
         tokens = line.split()
         nr = tokens[0]
@@ -526,7 +526,7 @@ def cancelAllRunners():
 
 def getMaxJobId() -> int:
     """ get the highest job id """
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     nmax = 0
     for line in lines:
@@ -538,7 +538,7 @@ def getMaxJobId() -> int:
 
 def getMinJobId() -> int:
     """ get the lowest job id """
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     nmin = 1e99
     for line in lines:
@@ -585,11 +585,11 @@ def cancelRangeOfRunners( jrange : str ):
             cancelled.append ( i )
         print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
         return
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     running = []
     for line in lines:
-        if not "RUNNER" in line:
+        if not "WALKER" in line:
             continue
         tokens = line.split()
         nr = tokens[0]
