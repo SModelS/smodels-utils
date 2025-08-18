@@ -91,6 +91,7 @@ def runOneJob ( rvars: dict ):
         - forbidden (List[int]): any forbidden pids we dont touch
         - wallpids (bool): put up mass walls for pids
         - templateSLHA (os.PathLike): name of the templateSLHA file
+        - allowN1N1Prod (bool): allow N1 N1 production mode
     """ 
     globals().update ( rvars ) # doesnt work for all
     dbpath = rvars["dbpath"]
@@ -130,7 +131,8 @@ def runOneJob ( rvars: dict ):
         f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden},\n" )
-        f.write ( f"    templateSLHA='{templateSLHA}'\n" )
+        f.write ( f"    templateSLHA='{templateSLHA}',\n" )
+        f.write ( f"    allowN1N1Prod={allowN1N1Prod}\n" )
         f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
@@ -507,7 +509,7 @@ def logCall ():
         if " " in i or "," in i or "[" in i:
             i = f'"{i}"'
         args += f"{i} "
-    f.write ( f'[slurm.py-{time.strftime("%H:%M:%S")}] {args.strip()}\n' )
+    f.write ( f'\n[slurm.py-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
     f.close()
 
 def cancelAllRunners():
@@ -677,6 +679,9 @@ def main():
     argparser.add_argument ( '-T', '--templateSLHA',
                         help='path to template SLHA [template1g.slha]',
                         type=str, default="template1g.slha" )
+    argparser.add_argument ( '--allowN1N1Prod',
+                        help='allow N1 N1 production mode',
+                        action="store_true" )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
@@ -793,18 +798,15 @@ def main():
         if args.maxsteps == None:
             args.maxsteps = 1000
         wallpids = not args.dont_wallpids
-        rvars = { "jmin": nmin, "jmax": nmax, "cont": cont, "dbpath": dbpath,
-                 "dry_run": args.dry_run, "keep": args.keep, "time": args.time,
-                 "cheatcode": cheatcode, "rundir": rundir, 
-                 "maxsteps": args.maxsteps, "select": args.select, 
-                 "do_srcombine": args.do_srcombine, 
-                 "record_history": args.record_history,
-                 "test_param_space": args.test_param_space,
-                 "run_mcmc": args.run_mcmc, "cap_ssm": 100.,
-                 "seed": seed, "update_hiscores": update_hiscores,
-                 "stopTeleportationAfter": args.stopTeleportationAfter,
-                 "forbidden": args.forbidden, "wallpids": wallpids,
-                 "templateSLHA": args.templateSLHA }
+        rvars = vars(args)
+        rvars["jmin"]= nmin 
+        rvars["jmax"]= nmax 
+        rvars["cont"]= cont 
+        rvars["dbpath"] = dbpath
+        rvars["cap_ssm"] = 100.
+        rvars["seed"] = seed
+        rvars["update_hiscores"] = update_hiscores
+        rvars["wallpids"] = wallpids
 
         while True:
             if nprocesses == 1:
