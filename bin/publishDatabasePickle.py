@@ -20,6 +20,8 @@ from smodels_utils.helper.terminalcolors import *
 from smodels_utils.helper.various import checkNumpyVersion
 from smodels.base.runtime import checkForIncompatibleModuleVersions
 
+from typing import Union, Set, Tuple
+
 checkNumpyVersion()
 smodels_check = checkForIncompatibleModuleVersions()
 if not smodels_check:
@@ -51,12 +53,13 @@ def addToCommandsFile ( cmd ):
     f.write ( f"{cmd}\n" )
     f.close()
 
-def _getSHA1 ( filename ):                                                                         return hashlib.sha1( pathlib.Path(filename).read_bytes() ).hexdigest()
+def _getSHA1 ( filename : os.PathLike ) -> str:
+    return hashlib.sha1( pathlib.Path(filename).read_bytes() ).hexdigest()
 
 eosdir = "/eos/project/s/smodels/www/database/"
 
 def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
-    """ create the file with the python dictionary that contains all 
+    """ create the file with the python dictionary that contains all
     meta info about the pickle file, e.g.:
     {"lastchanged": 1746624990.8478498, "mtime": "Wed May  7 15:36:30 2025", "size": 90289590, "url": "https://smodels.web.cern.ch/smodels/database/unittest310.pcl", "sha1": "5b7d238b401aab442e7944c6afdbb31e9b4c444c"}
     :param infofile: path to info file containing above python dictionary
@@ -75,7 +78,7 @@ def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
 
-def checkNonValidated( database ):
+def checkNonValidated( database ) -> Tuple[bool,Set]:
     """ check if there are results with e.g. "tbd" as their validated field.
     """
     has_nonValidated = False
@@ -96,6 +99,7 @@ def checkNonValidated( database ):
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file [database.pcl]', default="database.pcl" )
+    ap.add_argument( '--db_name', help='give an explicit name for this database [auto]', default=None )
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
     ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
@@ -150,8 +154,7 @@ def main():
             smodels.experiment.txnameObj.TxNameData._keep_values = True
             force_load = "txt"
         import smodels
-        print ( "[publishDatabasePickle] building database ''%s'' with ''%s''" % \
-                (dbname, os.path.dirname ( smodels.__file__ ) ) )
+        print ( f"[publishDatabasePickle] building database ''{dbname}'' with ''{os.path.dirname ( smodels.__file__ )}''" )
         d = Database ( dbname, progressbar=True, force_load = force_load )
         if args.txnamevalues:
             txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
@@ -228,6 +231,9 @@ def main():
 
     infofile = f"official{ver}{sfastlim}"
     pclfilename = f"official{ver}{sfastlim}.pcl"
+    if args.db_name not in [ "auto", None ]:
+        pclfilename = args.db_name + ".pcl"
+        infofile = args.db_name
     if args.txnamevalues:
         d.subs[0].databaseVersion=f"debug{dbver}"
         infofile = f"debug{ver.replace('debug', '')}"
@@ -278,7 +284,7 @@ def main():
         sexec="suppressing execution of:"
     if not ssh:
         print ( "eos exists on this machine! copy file!" )
-        cmd = f"cp {pcfilename} {eosdir}/"
+        cmd = f"cp {pclfilename} {eosdir}/"
         a=CMD.getoutput ( cmd )
         if len(a)>0:
             print ( f"[publishDatabasePickle] {a}" )
@@ -297,7 +303,7 @@ def main():
             a=CMD.getoutput ( cmd )
             print ( f"[publishDatabasePickle] update latest: {cmd} {a}" )
     backupfile = None
-    if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
+    if args.db_name is None and not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = f"backup{ver}"
         #if not args.remove_fastlim:
         #    backupfile = "backup_fastlim"
