@@ -303,7 +303,7 @@ def main():
             a=CMD.getoutput ( cmd )
             print ( f"[publishDatabasePickle] update latest: {cmd} {a}" )
     backupfile = None
-    if not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
+    if args.db_name is None and not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = f"backup{ver}"
         #if not args.remove_fastlim:
         #    backupfile = "backup_fastlim"
