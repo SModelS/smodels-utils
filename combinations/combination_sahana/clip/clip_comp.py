@@ -127,7 +127,7 @@ class SModelsOutput(object):
         if bestThPred == []:
             print("M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: None")
             print("Not running SModelS on file as no tp available")
-            logging.warning("Not running SModelS on %s as no tp available"%(filename))
+            logging.warning(f"Not running SModelS on {filename} as no tp available")
             
             process_et = time.process_time()
             time_process = time.strftime("%H:%M:%S", time.gmtime(process_et - process_st))
@@ -155,7 +155,7 @@ class SModelsOutput(object):
         filename = self.file.split('/')[-1]
         
         #enter path of parameters.ini file
-        parameterFile="%s/./parameters.ini"%(os.path.expanduser('~/git/smodels'))
+        parameterFile=f"{os.path.expanduser('~/git/smodels')}/./parameters.ini"
         parser = modelTester.getParameters(parameterFile)
         
         listOfAna = [ana for ana in self.allo.keys()]
@@ -188,7 +188,7 @@ class SModelsOutput(object):
         self.output_str = ['The highest r value is =', 'CMS analysis with highest available r_expected:', 'ATLAS analysis with highest available r_expected:', 'Combined Analyses:','combined r-value:','combined r-value (expected):']
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
-        with open('results_2/%s.smodels'%(file), 'r') as file:
+        with open(f'results_2/{file}.smodels', 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
                 if row == []:continue
@@ -219,7 +219,7 @@ class SModelsOutput(object):
         
         file = file.split('/')[-1]
         print('\n',file)
-        f = open('results_2/%s.py'%(file), 'r')
+        f = open(f'results_2/{file}.py', 'r')
         
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
@@ -289,15 +289,15 @@ if __name__ == "__main__":
     
     #sm = SModelsOutput(files)
     #output_name = 'summary_array2.csv'
-    output_name = args.summaryfilename + '.csv'
+    output_name = f"{args.summaryfilename}.csv"
     
-    with open('results_2/%s'%(output_name),'w') as out:
-        out.write('#Has files from %s to %s'%(fs*100,(fs+1)*100))
+    with open(f'results_2/{output_name}','w') as out:
+        out.write(f'#Has files from {fs * 100} to {(fs + 1) * 100}')
         out.write('\n#SLHA_file\t M_N1\t M_N2\t M_C1\t M_N3\t M_N4\t M_C2\t r_obs(comb)\t r_exp(comb)\t Combination\t max_r_obs\t Most_Constraining_Analysis\t max_r_exp\t Most_sensitive_Analysis\t Time taken')
         for i in range(100):
             item = queue.get()
             print(item)
-            out.write('\n{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10],item[11],item[12],item[13],item[14]))
+            out.write(f'\n{item[0]}\t{item[1]}\t{item[2]}\t{item[3]}\t{item[4]}\t{item[5]}\t{item[6]}\t{item[7]}\t{item[8]}\t{item[9]}\t{item[10]}\t{item[11]}\t{item[12]}\t{item[13]}\t{item[14]}')
         
         out.close()
                    

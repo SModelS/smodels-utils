@@ -82,7 +82,7 @@ def scan():
     # print ( "\n".join ( anas ) )
     if topos:
         print ( "\n".join ( anantopos ) )
-    print ( "%d analyses need to rerun" % ( len(anas) ) )
+    print ( f"{len(anas)} analyses need to rerun" )
 
 if __name__ == "__main__":
     scan()

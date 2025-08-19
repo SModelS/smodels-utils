@@ -56,7 +56,7 @@ class SPhenoReader:
           for pdgid,value in masses.items():
             self.masses[pdgid]=float(value)
         except Exception as e:
-            logger.error ( "Exception in ``parseNamesAndMasses'': %s" % e )
+            logger.error ( f"Exception in ``parseNamesAndMasses'': {e}" )
 
     def fullName ( self, pdgid, integrated=False ):
         """ get the full name of pdgid """
@@ -109,7 +109,7 @@ class SPhenoReader:
         print ( "SPhenoReader Mass Table" )
         print ( "-----------------------" )
         for (k,v) in self.masses.items():
-          print ( "%10s: %d GeV" % ( self.name ( k ), v ) )
+          print ( f"{self.name(k):>10}: {int(v)} GeV" )
 
     def getMass ( self, name ):
         pdgid=self.pdgId ( name )
@@ -166,13 +166,13 @@ class SPhenoReader:
         n1=self.ids[p1]
         n2=self.ids[p2]
         if math.fabs ( m2 - m1 ) > 25:
-          logger.error ( "cannot merge %s with %s" % ( n1,n2 ) )
+          logger.error ( f"cannot merge {n1} with {n2}" )
           return
         self.masses[p1]=(m1+m2)/2.
         self.masses.pop(p2)
         self.ids.pop(p2)
         self.ids.pop(n2)
-        n3=n1+","+n2[-1:]
+        n3=f"{n1},{n2[-1:]}"
         self.ids[p1]=n3
 
     def getMasses ( self ):
@@ -216,10 +216,10 @@ class SPhenoReader:
             mname = self.name ( mother )
             mmass = self.masses[mother]
             if mmass < 90000.:
-                logger.error ( "[sphenoReader:warning] %s branchings add up to %.2f, mass of %s is %s " % ( mname, rtotal, mname, self.masses[mother] ) )
+                logger.error ( f"[sphenoReader:warning] {mname} branchings add up to {rtotal:.2f}, mass of {mname} is {self.masses[mother]} " )
             return
           if absdiff > 0.01:
-            logger.warn ( "[sphenoReader:warning] %s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )
+            logger.warn ( f"[sphenoReader:warning] {self.name(mother)} branchings add up to {rtotal:.2f}" )
             return
 
     def integratePdgs ( self, pdgid ):
@@ -264,8 +264,8 @@ class SPhenoReader:
             if not pdgIdMother in self.decays.keys ( ):
               self.decays[pdgIdMother]={}
               self.fulldecays[pdgIdMother]={}
-            nbody=Word ( nums+"eE+-." )+Word ( nums+"-" )+ Word ( nums+"-" ) +\
-                  Word ( nums+"-" ) + Optional ( Word ( nums+"-" ) )
+            nbody=Word ( f"{nums}eE+-." )+Word ( f"{nums}-" )+ Word ( f"{nums}-" ) +\
+                  Word ( f"{nums}-" ) + Optional ( Word ( f"{nums}-" ) )
             try:
               parsed=nbody.parseString ( line )
               r=float(parsed[0])
@@ -277,13 +277,13 @@ class SPhenoReader:
               radiate=self.name(self.integratePdgs(ps[1]),integrated=True)
               fradiate=self.fullName(self.integratePdgs(ps[1]),integrated=True)
               if len(parsed)>4:
-                radiate+=" "+self.name(self.integratePdgs(ps[2]),integrated=True)
-                fradiate+=" "+self.fullName(self.integratePdgs(ps[2]),integrated=True)
+                radiate+=f" {self.name(self.integratePdgs(ps[2]), integrated=True)}"
+                fradiate+=f" {self.fullName(self.integratePdgs(ps[2]), integrated=True)}"
               if self.verbose:
                 if len(parsed)<=4:
-                  logger.debug ( "%d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r ) )
+                  logger.debug ( f"{int(pdgIdMother)} -> {int(ps[0])}  {int(ps[1])}   ({r})" )
                 else:
-                  logger.debug ( "%d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate ) )
+                  logger.debug ( f"{int(pdgIdMother)} -> {int(ps[0])}  {int(ps[1])}  {int(ps[2])}  ({r}) radiate={radiate} fradiate={fradiate}" )
               if not ps[0] in self.decays[pdgIdMother].keys ( ):
                 self.decays[pdgIdMother][ps[0]]={}
                 self.fulldecays[pdgIdMother][ps[0]]={}
@@ -296,10 +296,10 @@ class SPhenoReader:
             except ParseException as e:
               logger.error ( "error, failed while trying to interpret "\
                     "the following line as a decay line" )
-              logger.debug ( "line >>%s<<" % line )
+              logger.debug ( f"line >>{line}<<" )
           self.checkDecayTable()
         except Exception as e:
-          logger.error ( "exception in ``parseBranchings'': %s" %e )
+          logger.error ( f"exception in ``parseBranchings'': {e}" )
 
     def pdgId ( self, name ):
         if type(name)==type(3):
@@ -353,7 +353,7 @@ class SPhenoReader:
             pos=particle.find(" ")
             p=particle[:pos]
             particle=particle[pos:]
-            logger.debug ( "p=->%s<- pp=->%s<=" % ( p, particle ) )
+            logger.debug ( f"p=->{p}<- pp=->{particle}<=" )
           return ret
         return 0.0
 

@@ -80,13 +80,13 @@ class TxDecay(object):
 
         """
         if self._name in decays.keys():
-            logger.info('found decay for topology %s' %self._name)
+            logger.info(f'found decay for topology {self._name}')
             return decays[self._name]
         if self._slackExpTopologyName() in decays.keys():
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
             return decays[self._slackExpTopologyName()]
-        logger.warning('no decay found for topology %s' %self._name)
+        logger.warning(f'no decay found for topology {self._name}')
         return None
 
     @property
@@ -102,12 +102,12 @@ class TxDecay(object):
             lenght = len(decay)
             decayString =''
             for line in decay:
-                if i != 1: decayString = decayString + '{'
+                if i != 1: decayString = f"{decayString}{{"
                 if i != lenght:
-                    decayString = decayString +  '#splitline{' + self._latexDecay(line)
+                    decayString = f"{decayString}#splitline{{{self._latexDecay(line)}"
                 if i == lenght:
                     decayString = decayString + self._latexDecay(line)
-                decayString = decayString + '}'
+                decayString = f"{decayString}}}"
                 if i == lenght:
                     decayString = decayString + '}'*(i-2)
                 i += 1
@@ -134,12 +134,12 @@ class TxDecay(object):
         to a string readable by ROOT.TLatex object.
 
         """
-        decayString = decayString.replace('anti' + key + ' ','#bar{' + value + '}')
-        decayString = decayString.replace('anti' + key + '* ','#bar{' + value + '}*')
-        decayString = decayString.replace(key + ' ',value)
-        decayString = decayString.replace(key + '_',value + '_')
-        decayString = decayString.replace(key + '^',value + '^')
-        decayString = decayString.replace(key + '* ',value + '*')
+        decayString = decayString.replace(f"anti{key} ",f"#bar{{{value}}}")
+        decayString = decayString.replace(f"anti{key}* ",f"#bar{{{value}}}*")
+        decayString = decayString.replace(f"{key} ",value)
+        decayString = decayString.replace(f"{key}_",f"{value}_")
+        decayString = decayString.replace(f"{key}^",f"{value}^")
+        decayString = decayString.replace(f"{key}* ",f"{value}*")
         return decayString
 
     @property
@@ -170,7 +170,7 @@ class TxDecay(object):
             return 'c0'
         if  'neutralino_2' in motherPart and 'neutralino_3' in motherPart:#
             return 'c02c03'
-        logger.error('could not identify mother particle for  %s' %self._name)
+        logger.error(f'could not identify mother particle for  {self._name}')
         return None
 
     @property
@@ -183,7 +183,7 @@ class TxDecay(object):
         if isinstance(decay,list): decay = decay[0]
         decaySteps = decay.split('-->')
         if len(decaySteps) == 2: return self._latexDecay(decay)
-        decay = decaySteps[0] + '--> '
+        decay = f"{decaySteps[0]}--> "
         lsp = 'lsp '*(len(decay.split())-1)
         decaySteps = decaySteps[1:]
         for decayStep in decaySteps:
@@ -191,7 +191,7 @@ class TxDecay(object):
             #decayStep.replace(')','')
             #decayStep.replace('|','')
             for particle in prettySMParticle:
-                if particle in decayStep: decay = decay + particle + ' '
+                if particle in decayStep: decay = f"{decay}{particle} "
         decay = decay + lsp
         return self._latexDecay(decay)
 

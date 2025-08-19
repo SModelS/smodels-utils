@@ -67,7 +67,7 @@ def draw( validationfile ):
         bestSRs.append ( ( axes[1], axes[0], point["best combination"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
-        print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( f"[drawBestSRs] skipped {int(skipped)}/{len(validationData)} points: {err}" )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
@@ -136,12 +136,12 @@ def draw( validationfile ):
         plt.ylabel ( "$\Gamma$ [GeV]" )
         plt.xlabel ( "m [GeV]" )
     #plt.ylabel ( "$\\Delta$m [GeV]" )
-    print ( "[drawBestSRs] plotting %s (%s)" % ( anaId, topo ) )
+    print ( f"[drawBestSRs] plotting {anaId} ({topo})" )
     andre=""
     if "andre" in validationfile:
         andre="-andre"
-    plt.title ( "Best Combination, %s (%s)" % ( anaId+andre, topo ) )
-    fname = "bestSR_%s%s_%s.png" % ( anaId, andre, topo )
+    plt.title ( f"Best Combination, {anaId + andre} ({topo})" )
+    fname = f"bestSR_{anaId}{andre}_{topo}.png"
     print ( "[drawBestSRs} saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
@@ -150,33 +150,33 @@ def draw( validationfile ):
 def writeBestSRs( push = False ):
     import glob
     Dir = "../../smodels.github.io/ratioplots/"
-    files = glob.glob("%sbestSR*png" % Dir )
+    files = glob.glob(f"{Dir}bestSR*png" )
     files.sort()
     topos = set()
     for f in files:
         p = f.rfind ( "_" )
         topos.add ( f[p+1:-4] )
     # print ( topos )
-    with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
+    with open ( f"{Dir}bestSRs.md", "wt" ) as g:
         g.write ( "# plots of best expected signal regions\n" )
-        g.write ( "as of %s\n" % time.asctime() )
+        g.write ( f"as of {time.asctime()}\n" )
         g.write ( "checkout also the [ratio plots](README.md)\n" )
         tsorted = list(topos)
         tsorted.sort() ## why???
         for topo in tsorted:
-            g.write ( "\n## Topology: %s\n\n" % topo )
+            g.write ( f"\n## Topology: {topo}\n\n" )
             g.write ( "| andre | suchi |\n" )
             for f in files:
                 src = f.replace( Dir, "" )
                 if not topo in src:
                     continue
-                g.write ( '| <img src="%s" /> ' % ( src ) )
+                g.write ( f'| <img src="{src}" /> ' )
             g.write ( "|\n" )
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
     if push:
         o = subprocess.getoutput ( cmd )
-    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+    print ( f"[drawBestSRs] cmd {cmd}: {o}" )
 
 if __name__ == "__main__":
     import argparse
@@ -201,19 +201,19 @@ if __name__ == "__main__":
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
-                print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
+                print ( f"[drawBestSRs:default] now drawing {a}:{v}" )
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = draw( ipath )
                 if args.copy:
-                    cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+                    cmd = f"cp {fname} ../../smodels.github.io/ratioplots/"
                     o = subprocess.getoutput ( cmd )
-                    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+                    print ( f"[drawBestSRs] cmd {cmd}: {o}" )
     else:
         ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
         fname = draw( ipath )
         if args.copy:
-            cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+            cmd = f"cp {fname} ../../smodels.github.io/ratioplots/"
             o = subprocess.getoutput ( cmd )
-            print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+            print ( f"[drawBestSRs] cmd {cmd}: {o}" )
     if args.copy:
         writeBestSRs( args.push )

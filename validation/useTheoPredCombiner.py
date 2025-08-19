@@ -21,6 +21,10 @@ model.logger.setLevel ( logging.WARNING )
 from smodels.base.physicsUnits import GeV, fb
 from smodels.decomposition import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
+try:
+    from smodels.statistics.basicStats import observed, apriori, aposteriori, NllEvalType
+except Exception as e:
+    pass
 import multiprocessing
 
 def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts ):
@@ -47,8 +51,11 @@ def getCombinedTheoryPreds_ ( slhafile : str, inDir : str, expRes : list, rdicts
         return
     combiner = TheoryPredictionsCombiner ( tpreds, slhafile )
     combiner.computeStatistics()
-    r = combiner.getRValue ( expected=False )
-    rexp = combiner.getRValue ( expected=True )
+    r = combiner.getRValue ( )
+    try:
+        rexp = combiner.getRValue ( evaluationType=apriori )
+    except Exception as e:
+        rexp = combiner.getRValue ( expected = True )
     maxcond = combiner.getmaxCondition()
     xsec =float(combiner.totalXsection().asNumber(fb))
     chi2 = combiner.chi2()
@@ -120,7 +127,7 @@ class ValidationPlot( validationObjs.ValidationPlot ):
             logger.warning("SLHA folder not defined")
             return False
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.debug("SLHA files for validation at %s" %slhaDir)
+        logger.debug(f"SLHA files for validation at {slhaDir}")
 
         from smodels.matching import modelTester
         #Get list of input files to be tested
@@ -183,12 +190,12 @@ class ValidationPlot( validationObjs.ValidationPlot ):
         if fformat.startswith("."):
             fformat = fformat[1:]
 
-        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
+        filename = f"{self.expRes.globalInfo.id}_{self.txName}_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","").\
                     replace("/","d")
-        filename += '_tpredcomb.'+fformat
+        filename += f"_tpredcomb.{fformat}"
 
-        filename = filename.replace(self.expRes.globalInfo.id+"_","")
+        filename = filename.replace(f"{self.expRes.globalInfo.id}_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
 

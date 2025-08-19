@@ -5,38 +5,38 @@ import subprocess as commands
 
 home=os.environ["HOME"]
 
-dirs = glob.glob ( "%s/git/smodels-database-covariances" % home )
+dirs = glob.glob ( f"{home}/git/smodels-database-covariances" )
 anaId="CMS-PAS-SUS-16-052-eff"
 
 for dir in dirs:
-    path = "%s/13TeV/CMS/%s" % ( dir, anaId )
-    ars = glob.glob ( "%s/sr*" % path )
+    path = f"{dir}/13TeV/CMS/{anaId}"
+    ars = glob.glob ( f"{path}/sr*" )
     nr = len ( ars ) 
     f=open("__init__.py","w")
-    f.write ( "nSRs=%d\n" % nr )
+    f.write ( f"nSRs={int(nr)}\n" )
     f.close()
-    commands.getoutput ( "cp %s/sms.root ." % path )
-    files = glob.glob ( "%s/validation/T*py" % ( path ) )
+    commands.getoutput ( f"cp {path}/sms.root ." )
+    files = glob.glob ( f"{path}/validation/T*py" )
     print ( nr, dir, files )
     for f in files:
         fname = os.path.basename ( f )
         tpos = fname.find ( "_" )
         topo = fname [ :tpos ]
-        cmd = "cp %s ./%s_%s.py" % ( f, topo, nr )
+        cmd = f"cp {f} ./{topo}_{nr}.py"
         print ( cmd )
         commands.getoutput ( cmd )
-        if os.path.exists ( "./%s_all.py" % ( topo ) ):
-            commands.getoutput ( "rm -f ./%s_all.py" % ( topo ) )
-        commands.getoutput ( "ln -s ./%s_%s.py ./%s_all.py" % ( topo, nr, topo ) )
-    rootfiles = glob.glob ( "%s/13TeV/CMS/%s/validation/T*root" % (dir, anaId ) )
+        if os.path.exists ( f"./{topo}_all.py" ):
+            commands.getoutput ( f"rm -f ./{topo}_all.py" )
+        commands.getoutput ( f"ln -s ./{topo}_{nr}.py ./{topo}_all.py" )
+    rootfiles = glob.glob ( f"{dir}/13TeV/CMS/{anaId}/validation/T*root" )
     for f in rootfiles:
         fname = os.path.basename ( f )
         tpos = fname.find ( "_" )
         topo = fname [ :tpos ]
-        cmd = "cp %s ./%s.root" % ( f, topo )
+        cmd = f"cp {f} ./{topo}.root"
         print ( cmd )
         commands.getoutput ( cmd )
-    smsFile = "%s/13TeV/CMS/%s/sms.root" % ( dir, anaId )
-    cmd = "cp %s %s" % ( smsFile, "." )
+    smsFile = f"{dir}/13TeV/CMS/{anaId}/sms.root"
+    cmd = f"cp {smsFile} ."
     print ( cmd )
     commands.getoutput ( cmd )

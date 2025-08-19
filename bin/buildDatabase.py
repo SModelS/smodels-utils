@@ -47,7 +47,7 @@ for e in results[:1]:
         #print ( "expected upper limit",ds," (on sigma)", eul/eff )
         #print ( "eff", eff )
     predictions = theoryPredictionsFor ( e, smstoplist, useBestDataset=False, combinedResults=True )
-    print ( "theorypredfor=%s" % predictions )
+    print ( f"theorypredfor={predictions}" )
     for theoryPrediction in predictions:
         datasetID = theoryPrediction.dataId()
         mass = theoryPrediction.mass

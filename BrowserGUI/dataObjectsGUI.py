@@ -195,4 +195,4 @@ class ULgetter(BoxLayout):
         if not ul:
             self.resLabel.text = 'Error computing limit'
         else:
-            self.resLabel.text = "Upper Limit  = " + str(ul)
+            self.resLabel.text = f"Upper Limit  = {ul!s}"

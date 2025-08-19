@@ -6,16 +6,16 @@ import os, random
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array
-import json
+import json, tokenize, sys
 import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
-from validationHelpers import getAxisType, prettyAxes, translateAxisV2
+from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 
-def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"], 
+def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"],
                       axes=None, eval_axes=True ):
     """
     Get Exclusion Curve from official and SModelS json files
@@ -29,9 +29,10 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
 
     excl_x,excl_y,exp_excl_x,exp_excl_y = [],[],[],[]
     excl_lines = {}
-    
+
     if type == "official":
-        file = open(f"{anaDir}/exclusion_lines.json")
+        fname = f"{anaDir}/exclusion_lines.json"
+        file = open( fname )
         excl_file = json.load(file)
         axes = axes.replace(" ", "")
         import sympy
@@ -53,7 +54,11 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
                         sv = parse_expr ( v )
                         isInTokens = False
                         for t in tokens:
-                            st = parse_expr ( t )
+                            try:
+                                st = parse_expr ( t )
+                            except tokenize.TokenError as e:
+                                print ( f"[drawPaperPlot] token error '{e}': '{t}' in {fname}" )
+                                sys.exit(-1)
                             if st == sv:
                                 isInTokens = True
                                 break
@@ -68,7 +73,7 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
                 else:
                     print( f"[drawPaperPlot] {RED}ERROR could not find new axis. implement! {axes} {RESET}" )
                     sys.exit(-1)
-   
+
             excl_x = excl_file[txname][f"obsExclusion_{axes}"]['x']
             excl_y = excl_file[txname][f"obsExclusion_{axes}"]['y']
             if f"expExclusion_{axes}" in excl_file[txname].keys():
@@ -90,12 +95,13 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
             # return excl_lines
         if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
-            print (f"[drawPaperPlot] we have {txname}_bestSR_{axes} as an exclusion line" )
+            saxes = axes.replace(" ","").replace("'","")
+            print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
             excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
             excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
             exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
             exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
-        
+
         elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
             curve = f'{txname}_comb_{axes}'
             excl_x     = sum(excl_file[curve]['obs_excl']['x'], [])
@@ -105,8 +111,9 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             col = CYAN
             if len(excl_x)==0:
                 col = RED
-            print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
-            
+            scurve = curve.replace(" ","").replace("'","")
+            print (f"[drawPaperPlot] {col}we have {scurve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
+
     excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
 
     if ('x - y' in axes or 'x-y' in axes) and eval_axes:
@@ -114,17 +121,22 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
         for type, excl in excl_lines.items():
             excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
             excl_lines[type] = {"x":excl["x"],"y":excl_y}
-    
+
     return excl_lines
 
-def getOnshellAxesForOffshell(anaDir, tx_onshell):
-    sm_file = open(f"{anaDir}/validation/SModelS_ExclusionLines.json","r")
+def getOnshellAxesForOffshell(anaDir : os.PathLike, tx_onshell : str,
+        validationFolder : os.PathLike ):
+    fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
+    if not os.path.exists ( fname ):
+        print ( f"[drawPaperPlot] {fname} does not exist" )
+        return None
+    sm_file = open(fname,"r")
     file = open(f"{anaDir}/exclusion_lines.json")
     excl_file = json.load(file)
     excl_sm = json.load(sm_file)
     sm_file_keys = [key for key in excl_sm.keys() if f"{tx_onshell}_" in key]
     check_tx_on = [True for key in sm_file_keys if (f"{tx_onshell}_comb_" in key or f"{tx_onshell}_bestSR_" in key)]
-    
+
     if tx_onshell not in excl_file:
         print(f"[drawPaperPlot] {tx_onshell} not found in official excl. Plotting only offshell")
         return None
@@ -133,45 +145,47 @@ def getOnshellAxesForOffshell(anaDir, tx_onshell):
         return None
     else:
         axes = sm_file_keys[0].split('_')[-1]
-        print("[drawPaperPlot]", axes)
+        print("[drawPaperPlot]", axes, type(axes))
         return axes
-        
-    
+
+
 def drawOffshell(excl_lines, excl_off, min_off_y = 0.0, official=False):
-    
+
     print("[drawPaperPlot] min_off_y ", min_off_y )
     for type,excl in excl_lines.items():
         if excl_off[type]["x"] == []:
             continue
-        
+
         if excl_off[type]["x"][0] > excl_off[type]["x"][-1] or excl_off[type]["x"][1] > excl_off[type]["x"][-2]:
-            print("[drawPaperPlot] off reverse")
+            # print("[drawPaperPlot] off reverse")
             excl_off[type]["x"].reverse()
             excl_off[type]["y"].reverse()
         if official: min_off_y = excl_off[type]["y"][0]
-        
+
         if excl_off[type]["y"][-1] < excl_off[type]["y"][0]:# and official:
-            print("[drawPaperPlot] yes ")
+            # print("[drawPaperPlot] yes ")
             index = [i for i,y  in enumerate(excl_off[type]["y"]) if y>excl_off[type]["y"][0]+50]
-            excl_off[type]["x"] = excl_off[type]["x"][:index[-1]]
-            excl_off[type]["y"] = excl_off[type]["y"][:index[-1]]
-        
-        if excl["x"][0] > excl["x"][-1]:
-            print("[drawPaperPlot] on reverse")
+            if len(index)>0:
+                excl_off[type]["x"] = excl_off[type]["x"][:index[-1]]
+                excl_off[type]["y"] = excl_off[type]["y"][:index[-1]]
+
+        if len(excl["x"])>0 and excl["x"][0] > excl["x"][-1]:
+            # print("[drawPaperPlot] on reverse")
             excl["x"].reverse()
             excl["y"].reverse()
-        
-        if excl_off[type]["x"][-1] > excl["x"][0]:
+
+        if len(excl_off[type]["x"])>0 and len(excl["x"])>0 and excl_off[type]["x"][-1] > excl["x"][0]:
             index = [i for i,x  in enumerate(excl["x"]) if x>excl_off[type]["x"][-1]+20]
-            print("[drawPaperPlot] cut off ", excl["x"][index[0]])
-            excl["x"] = excl["x"][index[0]:]
-            excl["y"] = excl["y"][index[0]:]
-        
-        
+            # print("[drawPaperPlot] cut off ", excl["x"][index[0]])
+            if len(index)>0:
+                excl["x"] = excl["x"][index[0]:]
+                excl["y"] = excl["y"][index[0]:]
+
+
         excl["x"] = excl_off[type]["x"] + excl["x"]
         excl["y"] = excl_off[type]["y"] + excl["y"]
-    
-    
+
+
     return excl_lines
 
 def getPrettyProcessName(txname):
@@ -181,7 +195,7 @@ def getPrettyProcessName(txname):
         pName = ','.join(pName[1:])
     else:
         pName = pName[1]
-    
+
     return pName
 
 def getPrettyAxisLabels(label):
@@ -189,11 +203,11 @@ def getPrettyAxisLabels(label):
     particle = label.split('m(')[-1]
     particle = label.replace('(','').replace(')','').replace('$','').split('m_')[-1]
     #print("particle = ", particle)
-    if 'm' in particle[0]: label = '$m_{' + particle[1:] +'}$ [GeV]'
+    if 'm' in particle[0]: label = f"$m_{{{particle[1:]}}}$ [GeV]"
     elif 'Gamma' in particle:
         if 'Gamma_' not in particle: label = '$\\Gamma_{' + particle.split('Gamma')[-1] + '}$ [GeV]'
-        else: label = '$' + particle + '$ [GeV]'
-    else : label = '$m_{' + particle +'}$ [GeV]'
+        else: label = f"${particle}$ [GeV]"
+    else : label = f"$m_{{{particle}}}$ [GeV]"
     return label
 
 def widthToLifetime(y):
@@ -211,7 +225,7 @@ def widthToLifetime(y):
     new_y = np.reshape(new_y, shape)
     #print("yes here")
     return hbar/new_y
-    
+
 def lifetimeToWidth(time):
     hbar = 6.58*10**(-16)
     time *= 10**9
@@ -267,26 +281,29 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     vDir = validationPlot.getValidationDir (validationDir=None)
     validationFolder = os.path.basename ( vDir )
     anaDir = os.path.dirname(vDir)
+    if anaDir.endswith ( "validation" ):
+        anaDir = anaDir[:-10]
+        validationFolder = f"validation/{validationFolder}"
     txname = validationPlot.txName
     axes = validationPlot.axes
     eval_axes = True
     saxes = str(axes).replace(" ","").replace("'","")
     print(f"[drawPaperPlot] Drawing pretty paper plot for {txname}:{saxes} ")
-    
+
     offshell = False
     txnameOff = ''
     axes_on = None
     if 'off' in txname:
-        axes_on = getOnshellAxesForOffshell(anaDir, txname.split('off')[0])
+        axes_on = getOnshellAxesForOffshell( anaDir, txname.split('off')[0], validationFolder )
         if axes_on:
-            print("[drawPaperPlot] yes offshell")
+            # print("[drawPaperPlot] yes offshell")
             offshell=True
             txnameOff = txname
             txname = txname.split('off')[0]
 
     #get exclusion lines for official and SModelS
     off_excl, comb_excl, bestSR_excl = [],[],[]
-    
+
     if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
     if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
     if offshell:
@@ -294,7 +311,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         off_excl_offshell = getCurveFromJson(anaDir, validationFolder, txnameOff, type="official", axes = axes)
         off_excl = drawOffshell(off_excl, off_excl_offshell, official=True)
     else: off_excl = getCurveFromJson(anaDir, validationFolder, txname, type="official", axes = axes, eval_axes=eval_axes)
-    
+
     bestSR, combSR = True, True
     if offshell:
         bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname, type="bestSR", axes=axes_on)
@@ -336,7 +353,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             return
         print( f"[drawPaperPlot] got combined curve from {anaDir}" )
 
- 
+
     #get the range of x values in obs and exp curves to set lim on plot ranges. low limit on y axes usually 0 for plot (except for width plots)
     max_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "max", type="official")
     if bestSR: max_obs_x = max(max_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "max", type="bestSR"))
@@ -345,7 +362,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", type="official")
     if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", type="bestSR"))
     if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", type="combined"))
-        
+
     max_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "max", type="official")
     if bestSR: max_exp_x = max(max_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "max", type="bestSR"))
     if combSR: max_exp_x = max(max_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "max", type="combined"))
@@ -357,39 +374,57 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     min_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "min", type="official")
     if bestSR: min_obs_x = min(min_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "min", type="bestSR"))
     if combSR: min_obs_x = min(min_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "min", type="combined"))
-    
+
     min_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "min", type="official")
     if bestSR: min_exp_x = min(min_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "min", type="bestSR"))
     if combSR: min_exp_x = min(min_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "min", type="combined"))
-    
+
     num_sr, num_cr = 0, 0
     ver = ""
-    
+
+    def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
+        """ count the number of control regions
+        :param regionType: one of: SR, CR, VR
+        """
+        ctr = 0
+        for r in regions:
+            if "type" in r:
+                if r["type"]==regionType:
+                    ctr += 1
+            elif regionType == "SR": # if no type is mentioned, its an SR
+                ctr += 1
+        return ctr
+
     if "obs_excl" in comb_excl.keys():
-        num_sr = len(validationPlot.expRes.datasets)
-        if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ): 
-            ver = "(pyhf)"    #how to differentiate between simplified and full?
-            for js,files in validationPlot.expRes.globalInfo.jsonFiles.items():
-                num_cr += len(files)
-        elif hasattr ( validationPlot.expRes.globalInfo, "mlModels" ): 
-            ver = "ONNX"    #how to differentiate between simplified and full?
-            for js,files in validationPlot.expRes.globalInfo.mlModels.items():
-                num_cr += len(files)
+        if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
+            ver = "(pyhf)" # how to differentiate between simplified and full?
+            for js,regions in validationPlot.expRes.globalInfo.jsonFiles.items():
+                num_sr += countRegionsOfType(regions,"SR")
+                num_cr += countRegionsOfType(regions,"CR")
+        elif hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
+            ver = "ONNX" # how to differentiate between simplified and full?
+            for js,regions in validationPlot.expRes.globalInfo.mlModels.items():
+                num_sr += countRegionsOfType(regions,"SR")
+                num_cr += countRegionsOfType(regions,"CR")
+        else:
+            num_sr = len(validationPlot.expRes.datasets)
 
         if hasattr ( validationPlot.expRes.globalInfo, "covariance" ): ver = "(SLv1)"   #SLv1 vs SLv2
-    
+
     if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
         ver = "(SLv2)"
-    
+
+    # print ( f"@@and here num_cr {num_cr}" )
+
     #now plot figure
     # print("[drawPaperPlot] Drawing pretty obs and exp plots")
-    
+
     #--------observed plot-------
     plt.rcParams['text.usetex'] = True
     plt.rcParams['font.family'] = 'Cambria Math'
-    
+
     fig,ax = plt.subplots(figsize=(5,4))
- 
+
     step_x = int(max_obs_x/100)*10
     mid_x = int((max_obs_x - min_obs_x)/2)
     step_y = int(max_obs_y)
@@ -397,7 +432,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     #print("[drawPaperPlot] max obs y ", max_obs_y)
     #print("[drawPaperPlot] step y", step_y)
     #print("[drawPaperPlot] max exp y ", max_exp_y)
-    
+
     axis_label = prettyAxes(validationPlot).split(',')
     # print("[drawPaperPlot] Axis label ", axis_label)
     x_label, y_label = "",""
@@ -408,7 +443,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         elif ("=y" in lbl or "- y" in lbl) and "=y -" not in lbl: y_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
         elif "y=" in lbl: y_label = getPrettyAxisLabels(lbl.split("=")[-1].strip())
         else: continue
-    
+
     if '2018-14' in analysis:
         if 'Sel' in txname: particle = '{\\tilde{e}}'
         elif 'Smu' in txname: particle = '{\\tilde{\\mu}}'
@@ -416,10 +451,14 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         x_label = f'$m_{particle} [GeV]$'
         y_label = f'$\\Gamma_{particle} [GeV]$'
         massg = '$ m_{\\tilde{\\chi}_1^0} = 0.0 $'
-    
+
     if '2018-31' in analysis:
-        if '130.0' in axis_label[2]: massg = '$ m_{\\tilde{\\chi}_1^0} = m_{\\tilde{\\chi}_2^0} - ' + axis_label[2].split('-')[1]
-        else: massg = '$ m_{\\tilde{\\chi}_1^0} = ' + axis_label[2].split('=')[1]
+        if '130' in axis_label[2]: massg = '$m_{\\tilde{\\chi}_1^0} = m_{\\tilde{\\chi}_2^0}$ - ' + axis_label[2].split('-')[1]
+        elif '60' in axis_label[2]: massg = '$m_{\\tilde{\\chi}_1^0}$ = 60'
+        else: massg = '$m_{\\tilde{\\chi}_1^0}$ = ' + axis_label[2].split('=')[1]
+    if massg.count("$") % 2 == 1:
+        print ( f"[drawPaperPlot] something is wrong with the math modes in {massg}" )
+        import sys; sys.exit(-1)
 
     if '2018-13' in analysis:
         if 'TRPV1' in txname:
@@ -433,11 +472,11 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         else:       #TRPVChijjj
             x_label = '$m_{\\tilde{\\chi}_2^0}$ [GeV]'
             y_label = '$\\Gamma_{\\tilde{\\chi}_2^0}$ [GeV]'
-    
+
     if '2018-16' in analysis:
         if 'TSlep' in txname: y_label = '$  m_{\\tilde{l}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
         else: y_label = '$  m_{\\tilde{\\chi}_1^{\\pm}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
-    
+
     if 'CMS-PAS-SUS-16-052' in analysis:
         if 'T2b' in txname: y_label = '$  m_{\\tilde{\\tau}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
         else:
@@ -446,12 +485,12 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     # print("[drawPaperPlot] massg ", massg)
     if 'CMS-SUS-16-050-agg' in analysis:
         if 'T5t' in txname:massg = '$ m_{\\tilde{\\tau}} =  m_{\\tilde{\\chi}_1^0} + 20 $ '
-    
+
     if 'ATLAS-SUSY-2018-33' in analysis:
         x_label = '$m(\\tilde{t}$)'
         y_label = '$\\Gamma(\\tilde{t})$'
-    
-    
+
+
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
     ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
@@ -459,7 +498,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", type="official")
         if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", type="bestSR", width=True))
         if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", type="combined", width=True))
-        
+
         min_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "min", type="official")
         if bestSR: min_obs_y = min(min_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "min", type="bestSR", width=True))
         if combSR: min_obs_y = min(min_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "min", type="combined", width=True))
@@ -467,22 +506,22 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         #print("min_obs_y ", min_obs_y)
         #print("step ", step_y)
         ax.set_ylim([min_obs_y, max_obs_y+step_y])
-    
-    
+
+
     else:
         #print("max_obs_y + step ", max_obs_y+step_y )
         ax.set_ylim([0,round(max_obs_y+step_y,-1)])
-    
+
     plt.title(analysis, loc='left', fontsize=12)                        #analysis id on left of title
     #pName = prettyTxname(validationPlot.txName, outputtype="latex" )   #processName
     pName = getPrettyProcessName(validationPlot.txName)
     #print(pName)
     plt.title(pName,loc='right', fontsize=12)                           #process srring on right of title
-    
+
     #plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
     #plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
     #plt.tight_layout()
-    
+
     #plot excl curves
     exp_name = analysis.split('-')[0]
     ax.plot(off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
@@ -509,7 +548,8 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
                 ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
-            
+
+    # print ( f"@@XX here num_sr {num_sr} num_cr {num_cr} mlmodels {hasattr ( validationPlot.expRes.globalInfo, 'mlModels' )}" )
 
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
@@ -519,7 +559,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
                 y_vals[i]= y * random.uniform(.98,1.02)
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-            label = f"SModelS: NN {num_sr} SRs + {num_cr-num_sr} CRs"
+            label = f"SModelS: NN" #  {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -537,9 +577,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["obs_excl"]["x"]
         y_vals = cr_excl["obs_excl"]["y"]
-        label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
+        label = f"SModelS: CR comb." #  {num_cr} SRs+CRs {ver}"
         if cr_is == "orig":
-            label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr-num_sr} CRs"
+            label = f"SModelS: orig pyhf" #  {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -551,46 +591,56 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label)
 
     if 'Gamma' in y_label: ax.set_yscale('log')
-    if massg != "":plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
+    if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
     #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
-    
+
     plt.text(0.55,0.65, r"$\bf observed~exclusion$", transform=fig.transFigure, fontsize = 10)
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.tight_layout()
-    
+
     #get_name_of_plot
     if getAxisType(axes) == "v2":
-        axes = translateAxisV2(axes)
+        axes = axisV2ToV3(axes)
+    """
+    oaxes = axes
     axes = eval(axes).values()
     # print("[drawPaperPlot] fig ", axes)
     fig_axes_title = ""
     for a in axes: fig_axes_title += str(a) + '_'
+    fig_axes_title_old = fig_axes_title
     fig_axes_title = fig_axes_title.replace('x-y', 'y')
     fig_axes_title = fig_axes_title.replace('00', '0')
+    fig_axes_title = fig_axes_title.replace('.0', '')
+    fig_axes_title = fig_axes_title.replace('/', 'd')
+    print ( f"FIXME this code should use .getNiceAxes! {fig_axes_title_old} {fig_axes_title}" )
+    print ( f"FIXME this code should use .getNiceAxes! {fig_axes_title_old} {fig_axes_title} {na}" )
+    import sys; sys.exit()
+    """
+    fig_axes_title = getNiceAxes ( axes )
     outfiles = []
 
-    outfile = f"{vDir}/{txname}_{fig_axes_title}obs.png"
+    outfile = f"{vDir}/{txname}_{fig_axes_title}_obs.png"
     print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
     plt.savefig(outfile, dpi=250)
     plt.clf()
     plt.rcdefaults()
     plt.close()
-    outfiles.append ( outfile ) 
-    
+    outfiles.append ( outfile )
+
     #--------expected plot-------
     plt.rcParams['text.usetex'] = True
     plt.rcParams['font.family'] = 'Cambria Math'
-    
+
     fig,ax = plt.subplots(figsize=(5,4))
- 
+
     step_x = int(max_exp_x/100)*10
     mid_x = int((max_exp_x - min_exp_x)/2)
     step_y = int(max_exp_y)
-    
+
     #print("max exp y ", max_exp_y)
     #print("exp step y ", step_y)
     #plt.ylim([5*10**(-16),5*10**(-13)])
-    
+
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
     ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
@@ -598,7 +648,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", type="official")
         if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", type="bestSR", width=True))
         if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", type="combined", width=True))
-        
+
         min_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "min", type="official")
         if bestSR: min_exp_y = min(min_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "min", type="bestSR", width=True))
         if combSR: min_exp_y = min(min_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "min", type="combined", width=True))
@@ -610,10 +660,10 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     plt.title(analysis, loc='left', fontsize=12)
     plt.title(pName,loc='right', fontsize=12)
-    
+
     exp_name = analysis.split('-')[0]
     ax.plot(off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
-    
+
     if bestSR:
         x_vals = bestSR_excl["exp_excl"]["x"]
         y_vals = bestSR_excl["exp_excl"]["y"]
@@ -644,7 +694,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
                 y_vals[i]= y * random.uniform(.98,1.02)
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-            label = f"SModelS: NN {num_sr} SRs + {num_cr-num_sr} CRs"
+            label = f"SModelS: NN" #  {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -657,9 +707,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
-        label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
+        label = f"SModelS: CR comb." #  {num_sr} SRs+CRs {ver}"
         if cr_is == "orig":
-            label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr-num_sr} CRs"
+            label = f"SModelS: orig pyhf" #  {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -668,15 +718,15 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
         else:ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label )
-    
+
     if 'Gamma' in y_label: ax.set_yscale('log')
-    
-    if massg != "":plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
+
+    if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
     #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
     plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.tight_layout()
-    outfile = f"{vDir}/{txname}_{fig_axes_title}exp.png"
+    outfile = f"{vDir}/{txname}_{fig_axes_title}_exp.png"
     print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
     plt.savefig( outfile, dpi=250)
     plt.clf()
@@ -684,4 +734,4 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     plt.close()
     outfiles.append ( outfile )
     return outfiles
-        
+

@@ -94,7 +94,7 @@ highstrings = {
     '^mp' : '^{#mp}',
     '^p' : '^{+}',
     '^m' : '^{-}',
-    '^*' : '*',
+    '^*' : '^{*}',
 }
 
 lowstrings = {
@@ -238,6 +238,11 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiQ': 'squark --> q lsp',
     'TChiZoff': 'neutralino_1 --> Z^* lsp',
     'TChiZZ':'neutralino_2 --> Z lsp  ',
+    'TChiISR':'neutralino_2 --> neutrino neutrino lsp',
+    'TChiZISRqq':'neutralino_2 --> q q lsp',
+    'TChiZISRll':'neutralino_2 --> l l lsp',
+    'TChiWISRll': 'chargino^pm_1 --> l neutrino lsp',
+    'TChiWWISRqq' : 'chargino^pm_1 --> q q lsp',
     'TChiZZoff':'neutralino_2 --> Z^* lsp  ',
     'TChiWWoff':'chargino^pm_1 --> W^* lsp ',
     'TDTM1F':'chargino^pm_1 --> pion^pm lsp ',
@@ -449,6 +454,11 @@ motherDict = {"T1" :  "gluino gluino",
     "TChiHHG" :  "neutralino_2 neutralino_2",
     "TChiWW" :  "chargino^pm_1 chargino^mp_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
+    "TChiWISRll": "chargino^pm_1 neutralino_1",
+    "TChiZISRll": "neutralino_2 neutralino_1",
+    "TChiZISRqq": "neutralino_2 neutralino_1",
+    "TChiISR": "neutralino_2 neutralino_1",
+    "TChiWWISRqq": "chargino^pm_1 chargino^mp_1",
     "TDTM1F" :  "chargino^pm_1 chargino^mp_1",
     "TDTM2F" :  "chargino^pm_1 neutralino_1",
     "TDTM1S" :  "H^pm H^mp",
@@ -537,7 +547,7 @@ motherDict = {"T1" :  "gluino gluino",
     "TChiWH4q" :  "neutralino_3 chargino^pm_2"    
 }
 
-def latexfy(instr):
+def latexfy(instr : str ) -> str:
     """
     Tries to convert the string to its latex form,
     using ROOT conventions
@@ -547,7 +557,7 @@ def latexfy(instr):
     :return: String converted to its latex form (if possible)
     """
 
-    outstr = ' '+instr[:]
+    outstr = f" {instr[:]}"
     for key,rep in highstrings.items():
         if key in outstr:
             outstr = outstr.replace(key,rep)
@@ -558,10 +568,10 @@ def latexfy(instr):
     #(e.g. stau -> #tilde{#tau} happens before tau -> #tilde{#tau}
     for key,rep in sorted(prettyParticle.items(),
                           key=lambda pair: len(pair[0]), reverse=True):
-        if ' '+key in outstr:
-            outstr = outstr.replace(' '+key,' '+rep)
-        if '/'+key in outstr:
-            outstr = outstr.replace('/'+key,'/'+rep)
+        if f" {key}" in outstr:
+            outstr = outstr.replace(f" {key}",f" {rep}")
+        if f"/{key}" in outstr:
+            outstr = outstr.replace(f"/{key}",f"/{rep}")
     outstr = outstr.replace('-->','#rightarrow')
     outstr = outstr.lstrip().rstrip()
     return outstr
@@ -635,7 +645,7 @@ def getDaughters(txname):
     return list(daughters)
 
 
-def prettyProduction(txname,latex=True,protons=True):
+def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> str:
     """
     FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY production process
@@ -650,11 +660,9 @@ def prettyProduction(txname,latex=True,protons=True):
     if not txname in motherDict:
         logging.error( f"Txname {txname} not found in motherDict" )
         return None
-    #print ( f"@@A prettyProduction txname {txname} latex {latex}" )
 
     prodString = motherDict[txname].lstrip().rstrip().split()
     #Check if a single mother was given. If so, duplicate it
-    #print ( f"@@A prodString {prodString}" )
     prodString = " ".join ( prodString )
     """
     if len(prodString) == 1:
@@ -668,10 +676,9 @@ def prettyProduction(txname,latex=True,protons=True):
     """
 
     if protons:
-        prodString = "pp --> "+prodString
+        prodString = f"pp --> {prodString}"
     if latex:
         prodString = latexfy(prodString)
-    # print ( f"@@A finally {prodString}" )
     return prodString.lstrip().rstrip()
 
 def prettyDecay(txname,latex=True):
@@ -688,7 +695,7 @@ def prettyDecay(txname,latex=True):
     """
 
     if not txname in decayDict:
-        logging.error("Txname %s not found in decayDict" %txname)
+        logging.error( f"Txname {txname} not found in decayDict" )
         return None
     decayString = decayDict[txname]
     if latex:
@@ -760,7 +767,7 @@ def prettyTxname(txname : str, protons : bool =True,
         decayString = decayString.replace ( "H0", "H^0" )
 
     if prodString and decayString:
-        return prodString + ", " + decayString
+        return f"{prodString}, {decayString}"
     else:
         return None
 
@@ -864,9 +871,9 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
     pn = pn.replace("final state","")
     if dropEtmiss:
         for etm in [ "ETmiss", "Etmiss", "MET" ]:
-            pn = pn.replace(" + "+etm,"")
-            pn = pn.replace("+ "+etm,"")
-            pn = pn.replace("+"+etm,"")
+            pn = pn.replace(f" + {etm}","")
+            pn = pn.replace(f"+ {etm}","")
+            pn = pn.replace(f"+{etm}","")
             pn = pn.replace(etm,"")
     pn = pn.replace("ETmiss",r"$\not{\!\!E}_T$")
     pn = pn.replace("Etmiss",r"$\not{\!\!E}_T$")
@@ -895,9 +902,9 @@ def prettyTexAnalysisName ( prettyname, sqrts = None, dropEtmiss = False,
             sqrts = sqrts.asNumber(TeV)
         except Exception as e:
             pass
-        pn += ", %d TeV" % sqrts
+        pn += f", {int(sqrts)} TeV"
     if collaboration != None:
-        pn = collaboration + " " + pn
+        pn = f"{collaboration} {pn}"
     return pn
 
 def getParticleNames ( smsstring : str ) -> Dict:
@@ -920,13 +927,42 @@ def getParticleNames ( smsstring : str ) -> Dict:
         ret[int(numbers[0])]=name
     return ret
 
-def prettyAxes ( txn: str, axes : str ) -> str:
-    """ get pretty axes, v2 and v3 alike """
+def prettyAxes ( txn: str, axes : str, dataMap : Union[dict,None] = None ) -> str:
+    # get pretty axes, v2 and v3 alike
     if "{" in axes:
-        return prettyAxesV3 ( txn, axes )
+        return prettyAxesV3 ( txn, axes, dataMap )
     return prettyAxesV2 ( txn, axes )
 
-def prettyAxesV3( txn : str, axes : str ) -> str:
+def compressSQuarks ( pid : Union[int,Set] ) -> Set:
+    """ compress all squarks, i am only interested in ~q """
+    allquarks = [ 1000001, 1000002, 1000003, 1000004,
+                  2000001, 2000002, 2000003, 2000004 ]
+    if type(pid) in [ int ]:
+        if pid in allquarks:
+            return 1000001
+        return pid
+    ret = set()
+    for p in pid:
+        if p in allquarks:
+            ret.add ( 1000001 )
+        else:
+            ret.add ( p )
+    return ret
+
+def compressSLeptons ( pid : Union[int,Set] ) -> Set:
+    """ compress all sleptons, i am only interested in ~q """
+    if type(pid) in [ int ]:
+        return pid
+    ret = set()
+    for p in pid:
+        if p in [ 2000011, 2000013, 2000015 ]:
+            p -= 1000000
+        if p in [ 1000014, 1000016, 2000012, 2000014, 2000016 ]:
+            p = 1000012
+        ret.add ( p )
+    return ret
+
+def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
     """
     get a description of the axes of validation plot
 
@@ -937,92 +973,72 @@ def prettyAxesV3( txn : str, axes : str ) -> str:
     from smodels_utils.helper.slhaManipulator import getParticleIdsForTemplateFile
     from smodels_utils.helper.sparticleNames import SParticleNames
     namer = SParticleNames ( susy = True )
-    allpids = getParticleIdsForTemplateFile ( txn )
-    pids = allpids["masses"]
-    wpids = allpids["widths"]
+    opids = getParticleIdsForTemplateFile ( txn )
+    pids = {}
+    for label,pid in opids.items():
+        pid = compressSQuarks ( compressSLeptons ( pid ) )
+        name = namer.texName ( pid, addDollars=True )
+        replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
+        replacements["^+"] = "^\\pm"
+        replacements["^-"] = "^\\pm"
+        for frm,to in replacements.items():
+            name = name.replace(frm,to)
+        if "m" in label or "M" in label:
+            name = f"m({name})"
+        if "w" in label or "W" in label:
+            name = f"\\Gamma({name})"
+        pids[label]=name
     namesOnAxes = {}
-    # the axisMap looks e.g. like: {0: 2400.0, 1: 'x', 2: 'y'}
+    # the axisMap looks e.g. like: {0: 'x', 1: 'x-y', 2: 'x-y/2', 3: 'x-y'}
     # the dataMap looks like {0: (1, 'mass', 1.00E+00 [GeV]),
     #                         1: (3, 'mass', 1.00E+00 [GeV]),
     #                         2: (3, 'totalwidth', 1.00E+00 [GeV]),
+    # the opids look like {'M1': 1000022, 'M0': 1000023, 'm0': 1000024}
+    # the pids look like {'M1': 'm($\\tilde{\\chi}_1^0$)', 'M0': 'm($\\tilde{\\chi}_2^0$)', 'm0': 'm($\\tilde{\\chi}_1^\\pm$)'}
     axisMap = eval ( axes )
-
-    def compressSQuarks ( pid : Union[int,Set] ):
-        """ compress all squarks, i am only interested in ~q """
-        allquarks = [ 1000001, 1000002, 1000003, 1000004,
-                      2000001, 2000002, 2000003, 2000004 ]
-        if type(pid) in [ int ]:
-            if pid in allquarks:
-                return 1000001
-            return pid
-        ret = set()
-        for p in pid:
-            if p in allquarks:
-                ret.add ( 1000001 )
-            else:
-                ret.add ( p )
-        return ret
-
-    def compressSLeptons ( pid : Union[int,Set] ):
-        """ compress all sleptons, i am only interested in ~q """
-        if type(pid) in [ int ]:
-            return pid
-        ret = set()
-        for p in pid:
-            if p in [ 2000011, 2000013, 2000015 ]:
-                p -= 1000000
-            if p in [ 1000014, 1000016, 2000012, 2000014, 2000016 ]:
-                p = 1000012
-            ret.add ( p )
-        return ret
-
     for k,v in axisMap.items():
-        if k in pids:
-            name = pids[k]
-            pid = compressSQuarks (  pids[k] )
-            pid = compressSLeptons ( pid )
-            name = namer.texName ( pid, addDollars=True )
-            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
-            replacements["^+"] = "^\\pm"
-            replacements["^-"] = "^\\pm"
-            for frm,to in replacements.items():
-                name = name.replace(frm,to)
-            vplacements = {}
-            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
-            for frm,to in vplacements.items():
-                v = str(v).replace(frm,to)
-            namesOnAxes[v]=f"m({name})"
-        wk = k - len(pids)
-        if wk in wpids:
-            name = wpids[wk]
-            pid = compressSQuarks ( wpids[wk] )
-            pid = compressSLeptons ( pid )
-            name = namer.texName ( pid, addDollars=True )
-            replacements = { "_R": "", "_L": "", "\\tilde{d}":"\\tilde{q}" }
-            replacements["^+"] = "^\\pm"
-            replacements["^-"] = "^\\pm"
-            for frm,to in replacements.items():
-                name = name.replace(frm,to)
-            vplacements = {}
-            vplacements["0.5*x+0.5*y"] = "$\\frac{1}{2}(x+y)$"
-            for frm,to in vplacements.items():
-                v = str(v).replace(frm,to)
-            namesOnAxes[v]=f"$\\Gamma$({name})"
+        if v.endswith ( ".0" ):
+            axisMap[k]=v[:-2]
+    cMap = {}
+    for k,v in axisMap.items():
+        label = f"W{k}"
+        if dataMap is None or dataMap[k][1]=="mass":
+            label = f"M{k}"
+        if label in pids:
+            cMap[v]=pids[label]
+        else:
+            label = f"w{k-3}"
+            if dataMap is None or dataMap[k][1]=="mass":
+                label = f"m{k-2}"
+            if axisMap[k-2]==axisMap[k]: ## same entry!
+                if label in pids:
+                    cMap[v]=f"{cMap[v]},{pids[label]}"
+            else:
+                if label in pids:
+                    cMap[v]=pids[label]
+                else:
+                    # logging.error ( f"we did not find {label} in {pids.keys()} -- hope this is fine." )
+                    if False:
+                        print ( f"@@XX k,v {k,v}" )
+                        print ( f"@@XX dataMap {dataMap}" )
+                        print ( f"@@XX axisMap {axisMap}" )
+                        print ( f"@@XX pids {pids}" )
+                        print ( f"@@XX cMap {cMap}" )
+                        print ( )
+
     terms = []
-    for k,v in namesOnAxes.items():
-        term = f"{k}={v}"
+    for k,v in cMap.items():
+        term = f"{v}={k}"
         term = term.replace("0.0","0")
         terms.append ( term )
-    # ret = ", ".join ( terms )
     ret = ""
     for ctr,t in enumerate ( terms ):
-        ret += t + ", "
+        ret += f"{t}, "
         #if ctr == 1 and len(terms)>2: ## newline after second?
         #    ret += r"\\"
     if len(ret)>0:
         ret = ret[:-2]
-    # print ( f"@@9 returning {ret}" )
-    # import sys, IPython; IPython.embed( colors = "neutral" ) # ; sys.exit()
+    ret += " [GeV]"
     return ret
 
 def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
@@ -1094,17 +1110,17 @@ def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
     #Get mother particles:
     motherList = list(set(getMothers(txname)))
     #Convert to latex for mass:
-    motherList = ['m_{'+latexfy(mother)+'}' for mother in motherList]
+    motherList = [f"m_{{{latexfy(mother)}}}" for mother in motherList]
     motherStr = str(motherList).replace(']','').replace('[','')
     #Get intermediate particles:
     interList = list(set(getIntermediates(txname)))
     #Convert to latex for mass:
-    interList = ['m_{'+latexfy(inter)+'}' for inter in interList]
+    interList = [f"m_{{{latexfy(inter)}}}" for inter in interList]
     interStr = str(interList).replace(']','').replace('[','')
     #Daugther particles are always trivial:
     daughterList = list(set(getDaughters(txname)))
     #Convert to latex for mass:
-    daughterList = ['m_{'+latexfy(daughter)+'}' for daughter in daughterList]
+    daughterList = [f"m_{{{latexfy(daughter)}}}" for daughter in daughterList]
     daughterStr = str(daughterList).replace(']','').replace('[','')
 
     #Define mass strings for each axes format:
@@ -1131,7 +1147,7 @@ def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
 
     for i,eq in enumerate(ax):
         eq = roundme(eq )
-        axStr = massStrings[i].strip()+'='+str(eq)
+        axStr = f"{massStrings[i].strip()}={eq!s}"
         niceAxes.append(axStr.replace("'",""))
 
     return rootToLatex ( niceAxes, outputtype )

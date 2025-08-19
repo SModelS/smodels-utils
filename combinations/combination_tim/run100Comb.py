@@ -74,7 +74,7 @@ def main(allPredictions):
             print(f"\nDuplicated results when trying to combine analyses. Combination of {expIDs} will be skipped for file {inputFile}.")
         combostr = ''
         for c in combo:
-            combostr += c.dataset.globalInfo.id + ','
+            combostr += f"{c.dataset.globalInfo.id},"
         combostr = combostr[:-1]
 
         l0 = np.array ( [ c.likelihood(0.,expected=True, return_nll=True) for c in combo ], dtype=object )
@@ -91,7 +91,7 @@ def main(allPredictions):
 
     combosDict = dict(sorted(combosDict.items(), key = lambda x: x[1], reverse=True))
     for i,combo in enumerate(combosDict.keys()):
-        retDict.update( { 'combo%s'%i: {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
+        retDict.update( { f'combo{i}': {'combo':combo, 'nllr': sideCombosDict[combo]['nllr'], 'r_exp': sideCombosDict[combo]['r_exp'], 'eµUL': sideCombosDict[combo]['eµUL']} } )
 
     return retDict
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     count = len([1 for output in outputList if 'combo1' in output.keys()])
 
-    for i,fin in enumerate(glob.glob(slhaFolder+'*')):
+    for i,fin in enumerate(glob.glob(f"{slhaFolder}*")):
         if i <= 5000:
             continue
         if count == 100:
@@ -149,4 +149,4 @@ if __name__ == '__main__':
 
         outputList.append(retDict)
         with open(outputFile,'w') as fout:
-            fout.write('outputList = ' + str(outputList))
+            fout.write(f"outputList = {outputList!s}")

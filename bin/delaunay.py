@@ -119,7 +119,7 @@ def allZeroSimplex ( simplex, zeroes ):
     
 for s in tri.simplices:
     if allZeroSimplex ( s, zeroes ):
-        print ( "simplex %s is all zeroes." % s )
+        print ( f"simplex {s} is all zeroes." )
 
 for i in zeroes:
 #for i in [ 11 ]:
@@ -132,9 +132,9 @@ for i in zeroes:
             if not allZeroSimplex ( s, zeroes ):
                 allSimplicesZero = False
     if allSimplicesZero and not inHull:
-        print ( "we can remove point %d!!!" % i )
+        print ( f"we can remove point {int(i)}!!!" )
 
-    print ( "point %d: inHull: %d. in %d simplices." % ( i, inHull, ct ) )
+    print ( f"point {int(i)}: inHull: {int(inHull)}. in {int(ct)} simplices." )
 
 zero_points = np.array  ( zero_Points )
 # IPython.embed()
@@ -147,7 +147,7 @@ if len (zero_points)>0:
 for simplex in hull:
     plt.plot(points[simplex, 0], points[simplex, 1], 'r--')
 
-plt.title("Delaunay triangulation, %s (%s)" % (anaid,topo) )
+plt.title(f"Delaunay triangulation, {anaid} ({topo})" )
 plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
 plt.ylabel ( "m$_\mathrm{lsp}$ [GeV]" )
 #plt.show()
@@ -158,6 +158,6 @@ for i,(point,xsec) in enumerate ( zip ( points,xsecs ) ):
         col="g"
     if i in hull:
         col="r"
-    plt.text ( point[0], point[1], "%.2f" % (xsec), fontdict = { "color": col} )
+    plt.text ( point[0], point[1], f"{xsec:.2f}", fontdict = { "color": col} )
     #plt.text ( point[0], point[1], "%.2f [%d]" % (xsec,i), fontdict = { "color": col} )
 plt.savefig ( "delaunay.pdf" )

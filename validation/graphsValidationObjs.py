@@ -34,8 +34,6 @@ import glob
 
 logger.setLevel(level=logging.ERROR)
 
-complaints = { "NoResultsFor": 0 }
-
 class ValidationPlot( ValidationObjsBase ):
     """
     Encapsulates all the data necessary for creating a single validation plot.
@@ -61,17 +59,17 @@ class ValidationPlot( ValidationObjsBase ):
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
-        super ( ValidationPlot, self ).__init__ ( ) 
+        super ( ValidationPlot, self ).__init__ ( )
         anaID = ExptRes.globalInfo.id
         if databasePath:
             if os.path.isdir(databasePath):
                 self.databasePath = databasePath
             else:
-                logger.error("Database folder "+databasePath+" does not exist")
+                logger.error(f"Database folder {databasePath} does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
             if not os.path.isdir(self.databasePath):
@@ -125,11 +123,11 @@ class ValidationPlot( ValidationObjsBase ):
             if os.path.isdir(databasePath):
                 self.databasePath = databasePath
             else:
-                logger.error("Database folder "+databasePath+" does not exist")
+                logger.error(f"Database folder {databasePath} does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
             if not os.path.isdir(self.databasePath):
@@ -162,9 +160,9 @@ class ValidationPlot( ValidationObjsBase ):
         datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
             if self.options["generateData"] == False:
-                logger.error("Validation datafile %s not found" %datafile)
+                logger.error( f"Validation datafile {datafile} not found" )
             else:
-                logger.info("Validation datafile %s not found" %datafile)
+                logger.info( f"Validation datafile {datafile} not found" )
             if overwrite:
                 self.data = []
             return
@@ -198,12 +196,16 @@ class ValidationPlot( ValidationObjsBase ):
         addedpoints = len(self.data)
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
+            self.meta["runs"]=f"{len(self.data)}"
+            """ # we had this behavior before: report all runs, concatenated with a '+' sign.
+            # seems too contrived now. WW
             if not "runs" in self.meta:
                 self.meta["runs"]=f"{len(self.data)}"
             else:
                 prev = eval ( self.meta["runs"] )
                 addedpoints = len(self.data)-prev
                 self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
+            """
         # self.data = content["data"]
         ndata = 0
         if self.data != None:
@@ -211,7 +213,7 @@ class ValidationPlot( ValidationObjsBase ):
         self.meta["npoints"] = ndata
         return addedpoints
 
-    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int: 
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int:
         """ returns 1 if success else 0 """
         fout = resultsfile
         if not os.path.isfile(fout):
@@ -233,17 +235,14 @@ class ValidationPlot( ValidationObjsBase ):
         try:
             exec( cmd, myglobals )
         except SyntaxError as e:
-            logger.error ( f"when reading {fout}: {e}. will skip" ) 
+            logger.error ( f"when reading {fout}: {e}. will skip" )
             os.unlink ( fout )
             return 0
         ff.close()
         if not 'ExptRes' in smodelsOutput:
-            logger.debug( f"No results for {slhafile}" )
             ## still get the masses from the slhafile name
-            axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
-            ## log also the errors in the py file
-            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
-            self.data.append ( Dict )
+            axes = self.getAxesFromSLHAFileName ( slhafile )
+            self.addDictionaryForFailedPoint ( smodelsOutput, axes )
             return 1
         dt = None
         if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
@@ -295,9 +294,8 @@ class ValidationPlot( ValidationObjsBase ):
             import inspect
             frame = inspect.currentframe()
             line = frame.f_lineno
-            #print ( "roundmass is not given in validationObjs.py:%s" % line )
-            #print ( "we try to extract the info from the slha file name %s" % \
-            #        slhafile )
+            #print ( f"roundmass is not given in validationObjs.py:{line}" )
+            #print ( f"we try to extract the info from the slha file name {slhafile}" )
             roundmass = self.getMassesFromSLHAFileName ( slhafile )
         # print ( "after", slhafile, roundmass )
         mass = [br[:] for br in roundmass]
@@ -343,7 +341,7 @@ class ValidationPlot( ValidationObjsBase ):
             Dict["nll_min"]= nll_min
             nll_SM = 900.
             if expRes["l_SM"]>0.:
-                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 ) 
+                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
             Dict['nll_SM']= nll_SM
             if not "chi2" in expRes:
                 try:
@@ -378,7 +376,7 @@ class ValidationPlot( ValidationObjsBase ):
                 # br=[]
                 for bm,bw in zip(mass,width):
                     for m,w in zip(bm,bw):
-                        if w == 'stable' or w > .08:
+                        if w == 'stable' or ( type(w) not in [ str ] and w > .08 ):
                             massGeV.append( m )
                             # br.append( (m,0.0) )
                         else:
@@ -390,10 +388,10 @@ class ValidationPlot( ValidationObjsBase ):
                     eff = txname.txnameData.getValueFor(massGeV)
                     if eff != None:
                         Dict['efficiency'] = round ( eff, 8 )
-                except SModelSError as e:
-                    logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                except (SModelSError,ValueError) as e:
+                    logger.error ( f"could not handle {slhafile}: {e} ({type(e)}) massGeV={massGeV}" )
                     Dict=None
-        logger.debug('expres keys : {}'.format(expRes.keys()))
+        logger.debug(f'expres keys : {expRes.keys()}')
         if 'best combination' in expRes.keys():
             Dict['best combination'] = expRes['best combination']
 
@@ -538,15 +536,16 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             if "coordinates" in slhafile:
                 continue
+            if "comment" in slhafile:
+                continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
-            fout = os.path.join(self.outputDir,slhafile + '.py')
+            fout = os.path.join(self.outputDir,f"{slhafile}.py")
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
                     ## suppress subsequently same error messages
                     continue
-                logger.error("No SModelS output found for %s (should be %s)" % \
-                              ( slhafile, fout ) )
+                logger.error( f"No SModelS output found for {slhafile} (should be {fout})" )
                 ct_nooutput+=1
                 if ct_nooutput==5:
                     logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
@@ -565,18 +564,8 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                complaints["NoResultsFor"]+=1
-                if complaints["NoResultsFor"]<4:
-                    logger.info( f"No results for {slhafile}" )
-                if complaints["NoResultsFor"]==4:
-                    logger.info( f"(quenching more info msgs)" )
-
                 axes = self.getAxesFromSLHAFileName ( slhafile )
-                if len(axes)==0: # drop it, doesnt fall in this plane it seems
-                    continue
-                D = { "slhafile": slhafile, "error": "no result here",
-                      "axes": axes }
-                self.data.append ( D )
+                self.addDictionaryForFailedPoint ( smodelsOutput, axes )
                 continue
             dt = None
             if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
@@ -591,14 +580,13 @@ class ValidationPlot( ValidationObjsBase ):
                 for eR in res:
                     if eR == None:
                         continue
-                    if "combined" in eR["DataSetID"]:
+                    if "DataSetID" in eR and eR["DataSetID"] != None and "combined" in eR["DataSetID"]:
                         logger.debug ( "found a combined result. will use it." )
                         found_combined=True
                         expRes = eR
                 if self.options["keepTopNSRs"] not in [ None, 0 ]:
                     maxR, expRes = -1., None
                     for eR in res:
-                        # print ( f"@@0 eR {eR}" )
                         if "r_expected" in eR:
                             r = eR["r_expected"]
                             while r in leadingDSes: # make sure it's unique
@@ -614,10 +602,10 @@ class ValidationPlot( ValidationObjsBase ):
                 logger.error( f"Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
                 sys.exit(-1)
                 # return False
-            if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
+            if self.txName not in expRes['TxNames']: # [0] or len(expRes['TxNames']) != 1:
                 logger.error(f"Something went wrong. Obtained results for the wrong txname: {self.txName} != {expRes['TxNames']}")
-                sys.exit()
-                continue
+                # sys.exit()
+                # continue
                 # return False
 
             masses = expRes["Mass (GeV)"]
@@ -627,8 +615,8 @@ class ValidationPlot( ValidationObjsBase ):
                 axes = self.getAxesFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
-                D = { "slhafile": slhafile, "error": "masses are None",
-                      "axes": axes }
+                D = { "slhafile": slhafile, "error": "no result",
+                      "axes": axes, "comment": "masses are None" }
                 self.data.append ( D )
                 continue
             parameters = self.constructParameterVector ( masses, widths, nodesMap )
@@ -669,7 +657,7 @@ class ValidationPlot( ValidationObjsBase ):
                 Dict["nll_min"]= nll_min
                 nll_SM = 900.
                 if expRes["l_SM"]>0.:
-                    nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 ) 
+                    nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
                 Dict['nll_SM']= nll_SM
                 if not "chi2" in expRes:
                     try:
@@ -698,8 +686,6 @@ class ValidationPlot( ValidationObjsBase ):
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
                 if not "efficiency" in Dict.keys():
                     try:
-                        #print ( f"@@12 Dict {Dict}" )
-                        #print ( f"@@13 parameters {parameters}" )
                         for i,p in enumerate(parameters):
                             if p=="stable":
                                 parameters[i]=0.
@@ -709,7 +695,7 @@ class ValidationPlot( ValidationObjsBase ):
                     except SModelSError as e:
                         logger.error ( f"could not handle {slhafile}: {e}" )
                         Dict=None
-            logger.debug('expres keys : {}'.format(expRes.keys()))
+            logger.debug(f'expres keys : {expRes.keys()}')
             if 'best combination' in expRes.keys():
                 Dict['best combination'] = expRes['best combination']
 

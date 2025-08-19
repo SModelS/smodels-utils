@@ -47,7 +47,7 @@ errormsgs = {}
 # if on, will check for overlapping constraints
 _complainAboutOverlappingConstraints = False
 
-complainAbout = { "sympy obj": 0, "x in datamap": 0 }
+complainAbout = { "sympy obj": 0, "x in datamap": 0, "axesMap": 0 }
 
 def elementsInStr(instring : str,removeQuotes : bool = True) -> list: ## from V2
     """
@@ -105,7 +105,7 @@ def elementsInStr(instring : str,removeQuotes : bool = True) -> list: ## from V2
 
     # Check if there are not unmatched ['s and/or ]'s in the string
     if nc != 0:
-        raise SModelSError("Wrong input (incomplete elements?) " + instring)
+        raise SModelSError(f"Wrong input (incomplete elements?) {instring}")
 
     return elements
 
@@ -287,8 +287,8 @@ class MetaInfoInput(Locker):
             """
             try:
                 import uproot
-                handler = UPROOTCovarianceHandler ( filename, histoname, 
-                    max_datasets, aggregate, aggprefix, zeroIndexed, 
+                handler = UPROOTCovarianceHandler ( filename, histoname,
+                    max_datasets, aggregate, aggprefix, zeroIndexed,
                     scaleCov = scaleCov, blinded_regions = blinded_regions,
                     datasets = datasets )
             except ModuleNotFoundError as e:
@@ -339,8 +339,8 @@ class MetaInfoInput(Locker):
                             err = 2.*(dsVar-x ) / (dsVar+x)
                             logger.debug ( f"relative error on variance {100*err:.1f} percent" )
                     self.covariance += f"{x:.4g}, "
-                self.covariance = self.covariance[:-2] + "], "
-            self.covariance = self.covariance[:-2]+"]"
+                self.covariance = f"{self.covariance[:-2]}], "
+            self.covariance = f"{self.covariance[:-2]}]"
 
     def __init__(self, ID):
 
@@ -482,7 +482,7 @@ class DataSetInput(Locker):
             if type(val) == type(None):
                 continue
             if key in [ "upperLimit", "expectedUpperLimit" ] and type(val) == type(fb):
-                val = str(val.asNumber(fb))+"*fb"
+                val = f"{val.asNumber(fb)!s}*fb"
             setattr(self,key,val)
 
     def computeULs ( self ):
@@ -504,30 +504,57 @@ class DataSetInput(Locker):
             dataset = SimpleSpeyDataSet ( float(self.observedN),
                         float(self.expectedBG), float(self.bgError), lumi )
             computer = SpeyComputer ( dataset, 1. )
-            ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
-            ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
+            try:
+                ulspey = computer.poi_upper_limit ( expected = False, limit_on_xsec = True )
+                ulspeyE = computer.poi_upper_limit ( expected = True, limit_on_xsec = True )
+            except Exception as e:
+                ulspey = computer.poi_upper_limit ( evaluationType = observed, limit_on_xsec = True )
+                ulspeyE = computer.poi_upper_limit ( evaluationType = apriori, limit_on_xsec = True )
             #Round numbers:
             ulspey, ulspeyE = round_list(( ulspey.asNumber(fb),ulspeyE.asNumber(fb)), 4)
             return ulspey, ulspeyE
         alpha = .05
         try:
-            from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
-            comp = UpperLimitComputer ( 1. - alpha )
             try:
+                # v3.1.0
                 # new API
+                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
+                from smodels.statistics.basicStats import aposteriori
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                llhdComp = LikelihoodComputer  ( m )
+                comp = UpperLimitComputer ( llhdComp, 1. - alpha )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
+                try:
+                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
+                except Exception as e:
+                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( evaluationType=aposteriori ).asNumber ( fb )
                 if type(ul) == type(None):
                     ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
                 return ul, ulExpected
 
             except Exception as e:
+                print ( f"[inputObjects] Exception {e}, will try with older version" )
+            try:
+                # v3.0.0
+                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
+                # new API
+                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
+                           lumi = lumi )
+                comp = UpperLimitComputer ( 1. - alpha )
+                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
+                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                if type(ul) == type(None):
+                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                ul, ulExpected = round_list(( ul, ulExpected ), 4)
+                print ( f"[inputObjects] older version worked!" )
+                return ul, ulExpected
+
+            except Exception as e:
                 print ( "Exception", e  )
         except Exception as e:
-            print ( "Exception", e  )
+            print ( f"[inputObjects] Exception {e}" )
         # print ( "@>>>>>", "obs", m.observed, "bg", m.backgrounds, "+-", m.covariance )
         # print ( "SModelS ul", ul, "ule", ulExpected )
         # print ( "spey ul", ulspey, ulspeyE )
@@ -553,8 +580,8 @@ class DataSetInput(Locker):
             sys.exit()
 
         ul, ulExpected = self.computeULs ( )
-        self.upperLimit = str(ul)+'*fb'
-        self.expectedUpperLimit = str(ulExpected)+'*fb'
+        self.upperLimit = f"{ul!s}*fb"
+        self.expectedUpperLimit = f"{ulExpected!s}*fb"
 
     def addTxName( self,txname : str ):
         """
@@ -674,11 +701,11 @@ class TxNameInput(Locker):
                 if p.validationTarball == None:
                     # p.validationTarball = "skip"
                     continue
-                line = str(p).replace(" ","")+":"+p.validationTarball
+                line = f"{str(p).replace(' ', '')}:{p.validationTarball}"
                 if not hasattr ( self, "validationTarball" ) or self.validationTarball in [ "", None ]:
                     self.validationTarball = line
                 else:
-                    self.validationTarball += ";" + line
+                    self.validationTarball += f";{line}"
 
     def addXYRangesFromPlanes ( self ):
         """ if a mass plane has xrange or yrange defined, add it to this
@@ -687,19 +714,19 @@ class TxNameInput(Locker):
            if hasattr ( p, "xrange" ):
                if type(p.xrange) == list:
                    p.xrange=str(p.xrange)
-               line = str(p).replace(" ","")+":"+p.xrange
+               line = f"{str(p).replace(' ', '')}:{p.xrange}"
                if not hasattr ( self, "xrange" ) or self.xrange in [ "", None ]:
                    self.xrange = line
                else:
-                   self.xrange += ";" + line
+                   self.xrange += f";{line}"
            if hasattr ( p, "yrange" ):
                if type(p.yrange) == list:
                    p.yrange=str(p.yrange)
-               line = str(p).replace(" ","")+":"+p.yrange
+               line = f"{str(p).replace(' ', '')}:{p.yrange}"
                if not hasattr ( self, "yrange" ) or self.yrange in [ "", None ]:
                    self.yrange = line
                else:
-                   self.yrange += ";" + line
+                   self.yrange += f";{line}"
 
     def __init__(self,txName):
 
@@ -848,7 +875,15 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
-        self.addAxesMap ( plane )
+        if type(plane)==list:
+            complainAbout["axesMap"]+=1
+            if complainAbout["axesMap"]<3:
+               logger.error ( f"skipping adding axesMap, hope it is ok, else fix in inputObjects!" )
+            if complainAbout["axesMap"]==3:
+               logger.error ( f"... " )
+
+        else:
+            self.addAxesMap ( plane )
         if isinstance(plane,MassPlane):
             self._planes.append(plane)
             return plane
@@ -953,7 +988,7 @@ class TxNameInput(Locker):
                 hasNone = False
                 ## remove Nones, but only if there are other values.
                 for i in infoList:
-                    if i not in [ None, "None" ]:
+                    if i not in [ None, "None" ] and i not in myInfoList:
                         myInfoList.append ( i )
                     else:
                         hasNone = True
@@ -1271,7 +1306,11 @@ class TxNameInput(Locker):
                 for ext in  [ "+", "-", "" ]:
                     el = el.replace( f"[{m}{ext}",f"['{m}{ext}'" )
                     el = el.replace( f",{m}{ext}",f",'{m}{ext}'" )
-            particles = eval(el)
+            try:
+                particles = eval(el)
+            except SyntaxError as e:
+                print ( f"[inputObjects] syntax error {e} for {self.constraint}" )
+                import sys; sys.exit(-1)
             #Compute minimum mass difference (sum over SM final state masses)
             elConstraint = []
             for branch in particles:

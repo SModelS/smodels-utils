@@ -52,6 +52,8 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+complaints = { "removingSLHAFile": 0 }
+
 class TemplateFile(object):
     """
     Holds the information for a given template file as well as convenient methods
@@ -60,7 +62,7 @@ class TemplateFile(object):
 
     def __init__(self,topology,axes,tempdir=None,pythiaVersion : int =6,
                  keep : bool = False, txName : Union[None,str] = None,
-                 add_pids : Union[None,str] = None ):
+                 add_pids : Union[None,str] = None, verbose : bool = False ):
         """
         :param topology: the txname
         :param axes: string describing the axes for the template file
@@ -71,14 +73,15 @@ class TemplateFile(object):
                               the pythiaCard will be generated.
         :param add_pids: if not None, list of pids to add to list of potential mother pids
         :param keep: keep temporary files
+        :param verbose: if true, then print more info
         """
         template= f"../slha/templates/{topology}.template"
         if not os.path.exists ( template ):
             print ( f"[slhaCreator] error: templatefile {template} not found." )
             sys.exit()
 
-        self.version = "1.2" ## slhaCreator version
-        self.verbose = False
+        self.version = "1.3" ## slhaCreator version
+        self.verbose = verbose
         self.add_pids = add_pids
         if add_pids in [ "None" ]:
             self.add_pids = None
@@ -156,7 +159,7 @@ class TemplateFile(object):
         tempf = "../validation/filenameCoords2.py"
         g = open ( tempf, "wt" )
         for line in lines:
-            if not '"'+self.txName+'"' in line:
+            if not f"\"{self.txName}\"" in line:
                 g.write ( line )
         g.write ( f'coords["{self.txName}"]={self.coordDicts}\n' )
         g.close()
@@ -241,7 +244,7 @@ class TemplateFile(object):
         fdata = ftemplate.read()
         ftemplate.close()
         for tag in massDict:
-            fdata = fdata.replace(tag+"-5",str(massDict[tag]-5))
+            fdata = fdata.replace(f"{tag}-5",str(massDict[tag]-5))
             fdata = fdata.replace(tag,str(massDict[tag]))
 
         self.coordDicts = { "masses": [], "widths": None }
@@ -249,7 +252,7 @@ class TemplateFile(object):
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
             if not massesInFileName:
-                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=self.tempdir)
+                slhaname = tempfile.mkstemp(prefix=f"{templateName}_",suffix=".slha",dir=self.tempdir)
                 os.close(slhaname[0])
                 slhaname = slhaname[1]
             else:
@@ -264,14 +267,14 @@ class TemplateFile(object):
                     for m in br:
                         if type(m)==tuple:
                             self.coordDicts["masses"][-1].append(ctr)
-                            slhaname += "_%d_%.2g" % (m[0],m[1] )
+                            slhaname += f"_{int(m[0])}_{m[1]:.2g}"
                             if self.coordDicts["widths"]==None:
                                 self.coordDicts["widths"]=[[]]
                             self.coordDicts["widths"][-1].append(ctr+1)
                             ctr+=2
                         else:
                             self.coordDicts["masses"][-1].append(ctr)
-                            slhaname += "_%d" % m
+                            slhaname += f"_{int(m)}"
                             ctr+=1
                 slhaname += ".slha"
                 slhaname = os.path.join(self.tempdir,slhaname)
@@ -310,6 +313,7 @@ class TemplateFile(object):
            sqrts = [[8,13]]
 
         slhafiles = []
+        first = True
         for pt in pts:
             slhafile = self.createFileFor( pt, computeXsecs=False,
                      massesInFileName=massesInFileName, nevents=nevents, sqrts=sqrts,
@@ -319,7 +323,7 @@ class TemplateFile(object):
 
             if reference_xsecs:
                 from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
-                computer = RefXSecComputer( self.verbose )
+                computer = RefXSecComputer( self.verbose, first )
                 c = f"produced via slhaCreator v{self.version}"
                 if comment != None:
                     c+= f": {comment}"
@@ -328,6 +332,7 @@ class TemplateFile(object):
                 computer.computeForOneFile ( sqrts[0], slhafile, True, \
                           comment = c, ignore_pids = ignore_pids,
                           ewk = self.ewk )
+                first = False
 
         # print ( f"[slhaCreator] now calling xseccomputer {computeXsecs} {self.pythiaVersion}" )
         #Compute cross-sections
@@ -373,7 +378,7 @@ class TemplateFile(object):
         """ add our current command to the recipe file """
         # print ( f"adding to recipe {directory}" )
         with open ( f"{directory}/recipe", "at" ) as f:
-            f.write ( f"[slhaCreator v{self.version}::{time.asctime()}] {command}\n" )
+            f.write ( f"\n# slhaCreator v{self.version}, {time.asctime()}:\n{command}\n" )
             f.close()
 
     def checkFor(self,txnameObj,x,y,z=None):
@@ -574,7 +579,7 @@ if __name__ == "__main__":
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
     argparser.add_argument('-o', '--overwrite', action='store_true',
-        help="overwrite existing tarball")
+        help="overwrite existing tarball, default is to append")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
         help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'.")
     argparser.add_argument('-A', '--add_pids', type=str, default=None,
@@ -605,7 +610,7 @@ if __name__ == "__main__":
         print ( f"[slhaCreator] {YELLOW}NOT overwriting existing results from {tarball}!{RESET}" )
 
     tempf = TemplateFile(args.topology,args.axes,pythiaVersion=pythiaVersion,
-                         keep=args.keep, add_pids = args.add_pids )
+                         keep=args.keep, add_pids = args.add_pids, verbose = args.verbose )
     tempf.nprocesses = args.nprocesses
     tempf.verbose = args.verbose
     tempf.ewk = args.ewk
@@ -656,6 +661,16 @@ if __name__ == "__main__":
             argvs[i]=f'"{a}"'
     tempf.addToRecipe ( newtemp, " ".join ( argvs ) )
     tempf.writeOutCoordinates ( newtemp )
+    from slhaHelpers import hasXSecs
+    import glob
+    for slhafile in glob.glob ( f"{newtemp}/{args.topology}*slha" ):
+        if not hasXSecs ( slhafile ) and not args.keep:
+            complaints["removingSLHAFile"]+=1
+            if complaints["removingSLHAFile"]<3:
+                print ( f"[slhaCreator] removing {slhafile}: has no cross sections (use --keep if you want to keep them)" )
+            if complaints["removingSLHAFile"]==3:
+                print ( f"[slhaCreator] quenching more such messsages" )
+            os.unlink ( slhafile )
     cmd = f"cd {newtemp}; tar czvf ../{tarball} {args.topology}*slha recipe coordinates"
     if False:
         print ( f"[slhaCreator] {cmd}" )

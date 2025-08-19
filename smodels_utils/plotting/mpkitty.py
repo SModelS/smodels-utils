@@ -42,7 +42,7 @@ def timg( filename ):
     if not options["hasKittyBackend"] and not "kitty" in os.environ["TERM"]:
         return
     from shutil import which
-    exe = which ("timg", path=f"/usr/bin:{os.environ['PATH']}" )
+    exe = which ("timg", path=f"{os.environ['HOME']}/.local/bin:/usr/bin:{os.environ['PATH']}" )
     if exe is None:
         return
     import subprocess
@@ -53,9 +53,12 @@ def timg( filename ):
     if "MPLBACKEND_KITTY_SIZING" in os.environ:
         cols = os.environ["MPLBACKEND_KITTY_SIZING"]
     cmd = f"{exe} -pkitty -g {cols}x80 -U -W {filename}"
+    if "users" in exe:
+        cmd = f"{exe} {filename}"
     if ver.startswith ( "1.1" ):
         cmd = f"{exe} -s 80 -c extended {filename}"
 
+    print () # make sure we start in a fresh line
     o = subprocess.getoutput ( cmd )
     # print ( f"[mpkitty] {o}" )
     print ( o )

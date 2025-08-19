@@ -45,7 +45,7 @@ def createFile ():
         topos=["T1tttt","T2tt" ]
     random.shuffle ( topos )
     topo=topos[0]
-    template="./template_%s.slha" % topo
+    template=f"./template_{topo}.slha"
     # tempfile = "tmp.slha"
     tfile = tempfile.mktemp(suffix=".slha")
     glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ 1e6, 1e6 ],
@@ -71,10 +71,10 @@ def createFile ():
     f.close()
     g=open(tfile,"w")
     for line in lines:
-        line=line.replace("MGLUINO","%s" % mgl )
-        line=line.replace("MSTOP","%s" % mstop )
-        line=line.replace("MGL","%s" % mgl )
-        line=line.replace("MLSP","%s" % mlsp )
+        line=line.replace("MGLUINO",f"{mgl}" )
+        line=line.replace("MSTOP",f"{mstop}" )
+        line=line.replace("MGL",f"{mgl}" )
+        line=line.replace("MLSP",f"{mlsp}" )
         g.write ( line )
     g.close()
     return topo,mgl,mstop,mlsp,tfile
@@ -102,13 +102,13 @@ def runSingleFile( slhafile ):
     return dpreds
 
 def main():
-    subprocess.getoutput ( "cp %s.txt .%s.bu" % ( ids[0], ids[0] ) )
-    subprocess.getoutput ( "cp %s.pcl .%s.pcl.bu" % ( ids[0], ids[0] ) )
+    subprocess.getoutput ( f"cp {ids[0]}.txt .{ids[0]}.bu" )
+    subprocess.getoutput ( f"cp {ids[0]}.pcl .{ids[0]}.pcl.bu" )
     datasets=getDatasets()
     #print ( datasets ) 
     #sys.exit()
-    g=open("%s.txt" % ids[0],"w")
-    g2=open("%s.pcl" % ids[0],"wb")
+    g=open(f"{ids[0]}.txt","w")
+    g2=open(f"{ids[0]}.pcl","wb")
     i=0
     while True:
         topo,mgl,mstop,mlsp,tfile=createFile()
@@ -122,13 +122,13 @@ def main():
         sid=""
         first_n = 20
         for ctr,k in enumerate(keys[:first_n]):
-            sid+="id%d='%s'; r%d=%.2f; n%d=%d; " % ( ctr, preds[k], ctr, float(k)/10**6, ctr, datasets[preds[k]] )
-            D["r%d" % ctr]= float(k)/10**6
-            D["n%d" % ctr] = datasets[preds[k]]
-            D["id%d" % ctr] = preds[k] 
+            sid+=f"id{int(ctr)}='{preds[k]}'; r{int(ctr)}={float(k) / 10 ** 6:.2f}; n{int(ctr)}={int(datasets[preds[k]])}; "
+            D[f"r{int(ctr)}"]= float(k)/10**6
+            D[f"n{int(ctr)}"] = datasets[preds[k]]
+            D[f"id{int(ctr)}"] = preds[k] 
         sid=sid[:-2]
-        print ( "file %d, topo=%s, m=%d,%d,%d -> %s" % ( i, topo, mgl,mstop, mlsp, keys[:first_n] ) )
-        line="X: nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; %s.\n" % ( i, topo, mgl, mstop, mlsp, sid ) 
+        print ( f"file {int(i)}, topo={topo}, m={int(mgl)},{int(mstop)},{int(mlsp)} -> {keys[:first_n]}" )
+        line=f"X: nr={int(i)}; t='{topo}'; mgl={mgl:.1f}; mstop={mstop:.1f}; mlsp={mlsp:.1f}; {sid}.\n" 
         g.write ( line )
         g.flush()
         pickle.dump ( D, g2 )

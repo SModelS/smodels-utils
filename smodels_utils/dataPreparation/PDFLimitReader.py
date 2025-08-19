@@ -108,7 +108,7 @@ class PDFLimitReader():
                 if shape.fill.color.as_rgb() in [(1,1,1), (0,0,0)]: continue
                 #print (shape.fill.color.as_rgb(), len(shape.path))
                 if len(shape.path)!=6:
-                    raise RuntimeError("You need to look at this shape: %r" % shape.path)
+                    raise RuntimeError(f"You need to look at this shape: {shape.path!r}")
                 #there are two 'h' objects at the end
                 #y_vals.append(shape.path[-3])
                 colored_shapes.append(shape)

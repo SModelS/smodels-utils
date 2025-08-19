@@ -68,7 +68,7 @@ def compileTex(Filename="database.tex"):
 def pprint(constr):
     constr=constr.replace("'","")
     if len(constr)>40:
-        constr=constr[:37]+"..."
+        constr=f"{constr[:37]}..."
     return constr
 
 def printFirstTopo(File, expResult, txname):

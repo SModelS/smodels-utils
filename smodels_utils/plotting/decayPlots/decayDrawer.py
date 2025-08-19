@@ -46,7 +46,7 @@ class DecayDrawer:
             prog=prog[prog.rfind("/")+1:]
         dprog='dot'
         dargs='-n2 -Tsvg:svg:core'
-        wout=out+".svg"
+        wout=f"{out}.svg"
         # dargs='-n2 -Tpng:cairo'
         #wout=out+".png"
         if self.options["neato"]:
@@ -59,28 +59,28 @@ class DecayDrawer:
             prog='neato'
             args='-x -Ln10 -LT1000 -LO -Lg -v'
             if self.options["pdf"]:
-                wout=out+".neato.pdf"
+                wout=f"{out}.neato.pdf"
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
-            self.logger.debug ( "%s created with %s." % ( wout, prog ) )
+            self.logger.debug ( f"{wout} created with {prog}." )
 
         if self.options["dot"]:
             # wout=out+".dot"
-            wout=out+".dot"
+            wout=f"{out}.dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
-            self.logger.debug ( "%s created with dot." % ( wout ) )
+            self.logger.debug ( f"{wout} created with dot." )
 
         #if not self.options["nopng"]:
             ## wout=out+".dot.png"
         #    wout=out+".xxx"
         if self.options["pdf"]:
             # wout=out+".dot.pdf"
-            wout=out+".pdf"
+            wout=f"{out}.pdf"
 
             self.G.draw(wout,prog='dot')
-            self.logger.log ( "%s created with dot." % ( wout ) )
+            self.logger.log ( f"{wout} created with dot." )
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
@@ -108,9 +108,9 @@ class DecayDrawer:
         llabel=self.prettyName ( name )
         if include_masses:
             try:
-                llabel+=" (%d)" % mass
+                llabel+=f" ({int(mass)})"
             except:
-                llabel+=" (%s)" % str( mass )
+                llabel+=f" ({str(mass)})"
 
         label=llabel
         ## massctr+=1
@@ -145,7 +145,7 @@ class DecayDrawer:
         node.attr['shape']='none' # 'egg'
         #if not isFermionic:
         #    node.attr['shape']="box" # 'egg'
-        node.attr['label']="%s" % label
+        node.attr['label']=f"{label}"
 
     def addOneEdge ( self, name, daughter, rmin, labels ):
         """ add one edge with labels, etc """
@@ -165,6 +165,8 @@ class DecayDrawer:
             splabels = label.split(" ")
             newlabels = []
             for label in splabels:
+                # if these guys arent working,
+                # fix them maybe in .meddleWithTexFile
                 if label == "e":
                     label= "$e$"
                 if label == "ee":
@@ -172,7 +174,7 @@ class DecayDrawer:
                 if label == "mu":
                     label= "$\\mu$"
                 if label == "nu":
-                    label= "$v$"
+                    label= "@@nu@@"
                 if label == "nue":
                     label= "$v_{e}$"
                 if label == "numu":
@@ -217,7 +219,7 @@ class DecayDrawer:
                         continue
                     rname=self.prettyName(radiator) # .replace(" ","")
                     if rname in self.extra.keys ( ):
-                        rname += "->" + self.extra[rname]
+                        rname += f"->{self.extra[rname]}"
                     labels.append ( (r,rname) )
             labels.sort( key=lambda x: x[0], reverse=True )
             self.addOneEdge ( name, daughter, rmin, labels )
@@ -229,9 +231,9 @@ class DecayDrawer:
             #print ( "Here2, adding", m )
             self.G.add_node ( str(m) )
             node=self.G.get_node( str(m) )
-            node.attr['pos']="%f,%f" % ( 0, m )
+            node.attr['pos']=f"{0:f},{m:f}"
             node.attr['color']='#FFFFFF'
-            node.attr['label']=str(m)+' GeV'
+            node.attr['label']=f"{m!s} GeV"
 
     def texName ( self, pid, color = False, dollars = True ):
         """ get tex name for pid 
@@ -276,19 +278,22 @@ class DecayDrawer:
             return ret
         return self.htmlName ( name )
 
-    def meddleWithTexFile ( self,out ):
-        """ this changes the tex file! """
-        fname = "%s.tex"%out 
+    def meddleWithTexFile ( self, out : os.PathLike ):
+        """ here we meddle with decays.tex file 
+        hacks that are easier to do here
+        """
+        fname = f"{out}.tex" 
         if not os.path.exists ( fname ):
             return
         self.logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
         f=open( fname )
         lines=f.readlines()
         f.close()
-        f=open("%s.tex"%out,"w")
+        f=open(f"{out}.tex","w")
         for line in lines:
             if "enlargethispage" in line:
                 continue
+            line = line.replace("@@nu@@",r"$\nu$")
             f.write ( line )
         f.close()
 
@@ -302,10 +307,10 @@ class DecayDrawer:
             print ( "sudo apt install dot2tex" )
         self.logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
-        cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
-        self.logger.info (  "%s" % cmd )
+        cmd=f"dot2tex --autosize --nominsize --crop {out}.dot -traw -o {out}.tex"
+        self.logger.info (  f"{cmd}" )
         output=subprocess.getoutput( cmd )
-        self.logger.debug ( "out=%s" % output )
+        self.logger.debug ( f"out={output}" )
         self.logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out )
@@ -313,7 +318,7 @@ class DecayDrawer:
             outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        self.logger.error (  "%s" % pdfcmd )
+        self.logger.error (  f"{pdfcmd}" )
         output=subprocess.getoutput(pdfcmd )
         self.logger.debug ( output )
 
@@ -328,4 +333,4 @@ class DecayDrawer:
             self.logger.info ( cmd )
             o = subprocess.getoutput ( cmd )
             if len(o)>0:
-                self.logger.error ( "conversion output %s" % o )
+                self.logger.error ( f"conversion output {o}" )

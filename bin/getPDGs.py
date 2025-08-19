@@ -5,7 +5,7 @@ Used for the Les Houches correlation study (WW). """
 
 import glob
 templatedir = "../slha/templates/"
-files = glob.glob("%s/T*template" % templatedir )
+files = glob.glob(f"{templatedir}/T*template" )
 
 for fname in files:
     txname = fname.replace(".template","").replace(templatedir,"")
@@ -28,5 +28,5 @@ for fname in files:
             pdgs[tokens[1]]=[]
         pdgs[tokens[1]].append ( str ( tokens[0] ) )
     for k,v in pdgs.items():
-        print ( "  `- %s: %s" % ( k, ", ".join ( v ) ) )
+        print ( f"  `- {k}: {', '.join(v)}" )
     #print ( pdgs )

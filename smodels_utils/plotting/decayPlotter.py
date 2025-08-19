@@ -21,15 +21,14 @@ try:
     from . import setPath
 except ImportError as e:
     pass
-from smodels_utils.plotting import decayPlots
 import os
 from ptools import sparticleNames
 
-def draw( slhafile, outfile, options, offset=0.,
-          verbosity="info", ssmultipliers = None ):
+def draw( slhafile : os.PathLike, outfile : os.PathLike, options : dict , 
+          offset : float = 0., verbosity : str = "info" ):
     """ draw a decay plot from an slhafile
+    :param options: dictionary with all optional parameters
     :param offset: FIXME what does that one do?
-    :param ssmultipliers: signal strength multipliers
     """
     verbosity = verbosity.lower()
     levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
@@ -60,6 +59,7 @@ def draw( slhafile, outfile, options, offset=0.,
 
     verbosereader=False
     if options["verbose"]==True and not options["html"]: verbosereader=True
+    from smodels_utils.plotting import decayPlots
     reader=decayPlots.SPhenoReader ( slhafile, verbose=verbosereader, \
             integrateLeptons=(not options["leptons"]),
             integrateSquarks=options["integratesquarks"],
@@ -67,7 +67,7 @@ def draw( slhafile, outfile, options, offset=0.,
 
     if options["verbose"]==True and not options["html"]:
         reader.printDecay("~g")
-        logger.debug ( "%s" % reader.getDecays("~g",0.9) )
+        logger.debug ( f"{reader.getDecays('~g', 0.9)}" )
 
     # tmp=[    "~g", "~q", "~b", "~t", "~t_1", "~t_2", "~b_1", "~b_2" ]
     tmp = { 1000021, 1000001, 1000005, 1000006, 2000005, 2000006 }
@@ -76,48 +76,23 @@ def draw( slhafile, outfile, options, offset=0.,
         for pre in [ 1, 2 ]:
             for post in [ 1, 2, 3, 4 ]:
                 tmp.add ( pre*1000000 + post )
-        """
-        for i in [ "u", "d", "c", "s", "b", "t", "q" ]:
-            for c in ["L", "R", "1", "2" ]:
-                tmp.append ("~%s_%s" % ( i, c) )
-                tmp.append ("~%s%s" % ( i, c) )
-        """
 
     if options["sleptons"]:
         for pre in [ 1, 2 ]:
             for post in [ 11, 12, 13, 14, 15, 16 ]:
                 tmp.add ( pre*1000000 + post )
-        """
-        for i in [ "l", "e", "mu", "tau", "nu", "nu_e", "nu_mu", "nu_tau" ]:
-            for c in ["L", "R", "1", "2" ]:
-                tmp.append ("~%s_%s" % ( i, c) )
-                tmp.append ("~%s%s" % ( i, c) )
-        """
 
     if options["weakinos"]:
         weakinos = { 1000022, 1000023, 1000024, 1000025, 1000035, 1000037 }
         tmp.update ( weakinos )
-        """
-        for p_ in [ "~chi1+", "~chi2+", "~chi20", "~chi30" ]:
-            tmp.append ( p_ )
-        """
 
     starters=[]
 
     for i in tmp:
         if reader.hasTeVScaleMass(i):
             starters.append ( i )
-        """
-        if type ( reader.getMass(i) ) == type ( 5.0 ) or \
-           type ( reader.getMass(i) ) == type ( 5 ):
-            if reader.getMass(i)<100000:
-                starters.append ( i )
-        else:
-            # add all else
-            starters.append ( i )
-        """
 
-    print ( "[decayPlotters] we start with", starters )
+    print ( f"[decayPlotters] we start with {starters}" )
     namer = sparticleNames.SParticleNames ( susy=False )
 
     ps=reader.getRelevantParticles ( reader.filterNames(starters), 
@@ -141,7 +116,7 @@ def draw( slhafile, outfile, options, offset=0.,
     htmlend="</font>"
     if options["verbose"]:
         if options["html"]: print ( "<br>", htmlbegin )
-        logger.debug ( "We start from %s" % starters )
+        logger.debug ( f"We start from {starters}" )
         if options["html"]: print ( htmlend,"<br>" )
     drawer=decayPlots.DecayDrawer ( options, ps, offset, extra, verbosity )
 

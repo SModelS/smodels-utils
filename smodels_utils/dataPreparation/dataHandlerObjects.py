@@ -50,7 +50,7 @@ def _Hash ( lst ): ## simple hash function for our masses
 # (given that allowTrimming is true, see below)
 max_nbins = 12000
 allowTrimming=True ## allow big grids to be trimmed down
-trimmingFactor = [ 2 ] ## the factor by which to trim
+trimmingFactor = [ None ] ## the factor by which to trim, if none then determine automatically
 
 fileCache  = {} ## a file cache for input files, to speed things up
 pointsCache = {}
@@ -175,7 +175,7 @@ class DataHandler(object):
                 self._unit = unitString
                 return
             if not unitString in units:
-                logger.error("Units must be in %s, not %s" % (str(units),unitString) )
+                logger.error(f"Units must be in {str(units)}, not {unitString}" )
                 sys.exit()
             self._unit = unitString
 
@@ -306,7 +306,7 @@ class DataHandler(object):
             addPoint = True
             for key,val in xv.items():
                 if not key in point:
-                    logger.error("Key %s not allowed for data" %key)
+                    logger.error(f"Key {key} not allowed for data")
                     sys.exit()
                 if point[key] != val:
                     addPoint = False
@@ -338,13 +338,13 @@ class DataHandler(object):
                 #Get the point in the data which matches the one in self
                 pts = data.getPointsWith(**xvals)
                 if pts and len(pts)>1 and allowMultipleAcceptances:
-                    logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error(f"More than one point in reweighting data matches point {xvals}")
                     logger.error("But allowMultipleAcceptances is set to true, so will choose first value!" )
                     pts = [ pts[0] ]
                 if not pts:
                     continue
                 elif len(pts) > 1:
-                    logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error(f"More than one point in reweighting data matches point {xvals}")
                     logger.error("(If you want to allow for this happen, then set dataHandlerObjects.allowMultipleAcceptances = True)" )
                     sys.exit()
                 else:
@@ -457,7 +457,7 @@ class DataHandler(object):
         if unitString:
             units = ['GeV','TeV']
             if not unitString in units:
-                logger.error('Mass units must be in %s' %str(units))
+                logger.error(f'Mass units must be in {str(units)}')
                 sys.exit()
             self._massUnit = unitString
 
@@ -479,11 +479,11 @@ class DataHandler(object):
                     print ( "[dataHandlerObjects] did you try to parse an embaked file as a csv file maybe?" )
                     sys.exit(-1)
             if type(value) in [ float ] and value < 0.0:
-                logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
+                logger.warning(f"Negative value {value} in {self.path} will be ignored")
                 return False
             if value == 0.0 and strictlyPositive:
                 if not errorcounts["zerovalue"]:
-                    logger.warning("Zero value %s in %s will be ignored"%(value,self.path))
+                    logger.warning(f"Zero value {value} in {self.path} will be ignored")
                     errorcounts["zerovalue"]=True
                 return False
         return True
@@ -513,13 +513,13 @@ class DataHandler(object):
                 if values==[]:
                     continue
             except:
-                logger.error("Error reading file %s" %self.path)
+                logger.error(f"Error reading file {self.path}")
                 sys.exit()
             values = [value.strip() for value in values]
             try:
                 values = [float(value) for value in values]
             except:
-                logger.error("Error evaluating values %s in file %s" %(values,self.path))
+                logger.error(f"Error evaluating values {values} in file {self.path}")
                 sys.exit()
 
             lines.append ( values )
@@ -527,7 +527,7 @@ class DataHandler(object):
         xcoord, ycoord = self.coordinateMap[x], self.coordinateMap[y]
         ## FIXME should we ever sort here?
         # lines.sort( key= lambda x: x[xcoord]*1e6+x[ycoord] )
-        if len(lines) > max_nbins:
+        if len(lines) > max_nbins and trimmingFactor[0] == None:
             trimmingFactor[0] = int ( round ( math.sqrt ( len(lines) / 6000. ) ) )
             trimmingFactor[0] = trimmingFactor[0]**2
             newyields = []
@@ -572,10 +572,10 @@ class DataHandler(object):
                     logz = False
                     hasMatched = True
                 if not hasMatched:
-                    print ( "Error: do not understand %s. I expected log or nolog or delta (though I accept delta only in y coord)" % lims[2] )
+                    print ( f"Error: do not understand {lims[2]}. I expected log or nolog or delta (though I accept delta only in y coord)" )
             lims = tuple ( map ( float, lims[:2] ) )
             lim[axis]=lims
-        print("[dataHandlerObjects] limits %s" % lim )
+        print(f"[dataHandlerObjects] limits {lim}" )
 
         data =  {
             'name': self.path.replace(".pdf",""),
@@ -658,7 +658,7 @@ class DataHandler(object):
         waitFor = None
         if hasattr ( self, "objectName" ) and self.objectName is not None:
             if not suppressWarnings["objectname"]:
-                print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
+                print ( f"[dataHandlerObjects] warning, object name {self.objectName} supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." )
             waitFor = self.objectName
         has_waited = False
         if waitFor == None:
@@ -701,7 +701,7 @@ class DataHandler(object):
                         fr[1]=frx
                 yields.append ( fr )
             csvfile.close()
-            if len(yields) > max_nbins:
+            if len(yields) > max_nbins and trimmingFactor[0] == None:
                 trimmingFactor[0] = int ( round ( math.sqrt ( len(yields) / 6000. ) ) )
                 trimmingFactor[0] = trimmingFactor[0]**2
                 newyields = []
@@ -721,14 +721,13 @@ class DataHandler(object):
                 try:
                     yields.sort()
                 except TypeError as e:
-                    logger.error ( "type error when sorting: %s." % e )
+                    logger.error ( f"type error when sorting: {e}." )
                     culprits = ""
                     for lno,y in enumerate(yields):
                         for x in y:
                             if type(x) not in ( float, int ):
                                 culprits += f"''{x}'' "
-                    logger.error ( "the culprits might be %s in %s" % \
-                                   ( culprits, self.path ) )
+                    logger.error ( f"the culprits might be {culprits} in {self.path}" )
                     sys.exit()
             values = [] # compute the final return values from these containers
             for y in yields:
@@ -814,7 +813,7 @@ class DataHandler(object):
 
         waitFor = None
         if hasattr ( self, "objectName" ) and self.objectName is not None:
-            print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
+            print ( f"[dataHandlerObjects] warning, object name {self.objectName} supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." )
             waitFor = self.objectName
         has_waited = False
         if waitFor == None:
@@ -933,17 +932,17 @@ class DataHandler(object):
                 if values==[]:
                     continue
             except:
-                logger.error("Error reading file %s" %self.path)
+                logger.error(f"Error reading file {self.path}")
                 sys.exit()
             values = [value.strip() for value in values]
             try:
                 values = [float(value) for value in values]
             except:
-                logger.error("Error evaluating values %s in file %s" %(values,self.path))
+                logger.error(f"Error evaluating values {values} in file {self.path}")
                 sys.exit()
 
             if values[-2]<4*values[-1]:
-                logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
+                logger.debug(f"Small efficiency value {values[-2]} +- {values[-1]}. Setting to zero.")
                 values[-2]= 0.0
 
             print ( "value", values )
@@ -1024,7 +1023,7 @@ class DataHandler(object):
             name = name.replace('"','')
         obj = rootFile.Get(name)
         if not obj:
-            logger.error("Object %s not found in %s" %(name,self.path))
+            logger.error(f"Object {name} not found in {self.path}")
             sys.exit()
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
@@ -1177,7 +1176,7 @@ class DataHandler(object):
             yRange = range(len(yAxis))
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
-            if total_points > 6000.:
+            if total_points > 6000. and trimmingFactor[0]==None:
                 trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
                 logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
         if len(hist.axes) > 2:
@@ -1198,7 +1197,7 @@ class DataHandler(object):
                     else:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+                            logger.warning ( f"Very large map (nbins in z is {int(n_bins)}), but trimming turned off." )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
@@ -1212,7 +1211,7 @@ class DataHandler(object):
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
-                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+                        logger.warning ( f"Very large map (nbins in y is {int(n_bins)}), but trimming turned off." )
         if n_bins > max_nbins:
             if allowTrimming:
                 xRange = range(0,len(xAxis), trimmingFactor[0] )
@@ -1225,7 +1224,7 @@ class DataHandler(object):
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                    logger.warning ( f"Very large map (nbins in x is {int(n_bins)}), but trimming turned off." )
 
         if False: # total_points > n_bins:
             logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
@@ -1283,7 +1282,7 @@ class DataHandler(object):
             yRange = range(len(yAxis))
             n_bins=n_bins * len(yRange )
             total_points = len(yRange)*len(xRange)
-            if total_points > 6000.:
+            if total_points > 6000. and trimmingFactor[0] == None:
                 trimmingFactor[0] = int ( round ( math.sqrt ( total_points / 6000. ) ) )
                 logger.info ( f"total points is {total_points}. set trimmingFactor to {trimmingFactor[0]}" )
         if self.dimensions > 2:
@@ -1304,7 +1303,7 @@ class DataHandler(object):
                     else:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+                            logger.warning ( f"Very large map (nbins in z is {int(n_bins)}), but trimming turned off." )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
@@ -1318,7 +1317,7 @@ class DataHandler(object):
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
-                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+                        logger.warning ( f"Very large map (nbins in y is {int(n_bins)}), but trimming turned off." )
         if n_bins > max_nbins:
             if allowTrimming:
                 xRange = range(0,len(xAxis),  trimmingFactor[0] )
@@ -1331,7 +1330,7 @@ class DataHandler(object):
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                    logger.warning ( f"Very large map (nbins in x is {int(n_bins)}), but trimming turned off." )
 
         if False: # total_points > n_bins:
             logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
@@ -1406,7 +1405,7 @@ class DataHandler(object):
                     else:
                         if not errorcounts["trimzaxis"]:
                             errorcounts["trimzaxis"]=True
-                            logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
+                            logger.warning ( f"Very large map (nbins in z is {int(n_bins)}), but trimming turned off." )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>50:
                 if allowTrimming:
@@ -1419,7 +1418,7 @@ class DataHandler(object):
                 else:
                     if not errorcounts["trimyaxis"]:
                         errorcounts["trimyaxis"]=True
-                        logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
+                        logger.warning ( f"Very large map (nbins in y is {int(n_bins)}), but trimming turned off." )
         if n_bins > max_nbins:
             if allowTrimming:
                 xRange = range(1,xAxis.GetNbins() + 1,  trimmingFactor[0] )
@@ -1432,7 +1431,7 @@ class DataHandler(object):
             else:
                 if not errorcounts["trimxaxis"]:
                     errorcounts["trimxaxis"]=True
-                    logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                    logger.warning ( f"Very large map (nbins in x is {int(n_bins)}), but trimming turned off." )
 
         if False: # total_points > n_bins:
             logger.warning ( f"n_bins={n_bins}, total_points={total_points}, n_dims={self.dimensions}, xRange={list(xRange)[:4]} yRange={list(yRange)[:4]} {self.name}" )
@@ -1501,7 +1500,7 @@ class DataHandler(object):
         if type(self.index) in [ tuple, list ]: ## for aggregation!
             ys = []
             for i in self.index:
-                idfier = tree.file.file_path + ":" + tree.name + ":" + i
+                idfier = f"{tree.file.file_path}:{tree.name}:{i}"
                 if not idfier in pointsCache:
                     self._cacheUpRootTreePoints ( tree )
                 for y in pointsCache[idfier]:
@@ -1521,7 +1520,7 @@ class DataHandler(object):
             ys = []
             # tot = sum ( self.index.values() )
             for i,w in self.index.items():
-                idfier = tree.file.file_path + ":" + tree.name + ":" + i
+                idfier = f"{tree.file.file_path}:{tree.name}:{i}"
                 if not idfier in pointsCache:
                     self._cacheUpRootTreePoints ( tree )
                 for y in pointsCache[idfier]:
@@ -1539,7 +1538,7 @@ class DataHandler(object):
                 yield t
             return
 
-        idfier = tree.file.file_path + ":" + tree.name + ":" + self.index
+        idfier = f"{tree.file.file_path}:{tree.name}:{self.index}"
         if not idfier in pointsCache:
             self._cacheUpRootTreePoints ( tree )
         for y in pointsCache[idfier]:
@@ -1574,7 +1573,7 @@ class DataHandler(object):
 #                continue
             eff = float(effs[i])
             x = float(branches[ xvar ][i])
-            tidfier = tree.file.file_path + ":" + tree.name + ":" + branches["SearchBin"][i]
+            tidfier = f"{tree.file.file_path}:{tree.name}:{branches['SearchBin'][i]}"
             if not tidfier in pointsCache:
                 pointsCache[tidfier] = []
             if self.dimensions == 1:
@@ -1697,8 +1696,7 @@ class ExclusionHandler(DataHandler):
         elif 'M' in lines[0].split()[0]:
             relative = False
         else:
-            logger.error("Unknown svg format in %s:\n %s"
-                         %(self.path, lines[0].split()[0]))
+            logger.error(f"Unknown svg format in {self.path}:\n {lines[0].split()[0]}")
             sys.exit()
         ticks = lines[0].split()
         xticks = []
@@ -1718,11 +1716,10 @@ class ExclusionHandler(DataHandler):
                                  %(self.path,tick.split(':')[0][-3:]))
                     sys.exit()
             else:
-                logger.error("Unknown axis in %s:\n %s"
-                                 %(self.path,tick.split(':')[0][:1]))
+                logger.error(f"Unknown axis in {self.path}:\n {tick.split(':')[0][:1]}")
                 sys.exit()
         if len(xticks) != 2 or len(yticks) != 2:
-            logger.error("Unknown axis format %s" %self.path)
+            logger.error(f"Unknown axis format {self.path}")
             sys.exit()
         xGeV = (xticks[1][1]-xticks[0][1])/(xticks[1][0]-xticks[0][0])
         yGeV = (yticks[1][1]-yticks[0][1])/(yticks[1][0]-yticks[0][0])
@@ -1779,7 +1776,7 @@ class ExclusionHandler(DataHandler):
                     logz = False
                     hasMatched = True
                 if not hasMatched:
-                    print ( "Error: do not understand %s. I expected log or nolog" % lims[2] )
+                    print ( f"Error: do not understand {lims[2]}. I expected log or nolog" )
             lims = tuple ( map ( float, lims[:2] ) )
             lim[axis]=lims
 

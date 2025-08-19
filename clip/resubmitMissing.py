@@ -6,7 +6,7 @@ import subprocess, re, os, shutil
 
 def resubmit ( keyw ):
     """ check for keyword """
-    out = subprocess.getoutput ( "slurm q | grep %s" % keyw )
+    out = subprocess.getoutput ( f"slurm q | grep {keyw}" )
     lines = out.split ("\n" )
     nrs = set()
     for line in lines:
@@ -25,7 +25,7 @@ def resubmit ( keyw ):
     f=open("submit.sh","wt")
     f.write ( "#!/bin/sh\n" )
     for i in missing:
-        f.write ( "./slurm.py -R rundir.history -n %d -N %d\n" % ( i, i+1 ) )
+        f.write ( f"./slurm.py -R rundir.history -n {int(i)} -N {int(i + 1)}\n" )
     f.close()
     os.chmod( "submit.sh", 0o755 ) # 1877 is 0o755
 

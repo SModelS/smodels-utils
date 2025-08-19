@@ -147,7 +147,7 @@ class BestCombinationFinder(object):
                 print("1 theory Prediction ", self.listoftp[0].analysisId())
                 return self.listoftp
             else:
-                logging.warning("1 theory Prediction but not present in combination dictionary: %s"%(self.listoftp[0].analysisId()))               
+                logging.warning(f"1 theory Prediction but not present in combination dictionary: {self.listoftp[0].analysisId()}")               
                 if not self.use_dict: 
                     logging.warning("Returning Theory Prediction List as useAnalysisFromDict=False")
                     return self.listoftp
@@ -158,7 +158,7 @@ class BestCombinationFinder(object):
         
         if not EMatrix.size:                        #EMatrix is empty despite >1 tp
             notp_id = [notp.analysisId() for notp in self.notp]
-            logging.warning("Theory Prediction available but none are present in combination dictionary. %s"%(notp_id))
+            logging.warning(f"Theory Prediction available but none are present in combination dictionary. {notp_id}")
             #if not self.use_dict: 
             #        logging.warning("Returning Theory Prediction List as useAnalysisFromDict=False")
             #        return self.notp
@@ -197,8 +197,8 @@ class BestCombinationFinder(object):
                 if best_comb == []: self.combiner_list.append(None)
                 else: self.combiner_list.append(TheoryPredictionsCombiner(best_comb))
             for comb in self.combiner_list:
-                if comb: print("\n %i : " %(self.combiner_list.index(comb)+1), comb.analysisId())
-                else: print("\n %i : " %(self.combiner_list.index(comb)+1), comb)
+                if comb: print(f"\n {int(self.combiner_list.index(comb) + 1)} : ", comb.analysisId())
+                else: print(f"\n {int(self.combiner_list.index(comb) + 1)} : ", comb)
             return self.combiner_list
         
         #return list of theory predictions for which the combination has max weight
@@ -220,7 +220,7 @@ class BestCombinationFinder(object):
         if self.combiner_list == []:
             if len(self.listoftp) == 1 and self.listoftp[0].analysisId() in self.cM.keys():
                 r = self.listoftp[0].getRValue(expected = True)
-                print("\n R-value of analysis %s is "%(self.listoftp[0].analysisId()), r )
+                print(f"\n R-value of analysis {self.listoftp[0].analysisId()} is ", r )
                 return r
             else: return 0
             
@@ -240,7 +240,7 @@ class BestCombinationFinder(object):
         comb_rvalues = []
         for c in self.combiner_list:
             if c: comb_rvalues.append(c.getRValue(expected = True))
-        print("\n R-Values of top combinations ", comb_rvalues, " and R-value of most sensitive analysis %s is " %(bestResult), rmax)
+        print("\n R-Values of top combinations ", comb_rvalues, f" and R-value of most sensitive analysis {bestResult} is ", rmax)
         if comb_rvalues[0] >= rmax:
             if comb_rvalues[0] == max(comb_rvalues):
                 if bestResult in self.combiner_list[0].analysisId(): return comb_rvalues[0]
@@ -249,10 +249,10 @@ class BestCombinationFinder(object):
                     return 0
                     
             else:
-                logger.error("sensitivity of best combination is lower than that of the combination ranked %i " %(comb_rvalues.index(max(comb_rvalues))+1))
+                logger.error(f"sensitivity of best combination is lower than that of the combination ranked {int(comb_rvalues.index(max(comb_rvalues)) + 1)} ")
                 return 0
         else:
-            logger.error("sensitivity of best combination is lower than that of the most sensitive analysis: %s" %(bestResult))
+            logger.error(f"sensitivity of best combination is lower than that of the most sensitive analysis: {bestResult}")
             return 0
             
         

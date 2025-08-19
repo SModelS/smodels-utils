@@ -74,7 +74,7 @@ class Regressor:
         return ul.asNumber(fb)
 
     def log ( self, *args ):
-        print ( "[symbolic] " + " ".join ( map(str,args ) ) )
+        print ( f"[symbolic] {' '.join(map(str, args))}" )
 
     def instantiateRegressor( self ):
         def _protected_exp(x1):

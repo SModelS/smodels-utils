@@ -169,7 +169,7 @@ def convertNewAxes ( newa ):
             axes.append ( newa["z"] )
         return axes[::-1]
     if not errMsgIssued["axis"]:
-        print ( "[plotRatio] cannot convert axis '%s'" % newa )
+        print ( f"[plotRatio] cannot convert axis '{newa}'" )
         errMsgIssued["axis"]=True
     return None
 
@@ -282,10 +282,12 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False,
     return various.getExclusionCurvesFor ( jsonfile, txname, axes, get_all,
             expected )
 
-def getDatasetDescription ( validationPlot, maxLength = 100 ):
+def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
     """ get the description of the dataset that appears as a subtitle
         in e.g. the ugly plots """
     subtitle = f"best of {len(validationPlot.expRes.datasets)} SRs: "
+    if len(validationPlot.expRes.datasets)==1:
+        subtitle = f"single SR: "
     if validationPlot.validationType == "tpredcomb":
         subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
 
@@ -302,8 +304,8 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
             continue
         dataId = str(dataset.dataInfo.dataId)
         if len(dataId)>8:
-            dataId = dataId[:7]+"*"
-        subtitle+=dataId+", "
+            dataId = f"{dataId[:7]}*"
+        subtitle+=f"{dataId}, "
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ) and \
             validationPlot.combine == True:
@@ -325,7 +327,7 @@ def getDatasetDescription ( validationPlot, maxLength = 100 ):
         p1 = idx[idx<maxLength]
         if len(p1)>0:
             pos = p1[-1]
-        subtitle = subtitle[:pos] + ", ..."
+        subtitle = f"{subtitle[:pos]}, ..."
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = ""
@@ -365,7 +367,7 @@ def getFigureUrl( validationPlot ):
     pos = [i for i,x in enumerate(txaxes) if x==validationPlot.axes ]
 
     if len(pos)!=1:
-        logger.error("found axes %d times. Did you declare several maps for the same analysis/dataset/topology combo? Will exit, please fix!" % len(pos))
+        logger.error(f"found axes {len(pos)} times. Did you declare several maps for the same analysis/dataset/topology combo? Will exit, please fix!")
         sys.exit()
     return txurl[pos[0]]
 

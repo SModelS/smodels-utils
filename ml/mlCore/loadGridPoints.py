@@ -32,9 +32,9 @@ def loadInternalGridPoints(expres, txnameData, dataselector, signalRegion, singl
 
 
 	if dataselector == "upperLimit":
-		filePath = expres.path + '/data/' + tx + '.txt'
+		filePath = f"{expres.path}/data/{tx}.txt"
 	else:
-		filePath = expres.path + '/' + signalRegion + '/' + tx + '.txt'
+		filePath = f"{expres.path}/{signalRegion}/{tx}.txt"
 
 	with open(filePath) as txtFile:
 		txdata = txtFile.read()
@@ -190,14 +190,14 @@ def loadExternalGridPoints(externalFile, massColumns, includeExtremata = False, 
 	for n,c in enumerate(count[:10]):
 		if n == 0: p = 0
 		else: p = 10**-n
-		logger.debug("# effs at ~%s: %s" % (p, c))
+		logger.debug(f"# effs at ~{p}: {c}")
 
 		
 
-	logger.debug("length of dataset: %s" %len(dataset_masses))
-	logger.debug("number of eff squished to 0: %s (%s%%)" % (squished, 100*round(squished/totalLen,2)))
-	logger.debug("percentage of 0 efficiencies: %s%%" %(round(100*count[0]/totalLen, 2)))
-	logger.debug("taget minimum: %s" % min(dataset_targets))
-	logger.debug("taget maximum: %s" % max(dataset_targets))
+	logger.debug(f"length of dataset: {len(dataset_masses)}")
+	logger.debug(f"number of eff squished to 0: {squished} ({100 * round(squished / totalLen, 2)}%)")
+	logger.debug(f"percentage of 0 efficiencies: {round(100 * count[0] / totalLen, 2)}%")
+	logger.debug(f"taget minimum: {min(dataset_targets)}")
+	logger.debug(f"taget maximum: {max(dataset_targets)}")
 
 	return dataset_masses, dataset_targets

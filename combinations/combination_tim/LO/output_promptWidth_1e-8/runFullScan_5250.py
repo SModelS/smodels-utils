@@ -68,7 +68,7 @@ def main(allPredictions):
         combiner = TheoryPredictionsCombiner(bestCombo)
         combostr = ''
         for c in bestCombo:
-            combostr += c.dataset.globalInfo.id + ','
+            combostr += f"{c.dataset.globalInfo.id},"
         combostr = combostr[:-1]
         retDict['bestCombo'] = combostr
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     database = Database(database)
 
 
-    for i,fin in enumerate(glob.glob(slhaFolder+'*')):
+    for i,fin in enumerate(glob.glob(f"{slhaFolder}*")):
         if 5000 <= i < 5250:
 	        filename = os.path.basename(fin)
 	        print(f'Processing {i}/18557: {filename}')
@@ -129,4 +129,4 @@ if __name__ == '__main__':
 	        comboDict[filename] = retDict
 	
 	        with open(outputFile,'w') as fout:
-	            fout.write('comboDict = ' + str(comboDict))
+	            fout.write(f"comboDict = {comboDict!s}")

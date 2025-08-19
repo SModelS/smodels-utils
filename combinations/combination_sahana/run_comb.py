@@ -100,13 +100,13 @@ class SModelsOutput(object):
                 if bestThPred == []:
                     print("\n M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: None")
                     print("\n Not running SModelS on file as no tp available")
-                    out.write('\n {}, \t\t {}, \t {}, \t {}, \t {}, \t {}, \t {},  \t N/A, \t \t \t N/A, \t\t\t N/A, \t N/A, \t N/A, \t N/A, \t N/A'.format(filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2))
+                    out.write(f'\n {filename}, \t\t {self.m_n1}, \t {self.m_n2}, \t {self.m_c1}, \t {self.m_n3}, \t {self.m_n4}, \t {self.m_c2},  \t N/A, \t \t \t N/A, \t\t\t N/A, \t N/A, \t N/A, \t N/A, \t N/A')
         
                 else:
                     print("\n M_C1: ", self.m_c1, "\t M_N1: ", self.m_n1, "\t Combination: ", bestThPred[0].analysisId())
                     self.runSmodels(bestThPred, file)
                     self.readSModelSFile(file)
-                    out.write('\n {}, \t\t {}, \t {}, \t {}, \t {}, \t {}, \t {}, \t {}, \t {}, \t\t\t {}, \t\t\t {}, \t {}, \t {}, \t {}'.format(filename, self.m_n1, self.m_n2,self.m_c1, self.m_n3, self.m_n4, self.m_c2, self.output_r[2], self.output_r[3], self.output_ana[-1], self.output_r[0], self.output_ana[0], self.output_r[1] ,self.output_ana[1]))
+                    out.write(f'\n {filename}, \t\t {self.m_n1}, \t {self.m_n2}, \t {self.m_c1}, \t {self.m_n3}, \t {self.m_n4}, \t {self.m_c2}, \t {self.output_r[2]}, \t {self.output_r[3]}, \t\t\t {self.output_ana[-1]}, \t\t\t {self.output_r[0]}, \t {self.output_ana[0]}, \t {self.output_r[1]}, \t {self.output_ana[1]}')
                 
         
     def runSmodels(self, bestThPred, file):
@@ -139,7 +139,7 @@ class SModelsOutput(object):
         self.output_str = ['The highest r value is =', 'CMS analysis with highest available r_expected:', 'ATLAS analysis with highest available r_expected:', 'Combined Analyses:','combined r-value:','combined r-value (expected):']
         self.output_ana = ['Analysis with maximum obs r', 'Analysis with maximum exp r', 'Combined Analyses']
         self.output_r   = [0.0, 0.0, 0.0, 0.0]
-        with open('results/%s.smodels'%(file), 'r') as file:
+        with open(f'results/{file}.smodels', 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
                 if row == []:continue

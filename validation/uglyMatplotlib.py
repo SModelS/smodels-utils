@@ -14,6 +14,7 @@ from array import array
 import math
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
+from smodels.experiment import expAuxiliaryFuncs
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname
 from plottingFuncs import getGridPoints, yIsLog, getFigureUrl, \
@@ -68,14 +69,15 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         nmax = 20
     ndots = 30
     ndigits = int(math.ceil(math.log10(nmax)))
+    ntext = 29
     try:
-        ndots = shutil.get_terminal_size().columns - 45-ndigits
+        ndots = shutil.get_terminal_size().columns - ntext-2-ndigits
     except Exception as e:
         pass
     if "COLUMNS" in os.environ:
-        ndots = int(os.environ["COLUMNS"])-45-ndigits
+        ndots = int(os.environ["COLUMNS"])-ntext-2-ndigits
     dn = int(math.ceil(nmax/ndots))
-    print ( " "*int(43+ndigits+ndots), end="<\r" )
+    print ( " "*int(ntext+ndigits+ndots-5), end="<\r" )
     print ( f"[uglyMatplotlib] checking {nmax} validation points >", end="" )
     xcontainer,ycontainer=[],[]
     for ctPoints,pt in enumerate(validationPlot.data):
@@ -162,15 +164,16 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     for ctr,coords in enumerate(origdata):
         #masses = removeUnits ( pt[0], standardUnits=GeV )
         #coords = massPlane.getXYValues(masses)
-        if coords != None and "y" in coords:
+        if coords != None and "y" in coords and coords["y"] != None:
             if logY and coords["y"]>1e-8:
-                coords["y"]=math.exp(-coords["y"])
+                # coords["y"]=math.exp(-coords["y"]) * 10**(-3)
+                coords["y"]=expAuxiliaryFuncs.unscaleWidth ( coords["y"] )
             if xrange != None and not ( xrange[0] < coords["x"] < xrange[1] ):
                 continue
             if yrange != None and not ( yrange[0] < coords["y"] < yrange[1] ):
                 continue
-            gridpoints.append( { "i": len(gridpoints), "x": coords["x"],
-                                 "y": coords["y"] } )
+            pt = { "i": len(gridpoints), "x": coords["x"], "y": coords["y"] }
+            gridpoints.append( pt )
 
     if countPts == 0:
         logger.warning ( "no good points??" )
@@ -182,13 +185,19 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
             continue
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
-        plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
+        try:
+            plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
+        except ValueError as e:
+            print ( f"[uglyMatplotlib] ValueError: {e}" )
         label = "official exclusion"
         linestyle = "-"
         if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
             label = ""
             linestyle = "dotted"
-        plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
+        try:
+            plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
+        except ValueError as e:
+            print ( f"[uglyMatplotlib] ValueError: {e}" )
     ax = plt.gca()
     if logY:
         ax.set_yscale('log')
@@ -208,13 +217,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         dx = .53
     if len(allowed)>0:
         plt.plot ( get("x",allowed), get("y",allowed), marker="o", \
-                   linestyle=None, c="limegreen", linewidth=0, label="allowed", zorder = 3 )
+                   linestyle=None, c="green", linewidth=0, label="allowed", zorder = 3 )
     if len(excluded)>0:
         plt.plot ( get("x",excluded), get("y",excluded), marker="o", \
                    linestyle=None, c="red", linewidth=0, label="excluded", zorder = 4 )
     if len(allowed_border)>0:
         plt.plot ( get("x",allowed_border), get("y",allowed_border), marker="o", \
-                   linestyle=None, c="darkgreen", linewidth=0, label="allowed (but close)", zorder = 5)
+                   linestyle=None, c="limegreen", linewidth=0, label="allowed (but close)", zorder = 5)
     if len(excluded_border)>0:
         plt.plot ( get("x",excluded_border), get("y",excluded_border), marker="o", \
                    linestyle=None, c="orange", linewidth=0, label="excluded (but close)", zorder = 6)

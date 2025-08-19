@@ -33,6 +33,8 @@ from validationObjsBase import ValidationObjsBase
 
 logger.setLevel(level=logging.ERROR)
 
+complaints = { "NoResultsFor": 0 }
+
 class ValidationPlot( ValidationObjsBase ):
     """
     Encapsulates all the data necessary for creating a single validation plot.
@@ -58,17 +60,17 @@ class ValidationPlot( ValidationObjsBase ):
         :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
         :param keep: keep temporary directories
         """
-        super ( ValidationPlot, self ).__init__ ( ) 
+        super ( ValidationPlot, self ).__init__ ( )
         anaID = ExptRes.globalInfo.id
         if databasePath:
             if os.path.isdir(databasePath):
                 self.databasePath = databasePath
             else:
-                logger.error("Database folder "+databasePath+" does not exist")
+                logger.error(f"Database folder {databasePath} does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
             if not os.path.isdir(self.databasePath):
@@ -123,12 +125,12 @@ class ValidationPlot( ValidationObjsBase ):
             if os.path.isdir(databasePath):
                 self.databasePath = databasePath
             else:
-                logger.error("Database folder "+databasePath+" does not exist")
+                logger.error(f"Database folder {databasePath} does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
             anaID = ExptRes.globalInfo.id
-            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
             if not os.path.isdir(self.databasePath):
@@ -146,9 +148,9 @@ class ValidationPlot( ValidationObjsBase ):
     def __str__(self):
 
         vstr = "Validation plot for\n"
-        vstr += 'id: %s\n' % self.expRes.globalInfo.id
-        vstr += 'TxName: '+self.txName+'\n'
-        vstr += 'Axes: '+self.axes
+        vstr += f'id: {self.expRes.globalInfo.id}\n'
+        vstr += f"TxName: {self.txName}\n"
+        vstr += f"Axes: {self.axes}"
         return vstr
 
     def loadData(self, overwrite = True ):
@@ -203,12 +205,16 @@ class ValidationPlot( ValidationObjsBase ):
         addedpoints = len(self.data)
         if not overwrite:
             logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
+            self.meta["runs"]=f"{len(self.data)}"
+            """ # we had this behavior before: report all runs, concatenated with a '+' sign.
+            # seems too contrived now. WW
             if not "runs" in self.meta:
                 self.meta["runs"]=f"{len(self.data)}"
             else:
                 prev = eval ( self.meta["runs"] )
                 addedpoints = len(self.data)-prev
                 self.meta["runs"]=self.meta["runs"]+"+"+f"{addedpoints}"
+            """
         # self.data = content["data"]
         ndata = 0
         if self.data != None:
@@ -294,7 +300,7 @@ class ValidationPlot( ValidationObjsBase ):
                 ret = [ ret[0] ]
         return ret
 
-    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int: 
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int:
         """ returns 1 if success else 0 """
         fout = resultsfile
         if not os.path.isfile(fout):
@@ -316,17 +322,14 @@ class ValidationPlot( ValidationObjsBase ):
         try:
             exec( cmd, myglobals )
         except SyntaxError as e:
-            logger.error ( f"when reading {fout}: {e}. will skip" ) 
+            logger.error ( f"when reading {fout}: {e}. will skip" )
             os.unlink ( fout )
             return 0
         ff.close()
         if not 'ExptRes' in smodelsOutput:
-            logger.debug( f"No results for {slhafile}" )
             ## still get the masses from the slhafile name
             axes = self.getXYFromSLHAFileName ( slhafile, asDict=True )
-            ## log also the errors in the py file
-            Dict = { 'slhafile': slhafile, 'error': 'no results here', 'axes': axes }
-            self.data.append ( Dict )
+            self.addDictionaryForFailedPoint ( smodelsOutput, axes )
             return 1
         dt = None
         if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
@@ -430,7 +433,7 @@ class ValidationPlot( ValidationObjsBase ):
             Dict["nll_min"]= nll_min
             nll_SM = 900.
             if expRes["l_SM"]>0.:
-                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 ) 
+                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
             Dict['nll_SM']= nll_SM
             if not "chi2" in expRes:
                 try:
@@ -478,9 +481,9 @@ class ValidationPlot( ValidationObjsBase ):
                     if eff != None:
                         Dict['efficiency'] = round ( eff, 8 )
                 except SModelSError as e:
-                    logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                    logger.error ( f"could not handle {slhafile}: {e}" )
                     Dict=None
-        logger.debug('expres keys : {}'.format(expRes.keys()))
+        logger.debug(f'expres keys : {expRes.keys()}')
         if 'best combination' in expRes.keys():
             Dict['best combination'] = expRes['best combination']
 
@@ -519,9 +522,11 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             if "coordinates" in slhafile:
                 continue
+            if "comment" in slhafile:
+                continue
             if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
                 continue
-            fout = os.path.join(self.outputDir,slhafile + '.py')
+            fout = os.path.join(self.outputDir,f"{slhafile}.py")
             self.addResultToData ( slhafile, fout )
 
         #Remove temporary folder

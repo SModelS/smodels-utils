@@ -53,12 +53,15 @@ def fetchContent ( validationfiles : str, dbpath : str, analysis : str ) -> dict
     options = {}
     for validationfile in vfiles:
         if not "_" in validationfile:
-            validationfile = validationfile+"_2EqMassAx_EqMassBy.py"
+            validationfile = f"{validationfile}_2EqMassAx_EqMassBy.py"
         if "_combined" in validationfile:
             print ( f"[plotBestSRs] weird validationfile is {validationfile}, ie with 'combined' in the file name. You sure it is the right one?" )
         ipath = getPathName ( dbpath, analysis, validationfile )
         print ( f"[plotBestSRs] querying {ipath}" )
         smspath = getPathName ( dbpath, analysis, None )
+        if smspath == None:
+            print ( f"[plotBestSRs] got no sms path: returning" )
+            return
         p1 = validationfile.find("_")
         topo = validationfile[:p1]
         txnames.append ( topo )
@@ -105,11 +108,11 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
             err = point["error"]
             if "axes" in point and point["axes"] != None:
                 axes = convertNewAxes ( point["axes"] )
+                if axes == None:
+                    continue
                 if not isWithinValue ( axes[1], max_x ):
                     continue
                 if not isWithinValue ( axes[0], max_y ):
-                    continue
-                if axes == None:
                     continue
                 bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": None } )
             continue
@@ -241,6 +244,9 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
     """
     plt.clf()
     content = fetchContent ( validationfiles, dbpath, analysis )
+    if content is None:
+        print ( f"[plotBestSRs] got no content: returning" )
+        return None
     xr = None
     if max_x == None:
         xr = getAxisRange ( content["options"], "xaxis" )

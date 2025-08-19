@@ -39,4 +39,4 @@ if __name__ == "__main__":
 
 
 	prediction = getPrediction(expres, txnameData, massPoint)
-	print("Efficiency predicted for %s: %f" % (massPoint, round(prediction[0], 5)))
+	print(f"Efficiency predicted for {massPoint}: {round(prediction[0], 5):f}")

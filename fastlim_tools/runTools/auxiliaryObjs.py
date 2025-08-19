@@ -47,7 +47,7 @@ def prepareSLHA(slhafile,newfile):
     for pid in pyslhaData.blocks['MASS'].keys():
         if not pid in pyslhaData.decays:
             slha.write("#         PDG            Width\n")
-            slha.write("DECAY   "+str(pid)+"     0.00000000E+00\n")
+            slha.write(f"DECAY   {pid!s}     0.00000000E+00\n")
     slha.close()
         
     return True
@@ -70,10 +70,10 @@ def getSlhaFiles(slhadir):
             tar.extractall(path=tempdir)
             slhaD = tempdir
         except:
-            logger.error("Could not extract SLHA files from %s" %slhadir)
+            logger.error(f"Could not extract SLHA files from {slhadir}")
             sys.exit()
     else:
-        logger.error("%s is not a file nor a folder" %slhadir)
+        logger.error(f"{slhadir} is not a file nor a folder")
         sys.exit()
 
     for root, dirs, files in os.walk(slhaD):
@@ -152,26 +152,26 @@ def formatOutput(slhafile,predictions,extraInfo={},minval=0.00005):
     for key in res.blocks['NMIX'].entries:
         val = res.blocks['NMIX'].entries[key]
         if key[0] != 1: continue
-        newkey = 'N'+str(key[0])+str(key[1])
+        newkey = f"N{key[0]!s}{key[1]!s}"
         chimix[newkey] = val
     chamix = {}
     for key in res.blocks['UMIX'].entries:
         val = res.blocks['UMIX'].entries[key]
-        newkey = 'U'+str(key[0])+str(key[1])
+        newkey = f"U{key[0]!s}{key[1]!s}"
         chamix[newkey] = val  
     for key in res.blocks['VMIX'].entries:
         val = res.blocks['VMIX'].entries[key]
-        newkey = 'V'+str(key[0])+str(key[1])
+        newkey = f"V{key[0]!s}{key[1]!s}"
         chamix[newkey] = val  
     stopmix = {}
     for key in res.blocks['STOPMIX'].entries:
         val = res.blocks['STOPMIX'].entries[key]
-        newkey = 'ST'+str(key[0])+str(key[1])
+        newkey = f"ST{key[0]!s}{key[1]!s}"
         stopmix[newkey] = val  
     sbotmix = {}  
     for key in res.blocks['SBOTMIX'].entries:
         val = res.blocks['SBOTMIX'].entries[key]
-        newkey = 'SB'+str(key[0])+str(key[1])
+        newkey = f"SB{key[0]!s}{key[1]!s}"
         sbotmix[newkey] = val  
 
     #Order ExptRes according to tval:
@@ -201,7 +201,7 @@ def compareFiles(file1,file2,allowedDiff=0.001,ignore=[]):
     dicts = []
     for f in [file1,file2]:
         if not os.path.isfile(f):
-            logger.error("File %s not found" %f)
+            logger.error(f"File {f} not found")
             return False
         fin = open(f,'r')
         dicts.append(eval(fin.read().replace(' [fb]','*fb').replace('[GeV]','*GeV')))
@@ -223,7 +223,7 @@ def equalObjs(obj1,obj2,allowedDiff,ignore=[]):
     """      
     
     if type(obj1) != type(obj2):
-        logger.info("Data types differ (%s,%s)" %(type(obj1),type(obj2)))
+        logger.info(f"Data types differ ({type(obj1)},{type(obj2)})")
         return False
     
     if isinstance(obj1,unum.Unum):
@@ -240,20 +240,20 @@ def equalObjs(obj1,obj2,allowedDiff,ignore=[]):
         return obj1 == obj2
     elif isinstance(obj1,dict):    
         if len(obj1) != len(obj2):
-            logger.info("Dictionaries have distinct lengths (%i,%i)" %(len(obj1),len(obj2)))
+            logger.info(f"Dictionaries have distinct lengths ({len(obj1)},{len(obj2)})")
             return False
         for key in obj1:
             if key in ignore: continue
             if not key in obj2:
-                logger.info("Key %s missing" %key)
+                logger.info(f"Key {key} missing")
                 return False
             if not equalObjs(obj1[key],obj2[key],allowedDiff):
-                logger.info('Objects differ:\n   %s\n and\n   %s' %(str(obj1[key]),str(obj2[key])))
+                logger.info(f'Objects differ:\n   {str(obj1[key])}\n and\n   {str(obj2[key])}')
                 return False
     elif isinstance(obj1,list):
         for ival,val in enumerate(sorted(obj1)):
             if not equalObjs(val,sorted(obj2)[ival],allowedDiff):
-                logger.info('Objects differ:\n   %s \n and\n   %s' %(str(val),str(sorted(obj2)[ival])))
+                logger.info(f'Objects differ:\n   {str(val)} \n and\n   {str(sorted(obj2)[ival])}')
                 return False
     else:
         return obj1 == obj2
@@ -271,7 +271,7 @@ class FastlimError(Exception):
         Exception.__init__(self, infile)
         
     def __str__(self):
-        return 'Fastlim failed for %s' %self.infile
+        return f'Fastlim failed for {self.infile}'
 
 class SModelSError(Exception):
     """
@@ -282,7 +282,7 @@ class SModelSError(Exception):
         Exception.__init__(self, infile)
         
     def __str__(self):
-        return 'SModelS failed for %s' %self.infile    
+        return f'SModelS failed for {self.infile}'    
     
 
 class NoTime(Exception):
@@ -294,7 +294,7 @@ class NoTime(Exception):
         Exception.__init__(self, value)
         
     def __str__(self):
-        return '%.2f s time out exceeded' %float(self.value)
+        return f'{float(self.value):.2f} s time out exceeded'
 
 
 class Timeout():

@@ -100,7 +100,7 @@ def traverse( dryrun ):
             superseded = set()
             for analysis in os.listdir ( fulldir ):
                 fullpath = os.path.join ( fulldir, analysis )
-                gi = fullpath + "/globalInfo.txt"
+                gi = f"{fullpath}/globalInfo.txt"
                 gif=open ( gi )
                 lines=gif.readlines()
                 for line in lines:
@@ -112,7 +112,7 @@ def traverse( dryrun ):
 
             for analysis in os.listdir ( fulldir ):
                 fullpath = os.path.join ( fulldir, analysis )
-                gi = fullpath + "/globalInfo.txt"
+                gi = f"{fullpath}/globalInfo.txt"
                 if not os.path.exists ( gi ):
                     continue
                 gif=open ( gi )

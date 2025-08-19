@@ -13,9 +13,9 @@ def checkRegions ( g ):
     for k,v in g.items():
         nR =len(v)
         if nR < nMax:
-            print ( "point %s has only %d/%d regions" % ( k, nR, nMax ) )
+            print ( f"point {k} has only {int(nR)}/{int(nMax)} regions" )
             ctWrong += 1
-    print ( "%d / %d points dont have all %d regions." % ( ctWrong, len(g), nMax ) )
+    print ( f"{int(ctWrong)} / {len(g)} points dont have all {int(nMax)} regions." )
 
 
 def main():
@@ -26,26 +26,26 @@ def main():
     argparser.add_argument ( '-a', '--analysis', nargs='?', help='analysis to check [ATLAS-SUSY-2016-07]',
                              type=str, default='ATLAS-SUSY-2016-07' )
     args=argparser.parse_args()
-    ana = "%s-eff" % args.analysis
+    ana = f"{args.analysis}-eff"
     exp = "ATLAS"
     if "CMS" in ana:
         exp = "CMS"
     sqrts="13"
     topo=args.topology
-    fname = "../../smodels-database/%sTeV/%s/%s/orig/%s.embaked" % ( sqrts, exp, ana, topo)
+    fname = f"../../smodels-database/{sqrts}TeV/{exp}/{ana}/orig/{topo}.embaked"
     with open(fname) as f:
         g=eval(f.read())
     stats ( g )
 
 def stats ( g ):
-    print ( "we have %d points" % len(g) )
+    print ( f"we have {len(g)} points" )
     checkRegions ( g )
     tuples = list(g.keys())
     ntuples = np.array ( tuples )
     ndim = len(tuples[0]) 
-    print ( "we have %d dimensions" % ndim )
+    print ( f"we have {int(ndim)} dimensions" )
     for i in range( ndim ):
-        print ( " `- dim #%d: (%d,%d)" % ( i, min(ntuples[::,i]),max(ntuples[::,i])) )
+        print ( f" `- dim #{int(i)}: ({int(min(ntuples[:, i]))},{int(max(ntuples[:, i]))})" )
     mults =  []
     multst= {}
     multslastdim = []
@@ -72,9 +72,9 @@ def stats ( g ):
         multsonedim.append ( tmponedim )
         multsonedimt [ tmponedim ] = t
 
-    print ( "largest at meridian %s - %s" % ( multst[min(mults)], multst[max(mults)] ) )
-    print ( "largest with small LSP %s - %s" % ( multslastdimt[min(multslastdim)], multslastdimt[max(multslastdim)] ) )
-    print ( "largest with small intermediate %s - %s" % ( multsonedimt[min(multsonedim)], multsonedimt[max(multsonedim)] ) )
+    print ( f"largest at meridian {multst[min(mults)]} - {multst[max(mults)]}" )
+    print ( f"largest with small LSP {multslastdimt[min(multslastdim)]} - {multslastdimt[max(multslastdim)]}" )
+    print ( f"largest with small intermediate {multsonedimt[min(multsonedim)]} - {multsonedimt[max(multsonedim)]}" )
     # print ( g.keys() )
 
 if __name__ == "__main__":

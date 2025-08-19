@@ -6,8 +6,14 @@ import sys, subprocess, argparse, os
 from typing import Union, Text
 from smodels_utils.helper.terminalcolors import *
 
+from smodels_utils.helper.various import checkNumpyVersion
+from smodels.base.runtime import checkForIncompatibleModuleVersions
+
+checkNumpyVersion()
+smodels_check = checkForIncompatibleModuleVersions()
+
 def execute(cmd):
-    print ( "[cmd] %s" % " ".join ( cmd ) )
+    print ( f"[cmd] {' '.join(cmd)}" )
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line 
@@ -45,7 +51,7 @@ def gitPush( dry_run, commit, version : Union[None,Text] ):
     if dry_run:
         return
     o = subprocess.getoutput ( cmd )
-    print ( "[updateAllWikiPages.py] %s" % o )
+    print ( f"[updateAllWikiPages.py] {o}" )
 
 def main():
     import argparse
@@ -84,8 +90,8 @@ def main():
     ref_db = A.reference_database
     ref_db = os.path.expanduser( ref_db )
     ver = None ## version, if exists
-    if os.path.exists ( db+"/version" ):
-        with open ( db+"/version","rt" ) as f:
+    if os.path.exists ( f"{db}/version" ):
+        with open ( f"{db}/version","rt" ) as f:
             ver = f.read().replace(".","").replace("v","")
             ver = ver.strip()
     ## list of analyses, with and without superseded
@@ -94,7 +100,7 @@ def main():
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd + [ "-f" ], A.dry_run )
-    exec ( cmd + [ "-n" ], A.dry_run )
+    exec ( cmd + [ "-n", "-A" ], A.dry_run )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
         cmd = [ "./listOfAnalyses.py", "-l", "-d", db ]

@@ -20,9 +20,9 @@ def xsel( ):
 def sizeof_fmt(num, suffix='B'):                                              
     for unit in [ '','K','M','G','T','P' ]:                                   
         if abs(num) < 1024.:                                                  
-            return "%3.1f%s%s" % (num, unit, suffix)                          
+            return f"{num:3.1f}{unit}{suffix}"                          
         num /= 1024.0                                                         
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return f"{num:.1f}Yi{suffix}"
 
 def oldheader( w ):
     """ the old header, in moin moin wiki syntax, for smodels.hephy.at """
@@ -58,7 +58,7 @@ def main():
     w=open("Databases","w" )
     header ( w )
     Dir = "/var/www/database/"
-    globs=list ( glob.glob("%s*" % Dir ) )
+    globs=list ( glob.glob(f"{Dir}*" ) )
     globs.sort()
 
     for filen in globs:
@@ -71,18 +71,18 @@ def main():
         else:
             Ver = dbname[m.start():]
         ver2 = Ver[2:].replace("_fastlim","")
-        ver = "v" + Ver[0]+"."+Ver[1]+"."+ver2
-        description="[Official database, %s](ListOfAnalyses%s%s%s)" % ( ver, Ver[0],Ver[1],ver2 )
+        ver = f"v{Ver[0]}.{Ver[1]}.{ver2}"
+        description=f"[Official database, {ver}](ListOfAnalyses{Ver[0]}{Ver[1]}{ver2})"
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"
-        url="http://smodels.hephy.at/database/%s" % dbname
+        url=f"http://smodels.hephy.at/database/{dbname}"
         if "test" in filen:
             continue ## skip them
-            description = "Small test database, %s" % ver
+            description = f"Small test database, {ver}"
         if "unittest" in filen:
             continue ## skip them
-            description = "Database used for unit tests, %s" % ver
+            description = f"Database used for unit tests, {ver}"
         fastlim="no"
         if "fastlim" in Ver:
             fastlim="yes"
@@ -99,7 +99,7 @@ def oldmain():
     w=open("Databases","w" )
     oldheader ( w )
     Dir = "/var/www/database/"
-    globs=list ( glob.glob("%s*" % Dir ) )
+    globs=list ( glob.glob(f"{Dir}*" ) )
     globs.sort()
 
     for filen in globs:
@@ -112,18 +112,18 @@ def oldmain():
         else:
             Ver = dbname[m.start():]
         ver2 = Ver[2:].replace("_fastlim","")
-        ver = "v" + Ver[0]+"."+Ver[1]+"."+ver2
-        description="[[ListOfAnalyses%s%s%s|Official database, %s]]" % ( Ver[0],Ver[1],ver2, ver )
+        ver = f"v{Ver[0]}.{Ver[1]}.{ver2}"
+        description=f"[[ListOfAnalyses{Ver[0]}{Ver[1]}{ver2}|Official database, {ver}]]"
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"
-        url="http://smodels.hephy.at/database/%s" % dbname
+        url=f"http://smodels.hephy.at/database/{dbname}"
         if "test" in filen:
             continue ## skip them
-            description = "Small test database, %s" % ver
+            description = f"Small test database, {ver}"
         if "unittest" in filen:
             continue ## skip them
-            description = "Database used for unit tests, %s" % ver
+            description = f"Database used for unit tests, {ver}"
         fastlim="no"
         if "fastlim" in Ver:
             fastlim="yes"

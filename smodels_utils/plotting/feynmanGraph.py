@@ -47,7 +47,7 @@ def printParticle_ ( label ):
     if label in [ "hi", "higgs" ]: label="H"
     if label in [ "f" ]: return r"\Pfermion"
     if label in [ "b" ]: return r"b"
-    label=label+"     "
+    label=f"{label}     "
     return label[:3]
 
 def segment_ ( p1, p2, spin, Bend=None ):
@@ -108,7 +108,7 @@ class Drawer:
                 if label == "jet":
                     pass
                 else:
-                    label="$%s$" % label
+                    label=f"${label}$"
                 fl.addLabel ( label, pos=0.9, displace=displace )
             return [ fl ]
 
@@ -135,7 +135,7 @@ class Drawer:
             if not bend: br=None
             segs.append ( segment_(points[i],points[i+1],spin, Bend=br ) )
             if verbose:
-                print ( "[feynmanGraph.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() ) )
+                print ( f"[feynmanGraph.py] draw line from ({points[i].x():f},{points[i].y():f}) to ({points[i + 1].x():f},{points[i + 1].y():f})" )
         if displace==None: displace=-.08
         # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
         if label:
@@ -145,17 +145,17 @@ class Drawer:
             else:
                 lbl=lbl.upper()
             if lbl == "\\PBEAUTY": lbl="B"
-            filename="%s/icons/%s.jpg" % ( SModelSUtils.installDirectory(), lbl )
+            filename=f"{SModelSUtils.installDirectory()}/icons/{lbl}.jpg"
             #print "using",filename
             #print "filename=",filename
             from pyx import bitmap
             if not os.path.exists ( filename ):
                 print ( "[feynmanGraph.py] error:",filename,"not found." )
-                filename="%s/icons/questionmark.jpg" % SModelSUtils.installDirectory()
+                filename=f"{SModelSUtils.installDirectory()}/icons/questionmark.jpg"
             try:
                 jpg = bitmap.jpegimage( filename )
             except Exception as e:
-                logger.error ( "cant load %s: %s!" % (filename,e) )
+                logger.error ( f"cant load {filename}: {e}!" )
                 import sys
                 sys.exit(0)
 
@@ -227,7 +227,7 @@ class Drawer:
             from pyfeyn.user import FeynDiagram, Point, Circle, HATCHED135, CIRCLE, \
                 Vertex, Fermion, Scalar
         except ImportError as e:
-            logger.error ( "cannot draw, pyfeyn not installed? %s" % e )
+            logger.error ( f"cannot draw, pyfeyn not installed? {e}" )
             return
         try:
             fd = FeynDiagram()
@@ -321,13 +321,13 @@ class Drawer:
             fd.draw( pdffile )
             #fd.draw( epsfile )
             if pdffile!=filename:
-                cmd = "convert -quiet %s %s" % ( pdffile, filename )
+                cmd = f"convert -quiet {pdffile} {filename}"
                 a = subprocess.getoutput ( cmd )
                 if a != "":
-                    logger.error ( "file format conversion failed: %s" % a )
+                    logger.error ( f"file format conversion failed: {a}" )
                     sys.exit()
         except Exception as e:
-            logger.error ( "[draw] exception %s" % e )
+            logger.error ( f"[draw] exception {e}" )
 
 if __name__ == "__main__":
         import setPath, argparse, types
@@ -383,15 +383,15 @@ if __name__ == "__main__":
                 constraints = constraint.split("]+[")
                 # print ( "[feynmanGraph] sum of elements" )
                 for i,c in enumerate(constraints):
-                    out = outdir + "/" + outfile.replace(".","%d." % i ).replace(".png",".pdf")
-                    df = outdir + "/"+  outfile.replace(".","%d." % i )
-                    mergefiles += out + " "
-                    delfiles += out + " "
+                    out = f"{outdir}/{outfile.replace('.', f'{int(i)}.').replace('.png', '.pdf')}"
+                    df = f"{outdir}/{outfile.replace('.', f'{int(i)}.')}"
+                    mergefiles += f"{out} "
+                    delfiles += f"{out} "
                     if i < (len(constraints)-1):
                         c+="]"
                         # mergefiles += "plus.pdf "
                     if i > 0:
-                        c="["+c
+                        c=f"[{c}"
                     cc = cleanConstraint ( c )
                     model = Model( BSMparticles=BSMList, SMparticles=SMList )
                     E = element.Element ( cc, model=model )
@@ -406,25 +406,25 @@ if __name__ == "__main__":
                 if len(constraints)>2:
                     ny = 2
                 pdfout = args.output.replace(".png",".pdf")
-                C = "pdfjam %s --nup %dx%s --landscape --outfile %s" % ( mergefiles, nx, ny, pdfout )
+                C = f"pdfjam {mergefiles} --nup {int(nx)}x{ny} --landscape --outfile {pdfout}"
                 print ( "C=", C )
                 o = subprocess.getoutput ( C )
                 if len(o)>0:
                     print ( "o=", o )
-                C = "rm %s" % delfiles
+                C = f"rm {delfiles}"
                 o = subprocess.getoutput ( C )
                 #if len(o)>0:
                 #    print ( "o=", o )
-                C = "pdfcrop %s tmp.pdf" % ( pdfout )
+                C = f"pdfcrop {pdfout} tmp.pdf"
                 o = subprocess.getoutput ( C )
                 if len(o)>0:
                     print ( "o=", o )
-                C = "mv tmp.pdf %s" % ( pdfout )
+                C = f"mv tmp.pdf {pdfout}"
                 o = subprocess.getoutput ( C )
                 if len(o)>0:
                     print ( "o=", o )
                 if ".png" in args.output:
-                    C="convert %s %s" % ( pdfout ,args.output )
+                    C=f"convert {pdfout} {args.output}"
                     o = subprocess.getoutput ( C )
                     print ( "o=", o )
                 sys.exit()

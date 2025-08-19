@@ -33,10 +33,10 @@ for txname,analyses in txnames.items():
             if a.isUncorrelatedWith ( b ) == True:
                 if not txname in sets.keys():
                     sets[txname]=set()
-                sets[txname].add ( a.id() + " <-> " + b.id() )
+                sets[txname].add ( f"{a.id()} <-> {b.id()}" )
     #            print ( "%s: %s <-> %s" % ( txname, a.id(), b.id() ) )
     # sys.exit()
 
 for k,v in sets.items():
     for pair in v:
-        print ( "%s: %s" % ( k, pair ) )
+        print ( f"{k}: {pair}" )

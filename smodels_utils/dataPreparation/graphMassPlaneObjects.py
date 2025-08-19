@@ -12,7 +12,7 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, solve, N, And, sqrt, Symbol, core, Float
+from sympy import var, Eq, lambdify, linsolve, solve, N, And, sqrt, Symbol, core, Float
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import \
@@ -36,20 +36,23 @@ class GraphMassPlane(MassPlaneBase):
     """
 
     @classmethod
-    def getNiceAxes(cls,axesStr):
+    def getNiceAxes(cls, axesStr : Union[dict,str] ) -> str:
         """
         Convert the axes definition format, e.g. {0 : 'x', 1 : 'y', 2 : 'x', 3 : 'y'}
         to a nicer format: x_y_
 
         :param axesStr: string defining axes in the old format
-        :return: string with a nicer representation of the axes (more suitable for printing)
+        :return: string with a nicer representation of the axes
+        (more suitable for printing, in filenames)
         """
 
         if axesStr == "":
             logger.error ( "Axes field is empty: cannot validate." )
             return None
         x,y,z,w = var('x y z w')
-        axesDict = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
+        axesDict = axesStr
+        if type(axesDict)==str:
+            axesDict = eval(axesStr,{'x' : x, 'y' : y, 'z': z, 'w': w})
 
         def isSymmetrical ( axesDict : Dict ) -> bool:
             """ check if dicionary is symmetrical """
@@ -65,6 +68,7 @@ class GraphMassPlane(MassPlaneBase):
             for i in range(n,2*n):
                 axesDict.pop(i)
         ret = "_".join ( map ( str, axesDict.values() ) )
+        ret = ret.replace("/","d")
         # print ( f"@@ graphMassPlaneObjects {axesDict} turned into {ret}" )
         return ret
 
@@ -218,9 +222,9 @@ class GraphMassPlane(MassPlaneBase):
         else {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         # print ( f"@@11 getXYValues {parameters}" )
-        
+
         ret = {}
-        eqs = set()
+        eqs, free_symbols = set(), set()
         from sympy.parsing.sympy_parser import parse_expr
         for index,param in self.parametersMap.items():
             rhs = float("nan")
@@ -228,15 +232,15 @@ class GraphMassPlane(MassPlaneBase):
             # print ( f"parameters are {parameters}" )
             if type(parameters[index]) in [ float ]:
                 # ret[str(param)] = float ( parameters[index] )
-                rhs = round_to_n ( float ( parameters[index] ), 5 )
+                rhs = round_to_n ( float ( parameters[index] ), 10 )
             elif type(parameters[index]) in [ tuple, list ]:
                 # ret[str(param)] = float ( parameters[index][1] )
-                rhs = round_to_n ( float ( parameters[index][1] ), 5 )
+                rhs = round_to_n ( float ( parameters[index][1] ), 10 )
             elif parameters[index]=="stable":
                 rhs = 0.
             lhs = parse_expr ( str(param) )
             if type(lhs)==core.numbers.Float:
-                lhs = round_to_n ( float(lhs), 5 )
+                lhs = round_to_n ( float(lhs), 10 )
             if lhs == 0. and rhs == 1.:
               continue # hack for now FIXME
             if type(lhs)==Float and type(rhs)==Float and \
@@ -249,8 +253,28 @@ class GraphMassPlane(MassPlaneBase):
                 return ret
             if True: # not self.hasSimilarEquationAlready ( eqs, e ):
                 eqs.add ( e )
-        # print ( f"@@11 eqs={eqs}" )
-        d = solve ( list(eqs) )
+            for xhs in [ lhs, rhs ]:
+                if hasattr ( xhs, "free_symbols" ):
+                    for x in xhs.free_symbols:
+                        free_symbols.add ( x )
+
+        eqs = list(eqs)
+        free_symbols = list(free_symbols)
+        try:
+            d = linsolve ( eqs, free_symbols )
+            if len(d)>0:
+                d = dict(zip(free_symbols,list(d)[0]))
+            else:
+                d = {}
+        except Exception as e:
+            pass
+        if d == {}:
+            # print ( f"[GraphMassPlane] linsolve failed: {e}, trying solve now" )
+            d = solve ( eqs, simplify=False )
+        # print ( f"@@11 eqs={eqs} d {d}" )
+        #if d == {}:
+        #    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         #print ( f"@@11 solved {parameters}: {d}" )
         ret = {}
         if d == []:

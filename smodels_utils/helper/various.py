@@ -14,6 +14,15 @@ from smodels.experiment.expResultObj import ExpResult
 from typing import Union, Text, Dict, List
 from smodels_utils.helper.terminalcolors import *
 
+def checkNumpyVersion ():
+    """ for pickling we want numpy < 2.0.0, so that the pickle files work for
+    both v1 and v2. """
+    import numpy
+    if numpy.__version__[0]!="1":
+        print ( f"[various] numpy version is {numpy.__version__}. Downgrade to 1.26.4 for pickling:" )
+        print ( f"pip install numpy==1.26.4" )
+        sys.exit()
+
 def removeAnaIdSuffices ( anaId : str ) -> str:
     """ given  analysis id <anaId>, remove all kinds of suffices """
     for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
@@ -204,8 +213,10 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
         return ret
 
 
-def getExclusionCurvesFor(jsonfile,txname=None,axes=None, get_all=False,
-                          expected=False, dicts=False, ranges=None ):
+def getExclusionCurvesFor(jsonfile : os.PathLike , txname : Union[str,None]=None,
+        axes : Union[str,None]= None, get_all : bool =False,
+        expected : bool=False, dicts : bool =False,
+        ranges : Union[dict,None] = None ) -> dict:
     """
     Reads exclusion_lines.json and returns the dictionary objects for the
     exclusion curves. If txname is defined, returns only the curves
@@ -389,7 +400,7 @@ def getValidationDataPathName ( dbpath : os.PathLike, analysis : str ,
         if not analysis.endswith  ( "-eff" ):
             oldana = analysis
             analysis += "-eff"
-            for sqrts in [ 8, 13, 14, -1 ]:
+            for sqrts in [ 8, 13, 13.6, 14, -1 ]:
                 anadir = f"{dbpath}{sqrts}TeV/{experiment}/{analysis}"
                 if os.path.exists ( anadir ):
                     print ( f"[various] added -eff to '{oldana}'." )

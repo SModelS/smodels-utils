@@ -3,7 +3,7 @@
 """ simple script to create smodels-database.json that will be used
 to mark SModelS entries at hepdata """
 
-import os, sys, time
+import os, sys
 from typing import Union
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
          filterSupersededFromList
@@ -86,12 +86,18 @@ class HepJsonCreator:
         """ header of the json file """
         import smodels
         self.f.write ( "{\n" )
+        self.f.write ( '  "schema_version": "1.0.0",\n' )
         self.f.write ( '  "tool": "SModelS",\n' )
         # ver = smodels.installation.version()
         ver = self.db.databaseVersion
         self.f.write (f'  "version": "{ver}",\n' )
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        # now = datetime.now(timezone.utc)
+        now = datetime.now(ZoneInfo("Europe/Vienna"))
+        timestamp = now.isoformat()
+        self.f.write (f'  "date_created": "{timestamp}",\n' )
         self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
-        self.f.write (f'  "created": "{time.asctime()}",\n' )
         self.f.write ( '  "link_types": [ "main_url", "val_url", "publication", "arXiv" ],\n' )
         self.f.write ( '  "url_templates": {\n' )
         self.f.write ( '    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{main_path}",\n' )
@@ -341,11 +347,16 @@ class HepJsonCreator:
     def create( self, dbpath : os.PathLike, outputfile : os.PathLike ):
         """ create smodels-analyses.json """
         from smodels.experiment.databaseObj import Database
-        if not os.path.exists ( dbpath ) and not dbpath in [ "official", "superseded",
-                "fastlim", "full_llhds", "nonaggregated", "backup", "latest",
-                "backupunittest", "unittest", "debug", ]:
-            print ( f"[createHepJson] {dbpath} not found" )
-            sys.exit()
+        dbpaths = dbpath.split("+")
+        validNames = [ "official", "superseded", "fastlim", "full_llhds", 
+            "nonaggregated", "backup", "latest", "backupunittest", 
+            "unittest", "debug" ]
+        for dbp in dbpaths:
+            dbp = dbp.strip()
+            if not os.path.exists ( dbp ):
+               if not dbp in validNames:
+                   print ( f"[createHepJson] {dbpath} not found" )
+                   sys.exit()
         self.db = Database ( dbpath )
         self.f=open(outputfile,"wt")
         if self.long_version:

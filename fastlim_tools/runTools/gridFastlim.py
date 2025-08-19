@@ -43,17 +43,17 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
     
     #Several checks to make sure Fastlim will run with the correct input
     if not os.path.isdir(fastlimdir):
-        logger.error('Fastlim folder %s not found' %fastlimdir)
+        logger.error(f'Fastlim folder {fastlimdir} not found')
         return False
     if not os.path.isfile(os.path.join(fastlimdir,'fastlim.py')):
-        logger.error("fastlim.py not found in %s" %fastlimdir)
+        logger.error(f"fastlim.py not found in {fastlimdir}")
         return False
     if not os.path.isabs(fastlimdir):
         logger.error("Please provide an absolute path for fastlim dir.")
         return False
     
     if not os.path.isfile(slhafile):
-        logger.error("File: %s not found" %slhafile)
+        logger.error(f"File: {slhafile} not found")
         return False
     elif not os.path.isabs(slhafile) or not os.path.isabs(outfile):
         logger.error("Please provide absolute paths for files")

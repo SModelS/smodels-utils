@@ -39,7 +39,7 @@ def isIn ( i, txnames ):
     """ is i in list txnames, leaving out onshell versions """
     for x in txnames:
         if i == x: return True
-        if i == x+"(off)": return True
+        if i == f"{x}(off)": return True
     return False
 
 
@@ -290,7 +290,7 @@ class Writer:
         if anaid != self.last_ana:
             self.n_anas += 1
             self.last_ana = anaid
-            ananr="%d" % self.n_anas
+            ananr=f"{int(self.n_anas)}"
         ret = ""
         txnobjs = ana.getTxNames()
         t_txnames = [ x.txName for x in txnobjs ]
@@ -304,7 +304,7 @@ class Writer:
             else:
                 if not isIn ( i, txnames ):
                     txnames.append ( i )
-        alltxes = "%d: " % len(txnames)
+        alltxes = f"{len(txnames)}: "
         maxn = 40
         if self.prettyNames:
             maxn=15
@@ -313,7 +313,7 @@ class Writer:
             if not first:
                 alltxes+=", "
             first=False
-            alltxes+= "%s" % i
+            alltxes+= f"{i}"
             if len(alltxes)>maxn:
                 alltxes+="..."
                 break
@@ -442,16 +442,16 @@ class Writer:
         """
         frmt = "|l"
         if self.numbers:
-            frmt = "|r" + frmt
+            frmt = f"|r{frmt}"
         if not self.extended_likelihoods:
             frmt += "|l"
         if self.prettyNames:
             frmt += "|l"
         frmt += "|c|c|c|"
         if self.likelihoods:
-            frmt = frmt + "r|"
+            frmt = f"{frmt}r|"
         if self.extended_likelihoods:
-            frmt = frmt + "c|c|c|c|"
+            frmt = f"{frmt}c|c|c|c|"
         toprint = rf"\begin{{{self.table}}}{{{frmt}}}"
         toprint += "\n"
         toprint += r"\hline"
@@ -502,7 +502,7 @@ class Writer:
         toprint += "\\hline\n"
         if self.caption:
             caption = "\\caption{SModelS database"
-            if self.experiment != "both": caption += " (%s)" % self.experiment
+            if self.experiment != "both": caption += f" ({self.experiment})"
             toprint += "%s}\n" % caption
             toprint += "\\label{tab:SModelS database}\n"
         toprint += "\\end{%s}\n" % self.table
@@ -536,13 +536,13 @@ class Writer:
         o6 = C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
-        self.pprint ( "done latexing, see %s.pdf" % base )
+        self.pprint ( f"done latexing, see {base}.pdf" )
         if os.path.exists ( "/bin/pdftrimwhite" ):
-            trimcmd = "pdftrimwhite %s.pdf %strimmed.pdf" % ( base, base )
+            trimcmd = f"pdftrimwhite {base}.pdf {base}trimmed.pdf"
             C.getoutput ( trimcmd )
             self.pprint ( f"trimmed version: {base}trimmed.pdf" )
         if self.experiment != "both":
-            C.getoutput ( "mv smodels.pdf %s.pdf" % base )
+            C.getoutput ( f"mv smodels.pdf {base}.pdf" )
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
         for i in [ "smodels.log", "smodels.out", "smodels.aux" ]:
             if os.path.exists ( i ):
@@ -577,8 +577,8 @@ class Writer:
             base = self.experiment
         if self.sqrts != "all":
             base += str(self.sqrts)
-        pngfile= base + ".png"
-        pdffile= base + ".pdf"
+        pngfile= f"{base}.png"
+        pdffile= f"{base}.pdf"
         self.pprint ( f"now creating {base}.png" )
         whiteBG = True
         swbg=""

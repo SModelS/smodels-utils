@@ -59,7 +59,7 @@ def getMinJobId() -> int:
             nmin = nr
     return nmin
 
-def cancelRangerOfValiders( jrange : str ):
+def cancelRangeOfValidaters( jrange : str ):
     """ cancel only the jrange of runners """
     import re
     jrange = jrange.strip(" ")
@@ -192,7 +192,16 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@GENERATEDATA@@", generatedata )
             newline = newline.replace("@@DATASELECTOR@@", dataselector )
             newline = newline.replace("@@NCPUS@@", str(nprocesses) )
+            if args["model"] in [ "omit", "default" ] and "@@MODEL@@" in newline:
+                newline = "" ## omit model line altogether
             newline = newline.replace("@@MODEL@@", args["model"] )
+            if args["axis"] in [ "omit", "default", None ] and "@@AXIS@@" in newline:
+                newline = "" ## omit axis line altogether
+            if "@@USEFULLJSONLIKELIHOODS@@" in newline and args["usefulljsonlikelihoods"]==False:
+                newline = ""
+            else:
+                newline = newline.replace ( "@@USEFULLJSONLIKELIHOODS@@", "True" )
+            newline = newline.replace("@@AXIS@@",  args["axis"] )
             newline = newline.replace("@@TIMEOUT@@", "30000" )
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
             newline = newline.replace("@@DATABASEPATH@@", databasepath )
@@ -255,11 +264,11 @@ def validate ( args : Dict, idx ):
         if 8 < time <= 48:
             qos = "c_medium"
         cmd += [ "--qos", qos ]
-        cmd += [ "--time", "%s" % ( time*60-1 ) ]
+        cmd += [ "--time", f"{time * 60 - 1}" ]
     #ram = 1. * nproc
     # ram = int ( 12. + .8 * nproc ) # crazy high, no
     # ram = int ( 5. + .7 * nprocesses )
-    ram = int ( 2. + .5 * nprocesses )
+    ram = int ( 2.5 + .6 * nprocesses )
     # ncpus = nproc # int(nproc*1.5)
     ncpus = int(nprocesses*4)
     cmd += [ "--mem", f"{ram}G" ]
@@ -269,7 +278,7 @@ def validate ( args : Dict, idx ):
     print ( f"[slurm_validate.py] validating {' '.join ( cmd )}" )
     if not dry_run:
         a=subprocess.run ( cmd )
-        print ( "returned: %s" % a )
+        print ( f"returned: {a}" )
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm_validate.py] %s %s" % ( cmd, o ) )
@@ -279,8 +288,8 @@ def logCall ():
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
-            i = '"%s"' % i
-        line += i + " "
+            i = f'"{i}"'
+        line += f"{i} "
     line = line.strip()
     lastline = ""
     if os.path.exists( logfile ):
@@ -293,13 +302,25 @@ def logCall ():
     if line == lastline: # skip duplicates
         return
     f=open(logfile,"at")
-    f.write ( f"[slurm_validate.py-{time.strftime('%H:%M:%S')}] {line}\n" )
+    f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
     f.close()
 
 def clean():
+    """ clean out the temporary files """
     files = glob.glob ( f"{codedir}/smodels-utils/validation/tmp*" )
     files += glob.glob ( f"{codedir}/smodels-utils/clip/temp/_V*" )
     files += glob.glob ( f"{outputsdir}/validate*out" )
+    for f in files:
+        if os.path.exists ( f ):
+            print ( f"[slurm_validate] removing {f}" )
+            if os.path.isdir ( f ):
+                shutil.rmtree ( f, ignore_errors=True )
+            else:
+                os.unlink ( f )
+def clean_more():
+    """ be even more thorough when cleaning """
+    files = glob.glob ( f"{os.environ['OUTPUTS']}/_V*" )
+    files += glob.glob ( f"{codedir}/smodels-utils/validation/_V*" )
     for f in files:
         if os.path.exists ( f ):
             print ( f"[slurm_validate] removing {f}" )
@@ -315,17 +336,25 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-c','--clean', help='clean out all temp files',
                              action="store_true" )
+    argparser.add_argument ( '-C','--clean_all', help='be thorough when cleaning',
+                             action="store_true" )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered [None]',
                         type=str, default=None )
     argparser.add_argument ( '-k','--keep',
             help='keep the temporary files,do not remove them afterwards',
             action="store_true" )
+    argparser.add_argument ( '-j','--usefulljsonlikelihoods',
+            help='use the json file specification given in jsonFiles_FullLikelihoods (if defined)',
+            action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to run [10]',
             type=int, default=10 )
     argparser.add_argument ( '-m', '--model', nargs='?',
-            help='model to use [default]',
+            help='model to use (mssm,nmssm,idm,zprime.slha,omit) [default]',
             type=str, default="default" )
+    argparser.add_argument ( '--axis', nargs='?',
+            help='optionally specify the axis [omit]',
+            type=str, default="omit" )
     argparser.add_argument ( '-g', '--generate_data', nargs='?',
             help='generateData [False,True,ondemand]. In combination with --repeat we switch to ondemand after the first [ondemand]',
             type=str, default="ondemand" )
@@ -356,8 +385,15 @@ def main():
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run', action="store_true" )
     args=argparser.parse_args()
+    if args.usefulljsonlikelihoods and args.validationfolder == None:
+        print ( f"[slurm_validate] full json likelihoods and no folder given: will change to validation/fullStats" )
+        args.validationfolder = "validation/fullStats"
     if args.clean:
         clean()
+        sys.exit()
+    if args.clean_all:
+        clean()
+        clean_more()
         sys.exit()
     if args.query:
         queryStats ( )

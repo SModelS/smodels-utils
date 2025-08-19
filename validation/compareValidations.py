@@ -76,14 +76,14 @@ def compareDicts ( d1, d2 ):
                 return True
             dv = abs ( v2 - v1 ) / ( v1 + v2 )
             if dv > 0.05:
-                error ( "Dicts: %s: %s != %s, rel err is %.3f" % ( k, v1, v2, dv ) )
-                return "in %s: %s != %s" % ( k, v1, v2 )
+                error ( f"Dicts: {k}: {v1} != {v2}, rel err is {dv:.3f}" )
+                return f"in {k}: {v1} != {v2}"
             return "ok"
         if type(v2) == str and "Gamma" in v2:
             v2 = v2.replace("Gamma","g" )
         if v1 != v2:
-            error ( "Dicts: %s != %s" % ( v1, v2) )
-            return "in %s: %s != %s" % ( k, v1, v2 )
+            error ( f"Dicts: {v1} != {v2}" )
+            return f"in {k}: {v1} != {v2}"
     return "ok"
 
 def getValidationStatus ( f, db ):
@@ -112,48 +112,48 @@ def getValidationStatus ( f, db ):
 def compareDetails ( D1, D2, f ):
     lD1, lD2 = len(D1), len(D2)
     if lD1 < lD2:
-        error ( "%s: number of validation points decreased! %d versus %d" % ( f, lD1, lD2 ) )
-        return "number of validation points decreased! %d versus %d" % ( lD1, lD2 )
+        error ( f"{f}: number of validation points decreased! {int(lD1)} versus {int(lD2)}" )
+        return f"number of validation points decreased! {int(lD1)} versus {int(lD2)}"
     if lD1 > lD2:
-        pprint ( "%s: number of validation points increased! %d versus %d" % ( f, lD1, lD2 ) )
-        return "number of validation points increased! %d versus %d" % ( lD1, lD2 )
+        pprint ( f"{f}: number of validation points increased! {int(lD1)} versus {int(lD2)}" )
+        return f"number of validation points increased! {int(lD1)} versus {int(lD2)}"
     for d1,d2 in zip ( D1, D2 ):
         r = compareDicts ( d1, d2 )
         if r!="ok":
-            error ( "%s: %s !=\n%s" % ( f, d1, d2 ) )
+            error ( f"{f}: {d1} !=\n{d2}" )
             return r
     return "ok"
 
 def compareValidation ( db1, db2, f ):
-    pprint ( "compare validations %s" % getAnaTopo ( f ) )
+    pprint ( f"compare validations {getAnaTopo(f)}" )
     timestamp = os.stat ( db1 + f ).st_mtime
     f1 = open ( db1 + f, "rt" )
     lines = f1.read()
     f1.close()
     if "<<< HEAD" in lines:
-        error ( " ERROR: git conflict in %s%s" % ( db1, f ) )
+        error ( f" ERROR: git conflict in {db1}{f}" )
         return "git conflict"
     vd1 = eval ( lines.replace ( "validationData =", "" ) )
     f2 = open ( db2 + f, "rt" )
     lines = f2.read()
     f2.close()
     if "<<< HEAD" in lines:
-        error ( " ERROR: git conflict in %s%s" % ( db2, f ) )
+        error ( f" ERROR: git conflict in {db2}{f}" )
         return "git conflict"
     vd2 = eval ( lines.replace ( "validationData =", "" ) )
     if vd1 == vd2:
-        info ( "%s: exactly the same" % getAnaTopo ( f ) )
+        info ( f"{getAnaTopo(f)}: exactly the same" )
         return "ok"
     else:
         return compareDetails ( vd1, vd2, f )
 
 def compareDatabases ( db1, db2, db ):
-    print ( "compare databases: %s with %s" % ( db1, db2 ) )
+    print ( f"compare databases: {db1} with {db2}" )
     subprocess.getoutput ( "mv comparison.log comparison.old" )
     subprocess.getoutput ( "mv errors.log errors.old" )
     subprocess.getoutput ( "mv ok.log ok.old" )
-    g1 = glob.glob ( "%s/*TeV/*/*/validation/T*.py" % db1 )
-    g2 = glob.glob ( "%s/*TeV/*/*/validation/T*.py" % db2 )
+    g1 = glob.glob ( f"{db1}/*TeV/*/*/validation/T*.py" )
+    g2 = glob.glob ( f"{db2}/*TeV/*/*/validation/T*.py" )
     valFilesInBoth = set()
     valFilesMissing = set()
     for g in g1:
@@ -168,7 +168,7 @@ def compareDatabases ( db1, db2, db ):
         if gt in valFilesInBoth:
             continue
         valFilesMissing.add ( gt )
-    print ( "%d validation files found in both databases." % ( len(valFilesInBoth) ) )
+    print ( f"{len(valFilesInBoth)} validation files found in both databases." )
     print ( "%d validation files found missing in either database." % \
             ( len(valFilesMissing) ) )
     npassed,ntot=0,0
@@ -177,14 +177,14 @@ def compareDatabases ( db1, db2, db ):
     for f in vl:
         vstatus = getValidationStatus ( f, db )
         if vstatus != "True":
-            pprint ( "skipping %s: %s" % ( getAnaTopo(f), vstatus ) )
+            pprint ( f"skipping {getAnaTopo(f)}: {vstatus}" )
             continue
         res = compareValidation ( db1, db2, f )
         if res == "ok":
             addToOk ( f )
             npassed+=1
         ntot+=1
-    print ( "%d/%d validation objects are ok" % ( npassed, ntot ) )
+    print ( f"{int(npassed)}/{int(ntot)} validation objects are ok" )
 
 def loadDatabase():
     from smodels.experiment.databaseObj import Database

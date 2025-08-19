@@ -160,7 +160,7 @@ CMS are for on- and off-shell at once.
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion,
         self.dotlessv, self.dotlessv, self.dotlessv ) )
         if self.ugly:
-            self.file.write ( "\nTo [official validation plots](Validation%s)\n\n" % self.db.databaseVersion.replace(".","") )
+            self.file.write ( f"\nTo [official validation plots](Validation{self.db.databaseVersion.replace('.', '')})\n\n" )
 
     def writeTableHeader ( self, tpe ):
         fields = [ "Result", "Txname", "L [1/fb]", "Validation plots", "comment" ]
@@ -170,21 +170,21 @@ CMS are for on- and off-shell at once.
         lengths = []
         for i in fields:
             #ret=ret +  ( "||<#EEEEEE:> '''%s''' " % i )
-            ret=ret +  ( f"| **{i}** " )
+            ret=f"{ret}| **{i}** "
             lengths.append ( len(i)+6 )
-        ret = ret + ( "|\n" )
+        ret = f"{ret}|\n"
         self.true_lines.append ( ret )
         ret=""
         for l in lengths:
-            ret=ret+"|"+"-"*l
-        ret=ret + ( "|\n" )
+            ret=f"{ret}|{'-' * l}"
+        ret=f"{ret}|\n"
         self.true_lines.append ( ret )
 
     def getNumber ( self, nr ):
         """ just format an integral number nicely """
         if nr == 0:
             return "no"
-        return "%d" % nr
+        return f"{int(nr)}"
 
     def writeTableList ( self ):
         self.file.write ( "## Individual tables\n" )
@@ -192,7 +192,7 @@ CMS are for on- and off-shell at once.
         for sqrts in [ 13, 8 ]:
             run=1
             if sqrts == 13: run = 2
-            self.file.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            self.file.write ( f"\n### Run {int(run)} - {int(sqrts)} TeV\n" )
             nResults = { "ATLAS": set(), "CMS": set() }
             for exp in [ "ATLAS", "CMS" ]:
                 #for tpe in [ "upper limits", "efficiency maps" ]:
@@ -203,7 +203,7 @@ CMS are for on- and off-shell at once.
                         Id = Id.replace("-agg","")
                         Id = Id.replace("-eff","")
                         nResults[exp].add(Id)
-            print ( "[createWikiPage] results at %d TeV: %d CMS, %d ATLAS" % ( sqrts, len(nResults["CMS"]), len(nResults["ATLAS"]) ))
+            print ( f"[createWikiPage] results at {int(sqrts)} TeV: {len(nResults['CMS'])} CMS, {len(nResults['ATLAS'])} ATLAS")
             for exp in [ "ATLAS", "CMS" ]:
                 # for tpe in [ "upper limits", "efficiency maps" ]:
                 for tpe in [ "efficiency maps", "upper limits" ]:
@@ -332,10 +332,10 @@ CMS are for on- and off-shell at once.
             line += f'| <a name="{id}_{shorttpe[tpe]}">[{id}]({url})</a> '
 
             hadTxname = True
-            line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
-            line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
+            line += f'| [{txnbrs}](SmsDictionary{self.dotlessv}#{txn})'
+            line += f"| {txname.globalInfo.lumi.asNumber(1 / fb):.1f}"
             if self.ugly:
-                line += '| %s ' % ( sval )
+                line += f'| {sval} '
                 #line += '||<style="color: %s;"> %s ' % ( color, sval )
             line += "|"
             #line += "||"
@@ -348,13 +348,13 @@ CMS are for on- and off-shell at once.
             if vDir[0]=="/":
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
-            files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
+            files = glob.glob(f"{valDir}/{txname.txName}_*_pretty.png")
             if self.add_old:
-                files += glob.glob(valDir+"/old/"+txname.txName+"_*_pretty.png")
+                files += glob.glob(f"{valDir}/old/{txname.txName}_*_pretty.png")
             if self.ugly or self.isOneDimensional ( txname ) or len(files)==0:
-                tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
+                tmp = glob.glob(f"{valDir}/{txname.txName}_*.png")
                 if self.add_old:
-                    tmp += glob.glob(valDir+"/old/"+txname.txName+"_*.png")
+                    tmp += glob.glob(f"{valDir}/old/{txname.txName}_*.png")
                 files = []
                 for i in tmp:
                     if not "pretty" in i:
@@ -364,10 +364,10 @@ CMS are for on- and off-shell at once.
             valDir = valDir.replace("/media/linux/walten/git/smodels-database","" )
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
-                figName = pngname.replace(valDir+"/","").replace ( \
+                figName = pngname.replace(f"{valDir}/","").replace ( \
                             self.databasePath, "" )
-                figPath = dirPath+"/"+figName
-                figC = "https://smodels.github.io"+figPath
+                figPath = f"{dirPath}/{figName}"
+                figC = f"https://smodels.github.io{figPath}"
                 line += f'<a href="{figC}"><img src="{figC}?{t0}" /></a>'
                 line += "<BR>"
                 hasFig=True
@@ -377,7 +377,7 @@ CMS are for on- and off-shell at once.
             if not "attachment" in line:  #In case there are no plots
                 line += "  |"
             else:
-                line = line[:line.rfind("<<BR>>")] + "|"
+                line = f"{line[:line.rfind('<<BR>>')]}|"
             if False and "CMS-EXO-20-004" in line:
                 print ( "--------" )
                 print ( "figs", files )
@@ -397,23 +397,23 @@ CMS are for on- and off-shell at once.
                 font, endfont = "", ""
                 if txname.validated in [ "False", False ]:
                     font, endfont = "<font color='red'>", "</font>"
-                line += "%svalidated: %s%s<br>" % (font, txname.validated, endfont )
+                line += f"{font}validated: {txname.validated}{endfont}<br>"
             ## from comments file
-            cFile = valDir+"/"+txname.txName+".comment"
+            cFile = f"{valDir}/{txname.txName}.comment"
             if os.path.isfile(cFile):
-                commentPath = dirPath+"/"+txname.txName+".comment"
+                commentPath = f"{dirPath}/{txname.txName}.comment"
                 txtPath = commentPath.replace(".comment", ".txt" )
                 githubRepo = "../../smodels.github.io"
-                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
+                mvCmd = f"cp {githubRepo}/{commentPath} {githubRepo}/{txtPath}"
                 subprocess.getoutput ( mvCmd )
-                line += "[comment](https://smodels.github.io"+txtPath+ ")"
-            srplot = valDir + "/bestSR_%s.png" % ( txname.txName )
+                line += f"[comment](https://smodels.github.io{txtPath})"
+            srplot = f"{valDir}/bestSR_{txname.txName}.png"
             if os.path.isfile( srplot ) and self.ugly:
-                srPath = dirPath+"/bestSR_"+txname.txName+".png"
+                srPath = f"{dirPath}/bestSR_{txname.txName}.png"
                 githubRepo = "../../smodels.github.io"
-                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, srPath, githubRepo, srPath )
+                mvCmd = f"cp {githubRepo}/{srPath} {githubRepo}/{srPath}"
                 subprocess.getoutput ( mvCmd )
-                addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
+                addl = f" <br>[SR plot](https://smodels.github.io{srPath})"
                 line += addl
             line += " |\n" # End the line
         # print ( )
@@ -422,7 +422,7 @@ CMS are for on- and off-shell at once.
         elif "#FF0000" in line: self.false_lines.append(line)
         else: self.true_lines.append(line)
         self.nlines += 1
-        logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
+        logger.debug ( f"add {id} with {int(nfigs)} figs" )
 
     def describeSource ( self, txname ):
         """ describe the source of the data
@@ -530,7 +530,7 @@ CMS are for on- and off-shell at once.
         if self.comparison_db == None:
             # no comparison database given. So nothing is new.
             return False
-        if anaId+"-agg" in self.OldAnaIds:
+        if f"{anaId}-agg" in self.OldAnaIds:
             ##  looks like a non-aggregated result
             return False
         if not anaId in self.OldAnaIds: ## whole ana is new?

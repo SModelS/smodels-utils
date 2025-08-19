@@ -20,7 +20,7 @@ def getData():
     setLogLevel ( "debug" )
     from smodels.experiment.databaseObj import Database
     home=os.environ["HOME"]
-    db = "%s/git/smodels/test/tinydb/" % home
+    db = f"{home}/git/smodels/test/tinydb/"
     # db = "%s/git/smodels-database//" % home
     d=Database ( db )
     results = d.getExpResults ( analysisIDs=[ anaid ], useSuperseded=True, useNonValidated=True )
@@ -63,7 +63,7 @@ ax.plot_trisurf ( points[:,0], points[:,1], points[:,2], triangles=tri.simplices
 ax.scatter(points[:,0], points[:,1], points[:,2], 'bo' )
 ax.view_init ( 30, -113 )
 corr_anaid = anaid.replace ( "CMS-SUS-PAS", "CMS-PAS-SUS-15-002" )
-plt.title("Delaunay triangulation\n %s (%s)" % (anaid,topo) )
+plt.title(f"Delaunay triangulation\n {anaid} ({topo})" )
 plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
 plt.ylabel ( "m$_\mathrm{inter}$ [GeV]" )
 ax.set_zlabel( "m$_\mathrm{lsp}$ [GeV]" )

@@ -69,11 +69,11 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         lengths=[]
         for header in columns:
             #self.f.write ( "|<#EEEEEE:> **%s** " % header )
-            self.f.write ( "| **%s** " % header )
+            self.f.write ( f"| **{header}** " )
             lengths.append ( len(header)+4 )
         self.f.write ( "|\n" )
         for l in lengths:
-            self.f.write ( "| "+"-"*l+ " " )
+            self.f.write ( f"| {'-' * l} " )
         self.f.write ( "|\n" )
 
     def getConstraint ( self, txname : TxName ) -> str:
@@ -153,7 +153,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         self.move()
 
     def move( self ):
-        cmd="mv %s ../../smodels.github.io/docs/%s.md" % ( self.fname, self.fname )
+        cmd=f"mv {self.fname} ../../smodels.github.io/docs/{self.fname}.md"
         os.system ( cmd )
         print ( cmd )
 
@@ -192,8 +192,8 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                 for ua in unabbrv:
                     if txnameabb.find ( ua ) in [6,7,9]:
                         pos = txnameabb.find ( ua )
-                txnameabb=txnameabb[:pos]+"-<br>"+txnameabb[pos:]
-            ltxes.append ( '<a name="%s"></a>**%s**<br>' % ( txname, txnameabb ) )
+                txnameabb=f"{txnameabb[:pos]}-<br>{txnameabb[pos:]}"
+            ltxes.append ( f'<a name="{txname}"></a>**{txnameabb}**<br>' )
         entries.append ( "<BR>".join ( ltxes ) )
         # FIXME v3
         if self.drawSMSGraphs:
@@ -217,7 +217,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
         maps = self.constraintsToTxNames[txname][constraint].smsMap
         for k,v in shortnames.items():
             constraint = constraint.replace( k, v )
-        constraint = "`" + constraint + "`"
+        constraint = f"`{constraint}`"
         entries.append ( constraint ) # "Topology" column
         images = ""
         for i in range ( len(maps) ):
@@ -241,7 +241,7 @@ There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses
                     if hasattr ( res.globalInfo, "supersededBy" ):
                         supers="WithSuperseded"
                     # lets got
-                    l.append ( "[%s](%s)" % ( ID, res.globalInfo.url ) )
+                    l.append ( f"[{ID}]({res.globalInfo.url})" )
                     # before we had a link to the entry at ListOfAnalyses
                     # l.append ( "[%s](ListOfAnalyses%s%s#%s)" % ( ID, self.ver, supers, ID ) )
                 entries.append ( "<BR>".join ( l ) ) ## "Appears in" column
@@ -284,7 +284,7 @@ if __name__ == '__main__':
     if args.copy:
         cmd = f"cp ../smsgraphs/T*.p* {SmsDictWriter.smsgraphpath}"
         import subprocess
-        print ( "[smsDictionary] %s" % cmd )
+        print ( f"[smsDictionary] {cmd}" )
         a = subprocess.getoutput ( cmd )
         if len(a)>0:
-            print ( "[smsDictionary] error: %s" % a )
+            print ( f"[smsDictionary] error: {a}" )

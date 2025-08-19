@@ -83,7 +83,7 @@ class RulerPlot:
         ## cut off at 3 TeV
         ret = [ m for m in masses.values() if m<3000. ]
         self.masses = ret
-        self.logger.info ( "masses %s" % self.masses )
+        self.logger.info ( f"masses {self.masses}" )
         return ret
 
 
@@ -115,23 +115,24 @@ class RulerPlot:
         minvalue=min(self.masses)
         maxvalue = min ( [ 1.05*maxvalue, 3100. ] )
         minvalue = max ( [ 0, .95*minvalue ] )
-        if minvalue > 480:
-            minvalue = 480
-        if maxvalue < 620:
-            maxvalue = 620
+        if minvalue > 500:
+            minvalue = 500
+        if maxvalue < 260:
+            maxvalue = 260
+        assert minvalue < maxvalue, f"when determining range for ruler plot {minvalue} > {maxvalue}"
         dm = maxvalue - minvalue
         if self.range[0] != None and self.range[0] >=0.:
             minvalue=self.range[0]
         if self.range[1] != None and self.range[1] >=0.:
             maxvalue=self.range[1]
-        self.logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
+        self.logger.info ( f"range is [{int(minvalue)},{int(maxvalue)}]" )
         self.minmass = minvalue
         self.maxmass = maxvalue
 
     def retrieveMasses ( self ):
         """ retrieve the masses from slha file """
         logger=logging.getLogger(__name__)
-        logger.info ( "now extracting masses from slha file %s" % ( self.slhafile) )
+        logger.info ( f"now extracting masses from slha file {self.slhafile}" )
         namer = SParticleNames( susy = False )
         f = pyslha.read ( self.slhafile )
         m = f.blocks["MASS"]
@@ -197,7 +198,10 @@ class RulerPlot:
             yoff = 0. ## yoffset, put every second one halfway down
             if ctr % 2 == 1:
                 yoff=.5
-            plt.text ( m, .8-yoff, label, c = coldark, size=30, fontweight="bold" )
+            ytop = .8
+            #if maxvalue < 350.:
+            #    ytop = 1.
+            plt.text ( m, ytop-yoff, label, c = coldark, size=30, fontweight="bold" )
             lctr=0
             keys = []
 
@@ -206,7 +210,7 @@ class RulerPlot:
                     # print ( "m,mana",m,mana )
                     if abs(m-mana)<.1: ## max mass gap
                         if abs(m-mana)>1e-2:
-                            print ( "WARNING: clustering particle masses %.2f and %.2f. hope its ok. check it." % ( m, mana )  )
+                            print ( f"WARNING: clustering particle masses {m:.2f} and {mana:.2f}. hope its ok. check it."  )
                         keys.append ( mana )
                         for cana,ana in enumerate(analyses):
                             plt.text ( m-50., .91-yoff-.07*cana, ana.replace("201","1" ), c=col )
@@ -214,11 +218,11 @@ class RulerPlot:
         for frmat,runthis in self.formats.items():
             if not runthis:
                 continue
-            of = self.outputfile + "." + frmat
-            self.logger.info ( "saving to %s" % of )
+            of = f"{self.outputfile}.{frmat}"
+            self.logger.info ( f"saving to {of}" )
             plt.savefig ( of )
             if frmat == "png" and self.trim:
-                cmd = "convert %s -trim %s" % ( of, of )
+                cmd = f"convert {of} -trim {of}"
                 subprocess.getoutput ( cmd )
         self.ax1 = ax1
         self.plt = plt
@@ -285,7 +289,7 @@ class RulerPlot:
                     dtext = .2
                 if ctr == 0:
                     dtext = -.01
-            #print  ( "ctr", ctr, "mass", label, m, "xoff", xoff, "dtext", dtext )
+            # print  ( "@@XX5 ctr", ctr, "mass", label, "m", m, "xoff", xoff, "dtext", dtext )
             plt.text ( xoff + dtext, m, label, c = coldark, size=fontsize, 
                        fontweight="bold", ha="left" )
             x1 = xoff + side * .05
@@ -295,7 +299,7 @@ class RulerPlot:
             ## small horizontal lines next to the particle names
             if self.style != "andre":
             ## thats the line to the right
-                plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
+                plt.plot ( [ x1, x2 ], [m , m ], c= coldark )
 
             ## the LBP gets horizontal lines in both directions 
             if ctr == 0:
@@ -303,9 +307,9 @@ class RulerPlot:
                 x2 = .03
                 ## thats the line to the left
                 # print ( "line m=", m, "x=", x1, x2 )
-                plt.plot ( [ x1, x2 ], [m+10. , m+10. ], c= coldark )
+                plt.plot ( [ x1, x2 ], [m , m ], c= coldark )
                 if len(sortedpids)>2:
-                    plt.plot ( [ xoff + dtext+.1, .7 ], [m+10. , m+10. ], c= coldark )
+                    plt.plot ( [ xoff + dtext+.1, .7 ], [m , m ], c= coldark )
 
             ## 
             ## at the center of the decay line
@@ -321,7 +325,7 @@ class RulerPlot:
                     # print ( "m,mana",m,mana )
                     if abs(m-mana)<.1: ## max mass gap
                         if abs(m-mana)>1e-2:
-                            print ( "WARNING: clustering particle masses %.2f and %.2f. hope its ok. check it." % ( m, mana )  )
+                            print ( f"WARNING: clustering particle masses {m:.2f} and {mana:.2f}. hope its ok. check it."  )
                         keys.append ( mana )
                         dm1 = deltam / 30. ## gap to first ana id
                         if self.drawdecays:
@@ -359,17 +363,17 @@ class RulerPlot:
                                head_length=15, head_width=.03 )
                     label = self.namer.texName(idNotBSM,addDollars=True) 
                     if br < 0.95:
-                        label += ": %s" % br
+                        label += f": {br}"
                     plt.text ( xavg + .05, mlow + 30., label, color="grey", 
                                size=fontsize-1 )
         for frmat,runthis in self.formats.items():
             if not runthis:
                 continue
-            of = self.outputfile + "." + frmat
-            self.logger.info ( "saving to %s" % of )
+            of = f"{self.outputfile}.{frmat}"
+            self.logger.info ( f"saving to {of}" )
             plt.savefig ( of )
             if frmat == "png" and self.trim:
-                cmd = "convert %s -trim %s" % ( of, of )
+                cmd = f"convert {of} -trim {of}"
                 subprocess.getoutput ( cmd )
 
         self.ax1 = ax1
@@ -425,7 +429,7 @@ if __name__ == "__main__":
                                         SModelSUtils.installDirectory() )
     import logging.config
     logging.config.fileConfig (
-            SModelSUtils.installDirectory()+"/etc/commandline.conf" )
+            f"{SModelSUtils.installDirectory()}/etc/commandline.conf" )
     logger=logging.getLogger(__name__)
     setLogLevel ( logger, args.verbosity.lower() )
     hasResultsFor = None

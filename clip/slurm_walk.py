@@ -61,38 +61,44 @@ def mkdir ( Dir : str, symlinks : bool = True ):
     if not os.path.exists ( f'{os.environ["HOME"]}/{bDir}' ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
-def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
-    dry_run : bool, keep : bool, time : float, cheatcode : int, rundir : str,
-    maxsteps : int, select : str, do_srcombine : bool, record_history : bool, test_param_space : bool, run_mcmc: bool,
-    seed : Union[None,int], update_hiscores : bool, stopTeleportationAfter : int,
-    forbidden : List[int], wallpids : bool ):
+def runOneJob ( rvars: dict ):
     """ prepare everything for a single job
-    :params pid: process id, integer that idenfies the process
-    :param jmin: id of first walker
-    :param jmax: id of last walker
-    :param cont: pickle file to start with, "" means start from SM
-    :param dbpath: path to database
-    :param dry_run: dont act, just tell us what you would do
-    :param keep: keep temporary files, for debugging
-    :param time: time in hours
-    :param cheatcode: in case we wish to start with a cheat model
-    :param rundir: the run directory
-    :param maxsteps: max number of steps
-    :param select: select for certain results, e.g. "all", "ul", "em",
+ 
+    rvars ( dict ):
+        - pid (int): process id, integer that idenfies the process
+        - jmin (int): id of first walker
+        - jmax (int): id of last walker
+        - cont (str): pickle file to start with, "" means start from SM
+        - dbpath (os.PathLike): path to database
+        - dry_run (bool): dont act, just tell us what you would do
+        - keep (bool): keep temporary files, for debugging
+        - time (float): time in hours
+        - cheatcode (Union[str,int]): in case we wish to start with a cheat model
+        - rundir (os.PathLike): the run directory
+        - maxsteps (int): max number of steps
+        - select (str): select for certain results, e.g. "all", "ul", "em",
                    "txnames:T1,T2"
-    :param do_srcombine: if true, then also perform combinations, either via
+        - do_srcombine (bool): if true, then also perform combinations, either via
                         simplified likelihoods or via pyhf
-    :param record_history: if true, turn on the history recorder
-    :param test_param_space: If True, walk over the param space keeping constant K and TL
-    :param run_mcmc: if true, run mcmc walk without changing dimensions
-    :param seed: the random seed for the walker
-    :param update_hiscores: update the hiscores at the end
-    :param stopTeleportationAfter: stop teleportation after this step.
+        - record_history (bool): if true, turn on the history recorder
+        - test_param_space (bool): If True, walk over the param space keeping constant K and TL
+        - run_mcmc (bool): if true, run mcmc walk without changing dimensions
+        - cap_ssm (float): set the maximum value of the signal strength multipler (default=100)
+        - seed (Union[None,int]): the random seed for the walker
+        - update_hiscores (bool): update the hiscores at the end
+        - stopTeleportationAfter (int): stop teleportation after this step.
            if -1, dont run teleportation at all.
-    :param forbidden: any forbidden pids we dont touch
+        - forbidden (List[int]): any forbidden pids we dont touch
+        - wallpids (bool): put up mass walls for pids
+        - templateSLHA (os.PathLike): name of the templateSLHA file
     """ 
+    globals().update ( rvars ) # doesnt work for all
+    dbpath = rvars["dbpath"]
+    jmax = rvars["jmax"]
+    cheatcode = rvars["cheatcode"]
+    do_srcombine = rvars["do_srcombine"]
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
-        dbpath = rundir + "/" + dbpath
+        dbpath = f"{rundir}/{dbpath}"
     line = f"run walkers {jmin} - {jmax-1}"
     if jmax == jmin:
         jmax = jmin + 1
@@ -101,7 +107,7 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
     slurmdir = f"{rundir}/slurm/" 
     if not os.path.exists ( slurmdir ):
         os.mkdir ( slurmdir )
-    runner = f"{slurmdir}/RUNNER_{jmin}.py"
+    runner = f"{slurmdir}/WALKER_{jmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -113,11 +119,18 @@ def runOneJob ( pid : int, jmin : int, jmax : int, cont : str, dbpath : str,
             f.write ( "from builder.manipulator import Manipulator\n" )
             f.write ( "Manipulator.walledpids[1000024]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
-        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={cheatcode},\n" )
+        scheatcode=f"'{cheatcode}'"
+        try:
+            cheatcode = int(cheatcode)
+            scheatcode = f"{cheatcode}"
+        except ValueError as e:
+            pass
+        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={scheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, run_mcmc = {run_mcmc},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
-        f.write ( f"    forbiddenparticles={forbidden}\n" )
+        f.write ( f"    forbiddenparticles={forbidden},\n" )
+        f.write ( f"    templateSLHA='{templateSLHA}'\n" )
         f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
@@ -325,7 +338,7 @@ def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
     cmd += [ "-c", "10" ]
     #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "--time", f"{time * 60 - 1}" ]
     nprcs = 2 # was at 10
     script = produceLLHDScanScript ( pid, yvariable, rewrite, rundir, nprcs,
             select, do_srcombine, uploadTo  )
@@ -377,7 +390,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
     cmd += [ "-c", f"8" ]
     # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "--time", f"{time * 60 - 1}" ]
     nprc = 2
     fname = produceScanScript ( pid, rewrite, yvariable, rundir, nprc, dbpath, select,
                                 do_srcombine, uploadTo )
@@ -446,7 +459,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         cmd += [ "--reservation", "interactive" ]
     cmd += [ "--error", f"{outputdir}/hi-%j.out",
              "--output", f"{outputdir}/hi-%j.out" ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "--time", f"{time * 60 - 1}" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -457,7 +470,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
     if maxiterations > 5:
         cmd += [ "--pty", "bash" ]
     cmd += [ runner ]
-    print ( "updater: " + " ".join ( cmd ) )
+    print ( f"updater: {' '.join(cmd)}" )
     if dry_run:
         return
     subprocess.run ( cmd )
@@ -493,16 +506,16 @@ def logCall ():
     for i in sys.argv:
         if " " in i or "," in i or "[" in i:
             i = f'"{i}"'
-        args += i + " "
+        args += f"{i} "
     f.write ( f'[slurm.py-{time.strftime("%H:%M:%S")}] {args.strip()}\n' )
     f.close()
 
 def cancelAllRunners():
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     cancelled = []
     for line in lines:
-        if not "RUNNER" in line:
+        if not "WALKER" in line:
             continue
         tokens = line.split()
         nr = tokens[0]
@@ -513,7 +526,7 @@ def cancelAllRunners():
 
 def getMaxJobId() -> int:
     """ get the highest job id """
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     nmax = 0
     for line in lines:
@@ -525,7 +538,7 @@ def getMaxJobId() -> int:
 
 def getMinJobId() -> int:
     """ get the lowest job id """
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     nmin = 1e99
     for line in lines:
@@ -572,11 +585,11 @@ def cancelRangeOfRunners( jrange : str ):
             cancelled.append ( i )
         print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
         return
-    o = subprocess.getoutput ( "slurm q | grep RUNNER" )
+    o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
     running = []
     for line in lines:
-        if not "RUNNER" in line:
+        if not "WALKER" in line:
             continue
         tokens = line.split()
         nr = tokens[0]
@@ -603,6 +616,8 @@ def main():
             help='do also use combined results, SLs or pyhf', action="store_true" )
     argparser.add_argument ( '--test_param_space',
             help='test the parameter space by keeping constant K and TL', action="store_true" )
+    argparser.add_argument ( '--cap_ssm',
+            help='set the maximum value for the signal strength multipliers', type=float, default=100. )
     argparser.add_argument ( '--run_mcmc',
             help='run mcmc walk without changing dimensions', action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater. if maxsteps is none, run separately, else append to last job',
@@ -642,8 +657,8 @@ def main():
                         type=int, default=1 )
     argparser.add_argument ( '--seed', nargs='?', help='the random seed. 0 means random. None means, do not set. [None]',
                         type=int, default=None )
-    argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
-                        type=int, default=0 )
+    argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat model [no_cheat]',
+                        type=str, default="no_cheat" )
     argparser.add_argument ( '-N', '--nmax', nargs='?',
                         help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
@@ -659,6 +674,9 @@ def main():
     argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
+    argparser.add_argument ( '-T', '--templateSLHA',
+                        help='path to template SLHA [template1g.slha]',
+                        type=str, default="template1g.slha" )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
@@ -730,7 +748,7 @@ def main():
             # dbpath = rundir + "/default.pcl"
             dbpath = "official"
         if "fake" in dbpath and not dbpath.endswith(".pcl"):
-            dbpath = dbpath + ".pcl"
+            dbpath = f"{dbpath}.pcl"
 
         if args.allscans:
             subprocess.getoutput ( f"./slurm.py -R {rundir} -S 0" )
@@ -775,14 +793,24 @@ def main():
         if args.maxsteps == None:
             args.maxsteps = 1000
         wallpids = not args.dont_wallpids
+        rvars = { "jmin": nmin, "jmax": nmax, "cont": cont, "dbpath": dbpath,
+                 "dry_run": args.dry_run, "keep": args.keep, "time": args.time,
+                 "cheatcode": cheatcode, "rundir": rundir, 
+                 "maxsteps": args.maxsteps, "select": args.select, 
+                 "do_srcombine": args.do_srcombine, 
+                 "record_history": args.record_history,
+                 "test_param_space": args.test_param_space,
+                 "run_mcmc": args.run_mcmc, "cap_ssm": 100.,
+                 "seed": seed, "update_hiscores": update_hiscores,
+                 "stopTeleportationAfter": args.stopTeleportationAfter,
+                 "forbidden": args.forbidden, "wallpids": wallpids,
+                 "templateSLHA": args.templateSLHA }
+
         while True:
             if nprocesses == 1:
                 for i in range(args.repeat):
-                    runOneJob ( 0, nmin, nmax, cont, dbpath, args.dry_run,
-                      args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                      args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
-                      update_hiscores, args.stopTeleportationAfter, args.forbidden,
-                      wallpids )
+                    rvars["pid"]=0
+                    runOneJob ( rvars )
                 totjobs+=1
             else:
                 import multiprocessing
@@ -799,12 +827,11 @@ def main():
                     imax = imin + nwalkers
                     if seed != None: ## we count up
                         seed += (1+len(rundirs))*(1+nprocesses)
-                    p = multiprocessing.Process ( target = runOneJob,
-                        args = ( i, imin, imax, cont, dbpath, args.dry_run,
-                        args.keep, args.time, cheatcode, rundir, args.maxsteps,
-                        args.select, args.do_srcombine, args.record_history, args.test_param_space, args.run_mcmc, seed,
-                        update_hiscores, args.stopTeleportationAfter, args.forbidden,
-                        wallpids ) )
+                    rvars["pid"]=i
+                    rvars["jmin"]=imin
+                    rvars["jmax"]=imax
+                    p = multiprocessing.Process ( target = runOneJob, 
+                                                  args = ( rvars, ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )

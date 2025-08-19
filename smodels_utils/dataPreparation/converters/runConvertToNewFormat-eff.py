@@ -13,8 +13,8 @@ from __future__ import print_function
 import sys,glob,os,time,math,inspect
 from subprocess import Popen,PIPE
 home=os.environ["HOME"]
-sys.path.append('%s/smodels-utils' % home )
-sys.path.append('%s/smodels' % home )
+sys.path.append(f'{home}/smodels-utils' )
+sys.path.append(f'{home}/smodels' )
 thisdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 thisdir = thisdir.replace ( "/smodels_utils/dataPreparation", "" )
 sys.path.append( thisdir )
@@ -22,7 +22,7 @@ from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels_utils.dataPreparation.checkConversion import checkNewOutput
 from removeDocStrings import rmDocStrings
 
-databasePath = '%s/smodels-database' % home
+databasePath = f'{home}/smodels-database'
 
 
 def getObjectNames(f,objType):
@@ -46,7 +46,7 @@ def getObjectNames(f,objType):
         if l.lstrip() and l.lstrip()[0] == '#':
             continue
 
-        if objType+'(' in l:
+        if f"{objType}(" in l:
             objName = l.split('=')[0].strip() #Store name of objType instance
             if objName:
                 objects.append(objName)
@@ -71,7 +71,7 @@ def getObjectLines(f,objName,objType=None):
         f.seek(0,0)
         lines = f.readlines()
     objLines = []
-    instanceTag = "%s=%s(" %(objName,objType)
+    instanceTag = f"{objName}={objType}("
     start,stop = False,False
     if not objType:
         start = True
@@ -88,9 +88,9 @@ def getObjectLines(f,objName,objType=None):
             break
 
         newl = l.replace(" ","")[:len(objName)+1] #Get beginning of line
-        if  objName+'=' == newl and start:  #Object name is being redefined. Stop it
+        if  f"{objName}=" == newl and start:  #Object name is being redefined. Stop it
             stop = True
-        elif objName+'.' == newl:
+        elif f"{objName}." == newl:
             objLines.append(l) # Line belongs to metablock
 
     return objLines
@@ -160,12 +160,12 @@ def getDatasetBlock(f,datasetId):
     blocks = f.read().split('databaseCreator.create')
     datasetLines = []
     for b in blocks:
-        if not '"'+datasetId+'"' in b:
+        if not f"\"{datasetId}\"" in b:
             continue
         for l in b.split('\n'):
             if not l.strip():
                 continue
-            datasetLines.append(l+'\n')
+            datasetLines.append(f"{l}\n")
 
     return datasetLines
 
@@ -181,7 +181,7 @@ def getValueFor(dataLines,key):
             except:
                 pass
             if isinstance(val,str):
-                val = '"'+val+'"'
+                val = f"\"{val}\""
             return val
 
 
@@ -194,7 +194,7 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
 
     hasConstraint = False
     for l in txOffLines:
-        if "%s.off.constraint" %txname in l:
+        if f"{txname}.off.constraint" in l:
             hasConstraint = True
             break
 
@@ -207,10 +207,10 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
 
     #Ignore mass constraints for on-shell txname
     #everytime off-shell also exists (include full data):
-    fnew.write('%s.massConstraint = None\n' %txname)
+    fnew.write(f'{txname}.massConstraint = None\n')
 
     #Define off-shell txname:
-    fnew.write("%soff = dataset.addTxName('%soff')\n" %(txname,txname))
+    fnew.write(f"{txname}off = dataset.addTxName('{txname}off')\n")
     for l in txOffLines:
         l = l.replace('.off.','off.')
         fnew.write(l)
@@ -218,7 +218,7 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     massConstraint = getMassConstraint(txname,onshellConstraint) #Get on-shell constraints
     massConstraintOff = str(massConstraint).replace('>','<') #Get off-shell constraints
     massConstraintOff = massConstraintOff.replace("'m <= 0.0'","'m >= 0.0'") #Revert back dummy constraints
-    fnew.write('%soff.massConstraint = %s\n' %(txname,massConstraintOff))
+    fnew.write(f'{txname}off.massConstraint = {massConstraintOff}\n')
     return True
 
 def getMassConstraint(txname,constraint):
@@ -244,7 +244,7 @@ def getMassConstraint(txname,constraint):
 
 
 def main(f,fnew):
-    print ( "creating %s from %s" % ( fnew, f ) )
+    print ( f"creating {fnew} from {f}" )
 
     fold = open(f,'r')
     fnew = open(f.replace('convert.py','convertNew.py'),'w')
@@ -286,10 +286,10 @@ def main(f,fnew):
         for l in templateLines:
             if not l.strip():
                 continue
-            l = l + '\n'
+            l = f"{l}\n"
             datasetLines = getDatasetBlock(fold, dataset)
-            dataDict = {'dataset' : '"'+dataset+'"',
-                        'datasetFolder' : '"'+dataset.replace(" ","")+'"',
+            dataDict = {'dataset' : f"\"{dataset}\"",
+                        'datasetFolder' : f"\"{dataset.replace(' ', '')}\"",
                         'datasetStr' : dataset}
             dataDict.update(getDatasetStatistics(datasetLines))
 
@@ -298,9 +298,9 @@ def main(f,fnew):
             lineVars = [v for v in lineVars[1::2] if v]
             for v in lineVars:
                 if v in dataDict:
-                    l  = l.replace('$'+v+'$',str(dataDict[v]))
+                    l  = l.replace(f"${v}$",str(dataDict[v]))
                 elif v in locals() or v in globals():
-                    l  = l.replace('$'+v+'$',str(eval('%s["%s"]'%(v,dataset))))
+                    l  = l.replace(f"${v}$",str(eval(f'{v}["{dataset}"]')))
 
             if '.efficiencyMap.dataUrl' in l:
                 l = l.replace('efficiencyMap.dataUrl','dataUrl')
@@ -311,10 +311,10 @@ def main(f,fnew):
             elif '$$' in l:
                 key = l.split('=')[0]
                 val = getValueFor(datasetLines,key)
-                l = key + ' = ' + str(val)+'\n'
+                l = f"{key} = {val!s}\n"
                 fnew.write(l)
             else:
-                print ( 'Something wrong with line %s' %l )
+                print ( f'Something wrong with line {l}' )
                 return False
 
 
@@ -359,13 +359,13 @@ if __name__ == "__main__":
 
     nres = 0
     # files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
-    files = sorted(glob.glob(databasePath+'/*/*/*/convert.py')  )
+    files = sorted(glob.glob(f"{databasePath}/*/*/*/convert.py")  )
     t0 = time.time()
     analysis = args.analysis
     if analysis == ".":
         cwd = os.getcwd()
         analysis = os.path.basename ( os.getcwd() )
-        print ( ". -> %s" % analysis )
+        print ( f". -> {analysis}" )
     for f in files:
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
@@ -386,26 +386,26 @@ if __name__ == "__main__":
             continue
 
         fnew = f.replace('convert.py','convertNew.py')
-        print ( 'create %s' % fnew )
+        print ( f'create {fnew}' )
         if not skipProduction:
             if os.path.isfile(fnew):
                 os.remove(fnew)
             r = main(f,fnew)
 
             if not r:
-                print ( '\033[31m Error generating %s \033[0m' %fnew )
+                print ( f'\x1b[31m Error generating {fnew} \x1b[0m' )
                 sys.exit()
         else:
-            print ( '\033[31m Skipping %s \033[0m' % fnew )
+            print ( f'\x1b[31m Skipping {fnew} \x1b[0m' )
 
         rdir = fnew.replace(os.path.basename(fnew),'')
         #Make file executable
-        run = Popen('chmod +x %s' %fnew,shell=True)
+        run = Popen(f'chmod +x {fnew}',shell=True)
         run.wait()
         if args.dont_run:
             continue
         #Execute file
-        run = Popen(fnew+' -smodelsPath %s/smodels -utilsPath %s/smodels-utils' % ( home, home ),
+        run = Popen(f"{fnew} -smodelsPath {home}/smodels -utilsPath {home}/smodels-utils",
                     shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
 
         rstatus = None
@@ -414,17 +414,17 @@ if __name__ == "__main__":
             rstatus = run.poll()
         if time.time() - t0 > timeOut:
             run.terminate()
-            print ( '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut) )
+            print ( f'\x1b[31m Running {fnew} exceeded timeout {timeOut} \x1b[0m' )
             sys.exit()
 
 
         if rstatus:
-            print ( '\033[31m Error running %s \033[0m' %fnew )
+            print ( f'\x1b[31m Error running {fnew} \x1b[0m' )
             print ( rstatus )
             sys.exit()
         rerror = run.stderr.read()
         if rerror:
-            print ( '\033[31m Error running %s: \033[0m' %fnew )
+            print ( f'\x1b[31m Error running {fnew}: \x1b[0m' )
             print ( rerror )
             sys.exit()
 
@@ -434,15 +434,15 @@ if __name__ == "__main__":
                 ignore = True
                 break
         if ignore:
-            print ( "\033[31m Not checking %s \033[0m" %f.replace('convert.py','') )
+            print ( f"\x1b[31m Not checking {f.replace('convert.py', '')} \x1b[0m" )
             continue
 
 
-        oldir = rdir.replace(databasePath,'%s/smodels-database-master' % home )
+        oldir = rdir.replace(databasePath,f'{home}/smodels-database-master' )
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
-            print ( '\033[31m Error comparing %s \033[0m' %rdir )
+            print ( f'\x1b[31m Error comparing {rdir} \x1b[0m' )
             sys.exit()
 
-    print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
+    print ( f"\x1b[32m {f} OK (runtime = {time.time() - t0:.1f} s) \x1b[0m" )
 

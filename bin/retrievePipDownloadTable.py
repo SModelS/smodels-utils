@@ -28,7 +28,7 @@ g=open("../log/pip_downloads.log","w")
 ctr = 0
 for line in lines:
     sline=line.decode().strip()
-    print ( "line >>>%s<<<" % line )
+    print ( f"line >>>{line}<<<" )
     if len(sline)==0:
         continue
     if not hasPassedTotal and "Total downloads" in sline:
@@ -48,12 +48,12 @@ for line in lines:
     if "-" in sline:
         lastDate = sline
     else:
-        thisline = "%s, %s" % ( lastDate, sline )
+        thisline = f"{lastDate}, {sline}"
         ctr+=1
         if ctr<10:
             print ( thisline )
         if lastDate > datefirst:
-            g.write ( thisline + "\n" )
+            g.write ( f"{thisline}\n" )
 
 for line in oldlines:
     g.write ( str(line) )

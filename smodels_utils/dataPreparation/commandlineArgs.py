@@ -24,5 +24,5 @@ def setEnv ( args ):
     from smodels_utils.dataPreparation.inputObjects import DataSetInput
     if hasattr ( args, "ntoys" ):
         from smodels.base.smodelsLogging import logger
-        logger.info ( "Set the number of toys to %d" % args.ntoys )
+        logger.info ( f"Set the number of toys to {int(args.ntoys)}" )
         DataSetInput.ntoys = args.ntoys

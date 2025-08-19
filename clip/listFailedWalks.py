@@ -17,7 +17,7 @@ def main():
                 ooms.append ( lines[0] )
                 oofs.append ( f )
                 print ( "[listFailedWalks] in file:", f )
-                print ( "[listFailedWalks] line 0: >>>%s<<<" % lines[0] )
+                print ( f"[listFailedWalks] line 0: >>>{lines[0]}<<<" )
                 print ( "[listFailedWalks] line with error:", line )
                 print ( )
                 break
@@ -29,10 +29,10 @@ def main():
         nr = oom [ oom.find("starting")+9:oom.find(" @ ") ]
         try:
             nr = int(nr)
-            line = "./slurm.py -R %s -n %d -N %d" % ( rundir, nr, nr+1)
-            g.write ( line+"\n" )
+            line = f"./slurm.py -R {rundir} -n {int(nr)} -N {int(nr + 1)}"
+            g.write ( f"{line}\n" )
             line = f"rm -rf /scratch-cbe/users/{os.environ['USER']}/outputs/%s" % oof
-            g.write ( line+"\n\n" )
+            g.write ( f"{line}\n\n" )
         except Exception as e:
             print ( "exception", e, nr )
     g.close()

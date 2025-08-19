@@ -18,7 +18,7 @@ def correct ( filename ):
     for line in lines:
         if line.startswith("   1000022"):
             oldline = line
-            line = "   1000022     %d.0     # ~chi_10\n" % N1
+            line = f"   1000022     {int(N1)}.0     # ~chi_10\n"
             print ( "fixing", oldline, "->", line )
         f.write ( line )
     f.close()

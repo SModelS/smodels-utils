@@ -21,12 +21,12 @@ def cleanGlobalInfo ( f ):
             continue
         if line.startswith("covariance" ):
             continue
-        h.write ( line+"\n" )
+        h.write ( f"{line}\n" )
     h.close()
     
 
 def rm ( path ):
-    files = glob.glob ( path + "/*" )
+    files = glob.glob ( f"{path}/*" )
     # print ( f"{len(files)} files in {path}" )
     for f in files:
         if f.endswith ( ".json" ):

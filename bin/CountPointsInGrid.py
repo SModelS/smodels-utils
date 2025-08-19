@@ -29,7 +29,7 @@ plt.hist(nptsList,bins=20)
 plt.yscale('log')
 plt.ylabel('Number of Maps (UL+EM)')
 plt.xlabel('Number of Points in the Grid')
-plt.title('Database version: %s' %(database.txt_meta.databaseVersion))
+plt.title(f'Database version: {database.txt_meta.databaseVersion}')
 plt.tight_layout()
 
 # %% Save to file

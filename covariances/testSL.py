@@ -47,7 +47,7 @@ def createBinnedModel(bins):
                 col.append ( e )
         C.append ( col )
     m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S,
-                efficiencies=sig, name="model%d" % n )
+                efficiencies=sig, name=f"model{int(n)}" )
     m._bins=bins
     return m
 
@@ -103,7 +103,7 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     # print ( "[nick] model=", model.name )
 
     # CHECK we don't go over the max
-    if model.nbins > ROOT.MAXBINS: sys.exit("Too many bins (nbins > %d), you should modify MAXBINS in .C code"%ROOT.MAXBINS)
+    if model.nbins > ROOT.MAXBINS: sys.exit(f"Too many bins (nbins > {int(ROOT.MAXBINS)}), you should modify MAXBINS in .C code")
 
     # print ( "[nick] Simplified Likelihood for model file --> ", end="" )
     #try : print ( model.name )
@@ -162,7 +162,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
     ulComp100 = UpperLimitComputer ( lumi = 1. / fb, ntoys=100, cl=.95 )
     ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
-    print ( "- Run #%d with %d bins:" % (nrun, len(bins)) )
+    print ( f"- Run #{int(nrun)} with {len(bins)} bins:" )
 
     gul= [ None ]
     if runAlgo("profl"):
@@ -172,8 +172,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         try:
             ul = ulComp.ulSigma ( mc, marginalize=False ).asNumber(fb)
         except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
+            print ( f"Exception at profiling: {e}" )
+            ul=f"{type(e)} {str(e)}"
         ret["t_profl"]=time.time()-t0
         ret["ul_profl"]=ul
         gul[0]=ul
@@ -185,8 +185,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         try:
             ul = ulComp.ulSigma ( mc, marginalize=True ).asNumber(fb)
         except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
+            print ( f"Exception at profiling: {e}" )
+            ul=f"{type(e)} {str(e)}"
         ret["t_margl"]=time.time()-t0
         ret["ul_margl"]=ul
         gul[0]=ul
@@ -198,8 +198,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         try:
             ul = ulComp100.ulSigma ( m ).asNumber(fb)
         except Exception as e:
-            print ( "Exception at marginalization 100: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
+            print ( f"Exception at marginalization 100: {e}" )
+            ul=f"{type(e)} {str(e)}"
         t0=time.time()
         t_marg100 = t0-tm
         ret["ul_marg100"]=ul
@@ -213,8 +213,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         try:
             ul = ulComp.ulSigma ( m ).asNumber(fb)
         except Exception as e:
-            print ( "Exception at marginalization: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
+            print ( f"Exception at marginalization: {e}" )
+            ul=f"{type(e)} {str(e)}"
         ret["ul_marg"]=ul
         ret["t_marg"]=time.time()-t0
         gul[0]=ul
@@ -226,8 +226,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         try:
             ul = ulComp10K.ulSigma ( m ).asNumber(fb)
         except Exception as e:
-            print ( "Exception at marginalization: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
+            print ( f"Exception at marginalization: {e}" )
+            ul=f"{type(e)} {str(e)}"
         ret["ul_marg10"]=ul
         ret["t_marg10"]=time.time()-t0
         gul[0]=ul
@@ -239,8 +239,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         try:
             ul = ulComp.ulSigma ( m, marginalize=False ).asNumber(fb)
         except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
+            print ( f"Exception at profiling: {e}" )
+            ul=f"{type(e)} {str(e)}"
         ret["t_prof"]=time.time()-t0
         ret["ul_prof"]=ul
         gul[0]=ul
@@ -251,7 +251,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
             rmin=0.
             rmax=5.*ul
         ul=None
-        print ( "- nicks code in [%s,%s]" % ( rmin, rmax ) )
+        print ( f"- nicks code in [{rmin},{rmax}]" )
         t0=time.time()
         try:
             ctr=0
@@ -272,8 +272,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
                     ul=-1.
                     break
         except Exception as e:
-            print ( "Exception in Nicks code: %s" % e )
-            ul="Exception %s" % str(e)
+            print ( f"Exception in Nicks code: {e}" )
+            ul=f"Exception {str(e)}"
         ret["t_nick"]=time.time()-t0
         ret["ul_nick"]=ul
 
@@ -283,7 +283,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
             rmin=.4*ul
             rmax=1.3*ul
         ul=None
-        print ( "- nicks code in narrow [%s,%s]" % ( rmin, rmax ) )
+        print ( f"- nicks code in narrow [{rmin},{rmax}]" )
         t0=time.time()
         try:
             ctr=0
@@ -304,8 +304,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
                     ul=-1.
                     break
         except Exception as e:
-            print ( "Exception in Nicks code: %s" % e )
-            ul="Exception %s" % str(e)
+            print ( f"Exception in Nicks code: {e}" )
+            ul=f"Exception {str(e)}"
         ret["t_nickn"]=time.time()-t0
         ret["ul_nickn"]=ul
 
@@ -315,7 +315,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         if type(gul[0])==float:
             rmin,rmax=0.,2.1*ul
         ul=None
-        print ( "- nicks linear code in [%s,%s]" % ( rmin, rmax ) )
+        print ( f"- nicks linear code in [{rmin},{rmax}]" )
         t0=time.time()
         try:
             ctr=0
@@ -337,8 +337,8 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
                     ul=-1.
                     break
         except Exception as e:
-            print ( "Exception in Nicks code: %s" % e )
-            ul="%s %s" % ( type(e), str(e) )
+            print ( f"Exception in Nicks code: {e}" )
+            ul=f"{type(e)} {str(e)}"
         ret["t_nickl"]=time.time()-t0
         ret["ul_nickl"]=ul
 
@@ -348,14 +348,14 @@ def run ( R, n, sub, max_bins, algos ):
     """ one run. """
     import random
     random.seed(sub)
-    f=open("results%d_%d.py" % (R,sub),"w")
+    f=open(f"results{int(R)}_{int(sub)}.py","w")
     # f.write ( "d=[" )
     for i in range(n):
         r = one_turn( i+n*sub, None, args.max_bins, algos )
         if r == None:
             continue
         print (r)
-        f.write ( "%s,\n" % r )
+        f.write ( f"{r},\n" )
         f.flush()
     # f.write ( "]\n" )
     f.close()
@@ -388,7 +388,7 @@ if __name__ == "__main__":
     if ncpus == -1: ncpus = nCPUs()
     R=int(math.ceil( args.nruns / ncpus)) * ncpus
     n= int ( args.nruns / ncpus  )
-    print ( "Running %d jobs per process" % n )
+    print ( f"Running {int(n)} jobs per process" )
     pids=[]
     for cpu in range(ncpus):
         pid=os.fork()

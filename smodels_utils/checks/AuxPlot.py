@@ -91,7 +91,7 @@ def getTree(gDirectory,friends=[],verbose=False):
   elif len(trees) > 1:
     pstr = "More than one tree found, specify which one to use ("
     for tree in trees:
-      pstr += tree.GetName()+","
+      pstr += f"{tree.GetName()},"
     pstr += ")"
     usetree = raw_input(pstr)
     tree = gDirectory.Get(usetree)
@@ -100,7 +100,7 @@ def getTree(gDirectory,friends=[],verbose=False):
 
   for ifriend,friend in enumerate(friends):
     print ( "Adding friend",friend )
-    tree.AddFriend("friend"+str(ifriend)+" = "+str(tree.GetName()),friend)
+    tree.AddFriend(f"friend{ifriend!s} = {tree.GetName()!s}",friend)
 
 #Get Branches and Leaves (variables):
   branches = tree.GetListOfBranches()
@@ -216,7 +216,7 @@ def Print(canvas,prefix,hasSMS):
     addname = hasSMS.rstrip(".root")
     while addname.count("_") > 0:
       addname = addname[addname.index("_")+1:]
-    filename += "_"+addname
+    filename += f"_{addname}"
   filename += ".eps"
   canvas.Print(filename)
 
@@ -381,7 +381,7 @@ def getMetadata(filename,tags):
       for tag in tags:
         if tag in line:
           if not metadata[tag]: metadata[tag] = []
-          entry = line.lstrip(tag+' :').rstrip()
+          entry = line.lstrip(f"{tag} :").rstrip()
           if ':' in entry: entry = entry.split(':')
           metadata[tag].append(entry)
 
@@ -511,13 +511,13 @@ def getBestAnalysis(ana_list,sqrts=8.):
        R_best_Good = ana['tval']/ana['exptlimit']
        Th_best_Good = ana['tval']
        Cond_best_Good = ana['maxcond']
-       Ana_best_Good = ana['AnalysisName']+':'+ana['AnalysisTopo']
+       Ana_best_Good = f"{ana['AnalysisName']}:{ana['AnalysisTopo']}"
     else:
       if not R_best_Bad or R_best_Bad < ana['tval']/ana['exptlimit']:
        R_best_Bad = ana['tval']/ana['exptlimit']
        Th_best_Bad = ana['tval']
        Cond_best_Bad = ana['maxcond']
-       Ana_best_Bad = ana['AnalysisName']+':'+ana['AnalysisTopo']
+       Ana_best_Bad = f"{ana['AnalysisName']}:{ana['AnalysisTopo']}"
 
   best_dic = {"R_best_Good" : R_best_Good, "Th_best_Good" : Th_best_Good, "Cond_best_Good" : Cond_best_Good, "Ana_best_Good" : Ana_best_Good, "R_best_Bad" : R_best_Bad, "Th_best_Bad" : Th_best_Bad, "Cond_best_Bad" : Cond_best_Bad, "Ana_best_Bad" : Ana_best_Bad}
 

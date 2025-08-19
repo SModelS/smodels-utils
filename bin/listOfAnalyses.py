@@ -31,6 +31,9 @@ class Lister:
         self.github_io = "../../smodels.github.io/"
 
     def metaStatisticsPlot ( self ):
+        if not self.add_version:
+            ## dont plot again
+            return
         # return ## FIXME remove
         import sys
         sys.path.insert(0,"../../protomodels/ptools")
@@ -56,6 +59,8 @@ class Lister:
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
         poptions["nosuperseded"]= not self.includeSuperseded
+        poptions["use_aggregated"]= self.use_aggregated
+        poptions["keep"]= False
         poptions["nofastlim"]= not self.includeFastlim
         plotter = plotDBDict.Plotter ( poptions )
         #print ( "[listOfAnalyses] ending roughviz" )
@@ -139,9 +144,20 @@ class Lister:
         n_results = 0
         n_topos = set()
         n_anas = set()
+        hasAgg = []
+        for expR in self.expRes:
+            if "-agg" in expR.id():
+                ## when we have -agg results, we dont count the maps
+                ## of the non-aggregated ones
+                anaId = removeAnaIdSuffices ( expR.id() )
+                hasAgg.append ( anaId )
         for expR in self.expRes:
             self.stats.add ( expR.id() )
             expId = removeAnaIdSuffices ( expR.id() )
+            if expR.id() in hasAgg and expR.datasets[0].dataInfo.dataId != None:
+                # we have the non-aggregate result here, skip it. count only
+                # the aggregate
+                continue
             n_anas.add ( expId )
             for t in expR.getTxNames():
                 n_topos.add ( t.txName )
@@ -150,13 +166,22 @@ class Lister:
             dataIds = [ x.dataInfo.dataId for x in expR.datasets if x != None ]
             # print ( ">>> XataIds", dataIds )
             for d in dataIds:
+                #if "CMS" in expR.id():
+                #    print ( f"now at {expR.id()}:{d}" )
                 ds = expR.getDataset ( d )
                 n_results += 1
                 if ds == None:
                     print ( f"warning, {expR.id()},{d} is empty" )
                     # sys.exit(-1)
                     continue
-                n_maps += len ( ds.txnameList )
+                topos = set()
+                for i in ds.txnameList:
+                    if i.validated in [ True, "N/A", "n/a" ]:
+                        topos.add ( i.txName )
+                    else:
+                        print ( f"[listOfAnalyses] skipping {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i}: validated={i.validated}" )
+                n_maps += len(topos)
+                # n_maps += len ( ds.txnameList )
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
         self.f.write ( "List of analyses and topologies in the SMS results database, " )
         self.f.write ( f"comprising {n_maps} individual maps from {n_results} distinct signal regions, ")
@@ -165,9 +190,9 @@ class Lister:
         if self.includeFastlim:
             self.f.write ( "Results from FastLim are included. " )
         self.f.write ( f"There is also an  [sms dictionary](SmsDictionary{self.dotlessv}) and a [validation page](Validation{self.dotlessv}).\n" )
-        self.f.write ( referToOther + ".\n" )
+        self.f.write ( f"{referToOther}.\n" )
         sigsplot = self.significancesPlotFileName()
-        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='400' /><br><sub>Plot: Significances with respect to the Standard Model hypothesis, for all signal regions in the database. A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.</sub></p>\n" )
+        self.f.write ( f"\n<p align='center'><img src='../{sigsplot}?{time.time()}' alt='plot of significances' width='500' /><br></p>\n\n###### Plot: Significances with respect to the Standard Model hypothesis, for all signal regions [(1)](#A1). A standard normal distribution is expected if no new physics is in the data. New physics would manifest itself as an overabundance of large (positive) significances.\n\n" )
         # self.f.write ( f"\n![../{pvaluesplot}](../{pvaluesplot}?{time.time()})\n" )
 
     def significancesPlotFileName ( self, postfix : str = "" ):
@@ -178,7 +203,7 @@ class Lister:
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
-        directory = f"validation/{self.dotlessv}"
+        directory = f"validation/{self.orig_ver}"
         fullname = f"{self.github_io}/{directory}"
         if not os.path.exists ( fullname ):
             os.mkdir ( fullname )
@@ -186,13 +211,17 @@ class Lister:
         return pvaluesplot
 
     def footer ( self ):
-        # previous version self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
-        self.f.write ( "\n\n<a name='A1'>(1)</a> Expected upper limits ('exp. ULs'): allow SModelS to determine the sensitivity of UL results. Moreover, they may be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian (currently an experimental feature).\n\n" )
-        self.f.write ( "<a name='A2'>(2)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
-        self.f.write ( "<a name='A4'>(4)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
+        # previous version self.f.write ( "\n\n<a name='A2'>(2)</a> Expected upper limits ('exp. ULs'): Can be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian.\n\n" )
+        aggnonagg = "non-aggregated"
+        if self.use_aggregated:
+            aggnonagg = "aggregated"
+        self.f.write ( f"\n\n<a name='A1'>(1)</a> For analyses with both non-aggregated and aggregated signal regions, we use the {aggnonagg} ones.\n\n" )
+        self.f.write ( "\n\n<a name='A2'>(2)</a> Expected upper limits ('exp. ULs'): allow SModelS to determine the sensitivity of UL results. Moreover, they may be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian (currently an experimental feature).\n\n" )
+        self.f.write ( "<a name='A3'>(3)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
+        self.f.write ( "<a name='A4'>(4)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
+        self.f.write ( "<a name='A5'>(5)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         if self.includeFastlim:
-            self.f.write ( "<a name='A5'>(5)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
+            self.f.write ( "<a name='A6'>(6)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( f"\nThis page was created {time.asctime()}.\n" )
         self.f.close()
 
@@ -276,10 +305,10 @@ class Lister:
             ret.append ( "superseded by" )
         ret.append ( "obs. ULs" )
         if self.likelihoods:
-            ret.append ( "exp. ULs [(1)](#A1)" )
+            ret.append ( "exp. ULs [(2)](#A2)" )
         ret.append ( "EMs" )
         if self.likelihoods:
-            ret.append ( "SR comb. [(2)](#A2)" )
+            ret.append ( "SR comb. [(3)](#A3)" )
         return ret
 
     def moveToGithub( self ):
@@ -306,7 +335,7 @@ class Lister:
             lengths.append ( len(i)+6 ) # ideal for direct viewing
         self.f.write ( "|\n" )
         for l in lengths:
-            self.f.write ( "|" +"-"*l )
+            self.f.write ( f"|{'-' * l}" )
         self.f.write ( "|\n" )
 
     def getLabel ( self, ana_name ):
@@ -416,10 +445,10 @@ class Lister:
                     sys.exit(-1)
                 homegrownd[str(i)] = ""
                 if hasattr ( i, "source" ) and "SModelS" in i.source:
-                    homegrownd[str(i)] = " [(3)](#A3)"
+                    homegrownd[str(i)] = " [(4)](#A4)"
                 if has["agg"]:
                 # if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                    homegrownd[str(i)] = " [(4)](#A4)"
+                    homegrownd[str(i)] = " [(5)](#A5)"
 
         topos.sort()
         topos_s = ""
@@ -433,7 +462,7 @@ class Lister:
         topos_s = topos_s[2:]
         if fastlim:
             # topos_s += " (from FastLim (2))"
-            topos_s += " (from FastLim [(5)](#A5))"
+            topos_s += " (from FastLim [(6)](#A6))"
             pass
         url = ana.globalInfo.url
         if url.find ( " " ) > 0:
@@ -487,11 +516,13 @@ class Lister:
 
     def writeStatsFile ( self ):
         """ write out the stats file """
+        if not self.write_stats:
+            return
         statsfile = "analyses.py"
         print ( f"[listOfAnalyses] Writing stats file {statsfile}." )
         f = open ( statsfile, "wt" )
         f.write ( f"# superseded: {self.includeSuperseded}\n" )
-        f.write ( "A=" + str ( self.stats )+"\n" )
+        f.write ( f"A={self.stats!s}\n" )
         f.close()
 
     def selectAnalyses ( self, sqrts, experiment, Type ):
@@ -554,6 +585,8 @@ class Lister:
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
         argparser.add_argument ( '-n', '--no_superseded', action='store_true',
                                  help='ignore (filter out) superseded results' )
+        argparser.add_argument ( '-A', '--use_aggregated', action='store_true',
+                                 help='ignore (filter out) superseded results' )
         argparser.add_argument ( '-d', '--database',
                                  help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
@@ -576,12 +609,16 @@ class Lister:
                                  help='create also fudged version of significance plot' )
         argparser.add_argument ( '-a', '--add_version', action='store_true',
                                  help='add version labels to links' )
+        argparser.add_argument ( '-S', '--write_stats', action='store_true',
+                                 help='write the analyses.py stats file' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
         self.keep = args.keep
         self.fudged = args.fudged
         self.includeSuperseded = not args.no_superseded
+        self.use_aggregated = args.use_aggregated
         self.likelihoods = args.likelihoods
+        self.write_stats = args.write_stats
         self.dbpath = args.database
         self.createSuperseded()
         dbpath = self.dbpath
@@ -598,6 +635,8 @@ class Lister:
             filename += "WithSuperseded"
         self.filename = filename
         self.add_version = args.add_version ## add version number
+        self.orig_ver = ver # original version, whether we are in versionless
+        # mode or not
         self.dotlessv = ""
         if self.add_version:
             self.dotlessv = ver

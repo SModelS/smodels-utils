@@ -32,10 +32,10 @@ def body():
   if addBest:
   	columns.append ( "Best SR" )
   for name,topos in plots.items():
-    f.write ( "\n= %s =\n" % (names[name]) )
+    f.write ( f"\n= {names[name]} =\n" )
     f.write ( "||<#EEEEEE:> '''Name''' " ) 
     for col in columns:
-      f.write ("||<#EEEEEE:> '''%s''' " % (col) )
+      f.write (f"||<#EEEEEE:> '''{col}''' " )
     f.write ( "||\n" )
     for topo in topos:
       url="http://smodels.hephy.at/images/combination/"

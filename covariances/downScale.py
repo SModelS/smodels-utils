@@ -17,7 +17,7 @@ def downGrade ( n, noCov, skip=[] ):
     sskip="none"
     if len(skip):
         sskip=",".join(map(str,skip))
-    print ( "Downgrading to %d, skipping %s." % ( n, sskip ) )
+    print ( f"Downgrading to {int(n)}, skipping {sskip}." )
     if not os.path.exists ( ".backup" ):
         os.mkdir ( ".backup" )
     if not os.path.exists ( ".backup/globalInfo.txt" ):
@@ -25,10 +25,10 @@ def downGrade ( n, noCov, skip=[] ):
     for i in glob.iglob ( "sr*" ):
         srN = int ( i[2:] )
         if srN >= n or srN in skip:
-            if os.path.exists ( ".backup/%s" % i ):
-                subprocess.getoutput ( "rm -r %s" % i )
+            if os.path.exists ( f".backup/{i}" ):
+                subprocess.getoutput ( f"rm -r {i}" )
             else:
-                subprocess.getoutput ( "mv %s .backup/" % i )
+                subprocess.getoutput ( f"mv {i} .backup/" )
     f=open("globalInfo.txt","r")
     lines=f.readlines()
     f.close()
@@ -50,7 +50,7 @@ def downGrade ( n, noCov, skip=[] ):
                 if ctr not in skip:
                     newline+=char
                     needsComma=True
-            f.write ( newline + "\n" )
+            f.write ( f"{newline}\n" )
         elif "covariance:" in line:
             newline="covariance: ["
             ar = eval ( line[12:] )
@@ -78,9 +78,9 @@ def downGrade ( n, noCov, skip=[] ):
                             bitarray[ctr]=False
                     r=r[ bitarray ]
                     columns = r.tolist()
-                newline += str(columns)+","
-            newline = newline[:-1]+"]"
-            f.write ( newline+"\n" )
+                newline += f"{columns!s},"
+            newline = f"{newline[:-1]}]"
+            f.write ( f"{newline}\n" )
         else:
             f.write ( line )
     f.close()

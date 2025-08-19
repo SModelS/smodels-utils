@@ -18,49 +18,96 @@ from smodels.base.smodelsLogging import setLogLevel
 from smodels_utils.helper import databaseManipulations as manips
 from smodels_utils.helper.various import removeAnaIdSuffices
 from smodels_utils.helper.terminalcolors import *
-setLogLevel("debug")
 
-def discussExperiment ( anas, experiment, title, verbose ):
+from typing import Union
+# setLogLevel("debug")
+
+mets = set()
+
+def writeMETs():
+    with open ( "mets", "wt" ) as f:
+        f.write ( '{'+','.join([ f"'{x}'" for x in mets ])+"}\n" )
+        f.close()
+
+def discussExperiment ( anas : list, experiment : str, title : str, verbose : bool ):
     print ( f"{GREEN}{title}{experiment}:{RESET}" )
     ianas = set()
-    ul,em=0,0
-    n_results = 0
-    n_results_ul = 0
-    n_results_em = 0
+    ianas_MET = set()
+    ul,em=set(),set()
+    n_maps = 0
+    n_maps_ul = 0
+    n_maps_em = 0
+    n_maps_em_MET = 0
+    n_datasets = 0
+    n_datasets_sronly = 0
+    em_MET=set()
+    n_datasets_MET = 0
     for expRes in anas:
         Id = removeAnaIdSuffices ( expRes.globalInfo.id )
-        contact = ""
-        if hasattr ( expRes.globalInfo, "contact" ):
-            contact = expRes.globalInfo.contact
-        # print ( "id", Id )
         ianas.add ( Id )
-        topos = set()
-        for dataset in expRes.datasets:
-            for i in dataset.txnameList:
-                # print ( "validated=",i.validated )
-                if i.validated not in [ True, "N/A", "n/a" ]:
-                    continue
-                topos.add ( i.txName )
+        ulType = False
         if expRes.datasets[0].dataInfo.dataType=="upperLimit":
-            ul+=1
-            n_results_ul += len ( topos )
+            ul.add ( Id )
+            ulType = True
         else:
-            em+=1
-            n_results_em += len ( topos )
-        n_results += len ( topos )
+            em.add ( Id )
+        for dataset in expRes.datasets:
+            topos = set()
+            topos_MET = set()
+            hasMET = False
+            for i in dataset.txnameList:
+                if hasattr ( i, "finalState" ) and i.finalState is not None:
+                    for fs in i.finalState:
+                        if fs == "MET":
+                            hasMET = True
+                if "PV" in i.constraint and "MET" in i.constraint:
+                    hasMET = True
+                if i.validated in [ True, "N/A", "n/a" ]:
+                    topos.add ( i.txName )
+                    if hasMET:
+                        topos_MET.add ( i.txName )
+                        mets.add ( Id )
+                else:
+                    print ( f"[discussExperiment] {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i} validated {i.validated}" )
+            if hasMET:
+                ianas_MET.add ( Id )
+            if not ulType and hasMET:
+                em_MET.add ( Id )
+            if len(topos)>0 and ulType == False:
+                n_datasets += 1
+                if not dataset.dataInfo.dataId.startswith ( "CR_" ):
+                    n_datasets_sronly += 1
+                if hasMET:
+                    n_datasets_MET += 1
+                if verbose:
+                    print ( f"[countAnalyses] adding #{n_datasets} {Id}:{dataset.dataInfo.dataId}" )
+            if dataset.dataInfo.dataType=="upperLimit":
+                n_maps_ul += len ( topos )
+            else:
+                n_maps_em += len ( topos )
+                n_maps_em_MET += len ( topos_MET )
+            n_maps += len ( topos )
 
-    print ( "%d analyses." % len(ianas) )
+    print ( f"{len(ianas)} analyses." )
     if verbose:
-        print ( "   `- %s" % ( ", ".join(ianas) ) )
-    print ( "%d results total" % n_results )
-    print ( "%d upper limits analyses" % ul )
-    print ( "%d efficiency map analyses" % em )
-    print ( "%d upper limits results" % n_results_ul )
-    print ( "%d efficiency map results" % n_results_em )
+        print ( f"   `- {', '.join(ianas)}" )
+    print ( f"{len(ianas_MET)} analyses with MET." )
+    print ( f"{n_maps} maps total" )
+    print ( f"{len(ul)} upper limits analyses" )
+    print ( f"{len(em)} efficiency map analyses" )
+    print ( f"{len(em_MET)} efficiency map analyses with MET" )
+    print ( f"{n_maps_ul} upper limit maps" )
+    print ( f"{n_maps_em} efficiency maps" )
+    print ( f"{n_maps_em_MET} efficiency maps with MET" )
+    print ( f"{n_datasets_sronly} signal regions" )
+    print ( f"{n_datasets_MET} signal regions with MET in fs" )
+    print ( f"{n_datasets} signal and control regions" )
 
     print ()
 
-def discuss ( db, update, sqrts, verbose, lumi ):
+def discuss ( db, sqrts : Union[str,int,float], 
+              verbose : bool, lumi : Union[None,float],
+              mets ):
     print ()
     print ( "---------------" )
     title = ""
@@ -70,7 +117,7 @@ def discuss ( db, update, sqrts, verbose, lumi ):
     if sqrts == "all":
         title += "all runs, "
     else:
-        title += "%s TeV only, " % sqrts
+        title += f"{sqrts} TeV only, "
     if sqrts not in [ "all", "both" ]:
         anas = manips.filterSqrtsFromList ( anas, sqrts )
     anas = manips.filterByLumi  ( anas, lumi, invert=False )
@@ -80,9 +127,17 @@ def discuss ( db, update, sqrts, verbose, lumi ):
         if "CMS" in Id: cms.append ( expRes )
         if "ATLAS" in Id: atlas.append ( expRes )
     discussExperiment ( cms, "CMS", title, verbose )
+    print ( "---------------" )
     discussExperiment ( atlas, "ATLAS", title, verbose )
+    print ( "---------------" )
+    discussExperiment ( anas, "both", title, verbose )
+    if mets:
+        writeMETs()
 
-def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
+def countTopos ( superseded, filter_fastlim, db, update : str, verbose : bool = True ):
+    """ count the topologies
+    :param update: consider entries only after this date (yyyy/mm/dd)
+    """
     e = db.getExpResults( useSuperseded = superseded )
     anas = manips.filterFastlimFromList ( e, False, filter_fastlim, update )
     topos = set()
@@ -91,8 +146,7 @@ def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
         for t in i.getTxNames():
             topos.add ( t.txName )
             topos_roff.add ( t.txName.replace("off","") )
-    print ( "%d topologies (%d, not counting off-shell separately)" % \
-            ( len(topos), len(topos_roff) ) )
+    print ( f"{len(topos)} topologies ({len(topos_roff)}, not counting off-shell separately)" )
     if verbose:
         print ( ", ".join ( sorted ( topos ) ) )
 
@@ -110,6 +164,8 @@ def main():
     argparser.add_argument ( '-t', '--topologies', help='list topologies, also', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official]',
               type=str,default='official' )
+    argparser.add_argument ( '--mets', help='write mets file',
+              action="store_true" )
     args = argparser.parse_args()
     db = Database ( args.database )
     ss = [ True, False ]
@@ -117,7 +173,7 @@ def main():
     sqrts = args.sqrts.lower()
     if sqrts in [ "*" ]:
         sqrts = "all"
-    discuss ( db, args.update, sqrts, args.verbose, args.lumi )
+    discuss ( db, sqrts, args.verbose, args.lumi, args.mets )
     if args.topologies:
         countTopos ( db, args.update, args.verbose )
 if __name__ == '__main__':

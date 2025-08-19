@@ -64,7 +64,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     :returns: list of aggregated DataSets
     """
     newds = copy.deepcopy ( origDataSets[ agg[0]-1 ] )
-    newds._name = "%s%d" % ( aggprefix, aggidx+1 )
+    newds._name = f"{aggprefix}{int(aggidx + 1)}"
     aggregated = ""
     observedN, expectedBG, bgError2 = 0, 0., 0.
     originalSRs = []
@@ -80,7 +80,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         observedN += ds.observedN
         expectedBG += ds.expectedBG
         bgError2 += ds.bgError**2 ## F
-        aggregated += ds.dataId + ";"
+        aggregated += f"{ds.dataId};"
         originalSRs.append ( ds.dataId )
         if hasattr ( ds, "comment" ):
             comments.append ( ds.comment )
@@ -96,7 +96,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     newds.bgError = round ( math.sqrt ( bgErr2 ), 5 )
     if ( oldBgError - newds.bgError ) / newds.bgError > .2:
         if errorcounts["errorsvary"]==0:
-            logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( aggidx+1, oldBgError, newds.bgError  ) )
+            logger.error ( f"directly computed error and error from covariance vary greatly for ar{int(aggidx + 1)}: {oldBgError} != {newds.bgError}!" )
         if oldBgError > newds.bgError:
             if errorcounts["moreconservative"] == 0:
                 logger.error ( "since direct computation is more conservative, I will use that one." )
@@ -112,8 +112,8 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     try:
         ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber(fb)
     except Exception as e:
-        print ( "Exception", e )
-        print ( "observed:",newds.observedN )
+        print ( f"[datasetCreation] Exception {e}" )
+        print ( f"[datasetCreation] observed: {newds.observedN}" )
         sys.exit()
     if False: # the spey version
         from spey import get_uncorrelated_nbin_statistical_model, get_correlated_nbin_statistical_model, ExpectationType
@@ -127,14 +127,14 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         # lumi = lumi.asNumber(1./fb)
         ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
         ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
-    newds.upperLimit = str("%f*fb" % ul )
+    newds.upperLimit = str(f"{ul:f}*fb" )
     ule = comp.getUpperLimitOnSigmaTimesEff ( m, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
-    newds.expectedUpperLimit =  str("%f*fb" % ule )
+    newds.expectedUpperLimit =  str(f"{ule:f}*fb" )
     # print ( f"@@@ UL {ul:.2f} {ulspey:.2f}" )
     # print ( f"@@@ ULE {ule:.2f} {ulspeyE:.2f}" )
     newds.aggregated = aggregated[:-1]
     newds.originalSRs = originalSRs
-    newds.dataId = "%s%d" % (aggprefix, aggidx+1) ## for now the dataset id is the agg region id
+    newds.dataId = f"{aggprefix}{int(aggidx + 1)}" ## for now the dataset id is the agg region id
     return newds
 
 def aggregateDataSets ( aggregates, origDataSets, covariance, lumi, aggprefix="ar" ):
@@ -158,7 +158,7 @@ def createAggregationOrder ( aggregate, aggprefix="ar" ):
     """ create the right string for the datasetOrder field in globalInfo
     :param aggprefix: prefix used for aggregate regions, e.g. "ar"
     """
-    dsorder = [ '"%s%d"' % (aggprefix, x+1) for x in range(len(aggregate)) ]
+    dsorder = [ f'"{aggprefix}{int(x + 1)}"' for x in range(len(aggregate)) ]
     ret = ",".join(dsorder)
     return ret
 
@@ -257,7 +257,7 @@ class DatasetsFromLatex:
             for i,token in enumerate ( tokens ):
                 ctoken = token.strip()
                 ctoken = ctoken.replace ( "-", "_" )
-                dataId = dataId.replace ( "#%d" % i, ctoken )
+                dataId = dataId.replace ( f"#{int(i)}", ctoken )
             dataId = dataId.replace("$\\geq$",">=" )
             count_all+=1
             if not count_all in self.blinded_regions:
@@ -272,7 +272,7 @@ class DatasetsFromLatex:
 
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-                self.datasetOrder.append ( '%s' % dataId )
+                self.datasetOrder.append ( f'{dataId}' )
                 # self.datasetOrder.append ( '"%s"' % dataId )
                 self.datasets.append ( dataset )
         if self.aggregate != None:
@@ -293,7 +293,7 @@ class DatasetsFromLatex:
         databaseCreator.clear() ## reset list in databasecreator
         for i in self.datasets:
             databaseCreator.addDataset ( i )
-        logger.info ( "Aggregated %d to %d datasets" % ( len(self.origDataSets), len(self.datasets) ) )
+        logger.info ( f"Aggregated {len(self.origDataSets)} to {len(self.datasets)} datasets" )
 
     def __next__ ( self ):
         """ return next dataset. """
@@ -328,8 +328,7 @@ class DatasetsFromRoot:
         self.histo_bg = self.file_bg.Get ( hname_bg )
         self.readDatasetNames = readDatasetNames
         if not self.histo_obs:
-            logger.error ( "could not get histo ``%s'' file ``%s''" % \
-                             ( hname_obs, fname_obs ) )
+            logger.error ( f"could not get histo ``{hname_obs}'' file ``{fname_obs}''" )
             sys.exit()
         self.create()
         databaseCreator.datasetCreator = self
@@ -492,7 +491,7 @@ class DatasetsFromEmbaked:
                     bg=minimumBackgroundEstimate
                 dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-                self.datasetOrder.append ( '"%s"' % dataId )
+                self.datasetOrder.append ( f'"{dataId}"' )
                 self.datasets.append ( dataset )
         if self.aggregate != None:
             self.aggregateDSs()
@@ -512,7 +511,7 @@ class DatasetsFromEmbaked:
         databaseCreator.clear() ## reset list in databasecreator
         for i in self.datasets:
             databaseCreator.addDataset ( i )
-        logger.info ( "Aggregated %d to %d datasets" % ( len(self.origDataSets), len(self.datasets) ) )
+        logger.info ( f"Aggregated {len(self.origDataSets)} to {len(self.datasets)} datasets" )
 
     def __next__ ( self ):
         """ return next dataset. """

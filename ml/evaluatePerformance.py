@@ -43,7 +43,7 @@ class NetworkEvaluater():
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
-		self.savePath = os.getcwd() + "/" + dbPath + "/performance/"
+		self.savePath = f"{os.getcwd()}/{dbPath}/performance/"
 		Path(self.savePath).mkdir(parents=True, exist_ok=True)
 
 		self.builder = builder
@@ -150,15 +150,15 @@ class NetworkEvaluater():
 		for n in range(binNum):
 			
 			if n == 0.:
-				labels[n] = "0 " + units
+				labels[n] = f"0 {units}"
 
 			elif n == 1:
-				labels[n] = ">1e-1 " + units
+				labels[n] = f">1e-1 {units}"
 
 			else:
-				labels[n] = "1e-" + str(n-1) + " - 1e-" + str(n) + " " + units
+				labels[n] = f"1e-{n - 1!s} - 1e-{n!s} {units}"
 
-			labels[n] += " (n = {})".format(str(len(bins[n])))
+			labels[n] += f" (n = {str(len(bins[n]))})"
 
 
 		x = np.arange(len(bins))  # the label locations
@@ -169,14 +169,14 @@ class NetworkEvaluater():
 
 
 		ax.set_ylabel('mean relative error')
-		ax.set_title('mean error binned by %s (n = %s)' % (whichData, len(self.dataset)))
+		ax.set_title(f'mean error binned by {whichData} (n = {len(self.dataset)})')
 		ax.set_xticks(x)
 		ax.set_xticklabels(labels, rotation=45, rotation_mode="anchor", ha="right")
 		#ax.legend()
 
 		for rect in rects:
 			height = round(rect.get_height(), 3)
-			ax.annotate('{}'.format(height),
+			ax.annotate(f'{height}',
 				xy=(rect.get_x() + rect.get_width() / 2, height), 
 				xytext=(0, 3),  # 3 points vertical offset
 				textcoords="offset points",
@@ -334,13 +334,13 @@ class NetworkEvaluater():
 						spliceERR.append(E[n])
 
 				if len(spliceERR) > 0:
-					key = "m0=" + str(int(tmass))
+					key = f"m0={int(tmass)!s}"
 					thingsToPlot[key] = {"yaxis": spliceEFF, 
 										"ylabel": "efficiencies (log)", 
 										"xaxis": spliceWID, "xlabel":  
 										"widths (log)", 
 										"error": spliceERR, 
-										"affix": r"$m_{HSCP}$ = " + str(int(tmass)) + " GeV "}
+										"affix": rf"$m_{{HSCP}}$ = {int(tmass)!s} GeV "}
 		
 		
 		index = 5
@@ -356,14 +356,14 @@ class NetworkEvaluater():
 			else: affix = value["affix"]
 
 			plt.figure(index)
-			plt.title("{} (regression)\n{}mean error: {:4.2f}% max error: {:4.2f}%".format(str(self.txnameData), affix, meanError, maxError), fontsize=14)
+			plt.title(f"{str(self.txnameData)} (regression)\n{affix}mean error: {meanError:4.2f}% max error: {maxError:4.2f}%", fontsize=14)
 			plt.xlabel(value["xlabel"])
 			plt.ylabel(value["ylabel"])
 			plt.scatter(value["xaxis"], value["yaxis"], c=value["error"], cmap='rainbow', vmin=0, vmax=vMax)
 			cbar = plt.colorbar()
 			cbar.set_label('relative error', rotation=90)
 			plt.tight_layout()
-			fileName = str(self.txnameData) + "_regression_scatterPlot_" + key + ".png" #eps
+			fileName = f"{self.txnameData!s}_regression_scatterPlot_{key}.png" #eps
 			plt.savefig(self.savePath + fileName)
 			index += 1
 
@@ -420,18 +420,18 @@ class NetworkEvaluater():
 		error = round(100.*(1. - (onHull_correct_total + offHull_correct_total)/samples_total), 3)
 		delim = round(model._delimiter, 3)
 
-		onShell  = "%s / %s (%s%%)" % (onHull_correct_total, onHull_total, round(100.*onHull_correct_total/onHull_total, 3))
-		offShell = "%s / %s (%s%%)" % (offHull_correct_total, offHull_total, round(100.*offHull_correct_total/offHull_total, 3))
-		total    = "%s / %s (%s%%)" % (onHull_correct_total + offHull_correct_total, samples_total, error)
+		onShell  = f"{onHull_correct_total} / {onHull_total} ({round(100.0 * onHull_correct_total / onHull_total, 3)}%)"
+		offShell = f"{offHull_correct_total} / {offHull_total} ({round(100.0 * offHull_correct_total / offHull_total, 3)}%)"
+		total    = f"{onHull_correct_total + offHull_correct_total} / {samples_total} ({error}%)"
 
-		print("onShell:   %s" %onShell)
-		print("offShell:  %s" %offShell)
-		print("total:     %s" %total)
-		print("delimiter: %s" %delim)
+		print(f"onShell:   {onShell}")
+		print(f"offShell:  {offShell}")
+		print(f"total:     {total}")
+		print(f"delimiter: {delim}")
 
 
 		plt.figure(0)
-		plt.title('{} (regression)\nerror: {}% (delimiter: {})'.format(str(self.txnameData), error, delim), fontsize=14)
+		plt.title(f'{str(self.txnameData)} (regression)\nerror: {error}% (delimiter: {delim})', fontsize=14)
 		plt.xlabel('mass mother [GeV]')
 		plt.ylabel('mass daughter [GeV]')
 
@@ -451,7 +451,7 @@ class NetworkEvaluater():
 
 		plt.legend((plt_cor_on, plt_cor_off, plt_wrg_on, plt_wrg_off), ('on hull correct', 'off hull correct', 'should be on hull', 'should be off hull'), scatterpoints=1, loc='upper right', ncol=1, fontsize=8)
 
-		fileName = str(self.txnameData) + "_classification_scatterPlot.eps"
+		fileName = f"{self.txnameData!s}_classification_scatterPlot.eps"
 		plt.savefig(self.savePath + fileName)
 
 		if showPlots: plt.show()

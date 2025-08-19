@@ -40,11 +40,13 @@ class RefXSecComputer:
     version = "1.0" ## make sure we can trace changes in the tables
     hasWarned = { "omitted": 0 }
 
-    def __init__( self, verbose = False ):
+    def __init__( self, verbose : bool = False, first : bool = False ):
         """
         :param verbose: turn on verbose mode, for debugging
+        :param first: is it the first instance? then we are a bit more verbose
         """
         self.verbose = verbose
+        self.first = first
         if verbose:
             setLogLevel ( "debug" )
         self.shareDir = os.path.join ( installDirectory(), "smodels_utils", \
@@ -69,7 +71,7 @@ class RefXSecComputer:
         """
         nFile = self.absPath(inputFile)
         if not os.path.exists(nFile):
-            raise IOError("file %s does not exist" % nFile)
+            raise IOError(f"file {nFile} does not exist")
         return nFile
 
     def dictToXSection ( self, D ):
@@ -128,14 +130,14 @@ class RefXSecComputer:
             writeXsec = True
             # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
             if hasattr ( xsec, "comment" ) and xsec.comment not in [ None, "", "None", " (None)" ]:
-                xseccomment += " " + xsec.comment
+                xseccomment += f" {xsec.comment}"
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
                     writeXsec = False
                     break
             if writeXsec:
                 nxsecs += 1
-                outfile.write( self.xsecToBlock(xsec, (2212, 2212), xseccomment) + "\n")
+                outfile.write( f"{self.xsecToBlock(xsec, (2212, 2212), xseccomment)}\n")
         outfile.close()
 
         return nxsecs
@@ -157,22 +159,28 @@ class RefXSecComputer:
             logger.error("Wrong input")
             raise SModelSError()
         # Sqrt(s) in GeV
-        header = "XSECTION  " + str(xsec.info.sqrts / GeV)
+        header = f"XSECTION  {xsec.info.sqrts / GeV!s}"
         for pdg in inPDGs:
             # PDGs of incoming states
-            header += " " + str(pdg)
+            header += f" {pdg!s}"
         # Number of outgoing states
-        header += " " + str(len(xsec.pid))
+        reducedPids = [] ## take out Nones from xsec.pid
+        for pid in xsec.pid:
+            if pid != None:
+                reducedPids.append ( pid )
+        xsec.pid = tuple ( reducedPids )
+
+        header += f" {len(xsec.pid)!s}"
         for pid in xsec.pid:
             # PDGs of outgoing states
-            header += " " + str(pid)
+            header += f" {pid!s}"
         if comment:
-            header += " # " + str(comment)  # Comment
+            header += f" # {comment!s}"  # Comment
         entry = "  0  " + str(xsec.info.order) + "  0  0  0  0  " + \
-                str( "%16.8E" % (xsec.value / xsecUnit) ) + " SModelSv" + \
+                str( f"{float(xsec.value / xsecUnit):16.8E}" ) + " SModelSv" + \
                      smodelsinstallation.version()
 
-        return "\n" + header + "\n" + entry
+        return f"\n{header}\n{entry}"
 
     def computeForOneFile ( self, sqrtses, inputFile,
                  tofile, ssmultipliers = None, comment = None,
@@ -218,7 +226,7 @@ class RefXSecComputer:
             self.addCommentToFile ( comment, inputFile )
             self.cleanSLHAFile ( inputFile )
         else:
-            logger.info("Computing SLHA cross section from %s." % inputFile )
+            logger.info(f"Computing SLHA cross section from {inputFile}." )
             print()
             print( "     Cross sections:" )
             print( "=======================" )
@@ -255,7 +263,7 @@ class RefXSecComputer:
     def computeForBunch ( self, sqrtses, inputFiles, tofile, ssmultipliers=None ):
         """ compute xsecs for a bunch of slha files """
         for inputFile in inputFiles:
-            logger.debug ( "computing xsec for %s" % inputFile )
+            logger.debug ( f"computing xsec for {inputFile}" )
             self.computeForOneFile ( sqrtses, inputFile, tofile,
                                      ssmultipliers = ssmultipliers )
 
@@ -264,10 +272,10 @@ class RefXSecComputer:
         if comment in [ None, "" ]:
             return
         if not os.path.isfile(slhaFile ):
-            logger.error("SLHA file %s not found." % slhaFile )
+            logger.error(f"SLHA file {slhaFile} not found." )
             raise SModelSError()
         outfile = open(slhaFile, 'a')
-        outfile.write ( "\n# %s\n" % comment )
+        outfile.write ( f"\n# {comment}\n" )
         outfile.close()
 
     def addMultipliersToFile ( self, ssmultipliers, slhaFile ):
@@ -275,12 +283,12 @@ class RefXSecComputer:
         if ssmultipliers in [ None, {} ]:
             return
         if not os.path.isfile(slhaFile ):
-            logger.error("SLHA file %s not found." % slhaFile )
+            logger.error(f"SLHA file {slhaFile} not found." )
             raise SModelSError()
         tokens = []
         for k,v in ssmultipliers.items():
-            tokens.append ( "%s:%.4g" % ( k, v ) )
-        newline = "# Signal strength multipliers: " + ", ".join ( tokens )
+            tokens.append ( f"{k}:{v:.4g}" )
+        newline = f"# Signal strength multipliers: {', '.join(tokens)}"
         with open(slhaFile, 'r' ) as r:
             lines = r.readlines()
             r.close()
@@ -292,7 +300,7 @@ class RefXSecComputer:
                     logger.debug ( "Signal strength multipliers have alread been applied." )
                 else:
                     logger.error ( "Different signal strength multipliers have alread been applied!!!" )
-                    rewrite.append ( line+" ERROR inconsistent!" )
+                    rewrite.append ( f"{line} ERROR inconsistent!" )
             else:
                 if not "produced at step" in line:
                     rewrite.append ( line )
@@ -384,6 +392,8 @@ class RefXSecComputer:
             pids = channel["pids"]
             if pids[1]!=None and pids[1] < pids[0]:
                 pids = [ pids[1], pids[0] ]
+            #if pids[1] == None:
+            #    pids = [ pids[0] ]
             xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1],
                     sqrts, ewk, channel["masses"] )
             # print ( f"for channel {pids}: {str(xsecall)[:10]}" )
@@ -484,10 +494,10 @@ class RefXSecComputer:
         """ check if masses are out of bounds """
         if type(mass) in [ int, float ]:
             if mass > max(xsecs):
-                logger.info ( "mass %d>%d too high to interpolate, leave it as is." % ( mass, max(xsecs ) ) )
+                logger.info ( f"mass {int(mass)}>{int(max(xsecs))} too high to interpolate, leave it as is." )
                 return True
             if mass < min(xsecs):
-                logger.info ( "mass %d<%d too low to interpolate, leave it as is." % ( mass, min(xsecs ) ) )
+                logger.info ( f"mass {int(mass)}<{int(min(xsecs))} too low to interpolate, leave it as is." )
                 return True
             return False
         ## masses are tuple
@@ -576,7 +586,10 @@ class RefXSecComputer:
         """ get the xsec dictionary for pid1/pid2, sqrts
         :param ewk: specify the ewkino process (hino, or wino, or None)
         """
-        logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
+        if pid2 == None:
+            logger.debug ( f"asking for cross sections for pids={pid1}, {sqrts} TeV" )
+        else:
+            logger.debug ( f"asking for cross sections for pids={pid1,pid2}, {sqrts} TeV" )
         filename=None
         order = 0
         pb = True
@@ -584,19 +597,18 @@ class RefXSecComputer:
         isEWK=False
         comment = ""
         # comment="refxsec [pb]"
-        print ( "[refxsecComputer.getXSecsFor] @@1 pids", pid1, pid2 )
         if pid1 in [ 35 ] and pid2 == None:
             filename = f"xsecScalar{sqrts}.txt"
             columns["xsec"]=1
             isEWK=False
             order = LO
         if pid1 in [ 1000021 ] and pid2 == pid1:
-            filename = "xsecgluino%d.txt" % sqrts
-            columns["xsec"]=2
+            filename = f"xsecgluino{int(sqrts)}.txt"
+            columns["xsec"]=1
             isEWK=False
             order = NNLL # 4
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
-            filename = "xsecN2C1m%d.txt" % sqrts
+            filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
             pb = False
@@ -604,7 +616,7 @@ class RefXSecComputer:
                 pb = True
             smass = masses[0]+masses[1]
             if type(masses) == tuple and smass > 1e-6 and abs(masses[1]-masses[0])/smass > 1e-3:
-                filename = "xsecN2C1mnondegen%d.txt" % sqrts
+                filename = f"xsecN2C1mnondegen{int(sqrts)}.txt"
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
@@ -617,7 +629,7 @@ class RefXSecComputer:
             isEWK=True
             smasses = masses[1]+masses[0]
             if type(masses) == tuple and smasses > 1e-6 and abs(masses[1]-masses[0])/smasses > 1e-3:
-                filename = "xsecN2C1pnondegen%d.txt" % sqrts
+                filename = f"xsecN2C1pnondegen{int(sqrts)}.txt"
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
@@ -638,7 +650,7 @@ class RefXSecComputer:
                 columns["xsec"]=3
                 pb = True
             else:
-                filename = "xsecN2N1%d.txt" % sqrts
+                filename = f"xsecN2N1{int(sqrts)}.txt"
                 pb = False
             order = NLL
             isEWK=True
@@ -652,31 +664,31 @@ class RefXSecComputer:
             if pid2 == 1000025:
                 s2 = "N3"
             self.warn ( f"asked to compute {s1,pid1} {s2,pid2} production xsecs, will recycle the N2 N1 ones!" )
-            filename = "xsecN2N1%d.txt" % sqrts
+            filename = f"xsecN2N1{int(sqrts)}.txt"
             if ewk == "degenerate":
-                filename = "xsecEWKdegenerate%d.txt" % sqrts
+                filename = f"xsecEWKdegenerate{int(sqrts)}.txt"
                 comment = "fully degenerate N1, N2, C1"
             order = NLL
             pb = False
             isEWK=True
         if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
-            filename = "xsecN2C1p%d.txt" % sqrts
+            filename = f"xsecN2C1p{int(sqrts)}.txt"
             order = NLL
             pb = False
             isEWK=True
         if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
-            filename = "xsecN2C1m%d.txt" % sqrts
+            filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
             pb = False
         if pid1 in [ -1000005, -1000006, -2000006 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
-            filename = "xsecstop%d.txt" % sqrts
+            filename = f"xsecstop{int(sqrts)}.txt"
             order = NNLL #3
             columns["xsec"]=2
             pb = True
         if pid1 in [ -1000024 ] and pid2 == -pid1:
-            filename = "xsecC1C1%d.txt" % sqrts
+            filename = f"xsecC1C1{int(sqrts)}.txt"
             pb = False
             order = NLL #3
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ] and ewk == "degenerate":
@@ -687,10 +699,10 @@ class RefXSecComputer:
             columns["xsec"]=1
         if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
-            filename = "xsecslepLslepL%d.txt" % sqrts
+            filename = f"xsecslepLslepL{int(sqrts)}.txt"
             order = NLL #3
         if pid1 in [ -2000011, -2000013, -2000015 ] and pid2 == -pid1:
-            filename = "xsecslepRslepR%d.txt" % sqrts
+            filename = f"xsecslepRslepR{int(sqrts)}.txt"
             order = NLL # 3
         if filename == None:
             logger.info ( f"could not identify filename for xsecs for {pid1,pid2}" )
@@ -711,6 +723,9 @@ class RefXSecComputer:
             logger.error ( f"{path} missing for pids=({pid1},{pid2})" )
             sys.exit(-1)
         xsecs = self.getXSecsFrom ( path, pb, columns )
+        if self.first:
+            print ( f"[refxsecComputer] xsecs from {path}" )
+            self.first = False
         if self.verbose:
             print ( f"[refxsecComputer] returning: {xsecs}" )
         return xsecs,order,comment
@@ -723,16 +738,19 @@ if __name__ == "__main__":
             type=str, default="./simplyGluino.slha" )
     argparser.add_argument ( '-s', '--sqrts',
             help='center-of-mass energies [8 13]',
-            type=int, nargs="*", default=None )
+            type=float, nargs="*", default=None )
     argparser.add_argument ( "-i", "--ignore_pids",
             help="ignore pids", type=str, default=None )
     argparser.add_argument ( "-v", "--verbose",
-            help="Verbose level", type=str, default='info' )
+            help="Verbose level", action="store_true" ) # , type=str, default='info' )
 
     args = argparser.parse_args()
     sqrts = args.sqrts
     if sqrts == None:
         sqrts = [ 8, 13 ]
+    for i,s in enumerate(sqrts):
+        if int(s)==s:
+            sqrts[i]=int(s)
     setLogLevel ( "debug" )
     tool = RefXSecComputer( args.verbose )
     slhapaths = args.inputfile

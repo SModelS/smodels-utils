@@ -81,7 +81,7 @@ class MassPlaneBase(object):
             if in_hull == -1: ## not in a cut-out region
                 newdata.append ( i )
             else:
-                logger.info ( "removing point %s as it is in cut-out region." % ( p ) )
+                logger.info ( f"removing point {p} as it is in cut-out region." )
         obj.data = newdata
 
     def removeArea(self,points):
@@ -128,10 +128,10 @@ class MassPlaneBase(object):
             if inputList is None and key in optionalInput.keys():
                 allInput[key] = [None]*len(dataFiles)
             if not isinstance(allInput[key],list):
-                logger.error("Input %s must be a list" % key )
+                logger.error(f"Input {key} must be a list" )
                 sys.exit()
             elif len(allInput[key]) != len(dataFiles):
-                logger.error("Length of lists is inconsistent: ``%s'' has %d entries -- should have %d.." % ( key, len(allInput[key]),len(dataFiles) ) )
+                logger.error(f"Length of lists is inconsistent: ``{key}'' has {len(allInput[key])} entries -- should have {len(dataFiles)}.." )
                 sys.exit()
 
 
@@ -199,8 +199,8 @@ class Axes(object):
         #Define mass and width variables:
         massVars,widthVars = [], []
         for im in range(len(massEqs)):
-            massVars.append(var('Mass'+string.ascii_uppercase[im]))
-            widthVars.append(var('Width'+string.ascii_uppercase[im]))
+            massVars.append(var(f"Mass{string.ascii_uppercase[im]}"))
+            widthVars.append(var(f"Width{string.ascii_uppercase[im]}"))
 
         #New format:
         allEqs = []
@@ -271,7 +271,7 @@ class Axes(object):
         xValues = {}
         for xv in self._xvars:
             if not str(xv) in xMass:  #Missing a variable
-                self.error("Input variable %s missing for computing mass" %xv)
+                self.error(f"Input variable {xv} missing for computing mass")
                 return []
             value = xMass[str(xv)]
             if type(value) in [ str ]:
@@ -329,7 +329,7 @@ class Axes(object):
             if not xy:
                 continue
             if not isinstance(xy,list) or len(xy) > 1:
-                logger.error("Something wrong with the result from solve: %s" %str(xy))
+                logger.error(f"Something wrong with the result from solve: {str(xy)}")
                 sys.exit()
             else:
                 xy = xy[0]
@@ -438,11 +438,11 @@ class Axes(object):
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for l in [ "A", "B", "C" ][:len(parametersMap)]:
-            if not "Mass%s" % l in massInput.keys():
-                massInput["Mass%s" % l] = None
-            if "Mass%s" % l in massInput.keys() and \
-                not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
-                massInput["Width%s" % l ]=None
+            if not f"Mass{l}" in massInput.keys():
+                massInput[f"Mass{l}"] = None
+            if f"Mass{l}" in massInput.keys() and \
+                not f"Width{l}" in massInput.keys(): ## FIXME why is this needed???
+                massInput[f"Width{l}" ]=None
         #print ( "[getXYValues] massInput", massInput )
         #print ( "[getXYValues] xyFunc", self._xyFunction, str(self._xyFunction) )
         #print ( "parametersMap", parametersMap )
@@ -611,7 +611,7 @@ class Axes(object):
                     string+="_"
                 string += str ( equation ).replace(" ","")
             else:
-                if string: string = '%s_'%string
+                if string: string = f'{string}_'
                 string = '%sEq(%s,%s)' %(string, \
                 str(equation).split('==')[0].strip().replace(' ',''), \
                 str(equation).split('==')[1].strip().replace(' ',''))

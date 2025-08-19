@@ -14,7 +14,7 @@ from typing import Union, Dict
 
 def getParticleIdsForTemplateFile ( filename : str ) -> Dict:
     """ given a template file name, return a dictionary of 
-    pids, with positions as keys.
+    pids, with names in template files as keys.
 
     :param filename: filename, e.g. T1.template
     :returns: dictionary, position as keys, pids as values.
@@ -34,23 +34,18 @@ def getParticleIdsForTemplateFile ( filename : str ) -> Dict:
     lines = f.readlines()
     f.close()
     ret = {}
-    pids, wpids = {}, {}
+    pids = {}
     for line in lines:
         p1 = line.find("#")
         if p1 > 0:
             line = line[:p1]
         for x in [ 0, 1, 2 ]:
-            if f"M{x}" in line or f"m{x}" in line:
-                tokens = line.split()
-                if not x in pids:
-                    pids[x]=set()
-                pids[x].add ( int(tokens[0]) )
-            if f"W{x}" in line or f"w{x}" in line:
-                tokens = line.split()
-                if not x in wpids:
-                    wpids[x]=set()
-                wpids[x].add ( int(tokens[1]) )
-    return { "masses": pids, "widths": wpids }
+            for l in [ "m", "M", "w", "W" ]:
+                var = f"{l}{x}"
+                if var in line:
+                    tokens = line.split()
+                    pids[var] = int(tokens[0])
+    return pids
 
 def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
     """
@@ -67,7 +62,7 @@ def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
             p1 = slhafile.find("_",p1+1)
         import os, tarfile
         from smodels_utils import SModelSUtils
-        tarf = slhafile[:p1]+".tar.gz"
+        tarf = f"{slhafile[:p1]}.tar.gz"
         tarball = os.path.join ( SModelSUtils.installDirectory(), "slha", tarf )
     if not os.path.exists ( tarball ): ## no tarball!
         print ( f"[slhaManipulator] tarball {tarball} does not exist!" )

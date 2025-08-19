@@ -14,20 +14,20 @@ def convert ( path = "." ):
         # print root,dirs,files
         if not "-eff" in root: continue
         if "T2gg.effi" in files:
-            cmd = "mv %s/T2gg.effi %s/T2.effi" % ( root, root )
+            cmd = f"mv {root}/T2gg.effi {root}/T2.effi"
             commands.getoutput ( cmd )
         if not "T2gg.txt" in files: continue
-        ginfo = open(root[:root.find("-eff")+4]+"/globalInfo.txt",'r')
+        ginfo = open(f"{root[:root.find('-eff') + 4]}/globalInfo.txt",'r')
         gdata = ginfo.read()
         ginfo.close()
         if not "fastlim" in gdata.lower(): continue
-        t2f = open(root+"/T2gg.txt",'r')
+        t2f = open(f"{root}/T2gg.txt",'r')
         t2data = t2f.read()
         t2data = t2data.replace("txName: T2gg","txName: T2")
     #    t2data = t2data.replace("constraint: [[['jet']],[['jet']]]","constraint: [[['g']],[['g']]]")
         t2f.close()
-        os.remove(root+"/T2gg.txt")
-        t2f = open(root+"/T2.txt",'w')
+        os.remove(f"{root}/T2gg.txt")
+        t2f = open(f"{root}/T2.txt",'w')
         t2f.write(t2data)
         t2f.close()
         sys.exit()

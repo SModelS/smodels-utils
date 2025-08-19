@@ -31,14 +31,14 @@ class SLTest(unittest.TestCase):
         for i in range(ni,n):
             C.append ( C_[ni+ncov*i:ncov*i+n] )
         m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S, 
-                    nsignal=sig, name="model%d" % n, deltas_rel=deltas_rel )
+                    nsignal=sig, name=f"model{int(n)}", deltas_rel=deltas_rel )
         return m
 
     def printDict ( self, d ):
         s=0.
         for k,v in d.items():
             s+=v
-            print ( "%s: %s(%s)" % ( k, v, s ) )
+            print ( f"{k}: {v}({s})" )
 
     def testLLHDs(self):
         """ test the evolution of likelihoods """
@@ -97,14 +97,14 @@ class SLTest(unittest.TestCase):
         import time
         print ( "case 1: no signal uncertainty" )
         m = self.createModel ( 3, 1, 0. )
-        print ( "model: %s" % m, m.observed, m.backgrounds )
+        print ( f"model: {m}", m.observed, m.backgrounds )
         ulComp = UpperLimitComputer(ntoys=10000, cl=.95 )
         t0=time.time()
         ul = ulComp.ulSigma( m )
         ulm = None
         # ulm = ulComp.ulSigma( m, marginalize=True )
         t1=time.time()
-        print ( "ul=%s,%s t=%s" % ( ul, ulm, t1-t0 ) )
+        print ( f"ul={ul},{ulm} t={t1 - t0}" )
         # self.assertAlmostEqual( ul/(2135.66*sum(m.nsignal)), 1.0, 1 )
 
         print ()
@@ -114,7 +114,7 @@ class SLTest(unittest.TestCase):
         ulm2 = None
         # ulm2 = ulComp.ulSigma( m2, marginalize=True )
         t2=time.time()
-        print ( "ul2=%s,%s t=%s" % ( ul2, ulm2, t2-t1 ) )
+        print ( f"ul2={ul2},{ulm2} t={t2 - t1}" )
         #self.assertAlmostEqual( ulProf/(2135.66*sum(m.nsignal)), 1.0, 1 )
 
 

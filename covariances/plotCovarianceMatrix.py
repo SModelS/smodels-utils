@@ -66,10 +66,10 @@ def plot():
     def fmtLabel ( s ):
         if s >= 1.:
             # return "%d" % s
-            return "%.0f" % s
+            return f"{s:.0f}"
         if s < 1.:
-            return ("%.1f" % s)[1:]
-        return "%.1f" % s
+            return (f"{s:.1f}")[1:]
+        return f"{s:.1f}"
     labels = [ [ fmtLabel(x) for x in y ] for y in cov ]
     if n > 25:
         labels = None

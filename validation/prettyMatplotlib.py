@@ -85,7 +85,7 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
     file_js = "SModelS_ExclusionLines.json"
     import json
     plots = plot_dict
-    if os.path.exists(vDir+'/'+file_js):
+    if os.path.exists(f"{vDir}/{file_js}"):
         file = open(f'{vDir}/{file_js}','r')
         try:
             plots = json.load(file)
@@ -101,7 +101,7 @@ def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
     print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
 
     file = open(f'{vDir}/{file_js}','w')
-    json.dump(plots,file)
+    json.dump(plots,file,indent=4)
     file.close()
 
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
@@ -163,7 +163,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if xvals == None: ## happens when not on the plane I think
             continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
-            logger.warning( "no UL for %s: %s" % (xvals, pt ) )
+            logger.warning( f"no UL for {xvals}: {pt}" )
         r, rexp = float("nan"), float("nan")
         if not "error" in pt.keys():
             if pt["UL"]!=None:
@@ -226,7 +226,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if "condition" in pt.keys() and pt['condition'] and pt['condition'] > 0.05:
             condV += 1
             if condV < 5:
-                logger.warning("Condition violated for file " + pt['slhafile'])
+                logger.warning(f"Condition violated for file {pt['slhafile']}")
             if condV == 5:
                 logger.warning("Condition violated for more points (not shown)")
         else:
@@ -267,10 +267,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         types.append(dataset.dataInfo.dataType)
     types = list(set(types))
     if len(types) == 1: types = types[0]
-    resultType = "%s" %str(types)
+    resultType = f"{str(types)}"
     if len ( validationPlot.expRes.datasets ) > 1 and validationPlot.combine:
-        resultType = "combined"
-    title = title + " ("+resultType+")"
+        hasCombinedInfo = False
+        for i in [ "covariance", "jsonFiles", "mlModels" ]:
+            if hasattr ( validationPlot.expRes.globalInfo, i ):
+                hasCombinedInfo = True
+                resultType = "combined"
+        if not hasCombinedInfo:
+            resultType = "efficiencyMap"
+    title = f"{title} ({resultType})"
 
     plt.dontplot = False
     plt.clf()
@@ -428,7 +434,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         x_ecs, y_ecs = [],[]
         x_cs, y_cs = retrievePoints ( cs )
 
-        if options["drawExpected"] in [ "auto", True ]:
+        if options["drawExpected"] in [ "auto", True ] and not np.all ( np.isnan(eT) ):
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
@@ -457,7 +463,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     if backend!="":
         plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure, 
                  fontsize=9 )
-    txStr = validationPlot.txName +': '+pName
+    txStr = f"{validationPlot.txName}: {pName}"
     plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )
     axStr = prettyAxes(validationPlot)
     axStr = axStr.replace("*","")

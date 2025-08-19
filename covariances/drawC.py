@@ -23,28 +23,28 @@ def addLine ( ax, X, c, legend, style='-', ul=False ):
         ax.add_line(lm)
 
 def checkN ( n ):
-    fname="results%d" % n
-    files = glob.glob(fname+"_*.py")
+    fname=f"results{int(n)}"
+    files = glob.glob(f"{fname}_*.py")
     lines=[]
     for fil in files:
         f = open ( fil, "r" )
         for L in f.readlines():
             lines.append ( L )
         f.close()
-    g=open(fname+"tmp.py","w")
+    g=open(f"{fname}tmp.py","w")
     g.write ( "d=[" )
     for line in lines:
         g.write ( line )
     g.write("]\n" )
     g.close()
-    return fname+"tmp"
+    return f"{fname}tmp"
 
 def run ( n, selected, denominator, plot ):
     """ run for results<n>.py, drawing <selected> algos. """
     fname=checkN( n )
     D=__import__( fname )
     data=D.d
-    print ( "I have a total of %d points." % len(data) )
+    print ( f"I have a total of {len(data)} points." )
 
     #max number of bins
     bmax = max( [ x["nbins"] for x in data ] )
@@ -76,15 +76,15 @@ def run ( n, selected, denominator, plot ):
         if denominator=="mean":
             denom=numpy.mean ( [row["ul_nick"],row["ul_prof"],row["ul_marg10"] ] )
         else:
-            denom= row["ul_%s" % denominator ]
+            denom= row[f"ul_{denominator}" ]
 
         for a in algos.keys():
-            T[a][nbins].append( row["t_%s" % a ] )
-            r = row["ul_%s" % a ]
+            T[a][nbins].append( row[f"t_{a}" ] )
+            r = row[f"ul_{a}" ]
             if type(r)==float:
-                R[a][nbins].append( row["ul_%s" % a ] / denom )
+                R[a][nbins].append( row[f"ul_{a}" ] / denom )
             else:
-                print ( "skipping ul: %s" % r )
+                print ( f"skipping ul: {r}" )
 
     def mean ( Rx ):
         x=[]

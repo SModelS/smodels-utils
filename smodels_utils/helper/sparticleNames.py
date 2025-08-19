@@ -86,7 +86,7 @@ class SParticleNames:
         """
         if type(pid)==str:
             if not pid in self.names:
-                print ( "[sparticleNames.texColor] %s not in names" % name )
+                print ( f"[sparticleNames.texColor] {name} not in names" )
                 sys.exit(-1)
             pid = self.names[pid]
         pid = abs(pid)
@@ -181,7 +181,7 @@ class SParticleNames:
         """ rootify <name>, currently not doing anything """
         return name
 
-    def htmlify ( self, name, addBrackets ):
+    def htmlify ( self, name : str, addBrackets : bool ) -> str:
         """ htmlify <name> """
         import re
         html = name
@@ -196,14 +196,14 @@ class SParticleNames:
             if m == None:
                 break
             repl = html[m.start()+2:m.end()-1]
-            html = html[:m.start()]+"<sub>"+repl+"</sub>"+html[m.end():]
+            html = f"{html[:m.start()]}<sub>{repl}</sub>{html[m.end():]}"
 
         while True:
-            m = re.search ( "\^{[0-9&;A-Za-z-+]*}", html)
+            m = re.search ( r"\^{[0-9&;A-Za-z-+]*}", html)
             if m == None:
                 break
             repl = html[m.start()+2:m.end()-1]
-            html = html[:m.start()]+"<sup>"+repl+"</sup>"+html[m.end():]
+            html = f"{html[:m.start()]}<sup>{repl}</sup>{html[m.end():]}"
 
         if addBrackets:
             html = f"({html})"
@@ -213,7 +213,6 @@ class SParticleNames:
         if html == "nu":
             html="&nu;"
         # print ( "htmlify", name, "->", html )
-
         return html
 
     def rootName ( self, pid, addSign = False ):
@@ -244,9 +243,9 @@ class SParticleNames:
         else:
             n = n.replace("^{-}","").replace("^{+}","")
         if addDollars:
-            n = "$" + n + "$"
+            n = f"${n}$"
         if addBrackets:
-            n = "(" + n + ")"
+            n = f"({n})"
         return n
 
     def name ( self, pid, addSign=False, addOnes=False, 
@@ -271,11 +270,11 @@ class SParticleNames:
 
         if abs(pid) in [ 1000005, 1000006 ] and addOnes:
             ret = self.name ( pid, addSign, addOnes=False )
-            return ret+"1"
+            return f"{ret}1"
 
         if type(pid) == str and pid.startswith("+-"):
             n = self.name(int(pid[2:]))
-            return "+-"+n
+            return f"+-{n}"
 
         if not pid in self.ids and not abs(pid) in self.ids:
             return str(pid)
@@ -381,13 +380,13 @@ class SParticleNames:
 
     def tilde ( self, text ):
         """ put a tilde over text """
-        return "<math display='inline'><mover><mi>%s</mi><mo stretchy='true'>~</mo></mover></math>" % text
+        return f"<math display='inline'><mover><mi>{text}</mi><mo stretchy='true'>~</mo></mover></math>"
 
     def sub ( self, text ):
-        return "<sub>"+text+"</sub>"
+        return f"<sub>{text}</sub>"
 
     def sup ( self, text ):
-        return "<sup>"+text+"</sup>"
+        return f"<sup>{text}</sup>"
 
     """
     def toHtml ( self, name ):

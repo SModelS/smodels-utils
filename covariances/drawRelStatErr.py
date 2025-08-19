@@ -21,9 +21,9 @@ def getTopo ( validation ):
 
 def getEmbakedDict ( basedir, topo ):
     """ get the embaked file """
-    path = basedir+"orig/"+topo+".embaked"
+    path = f"{basedir}orig/{topo}.embaked"
     if not os.path.exists( path ):
-        print ( "cannot find %s" % path )
+        print ( f"cannot find {path}" )
         return {}
     f=open(path,"rt")
     D=eval(f.read())
@@ -104,7 +104,7 @@ def draw( validationfile, suffix ):
         axes = convertNewAxes ( point["axes"] )
         effs.append ( ( axes[1], axes[0], point["efficiency"] ) )
     if skipped > 0:
-        print ( "[drawRelStatErr] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( f"[drawRelStatErr] skipped {int(skipped)}/{len(validationData)} points: {err}" )
     effs.sort()
     basedir = validationfile[:p3]
     nevents = getEmbakedDict ( basedir, topo )
@@ -125,15 +125,15 @@ def draw( validationfile, suffix ):
     plt.scatter ( x, y, c=z )
     cbar = plt.colorbar()
     cbar.set_label ( "relative statistical error (%)" )
-    plt.title ( "rel.stat.err of best SR, %s:%s" % ( anaId, topo ) )
+    plt.title ( f"rel.stat.err of best SR, {anaId}:{topo}" )
     plt.xlabel ( "m(mother) [GeV]" )
     plt.ylabel ( "m(LSP) [GeV]" )
     rse = {}
     suff = ""
     if suffix != None:
-        suff = "_" + str(suffix)
-    fname = "relstaterr_%s_%s%s.png" % ( anaId, topo, suff )
-    print ( "[drawRelStatErr] saving to %s" % fname )
+        suff = f"_{suffix!s}"
+    fname = f"relstaterr_{anaId}_{topo}{suff}.png"
+    print ( f"[drawRelStatErr] saving to {fname}" )
     plt.savefig ( fname )
     plt.clf()
     return fname
@@ -142,7 +142,7 @@ def writeMDPage( push = False ):
     """ write the markdown page for smodels.github.io """
 
     Dir = "../../smodels.github.io/relstaterr/"
-    path = "%srelstaterr_*.png" % Dir
+    path = f"{Dir}relstaterr_*.png"
     files = glob.glob( path )
     files.sort()
     stats = {}
@@ -157,22 +157,22 @@ def writeMDPage( push = False ):
         if tokens[1] == "TGQ12":
             continue
         stats [ tokens[0] ].append ( tokens[1] )
-    print ( "[drawRelStatErr] writing %sREADME.md" % Dir )
+    print ( f"[drawRelStatErr] writing {Dir}README.md" )
     # print ( "[drawRelStatErr] files %s" % path )
-    with open ( "%sREADME.md" % Dir, "wt" ) as g:
+    with open ( f"{Dir}README.md", "wt" ) as g:
         g.write ( "# Plots of relative statistical errors\n" )
-        g.write ( "as of %s\n" % time.asctime() )
+        g.write ( f"as of {time.asctime()}\n" )
         g.write ( "\n" )
         g.write ( "## stats\n" )
         for ana,topos in stats.items():
-            g.write ( " * %s: " % ana )
+            g.write ( f" * {ana}: " )
             prevtopo = ""
             for ctr,topo in enumerate(topos):
                 if prevtopo == topo:
                     continue
                 if ctr > 0:
                     g.write ( ", " )
-                g.write ( "[%s](#%s)" % ( topo, ana+"_"+topo ) )
+                g.write ( f"[{topo}](#{f"{ana}_{topo}"})" )
                 prevtopo = topo
             g.write ( "\n" )
         g.write ( "\n" )
@@ -191,16 +191,16 @@ def writeMDPage( push = False ):
                 print ( "[drawRelStatErr] skipping TGQ12" )
                 continue
             t0 = int(time.time() )-1590000000
-            img = '<img src="%s?%d" />' % ( src, t0 ) 
-            anchor = '%s, %s<a name="%s"></a>' % ( tokens[0], tokens[1], f )
-            g.write ( '| %s | %s |\n' % ( anchor, img ) )
+            img = f'<img src="{src}?{int(t0)}" />' 
+            anchor = f'{tokens[0]}, {tokens[1]}<a name="{f}"></a>'
+            g.write ( f'| {anchor} | {img} |\n' )
         g.write ( "\n" )
         g.close()
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
     if push:
         o = subprocess.getoutput ( cmd )
-    print ( "[drawRelStatErr] cmd %s: %s" % (cmd, o ) )
+    print ( f"[drawRelStatErr] cmd {cmd}: {o}" )
     
 if __name__ == "__main__":
     import argparse
@@ -232,7 +232,7 @@ if __name__ == "__main__":
             analyses = []
         validations = [ args.validationfile ]
         if "*" in args.validationfile:
-            path = args.dbpath + "*/*/" + args.analysis + "/validation/" + args.validationfile 
+            path = f"{args.dbpath}*/*/{args.analysis}/validation/{args.validationfile}" 
             print ( "searching", path )
             tmp = glob.glob ( path )
             validations = []
@@ -254,8 +254,8 @@ if __name__ == "__main__":
             ipath = getPathName ( args.dbpath, analysis, validationfile )
             fname = draw( ipath, suffix )
             if args.copy:
-                cmd = "cp %s ../../smodels.github.io/relstaterr/" % fname
+                cmd = f"cp {fname} ../../smodels.github.io/relstaterr/"
                 o = subprocess.getoutput ( cmd )
-                print ( "[drawRelStatErr] cmd %s: %s" % (cmd, o ) )
+                print ( f"[drawRelStatErr] cmd {cmd}: {o}" )
     if args.copy:
         writeMDPage( args.push )

@@ -30,8 +30,8 @@ def map_z2color(zval, colormap, vmin, vmax):
     t=(zval-vmin)/float((vmax-vmin))#normalize val
     R, G, B, alpha=colormap(t)
     alpha=.05
-    return 'rgba('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+','+'{:d}'.format(int(B*255+0.5))+\
-           ','+'{:d}'.format(int(alpha*255+0.5))+')'
+    return 'rgba('+f'{int(R * 255 + 0.5):d}'+','+f'{int(G * 255 + 0.5):d}'+','+f'{int(B * 255 + 0.5):d}'+\
+           ','+f'{int(alpha * 255 + 0.5):d}'+')'
     #return 'rgb('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+\
     #       ','+'{:d}'.format(int(B*255+0.5))+')'
 
@@ -144,7 +144,7 @@ camera = dict(
 )
 
 layout = go.Layout(
-         title="<br><br><br><br>Delaunay triangulation<br> %s (%s)" % (anaid,topo),
+         title=f"<br><br><br><br>Delaunay triangulation<br> {anaid} ({topo})",
          width=800,
          height=600,
          margin = go.Margin ( t = 0, b = 0, l = 0, r = 0, pad = 1 ),

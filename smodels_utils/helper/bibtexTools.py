@@ -113,7 +113,7 @@ class BibtexWriter:
     def header ( self ):
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "% References for the analyses included in this version of the database %\n" )
-        self.i.write ( f"% This file was created at {time.asctime()} for db v{self.db.databaseVersion}         "[:71]+"%\n" )
+        self.i.write ( f"{f'% This file was created at {time.asctime()} for db v{self.db.databaseVersion}         '[:71]}%\n" )
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "\n" )
 
@@ -137,19 +137,19 @@ class BibtexWriter:
     def close ( self ):
         self.log ( f"{len(self.res)} results in container." )
         self.log ( f"Summary: {self.success} / {self.npublications} successful." )
-        self.log ( " ... of which: %d superseded results" % self.nsuperseded )
+        self.log ( f" ... of which: {int(self.nsuperseded)} superseded results" )
         self.log ( f"               {self.not_found} not found" )
         self.log ( f"               {self.fastlim} fastlim" )
         self.log ( f"               {len(self.nomatch)} no match" )
         self.log ( f"               {','.join( self.nomatch )}" )
-        self.log ( "failed: %d" % self.nfailed )
+        self.log ( f"failed: {int(self.nfailed)}" )
         self.g.close()
         self.h.close()
         self.createStatsFile()
 
     def bibtexFromCDS ( self, url, label=None ):
         """ get the bibtex entry from cds """
-        fullurl =  url+"/export/hx"
+        fullurl =  f"{url}/export/hx"
         fullurl = fullurl.replace ( "?ln=en", "" )
         fullurl = fullurl.replace ( "?ln=de", "" )
         self.log ( f" * fetching from CDS: {fullurl}" )
@@ -209,7 +209,7 @@ class BibtexWriter:
         ## hack for now, this solution wont work in the future
         # self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
         # url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
-        fullurl =  url +"?format=bibtex"
+        fullurl =  f"{url}?format=bibtex"
         self.log ( f" * fetching from Inspire: {url}" )
         self.log ( f" * fullurl {fullurl}" )
         # return fullurl
@@ -220,7 +220,7 @@ class BibtexWriter:
             txt = txt.decode("utf-8")
             if label != None:
                 p1 = txt.rfind("}")
-                txt = txt[:p1-1] + f',\n    label = "{label}"\n}}\n'
+                txt = f"{txt[:p1 - 1]},\n    label = \"{label}\"\n}}\n"
             return txt
         except urllib.error.HTTPError as e:
             print ( f"[bibtexTools] Caught: {e}" )
@@ -320,11 +320,11 @@ class BibtexWriter:
     def log ( self, line ):
         if self.verbose in [ "debug", "info" ]:
             print ( line )
-        self.g.write ( line + "\n" )
+        self.g.write ( f"{line}\n" )
 
     def warn ( self, line ):
         print ( f"{RED}WARN {line}{RESET}" )
-        self.g.write ( line + "\n" )
+        self.g.write ( f"{line}\n" )
 
     def test( self ):
         print ( self.bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
@@ -367,9 +367,9 @@ class BibtexWriter:
         self.stats[coll][Id]={"cached":0 }
         bib=bib.strip()
         if not "label" in bib:
-            bib = bib[:-1]+",\n    label={"+Id+"}}"
+            bib = f"{bib[:-1]},\n    label={{{Id}}}}}"
         if bib.endswith("}"):
-            bib = bib[:-1]+"\n}\n"
+            bib = f"{bib[:-1]}\n}}\n"
 
         self.f.write ( bib )
         self.f.write ( "\n" )
@@ -445,7 +445,7 @@ class BibtexWriter:
                 p2 = text.find("}",p1 )
                 if p2 - p1 > 10000: 
                     ## replace author list with collaboration name
-                    text = text[:p1] + "author={" + coll + " collaboration}" + bib[1][p2+1:]
+                    text = f"{text[:p1]}author={{{coll} collaboration}}{bib[1][p2 + 1:]}"
                 text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>\n', r"$pp$" )
                 text = text.replace( '\n<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>b</mml:mi></mml:math>\n', r"$b$" )
                 text = text.replace( '<mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" display="inline"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>', r"$pp$" )
@@ -522,7 +522,7 @@ class BibtexWriter:
         #cmds = [ "latexmk -pvs -ps test" ]
         #cmds = []
         for cmd in cmds:
-            f.write ( cmd + "\n" )
+            f.write ( f"{cmd}\n" )
         f.close()
         os.chmod ( "latex.sh", 0o755 )
         print ( "Execute latex.sh if you want a test document" )
@@ -552,7 +552,7 @@ class BibtexWriter:
         ret = ""
         if commentOut:
             ret += "% "
-        ret += "Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
+        ret += f"Use this LaTeX code to cite all {len(filtered)!s} non-superseded {experiment} results:\n"
         if commentOut:
             ret += "% "
         ret+= r"\cite{"
@@ -565,7 +565,7 @@ class BibtexWriter:
             if coll in self.stats and label in self.stats[coll]:
                 self.stats[coll][label]["bibtex"]=ID
             ret += f"{ID}, "
-        ret = str(ret[:-2]+"}")
+        ret = str(f"{ret[:-2]}}}")
         return ret
 
     def getLabels ( self, bibtex ):

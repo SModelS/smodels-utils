@@ -25,7 +25,7 @@ def showPlot ( filename : str ) -> bool:
     term = os.environ["TERM"]
     import subprocess, distutils.spawn
     for viewer in [ "timg", "see", "display" ]:
-        v = distutils.spawn.find_executable( viewer, "/bin:/usr/bin:/usr/sbin:/usr/local/bin"  )
+        v = distutils.spawn.find_executable( viewer, f"{os.environ['HOME']}/.local/bin:/bin:/usr/bin:/usr/sbin:/usr/local/bin"  )
         if viewer == "timg" and os.path.exists ( "/bin/timg" ):
             # override python install
             v = "/bin/timg"
@@ -45,7 +45,7 @@ def showPlot ( filename : str ) -> bool:
 
 def getAxisType ( axis : Union[Text,Dict,List] ) -> Union[Text,None]:
     """ determine whether a given axis is v2-type ([[x,y],[x,y]]) or v3-type
-    { 0: x, 1: y }. FIXME shouldnt be needed once we completed migrated to v3.
+    { 0: x, 1: y }. FIXME shouldnt be needed once we completed migration to v3.
     :returns: v2 or v3 or None
     """
     if type(axis)==str:
@@ -98,9 +98,18 @@ def prettyAxes( validationPlot ) -> str:
     v = getAxisType ( validationPlot.axes )
     if v == "v2":
         return prettyDescriptions.prettyAxesV2 ( validationPlot.txName, validationPlot.axes )
-    return prettyDescriptions.prettyAxesV3 ( validationPlot.txName, validationPlot.axes )
+    return prettyDescriptions.prettyAxesV3 ( validationPlot.txName, validationPlot.axes, validationPlot.getDataMap() )
 
-def translateAxisV2 ( axisv2 : str ) -> str:
+def getNiceAxes ( axes : str ) -> str:
+    """ get a representation of axes that is suitable as part of a filename """
+    v = getAxisType ( axes )
+    if v == "v2":
+        from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+        return MassPlane.getNiceAxes ( axes )
+    from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
+    return GraphMassPlane.getNiceAxes ( axes )
+
+def axisV2ToV3 ( axisv2 : str ) -> str:
     """ translate a v2 axis to v3 syntax """
     from sympy import var
     x,y,z,w = var("x y z w")
@@ -147,7 +156,7 @@ def significanceFromNLLs ( nll_SM : float, nll_BSM : float, ndf : int = 2)->floa
         Z = -3.
     return Z
 
-def prettyAxesV3 ( axesStr : str ) -> bool:
+def prettyAxesV3 ( axesStr : str ) -> str:
     """ make an axes v3 description readable
 
     :param axesStr: e.g. {0:'x',1:'0.5*x+0.5*y',2:'y',3:'x',4:'0.5*x+0.5*y',5:'y'}
@@ -171,6 +180,7 @@ def prettyAxesV3 ( axesStr : str ) -> bool:
             axesDict.pop(i)
     saxes = "_".join ( map ( str, axesDict.values() ) )
     saxes =  saxes.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
+    saxes += " [GeV]"
     return saxes
 
 def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
@@ -304,6 +314,15 @@ def mergeExclusionLines ( lines : list ):
             line["x"].append ( lx )
             line["y"].append ( ly )
     return line
+
+def streamlineValidationData ( data : dict )-> str:
+    """ clean up the validation data before it goes into the dict file """
+    out = str(data).replace('[fb]','*fb').replace('[pb]','*pb')
+    out = out.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+    out = out.replace( "}, {" , "},\n{" )
+    if "inf" in out:
+        out = out.replace("inf,","float('inf')," )
+    return out
 
 def mergeValidationData ( contents : list ):
     """ given a list of validation contents, return the merged """

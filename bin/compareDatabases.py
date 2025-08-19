@@ -17,7 +17,7 @@ TxNameData._keep_values = True
 tx = { "tot": 0, "err": 0 }
 
 def error ( text, col=colors.red ):
-    print ( "%s%s%s" % ( col, text, colors.reset ) )
+    print ( f"{col}{text}{colors.reset}" )
     tx["err"]+=1
 
 def getPath ( text ):
@@ -28,7 +28,7 @@ def unequal ( a, b, label=None ):
         l = ""
         if label:
             l=label
-        print ( "unequal %s: old,new = %f, %f -->" % ( l,a,b ) )
+        print ( f"unequal {l}: old,new = {a:f}, {b:f} -->" )
         return True
     return False
 
@@ -44,7 +44,7 @@ def compareMatrices ( ER, DS, txname, a, b ):
     dx = dx / ( a.shape[0]*a.shape[1] )
     if ( dx > 1e-3 ):
     # if ( sum(sum( a != b ) ) ):
-        error ( "Data differ in _V: %s/%s/%s: dx=%.2f" % ( ER, DS, txname, dx ) )
+        error ( f"Data differ in _V: {ER}/{DS}/{txname}: dx={dx:.2f}" )
         #print ( type(a) )
         print ( a )
         print ( b )
@@ -58,7 +58,7 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     checkedTriples = []
     for Z in checkedTriples:
         if (ER, DS, oldTx.txName) == Z:
-            error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+            error ( f"skipping {ER}/{DS}/{oldTx.txName}", colors.green )
             return
     checkedPairs = [ ("CMS-SUS-13-013", "T1ttttoff"), 
         ("CMS-SUS-13-012", "TChiZZ"), 
@@ -75,7 +75,7 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     checkedPairs = [ ]
     for Z in checkedPairs:
         if (ER, oldTx.txName) == Z:
-            error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+            error ( f"skipping {ER}/{DS}/{oldTx.txName}", colors.green )
             return
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
     if ( oldTx.txnameData != newTx.txnameData ):
@@ -99,26 +99,26 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     #    newUnit = newUnit.asNumber (fb)
     oldUnit, newUnit = 1., 1.
     if ( unequal ( oldUnit * sum ( oldTx.txnameData.y_values ), newUnit * sum (newTx.txnameData.y_values ), "xsec" ) ):
-        error ( "--> txnameData differ in xsec! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
-        error ( "    ::: n(entries)=%d, %d" % ( len ( oldTx.txnameData.xsec ), len ( newTx.txnameData.xsec ) ) )
-        error ( " :ov=%s" % oldTx.txnameData.value[:88] )
-        error ( " :nv=%s" % newTx.txnameData.value[:88] )
+        error ( f"--> txnameData differ in xsec! {ER}/{DS}/{oldTx.txName}" )
+        error ( f"    ::: n(entries)={len(oldTx.txnameData.xsec)}, {len(newTx.txnameData.xsec)}" )
+        error ( f" :ov={oldTx.txnameData.value[:88]}" )
+        error ( f" :nv={newTx.txnameData.value[:88]}" )
         #sys.exit(-1)
         fail=True
 
     ## delta_x
     if ( unequal ( sum ( sum ( oldTx.txnameData.delta_x ) ),\
                    sum ( sum (newTx.txnameData.delta_x ) ), "delta_x" ) ):
-        error ( "--> txnameData differ in delta_x! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        error ( f"--> txnameData differ in delta_x! {ER}/{DS}/{oldTx.txName}" )
         fail=True
         #sys.exit(-1)
 
     if ( oldTx.constraint != newTx.constraint ):
-        error ( "txname differs in constraint! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        error ( f"txname differs in constraint! {ER}/{DS}/{oldTx.txName}" )
         fail=True
         #sys.exit(-1)
     if ( oldTx.condition != newTx.condition ):
-        error ( "txname differs in condition! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        error ( f"txname differs in condition! {ER}/{DS}/{oldTx.txName}" )
         fail=True
         #sys.exit(-1)
     #if ( oldTx.conditionDescription != newTx.conditionDescription ):
@@ -169,8 +169,8 @@ def discussERs ( oldER, newER, anaid ):
     newDSDict = { getPath ( x.path):x for x in newDSs }
     if False:
         print ( "anaid", anaid )
-        print ( "oldER: %s, %d datasets" % (oldER.globalInfo.id,len(oldDSs) ) )
-        print ( "newER: %s, %d datasets" % (newER.globalInfo.id,len(newDSs) ) )
+        print ( f"oldER: {oldER.globalInfo.id}, {len(oldDSs)} datasets" )
+        print ( f"newER: {newER.globalInfo.id}, {len(newDSs)} datasets" )
     for k,v in oldDSDict.items():
         if not k in newDSDict.keys():
             oldDSNotInNew ( oldER.globalInfo.id, v )
@@ -203,8 +203,8 @@ def createDictionary ( er ):
 
 def discussDBs ( oldD, newD ):
     if True:
-        print ( "old: %s" % oldD )
-        print ( "new: %s" % newD )
+        print ( f"old: {oldD}" )
+        print ( f"new: {newD}" )
 
     oldER = oldD.getExpResults ( useSuperseded=True, useNonValidated=False )
     oldERDict = createDictionary ( oldER )
@@ -220,7 +220,7 @@ def discussDBs ( oldD, newD ):
         if not k in oldERDict.keys():
             newResultNotInNew ( v )
 
-    print ( "%d/%d txnames failed." % ( tx["err"], tx["tot"] ) )
+    print ( f"{int(tx['err'])}/{int(tx['tot'])} txnames failed." )
 
 def compare():
     import argparse

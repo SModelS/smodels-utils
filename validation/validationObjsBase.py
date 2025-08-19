@@ -10,7 +10,7 @@
 """
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
-from validationHelpers import getDefaultModel, showPlot
+from validationHelpers import getDefaultModel, showPlot, streamlineValidationData
 from smodels.matching import modelTester
 from typing import Union, List, Dict
 from validationHelpers import point_in_hull
@@ -20,6 +20,8 @@ from smodels.base.smodelsLogging import logger
 
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
+
+complaints = { "NoResultsFor": 0 }
 
 class ProgressHandler:
     """ a namespace to handle everything around the progressbar """
@@ -146,14 +148,14 @@ class ValidationObjsBase():
         if fformat.startswith("."):
             fformat = fformat[1:]
 
-        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
+        filename = f"{self.expRes.globalInfo.id}_{self.txName}_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","").\
                     replace("/","d")
         if self.combine:
             filename += '_combined'
-        filename += '.'+fformat
+        filename += f".{fformat}"
 
-        filename = filename.replace(self.expRes.globalInfo.id+"_","")
+        filename = filename.replace(f"{self.expRes.globalInfo.id}_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","").replace("0.0","0").replace("1.0","1").replace("._","_")
         return filename
@@ -180,7 +182,7 @@ class ValidationObjsBase():
                     if "/" in tdir or "." in tdir:
                         logger.warning ( f"you supplied {tdir} as a tempdir, I have been expecting a name without a '/' or a '.', you have been warned" )
                     tempdir = os.path.join ( os.getcwd(), tdir )
-                    nfiles = len(glob.glob(tempdir+'/T*slha')) + 2
+                    nfiles = len(glob.glob(f"{tempdir}/T*slha")) + 2
                 else:
                     tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 p1 = tempdir.rfind("/")
@@ -275,11 +277,11 @@ class ValidationObjsBase():
         if self.pretty:
             from addLogoToPlots import addLogo
             #Print pdf, png and root formats
-            filename = filename.replace('.'+fformat,'_pretty.'+fformat)
+            filename = filename.replace(f".{fformat}",f"_pretty.{fformat}")
             logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
             self.savefig ( filename )
             addLogo ( filename )
-            newfilename = filename.replace('.'+fformat,'.pdf')
+            newfilename = filename.replace(f".{fformat}",'.pdf')
             if self.options["pdfPlots"]:
                cmd = f"convert {filename} {newfilename}"
                import subprocess
@@ -287,7 +289,7 @@ class ValidationObjsBase():
         else:
             self.savefig(filename)
             if fformat != "png":
-                filename = filename.replace('.'+fformat,'.png')
+                filename = filename.replace(f".{fformat}",'.png')
                 try:
                     self.savefig(filename)
                 except Exception as e:
@@ -336,7 +338,7 @@ class ValidationObjsBase():
                     ys.append ( yvalue )
         if len(ys)>0:
             deltay = max(ys)-min(ys)
-            if deltay < 1e-14:
+            if deltay < 1e-17:
                logger.warn ( f"the range in y values {deltay} is quite small. let me make it a 1d plot!" )
                return True
         return False
@@ -472,7 +474,7 @@ class ValidationObjsBase():
                 time.sleep(5) ## wait a little
                 dirs = [ self.outputDir.replace("/results","") ]
                 p = Progress ( dirs = dirs )
-                return 
+                return
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
@@ -482,6 +484,35 @@ class ValidationObjsBase():
     def pprint ( self, *args ):
         """ convenience """
         print ( f"[validationObjsBase]", *args )
+
+    def addDictionaryForFailedPoint ( self, smodelsOutput : dict, axes ):
+        """ a point has failed, no "ExptRes" is in smodelsOutput.
+        create the dict that describes the failure.
+        :returns: empty dictionary if axes not in plane
+        """
+        slhafile = os.path.basename ( smodelsOutput["OutputStatus"]["input file"] )
+        folder = os.path.dirname ( smodelsOutput["OutputStatus"]["input file"] )
+        if axes == None or len(axes)==0:
+            return
+
+        complaints["NoResultsFor"]+=1
+        if complaints["NoResultsFor"]<4:
+            logger.info( f"No results for {slhafile}" )
+        if complaints["NoResultsFor"]==4:
+            logger.info( f"(quenching more info msgs)" )
+
+        Dict = { 'slhafile': slhafile, 'error': 'no result', 'axes': axes,
+                 'comment': "no ExptRes in smodelsOutput" }
+        if "OutputStatus" in smodelsOutput:
+            if 'file status' in smodelsOutput["OutputStatus"]:
+                Dict["file status"]=smodelsOutput["OutputStatus"]["file status"]
+            if 'decomposition status' in smodelsOutput["OutputStatus"]:
+                Dict["decomposition status"]=smodelsOutput["OutputStatus"]["decomposition status"]
+            if "warnings" in smodelsOutput["OutputStatus"]:
+                warning = smodelsOutput["OutputStatus"]["warnings"]
+                warning = warning.replace( f"{folder}/", "" ).replace ( folder, "" )
+                Dict["warnings"] = warning
+        self.data.append ( Dict )
 
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
         """ try to guess the mass vector from the SLHA file name
@@ -586,7 +617,7 @@ class ValidationObjsBase():
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n" )
             f.write ( f"combineSRs = {combine}\n" )
-            f.write ( f"pyhfbackend = pytorch\n" )
+            # f.write ( f"pyhfbackend = pytorch\n" )
             if self.options["keepTopNSRs"] not in  [ None, 0 ]:
                 f.write ( "reportAllSRs = True\n" )
             sigmacut = 0.000000001
@@ -628,10 +659,8 @@ class ValidationObjsBase():
                 model = f"share.models.{model}"
             f.write(f"model={model}\n" )
             f.write(f"promptWidth={promptWidth}\n" )
-            #expected = "posteriori"
-            #expected = "priori"
             expected = self.options["expectationType"]
-            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues='{expected}'\nprinttimespent=True\n")
+            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues={expected}\nprinttimespent=True\n")
             if outputformat == 3:
                 f.write ( "addNodesMap=True\n" )
             f.close()
@@ -772,18 +801,13 @@ class ValidationObjsBase():
         if not datafile:
             datafile = self.getDataFile(validationDir)
         self.datafile = datafile
-        lockfile = datafile + ".lock"
+        lockfile = f"{datafile}.lock"
         self.lockFile ( lockfile )
         self.pprint ( f"saving {len(self.data)} points to {datafile}" )
         #Save data to file
         f = open(datafile,'w')
-        dataStr = str(self.data)
-        dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
-        dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
-        dataStr = dataStr.replace( "}, {" , "},\n{" )
-        if "inf" in dataStr:
-            dataStr = dataStr.replace("inf,","float('inf')," )
-        f.write("validationData = "+dataStr+"\n")
+        dataStr = streamlineValidationData ( self.data )
+        f.write(f"validationData = {dataStr}\n")
         from smodels import installation
         from smodels_utils import SModelSUtils
         nerr = 0
@@ -802,6 +826,7 @@ class ValidationObjsBase():
             meta["style"]=self.options["style"]
         if os.path.isfile ( self.slhaDir ):
             ## currently we have sha1sums only for named tarballs
+            meta["sha1for"] = os.path.basename ( self.slhaDir )
             meta["sha1"]=sha1sum ( self.slhaDir )
         if hasattr ( self.expRes.globalInfo, "includeCRs" ):
             meta["includeCRs"]=self.expRes.globalInfo.includeCRs
@@ -814,8 +839,20 @@ class ValidationObjsBase():
                 meta["commentary"]=txt
         if hasattr ( self.expRes.globalInfo, "resultType" ):
             meta["resultType"]=self.expRes.globalInfo.resultType
+        if hasattr ( self, "getDataMap" ): # V3
+            dm = self.getDataMap()
+            dmn = {}
+            for k,v in dm.items():
+                unit = str(v[2])
+                if unit == "1.00E+00 [GeV]":
+                    unit = "GeV"
+                if unit == "1.00E+00 [MeV]":
+                    unit = "MeV"
+                vn = ( v[0], v[1], unit )
+                dmn[k]=vn
+            meta["dataMap"] = dmn
         from smodels.base import runtime
-        if "spey" in runtime._experimental and \
+        if type(runtime._experimental)==dict and "spey" in runtime._experimental and \
                 runtime._experimental["spey"]==True:
             if self.expRes.datasets[0].dataInfo.dataId != None:
                 import spey
@@ -840,8 +877,8 @@ class ValidationObjsBase():
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         useTevatronCLs = False
         asimovIsExpected = False
-        from smodels.base.runtime import experimentalFeature
         try:
+            from smodels.base.runtime import experimentalFeature
             useTevatronCLs = experimentalFeature ( "tevatroncls" )
             asimovIsExpected = experimentalFeature ( "asimovisexpected" )
         except Exception as e:
@@ -1021,4 +1058,4 @@ class ValidationObjsBase():
         datafile = datafile.rstrip(fformat)
         if not datafile.endswith ( "." ):
             datafile += "."
-        return datafile+'py'
+        return f"{datafile}py"

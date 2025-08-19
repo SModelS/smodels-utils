@@ -75,7 +75,7 @@ class ModelTrainer():
 
 			self.epochLoss = {"training":[], "testing":[]}
 
-			logger.info("training with hyperparam config %d/%d .." %(self.hyper.index + 1, len(self.hyper)))
+			logger.info(f"training with hyperparam config {int(self.hyper.index + 1)}/{len(self.hyper)} ..")
 
 			self.runCurrentConfiguration()
 
@@ -111,7 +111,7 @@ class ModelTrainer():
 
 		if self.type == "regression" and secondRun:
 			subset = self._getWrongPredictions()
-			logger.debug("subset length: %s" %len(subset))
+			logger.debug(f"subset length: {len(subset)}")
 			self.trainModel(training = subset)
 		
 		self.meanError = getModelError(self.model, self.validation, self.type)[0]
@@ -174,7 +174,7 @@ class ModelTrainer():
 					#bestEpochLocal = epoch
 			
 			if getLogLevel() <= 20: # 20 == info
-				print("\repoch: %d/%d | loss: %f (%f) %s %s   " %(epoch+1,epochNum, bestLossLocal, testingLoss, loss1.item(), beta*loss2.item()), end = "" if epoch+1 < epochNum else "\n")
+				print(f"\repoch: {int(epoch + 1)}/{int(epochNum)} | loss: {bestLossLocal:f} ({testingLoss:f}) {loss1.item()} {beta * loss2.item()}   ", end = "" if epoch+1 < epochNum else "\n")
 
 		self.model = bestModelLocal
 
@@ -240,17 +240,17 @@ class ModelTrainer():
 			if dbPath[i:i+8] == 'database':
 				dbPath = dbPath[i:]
 				break
-		path = os.getcwd() + "/" + dbPath + "/performance/"
+		path = f"{os.getcwd()}/{dbPath}/performance/"
 		Path(path).mkdir(parents=True, exist_ok=True)
 
-		path += str(self.txnameData) + ":" + self.type + "_epochLoss.png"
+		path += f"{self.txnameData!s}:{self.type}_epochLoss.png"
 
 		trainingLoss = self.winner["epochLoss"]["training"]
 		testingLoss = self.winner["epochLoss"]["testing"]
 
 		epo = [n+1 for n in range(len(trainingLoss))]
 
-		title = "epoch loss for %s:%s" % (str(self.txnameData), self.type)
+		title = f"epoch loss for {str(self.txnameData)}:{self.type}"
 
 		plt.figure(11)
 		plt.title(title, fontsize=20)
@@ -261,5 +261,5 @@ class ModelTrainer():
 		plt.legend()
 		plt.savefig(path)
 		plt.close(11)
-		logger.info("lossplot saved at %s" % path)
+		logger.info(f"lossplot saved at {path}")
 

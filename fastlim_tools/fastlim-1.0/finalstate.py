@@ -370,12 +370,12 @@ def get_SRs_for_proc(procs, prc):
         for obj in obj_list:
             if obj in obj_dict: 
                 if isinstance(obj_dict[obj], int):
-                    name = name + str(obj_dict[obj]) + str(obj_name_dict[obj]) + "_"
+                    name = f"{name}{obj_dict[obj]!s}{obj_name_dict[obj]!s}_"
                 else:
-                    name = name + str(obj_name_dict[obj]) + "_"
+                    name = f"{name}{obj_name_dict[obj]!s}_"
         MET = 0
         if "MET" in obj_dict:
-            name = name + "MET"
+            name = f"{name}MET"
             MET = obj_dict["MET"]
         else:
             name = name[:-1]

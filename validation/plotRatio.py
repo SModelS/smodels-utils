@@ -23,6 +23,7 @@ from smodels_utils.helper.various import getValidationDataPathName
 #from smodels_utils.helper.various import getValidationModule
 from validation.validationHelpers import getValidationFileContent, shortTxName, \
        mergeExclusionLines, mergeValidationData
+import validationHelpers
 from validation.plottingFuncs import convertNewAxes
 from smodels_utils.helper.terminalcolors import *
 import warnings
@@ -101,9 +102,9 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
             label = "combined"
     if anaId1 in anaId2:
         label = anaId2.lower()
-    if anaId2 == anaId1 + "-eff":
+    if anaId2 == f"{anaId1}-eff":
         label = "ul"
-    if anaId2 == anaId1 + "-agg":
+    if anaId2 == f"{anaId1}-agg":
         label = "ul"
     if anaId2 == anaId1:
         label = "ul"
@@ -405,7 +406,7 @@ def draw ( options : dict ):
         stopos.append ( stopo )
     stopo = "+".join ( stopos )
     if len(topos)==1:
-        stopo = "".join(topos)+": "+stopo
+        stopo = f"{''.join(topos)}: {stopo}"
 
     isEff = False
     if "-eff" in analysis1 or "-eff" in analysis2:
@@ -424,7 +425,7 @@ def draw ( options : dict ):
             title = anaId2
         if anaId in anaId2:
             title = anaId
-    if "eul" in options:
+    if "eul" in options and options["eul"]==True:
         title += " (expected)"
     else:
         title += " (observed)"
@@ -434,7 +435,10 @@ def draw ( options : dict ):
     if options["SR"] != None:
         txStr+=f' [{options["SR"]}]'
     plt.text(.03,.95,txStr,transform=fig.transFigure, fontsize=9 )
-    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1 ) #, outputtype="latex" )
+    dataMap = None
+    if "meta" in content and "dataMap" in content["meta"]:
+        dataMap = content["meta"]["dataMap"]
+    axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, dataMap ) #, outputtype="latex" )
     if axis1 != axis2:
         print ( f"[plotRatio] error, different axes: {axis1}!={axis2}" )
         # return
@@ -497,11 +501,12 @@ def draw ( options : dict ):
                 label = ""
     smodels_root = f"{analysis}/{topo}.root"
     if not os.path.exists ( smodels_root ):
-        print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
+        # print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
         # print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
         # smodels_line = []
         el2 = getSModelSExclusionFromContent ( content1 )
     else:
+        print ( f"[plotRatio] warn: {smodels_root} does exist. Maybe switch to jsons?" )
         smodels_line = getSModelSExclusion ( smodels_root )
         el2 = getExclusionLine ( smodels_line )
     print ( f"[plotRatio] Found SModelS exclusion line with {len(el2)} points." )
@@ -521,14 +526,15 @@ def draw ( options : dict ):
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
-    figname = "%s_%s.png" % ( analysis.replace( options["folder1"],"ratio" ), topo )
+
+    figname = f'{analysis.replace( options["folder1"],"ratio" )}_{topo}_{validationHelpers.getNiceAxes(axes)}.png'
     output = options["output"]
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
     sr = ""
     if options["SR"] != None:
-        sr="_"+options["SR"]
+        sr=f"_{options['SR']}"
 
     figname = figname.replace("@sr",sr)
     a1, a2 = options["label1"], options["label2"]
@@ -583,7 +589,7 @@ def writeMDPage( copy ):
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
         f.write ( "# ratio plots on the upper limits\n" )
-        f.write ( "as of %s\n\n" % time.asctime() )
+        f.write ( f"as of {time.asctime()}\n\n" )
         # f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
@@ -595,8 +601,8 @@ def writeMDPage( copy ):
         ctr = 0
         t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
-            src = "https://smodels.github.io/plots/%s" % i
-            f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
+            src = f"https://smodels.github.io/plots/{i}"
+            f.write ( f'| <img src="{src}?{int(t0)}" /> ' )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
         if ctr % 2 == 0:
@@ -695,7 +701,7 @@ def main():
     if args.analysis2 in [ None, "", "None" ]:
         args.analysis2 = args.analysis1
     if not "_" in args.validationfile1:
-        args.validationfile1 = args.validationfile1 + "_2EqMassAx_EqMassBy.py"
+        args.validationfile1 = f"{args.validationfile1}_2EqMassAx_EqMassBy.py"
     if not args.validationfile1.endswith ( ".py" ):
         args.validationfile1 += ".py"
 
@@ -705,7 +711,7 @@ def main():
         if valfile2 in [ "", "none", "None", None ]:
             valfile2 = valfile1
         if not "_" in valfile2:
-            valfile2 = valfile2 + "_2EqMassAx_EqMassBy.py"
+            valfile2 = f"{valfile2}_2EqMassAx_EqMassBy.py"
         args.valfile1 = valfile1
         args.valfile2 = valfile2
         draw ( vars(args) )
@@ -716,11 +722,11 @@ def main():
     cmd = "cd ~/git/smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
-        print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
+        print ( f"[plotRatio] now performing {cmd}: {o}" )
         o = subprocess.getoutput ( cmd )
     else:
         if args.copy:
-            print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
+            print ( f"[plotRatio] now you could do:\n{cmd}: {o}" )
 
 if __name__ == "__main__":
     main()

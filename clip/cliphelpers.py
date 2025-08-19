@@ -18,8 +18,8 @@ def describeSet( inp ):
         if i == lastIndex+1:
             lastIndex=i
         else:
-            ret += "%d-%d, " % ( firstIndex, lastIndex )
+            ret += f"{int(firstIndex)}-{int(lastIndex)}, "
             firstIndex = i
             lastIndex= i
-    ret += "%d-%d" % ( firstIndex, lastIndex )
+    ret += f"{int(firstIndex)}-{int(lastIndex)}"
     return ret
