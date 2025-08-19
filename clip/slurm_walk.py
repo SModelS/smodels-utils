@@ -488,17 +488,19 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
         print ( f"[slurm.py] {cmd}" )
     o = subprocess.getoutput ( cmd )
 
-def queryStats ( maxsteps : int ):
+def queryStats ( maxsteps : int, short : bool = False ):
     """ just give us the statistics """
     import running_stats
     running_stats.count_jobs()
-    running_stats.running_stats()
+    if not short:
+        running_stats.running_stats()
     if maxsteps != None:
         for i in range(maxsteps):
             time.sleep(30.)
             print()
             running_stats.count_jobs()
-            running_stats.running_stats()
+            if not short:
+                running_stats.running_stats()
             print()
 
 def logCall ():
@@ -602,8 +604,11 @@ def cancelRangeOfRunners( jrange : str ):
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
-    argparser.add_argument ( '-q','--query',
+    argparser.add_argument ( '-Q','--query',
             help='query status, dont actually run (use -M to query repeatedly)',
+            action="store_true" )
+    argparser.add_argument ( '-q','--query_short',
+            help='query status, but keep it brief, dont actually run (use -M to query repeatedly)',
             action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
@@ -730,7 +735,7 @@ def main():
     else:
         print ( f"[slurm.py] rundir {YELLOW} {rundirs[0]}{RESET}" )
 
-    if not args.query:
+    if not args.query and not args.query_short:
         logCall ()
 
     totjobs = 0
@@ -763,6 +768,9 @@ def main():
 
         if args.query:
             queryStats ( args.maxsteps )
+            continue
+        if args.query_short:
+            queryStats ( args.maxsteps, short=True )
             continue
         if args.clean:
             clean_dirs( rundir, clean_all = False )
