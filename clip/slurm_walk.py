@@ -526,7 +526,10 @@ def cancelAllRunners():
         cmd = f"scancel {nr}"
         subprocess.getoutput ( cmd )
         cancelled.append ( nr )
-    print ( f"[slurm_walk] cancelled {', '.join(cancelled)}" )
+    if len(cancelled)==0:
+        print ( f"[slurm_walk] no jobs cancelled." )
+        return
+    print ( f"[slurm_walk] cancelled {', '.join(cancelled)[:.200]} ({len(cancelled)} jobs)" )
 
 def getMaxJobId() -> int:
     """ get the highest job id """
