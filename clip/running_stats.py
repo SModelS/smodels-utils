@@ -146,10 +146,10 @@ def count_jobs( grep : str = None ):
     lpend = f"{YELLOW}{pend}{RESET}"
     lrun = f"{GREEN}{running}{RESET}"
     ltot = f"{RED}{pend+running}{RESET}"
-    print ( "pending", lpend, "running", lrun )
+    print ( "pending", lpend, "running", lrun, "  " )
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
-        print ( "remaining", remaining )
+        print ( "remaining", remaining, "  " )
 
 def count_dupes():
     A = subprocess.getoutput ( "slurm q" )
