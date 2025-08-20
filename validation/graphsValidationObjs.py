@@ -149,10 +149,11 @@ class ValidationPlot( ValidationObjsBase ):
         vstr = f"{self.expRes.globalInfo.id}:{self.txName}_{axes}"
         return vstr
 
-    def loadData(self, overwrite = True ):
+    def loadData(self, overwrite : bool = True ) -> int:
         """
         Tries to load an already existing python output.
         :param overwrite:  if True, then overwrite any existing data
+
         :returns: number of points added
         """
 
@@ -165,7 +166,7 @@ class ValidationPlot( ValidationObjsBase ):
                 logger.info( f"Validation datafile {datafile} not found" )
             if overwrite:
                 self.data = []
-            return
+            return 0
         nprev = len(self.data)
 
         from validationHelpers import getValidationFileContent
@@ -507,8 +508,7 @@ class ValidationPlot( ValidationObjsBase ):
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
-        the relevant data in self.data.
-        Uses runSModelS.main.
+        the relevant data in self.data.  Uses runSModelS.main.
         Result is stored in self.data
         """
         #Get list of SLHA files:

@@ -820,6 +820,9 @@ class DatabaseCreator(list):
                 value = str(value)
                 for i in [ "1.00", "1.000", "1.0000", "1.00000", "1.000000" ]:
                     value = value.replace(f"{i}E+00 [GeV]","GeV")
+                for ev in [ "eV", "keV", "MeV", "GeV", "TeV" ]:
+                    value = value.replace(f"'{ev}'",f"{ev}" )
+                    value = value.replace(f'"{ev}"',f"{ev}" )
             if value in [ None ] and attr == "intermediateState":
                 continue
             if value in [ "" ]:
