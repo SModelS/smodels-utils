@@ -34,6 +34,9 @@ prettySMParticle = {
  'jet': r'#mathrm{jet\,}',
  '(RPV)': r'#mathrm{\,(RPV)}',
  'b': 'b',
+ 'pion' : '#pi',            # pi
+ 'pi' : '#pi',            # pi
+ 'pion' : '#pi',            # pi
  'down': 'd',           #down
  'charm': 'c',           #charm
  'strange': 's',           #strange
@@ -59,7 +62,6 @@ prettySUSYParticle = {
     'chi': '#chi', # dark matter particle
     'phi': '#phi', # scalar mediator for dark matter particle
     'chibar': '#bar{#chi}', # dark matter particle
-    'pion' : '#pi',            #Chargino
     'chargino^pm_1' : '#tilde{#chi}^{#pm}_{1}',            #Chargino
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
@@ -143,6 +145,8 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T4bnutaubnutau': 'stop --> b nu stau, stau --> tau lsp',
     'T5Chi': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> photon neutralino_1',
     'T5':'gluino  --> quark squark, squark --> quark lsp',
+    'T5btbtLL':'gluino  --> b t chargino^pm_1, chargino^pm_1 --> pi^pm lsp',
+    'T5btbt':'gluino  --> b t chargino^pm_1, chargino^pm_1 --> pi^pm lsp',
     'T5GQ' : 'gluino --> quark quark, squark --> quark gluino',
     'T5Disp':'gluino  --> quark quark lsp',
     'T1Disp':'gluino  --> quark quark lsp',
@@ -373,6 +377,8 @@ motherDict = {"T1" :  "gluino gluino",
     "T5HZ" :  "gluino gluino",
     "T5ZZG" :  "gluino gluino",
     "T5" :  "gluino gluino",
+    "T5btbtLL" :  "gluino gluino",
+    "T5btbt" :  "gluino gluino",
     "T5tctc" :  "gluino gluino",
     "T5gg": "gluino gluino",
     "T6gg":"squark squark",
