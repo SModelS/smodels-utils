@@ -62,7 +62,7 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def runOneJob ( rvars: dict ):
-    """ prepare everything for a single job
+    """ prepare everything for a single job. this is the central method!
  
     rvars ( dict ):
         - pid (int): process id, integer that idenfies the process
@@ -138,7 +138,7 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( jmax - jmin ) )
-    ram = ram*1.5
+    ram = ram*2
     if "comb" in rundir: ## combinations need more RAM
         ram = ram * 1.2
     if "history" in rundir: ## history runs need more RAM
@@ -848,6 +848,11 @@ def main():
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
+                if nprocesses>2:
+                    print ( f"[slurm_walk] will now create a WALKER_0.py, but not start it. You can start it manually!" )
+                    rvars["pid"]=0
+                    rvars["dry_run"]=True
+                    runOneJob ( rvars )
 
                 for j in jobs:
                     j.join()
