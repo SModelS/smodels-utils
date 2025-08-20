@@ -12,7 +12,7 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, linsolve, solve, N, And, sqrt, Symbol, core, Float
+from sympy import var, Eq, lambdify, linsolve, solve, N, And, sqrt, Symbol, core, Float, linear_eq_to_matrix
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import \
@@ -271,14 +271,22 @@ class GraphMassPlane(MassPlaneBase):
         if d == {}:
             # print ( f"[GraphMassPlane] linsolve failed: {e}, trying solve now" )
             d = solve ( eqs, simplify=False )
-        # print ( f"@@11 eqs={eqs} d {d}" )
-        #if d == {}:
-        #    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
-        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
-        #print ( f"@@11 solved {parameters}: {d}" )
+        if d == {}:
+            A, b = linear_eq_to_matrix(eqs, free_symbols)
+            A_np = np.array(A, dtype=float)
+            b_np = np.array(b, dtype=float)
+            sol, residuals, rank, s = np.linalg.lstsq(A_np, b_np, rcond=None)
+            if sum(residuals)<1e-4:
+                for k,v in zip(free_symbols,sol):
+                    d[k]=v[0]
+
         ret = {}
         if d == []:
             return ret
         for k,v in d.items():
             ret[str(k)]=float(v)
+        #if d == {}:
+        #    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        # print ( f"@@11 solved {parameters}: {d}" )
         return ret
