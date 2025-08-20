@@ -848,11 +848,14 @@ def main():
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
-                if nprocesses>2:
+                if nwalkers > 2 :
                     print ( f"[slurm_walk] will now create a WALKER_0.py, but not start it. You can start it manually!" )
                     rvars["pid"]=0
                     rvars["dry_run"]=True
                     runOneJob ( rvars )
+                    uploadTo = rundir.replace("rundir_","")
+                    runUpdater( True, args.time, rundir, 1,
+                        dbpath = dbpath, uploadTo = uploadTo )
 
                 for j in jobs:
                     j.join()
