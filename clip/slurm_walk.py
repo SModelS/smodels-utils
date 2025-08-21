@@ -511,7 +511,8 @@ def logCall ():
         if " " in i or "," in i or "[" in i:
             i = f'"{i}"'
         args += f"{i} "
-    f.write ( f'\n[slurm.py-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
+    # f.write ( f'\n[slurm.py-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
+    f.write ( f'\n[slurm.py-{time.asctime()}]\n{args.strip()}\n' )
     f.close()
 
 def cancelAllRunners():
@@ -853,9 +854,15 @@ def main():
                     rvars["pid"]=0
                     rvars["dry_run"]=True
                     runOneJob ( rvars )
-                    uploadTo = rundir.replace("rundir_","")
-                    runUpdater( True, args.time, rundir, 1,
-                        dbpath = dbpath, uploadTo = uploadTo )
+                    if not os.path.exists ( f"{rundir}/upHi.py" ):
+                        uploadTo = rundir
+                        p1 = uploadTo.find("rundir_")
+                        if p1 > 0:
+                            uploadTo = uploadTo[p1+7:]
+                        uploadTo = f"{uploadTo}_310"
+                        uploadTo = rundir.replace("rundir_","")
+                        runUpdater( True, args.time, rundir, 1,
+                            dbpath = dbpath, uploadTo = uploadTo )
 
                 for j in jobs:
                     j.join()
