@@ -70,7 +70,7 @@ def runOneJob ( rvars: dict ):
         - jmax (int): id of last walker
         - cont (str): pickle file to start with, "" means start from SM
         - dbpath (os.PathLike): path to database
-        - dry_run (bool): dont act, just tell us what you would do
+        - dry_run (bool): if true, then create script but dont run it
         - keep (bool): keep temporary files, for debugging
         - time (float): time in hours
         - cheatcode (Union[str,int]): in case we wish to start with a cheat model
@@ -178,10 +178,10 @@ def runOneJob ( rvars: dict ):
         if "Submitted batch job " in sb:
             sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
             sb+=RESET
-        print ( sb )
+        print ( f"[slurm_walk] {sb}" )
         if not "returncode=0" in sa:
             sa = f"{RED}{sa}{RESET}"
-        print ( f"returned: {sa}" )
+        # print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
 def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewrite : bool,
@@ -849,7 +849,7 @@ def main():
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
-                if nwalkers > 2 :
+                if nprocesses > 2 :
                     print ( f"[slurm_walk] will now create a WALKER_0.py, but not start it. You can start it manually!" )
                     rvars["pid"]=0
                     rvars["dry_run"]=True
@@ -860,7 +860,6 @@ def main():
                         if p1 > 0:
                             uploadTo = uploadTo[p1+7:]
                         uploadTo = f"{uploadTo}_310"
-                        uploadTo = rundir.replace("rundir_","")
                         runUpdater( True, args.time, rundir, 1,
                             dbpath = dbpath, uploadTo = uploadTo )
 
