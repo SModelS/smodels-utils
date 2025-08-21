@@ -512,7 +512,7 @@ def logCall ():
             i = f'"{i}"'
         args += f"{i} "
     # f.write ( f'\n[slurm.py-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
-    f.write ( f'\n[slurm.py-{time.asctime()}]\n{args.strip()}\n' )
+    f.write ( f'\n[slurm.py :: {time.asctime()}]\n{args.strip()}\n' )
     f.close()
 
 def cancelAllRunners():
