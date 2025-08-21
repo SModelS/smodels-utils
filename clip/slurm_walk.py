@@ -169,9 +169,9 @@ def runOneJob ( rvars: dict ):
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
-        print ( "[slurm.py] dry_running:", scmd )
+        print ( "[slurm_walk] dry_running:", scmd )
     else:
-        print ( "[slurm.py] running", scmd )
+        print ( "[slurm_walk] running", scmd )
         a=subprocess.run ( cmd, capture_output=True )
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
@@ -250,7 +250,7 @@ def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     """
     fname = f"{rundir}/states.dict"
     if not os.path.exists ( fname ):
-        print ( f"[slurm.py] could not find {fname} file when trying to fetch unfrozen pids" )
+        print ( f"[slurm_walk] could not find {fname} file when trying to fetch unfrozen pids" )
         return None
     with open ( fname, "rt" ) as f:
         lines = f.read()
@@ -271,11 +271,11 @@ def fetchUnfrozenSSMsFromDict( rundir ):
     :returns: list of pid pairs, or None.
     """
     ## FIXME the pid pairs should be taken from hiscore file, so we have xsecs to look at!
-    print ( "[slurm.py:fetchUnfrozenSSMsFromDict] FIXME can we find out which productions we can ignore?" )
+    print ( "[slurm_walk:fetchUnfrozenSSMsFromDict] FIXME can we find out which productions we can ignore?" )
     # fname = f"{rundir}/pmodel.py"
     fname = f"{rundir}/states.dict"
     if not os.path.exists ( fname ):
-        print ( f"[slurm.py] could not find {fname} file when trying to fetch unfrozen ssms" )
+        print ( f"[slurm_walk] could not find {fname} file when trying to fetch unfrozen ssms" )
         return None
     with open ( fname, "rt" ) as f:
         lines = f.read()
@@ -304,7 +304,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
         if hasStop and hasSquark:
             takeIt = False
         if 1000022 in ssmpids or -1000022 in ssmpids:
-            print ( "[slurm.py] in this iteration we ignore LSP production modes!" )
+            print ( "[slurm_walk] in this iteration we ignore LSP production modes!" )
             takeIt = False
         if takeIt:
             ret.append ( ssmpids )
@@ -485,7 +485,7 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
         cmd = f"cd {rundir}; rm -rf old*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf"
         cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi hiscore*cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
     if verbose:
-        print ( f"[slurm.py] {cmd}" )
+        print ( f"[slurm_walk] {cmd}" )
     o = subprocess.getoutput ( cmd )
 
 def queryStats ( maxsteps : int, short : bool = False ):
@@ -511,8 +511,8 @@ def logCall ():
         if " " in i or "," in i or "[" in i:
             i = f'"{i}"'
         args += f"{i} "
-    # f.write ( f'\n[slurm.py-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
-    f.write ( f'\n[slurm.py :: {time.asctime()}]\n{args.strip()}\n' )
+    # f.write ( f'\n[slurm_walk-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
+    f.write ( f'\n[slurm_walk :: {time.asctime()}]\n{args.strip()}\n' )
     f.close()
 
 def cancelAllRunners():
@@ -735,9 +735,9 @@ def main():
         rundirs = [ rundir ]
     rundirs.sort()
     if len(rundirs)>1:
-        print ( f"[slurm.py] rundirs {YELLOW} {', '.join(rundirs)}{RESET}" )
+        print ( f"[slurm_walk] rundirs {YELLOW} {', '.join(rundirs)}{RESET}" )
     else:
-        print ( f"[slurm.py] rundir {YELLOW} {rundirs[0]}{RESET}" )
+        print ( f"[slurm_walk] rundir {YELLOW} {rundirs[0]}{RESET}" )
 
     if not args.query and not args.query_short:
         logCall ()
@@ -765,9 +765,9 @@ def main():
             dbpath = f"{dbpath}.pcl"
 
         if args.allscans:
-            subprocess.getoutput ( f"./slurm.py -R {rundir} -S 0" )
-            subprocess.getoutput ( f"./slurm.py -R {rundir} -S 0 --yvariable 0" )
-            subprocess.getoutput ( f"./slurm.py -R {rundir} -L 0" )
+            subprocess.getoutput ( f"./slurm_walk -R {rundir} -S 0" )
+            subprocess.getoutput ( f"./slurm_walk -R {rundir} -S 0 --yvariable 0" )
+            subprocess.getoutput ( f"./slurm_walk -R {rundir} -L 0" )
             continue
 
         if args.query:
@@ -851,7 +851,8 @@ def main():
                     time.sleep ( random.uniform ( 0.006, .01 ) )
                 if nprocesses > 2 :
                     print ( f"[slurm_walk] will now create a WALKER_0.py, but not start it. You can start it manually!" )
-                    rvars["pid"]=0
+                    rvars["jmin"]=0
+                    rvars["jmax"]=1
                     rvars["dry_run"]=True
                     runOneJob ( rvars )
                     if not os.path.exists ( f"{rundir}/upHi.py" ):
@@ -871,7 +872,7 @@ def main():
                 if len(jobs) in [ 48, 49, 51 ]:
                     colo = RED
                 if len(jobs)>0:
-                    print ( f"{col}[slurm.py] collected {len(jobs)} jobs.{res}" )
+                    print ( f"{col}[slurm_walk] collected {len(jobs)} jobs.{res}" )
             break
         res = RESET
         col = GREEN
@@ -889,7 +890,7 @@ def main():
                     dbpath = dbpath, uploadTo = args.uploadTo )
             totjobs += 1
             #    continue
-        print ( f"{col}[slurm.py] In total we submitted {totjobs} jobs.{res}" )
+        print ( f"{col}[slurm_walk] In total we submitted {totjobs} jobs.{res}" )
         if seed != None: ## count up
             seed += (1+len(rundirs))*(1+nprocesses)
 
