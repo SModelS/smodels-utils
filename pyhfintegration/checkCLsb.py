@@ -5,10 +5,10 @@ from smodels.base.physicsUnits import GeV
 from smodels.experiment.databaseObj import Database
 from smodels.tools.combinations import getCombinedUpperLimitFor
 from smodels.matching.theoryPrediction import theoryPredictionsFor
-from smodels.theory.decomposer import decompose
+from smodels.decomposition.decomposer import decompose
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 import pickle, random, os, glob, time
 import numpy as np
 from matplotlib import pyplot as plt

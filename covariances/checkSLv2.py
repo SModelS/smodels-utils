@@ -4,7 +4,7 @@ from computeBills import SLParams
 from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.decomposition import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList
 from smodels.experiment.databaseObj import Database

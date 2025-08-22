@@ -9,7 +9,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.decomposition import decomposer
 from smodels.tools.truncatedGaussians import TruncatedGaussians
 # TruncatedGaussians.newCorrectionType = False
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from validation.validationHelpers import retrieveValidationFile

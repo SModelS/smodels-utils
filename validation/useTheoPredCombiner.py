@@ -12,10 +12,10 @@ import logging, tempfile, time, os
 logger = logging.getLogger(__name__)
 import validationObjs
 from smodels.matching.theoryPrediction import theoryPredictionsFor
-from smodels.theory.decomposer import decompose
+from smodels.decomposition.decomposer import decompose
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.theory import model 
 model.logger.setLevel ( logging.WARNING )
 from smodels.base.physicsUnits import GeV, fb

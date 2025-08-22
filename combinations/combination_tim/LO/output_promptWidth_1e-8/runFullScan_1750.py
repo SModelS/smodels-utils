@@ -36,7 +36,7 @@ from smodels.tools import coverage
 from smodels.base.smodelsLogging import setLogLevel
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 import numpy as np
 

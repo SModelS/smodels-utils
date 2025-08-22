@@ -7,7 +7,7 @@ from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPredic
 from smodels.experiment.databaseObj import Database
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from combinations.combination_sahana.bestCombination import BestCombinationFinder
 import glob
 import pyslha

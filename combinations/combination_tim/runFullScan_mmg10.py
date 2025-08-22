@@ -31,7 +31,7 @@ from smodels.tools import coverage, ioObjects, timeOut #, crashReport
 # from smodels.base.smodelsLogging import setLogLevel
 from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.theory.exceptions import SModelSTheoryError as SModelSError
 from smodels.tools.printer import MPrinter, printScanSummary, PyPrinter, SummaryPrinter
 from smodels.base.smodelsLogging import logger

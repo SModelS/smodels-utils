@@ -56,3 +56,4 @@ EM_Creator/LLP/MG5
 */.DS_Store
 .DS_Store
 */*/.DS_Store
+bin/plotDBDict.log

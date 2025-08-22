@@ -7,7 +7,7 @@ from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPredic
 from smodels.experiment.databaseObj import Database
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.installation import installDirectory, version
 from smodels.matching import modelTester
 from smodels.tools import crashReport
