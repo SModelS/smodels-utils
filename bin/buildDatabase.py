@@ -9,12 +9,12 @@ from smodels.experiment.exceptions import SModelSExperimentError
 from smodels.base.smodelsLogging import setLogLevel
 from smodels.tools.colors import colors
 from smodels.base.physicsUnits import pb, fb, GeV
-from smodels.theory import slhaDecomposer
+from smodels.decomposition import decomposer
 
 colors.on = True
 setLogLevel ( "debug" )
 
-smstoplist = smstoplist = slhaDecomposer.decompose( "T2tt.slha" )
+smstoplist = smstoplist = decomposer.decompose( "T2tt.slha" )
 # print ( "smstoplist=",len(smstoplist ) )
 # dir = "corrdb/"
 dir = "../../smodels-database"

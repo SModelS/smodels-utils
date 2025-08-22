@@ -6,7 +6,7 @@
 import sys, numpy
 from smodels.experiment.databaseObj import Database
 from smodels.matching.theoryPrediction import theoryPredictionsFor
-from smodels.theory.slhaDecomposer import decompose
+from smodels.decomposition.decomposer import decompose
 
 d=Database( "/home/walten/git/smodels-database" )
 # T1bbbb: CMS-PAS-SUS-16-016 <-> CMS-SUS-12-028

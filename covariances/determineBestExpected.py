@@ -9,7 +9,7 @@ from smodels.tools.xsecComputer import XSecComputer
 from smodels.base.crossSection import NLL, LO
 from smodels.base.physicsUnits import TeV
 from smodels.matching.theoryPrediction import theoryPredictionsFor
-from smodels.theory.slhaDecomposer import decompose
+from smodels.decomposition.decomposer import decompose
 import random
 import IPython
 import pickle

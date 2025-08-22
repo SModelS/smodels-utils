@@ -17,7 +17,8 @@ home = os.path.expanduser("~")
 databaseDir = os.path.join(home,'smodels-database')
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.base.physicsUnits import fb, GeV, TeV
-from smodels.theory import slhaDecomposer, theoryPrediction
+from smodels.decomposition import decomposer
+from smodels.matching import theoryPrediction
 import multiprocessing
 from smodels.tools import databaseBrowser
 import subprocess
@@ -73,7 +74,7 @@ def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
             database.expResultList = database.getExpResults(txnames=[txname])
         
         try:
-            smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
+            smstoplist = decomposer.decompose(slhafile, sigmacut,\
                             doCompress=True,doInvisible=False, minmassgap=mingap)
             predictions = theoryPrediction.TheoryPredictionList()
             for expRes in database.expResultList:
