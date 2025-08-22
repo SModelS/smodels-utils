@@ -12,6 +12,8 @@ from typing import Union, List, Tuple
 from ptools.sparticleNames import SParticleNames
 namer = SParticleNames()
 
+intro = f"{CYAN}[slurm_walk]{RESET} "
+
 def remove( fname, keep):
     ## rmeove filename if exists
     if not os.path.exists ( fname ):
@@ -35,9 +37,11 @@ defaultrundir = f"{basedir}/rundir"
 
 def pprint ( msg, jobnr ):
     if jobnr < 3:
+        if jobnr == -1:
+            msg += " [last job]"
         print ( msg )
     if jobnr == 3:
-        print ( "[slurm_walk] ... (quenched similar msgs)" )
+        print ( f"{intro} ... (quenched similar msgs)" )
 
 def mkdir ( Dir : str, symlinks : bool = True ):
     """ make a rundir directory. link typical tools
@@ -175,16 +179,16 @@ def runOneJob ( rvars: dict ):
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
-        pprint ( f"[slurm_walk] dry_running {scmd}", rvars["jobnr"] )
+        pprint ( f"{intro}{CYAN}dry_running{RESET} {scmd}", rvars["jobnr"] )
     else:
-        pprint ( f"[slurm_walk] running {scmd}", rvars["jobnr"] )
+        pprint ( f"{intro}{CYAN}running{RESET} {scmd}", rvars["jobnr"] )
         a=subprocess.run ( cmd, capture_output=True )
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
         if "Submitted batch job " in sb:
             sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
             sb+=RESET
-        pprint ( f"[slurm_walk] {sb}", rvars["jobnr"] )
+        pprint ( f"{intro}{sb}", rvars["jobnr"] )
         #if not "returncode=0" in sa:
         #    sa = f"{RED}{sa}{RESET}"
         # print ( f"returned: {sa}" )
@@ -256,7 +260,7 @@ def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     """
     fname = f"{rundir}/states.dict"
     if not os.path.exists ( fname ):
-        print ( f"[slurm_walk] could not find {fname} file when trying to fetch unfrozen pids" )
+        print ( f"{intro}could not find {fname} file when trying to fetch unfrozen pids" )
         return None
     with open ( fname, "rt" ) as f:
         lines = f.read()
@@ -281,7 +285,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
     # fname = f"{rundir}/pmodel.py"
     fname = f"{rundir}/states.dict"
     if not os.path.exists ( fname ):
-        print ( f"[slurm_walk] could not find {fname} file when trying to fetch unfrozen ssms" )
+        print ( f"{intro}could not find {fname} file when trying to fetch unfrozen ssms" )
         return None
     with open ( fname, "rt" ) as f:
         lines = f.read()
@@ -310,7 +314,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
         if hasStop and hasSquark:
             takeIt = False
         if 1000022 in ssmpids or -1000022 in ssmpids:
-            print ( "[slurm_walk] in this iteration we ignore LSP production modes!" )
+            print ( "{intro}in this iteration we ignore LSP production modes!" )
             takeIt = False
         if takeIt:
             ret.append ( ssmpids )
@@ -491,7 +495,7 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
         cmd = f"cd {rundir}; rm -rf old*pcl H*hi hiscores.cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf"
         cmd = f"cd {rundir}; rm -rf old*pcl scan*pcl H*hi hiscore*hi hiscore*cache .cur* .old* .tri* .*slha M*png history.txt pmodel-*py pmodel.py pmodel.dict pmodel-*.dict llhd*png decays* RUN*.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf xsec* llhdscanner*sh hiscores.dict Kold.conf Kmin.conf old_hiscore.hi log.txt run.dict llhd*pcl L*sh S*sh llhdPlotScript.py *old $OUTPUTS/walk-*.out"
     if verbose:
-        print ( f"[slurm_walk] {cmd}" )
+        print ( f"{intro}{cmd}" )
     o = subprocess.getoutput ( cmd )
 
 def queryStats ( maxsteps : int, short : bool = False ):
@@ -534,9 +538,9 @@ def cancelAllRunners():
         subprocess.getoutput ( cmd )
         cancelled.append ( nr )
     if len(cancelled)==0:
-        print ( f"[slurm_walk] no jobs cancelled." )
+        print ( f"{intro}no jobs cancelled." )
         return
-    print ( f"[slurm_walk] cancelled {', '.join(cancelled)[:200]} ({len(cancelled)} jobs)" )
+    print ( f"{intro}cancelled {', '.join(cancelled)[:200]} ({len(cancelled)} jobs)" )
 
 def getMaxJobId() -> int:
     """ get the highest job id """
@@ -575,7 +579,7 @@ def cancelRangeOfRunners( jrange : str ):
     if not "-" in jrange: # single job
         cmd = f"scancel {jrange}"
         subprocess.getoutput ( cmd )
-        print ( f"[slurm_walk] cancelled {jrange}" )
+        print ( f"{intro}cancelled {jrange}" )
         return
     cancelled = []
     p1 = jrange.find("-")
@@ -597,7 +601,7 @@ def cancelRangeOfRunners( jrange : str ):
             cmd = f"scancel {i}"
             subprocess.getoutput ( cmd )
             cancelled.append ( i )
-        print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
+        print ( f"{intro}cancelled {', '.join(map(str,cancelled))}" )
         return
     o = subprocess.getoutput ( "slurm q | grep WALKER" )
     lines = o.split("\n")
@@ -710,14 +714,14 @@ def main():
         if "X" in args.llhdscan:
             tmp = namer.pid ( args.llhdscan )
             if tmp == None:
-                print ( f"[slurm_walk.py] error: cannot find pid for {args.llhdscan}" )
+                print ( f"{intro}error: cannot find pid for {args.llhdscan}" )
                 sys.exit()
             else:
                 args.llhdscan = tmp
         try:
             args.llhdscan = int ( args.llhdscan )
         except TypeError as e:
-            print ( f"[slurm_walk.py] error: {e}" )
+            print ( f"{intro}error: {e}" )
     if args.cancel:
         cancelRangeOfRunners ( args.cancel )
         return
@@ -740,10 +744,12 @@ def main():
         # rundirs = [ "./" ]
         rundirs = [ rundir ]
     rundirs.sort()
+    print ( )
+    print ( f"{intro}{RED}starting:{RESET}" )
     if len(rundirs)>1:
-        print ( f"[slurm_walk] rundirs {YELLOW} {', '.join(rundirs)}{RESET}" )
+        print ( f"{intro}rundirs {YELLOW} {', '.join(rundirs)}{RESET}" )
     else:
-        print ( f"[slurm_walk] rundir {YELLOW} {rundirs[0]}{RESET}" )
+        print ( f"{intro}rundir {YELLOW} {rundirs[0]}{RESET}" )
 
     if not args.query and not args.query_short:
         logCall ()
@@ -853,14 +859,14 @@ def main():
                     rvars["jmax"]=imax
                     rvars["jobnr"]+=1
                     if i == nprocesses - 1:
-                        rvars["jobnr"]=0 # wanna see the last one
+                        rvars["jobnr"]=-1 # wanna see the last one
                     p = multiprocessing.Process ( target = runOneJob, 
                                                   args = ( rvars, ) )
                     jobs.append ( p )
                     p.start()
                     time.sleep ( random.uniform ( 0.006, .01 ) )
                 if nprocesses > 2 :
-                    print ( f"[slurm_walk] will now create a WALKER_0.py, but not start it. You can start it manually!" )
+                    print ( f"{intro}creating WALKER_0.py, but wont start it. You can start it manually!" )
                     rvars["jmin"]=0
                     rvars["jmax"]=1
                     rvars["dry_run"]=True
@@ -882,7 +888,7 @@ def main():
                 if len(jobs) in [ 48, 49, 51 ]:
                     colo = RED
                 if len(jobs)>0:
-                    print ( f"{col}[slurm_walk] collected {len(jobs)} jobs.{res}" )
+                    print ( f"{intro}{col}collected {len(jobs)} jobs.{res}" )
             break
         res = RESET
         col = GREEN
@@ -900,9 +906,10 @@ def main():
                     dbpath = dbpath, uploadTo = args.uploadTo )
             totjobs += 1
             #    continue
-        print ( f"{col}[slurm_walk] In total we submitted {totjobs} jobs.{res}" )
+        print ( f"{intro}{col}In total we submitted {totjobs} jobs.{res}" )
         if seed != None: ## count up
             seed += (1+len(rundirs))*(1+nprocesses)
+        print ( )
 
 if __name__ == "__main__":
     main()
