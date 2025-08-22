@@ -11,6 +11,7 @@ import sys,os,timeit
 sys.path.insert(0, "../")
 sys.path.insert(0, os.path.expanduser("~/smodels"))
 from smodels.matching import modelTester
+from smodels.statistics.basicStats import observed, apriori, aposteriori
 from testAnalysisCombinations import createLlhds
 import numpy as np
 import pyslha
@@ -76,9 +77,10 @@ def getCombination(inputFile, parameterFile):
 #    print ( "expFeatures", expFeatures )
 #    from smodels.base import runtime
 #    runtime._experimental = expFeatures
-    predictions = theoryPredictionsFor(database, smstoplist,
+    allPredictions = theoryPredictionsFor(database, smstoplist,
                        useBestDataset=useBest, combinedResults=combineResults )
 
+    """
     for pred in predictions:
     #for expResult in database.getExpResultList():
     #    theorypredictions = theoryPredictionsFor(expResult, smstoplist,
@@ -87,6 +89,7 @@ def getCombination(inputFile, parameterFile):
         if not pred:
             continue
         allPredictions += pred # ._theoryPredictions
+    """
 
     """Compute chi-square and likelihood"""
     if parser.getboolean("options", "computeStatistics"):
@@ -108,7 +111,7 @@ def getLlhds(combiner,setup):
     from math import isnan
 
     muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
-    expected = setup["expected"]
+    evaluationType = setup["evaluationType"]
     normalize = setup["normalize"]
     llhds = {'combined' : np.ones(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
@@ -117,7 +120,7 @@ def getLlhds(combiner,setup):
         Id = t.analysisId()
         #t.computeStatistics( expected = expected )
         lsm = t.lsm()
-        l = np.array([t.likelihood(mu,expected=expected,return_nll=False) for mu in muvals])
+        l = np.array([t.likelihood(mu,evaluationType=evaluationType,return_nll=False) for mu in muvals])
         # l_prev = np.array([t.likelihood(mu,expected=expected,useCached=False,previous=True) for mu in muvals])
         for i in range(len(muvals)):
             # If the fit did not converge, set the combined likelihood to nan
@@ -158,7 +161,7 @@ def getPlot(inputFile, parameterFile,options):
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     step_mu = (options["mumax"] - options["mumin"] ) / 50.
-    setup = {'expected' : True,'normalize' : True,
+    setup = {'evaluationType' : apriori ,'normalize' : True,
               'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
 
     if parser.has_section("setup"):
@@ -173,17 +176,17 @@ def getPlot(inputFile, parameterFile,options):
     tpDict = {}
     for ana in tPredsList:
         idDict = {}
-        idDict['ulmu'] = ana.getUpperLimitOnMu(expected = setup["expected"])
-        idDict['r_obs'] = ana.getRValue(expected = False)
-        idDict['r_exp'] = ana.getRValue(expected = True)
+        idDict['ulmu'] = ana.getUpperLimitOnMu( evaluationType = setup["evaluationType"])
+        idDict['r_obs'] = ana.getRValue( evaluationType = observed )
+        idDict['r_exp'] = ana.getRValue( evaluationType = apriori )
         tpDict[ana.dataset.globalInfo.id] = idDict
         tpDict
 
 
-    muhat = combiner.muhat(expected = setup["expected"])
-    lmax = combiner.lmax(expected = setup["expected"])
-    lsm = combiner.lsm(expected = setup["expected"])
-    lbsm = combiner.likelihood(mu=1.0,expected = setup["expected"])
+    muhat = combiner.muhat( evaluationType = setup["evaluationType"])
+    lmax = combiner.lmax( evaluationType = setup["evaluationType"])
+    lsm = combiner.lsm( evaluationType = setup["evaluationType"])
+    lbsm = combiner.likelihood(mu=1.0, evaluationType = setup["evaluationType"])
     ymin = 0.
 
     fig = plt.figure(figsize=plotOptions['figsize'])
@@ -193,7 +196,7 @@ def getPlot(inputFile, parameterFile,options):
             zorder = 100
             linestyle = '-.'
             lbl=r'$\mu_{UL}$'
-            ulmu = combiner.getUpperLimitOnMu(expected = setup["expected"])
+            ulmu = combiner.getUpperLimitOnMu( evaluationType = setup["evaluationType"])
             ulmu_comb = ulmu
             #Draw vertical lines for muhat
             if setup['murange'][0] <= muhat <= setup['murange'][1]:
@@ -203,10 +206,10 @@ def getPlot(inputFile, parameterFile,options):
             zorder = 99
             linestyle = '--'
             lbl=r'$\mu_{UL}$'
-            ulmu = combiner.getUpperLimitOnMu(expected = setup["expected"])
+            ulmu = combiner.getUpperLimitOnMu( evaluationType= setup["evaluationType"])
             ulmu_comb = ulmu
-            robs = combiner.getRValue(expected = False)
-            rexp = combiner.getRValue(expected = True)
+            robs = combiner.getRValue( evaluationType = observed )
+            rexp = combiner.getRValue( evaluationType = apriori )
             #Draw vertical lines for muhat
             if muvals[0] <= muhat <= muvals[-1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
@@ -230,10 +233,10 @@ def getPlot(inputFile, parameterFile,options):
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
 
     plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
-    if setup["expected"] == "posteriori":
+    if setup["evaluationType"] == aposteriori:
         ylab = 'post-fit expected '
         shortExpType = 'apost'
-    elif setup["expected"]:
+    elif setup["evaluationType"] == apriori:
         ylab = 'pre-fit expected '
         shortExpType = 'exp'
     else:
