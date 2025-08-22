@@ -33,6 +33,12 @@ if "CODEDIR" in os.environ:
 outputdir = f"{basedir}/outputs"
 defaultrundir = f"{basedir}/rundir"
 
+def pprint ( msg, jobnr ):
+    if jobnr < 3:
+        print ( msg )
+    if jobnr == 3:
+        print ( "[slurm_walk] ... (quenched similar msgs)" )
+
 def mkdir ( Dir : str, symlinks : bool = True ):
     """ make a rundir directory. link typical tools
 
@@ -169,18 +175,18 @@ def runOneJob ( rvars: dict ):
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
-        print ( "[slurm_walk] dry_running:", scmd )
+        pprint ( f"[slurm_walk] dry_running {scmd}", rvars["jobnr"] )
     else:
-        print ( "[slurm_walk] running", scmd )
+        pprint ( f"[slurm_walk] running {scmd}", rvars["jobnr"] )
         a=subprocess.run ( cmd, capture_output=True )
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
         if "Submitted batch job " in sb:
             sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
             sb+=RESET
-        print ( f"[slurm_walk] {sb}" )
-        if not "returncode=0" in sa:
-            sa = f"{RED}{sa}{RESET}"
+        pprint ( f"[slurm_walk] {sb}", rvars["jobnr"] )
+        #if not "returncode=0" in sa:
+        #    sa = f"{RED}{sa}{RESET}"
         # print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
@@ -819,6 +825,7 @@ def main():
         rvars["seed"] = seed
         rvars["update_hiscores"] = update_hiscores
         rvars["wallpids"] = wallpids
+        rvars["jobnr"]=0
 
         while True:
             if nprocesses == 1:
@@ -844,6 +851,9 @@ def main():
                     rvars["pid"]=i
                     rvars["jmin"]=imin
                     rvars["jmax"]=imax
+                    rvars["jobnr"]+=1
+                    if i == nprocesses - 1:
+                        rvars["jobnr"]=0 # wanna see the last one
                     p = multiprocessing.Process ( target = runOneJob, 
                                                   args = ( rvars, ) )
                     jobs.append ( p )
