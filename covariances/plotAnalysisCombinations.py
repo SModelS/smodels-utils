@@ -86,7 +86,7 @@ def getCombination(inputFile, parameterFile):
     #                                             )
         if not pred:
             continue
-        allPredictions += pred._theoryPredictions
+        allPredictions += pred # ._theoryPredictions
 
     """Compute chi-square and likelihood"""
     if parser.getboolean("options", "computeStatistics"):

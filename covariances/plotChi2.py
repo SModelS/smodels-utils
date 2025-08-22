@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.decomposition import decomposer
 from smodels.tools.theoryPredictionsCombiner import TheoryPredictionsCombiner
 from smodels.theory.model import Model

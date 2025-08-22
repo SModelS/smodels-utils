@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from smodels.tools import runtime
-from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
+from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database
 
 #try:

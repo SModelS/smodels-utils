@@ -3,7 +3,7 @@
 from smodels.tools import runtime
 import random
 runtime._experimental = True
-from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.tools.statsTools import StatsComputer
 from smodels.experiment.databaseObj import Database
 from smodels.decomposition import decomposer

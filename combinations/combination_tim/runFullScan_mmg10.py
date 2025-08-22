@@ -25,7 +25,7 @@ from tester.combiner import Combiner
 from smodels.tools import runtime
 from smodels.decomposition import decomposer
 from smodels.base.physicsUnits import fb, GeV
-from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
+from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner, TheoryPredictionList
 from smodels.experiment.databaseObj import Database, ExpResultList
 from smodels.tools import coverage, ioObjects, timeOut #, crashReport
 # from smodels.base.smodelsLogging import setLogLevel

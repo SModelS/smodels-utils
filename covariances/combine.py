@@ -5,7 +5,7 @@
 
 import sys, numpy
 from smodels.experiment.databaseObj import Database
-from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.theory.slhaDecomposer import decompose
 
 d=Database( "/home/walten/git/smodels-database" )

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 #logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 #sys.path.insert(0, os.path.expanduser("~/git/smodels"))
 from smodels.tools import runtime
-from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
+from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database
 
 try:
