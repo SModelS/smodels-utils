@@ -20,23 +20,26 @@ import smodels_utils.plotting.mpkitty as plt
 def getCombination(inputFile, parameterFile):
 
     from smodels.base.physicsUnits import fb, GeV, TeV, pb
-    from smodels.theory.model import Model
+    from smodels.base.model import Model
     from smodels.share.models.SMparticles import SMList
-    from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
+    from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
     from smodels.decomposition import decomposer
-    from smodels.theory import theoryPrediction
+    from smodels.matching import theoryPrediction
 
 
 
     parser = modelTester.getParameters(parameterFile)
-    database, databaseVersion = modelTester.loadDatabase(parser,None)
-    listOfExpRes = modelTester.loadDatabaseResults(parser, database)
-
-
+    database = modelTester.loadDatabase(parser,None)
+    modelTester.loadDatabaseResults(parser, database)
+    listOfExpRes = database.getExpResults()
 
     sigmacut = parser.getfloat("parameters", "sigmacut") * fb
     minmassgap = parser.getfloat("parameters", "minmassgap") * GeV
-    from smodels.particlesLoader import BSMList
+    from smodels.tools.particlesLoader import load
+    from smodels.base import runtime
+    runtime.modelFile = "smodels.share.models.mssm"
+    BSMList = load()
+    # from smodels.particlesLoader import BSMList
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     promptWidth = None
     stableWidth = None
@@ -53,9 +56,9 @@ def getCombination(inputFile, parameterFile):
     """
     sigmacut = parser.getfloat("parameters", "sigmacut") * fb
     smstoplist = decomposer.decompose(model, sigmacut,
-                                      doCompress=parser.getboolean(
+                                      massCompress=parser.getboolean(
                                           "options", "doCompress"),
-                                      doInvisible=parser.getboolean(
+                                      invisibleCompress=parser.getboolean(
                                           "options", "doInvisible"),
                                       minmassgap=minmassgap)
 
@@ -69,18 +72,21 @@ def getCombination(inputFile, parameterFile):
     combineResults = False
     useBest = True
     combineResults = parser.getboolean("options", "combineSRs")
-    expFeatures = parser.getboolean("options", "experimentalFeatures")
-    from smodels.tools import runtime
-    runtime._experimental = expFeatures
+#    expFeatures = parser.getboolean("options", "experimentalFeatures")
+#    print ( "expFeatures", expFeatures )
+#    from smodels.base import runtime
+#    runtime._experimental = expFeatures
+    predictions = theoryPredictionsFor(database, smstoplist,
+                       useBestDataset=useBest, combinedResults=combineResults )
 
-    for expResult in listOfExpRes:
-        theorypredictions = theoryPredictionsFor(expResult, smstoplist,
-                                                 useBestDataset=useBest, combinedResults=combineResults,
-                                                 #marginalize=False
-                                                 )
-        if not theorypredictions:
+    for pred in predictions:
+    #for expResult in database.getExpResultList():
+    #    theorypredictions = theoryPredictionsFor(expResult, smstoplist,
+    #                                             useBestDataset=useBest, combinedResults=combineResults,
+    #                                             )
+        if not pred:
             continue
-        allPredictions += theorypredictions._theoryPredictions
+        allPredictions += pred._theoryPredictions
 
     """Compute chi-square and likelihood"""
     if parser.getboolean("options", "computeStatistics"):

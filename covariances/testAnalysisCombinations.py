@@ -10,11 +10,11 @@
 import sys
 sys.path.insert(0, "../")
 
-from smodels.tools import runtime
-runtime._experimental = True
-from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
+# from smodels.base import runtime
+# runtime._experimental = True
+from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPredictionsCombiner
 from smodels.decomposition import decomposer
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.share.models.mssm import BSMList
 from smodels.experiment.databaseObj import Database
@@ -783,7 +783,7 @@ def plotLlhds ( llhds, fits, uls, setup ):
         # if muhat < 0.:
         label = None
         if addVerticalLabels:
-            label = f"$\hat\mu$ ({Id})"
+            label = rf"$\hat\mu$ ({Id})"
         if not "combo" in Id:
             plt.plot ( [ muhat ] *2, [ llmin, lmax ], linestyle="-.", \
                         c=colors[Id], label= label )
