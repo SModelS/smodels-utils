@@ -1,14 +1,14 @@
 """ a bit of code to try to import the matplotlib-kitty backend,
     if that fails then fall back to ordinary matplotlib """
 
+import os
 options = { "hasKittyBackend": False }
 
 def importBackend():
-    import os
     if "jupyter" in os.environ["_"]:
         return
     try:
-        import matplotlib, os, sys, subprocess
+        import matplotlib, sys, subprocess
         from smodels_utils import SModelSUtils
         home = os.environ["HOME"]
         info = sys.version_info
@@ -36,7 +36,7 @@ importBackend()
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 
-def timg( filename ):
+def timg( filename : os.PathLike ):
     """ use timg to show filename in the terminal """
     import os
     if not options["hasKittyBackend"] and not "kitty" in os.environ["TERM"]:

@@ -16,9 +16,11 @@ from testAnalysisCombinations import createLlhds
 import numpy as np
 import pyslha
 import smodels_utils.plotting.mpkitty as plt
-# import matplotlib.pyplot as plt
+from typing import Tuple
 
-def getCombination(inputFile, parameterFile):
+def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
+    """ get the combination of analyses for inputFile, parameter.ini
+    """
 
     from smodels.base.physicsUnits import fb, GeV, TeV, pb
     from smodels.base.model import Model
@@ -154,13 +156,19 @@ def getLlhds(combiner,setup):
 
     return muvals,llhds
 
-def getPlot(inputFile, parameterFile,options):
+def getPlot( options : dict ) -> Tuple:
+    """ plot the likelihood.
+
+    :returns: tuple with matplotlib figure and output file name
+    """
+    inputFile = options["filename"]
+    parameterFile = options["parameterFile"]
     from scipy.interpolate import interp1d
     outputFile = options["output"]
 
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
-    step_mu = (options["mumax"] - options["mumin"] ) / 50.
+    step_mu = (options["mumax"] - options["mumin"] ) / options["nsteps"]
     setup = {'evaluationType' : apriori ,'normalize' : True,
               'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
 
@@ -177,16 +185,16 @@ def getPlot(inputFile, parameterFile,options):
     for ana in tPredsList:
         idDict = {}
         idDict['ulmu'] = ana.getUpperLimitOnMu( evaluationType = setup["evaluationType"])
-        idDict['r_obs'] = ana.getRValue( evaluationType = observed )
-        idDict['r_exp'] = ana.getRValue( evaluationType = apriori )
+        idDict['mu_obs'] = 1. / ana.getRValue( evaluationType = observed )
+        idDict['mu_exp'] = 1. / ana.getRValue( evaluationType = apriori )
         tpDict[ana.dataset.globalInfo.id] = idDict
         tpDict
 
 
     muhat = combiner.muhat( evaluationType = setup["evaluationType"])
-    lmax = combiner.lmax( evaluationType = setup["evaluationType"])
-    lsm = combiner.lsm( evaluationType = setup["evaluationType"])
-    lbsm = combiner.likelihood(mu=1.0, evaluationType = setup["evaluationType"])
+    nllmin = combiner.lmax( evaluationType = setup["evaluationType"], return_nll = True )
+    nllsm = combiner.lsm( evaluationType = setup["evaluationType"], return_nll = True )
+    nllbsm = combiner.likelihood(mu=1.0, evaluationType = setup["evaluationType"], return_nll = True )
     ymin = 0.
 
     fig = plt.figure(figsize=plotOptions['figsize'])
@@ -195,9 +203,10 @@ def getPlot(inputFile, parameterFile,options):
         if anaID == 'combined_prev':
             zorder = 100
             linestyle = '-.'
-            lbl=r'$\mu_{UL}$'
             ulmu = combiner.getUpperLimitOnMu( evaluationType = setup["evaluationType"])
             ulmu_comb = ulmu
+            # lbl=rf'$\mu^{{UL}}={ulmu:.2f}$'
+            lbl = None
             #Draw vertical lines for muhat
             if setup['murange'][0] <= muhat <= setup['murange'][1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
@@ -205,15 +214,16 @@ def getPlot(inputFile, parameterFile,options):
         elif anaID == 'combined':
             zorder = 99
             linestyle = '--'
-            lbl=r'$\mu_{UL}$'
             ulmu = combiner.getUpperLimitOnMu( evaluationType= setup["evaluationType"])
             ulmu_comb = ulmu
-            robs = combiner.getRValue( evaluationType = observed )
-            rexp = combiner.getRValue( evaluationType = apriori )
+            # lbl=rf'$\mu^{{UL}}={ulmu:.2f}$'
+            lbl=None
+            muobs = 1. / combiner.getRValue( evaluationType = observed )
+            muexp = 1. / combiner.getRValue( evaluationType = apriori )
             #Draw vertical lines for muhat
             if muvals[0] <= muhat <= muvals[-1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=f"{anaID}\n{'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' % (robs, rexp)}",zorder=zorder,linestyle=linestyle,linewidth=2)
+            x = plt.plot(muvals,l,label=f"combined\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}",zorder=zorder,linestyle=linestyle,linewidth=2,color="black")
         else:
             if 'prev' in anaID:
                 linestyle = ':'
@@ -223,9 +233,9 @@ def getPlot(inputFile, parameterFile,options):
                 linestyle = '-'
                 zorder = None
                 ulmu = tpDict[anaID]['ulmu']
-                robs = tpDict[anaID]['r_obs']
-                rexp = tpDict[anaID]['r_exp']
-                x = plt.plot(muvals,l,label=f"{anaID}\n{'$r_{obs} = $ %1.2f, $r_{exp} = $ %1.2f' % (robs, rexp)}",zorder=zorder,linestyle=linestyle,linewidth=2)
+                muobs = tpDict[anaID]['mu_obs']
+                muexp = tpDict[anaID]['mu_exp']
+                x = plt.plot(muvals,l,label=f"{anaID}\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}",zorder=zorder,linestyle=linestyle,linewidth=2)
             lbl=None
 
         #Draw vertical lines for ulmu
@@ -265,9 +275,12 @@ def getPlot(inputFile, parameterFile,options):
     m1 = data.blocks['EXTPAR'][1]
     m2 = data.blocks['EXTPAR'][2]
     mu = data.blocks['EXTPAR'][23]
+    smuhat = f"{muhat:1.2f}"
+    if muhat == 0:
+        smuhat = 0
 
-    plt.title( rf'$M_1$ = {m1} GeV, $M_2$ = {m2} GeV, $\mu$ = {mu} GeV,' + f' combined SR = {CSR}'+ '\n' +
-              r'$\hat{\mu}_{\mathrm{Comb}} = $ %1.2f, $\mu_{\mathrm{UL comb}} = $ %1.2f, $L_{BSM} =$ %1.2e, $L_{max} =$ %1.2e, $L_{SM} =$ %1.2e' %(muhat,ulmu_comb,lbsm,lmax,lsm),fontsize=20)
+    plt.title( rf'$M_1$ = {m1:.2f} GeV, $M_2$ = {m2:.2f} GeV, $\mu$ = {mu:.2f} GeV,' + f' combined SR = {CSR}'+ '\n' +
+              r'$\hat{\mu}_{\mathrm{Comb}} = $ %s, $\mu^\mathrm{UL}_{comb} = $ %1.2f, $\mathrm{nll_{BSM}} =$ %1.1f, $\mathrm{nll_{min}} =$ %1.1f, $\mathrm{nll_{SM}} =$ %1.1f' %(smuhat,ulmu_comb,nllbsm,nllmin,nllsm),fontsize=20)
 
     if plotOptions['xlog']:
         plt.xscale('log')
@@ -279,7 +292,7 @@ def getPlot(inputFile, parameterFile,options):
         plt.legend(fontsize=14)
 
     plt.savefig(outputFile)
-    return fig
+    return fig, outputFile
 
 def main():
     import argparse
@@ -297,20 +310,28 @@ def main():
     ap.add_argument('-m', '--mumin',
             help='minimum mu [-3.]', type=float,
             default = -3. )
+    ap.add_argument('-n', '--nsteps',
+            help='number of steps [100]', type=int,
+            default = 100 )
     ap.add_argument('-M', '--mumax',
             help='maximum mu [5.]', type=float,
             default = 5. )
+    ap.add_argument('-s', '--show', help='show final plot',
+            action = "store_true" )
 
     args = ap.parse_args()
-    t0 = timeit.default_timer()
 
     if args.output == 'Likelihoods.png':
         args.output = os.path.basename(args.filename).replace('.slha','_llhds.png')
 
-    options = { "mumin": args.mumin, "mumax": args.mumax,
-                "output": args.output }
-    fig = getPlot(args.filename, args.parameterFile, options)
-    print(f'Done in {timeit.default_timer() - t0:1.2f} s')
+    options = vars(args)
+
+    t0 = timeit.default_timer()
+    fig, outputFile = getPlot(options)
+    print(f'[plotAnalysisCombinations] plotted {args.filename} in {timeit.default_timer() - t0:1.2f} s')
+    if args.show:
+        from smodels_utils.plotting.mpkitty import timg
+        timg ( outputFile )
 
 if __name__ == "__main__":
     main()
