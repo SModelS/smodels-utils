@@ -4,17 +4,17 @@ from __future__ import print_function
 import sys, os, time
 sys.path.insert(0,"/home/alguero/Work/smodels")
 from smodels.experiment.databaseObj import Database
-from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.experiment.exceptions import SModelSExperimentError
 from smodels.base.smodelsLogging import setLogLevel
 from smodels.tools.colors import colors
 from smodels.base.physicsUnits import pb, fb, GeV
-from smodels.theory import slhaDecomposer
+from smodels.decomposition import decomposer
 
 colors.on = True
 setLogLevel ( "debug" )
 
-# smstoplist = smstoplist = slhaDecomposer.decompose( "T6bbHH.slha" )
+# smstoplist = smstoplist = decomposer.decompose( "T6bbHH.slha" )
 dir = "/home/alguero/Work/smodels-database"
 d=Database( dir )
 # print(d)

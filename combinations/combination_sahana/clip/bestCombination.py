@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from smodels.tools import runtime
-from smodels.theory.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
+from smodels.matching.theoryPrediction import theoryPredictionsFor, TheoryPrediction, TheoryPredictionsCombiner
 from smodels.experiment.databaseObj import Database
 
 #try:
@@ -243,7 +243,7 @@ class BestCombinationFinder(object):
 
 if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
-    from smodels.theory.model import Model
+    from smodels.base.model import Model
     from smodels.share.models.mssm import BSMList
     from smodels.share.models.SMparticles import SMList
     from smodels.base.physicsUnits import fb, GeV

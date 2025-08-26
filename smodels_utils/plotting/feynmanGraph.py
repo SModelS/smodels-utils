@@ -27,7 +27,7 @@ from smodels.experiment.defaultFinalStates import BSMfinalStates as BSMList
 from smodels.experiment import defaultFinalStates
 BSMList += [ defaultFinalStates.RHadronD, defaultFinalStates.RHadronU ]
 
-from smodels.theory.model import Model
+from smodels.base.model import Model
 
 def cleanConstraint ( inp ):
     """ cleanup constraint string """

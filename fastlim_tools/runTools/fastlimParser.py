@@ -16,8 +16,8 @@ sys.path.append(os.path.join(home,'smodels-database'))
 from convertHelpers import smodels2fastlim
 from smodels.base.physicsUnits import GeV, fb, TeV
 from smodels.experiment import databaseObjects, datasetObject, infoObject
-from smodels.theory.theoryPrediction import TheoryPrediction, TheoryPredictionList
-from smodels.theory.theoryPrediction import _getBestResults
+from smodels.matching.theoryPrediction import TheoryPrediction, TheoryPredictionList
+from smodels.matching.theoryPrediction import _getBestResults
 from smodels.base.crossSection import XSectionList, XSection, XSectionInfo
 from smodels.theory.clusterTools import ElementCluster
 from smodels.theory.element import Element

@@ -18,7 +18,9 @@ from fastlimOutput import compareFiles, fastlimParser
 from smodels.base.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
 from gridSmodels import runSmodelS
-from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
+from smodels.decomposition import decomposer
+from smodels.base import crossSection
+from smodels.matching import theoryPrediction
 from fastlimOutput import formatOutput
 from smodels.tools import databaseBrowser
 from gridFastlim import getSlhaFiles, prepareSLHA

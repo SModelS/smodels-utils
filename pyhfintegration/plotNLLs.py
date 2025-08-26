@@ -15,11 +15,11 @@ from smodels_utils.helper import prettyDescriptions
 from smodels.experiment.databaseObj import Database
 from smodels.experiment import txnameObj
 txnameObj.TxNameData._keep_values = True
-from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.decomposition import decomposer
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.base.physicsUnits import GeV, pb, fb
 from smodels.tools.statistics import likelihoodFromLimits
 from smodels_utils.helper import slhaManipulator

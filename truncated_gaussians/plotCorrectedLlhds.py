@@ -3,13 +3,13 @@
 from smodels.tools import runtime
 import random
 runtime._experimental = True
-from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.tools.statsTools import StatsComputer
 from smodels.experiment.databaseObj import Database
 from smodels.decomposition import decomposer
 from smodels.tools.truncatedGaussians import TruncatedGaussians
 # TruncatedGaussians.newCorrectionType = False
-from smodels.theory.model import Model
+from smodels.base.model import Model
 from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from validation.validationHelpers import retrieveValidationFile

@@ -19,7 +19,9 @@ from auxiliaryObjs import compareFiles,getSlhaFiles, formatOutput
 from smodels.base.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
 from gridSmodels import runSmodelS
-from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
+from smodels.decomposition import decomposer
+from smodels.base import crossSection
+from smodels.matching import theoryPrediction
 from smodels.tools import databaseBrowser
 from signalregions import SRs
 
