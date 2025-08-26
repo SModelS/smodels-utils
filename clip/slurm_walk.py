@@ -71,6 +71,102 @@ def mkdir ( Dir : str, symlinks : bool = True ):
     if not os.path.exists ( f'{os.environ["HOME"]}/{bDir}' ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
+
+def runWalkers ( args ) -> int:
+    """ run the walkers!
+
+    :returns: number of jobs started
+    """
+    totjobs = 0
+    nmin, nmax, cont = args.nmin, args.nmax, args.cont
+    if nmin == None:
+        return 0
+    cheatcode = args.cheatcode
+    if nmax == 0 or nmax < nmin:
+        nmax = nmin
+    nworkers = nmax - nmin + 1
+    nprocesses = min ( args.nprocesses, nworkers )
+    if nprocesses == 0:
+        nprocesses = nworkers
+
+    restartctr = 0
+    update_hiscores = args.updater ## False
+    if args.stopTeleportationAfter == None:
+        args.stopTeleportationAfter = -1
+    if args.maxsteps == None:
+        args.maxsteps = 1000
+    wallpids = not args.dont_wallpids
+    rvars = vars(args)
+    rvars["jmin"]= nmin 
+    rvars["jmax"]= nmax 
+    rvars["cont"]= cont 
+    rvars["dbpath"] = args.dbpath
+    rvars["cap_ssm"] = 100.
+    rvars["update_hiscores"] = update_hiscores
+    rvars["wallpids"] = wallpids
+    rvars["jobnr"]=0
+    seed = args.seed
+
+    while True:
+        if nprocesses == 1:
+            for i in range(args.repeat):
+                rvars["pid"]=0
+                runOneJob ( rvars )
+            totjobs+=1
+        else:
+            import multiprocessing
+            ## nwalkers is the number of jobs per process
+            nwalkers = 0
+            if nprocesses > 0:
+                nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
+            jobs = []
+            for i in range(nprocesses):
+                update_hiscores = False
+                if args.updater and i == nprocesses-1:
+                    update_hiscores = True
+                imin = nmin + i*nwalkers
+                imax = imin + nwalkers
+                if seed != None: ## we count up
+                    seed += (1+len(rundirs))*(1+nprocesses)
+                rvars["pid"]=i
+                rvars["jmin"]=imin
+                rvars["jmax"]=imax
+                rvars["jobnr"]+=1
+                if i == nprocesses - 1:
+                    rvars["jobnr"]=-1 # wanna see the last one
+                p = multiprocessing.Process ( target = runOneJob, 
+                                              args = ( rvars, ) )
+                jobs.append ( p )
+                p.start()
+                time.sleep ( random.uniform ( 0.006, .01 ) )
+            if nprocesses > 2 :
+                print ( f"{intro}creating WALKER_0.py, but wont start it. You can start it manually!" )
+                rvars["jmin"]=0
+                rvars["jmax"]=1
+                rvars["dry_run"]=True
+                runOneJob ( rvars )
+                if not os.path.exists ( f"{rundir}/upHi.py" ):
+                    uploadTo = rundir
+                    p1 = uploadTo.find("rundir_")
+                    if p1 > 0:
+                        uploadTo = uploadTo[p1+7:]
+                    uploadTo = f"{uploadTo}_310"
+                    runUpdater( True, args.time, rundir, 1,
+                        dbpath = dbpath, uploadTo = uploadTo )
+
+            for j in jobs:
+                j.join()
+            col = GREEN
+            totjobs+=len(jobs)
+            if len(jobs) in [ 48, 49, 51 ]:
+                col = RED
+            if len(jobs)>0:
+                print ( f"{intro}{col}collected {len(jobs)} jobs.{RESET}" )
+        break
+    res = RESET
+    col = GREEN
+    return totjobs
+
 def runOneJob ( rvars: dict ):
     """ prepare everything for a single job. this is the central method!
  
@@ -102,6 +198,7 @@ def runOneJob ( rvars: dict ):
         - wallpids (bool): put up mass walls for pids
         - templateSLHA (os.PathLike): name of the templateSLHA file
         - allowN1N1Prod (bool): allow N1 N1 production mode
+        - susy_mode (bool): susy mode
     """ 
     globals().update ( rvars ) # doesnt work for all
     dbpath = rvars["dbpath"]
@@ -142,17 +239,18 @@ def runOneJob ( rvars: dict ):
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden},\n" )
         f.write ( f"    templateSLHA='{templateSLHA}',\n" )
-        f.write ( f"    allowN1N1Prod={allowN1N1Prod}\n" )
+        f.write ( f"    allowN1N1Prod={allowN1N1Prod},\n" )
+        f.write ( f"    susy_mode={susy_mode}\n" )
         f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( jmax - jmin ) )
-    ram = ram*2
-    if "comb" in rundir: ## combinations need more RAM
-        ram = ram * 1.2
-    if "history" in rundir: ## history runs need more RAM
-        ram = ram * 1.3
+    ram = ram*2.3
+    #if "comb" in rundir: ## combinations need more RAM
+    #    ram = ram * 1.2
+    #if "history" in rundir: ## history runs need more RAM
+    #    ram = ram * 1.3
     if update_hiscores: ## make sure we have a bit more for that
         ram = ram * 1.2
     ram=int(ram)
@@ -434,19 +532,13 @@ def getDirname ( rundir ):
     ret = ret.replace("rundir.","")
     return ret
 
-def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
-        maxiterations : Union[None,int], dbpath : str, uploadTo : str ):
-    """ thats the hiscore updater
-    :param dry_run: create the scripts, dont start them
-    :param time: time, given in minutes(?)
-    :param maxiterations: maximum number of iterations to run the updater
-    :param dbpath: database path, @rundir@ will get replaced by rundir
-    :param uploadTo: directory under smodels.github.io/protomodels to upload to
-    """
-
+def createUpHiFile ( rundir : os.PathLike, maxiterations : Union[None,int], 
+        uploadTo : str, dbpath : str ):
+    """ create upHi.py file, if it doesnt exist """
     runner = f"{rundir}/upHi.py"
-    if maxiterations == None:
-        maxiterations = 1000
+    if os.path.exists ( runner ):
+        print ( f"{intro}{YELLOW}not overwriting {runner}{RESET}" )
+        return
     #rd=rundir[rundir.find("rundir")+7:]
     # uploadTo=f"2020_PioneerStudy/{rd}"
     #while rd.endswith("/"):
@@ -463,8 +555,25 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
         f.write ( 'batchjob="SLURM_JOBID" in os.environ\n' )
         f.write ( f'did_srcombine=updateHiscores.didSRCombine ( rundir )\n' )
         f.write ( f"updateHiscores.loop ( rundir=rundir, maxruns={maxiterations}, createPlots=not batchjob,\n" )
-        f.write ( f"    uploadTo='{uploadTo}', do_srcombine=did_srcombine, dbpath='{dbpath}' )\n" )
+        f.write ( f"    uploadTo='{uploadTo}', do_srcombine=did_srcombine,\n" )
+        f.write ( f"    dbpath='{dbpath}' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
+
+def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
+        maxiterations : Union[None,int], dbpath : str, uploadTo : str ):
+    """ thats the hiscore updater
+    :param dry_run: create the scripts, dont start them
+    :param time: time, given in minutes(?)
+    :param maxiterations: maximum number of iterations to run the updater
+    :param dbpath: database path, @rundir@ will get replaced by rundir
+    :param uploadTo: directory under smodels.github.io/protomodels to upload to
+    """
+    # slurmdir = f"{rundir}/slurm/" 
+    runner = f"{rundir}/upHi.py"
+    if maxiterations == None:
+        maxiterations = 1000
+    createUpHiFile ( rundir, maxiterations, uploadTo, dbpath )
+
     cmd = [ "sbatch", "--mem", "25G" ]
     if maxiterations > 5:
         cmd = [ "srun", "--mem", "25G" ]
@@ -482,9 +591,10 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
     if maxiterations > 5:
         cmd += [ "--pty", "bash" ]
     cmd += [ runner ]
-    print ( f"updater: {' '.join(cmd)}" )
     if dry_run:
+        print ( f"{intro}{CYAN}updater: dry_running{RESET} {' '.join(cmd)}" )
         return
+    print ( f"{intro}{CYAN}updater: running{RESET} {' '.join(cmd)}" )
     subprocess.run ( cmd )
 
 def clean_dirs( rundir, clean_all = False, verbose=True ):
@@ -579,7 +689,10 @@ def cancelRangeOfRunners( jrange : str ):
     if not "-" in jrange: # single job
         cmd = f"scancel {jrange}"
         subprocess.getoutput ( cmd )
-        print ( f"{intro}cancelled {jrange}" )
+        njobs = jrange.count(",")+1
+        if len(jrange)>300:
+            jrange = jrange[:100] + " ... " + jrange[-21:]
+        print ( f"{intro}cancelled {jrange} ({njobs} jobs)" )
         return
     cancelled = []
     p1 = jrange.find("-")
@@ -675,7 +788,7 @@ def main():
     argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
                              action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [1]',
-                        type=int, default=1 )
+                        type=int, default=None )
     argparser.add_argument ( '--seed', nargs='?', help='the random seed. 0 means random. None means, do not set. [None]',
                         type=int, default=None )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat model [no_cheat]',
@@ -700,6 +813,9 @@ def main():
                         type=str, default="template1g.slha" )
     argparser.add_argument ( '--allowN1N1Prod',
                         help='allow N1 N1 production mode',
+                        action="store_true" )
+    argparser.add_argument ( '--susy_mode',
+                        help='susy mode (penalize ssms for being not 1.0)',
                         action="store_true" )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
@@ -733,6 +849,9 @@ def main():
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
         return
+    if not "/" in args.dbpath and not "pcl" in args.dbpath and \
+            not "official" in args.dbpath:
+        args.dbpath = f"https://smodels.github.io/database/{args.dbpath}"
     rundir = defaultrundir
     if args.rundir != None:
         rundir = args.rundir
@@ -765,6 +884,7 @@ def main():
             seed = int ( random.uniform ( 10**6, 10**8 ) )
         if seed != None and type(seed)==int and seed>2**31-1:
             seed = seed % 1073741823
+        args.seed = seed
 
         time.sleep ( random.uniform ( .004, .009 ) )
         dbpath = args.dbpath
@@ -804,93 +924,7 @@ def main():
                 runLLHDScanner ( args.llhdscan, args.yvariable, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
             continue
 
-        #with open("run_walker.sh","rt") as f:
-        #    lines=f.readlines()
-        nmin, nmax, cont = args.nmin, args.nmax, args.cont
-        cheatcode = args.cheatcode
-        if nmax == 0 or nmax < nmin:
-            nmax = nmin
-        nworkers = nmax - nmin + 1
-        nprocesses = min ( args.nprocesses, nworkers )
-        if nprocesses == 0:
-            nprocesses = nworkers
-
-        restartctr = 0
-        update_hiscores = args.updater ## False
-        if args.stopTeleportationAfter == None:
-            args.stopTeleportationAfter = -1
-        if args.maxsteps == None:
-            args.maxsteps = 1000
-        wallpids = not args.dont_wallpids
-        rvars = vars(args)
-        rvars["jmin"]= nmin 
-        rvars["jmax"]= nmax 
-        rvars["cont"]= cont 
-        rvars["dbpath"] = dbpath
-        rvars["cap_ssm"] = 100.
-        rvars["seed"] = seed
-        rvars["update_hiscores"] = update_hiscores
-        rvars["wallpids"] = wallpids
-        rvars["jobnr"]=0
-
-        while True:
-            if nprocesses == 1:
-                for i in range(args.repeat):
-                    rvars["pid"]=0
-                    runOneJob ( rvars )
-                totjobs+=1
-            else:
-                import multiprocessing
-                ## nwalkers is the number of jobs per process
-                nwalkers = 0
-                if nprocesses > 0:
-                    nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
-                jobs = []
-                for i in range(nprocesses):
-                    update_hiscores = False
-                    if args.updater and i == nprocesses-1:
-                        update_hiscores = True
-                    imin = nmin + i*nwalkers
-                    imax = imin + nwalkers
-                    if seed != None: ## we count up
-                        seed += (1+len(rundirs))*(1+nprocesses)
-                    rvars["pid"]=i
-                    rvars["jmin"]=imin
-                    rvars["jmax"]=imax
-                    rvars["jobnr"]+=1
-                    if i == nprocesses - 1:
-                        rvars["jobnr"]=-1 # wanna see the last one
-                    p = multiprocessing.Process ( target = runOneJob, 
-                                                  args = ( rvars, ) )
-                    jobs.append ( p )
-                    p.start()
-                    time.sleep ( random.uniform ( 0.006, .01 ) )
-                if nprocesses > 2 :
-                    print ( f"{intro}creating WALKER_0.py, but wont start it. You can start it manually!" )
-                    rvars["jmin"]=0
-                    rvars["jmax"]=1
-                    rvars["dry_run"]=True
-                    runOneJob ( rvars )
-                    if not os.path.exists ( f"{rundir}/upHi.py" ):
-                        uploadTo = rundir
-                        p1 = uploadTo.find("rundir_")
-                        if p1 > 0:
-                            uploadTo = uploadTo[p1+7:]
-                        uploadTo = f"{uploadTo}_310"
-                        runUpdater( True, args.time, rundir, 1,
-                            dbpath = dbpath, uploadTo = uploadTo )
-
-                for j in jobs:
-                    j.join()
-                res = RESET
-                col = GREEN
-                totjobs+=len(jobs)
-                if len(jobs) in [ 48, 49, 51 ]:
-                    colo = RED
-                if len(jobs)>0:
-                    print ( f"{intro}{col}collected {len(jobs)} jobs.{res}" )
-            break
-        res = RESET
+        totjobs = runWalkers ( args )
         col = GREEN
         if totjobs % 10 != 0 and (totjobs)>1:
             col = RED
@@ -906,7 +940,7 @@ def main():
                     dbpath = dbpath, uploadTo = args.uploadTo )
             totjobs += 1
             #    continue
-        print ( f"{intro}{col}In total we submitted {totjobs} jobs.{res}" )
+        print ( f"{intro}{col}In total we submitted {totjobs} jobs.{RESET}" )
         if seed != None: ## count up
             seed += (1+len(rundirs))*(1+nprocesses)
         print ( )
