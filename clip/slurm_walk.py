@@ -650,7 +650,11 @@ def cancelAllRunners():
     if len(cancelled)==0:
         print ( f"{intro}no jobs cancelled." )
         return
-    print ( f"{intro}cancelled {', '.join(cancelled)[:200]} ({len(cancelled)} jobs)" )
+    scanc = ', '.join(cancelled)
+    if scanc < 200:
+        print ( f"{intro}cancelled {scanc} ({len(cancelled)} jobs)" )
+    else:
+        print ( f"{intro}cancelled {scanc[:190]} ... {scanc[-8:]} ({len(cancelled)} jobs)" )
 
 def getMaxJobId() -> int:
     """ get the highest job id """
