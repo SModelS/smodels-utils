@@ -5,14 +5,38 @@ protomodels walkers.
 """
 
 import tempfile, argparse, stat, os, math, sys, time, glob, random
+import hashlib, json, subprocess
 from smodels_utils.helper.terminalcolors import *
-import subprocess
 from typing import Union, List, Tuple
 
 from ptools.sparticleNames import SParticleNames
 namer = SParticleNames()
 
 intro = f"{CYAN}[slurm_walk]{RESET} "
+
+
+# Path to store last run info (use system temp dir)
+STATE_FILE = os.path.join(tempfile.gettempdir(), ".last_exec_state.json")
+
+def compute_signature(executable, args):
+    """Compute a unique signature for the current execution."""
+    data = [executable] + args
+    return hashlib.sha256(" ".join(data).encode()).hexdigest()
+
+def load_last_signature():
+    """Load the last execution signature from file."""
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r") as f:
+                return json.load(f).get("signature")
+        except Exception:
+            return None
+    return None
+
+def save_signature(signature):
+    """Save the current execution signature to file."""
+    with open(STATE_FILE, "w") as f:
+        json.dump({"signature": signature}, f)
 
 def remove( fname, keep):
     ## rmeove filename if exists
@@ -72,7 +96,7 @@ def mkdir ( Dir : str, symlinks : bool = True ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
 def hasCheatFile ( rvars : dict )-> bool:
-    """ check that the cheat file named exists 
+    """ check that the cheat file named exists
     :returns: true if cheatfile exists, or none is mentioned
     """
     if not "cheatcode" in rvars:
@@ -86,6 +110,21 @@ def hasCheatFile ( rvars : dict )-> bool:
     print ( f"{intro} do not understand if cheat file {cheatfile} exists: {rvars}" )
     sys.exit()
 
+    return False
+
+def sameCallTwice() -> bool:
+    executable = os.path.abspath(sys.argv[0])
+    args = sys.argv[1:]
+
+    # Compute current signature
+    current_sig = compute_signature(executable, args)
+
+    # Load previous signature
+    last_sig = load_last_signature()
+
+    if current_sig == last_sig:
+        os.remove(STATE_FILE)
+        return True
     return False
 
 def runWalkers ( args ) -> int:
@@ -113,9 +152,9 @@ def runWalkers ( args ) -> int:
         args.maxsteps = 1000
     wallpids = not args.dont_wallpids
     rvars = vars(args)
-    rvars["jmin"]= nmin 
-    rvars["jmax"]= nmax 
-    rvars["cont"]= cont 
+    rvars["jmin"]= nmin
+    rvars["jmax"]= nmax
+    rvars["cont"]= cont
     rvars["dbpath"] = args.dbpath
     rvars["cap_ssm"] = 100.
     rvars["update_hiscores"] = update_hiscores
@@ -124,7 +163,10 @@ def runWalkers ( args ) -> int:
     hasC = hasCheatFile ( rvars )
     if not hasC:
         print ( f"{intro}you specified cheatfile {rvars['cheatcode']} but it doesnt exist!" )
-        sys.exit()
+        if sameCallTwice():
+            print ( f"{intro}but you asked us twice so lets go on" )
+        else:
+            sys.exit()
     seed = args.seed
 
     while True:
@@ -154,7 +196,7 @@ def runWalkers ( args ) -> int:
                 rvars["jobnr"]+=1
                 if i == nprocesses - 1:
                     rvars["jobnr"]=-1 # wanna see the last one
-                p = multiprocessing.Process ( target = runOneJob, 
+                p = multiprocessing.Process ( target = runOneJob,
                                               args = ( rvars, ) )
                 jobs.append ( p )
                 p.start()
@@ -189,7 +231,7 @@ def runWalkers ( args ) -> int:
 
 def runOneJob ( rvars: dict ):
     """ prepare everything for a single job. this is the central method!
- 
+
     rvars ( dict ):
         - pid (int): process id, integer that idenfies the process
         - jmin (int): id of first walker
@@ -219,7 +261,7 @@ def runOneJob ( rvars: dict ):
         - templateSLHA (os.PathLike): name of the templateSLHA file
         - allowN1N1Prod (bool): allow N1 N1 production mode
         - susy_mode (bool): susy mode
-    """ 
+    """
     globals().update ( rvars ) # doesnt work for all
     dbpath = rvars["dbpath"]
     jmax = rvars["jmax"]
@@ -232,7 +274,7 @@ def runOneJob ( rvars: dict ):
         jmax = jmin + 1
     if jmax == jmin + 1:
         line = f"run walker {jmin}"
-    slurmdir = f"{rundir}/slurm/" 
+    slurmdir = f"{rundir}/slurm/"
     if not os.path.exists ( slurmdir ):
         os.mkdir ( slurmdir )
     runner = f"{slurmdir}/WALKER_{jmin}.py"
@@ -282,7 +324,7 @@ def runOneJob ( rvars: dict ):
     cmd += [ "--error", f"{outputdir}/walk-%j.out",
              "--output", f"{outputdir}/walk-%j.out" ]
     cmd += ["--cpus-per-task", "3"]
-    
+
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -552,7 +594,7 @@ def getDirname ( rundir ):
     ret = ret.replace("rundir.","")
     return ret
 
-def createUpHiFile ( rundir : os.PathLike, maxiterations : Union[None,int], 
+def createUpHiFile ( rundir : os.PathLike, maxiterations : Union[None,int],
         uploadTo : str, dbpath : str ):
     """ create upHi.py file, if it doesnt exist """
     runner = f"{rundir}/upHi.py"
@@ -588,7 +630,7 @@ def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
     :param dbpath: database path, @rundir@ will get replaced by rundir
     :param uploadTo: directory under smodels.github.io/protomodels to upload to
     """
-    # slurmdir = f"{rundir}/slurm/" 
+    # slurmdir = f"{rundir}/slurm/"
     runner = f"{rundir}/upHi.py"
     if maxiterations == None:
         maxiterations = 1000
@@ -701,10 +743,10 @@ def getMinJobId() -> int:
     return nmin
 
 def cancelRangeOfRunners( jrange : str ):
-    """ cancel only the jrange of runners 
+    """ cancel only the jrange of runners
     :param jrange: ranges of job ids given as string,
     e.g. 100-102, -98, 120-, 100
-    """ 
+    """
     import re
     jrange = jrange.strip(" ")
     if re.search('[a-zA-Z]', jrange) is not None:
