@@ -71,6 +71,22 @@ def mkdir ( Dir : str, symlinks : bool = True ):
     if not os.path.exists ( f'{os.environ["HOME"]}/{bDir}' ):
         o = os.symlink ( Dir, f'{os.environ["HOME"]}/{bDir}' )
 
+def hasCheatFile ( rvars : dict )-> bool:
+    """ check that the cheat file named exists 
+    :returns: true if cheatfile exists, or none is mentioned
+    """
+    if not "cheatcode" in rvars:
+        return True ## we dont even use a cheatfile
+    cheatfile = rvars["cheatcode"]
+    if cheatfile.startswith("/"):
+        return os.path.exists ( cheatfile )
+    if (not "/" in cheatfile) and ("rundir" in rvars):
+        return os.path.exists ( f"{rvars['rundir']}/{cheatfile}" )
+    # dont understand what is happening
+    print ( f"{intro} do not understand if cheat file {cheatfile} exists: {rvars}" )
+    sys.exit()
+
+    return False
 
 def runWalkers ( args ) -> int:
     """ run the walkers!
@@ -105,6 +121,10 @@ def runWalkers ( args ) -> int:
     rvars["update_hiscores"] = update_hiscores
     rvars["wallpids"] = wallpids
     rvars["jobnr"]=0
+    hasC = hasCheatFile ( rvars )
+    if not hasC:
+        print ( f"{intro}you specified cheatfile {rvars['cheatcode']} but it doesnt exist!" )
+        sys.exit()
     seed = args.seed
 
     while True:
