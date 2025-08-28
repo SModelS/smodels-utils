@@ -559,7 +559,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
                 y_vals[i]= y * random.uniform(.98,1.02)
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-            label = f"SModelS: NN" #  {num_sr} SRs + {num_cr} CRs"
+            label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -577,9 +577,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["obs_excl"]["x"]
         y_vals = cr_excl["obs_excl"]["y"]
-        label = f"SModelS: CR comb." #  {num_cr} SRs+CRs {ver}"
+        label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
         if cr_is == "orig":
-            label = f"SModelS: orig pyhf" #  {num_sr} SRs + {num_cr} CRs"
+            label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -694,7 +694,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
                 y_vals[i]= y * random.uniform(.98,1.02)
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-            label = f"SModelS: NN" #  {num_sr} SRs + {num_cr} CRs"
+            label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -707,9 +707,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
-        label = f"SModelS: CR comb." #  {num_sr} SRs+CRs {ver}"
+        label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
         if cr_is == "orig":
-            label = f"SModelS: orig pyhf" #  {num_sr} SRs + {num_cr} CRs"
+            label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]

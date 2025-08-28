@@ -465,8 +465,13 @@ def draw ( options : dict ):
         if axes in [ None, False ]: # search on
             axes = hasAxisInfo ( content2 )
         from smodels_utils.helper import various
-        el = various.getExclusionCurvesFor ( exclusionlines1, t, axes, ranges=ranges )
-        el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes, ranges=ranges )
+        el1_expected, el2_expected = False, False
+        if "eul" in options and options["eul"] == True:
+            el1_expected = True
+        if "eul2" in options and options["eul2"] == True:
+            el2_expected = True
+        el = various.getExclusionCurvesFor ( exclusionlines1, t, axes, ranges=ranges, expected = el1_expected )
+        el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes, ranges=ranges, expected = el2_expected )
         label = "official exclusion"
         # label = anaId
         if hasLegend:
