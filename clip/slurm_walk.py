@@ -881,8 +881,8 @@ def main():
                         help='override the default rundir. can use wildcards [None]',
                         type=str, default=None )
     argparser.add_argument ( '-T', '--templateSLHA',
-                        help='path to template SLHA [template1g.slha]',
-                        type=str, default="template1g.slha" )
+                        help='path to template SLHA [template_default.slha]',
+                        type=str, default="template_default.slha" )
     argparser.add_argument ( '--allowN1N1Prod',
                         help='allow N1 N1 production mode',
                         action="store_true" )
