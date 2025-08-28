@@ -15,8 +15,8 @@ namer = SParticleNames()
 intro = f"{CYAN}[slurm_walk]{RESET} "
 
 
-# Path to store last run info (use system temp dir)
-STATE_FILE = os.path.join(tempfile.gettempdir(), ".last_exec_state.json")
+# Path to store last run info (use home dir)
+STATE_FILE = os.path.join(os.environ["HOME"], ".last_exec_state.json")
 
 def compute_signature(executable, args):
     """Compute a unique signature for the current execution."""
@@ -97,10 +97,12 @@ def mkdir ( Dir : str, symlinks : bool = True ):
 
 def hasCheatFile ( rvars : dict )-> bool:
     """ check that the cheat file named exists
-    :returns: true if cheatfile exists, or none is mentioned
+    :returns: true if cheatfile exists, or no cheatfile is used
     """
     if not "cheatcode" in rvars:
         return True ## we dont even use a cheatfile
+    if rvars["cheatcode"] in [ "no_cheat", None ]:
+        return True
     cheatfile = rvars["cheatcode"]
     if cheatfile.startswith("/"):
         return os.path.exists ( cheatfile )
@@ -166,6 +168,7 @@ def runWalkers ( args ) -> int:
         if sameCallTwice():
             print ( f"{intro}but you asked us twice so lets go on" )
         else:
+            print ( f"{intro} (repeat the exact same command to force execution)" )
             sys.exit()
     seed = args.seed
 
@@ -290,11 +293,14 @@ def runOneJob ( rvars: dict ):
             f.write ( "Manipulator.walledpids[1000024]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
         scheatcode=f"'{cheatcode}'"
-        try:
-            cheatcode = int(cheatcode)
-            scheatcode = f"{cheatcode}"
-        except ValueError as e:
-            pass
+        if cheatcode in [ "no_cheat", None ]:
+            scheatcode = None
+        else:
+            try:
+                cheatcode = int(cheatcode)
+                scheatcode = f"{cheatcode}"
+            except ValueError as e:
+                pass
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={scheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
         f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
