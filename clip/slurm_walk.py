@@ -301,10 +301,14 @@ def runOneJob ( rvars: dict ):
                 scheatcode = f"{cheatcode}"
             except ValueError as e:
                 pass
-        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}', dbpath='{dbpath}', cheatcode={scheatcode},\n" )
+        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}',\n" )
+        f.write ( f"    dbpath='{dbpath}',\n" )
+        f.write ( f"    cheatcode={scheatcode},\n" )
         f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space}, cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
-        f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores}, stopTeleportationAfter={stopTeleportationAfter},\n" )
+        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space},\n" )
+        f.write ( f"    cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
+        f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores},\n" )
+        f.write ( f"    stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden},\n" )
         f.write ( f"    templateSLHA='{templateSLHA}',\n" )
         f.write ( f"    allowN1N1Prod={allowN1N1Prod},\n" )
@@ -314,7 +318,9 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( jmax - jmin ) )
-    ram = ram*2.3
+    ram = ram*2.5
+    if rvars["time"]>9: # longer running job, more ram
+        ram=ram*1.2
     #if "comb" in rundir: ## combinations need more RAM
     #    ram = ram * 1.2
     #if "history" in rundir: ## history runs need more RAM
@@ -383,7 +389,8 @@ def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewr
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ( f"{codedir}/protomodels/ptools/llhdScanner.py -R {rundir} --draw --xvariable {pid1} --yvariable '{yvariable}' --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
+            scExe = f"{codedir}/protomodels/ptools/llhdScanner.py"
+            f.write ( f"{scExe} -R {rundir} --draw --xvariable {pid1} --yvariable '{yvariable}' --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
     return fname
@@ -719,7 +726,7 @@ def cancelAllRunners():
         print ( f"{intro}no jobs cancelled." )
         return
     scanc = ', '.join(cancelled)
-    if scanc < 200:
+    if len(scanc) < 200:
         print ( f"{intro}cancelled {scanc} ({len(cancelled)} jobs)" )
     else:
         print ( f"{intro}cancelled {scanc[:190]} ... {scanc[-8:]} ({len(cancelled)} jobs)" )
