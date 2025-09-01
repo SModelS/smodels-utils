@@ -919,12 +919,12 @@ if __name__ == "__main__":
             logger.error ( "asked for spey but don't see any support for it in this SModelS version" )
             sys.exit()
 
-    if "writeOutYields" in options and options["writeOutYields"]==True:
+    if "writeoutyields" in options and options["writeoutyields"]==True:
         from smodels.base import runtime
-        if "writeOutYields" in runtime._experimental:
-            runtime._experimental["writeOutYields"]=True
+        if "writeoutyields" in runtime._experimental:
+            runtime._experimental["writeoutyields"]=True
         else:
-            logger.error ( "asked for writeOutYields but don't see any support for it in this SModelS version" )
+            logger.error ( "asked for writeoutyields but don't see any support for it in this SModelS version" )
             sys.exit()
 
     #Run validation:
