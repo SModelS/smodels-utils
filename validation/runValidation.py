@@ -841,6 +841,7 @@ if __name__ == "__main__":
                 "ratio_comment": None, ## comment in ratio plot
                 "expectationType": "aposteriori",
                 "spey": False, ## use spey statistics
+                "writeOutYields": False, ## write out the yields, for NNs
                 "databasepath": "../../smodels-database", ## smodels database
                 # "expectationType": "prior", # the expectation type used for eULs
                 "minmassgap": 2.0, ## the min mass gap in SModelS
@@ -916,6 +917,14 @@ if __name__ == "__main__":
             runtime._experimental["spey"]=True
         else:
             logger.error ( "asked for spey but don't see any support for it in this SModelS version" )
+            sys.exit()
+
+    if "writeOutYields" in options and options["writeOutYields"]==True:
+        from smodels.base import runtime
+        if "writeOutYields" in runtime._experimental:
+            runtime._experimental["writeOutYields"]=True
+        else:
+            logger.error ( "asked for writeOutYields but don't see any support for it in this SModelS version" )
             sys.exit()
 
     #Run validation:
