@@ -318,7 +318,7 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( jmax - jmin ) )
-    ram = ram*2.5
+    ram = ram*2.8
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.2
     #if "comb" in rundir: ## combinations need more RAM
@@ -366,33 +366,44 @@ def runOneJob ( rvars: dict ):
         # print ( f"returned: {sa}" )
         # time.sleep( random.uniform ( 0., 1. ) )
 
-def produceLLHDScanScript ( pid1 : int, yvariable : Union[int,tuple], force_rewrite : bool,
-        rundir : str, nprocs : int, select : str, do_srcombine : bool,
-        uploadTo : str ) -> str:
+def produceLLHDScanScript ( pid1 : int, nprocs : int,
+        rvars : dict ) -> str:
     """
     produces the llhdscanner<pid>.sh scripts
+    :param pid1: pid of x axis
+    :param nprocs: number of processes
+    :param rvars: command line arguments
 
     :returns: filename of script
     """
-    fname = f"{rundir}/L{namer.asciiName(pid1)}.sh"
+    globals().update ( rvars ) # doesnt work for all
+    yvariable = rvars["yvariable"]
+    # rundir = rvars["rundir"]
+    fname = f"{rundir}/slurm/L{namer.asciiName(pid1)}.sh"
     if yvariable == -1:
         yvariable = 1000022
     if yvariable != 1000022:
         yvn = namer.asciiName(yvariable).replace(" ","").replace(",","")
         yvn = yvn.replace("~","m")
-        fname = f"{rundir}/L{namer.asciiName(pid1)}_{yvn}.sh"
-    sselect,sdo_srcombine = "",""
+        fname = f"{rundir}/slurm/L{namer.asciiName(pid1)}_{yvn}.sh"
+    sselect,sdo_srcombine, sdbpath = "","", ""
     if select != "":
         sselect = f" --select '{select}'"
     if do_srcombine:
         sdo_srcombine = f" --do_srcombine"
-    if force_rewrite or not os.path.exists ( fname ):
+    if dbpath:
+        sdbpath = f" --dbpath {dbpath}"
+    if rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            scExe = f"{codedir}/protomodels/ptools/llhdScanner.py"
-            f.write ( f"{scExe} -R {rundir} --draw --xvariable {pid1} --yvariable '{yvariable}' --uploadTo {uploadTo} --nproc {nprocs}{sselect}{sdo_srcombine}\n" )
+            scExe = f"{codedir}/protomodels/ptools/llhdScanner.py --draw"
+            opts=f"{sselect}{sdo_srcombine}{sdbpath}"
+            xyvars = f"--xvariable {pid1} --yvariable {yvariable}"
+            moreargs = f"-R {rundir} --uploadTo {uploadTo} --nproc {nprocs}"
+            f.write ( f"{scExe} {moreargs} {xyvars} {opts}\n" )
             f.close()
         os.chmod ( fname, 0o775 )
+    print ( fname )
     return fname
 
 def produceScanScript ( pid : int, force_rewrite : bool, yvariable : int,
@@ -493,21 +504,21 @@ def fetchUnfrozenSSMsFromDict( rundir ):
             ret.append ( ssmpids )
     return ret
 
-def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
-        time : float, rewrite : bool, rundir : str, select : str,
-        do_srcombine : bool, uploadTo : str ):
+def runLLHDScanner( pid : int, rundir : str, rvars : dict ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
-    :param dry_run: do not execute, just say what you do
+    :param rundir: the rundir
+    :param rvars: the command line arguments, passed thru
     :param rewrite: force rewrite of scan script
     """
+    globals().update ( rvars ) # doesnt work for all
+    yvariable = rvars["yvariable"]
     if pid == 0:
         pids = fetchUnfrozenFromDict( rundir, includeLSP = False )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, yvariable, dry_run, time, rewrite, rundir, select,
-                             do_srcombine, uploadTo )
+            runLLHDScanner ( i, rundir, rvars )
         return
     qos = "c_short"
     if time > 48:
@@ -525,8 +536,7 @@ def runLLHDScanner( pid : int, yvariable : Union[Tuple,int] , dry_run : bool,
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", f"{time * 60 - 1}" ]
     nprcs = 2 # was at 10
-    script = produceLLHDScanScript ( pid, yvariable, rewrite, rundir, nprcs,
-            select, do_srcombine, uploadTo  )
+    script = produceLLHDScanScript ( pid, nprcs, rvars )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -999,8 +1009,9 @@ def main():
                 runScanner ( args.scan, args.dry_run, args.time, rewrite, args.yvariable, rundir, dbpath, args.select, args.do_srcombine, args.uploadTo )
             continue
         if args.llhdscan != -1:
+            rvars = vars(args)
             for i in range(args.repeat):
-                runLLHDScanner ( args.llhdscan, args.yvariable, args.dry_run, args.time, args.rewrite, rundir, args.select, args.do_srcombine, args.uploadTo )
+                runLLHDScanner ( args.llhdscan, rundir, rvars )
             continue
 
         totjobs = runWalkers ( args )
