@@ -135,7 +135,7 @@ def runWalkers ( args ) -> int:
     :returns: number of jobs started
     """
     totjobs = 0
-    nmin, nmax, cont = args.nmin, args.nmax, args.cont
+    nmin, nmax, continueFrom = args.nmin, args.nmax, args.continueFrom
     if nmin == None:
         return 0
     cheatcode = args.cheatcode
@@ -156,7 +156,7 @@ def runWalkers ( args ) -> int:
     rvars = vars(args)
     rvars["jmin"]= nmin
     rvars["jmax"]= nmax
-    rvars["cont"]= cont
+    rvars["continueFrom"]= continueFrom
     rvars["dbpath"] = args.dbpath
     rvars["cap_ssm"] = 100.
     rvars["update_hiscores"] = update_hiscores
@@ -259,7 +259,7 @@ def runOneJob ( rvars: dict ):
         - update_hiscores (bool): update the hiscores at the end
         - stopTeleportationAfter (int): stop teleportation after this step.
            if -1, dont run teleportation at all.
-        - forbidden (List[int]): any forbidden pids we dont touch
+        - forbiddenparticles (List[int]): any forbidden pids we dont touch
         - wallpids (bool): put up mass walls for pids
         - templateSLHA (os.PathLike): name of the templateSLHA file
         - allowN1N1Prod (bool): allow N1 N1 production mode
@@ -305,6 +305,19 @@ def runOneJob ( rvars: dict ):
                 scheatcode = f"{cheatcode}"
             except ValueError as e:
                 pass
+        from ptools.helpers import py_dumps
+        import copy
+        nvars = copy.deepcopy ( rvars )
+        drops = [ "query", "query_short", "cancel", "cancel_all", 
+                  "dry_run", "keep", "updater", "uploadTo", "scan",
+                  "yvariable", "llhdscan", "clean", "clean_all", "allscans",
+                  "rewrite", "time", "repeat", "jobnr", "pid" ]
+        for i in drops:
+            nvars.pop ( i )
+        nvars["catch_exceptions"]=True
+        ds = py_dumps ( nvars, indent=4 )
+        f.write ( f"factoryOfWalkers.createWalkersNew ( {ds} )\n" )
+        """
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}',\n" )
         f.write ( f"    dbpath='{dbpath}',\n" )
         f.write ( f"    cheatcode={scheatcode},\n" )
@@ -314,11 +327,12 @@ def runOneJob ( rvars: dict ):
         f.write ( f"    cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores},\n" )
         f.write ( f"    stopTeleportationAfter={stopTeleportationAfter},\n" )
-        f.write ( f"    forbiddenparticles={forbidden},\n" )
+        f.write ( f"    forbiddenparticles={forbiddenparticles},\n" )
         f.write ( f"    templateSLHA='{templateSLHA}',\n" )
         f.write ( f"    allowN1N1Prod={allowN1N1Prod},\n" )
         f.write ( f"    susy_mode={susy_mode}, use_initialiser={use_initialiser}\n" )
         f.write ( ")\n" )
+        """
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
@@ -862,8 +876,8 @@ def main():
     argparser.add_argument ( '--select', nargs="?",
                     help='filter analysis results, ("all", "em", "ul", "txnames:T1,T2", ... ["all"]',
                     type=str, default="all" )
-    argparser.add_argument ( '--forbidden',
-                    help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' [None]",
+    argparser.add_argument ( '--forbiddenparticles',
+                    help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' []",
                     type=str, default="[]" )
     argparser.add_argument ( '--yvariable', nargs="?",
                     help='run the teststatScanner for ss multipliers (pid,yvariable), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
@@ -897,7 +911,7 @@ def main():
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )
-    argparser.add_argument ( '-f', '--cont', help='continue with saved states (path to pickle file, or empty) [""]',
+    argparser.add_argument ( '-f', '--continueFrom', help='continue with saved states (path to pickle file, or empty) [""]',
                         type=str, default="" )
     argparser.add_argument ( '-R', '--rundir',
                         help='override the default rundir. can use wildcards [None]',
@@ -920,6 +934,7 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    args.forbiddenparticles= eval ( args.forbiddenparticles)
     args.yvariable = namer.pid ( args.yvariable )
     if args.use_initialiser in [ "False", "false", "no", None, "None", "none" ]:
         args.use_initialiser = False
