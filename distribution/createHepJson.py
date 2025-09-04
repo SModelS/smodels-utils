@@ -100,8 +100,8 @@ class HepJsonCreator:
         self.f.write (f'  "implementations_description": "SModelS analysis",\n' )
         self.f.write ( '  "link_types": [ "main_url", "val_url", "publication", "arXiv" ],\n' )
         self.f.write ( '  "url_templates": {\n' )
-        self.f.write ( '    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{main_path}",\n' )
-        self.f.write ( '    "val_url": "https://smodels.github.io/docs/Validation#{val_name}",\n' )
+        self.f.write ( '    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{path}",\n' )
+        self.f.write ( '    "val_url": "https://smodels.github.io/docs/Validation#{name}",\n' )
         if self.extra_fields:
             self.f.write ( '    "publication": "https://doi.org/{publication_doi}",\n' )
             self.f.write ( '    "arXiv": "https://arxiv.org/abs/{arXiv_id}"\n' )
@@ -328,8 +328,8 @@ class HepJsonCreator:
                 if not isFirst:
                     self.f.write ( ",\n" )
                 self.f.write ( '        {\n' )
-                self.f.write ( f'          "val_name": "{validation}",\n' )
-                self.f.write ( f'          "main_path": "{implementation}"\n' )
+                self.f.write ( f'          "name": "{validation}",\n' )
+                self.f.write ( f'          "path": "{implementation}"\n' )
                 self.f.write ( '        }' )
                 isFirst=False
 
