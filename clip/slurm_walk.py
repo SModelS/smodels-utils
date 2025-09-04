@@ -264,9 +264,11 @@ def runOneJob ( rvars: dict ):
         - templateSLHA (os.PathLike): name of the templateSLHA file
         - allowN1N1Prod (bool): allow N1 N1 production mode
         - susy_mode (bool): susy mode
+        - use_initialiser (Union[str,bool]): if string, then interpret it as path to database
     """
     globals().update ( rvars ) # doesnt work for all
     dbpath = rvars["dbpath"]
+    use_initialiser = rvars["use_initialiser"]
     jmax = rvars["jmax"]
     cheatcode = rvars["cheatcode"]
     do_srcombine = rvars["do_srcombine"]
@@ -293,6 +295,8 @@ def runOneJob ( rvars: dict ):
             f.write ( "Manipulator.walledpids[1000024]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
         scheatcode=f"'{cheatcode}'"
+        if use_initialiser not in [ None, False ]:
+            use_initialiser=f"'{use_initialiser}'"
         if cheatcode in [ "no_cheat", None ]:
             scheatcode = None
         else:
@@ -304,15 +308,16 @@ def runOneJob ( rvars: dict ):
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}',\n" )
         f.write ( f"    dbpath='{dbpath}',\n" )
         f.write ( f"    cheatcode={scheatcode},\n" )
-        f.write ( f"    rundir='{rundir}', maxsteps={maxsteps},\n" )
-        f.write ( f"    seed={seed}, select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space},\n" )
+        f.write ( f"    rundir='{rundir}',\n" )
+        f.write ( f"    maxsteps={maxsteps}, seed={seed},\n" )
+        f.write ( f"    select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space},\n" )
         f.write ( f"    cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
         f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores},\n" )
         f.write ( f"    stopTeleportationAfter={stopTeleportationAfter},\n" )
         f.write ( f"    forbiddenparticles={forbidden},\n" )
         f.write ( f"    templateSLHA='{templateSLHA}',\n" )
         f.write ( f"    allowN1N1Prod={allowN1N1Prod},\n" )
-        f.write ( f"    susy_mode={susy_mode}\n" )
+        f.write ( f"    susy_mode={susy_mode}, use_initialiser={use_initialiser}\n" )
         f.write ( ")\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
@@ -906,6 +911,9 @@ def main():
     argparser.add_argument ( '--susy_mode',
                         help='susy mode (penalize ssms for being not 1.0)',
                         action="store_true" )
+    argparser.add_argument ( '--use_initialiser',
+                        help='path to the database dict file, if you want to use an initialiser',
+                        type=str, default=False )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
@@ -913,6 +921,8 @@ def main():
                         type=str, default="default" )
     args=argparser.parse_args()
     args.yvariable = namer.pid ( args.yvariable )
+    if args.use_initialiser in [ "False", "false", "no", None, "None", "none" ]:
+        args.use_initialiser = False
     if args.yvariable == "-1":
         args.yvariable = -1
     if type(args.llhdscan) == str:
