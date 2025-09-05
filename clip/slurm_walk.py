@@ -219,7 +219,7 @@ def runWalkers ( args ) -> int:
                     if p1 > 0:
                         uploadTo = uploadTo[p1+7:]
                     uploadTo = f"{uploadTo}_310"
-                    runUpdater( True, args.time, rundir, 1,
+                    runUpdater( args.dry_run, args.time, rundir, 1,
                         dbpath = dbpath, uploadTo = uploadTo )
 
             for j in jobs:
