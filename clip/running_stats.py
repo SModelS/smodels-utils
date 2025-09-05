@@ -3,9 +3,26 @@
 """ FIXME should rename, contains all the helpers to interact efficiently with 
 slurm
 """
+import sys, os
 
-import glob, stat, os, time, subprocess
+sys.path.insert(0,os.path.expanduser("~/git/smodels-utils"))
+# sys.path.insert(0,"/software/system/utils/")
+
+import glob, stat, time, subprocess
 from smodels_utils.helper.terminalcolors import *
+
+def query_stats( maxsteps : int, short : bool = False ):
+    running_stats.count_jobs()
+    if not short:
+        running_stats.running_stats()
+    if maxsteps != None:
+        for i in range(maxsteps):
+            time.sleep(30.)
+            print()
+            running_stats.count_jobs()
+            if not short:
+                running_stats.running_stats()
+            print()
 
 def cancelJobsByString ( text : str ):
     """ cancel jobs that have text in their job names """
@@ -168,6 +185,9 @@ def count_dupes():
             print ( "job",j,"#",jobs.count(j) )
 
 if __name__ == "__main__":
+    os.environ["PATH"]+=":/software/system/utils/"
+    os.environ["TERM"]="xterm"
+    os.environ["PYTHONPATH"]="/users/wolfgan.waltenberger/.local/lib/python3.10/site-packages:/software/f2022/software/python/3.10.8-gcccore-12.2.0/lib/python3.10/site-packages:/software/f2022/software/root/6.26.10-foss-2022b/lib:/software/f2022/software/scipy-bundle/2023.02-gfbf-2022b/lib/python3.10/site-packages:/software/f2022/software/pybind11/2.10.3-gcccore-12.2.0/lib/python3.10/site-packages:/software/f2022/software/python/3.10.8-gcccore-12.2.0/easybuild/python:/users/wolfgan.waltenberger/.local/lib/python3.10/site-packages:/users/wolfgan.waltenberger/git/smodels:/users/wolfgan.waltenberger/git/smodels-utils:/users/wolfgan.waltenberger/git/protomodels:/users/wolfgan.waltenberger/git:/users/wolfgan.waltenberger/git/spey:"
     #count_dupes()
     count_jobs()
     running_stats()

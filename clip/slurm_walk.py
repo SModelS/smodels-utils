@@ -699,21 +699,6 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
         print ( f"{intro}{cmd}" )
     o = subprocess.getoutput ( cmd )
 
-def queryStats ( maxsteps : int, short : bool = False ):
-    """ just give us the statistics """
-    import running_stats
-    running_stats.count_jobs()
-    if not short:
-        running_stats.running_stats()
-    if maxsteps != None:
-        for i in range(maxsteps):
-            time.sleep(30.)
-            print()
-            running_stats.count_jobs()
-            if not short:
-                running_stats.running_stats()
-            print()
-
 def logCall ():
     fname = f"{os.environ['HOME']}/walker.log"
     f=open( fname,"at")
@@ -1004,7 +989,8 @@ def main():
             continue
 
         if args.query:
-            queryStats ( args.maxsteps )
+            import running_stats
+            query_stats ( args.maxsteps )
             continue
         if args.query_short:
             queryStats ( args.maxsteps, short=True )
