@@ -5,6 +5,8 @@ protomodels walkers.
 """
 
 import tempfile, argparse, stat, os, math, sys, time, glob, random
+sys.path.insert(0,os.path.expanduser("~/git/smodels-utils"))
+sys.path.insert(0,os.path.expanduser("~/git/protomodels"))
 import hashlib, json, subprocess
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, List, Tuple
@@ -316,7 +318,7 @@ def runOneJob ( rvars: dict ):
             nvars.pop ( i )
         nvars["catch_exceptions"]=True
         ds = py_dumps ( nvars, indent=4 )
-        f.write ( f"factoryOfWalkers.createWalkersNew ( {ds} )\n" )
+        f.write ( f"factoryOfWalkers.createWalkers ( {ds} )\n" )
         """
         f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}',\n" )
         f.write ( f"    dbpath='{dbpath}',\n" )
