@@ -156,8 +156,8 @@ def runWalkers ( args ) -> int:
         args.maxsteps = 1000
     wallpids = not args.dont_wallpids
     rvars = vars(args)
-    rvars["jmin"]= nmin
-    rvars["jmax"]= nmax
+    rvars["nmin"]= nmin
+    rvars["nmax"]= nmax
     rvars["continueFrom"]= continueFrom
     rvars["dbpath"] = args.dbpath
     rvars["cap_ssm"] = 100.
@@ -178,6 +178,7 @@ def runWalkers ( args ) -> int:
         if nprocesses == 1:
             for i in range(args.repeat):
                 rvars["pid"]=0
+                rvars["nmin"]=0
                 runOneJob ( rvars )
             totjobs+=1
         else:
@@ -196,8 +197,8 @@ def runWalkers ( args ) -> int:
                 if seed != None: ## we count up
                     seed += (1+len(rundirs))*(1+nprocesses)
                 rvars["pid"]=i
-                rvars["jmin"]=imin
-                rvars["jmax"]=imax
+                rvars["nmin"]=imin
+                rvars["nmax"]=imax
                 rvars["jobnr"]+=1
                 if i == nprocesses - 1:
                     rvars["jobnr"]=-1 # wanna see the last one
@@ -208,8 +209,8 @@ def runWalkers ( args ) -> int:
                 time.sleep ( random.uniform ( 0.006, .01 ) )
             if nprocesses > 2 :
                 print ( f"{intro}creating WALKER_0.py, but wont start it. You can start it manually!" )
-                rvars["jmin"]=0
-                rvars["jmax"]=1
+                rvars["nmin"]=0
+                rvars["nmax"]=1
                 rvars["dry_run"]=True
                 runOneJob ( rvars )
                 if not os.path.exists ( f"{rundir}/upHi.py" ):
@@ -239,8 +240,8 @@ def runOneJob ( rvars: dict ):
 
     rvars ( dict ):
         - pid (int): process id, integer that idenfies the process
-        - jmin (int): id of first walker
-        - jmax (int): id of last walker
+        - nmin (int): id of first walker
+        - nmax (int): id of last walker
         - cont (str): pickle file to start with, "" means start from SM
         - dbpath (os.PathLike): path to database
         - dry_run (bool): if true, then create script but dont run it
@@ -271,20 +272,20 @@ def runOneJob ( rvars: dict ):
     globals().update ( rvars ) # doesnt work for all
     dbpath = rvars["dbpath"]
     use_initialiser = rvars["use_initialiser"]
-    jmax = rvars["jmax"]
+    nmax = rvars["nmax"]
     cheatcode = rvars["cheatcode"]
     do_srcombine = rvars["do_srcombine"]
     if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
         dbpath = f"{rundir}/{dbpath}"
-    line = f"run walkers {jmin} - {jmax-1}"
-    if jmax == jmin:
-        jmax = jmin + 1
-    if jmax == jmin + 1:
-        line = f"run walker {jmin}"
+    line = f"run walkers {nmin} - {nmax-1}"
+    if nmax == nmin:
+        nmax = nmin + 1
+    if nmax == nmin + 1:
+        line = f"run walker {nmin}"
     slurmdir = f"{rundir}/slurm/"
     if not os.path.exists ( slurmdir ):
         os.mkdir ( slurmdir )
-    runner = f"{slurmdir}/WALKER_{jmin}.py"
+    runner = f"{slurmdir}/WALKER_{nmin}.py"
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -319,26 +320,10 @@ def runOneJob ( rvars: dict ):
         nvars["catch_exceptions"]=True
         ds = py_dumps ( nvars, indent=4 )
         f.write ( f"factoryOfWalkers.createWalkers ( {ds} )\n" )
-        """
-        f.write ( f"factoryOfWalkers.createWalkers ( {jmin}, {jmax}, '{cont}',\n" )
-        f.write ( f"    dbpath='{dbpath}',\n" )
-        f.write ( f"    cheatcode={scheatcode},\n" )
-        f.write ( f"    rundir='{rundir}',\n" )
-        f.write ( f"    maxsteps={maxsteps}, seed={seed},\n" )
-        f.write ( f"    select='{select}', do_srcombine={do_srcombine}, test_param_space = {test_param_space},\n" )
-        f.write ( f"    cap_ssm = {cap_ssm}, run_mcmc = {run_mcmc},\n" )
-        f.write ( f"    record_history={record_history}, update_hiscores={update_hiscores},\n" )
-        f.write ( f"    stopTeleportationAfter={stopTeleportationAfter},\n" )
-        f.write ( f"    forbiddenparticles={forbiddenparticles},\n" )
-        f.write ( f"    templateSLHA='{templateSLHA}',\n" )
-        f.write ( f"    allowN1N1Prod={allowN1N1Prod},\n" )
-        f.write ( f"    susy_mode={susy_mode}, use_initialiser={use_initialiser}\n" )
-        f.write ( ")\n" )
-        """
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # Dir = getDirname ( rundir )
 
-    ram = max ( 10000., 4000. * ( jmax - jmin ) )
+    ram = max ( 10000., 4000. * ( nmax - nmin ) )
     ram = ram*2.8
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.2
@@ -364,9 +349,9 @@ def runOneJob ( rvars: dict ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd += [ "--qos", qos ]
-    # cmd += [ "-n", str(jmax - jmin) ]
-    # cmd += [ "--threads-per-core", str(jmax - jmin) ]
-    # cmd += [ "-N", str(jmax - jmin) ]
+    # cmd += [ "-n", str(nmax - nmin) ]
+    # cmd += [ "--threads-per-core", str(nmax - nmin) ]
+    # cmd += [ "-N", str(nmax - nmin) ]
     # cmd += [ "-k" ]
     cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", runner ]
     scmd =  " ".join ( cmd )
@@ -819,8 +804,8 @@ def cancelRangeOfRunners( jrange : str ):
 
     if 0 < p1 < len(jrange)-1:
         # full range given
-        jmin,jmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
-        for i in range(jmin,jmax+1):
+        nmin,nmax = int ( jrange[:p1] ), int ( jrange[p1+1:] )
+        for i in range(nmin,nmax+1):
             cmd = f"scancel {i}"
             subprocess.getoutput ( cmd )
             cancelled.append ( i )
