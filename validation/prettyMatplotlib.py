@@ -22,6 +22,7 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname
 from validationHelpers import prettyAxes
 import matplotlib.ticker as ticker
+from matplotlib.pyplot import contour
 from smodels_utils.helper.terminalcolors import *
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
          getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
@@ -49,29 +50,91 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             # if not math.isnan ( value )  and y > x:
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
-def retrievePoints ( cs ) -> tuple:
-    """ retrieve the points from the contour """
+def retrievePoints ( cs : contour ) -> list[list[dict]]:
+    """ retrieve the points from the contour 
+
+    :param cs: matplotlib contour
+    :returns: list of exclusion lines, where an exclusion line is
+    a list of dictionaries with "x" and "y"
+    """
+    exclusion_lines = []
     x, y = [], []
+
+    def exclusionLineFromPaths ( paths ):
+        """ get exclusion line from matplotlib paths """
+        exclusion_lines = []
+        for paths in paths_cs:
+            vertices_cs = paths.vertices
+            l_x = vertices_cs[:,0].tolist()
+            l_y = vertices_cs[:,1].tolist()
+            exclusion_line = []
+            for x,y, code in zip ( l_x, l_y, paths.codes ):
+                if code == 1:
+                    if len(exclusion_line)>0:
+                        exclusion_lines.append( exclusion_line )
+                    exclusion_line = []
+                exclusion_line.append ( { "x": round(x,5), "y": round(y,5) } )
+            if len(exclusion_line)>0:
+                exclusion_lines.append ( exclusion_line )
+        return exclusion_lines
+
     if hasattr ( cs, "collections" ) and len(cs.collections)>0:
         paths_cs = cs.collections[0].get_paths()  #collections[0] refers to the 1st level
-        if len ( paths_cs ) > 0:
-            for paths in paths_cs:
-                vertices_cs = paths.vertices
-                x.append(vertices_cs[:,0].tolist())
-                y.append(vertices_cs[:,1].tolist())
-        return x, y
+        exclusion_lines = exclusionLineFromPaths ( paths_cs )
+        return exclusion_lines
+
     if hasattr ( cs, "_paths" ):
         paths_cs = cs._paths  #collections[0] refers to the 1st level
-        if len ( paths_cs ) > 0:
-            for paths in paths_cs:
-                vertices_cs = paths.vertices
-                x.append(vertices_cs[:,0].tolist())
-                y.append(vertices_cs[:,1].tolist())
-        return x, y
-    return x, y
+        # print ( f'retrievePoints {paths_cs}' )
+        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+        exclusion_lines = exclusionLineFromPaths ( paths_cs )
+        return exclusion_lines
+    return exclusion_lines
 
-def createSModelSExclusionJson(xobs, yobs, xexp, yexp, validationPlot ):
+def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files """
+    if len(excl_lines)==0 and len(exp_excl_lines)==0:
+        print( f"[prettyMatplotlib] {RED}Skipping creation of SModelS Exclusion JSON: no points{RESET}")
+        return
+
+    if not validationPlot.combine: plot_type = "bestSR"
+    else: plot_type = "comb"
+    axes = validationPlot.axes
+    #store x,y points in json file
+    plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obs_excl":excl_lines, "exp_excl": exp_excl_lines }}
+    vDir = validationPlot.getValidationDir (validationDir=None)
+    file_js = "SModelS_ExclusionLines.json"
+    import json
+    plots = plot_dict
+    if os.path.exists(f"{vDir}/{file_js}"):
+        file = open(f'{vDir}/{file_js}','r')
+        try:
+            plots = json.load(file)
+            plots.update(plot_dict)
+        except Exception as e:
+            print ( f"[prettyMatplotlib] cannot read {vDir}/{file_js}: {e}" )
+            sys.exit()
+
+    plots["schema_version"]="2.0"
+
+    npoints = 0
+    if len(excl_lines)>0:
+        for excl_line in excl_lines:
+            npoints += len(excl_line)
+
+    print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
+
+    from ptools.helpers import py_dumps
+    ds = py_dumps(plots, indent=4, stop_at_level = 4 )
+    ds = ds.replace("'",'"')
+    file = open(f'{vDir}/{file_js}','w')
+    file.write ( ds + "\n" )
+    file.close()
+
+def createSModelSExclusionJsonV1(xobs, yobs, xexp, yexp, validationPlot ):
+    """ create the SModelS_ExclusionLines.json exclusion files,
+    this is the old version, all exclusion lines merged, x and y separated,
+    no schema_version """
     if len(xobs)==0 and len(xexp)==0:
         print( f"[prettyMatplotlib] {RED}Skipping creation of SModelS Exclusion JSON: no points{RESET}")
         return
@@ -431,18 +494,18 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                   transform = fig.transFigure )
         #convert contour to a list of x,y values
 
-        x_ecs, y_ecs = [],[]
-        x_cs, y_cs = retrievePoints ( cs )
+        excl_lines = retrievePoints ( cs )
+        exp_excl_lines = []
 
         if options["drawExpected"] in [ "auto", True ] and not np.all ( np.isnan(eT) ):
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                             transform = fig.transFigure, linestyle="dotted" )
-            x_ecs, y_ecs = retrievePoints ( cs )
+            exp_excl_lines = retrievePoints ( cs )
 
         if options["createSModelSExclJson"]: 
-            createSModelSExclusionJson(x_cs,y_cs,x_ecs,y_ecs, validationPlot)
+            createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot )
 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
