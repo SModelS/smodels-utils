@@ -125,8 +125,7 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
     print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
 
     from ptools.helpers import py_dumps
-    ds = py_dumps(plots, indent=4, stop_at_level = 4 )
-    ds = ds.replace("'",'"')
+    ds = py_dumps(plots, indent=4, stop_at_level = 4, double_quotes = True )
     file = open(f'{vDir}/{file_js}','w')
     file.write ( ds + "\n" )
     file.close()
