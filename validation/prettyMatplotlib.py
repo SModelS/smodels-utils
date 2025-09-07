@@ -130,10 +130,19 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
     file.write ( ds + "\n" )
     file.close()
 
-def createSModelSExclusionJsonV1(xobs, yobs, xexp, yexp, validationPlot ):
+def createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files,
     this is the old version, all exclusion lines merged, x and y separated,
     no schema_version """
+    xobs, yobs, xexp, yexp = [[]], [[]], [[]], [[]]
+    for excl_line in excl_lines:
+        for pt in excl_line:
+            xobs[0].append ( pt["x"] )
+            yobs[0].append ( pt["y"] )
+    for excl_line in exp_excl_lines:
+        for pt in excl_line:
+            xexp[0].append ( pt["x"] )
+            yexp[0].append ( pt["y"] )
     if len(xobs)==0 and len(xexp)==0:
         print( f"[prettyMatplotlib] {RED}Skipping creation of SModelS Exclusion JSON: no points{RESET}")
         return
@@ -159,6 +168,7 @@ def createSModelSExclusionJsonV1(xobs, yobs, xexp, yexp, validationPlot ):
     npoints = 0
     if len(xobs)>0:
         npoints = len(xobs[0])
+    plots["schema_version"]="1.0"
 
     print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
 
@@ -504,7 +514,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             exp_excl_lines = retrievePoints ( cs )
 
         if options["createSModelSExclJson"]: 
-            createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot )
+            createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot )
 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
