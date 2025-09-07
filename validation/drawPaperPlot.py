@@ -15,6 +15,112 @@ from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 
+def getSModelSCurveFromJsonV2( anaDir, validationFolder, txname, type=[ "bestSR", "combined"],
+                      axes=None, eval_axes=True ):
+    """
+    Get Exclusion Curve from official and SModelS json files
+    :param anaDir: path to dir of analysis
+    :param txname: txname for which we need the exclusion curve
+    :param type: type of exclusion curve - official curve, SModelS bestSR, SModelS combined SR
+    :param axes: axes map of official exclusion line
+    returns a dict of obs and exp exclusion lines
+    """
+    saxes = str(axes).replace(" ","").replace("'","")
+
+    excl_x,excl_y,exp_excl_x,exp_excl_y = [],[],[],[]
+    excl_lines = {}
+
+    fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
+    if not os.path.exists ( fname ):
+        print ( f"[drawPaperPlot] error: {fname} does not exist!" )
+        return []
+    print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
+
+    file = open(fname,"r")
+    excl_file = json.load(file)
+    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+    if f"{txname}_comb_{axes}" not in excl_file:
+        print(f"[drawPaperPlot] {txname}_comb_{saxes[:20]} not found in {fname}")
+    if f"{txname}_bestSR_{axes}" not in excl_file:
+        print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
+        # return excl_lines
+    if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
+        saxes = axes.replace(" ","").replace("'","")
+        print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
+        excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
+        excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
+        exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
+        exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
+
+    elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
+        curve = f'{txname}_comb_{axes}'
+        excl_x     = sum(excl_file[curve]['obs_excl']['x'], [])
+        excl_y     = sum(excl_file[curve]['obs_excl']['y'], [])
+        exp_excl_x = sum(excl_file[curve]['exp_excl']['x'], [])
+        exp_excl_y = sum(excl_file[curve]['exp_excl']['y'], [])
+        col = CYAN
+        if len(excl_x)==0:
+            col = RED
+        scurve = curve.replace(" ","").replace("'","")
+        print (f"[drawPaperPlot] {col}we have {scurve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
+
+    excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
+    return excl_lines
+
+def getSModelSCurveFromJson( anaDir, validationFolder, txname, type=[ "bestSR", "combined"],
+                      axes=None, eval_axes=True ):
+    """
+    Get Exclusion Curve from official and SModelS json files
+    :param anaDir: path to dir of analysis
+    :param txname: txname for which we need the exclusion curve
+    :param type: type of exclusion curve - official curve, SModelS bestSR, SModelS combined SR
+    :param axes: axes map of official exclusion line
+    returns a dict of obs and exp exclusion lines
+    """
+    saxes = str(axes).replace(" ","").replace("'","")
+
+    excl_x,excl_y,exp_excl_x,exp_excl_y = [],[],[],[]
+    excl_lines = {}
+
+    fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
+    if not os.path.exists ( fname ):
+        print ( f"[drawPaperPlot] error: {fname} does not exist!" )
+        return []
+    print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
+
+    file = open(fname,"r")
+    excl_file = json.load(file)
+    if "schema_version" in excl_file and excl_file["schema_version"][0]=="2":
+        return getSModelSCurveFromJsonV2 ( anaDir, validationFolder, txname, type,
+                axes, eval_axes )
+    if f"{txname}_comb_{axes}" not in excl_file:
+        print(f"[drawPaperPlot] {txname}_comb_{saxes[:20]} not found in {fname}")
+    if f"{txname}_bestSR_{axes}" not in excl_file:
+        print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
+        # return excl_lines
+    if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
+        saxes = axes.replace(" ","").replace("'","")
+        print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
+        excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
+        excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
+        exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
+        exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
+
+    elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
+        curve = f'{txname}_comb_{axes}'
+        excl_x     = sum(excl_file[curve]['obs_excl']['x'], [])
+        excl_y     = sum(excl_file[curve]['obs_excl']['y'], [])
+        exp_excl_x = sum(excl_file[curve]['exp_excl']['x'], [])
+        exp_excl_y = sum(excl_file[curve]['exp_excl']['y'], [])
+        col = CYAN
+        if len(excl_x)==0:
+            col = RED
+        scurve = curve.replace(" ","").replace("'","")
+        print (f"[drawPaperPlot] {col}we have {scurve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
+
+    excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
+    return excl_lines
+
 def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"],
                       axes=None, eval_axes=True ):
     """
@@ -81,47 +187,13 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
                 exp_excl_y = excl_file[txname][f"expExclusion_{axes}"]['y']
 
     else:
-        fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
-        if not os.path.exists ( fname ):
-            print ( f"[drawPaperPlot] error: {fname} does not exist!" )
-            return []
-        print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
-
-        file = open(fname,"r")
-        excl_file = json.load(file)
-        if f"{txname}_comb_{axes}" not in excl_file:
-            print(f"[drawPaperPlot] {txname}_comb_{saxes[:20]} not found in {fname}")
-        if f"{txname}_bestSR_{axes}" not in excl_file:
-            print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
-            # return excl_lines
-        if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
-            saxes = axes.replace(" ","").replace("'","")
-            print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
-            excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
-            excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
-            exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
-            exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
-
-        elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
-            curve = f'{txname}_comb_{axes}'
-            excl_x     = sum(excl_file[curve]['obs_excl']['x'], [])
-            excl_y     = sum(excl_file[curve]['obs_excl']['y'], [])
-            exp_excl_x = sum(excl_file[curve]['exp_excl']['x'], [])
-            exp_excl_y = sum(excl_file[curve]['exp_excl']['y'], [])
-            col = CYAN
-            if len(excl_x)==0:
-                col = RED
-            scurve = curve.replace(" ","").replace("'","")
-            print (f"[drawPaperPlot] {col}we have {scurve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
-
-    excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
-
+        return getSModelSCurveFromJson ( anaDir, validationFolder, txname, type,
+                                         axes, eval_axes )
     if ('x - y' in axes or 'x-y' in axes) and eval_axes:
         print(f"[drawPaperPlot] {type} {txname} {axes} yes")
         for type, excl in excl_lines.items():
             excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
             excl_lines[type] = {"x":excl["x"],"y":excl_y}
-
     return excl_lines
 
 def getOnshellAxesForOffshell(anaDir : os.PathLike, tx_onshell : str,
