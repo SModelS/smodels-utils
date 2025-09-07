@@ -697,9 +697,10 @@ class DatabaseCreator(list):
                    content[dirname][name]={ "x": xv, "y": yv }
                 if axisMap is not None:
                     content[dirname][name]["axisMap"]=axisMap
+        content["schema_version"]="1.0"
         with open ( fname, "wt" ) as handle:
             # json.dump ( content, handle, indent = 1 )
-            c = json.dumps ( content, indent = 2 )
+            c = json.dumps ( content, indent = 4 )
             import re
             cc = re.sub(r'(\d),\s+', r'\1, ', c )
             handle.write ( cc )
