@@ -692,15 +692,16 @@ class DatabaseCreator(list):
             if not name in content[dirname]:
                 # content[dirname][name]=xandy
                 if len(yv)==0:
-                    content[dirname][name]={ "x": xv }
+                    content[dirname][name]= [ [ { "x": x } for x in xv ] ]
                 else:
-                   content[dirname][name]={ "x": xv, "y": yv }
+                   content[dirname][name]= [ [ { "x": x, "y": y } for x,y in zip(xv,yv) ] ]
                 if axisMap is not None:
                     content[dirname][name]["axisMap"]=axisMap
-        content["schema_version"]="1.0"
+        content["schema_version"]="2.0"
         with open ( fname, "wt" ) as handle:
+            from smodels_utils.helper.various import py_dumps
             # json.dump ( content, handle, indent = 1 )
-            c = json.dumps ( content, indent = 4 )
+            c = py_dumps ( content, indent = 4, stop_at_level=4, double_quotes=True )
             import re
             cc = re.sub(r'(\d),\s+', r'\1, ', c )
             handle.write ( cc )
