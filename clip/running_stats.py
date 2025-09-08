@@ -12,16 +12,16 @@ import glob, stat, time, subprocess
 from smodels_utils.helper.terminalcolors import *
 
 def query_stats( maxsteps : int, short : bool = False ):
-    running_stats.count_jobs()
+    count_jobs()
     if not short:
-        running_stats.running_stats()
+        running_stats()
     if maxsteps != None:
         for i in range(maxsteps):
             time.sleep(30.)
             print()
-            running_stats.count_jobs()
+            count_jobs()
             if not short:
-                running_stats.running_stats()
+                running_stats()
             print()
 
 def cancelJobsByString ( text : str ):

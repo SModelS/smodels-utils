@@ -324,9 +324,9 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
-    ram = ram*2.8
+    ram = ram*3
     if rvars["time"]>9: # longer running job, more ram
-        ram=ram*1.2
+        ram=ram*1.3
     #if "comb" in rundir: ## combinations need more RAM
     #    ram = ram * 1.2
     #if "history" in rundir: ## history runs need more RAM
@@ -990,10 +990,11 @@ def main():
 
         if args.query:
             import running_stats
-            query_stats ( args.maxsteps )
+            running_stats.query_stats ( args.maxsteps )
             continue
         if args.query_short:
-            queryStats ( args.maxsteps, short=True )
+            import running_stats
+            running_stats.query_stats ( args.maxsteps, short=True )
             continue
         if args.clean:
             clean_dirs( rundir, clean_all = False )
