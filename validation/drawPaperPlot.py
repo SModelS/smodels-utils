@@ -15,6 +15,17 @@ from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 
+def getCoords ( efile, curve, entry, coord : str  ):
+    """ get the coordinates of curve residing in efile
+
+    :param efile: the excl_file
+    :param curve: the curve as lists
+    :param entry: e.g. obs_excl, or exp_excl
+    :param coord: x, or y
+    """
+    values = efile[curve][entry][coord]
+    return values
+
 def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"],
                       axes=None, eval_axes=True ):
     """
@@ -104,10 +115,10 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             curve = f'{txname}_comb_{axes}'
 
         if curve != None:
-            all_obs_x = excl_file[curve]['obs_excl']['x']
-            all_obs_y = excl_file[curve]['obs_excl']['y']
-            all_exp_x = excl_file[curve]['exp_excl']['x']
-            all_exp_y = excl_file[curve]['exp_excl']['y']
+            all_obs_x = getCoords ( excl_file, curve, "obs_excl", "x" )
+            all_obs_y = getCoords ( excl_file, curve, "obs_excl", "y" )
+            all_exp_x = getCoords ( excl_file, curve, "exp_excl", "x" )
+            all_exp_y = getCoords ( excl_file, curve, "exp_excl", "y" )
             excl_x     = sum( all_obs_x, [])
             excl_y     = sum( all_obs_y, [])
             exp_excl_x     = sum( all_exp_x, [])
