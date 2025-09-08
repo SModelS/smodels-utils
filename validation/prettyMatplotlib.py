@@ -514,8 +514,9 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             exp_excl_lines = retrievePoints ( cs )
 
         if options["createSModelSExclJson"]: 
-            writeV1Format = True
+            writeV1Format = False
             if writeV1Format:
+                # thats the old format, list of x values, list of y values
                 createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot )
             else:
                 createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot )

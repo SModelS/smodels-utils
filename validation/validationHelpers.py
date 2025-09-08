@@ -34,10 +34,11 @@ def showPlot ( filename : str ) -> bool:
         if viewer == "timg" and term == "xterm-kitty":
             v += " -pkitty "
         cmd = f"{v} {filename}"
+        import time
+        time.sleep(0.1)
         o = subprocess.check_output ( cmd, shell=True )
         print ( f"[showPlot] {cmd}" )
-        import time
-        time.sleep(.8)
+        time.sleep(1.0)
         print ( f"{o.decode('ascii')}" )
         return True
     return False

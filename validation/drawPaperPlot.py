@@ -23,6 +23,13 @@ def getCoords ( efile, curve, entry, coord : str  ):
     :param entry: e.g. obs_excl, or exp_excl
     :param coord: x, or y
     """
+    if "schema_version" in efile and efile["schema_version"]=="2.0":
+        values = []
+        for l in efile[curve][entry]:
+            for d in l:
+                if coord in d:
+                    values.append ( d[coord] )
+        return [ values ]
     values = efile[curve][entry][coord]
     return values
 
@@ -194,21 +201,19 @@ def drawOffshell(excl_lines, excl_off, min_off_y = 0.0, official=False):
                 excl["x"] = excl["x"][index[0]:]
                 excl["y"] = excl["y"][index[0]:]
 
-
         excl["x"] = excl_off[type]["x"] + excl["x"]
         excl["y"] = excl_off[type]["y"] + excl["y"]
-
 
     return excl_lines
 
 def getPrettyProcessName(txname):
-    pName = prettyTxname(txname, outputtype="latex" ).split(',')         #remove pp->intermediate state
-    #print("pnamr ", pName)
+    # remove pp->intermediate state
+    pName = prettyTxname(txname, outputtype="latex" ).split(',')
+    # print("pnamr ", pName)
     if len(pName)>2:
         pName = ','.join(pName[1:])
     else:
         pName = pName[1]
-
     return pName
 
 def getPrettyAxisLabels(label):
