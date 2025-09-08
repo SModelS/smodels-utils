@@ -94,21 +94,16 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
         if f"{txname}_bestSR_{axes}" not in excl_file:
             print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
             # return excl_lines
+        col = CYAN
+        saxes = axes.replace(" ","").replace("'","")
+        curve = None
         if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
-            saxes = axes.replace(" ","").replace("'","")
-            print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
             curve = f'{txname}_bestSR_{axes}'
-            all_obs_x = excl_file[curve]['obs_excl']['x']
-            all_obs_y = excl_file[curve]['obs_excl']['y']
-            all_exp_x = excl_file[curve]['exp_excl']['x']
-            all_exp_y = excl_file[curve]['exp_excl']['y']
-            excl_x     = sum( all_obs_x, [])
-            excl_y     = sum( all_obs_y, [])
-            exp_excl_x     = sum( all_exp_x, [])
-            exp_excl_y     = sum( all_exp_y, [])
 
         elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
             curve = f'{txname}_comb_{axes}'
+
+        if curve != None:
             all_obs_x = excl_file[curve]['obs_excl']['x']
             all_obs_y = excl_file[curve]['obs_excl']['y']
             all_exp_x = excl_file[curve]['exp_excl']['x']
@@ -117,11 +112,9 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             excl_y     = sum( all_obs_y, [])
             exp_excl_x     = sum( all_exp_x, [])
             exp_excl_y     = sum( all_exp_y, [])
-            col = CYAN
             if len(excl_x)==0:
                 col = RED
-            scurve = curve.replace(" ","").replace("'","")
-            print (f"[drawPaperPlot] {col}we have {scurve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
+            print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
 
     excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
 
