@@ -650,12 +650,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
         else:
-            if type(x_vals[0])==list:
-                for x_val, y_val in zip ( x_vals, y_vals ):
-                    ax.plot(x_val, y_val,color='blue', linestyle='solid', label = label)              
-                    label = ""
-            else:
-                ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label)
+            plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
     if 'Gamma' in y_label: ax.set_yscale('log')
     if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
