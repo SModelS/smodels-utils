@@ -514,7 +514,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             exp_excl_lines = retrievePoints ( cs )
 
         if options["createSModelSExclJson"]: 
-            createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot )
+            writeV1Format = True
+            if writeV1Format:
+                createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot )
+            else:
+                createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot )
 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
