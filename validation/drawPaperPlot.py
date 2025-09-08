@@ -97,17 +97,26 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
         if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
             saxes = axes.replace(" ","").replace("'","")
             print (f"[drawPaperPlot] we have {txname}_bestSR_{saxes} as an exclusion line" )
-            excl_x     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['x'], [])
-            excl_y     = sum(excl_file[f'{txname}_bestSR_{axes}']['obs_excl']['y'], [])
-            exp_excl_x = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['x'], [])
-            exp_excl_y = sum(excl_file[f'{txname}_bestSR_{axes}']['exp_excl']['y'], [])
+            curve = f'{txname}_bestSR_{axes}'
+            all_obs_x = excl_file[curve]['obs_excl']['x']
+            all_obs_y = excl_file[curve]['obs_excl']['y']
+            all_exp_x = excl_file[curve]['exp_excl']['x']
+            all_exp_y = excl_file[curve]['exp_excl']['y']
+            excl_x     = sum( all_obs_x, [])
+            excl_y     = sum( all_obs_y, [])
+            exp_excl_x     = sum( all_exp_x, [])
+            exp_excl_y     = sum( all_exp_y, [])
 
         elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
             curve = f'{txname}_comb_{axes}'
-            excl_x     = sum(excl_file[curve]['obs_excl']['x'], [])
-            excl_y     = sum(excl_file[curve]['obs_excl']['y'], [])
-            exp_excl_x = sum(excl_file[curve]['exp_excl']['x'], [])
-            exp_excl_y = sum(excl_file[curve]['exp_excl']['y'], [])
+            all_obs_x = excl_file[curve]['obs_excl']['x']
+            all_obs_y = excl_file[curve]['obs_excl']['y']
+            all_exp_x = excl_file[curve]['exp_excl']['x']
+            all_exp_y = excl_file[curve]['exp_excl']['y']
+            excl_x     = sum( all_obs_x, [])
+            excl_y     = sum( all_obs_y, [])
+            exp_excl_x     = sum( all_exp_x, [])
+            exp_excl_y     = sum( all_exp_y, [])
             col = CYAN
             if len(excl_x)==0:
                 col = RED
