@@ -26,12 +26,42 @@ def getCoords ( efile, curve, entry, coord : str  ):
     if "schema_version" in efile and efile["schema_version"]=="2.0":
         values = []
         for l in efile[curve][entry]:
+            one_curve = []
             for d in l:
                 if coord in d:
-                    values.append ( d[coord] )
-        return [ values ]
+                    one_curve.append ( d[coord] )
+            values.append ( one_curve )
+        return values
     values = efile[curve][entry][coord]
     return values
+
+def add_jitter ( y_vals, addJitter : bool ):
+    """ add jitter
+    :bool addJitter: if false, then dont add jitter """
+    if not addJitter:
+        return y_vals
+    for i, y in enumerate(y_vals):
+        if type(y)==list:
+            for j, yy in enumerate(y):
+                y_vals[i][j]= yy * random.uniform(.98,1.02)
+        else:
+            y_vals[i]= y * random.uniform(.98,1.02)
+    return y_vals
+            
+
+def plotLines ( ax, x_vals, y_vals, color : str, linestyle : str, 
+               label : str ):
+    """ plot lines """
+    if len(x_vals)==0:
+        return
+    if type(x_vals[0]) == list:
+        for x_val, y_val in zip ( x_vals, y_vals ):
+            ax.plot( x_val, y_val,color=color, linestyle= linestyle, 
+                     label = label )
+            label = ""
+        return
+    ax.plot( x_vals, y_vals,color=color, linestyle=linestyle, 
+             label = label )
 
 def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"],
                       axes=None, eval_axes=True ):
@@ -45,8 +75,8 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
     """
     saxes = str(axes).replace(" ","").replace("'","")
 
-    excl_x,excl_y,exp_excl_x,exp_excl_y = [],[],[],[]
     excl_lines = {}
+    all_obs_x, all_obs_y, all_exp_x, all_exp_y = [], [], [], []
 
     if type == "official":
         fname = f"{anaDir}/exclusion_lines.json"
@@ -92,11 +122,14 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
                     print( f"[drawPaperPlot] {RED}ERROR could not find new axis. implement! {axes} {RESET}" )
                     sys.exit(-1)
 
-            excl_x = excl_file[txname][f"obsExclusion_{axes}"]['x']
-            excl_y = excl_file[txname][f"obsExclusion_{axes}"]['y']
+            excl_x = getCoords ( excl_file, txname, f"obsExclusion_{axes}", "x" )
+            excl_y = getCoords ( excl_file, txname, f"obsExclusion_{axes}", "y" )
             if f"expExclusion_{axes}" in excl_file[txname].keys():
-                exp_excl_x = excl_file[txname][f"expExclusion_{axes}"]['x']
-                exp_excl_y = excl_file[txname][f"expExclusion_{axes}"]['y']
+                exp_excl_x = getCoords ( excl_file, txname, f"expExclusion_{axes}", "x" )
+                exp_excl_y = getCoords ( excl_file, txname, f"expExclusion_{axes}", "y" )
+            excl_lines = { "obs_excl":{"x":excl_x,"y":excl_y}, 
+                           "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
+            return excl_lines
 
     else:
         fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
@@ -121,20 +154,21 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
         elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
             curve = f'{txname}_comb_{axes}'
 
+
         if curve != None:
             all_obs_x = getCoords ( excl_file, curve, "obs_excl", "x" )
             all_obs_y = getCoords ( excl_file, curve, "obs_excl", "y" )
             all_exp_x = getCoords ( excl_file, curve, "exp_excl", "x" )
             all_exp_y = getCoords ( excl_file, curve, "exp_excl", "y" )
-            excl_x     = sum( all_obs_x, [])
-            excl_y     = sum( all_obs_y, [])
-            exp_excl_x     = sum( all_exp_x, [])
-            exp_excl_y     = sum( all_exp_y, [])
-            if len(excl_x)==0:
+            #excl_x     = sum( all_obs_x, [])
+            #excl_y     = sum( all_obs_y, [])
+            #exp_excl_x     = sum( all_exp_x, [])
+            #exp_excl_y     = sum( all_exp_y, [])
+            if len(all_obs_x)==0:
                 col = RED
-            print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {len(excl_x)} (observed) and {len(exp_excl_x)} (expected) points{RESET}" )
-
-    excl_lines = {"obs_excl":{"x":excl_x,"y":excl_y}, "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
+            print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
+    excl_lines = { "obs_excl":{"x":all_obs_x,"y":all_obs_y}, 
+                   "exp_excl":{"x":all_exp_x,"y":all_exp_y}}
 
     if ('x - y' in axes or 'x-y' in axes) and eval_axes:
         print(f"[drawPaperPlot] {type} {txname} {axes} yes")
@@ -250,10 +284,16 @@ def lifetimeToWidth(time):
     return hbar/time
 
 
-def getExtremeValue(excl_line, extreme, type, width=False):
-    if type == "official":
+def getExtremeValue(excl_line, extreme : str, e_type : str, 
+        width : bool = False) -> float:
+    """ get the extreme  value
+    :param extreme: 'min' or 'max'
+    """
+    if len(excl_line)==0: return -1
+    if type(excl_line[0]) == list:
+        excl_line = sum(excl_line,[])
+    if e_type == "official":
         if extreme == "max":
-            if len(excl_line)==0: return -1
             return max(excl_line)
         else:
             if len(excl_line)==0: return np.inf
@@ -373,29 +413,29 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
 
     #get the range of x values in obs and exp curves to set lim on plot ranges. low limit on y axes usually 0 for plot (except for width plots)
-    max_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "max", type="official")
-    if bestSR: max_obs_x = max(max_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "max", type="bestSR"))
-    if combSR: max_obs_x = max(max_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "max", type="combined"))
+    max_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "max", e_type="official")
+    if bestSR: max_obs_x = max(max_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "max", e_type="bestSR"))
+    if combSR: max_obs_x = max(max_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "max", e_type="combined"))
 
-    max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", type="official")
-    if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", type="bestSR"))
-    if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", type="combined"))
+    max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
+    if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", e_type="bestSR"))
+    if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", e_type="combined"))
 
-    max_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "max", type="official")
-    if bestSR: max_exp_x = max(max_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "max", type="bestSR"))
-    if combSR: max_exp_x = max(max_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "max", type="combined"))
+    max_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "max", e_type="official")
+    if bestSR: max_exp_x = max(max_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "max", e_type="bestSR"))
+    if combSR: max_exp_x = max(max_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "max", e_type="combined"))
 
-    max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", type="official")
-    if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", type="bestSR"))
-    if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", type="combined"))
+    max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
+    if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", e_type="bestSR"))
+    if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", e_type="combined"))
 
-    min_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "min", type="official")
-    if bestSR: min_obs_x = min(min_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "min", type="bestSR"))
-    if combSR: min_obs_x = min(min_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "min", type="combined"))
+    min_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "min", e_type="official")
+    if bestSR: min_obs_x = min(min_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "min", e_type="bestSR"))
+    if combSR: min_obs_x = min(min_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "min", e_type="combined"))
 
-    min_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "min", type="official")
-    if bestSR: min_exp_x = min(min_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "min", type="bestSR"))
-    if combSR: min_exp_x = min(min_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "min", type="combined"))
+    min_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "min", e_type="official")
+    if bestSR: min_exp_x = min(min_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "min", e_type="bestSR"))
+    if combSR: min_exp_x = min(min_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "min", e_type="combined"))
 
     num_sr, num_cr = 0, 0
     ver = ""
@@ -513,13 +553,14 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     ax.set_ylabel(y_label,fontsize = 14)
     ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
     if 'Gamma' in y_label:
-        max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", type="official")
-        if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", type="bestSR", width=True))
-        if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", type="combined", width=True))
+        print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+        max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
+        if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", e_type="bestSR", width=True))
+        if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", e_type="combined", width=True))
 
-        min_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "min", type="official")
-        if bestSR: min_obs_y = min(min_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "min", type="bestSR", width=True))
-        if combSR: min_obs_y = min(min_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "min", type="combined", width=True))
+        min_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "min", e_type="official")
+        if bestSR: min_obs_y = min(min_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "min", e_type="bestSR", width=True))
+        if combSR: min_obs_y = min(min_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "min", e_type="combined", width=True))
         step_y = max_obs_y*1000
         #print("min_obs_y ", min_obs_y)
         #print("step ", step_y)
@@ -542,12 +583,15 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     #plot excl curves
     exp_name = analysis.split('-')[0]
-    ax.plot(off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
+    # ax.plot(off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
+    plotLines ( ax, off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],
+               "black", "solid", label = f'{exp_name} official') 
     #print("official : ", off_excl["obs_excl"]["y"] )
     if bestSR:
         x_vals = bestSR_excl["obs_excl"]["x"]
         y_vals = bestSR_excl["obs_excl"]["y"]
         if 'Gamma' in y_label:
+            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             print("yes gamma")
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -562,8 +606,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
         else:
-            if len(x_vals)>0:
-                ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
+            plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR") 
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 
@@ -572,13 +615,12 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
         y_vals = comb_excl["obs_excl"]["y"]
-        if addJitter:
-            for i, y in enumerate(y_vals):
-                y_vals[i]= y * random.uniform(.98,1.02)
+        y_vals = add_jitter ( y_vals, addJitter )
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
             label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
+            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
@@ -590,7 +632,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
         else:
-            ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
+            plotLines ( ax, x_vals, y_vals, "red", "solid", label )
 
     if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["obs_excl"]["x"]
@@ -599,14 +641,21 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         if cr_is == "orig":
             label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
+            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
         else:
-            ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label)
+            if type(x_vals[0])==list:
+                for x_val, y_val in zip ( x_vals, y_vals ):
+                    ax.plot(x_val, y_val,color='blue', linestyle='solid', label = label)              
+                    label = ""
+            else:
+                ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label)
 
     if 'Gamma' in y_label: ax.set_yscale('log')
     if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
@@ -663,13 +712,14 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     ax.set_ylabel(y_label,fontsize = 14)
     ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
     if 'Gamma' in y_label:
-        max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", type="official")
-        if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", type="bestSR", width=True))
-        if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", type="combined", width=True))
+        print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+        max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
+        if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", e_type="bestSR", width=True))
+        if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", e_type="combined", width=True))
 
-        min_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "min", type="official")
-        if bestSR: min_exp_y = min(min_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "min", type="bestSR", width=True))
-        if combSR: min_exp_y = min(min_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "min", type="combined", width=True))
+        min_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "min", e_type="official")
+        if bestSR: min_exp_y = min(min_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "min", e_type="bestSR", width=True))
+        if combSR: min_exp_y = min(min_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "min", e_type="combined", width=True))
         print("min exp y ", min_exp_y)
         step_y = max_exp_y*1000
         print("step exp y ", step_y)
@@ -686,6 +736,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         x_vals = bestSR_excl["exp_excl"]["x"]
         y_vals = bestSR_excl["exp_excl"]["y"]
         if 'Gamma' in y_label:
+            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
@@ -707,13 +758,12 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if combSR:
         x_vals = comb_excl["exp_excl"]["x"]
         y_vals = comb_excl["exp_excl"]["y"]
-        if addJitter:
-            for i, y in enumerate(y_vals):
-                y_vals[i]= y * random.uniform(.98,1.02)
+        y_vals = add_jitter ( y_vals, addJitter )
         label = f"SModelS: comb. {num_sr} SRs {ver}"
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
             label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
+            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
@@ -721,7 +771,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
         else:
-            ax.plot(x_vals, y_vals,color='red', linestyle='solid', label = label )
+            plotLines ( ax, x_vals, y_vals, "red", "solid", label )
     if cr_excl not in [ None, [] ]:
         x_vals = cr_excl["exp_excl"]["x"]
         y_vals = cr_excl["exp_excl"]["y"]
@@ -729,13 +779,15 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         if cr_is == "orig":
             label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
+            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
             if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
             ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
             ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
-        else:ax.plot(x_vals, y_vals,color='blue', linestyle='solid', label = label )
+        else:
+            plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
     if 'Gamma' in y_label: ax.set_yscale('log')
 
