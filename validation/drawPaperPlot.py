@@ -745,8 +745,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
         else:
-            if len(x_vals)>0:
-                ax.plot(x_vals, y_vals,color='red', linestyle='dashed', label = "SModelS: best SR")
+            plotLines ( ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR")
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 

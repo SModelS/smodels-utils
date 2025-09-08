@@ -202,7 +202,7 @@ class MetaInfoInput(Locker):
     """
 
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
-    'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment', 'modelFile', 'datasetOrderForModel',
+    'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment', 'modelFile', 'datasetOrderForModel', 'mlModels',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
     'combinableWith', 'jsonFiles', 'jsonFiles_FullLikelihood', 'source',
     'Leff_inner', 'Leff_outer', 'type',
