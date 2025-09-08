@@ -289,7 +289,10 @@ def getExtremeValue(excl_line, extreme : str, e_type : str,
     """ get the extreme  value
     :param extreme: 'min' or 'max'
     """
-    if len(excl_line)==0: return -1
+    if len(excl_line)==0: 
+        if extreme == "max":
+            return -1
+        return np.inf
     if type(excl_line[0]) == list:
         excl_line = sum(excl_line,[])
     if e_type == "official":
@@ -318,8 +321,8 @@ def getExtremeValue(excl_line, extreme : str, e_type : str,
                 return mini
             if len(excl_line)>0:
                 mini = min(mini, min(excl_line))
-            else:
-                mini = 0.
+            #else:
+            #    mini = 
             return mini
 
 def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
@@ -551,9 +554,10 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
+    print ( f"@@@ min_obs_x {min_obs_x}" )
     ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
     if 'Gamma' in y_label:
-        print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+        print ( f"{RED}[drawPaperPlot:3] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
         max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
         if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", e_type="bestSR", width=True))
         if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", e_type="combined", width=True))
@@ -591,7 +595,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         x_vals = bestSR_excl["obs_excl"]["x"]
         y_vals = bestSR_excl["obs_excl"]["y"]
         if 'Gamma' in y_label:
-            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            print ( f"{RED}[drawPaperPlot:4] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             print("yes gamma")
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
@@ -620,7 +624,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
             label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
-            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            print ( f"{RED}[drawPaperPlot:5] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
@@ -641,14 +645,17 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         if cr_is == "orig":
             label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
-            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            y_vals = [10**y for y in y_vals]
-            y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-            index_max_diff = -1
-            if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+            print ( f"{RED}[drawPaperPlot:6] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            if type(x_vals[0]) == list:
+                y_vals = [10**y for y in y_vals]
+                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
+                index_max_diff = -1
+                if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
 
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
+                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
+            else:
+                plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
         else:
             plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
@@ -663,21 +670,6 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     #get_name_of_plot
     if getAxisType(axes) == "v2":
         axes = axisV2ToV3(axes)
-    """
-    oaxes = axes
-    axes = eval(axes).values()
-    # print("[drawPaperPlot] fig ", axes)
-    fig_axes_title = ""
-    for a in axes: fig_axes_title += str(a) + '_'
-    fig_axes_title_old = fig_axes_title
-    fig_axes_title = fig_axes_title.replace('x-y', 'y')
-    fig_axes_title = fig_axes_title.replace('00', '0')
-    fig_axes_title = fig_axes_title.replace('.0', '')
-    fig_axes_title = fig_axes_title.replace('/', 'd')
-    print ( f"FIXME this code should use .getNiceAxes! {fig_axes_title_old} {fig_axes_title}" )
-    print ( f"FIXME this code should use .getNiceAxes! {fig_axes_title_old} {fig_axes_title} {na}" )
-    import sys; sys.exit()
-    """
     fig_axes_title = getNiceAxes ( axes )
     outfiles = []
 
@@ -707,7 +699,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     ax.set_ylabel(y_label,fontsize = 14)
     ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
     if 'Gamma' in y_label:
-        print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+        print ( f"{RED}[drawPaperPlot:7] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
         max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
         if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", e_type="bestSR", width=True))
         if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", e_type="combined", width=True))
@@ -725,20 +717,24 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     plt.title(pName,loc='right', fontsize=12)
 
     exp_name = analysis.split('-')[0]
-    ax.plot(off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
+    plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], "black",
+            "solid", f'{exp_name} official')  
 
     if bestSR:
         x_vals = bestSR_excl["exp_excl"]["x"]
         y_vals = bestSR_excl["exp_excl"]["y"]
         if 'Gamma' in y_label:
-            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            y_vals = [10**y for y in y_vals]
-            y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-            index_max_diff = -1
-            if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            if len(x_vals)>0:
-                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
-                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
+            print ( f"{RED}[drawPaperPlot:5] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            if type(y_vals[0]) != list:
+                y_vals = [10**y for y in y_vals]
+                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
+                index_max_diff = -1
+                if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+                if len(x_vals)>0:
+                    ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
+                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
+            else:
+                plotLines(ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR" )
             sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
@@ -757,13 +753,16 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
             label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
-            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            y_vals = [10**y for y in y_vals]
-            y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-            index_max_diff = -1
-            if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
+            print ( f"{RED}[drawPaperPlot:1] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            if type(y_vals[0]) != list:
+                y_vals = [10**y for y in y_vals]
+                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
+                index_max_diff = -1
+                if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
+            else:
+                plotLines(ax, x_vals, y_vals, "red", "dashed", label )
         else:
             plotLines ( ax, x_vals, y_vals, "red", "solid", label )
     if cr_excl not in [ None, [] ]:
@@ -773,13 +772,16 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         if cr_is == "orig":
             label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
-            print ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            y_vals = [10**y for y in y_vals]
-            y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-            index_max_diff = -1
-            if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
+            print ( f"{RED}[drawPaperPlot:2] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            if type(y_vals[0]) != list:
+                y_vals = [10**y for y in y_vals]
+                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
+                index_max_diff = -1
+                if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
+            else:
+                plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
         else:
             plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 

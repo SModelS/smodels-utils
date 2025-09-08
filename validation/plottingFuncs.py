@@ -184,6 +184,10 @@ def filterWithinRanges ( points : dict, xrange : Optional[list], \
     """ filter from points all that is not within xrange or yrange
     :param defRetZeroes: if true, then return list of zeroes if no y coordinates
     """
+    if type(points)==list:
+        ## we have v2
+        return filterWithinRangesV2 ( points, xrange,
+                yrange, defRetZeroes )
     pxs = points["x"]
     px = []
     if not "y" in points:
@@ -203,6 +207,33 @@ def filterWithinRanges ( points : dict, xrange : Optional[list], \
         px.append ( x )
         py.append ( y )
     return px, py
+
+def filterWithinRangesV2 ( points : list, xrange : Optional[list], \
+        yrange : Optional[list], defRetZeroes : bool = False ):
+    """ filter from points all that is not within xrange or yrange
+    :param defRetZeroes: if true, then return list of zeroes if no y coordinates
+    """
+    # v2
+    ret = []
+    px, py = [], [] ## backwards compatibility
+    for line in points:
+        newline = []
+        for point in line:
+            pointIsGood = True
+            if not isWithinRange ( xrange, point["x"] ):
+                pointIsGood = False
+            if "y" in point and not isWithinRange(  yrange, point["y"] ):
+                pointIsGood = False
+            if not "y" in point and defRetZeroes:
+                point["y"]=0.
+            if pointIsGood:
+                newline.append ( point )
+                px.append ( point["x"] )
+                py.append ( point["y"] )
+        if len(newline)>0:
+            ret.append ( newline )
+    # return ret ## eventually we will return this list of points
+    return px, py ## fixme eventually drop this
 
 def getAxisRange ( options : dict, label : str = "xaxis" ):
     """ given an options dictionary, obtain a range for the axis named
