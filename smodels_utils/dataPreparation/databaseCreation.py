@@ -689,14 +689,17 @@ class DatabaseCreator(list):
                 #x = round_to_n ( exclusion.GetPointX(i), 4 )
                 #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
+            # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             if not name in content[dirname]:
                 # content[dirname][name]=xandy
                 if len(yv)==0:
                     content[dirname][name]= [ [ { "x": x } for x in xv ] ]
                 else:
                    content[dirname][name]= [ [ { "x": x, "y": y } for x,y in zip(xv,yv) ] ]
-                if axisMap is not None:
-                    content[dirname][name]["axisMap"]=axisMap
+                #if axisMap is not None: 
+                # not needed (I hope)
+                #    content[dirname][name]["axisMap"]=axisMap
+                #    # content[dirname][name]["axisMap"]=axisMap
         content["schema_version"]="2.0"
         with open ( fname, "wt" ) as handle:
             from smodels_utils.helper.various import py_dumps
