@@ -653,7 +653,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                   dataTypes, useNonValidated=True )
 
     if not expResList:
-        logger.error( f"No experimental results found for {analysisIDs}:{datasetIDs} [{txnames}:{dataTypes}]")
+        logger.error( f"No experimental results found for {','.join(analysisIDs)}:{','.join(datasetIDs)} [{','.join(txnames)}:{','.join(dataTypes)}]")
 
     if options["ncpus"] <= 0:
         from smodels.base import runtime
