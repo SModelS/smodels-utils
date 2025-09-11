@@ -128,9 +128,15 @@ class RefXSecComputer:
         for xsec in xsecs:
             xseccomment = f"reference xsecs v{self.version} [pb]"
             writeXsec = True
-            # print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
-            if hasattr ( xsec, "comment" ) and xsec.comment not in [ None, "", "None", " (None)" ]:
-                xseccomment += f" {xsec.comment}"
+            pids = xsec.pid
+            sqrts= f"{xsec.info.sqrts.asNumber(TeV):.1f}"
+            order = xsec.info.order
+            ostr = str(pids)+str(sqrts)+str(order)
+            if ostr in self.comments:
+                xseccomment += f"{self.comments[ostr]}"
+            #print ( "in addXSecToFile comment", xsec, hasattr ( xsec, "comment" ) )
+            #if hasattr ( xsec, "comment" ) and xsec.comment not in [ None, "", "None", " (None)" ]:
+            #    xseccomment += f" {xsec.comment}"
             for oldxsec in xSectionList:
                 if oldxsec.info == xsec.info and set(oldxsec.pid) == set(xsec.pid):
                     writeXsec = False
@@ -236,8 +242,7 @@ class RefXSecComputer:
                               ssmultipliers = ssmultipliers )
                 for xsec in self.xsecs:
                     nXSecs += 1
-                    print( "%s %20s:  %.3e pb" % \
-                            ( xsec.info.label,xsec.pid,xsec.value/pb ) )
+                    print( f"{xsec.info.label} {xsec.pid:20s}:  {xsec.valu/pb:.3e} pb" )
             print()
         return nXSecs
 
@@ -386,6 +391,7 @@ class RefXSecComputer:
         channels = self.selectChannels ( channels, ignore_pids )
         #print ( "selected ", channels )
         xsecs = crossSection.XSectionList()
+        comments = {}
         for channel in channels:
             # obtain xsecs for all masses, but for the given channel
             # for sqrts in self.sqrtses: # FIXME
@@ -411,18 +417,30 @@ class RefXSecComputer:
                 xsec = xsec * ssm
             channel["xsec"] = xsec
             channel["sqrts"] = sqrts
-            channel["order"] = order
             channel["comment"] = comment
-            orderStr = crossSection.orderToString(order,False,False)
-            channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
-            a = self.dictToXSection ( channel )
-            a.comment = comment
-            # print ( "adding", a, hasattr ( a, "comment" ) )
-            xsecs.add ( a )
-        # print ( "xdding", xsecs, hasattr ( xsecs[0], "comment" ) )
+            if type(order) in [ tuple, list ]:
+                for o in order:
+                    channel["order"] = o
+                    orderStr = crossSection.orderToString(o,False,False)
+                    channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
+                    ncomment = comment
+                    if o == NLL:
+                        ncomment += "\n  # (this really is NNLL, added as NLL to satisfy pyslha)"
+                    comments[str(pids)+f"{sqrts:.1f}"+str(o)]=ncomment
+                    a = self.dictToXSection ( channel )
+                    xsecs.add ( a )
+            else:
+                channel["order"] = order
+                orderStr = crossSection.orderToString(order,False,False)
+                channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
+                comments[str(pids)+f"{sqrts:.1f}"+str(order)]=comment
+                a = self.dictToXSection ( channel )
+                comments[channel]=ncomment
+                xsecs.add ( a )
         self.xsecs = xsecs
-        if len(self.xsecs)>0:
-            self.xsecs[0].comment = comment
+        self.comments = comments
+        #if len(self.xsecs)>0:
+        #    self.xsecs[0].comment = comment
         # print ( "xdding", self.xsecs, hasattr ( self.xsecs[0], "comment" ) )
 
     def findOpenChannels ( self, slhafile ):
@@ -606,7 +624,8 @@ class RefXSecComputer:
             filename = f"xsecgluino{int(sqrts)}.txt"
             columns["xsec"]=1
             isEWK=False
-            order = NNLL # 4
+            #order = NNLL # 4
+            order = (NLL, NNLL) # specify for both
         if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
             filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
