@@ -703,7 +703,7 @@ class RefXSecComputer:
         if pid1 in [ -1000005, -1000006, -2000006 ] and pid2 == -pid1:
             ## left handed slep- slep+ production.
             filename = f"xsecstop{int(sqrts)}.txt"
-            order = NNLL #3
+            order = (NLL,NNLL) #3
             columns["xsec"]=2
             pb = True
         if pid1 in [ -1000024 ] and pid2 == -pid1:
