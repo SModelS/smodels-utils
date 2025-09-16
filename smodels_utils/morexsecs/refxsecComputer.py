@@ -32,6 +32,8 @@ except:
     sys.path.append(os.path.expanduser('~/smodels-utils'))
     from smodels_utils.SModelSUtils import installDirectory
 
+hasComplained = {}
+
 class RefXSecComputer:
     """
     The xsec computer that simply looks up reference cross sections,
@@ -428,7 +430,14 @@ class RefXSecComputer:
                         ncomment += "\n  # (this really is NNLL, added as NLL to satisfy pyslha)"
                     comments[str(pids)+f"{sqrts:.1f}"+str(o)]=ncomment
                     a = self.dictToXSection ( channel )
-                    xsecs.add ( a )
+                    if o == NNLL:
+                        if not "skipNNLL" in hasComplained:
+                            hasComplained["skipNNLL"]=0
+                        hasComplained["skipNNLL"]+=1
+                        if hasComplained["skipNNLL"]<3:
+                            logger.error ( f"for now will skip NNLL entry, pyslha 3.2.6 seems to not like that" )
+                    else:
+                        xsecs.add ( a )
             else:
                 channel["order"] = order
                 orderStr = crossSection.orderToString(order,False,False)
