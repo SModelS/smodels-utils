@@ -647,7 +647,7 @@ def createUpHiFile ( rundir : os.PathLike, maxiterations : Union[None,int],
         f.write ( f'did_srcombine=updateHiscores.didSRCombine ( rundir )\n' )
         f.write ( f"updateHiscores.loop ( rundir=rundir, maxruns={maxiterations}, createPlots=not batchjob,\n" )
         f.write ( f"    uploadTo='{uploadTo}', do_srcombine=did_srcombine,\n" )
-        f.write ( f"    dbpath='{dbpath}' )\n" )
+        f.write ( f"    dbpath='{dbpath}', walkerid='uphi' )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
 
 def runUpdater( dry_run : bool, time : float, rundir : os.PathLike,
