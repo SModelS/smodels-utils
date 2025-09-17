@@ -268,15 +268,15 @@ class GraphMassPlane(MassPlaneBase):
                 d = {}
         except Exception as e:
             pass
-        if d == {}:
-            # print ( f"[GraphMassPlane] linsolve failed: {e}, trying solve now" )
+        if len(d) == 0:
             d = solve ( eqs, simplify=False )
-        if d == {}:
+        if len(d) == 0: # d == {} or d == []:
             A, b = linear_eq_to_matrix(eqs, free_symbols)
             A_np = np.array(A, dtype=float)
             b_np = np.array(b, dtype=float)
             sol, residuals, rank, s = np.linalg.lstsq(A_np, b_np, rcond=None)
-            if sum(residuals)<1e-4:
+            d = {}
+            if sum(residuals)<1e-2:
                 for k,v in zip(free_symbols,sol):
                     d[k]=v[0]
 
