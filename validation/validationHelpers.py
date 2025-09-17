@@ -243,6 +243,13 @@ def point_in_hull(point, hull, tolerance=1e-12):
     """ return if a given point is within a given hull """
     return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
 
+def findLineNrOfMeta ( lines : list ) -> int:
+    """ find the line number that the meta info starts in """
+    for i,line in enumerate(lines):
+        if line.startswith ( "meta" ):
+            return i
+    return len(lines)
+
 def getValidationFileContent ( validationfile : str ):
     """ get the content of the validation file, as a dictionary of
         'data' and 'meta'
@@ -256,11 +263,12 @@ def getValidationFileContent ( validationfile : str ):
         f = open( validationfile, 'r' )
         lines = f.readlines()
         f.close()
+        lMeta = findLineNrOfMeta ( lines )
         nlines = len(lines)
-        txt = "\n".join(lines[:-1])
+        txt = "\n".join(lines[:lMeta])
         ## if meta is missing, or just one line
-        if nlines == 1 or not lines[-1].startswith("meta"):
-            txt = "\n".join(lines[:])
+        #if nlines == 1 or not lines[lMeta].startswith("meta"):
+        #    txt = "\n".join(lines[nlines])
         # print ( "txt", txt )
         ret = {}
         txt = txt.replace("validationData = ","")
@@ -269,8 +277,9 @@ def getValidationFileContent ( validationfile : str ):
         data = eval(txt)
         ret["data"] = data
         meta = None
-        if len(lines)>1 and lines[-1].startswith ( "meta" ):
-            meta = eval(lines[-1].replace("meta = ","").replace("meta=","") )
+        if len(lines)>1 and lines[lMeta].startswith ( "meta" ):
+            txt = "\n".join(lines[lMeta:])
+            meta = eval(txt.replace("meta = ","").replace("meta=","") )
         ret["meta"]=meta
         return ret
     except (SyntaxError,ValueError) as e:
@@ -318,11 +327,15 @@ def mergeExclusionLines ( lines : list ):
 
 def streamlineValidationData ( data : dict )-> str:
     """ clean up the validation data before it goes into the dict file """
+    from smodels_utils.helper.various import py_dumps
+    data = py_dumps( data, indent=4, stop_at_level = 4, double_quotes = True )
     out = str(data).replace('[fb]','*fb').replace('[pb]','*pb')
     out = out.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
-    out = out.replace( "}, {" , "},\n{" )
-    if "inf" in out:
+    while "inf" in out:
         out = out.replace("inf,","float('inf')," )
+    while "nan" in out:
+        out = out.replace("nan,","float('nan')," )
+    # out = out.replace( "}, {" , "},\n{" )
     return out
 
 def mergeValidationData ( contents : list ):
