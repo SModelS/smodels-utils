@@ -106,6 +106,14 @@ def hasCheatFile ( rvars : dict )-> bool:
     if rvars["cheatcode"] in [ "no_cheat", None ]:
         return True
     cheatfile = rvars["cheatcode"]
+    if "JOBNR" in cheatfile:
+        jobnrdict = f"{rvars['rundir']}/Pmodels/pmodel{rvars['jobnr']}.dict"
+        exists = os.path.exists ( jobnrdict )
+        print ( f"{intro} searching for {jobnrdict}: {exists}" )
+        return True
+        # return exists
+        
+    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     if cheatfile.startswith("/"):
         return os.path.exists ( cheatfile )
     if (not "/" in cheatfile) and ("rundir" in rvars):
@@ -165,6 +173,7 @@ def runWalkers ( args ) -> int:
     rvars["wallpids"] = wallpids
     rvars["jobnr"]=0
     hasC = hasCheatFile ( rvars )
+        
     if not hasC:
         print ( f"{intro}you specified cheatfile {rvars['cheatcode']} but it doesnt exist!" )
         if sameCallTwice():
@@ -311,6 +320,8 @@ def runOneJob ( rvars: dict ):
         from ptools.helpers import py_dumps
         import copy
         nvars = copy.deepcopy ( rvars )
+        if "JOBNR" in nvars["cheatcode"] and "jobnr" in nvars:
+            nvars["cheatcode"] = f"{rvars['rundir']}/Pmodels/pmodel{nvars['jobnr']}.dict"
         drops = [ "query", "query_short", "cancel", "cancel_all", 
                   "dry_run", "keep", "updater", "uploadTo", "scan",
                   "yvariable", "llhdscan", "clean", "clean_all", "allscans",
@@ -324,9 +335,9 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
-    ram = ram*3
+    ram = ram*3.5
     if rvars["time"]>9: # longer running job, more ram
-        ram=ram*1.3
+        ram=ram*1.1
     #if "comb" in rundir: ## combinations need more RAM
     #    ram = ram * 1.2
     #if "history" in rundir: ## history runs need more RAM
@@ -363,6 +374,10 @@ def runOneJob ( rvars: dict ):
         a=subprocess.run ( cmd, capture_output=True )
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
+        jobsfile = f"{rvars['rundir']}/jobs"
+        with open ( jobsfile, "at" ) as f:
+            jobtxt = sb.replace("Submitted batch job ", "" )
+            f.write ( jobtxt + "\n" )
         if "Submitted batch job " in sb:
             sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
             sb+=RESET
@@ -871,7 +886,7 @@ def main():
                         type=int, default=None )
     argparser.add_argument ( '--seed', nargs='?', help='the random seed. 0 means random. None means, do not set. [None]',
                         type=int, default=None )
-    argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat model [no_cheat]',
+    argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat model, give model number, "JOBNR", or "no_cheat" [no_cheat]',
                         type=str, default="no_cheat" )
     argparser.add_argument ( '-N', '--nmax', nargs='?',
                         help='maximum worker id. Zero means nmin + 1. [0]',
@@ -908,7 +923,7 @@ def main():
     args=argparser.parse_args()
     args.forbiddenparticles= eval ( args.forbiddenparticles)
     args.yvariable = namer.pid ( args.yvariable )
-    if args.use_initialiser in [ "False", "false", "no", None, "None", "none" ]:
+    if args.use_initialiser in [ "False", "false", "no", None, "None", "none", "" ]:
         args.use_initialiser = False
     if args.yvariable == "-1":
         args.yvariable = -1
