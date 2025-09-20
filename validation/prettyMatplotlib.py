@@ -68,12 +68,13 @@ def retrievePoints ( cs : contour ) -> list[list[dict]]:
             l_x = vertices_cs[:,0].tolist()
             l_y = vertices_cs[:,1].tolist()
             exclusion_line = []
-            for x,y, code in zip ( l_x, l_y, paths.codes ):
-                if code == 1:
-                    if len(exclusion_line)>0:
-                        exclusion_lines.append( exclusion_line )
-                    exclusion_line = []
-                exclusion_line.append ( { "x": round(x,5), "y": round(y,5) } )
+            if len(l_x)>0:
+                for x,y, code in zip ( l_x, l_y, paths.codes ):
+                    if code == 1:
+                        if len(exclusion_line)>0:
+                            exclusion_lines.append( exclusion_line )
+                        exclusion_line = []
+                    exclusion_line.append ( { "x": round(x,5), "y": round(y,5) } )
             if len(exclusion_line)>0:
                 exclusion_lines.append ( exclusion_line )
         return exclusion_lines

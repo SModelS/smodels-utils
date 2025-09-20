@@ -887,7 +887,9 @@ class ValidationObjsBase():
             meta["tevatroncls"]= useTevatronCLs
         if asimovIsExpected:
             meta["asimovisexpected"]= asimovIsExpected
-        f.write( f"meta = {str(meta)}\n" )
+        from smodels_utils.helper.various import py_dumps
+        ds = py_dumps ( meta, indent=4, double_quotes = True )
+        f.write( f"meta = {ds}\n" )
         f.close()
         self.unlockFile ( lockfile )
 
