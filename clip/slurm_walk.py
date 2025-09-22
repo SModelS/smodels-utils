@@ -320,8 +320,8 @@ def runOneJob ( rvars: dict ):
         from ptools.helpers import py_dumps
         import copy
         nvars = copy.deepcopy ( rvars )
-        if "JOBNR" in nvars["cheatcode"] and "jobnr" in nvars:
-            nvars["cheatcode"] = f"{rvars['rundir']}/Pmodels/pmodel{nvars['jobnr']}.dict"
+        if "JOBNR" in nvars["cheatcode"] and "nmin" in nvars:
+            nvars["cheatcode"] = f"{rvars['rundir']}/Pmodels/pmodel{nvars['nmin']}.dict"
         drops = [ "query", "query_short", "cancel", "cancel_all", 
                   "dry_run", "keep", "updater", "uploadTo", "scan",
                   "yvariable", "llhdscan", "clean", "clean_all", "allscans",
