@@ -113,7 +113,6 @@ def hasCheatFile ( rvars : dict )-> bool:
         return True
         # return exists
         
-    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     if cheatfile.startswith("/"):
         return os.path.exists ( cheatfile )
     if (not "/" in cheatfile) and ("rundir" in rvars):
@@ -909,6 +908,9 @@ def main():
     argparser.add_argument ( '--allowN1N1Prod',
                         help='allow N1 N1 production mode',
                         action="store_true" )
+    argparser.add_argument ( '--disallowN1N1Prod',
+                        help='allow N1 N1 production mode',
+                        action="store_true" )
     argparser.add_argument ( '--susy_mode',
                         help='susy mode (penalize ssms for being not 1.0)',
                         action="store_true" )
@@ -921,6 +923,11 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    if args.allowN1N1Prod and args.disallowN1N1Prod:
+        print ( f"[slurm_walk] you at the same time allow and disallow N1N1 prod. fix this." )
+        sys.exit()
+    if args.disallowN1N1Prod:
+        args.allowN1N1Prod = False
     args.forbiddenparticles= eval ( args.forbiddenparticles)
     args.yvariable = namer.pid ( args.yvariable )
     if args.use_initialiser in [ "False", "false", "no", None, "None", "none", "" ]:
