@@ -5,6 +5,7 @@ the more specific modules """
 
 from typing import Union
 import os
+import subprocess
 
 def readJobIds():
     """ read the job ids from jobs files """
@@ -29,7 +30,13 @@ def getJobStatus  ( jobids : Union[list,int] ) -> dict:
             js = getJobStatus ( jobid)
             ret[jobid] = js[jobid]
         return ret
-    import subprocess
+    cmd = f"sacct --job {jobids}"
+    output = subprocess.getoutput ( cmd ).split("\n")[2][60:73]
+    output = output.strip()
+    output = output.lower()
+    return { jobids: output }
+
+    """ jobinfo
     cmd = f"jobinfo {jobids}"
     output = subprocess.getoutput ( cmd ).split("\n")
     ret = "undefined"
@@ -41,6 +48,7 @@ def getJobStatus  ( jobids : Union[list,int] ) -> dict:
             ret = ret.lower()
             return { jobids: ret }
     return { jobids: ret }
+    """
 
 def describeSet( inp : list ) -> str:
     """ describe a given set of indices in compact form. e.g.
