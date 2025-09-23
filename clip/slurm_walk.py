@@ -375,8 +375,8 @@ def runOneJob ( rvars: dict ):
         sb = str ( a.stdout.decode().strip() )
         jobsfile = f"{rvars['rundir']}/jobs"
         if os.path.exists ( jobsfile ):
-            from datetime import datetime
-            dst = f"{rvars['rundir']}/jobs_{datetime.now(datetime.timezone.utc).isoformat()}"
+            from datetime import datetime, timezone
+            dst = f"{rvars['rundir']}/jobs_{datetime.now(timezone.utc).isoformat()}"
             os.rename ( jobsfile, dst )
         with open ( jobsfile, "wt" ) as f:
             jobtxt = sb.replace("Submitted batch job ", "" )
