@@ -182,6 +182,12 @@ def runWalkers ( args ) -> int:
             sys.exit()
     seed = args.seed
 
+    jobsfile = f"{rvars['rundir']}/jobs"
+    if os.path.exists ( jobsfile ):
+        from datetime import datetime, timezone
+        dst = f"{rvars['rundir']}/jobs_{datetime.now(timezone.utc).isoformat()}"
+        os.rename ( jobsfile, dst )
+
     while True:
         if nprocesses == 1:
             for i in range(args.repeat):
@@ -374,11 +380,7 @@ def runOneJob ( rvars: dict ):
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
         jobsfile = f"{rvars['rundir']}/jobs"
-        if os.path.exists ( jobsfile ):
-            from datetime import datetime, timezone
-            dst = f"{rvars['rundir']}/jobs_{datetime.now(timezone.utc).isoformat()}"
-            os.rename ( jobsfile, dst )
-        with open ( jobsfile, "wt" ) as f:
+        with open ( jobsfile, "at" ) as f:
             jobtxt = sb.replace("Submitted batch job ", "" )
             f.write ( jobtxt + "\n" )
         if "Submitted batch job " in sb:

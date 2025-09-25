@@ -31,7 +31,16 @@ def getJobStatus  ( jobids : Union[list,int] ) -> dict:
             ret[jobid] = js[jobid]
         return ret
     cmd = f"sacct --job {jobids}"
-    output = subprocess.getoutput ( cmd ).split("\n")[2][60:73]
+    output = subprocess.getoutput ( cmd ).split("\n")
+    if len(output)<2:
+        output = f"fewer than two lines?? {output}"
+    else:
+        output = output[2]
+        if len(output)<73:
+            output = f"fewer than 73 characters?? {output}"
+        else:
+            output = output[60:73]
+    
     output = output.strip()
     output = output.lower()
     return { jobids: output }
