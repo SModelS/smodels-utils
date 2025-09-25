@@ -51,7 +51,7 @@ def pprint ( xs, ys, values, xrange = None, yrange = None ):
             print ( f"y={y:.1f} x={x:.1f} value {value:.3f}" )
 
 def retrievePoints ( cs : contour ) -> list[list[dict]]:
-    """ retrieve the points from the contour 
+    """ retrieve the points from the contour
 
     :param cs: matplotlib contour
     :returns: list of exclusion lines, where an exclusion line is
@@ -128,12 +128,27 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
             npoints += len(excl_line)
 
     print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
-
+    plots = cleanUpPlots ( plots )
     from smodels_utils.helper.various import py_dumps
     ds = py_dumps(plots, indent=4, stop_at_level = 4, double_quotes = True )
     file = open(f'{vDir}/{file_js}','w')
     file.write ( ds + "\n" )
     file.close()
+
+def cleanUpPlots ( plots : dict ) -> dict:
+    """ remove empty entries from the plots directory
+
+    :returns: cleaned up dictionary
+    """
+    newplots = {}
+    for plotName,plot in plots.items():
+        if "exp_excl" in plot and len(plot["exp_excl"])==0:
+            plot.pop ( "exp_excl" )
+        if "obs_excl" in plot and len(plot["obs_excl"])==0:
+            plot.pop ( "obs_excl" )
+        if len(plot)>0:
+            newplots[plotName]=plot
+    return newplots
 
 def createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files,
@@ -522,7 +537,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                             transform = fig.transFigure, linestyle="dotted" )
             exp_excl_lines = retrievePoints ( cs )
 
-        if options["createSModelSExclJson"]: 
+        if options["createSModelSExclJson"]:
             writeV1Format = False
             if writeV1Format:
                 # thats the old format, list of x values, list of y values
@@ -547,7 +562,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if "adl" in comment or "cutlang" in comment:
             backend = "CutLang"
     if backend!="":
-        plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure, 
+        plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure,
                  fontsize=9 )
     txStr = f"{validationPlot.txName}: {pName}"
     plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )

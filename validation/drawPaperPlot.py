@@ -487,7 +487,12 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     fig,ax = plt.subplots(figsize=(5,4))
 
     step_x = int(max_obs_x/100)*10
-    mid_x = int((max_obs_x - min_obs_x)/2)
+    mid_x = 0
+    if max_obs_x < -.99:
+        print ( f"[drawPaperPlot] seems like exclusion lines are empty" ) 
+        return
+    if max_obs_x > -.99:
+        mid_x = int((max_obs_x - min_obs_x)/2)
     step_y = int(max_obs_y)
 
     #print("[drawPaperPlot] max obs y ", max_obs_y)
@@ -554,7 +559,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
-    print ( f"@@@ min_obs_x {min_obs_x}" )
+    # print ( f"@@@ min_obs_x {min_obs_x}" )
     ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
     if 'Gamma' in y_label:
         print ( f"{RED}[drawPaperPlot:3] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
