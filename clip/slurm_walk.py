@@ -220,7 +220,7 @@ def runWalkers ( args ) -> int:
                                               args = ( rvars, ) )
                 jobs.append ( p )
                 p.start()
-                time.sleep ( random.uniform ( 0.006, .01 ) )
+                time.sleep ( random.uniform ( 0.21, .27 ) )
             if nprocesses > 2 :
                 print ( f"{intro}creating WALKER_0.py, but wont start it. You can start it manually!" )
                 rvars["nmin"]=0
@@ -340,6 +340,7 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
+    # ram = ram*1.2
     ram = ram*3.5
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.1
