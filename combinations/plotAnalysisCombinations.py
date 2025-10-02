@@ -172,7 +172,7 @@ def getPlot( options : dict ) -> Tuple:
     parser = modelTester.getParameters(parameterFile)
     # step_mu = (mumax - mumin ) / nsteps
     setup = {'evaluationtype' : apriori ,'normalize' : True,
-             'mumin': -5, 'mumax': 5, 'nsteps': 20 }
+             'mumin': -5, 'mumax': 5, 'nsteps': 20, 'title' : None }
 
     if "setup" in parser:
     # if parser.has_section("setup"):
@@ -303,8 +303,12 @@ def getPlot( options : dict ) -> Tuple:
     if muhat == 0:
         smuhat = 0
 
-    plt.title( rf'$M_1$ = {m1:.2f} GeV, $M_2$ = {m2:.2f} GeV, $\mu$ = {mu:.2f} GeV,' + f' combined SR = {CSR}'+ '\n' +
-              r'$\hat{\mu}_{\mathrm{Comb}} = $ %s, $\mu^\mathrm{UL}_{comb} = $ %1.2f, $\mathrm{nll_{BSM}} =$ %1.1f, $\mathrm{nll_{min}} =$ %1.1f, $\mathrm{nll_{SM}} =$ %1.1f' %(smuhat,ulmu_comb,nllbsm,nllmin,nllsm),fontsize=20)
+    title = setup["title"]
+    if title == None:
+        title = rf'$M_1$ = {m1:.2f} GeV, $M_2$ = {m2:.2f} GeV, $\mu$ = {mu:.2f} GeV,' + f' combined SR = {CSR}\n'
+        title += r'$\hat{\mu}_{\mathrm{Comb}} = $ %s, $\mu^\mathrm{UL}_{comb} = $ %1.2f, $\mathrm{nll_{BSM}} =$ %1.1f, $\mathrm{nll_{min}} =$ %1.1f, $\mathrm{nll_{SM}} =$ %1.1f' %(smuhat,ulmu_comb,nllbsm,nllmin,nllsm)
+
+    plt.title( title, fontsize = 20 ) 
 
     if plotOptions['xlog']:
         plt.xscale('log')
