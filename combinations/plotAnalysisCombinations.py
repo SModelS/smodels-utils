@@ -113,7 +113,8 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
 def getLlhds(combiner,setup):
     from math import isnan
 
-    muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
+    step_mu = ( setup["mumax"]-setup["mumin"] )/ setup["nsteps"]
+    muvals = np.arange(setup['mumin'],setup['mumax'],step_mu)
     evaluationType = setup["evaluationtype"]
     normalize = setup["normalize"]
     llhds = {'combined' : np.ones(len(muvals))}
@@ -169,22 +170,25 @@ def getPlot( options : dict ) -> Tuple:
 
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
-    step_mu = (options["mumax"] - options["mumin"] ) / options["nsteps"]
+    # step_mu = (mumax - mumin ) / nsteps
     setup = {'evaluationtype' : apriori ,'normalize' : True,
-              'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
+             'mumin': -5, 'mumax': 5, 'nsteps': 20 }
 
     if "setup" in parser:
     # if parser.has_section("setup"):
         # setup = parser.get_section("setup").toDict()
         for k,v in parser["setup"].items():
-            if not k in setup and k != "nsteps":
+            if not k in setup:
                 print ( f"[plotAnalysisCombinations] do not know of entry {k} in setup" )
                 sys.exit(-1)
             if k == "evaluationType":
                 v= NllEvalType ( v )
-            if k == "nsteps":
-                step_mu = (options["mumax"] - options["mumin"] ) / options["nsteps"]
-                k,v = "step_mu", step_mu
+            elif k in [ "mumin", "mumax" ]:
+                v = float ( v )
+            elif k in [ "nsteps" ]:
+                v = int ( v )
+            elif k in [ "normalize" ]:
+                v = bool ( v )
             setup[k]=v
                 
         # setup.update ( dict ( parser["setup"] ) )
@@ -326,7 +330,9 @@ def main():
             default = 'Likelihoods.png' )
     ap.add_argument('-p', '--parameterFile',
             help='name of parameter file, where most options are defined. this is a normal smodels ini file, but do make sure that combineAnas is defined. also an extra [setup] section may be defined see pac.ini in this folder',
-            required=True)
+            default="pac.ini" )
+            #required=True)
+    """
     ap.add_argument('-m', '--mumin',
             help='minimum mu [-3.]', type=float,
             default = -3. )
@@ -336,6 +342,7 @@ def main():
     ap.add_argument('-M', '--mumax',
             help='maximum mu [5.]', type=float,
             default = 5. )
+    """
     ap.add_argument('-s', '--show', help='show final plot',
             action = "store_true" )
 
