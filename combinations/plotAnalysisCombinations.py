@@ -362,7 +362,7 @@ def main():
 
     t0 = timeit.default_timer()
     fig, outputFile = getPlot(options)
-    print(f'[plotAnalysisCombinations] plotted {args.filename} in {timeit.default_timer() - t0:1.2f} s')
+    print(f'[plotAnalysisCombinations] plotted {args.filename} to {outputFile} in {timeit.default_timer() - t0:1.2f} s')
     if args.show:
         from smodels_utils.plotting.mpkitty import timg
         timg ( outputFile )
