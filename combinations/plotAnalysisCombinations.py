@@ -142,7 +142,7 @@ def getLlhds(combiner,setup):
     # Replace the points that did not converge by None in the combined likelihood
     llhds['combined'] = np.array([llCombined if llCombined != 1 else None for llCombined in llhds['combined'].tolist()])
     # llhds['combined_prev'] = np.array([llCombined_prev if llCombined_prev!=1 and llCombined_prev!=0 else None for llCombined_prev in llhds['combined_prev'].tolist()])
-    if normalize:
+    if normalize == "max":
         for Id,l in llhds.items():
             norm = 0
             # Compute the normalization factor
@@ -154,7 +154,16 @@ def getLlhds(combiner,setup):
             for i,elem in enumerate(l):
                 if elem != None and not isnan(elem):
                     llhds[Id][i] = elem/norm
-
+    if normalize == "area":
+        for Id,l in llhds.items():
+            norm = 0
+            # Compute the normalization factor
+            for elem in l:
+                if elem != None and not isnan(elem):
+                    norm += elem
+            for i,elem in enumerate(l):
+                if elem != None and not isnan(elem):
+                    llhds[Id][i] = elem/norm
 
     return muvals,llhds
 
@@ -171,7 +180,7 @@ def getPlot( options : dict ) -> Tuple:
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     # step_mu = (mumax - mumin ) / nsteps
-    setup = {'evaluationtype' : apriori ,'normalize' : True,
+    setup = {'evaluationtype' : apriori ,'normalize' : "none",
              'mumin': -5, 'mumax': 5, 'nsteps': 20, 'title' : None }
 
     if "setup" in parser:
@@ -187,8 +196,10 @@ def getPlot( options : dict ) -> Tuple:
                 v = float ( v )
             elif k in [ "nsteps" ]:
                 v = int ( v )
-            elif k in [ "normalize" ]:
-                v = bool ( v )
+            elif k == "normalize":
+                if v not in [ "none", "max", "area" ]:
+                    print ( f"[plotAnalysisCombinations] v has to be one of: none, max, area" )
+                    sys.exit()
             setup[k]=v
                 
         # setup.update ( dict ( parser["setup"] ) )
@@ -276,8 +287,11 @@ def getPlot( options : dict ) -> Tuple:
     else:
         ylab = 'observed '
         shortExpType = 'obs'
-    if setup["normalize"]:
-        ylab = f"{ylab}normalized likelihood"
+    if setup["normalize"]=="area":
+        ylab = f"{ylab}normalized"
+        plt.ylabel(ylab, fontsize=18)
+    elif setup["normalize"]=="max":
+        ylab = rf"{ylab}normalized to l($\hat\mu$)=1"
         plt.ylabel(ylab, fontsize=18)
     else:
         ylab = f"{ylab}likelihood"
@@ -336,17 +350,6 @@ def main():
             help='name of parameter file, where most options are defined. this is a normal smodels ini file, but do make sure that combineAnas is defined. also an extra [setup] section may be defined see pac.ini in this folder',
             default="pac.ini" )
             #required=True)
-    """
-    ap.add_argument('-m', '--mumin',
-            help='minimum mu [-3.]', type=float,
-            default = -3. )
-    ap.add_argument('-n', '--nsteps',
-            help='number of steps [100]', type=int,
-            default = 100 )
-    ap.add_argument('-M', '--mumax',
-            help='maximum mu [5.]', type=float,
-            default = 5. )
-    """
     ap.add_argument('-s', '--show', help='show final plot',
             action = "store_true" )
 
