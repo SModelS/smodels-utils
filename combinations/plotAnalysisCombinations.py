@@ -11,7 +11,8 @@ import sys,os,timeit
 sys.path.insert(0, "../")
 sys.path.insert(0, os.path.expanduser("~/smodels"))
 from smodels.matching import modelTester
-from smodels.statistics.basicStats import observed, apriori, aposteriori
+from smodels.statistics.basicStats import observed, apriori, \
+         aposteriori, NllEvalType
 from testAnalysisCombinations import createLlhds
 import numpy as np
 import pyslha
@@ -113,7 +114,7 @@ def getLlhds(combiner,setup):
     from math import isnan
 
     muvals = np.arange(setup['murange'][0],setup['murange'][1],setup['step_mu'])
-    evaluationType = setup["evaluationType"]
+    evaluationType = setup["evaluationtype"]
     normalize = setup["normalize"]
     llhds = {'combined' : np.ones(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
@@ -169,32 +170,48 @@ def getPlot( options : dict ) -> Tuple:
     combiner,tPredsList = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     step_mu = (options["mumax"] - options["mumin"] ) / options["nsteps"]
-    setup = {'evaluationType' : apriori ,'normalize' : True,
+    setup = {'evaluationtype' : apriori ,'normalize' : True,
               'murange' : (options["mumin"],options["mumax"]), 'step_mu' : step_mu}
 
-    if parser.has_section("setup"):
-        setup = parser.get_section("setup").toDict()
+    if "setup" in parser:
+    # if parser.has_section("setup"):
+        # setup = parser.get_section("setup").toDict()
+        for k,v in parser["setup"].items():
+            if not k in setup and k != "nsteps":
+                print ( f"[plotAnalysisCombinations] do not know of entry {k} in setup" )
+                sys.exit(-1)
+            if k == "evaluationType":
+                v= NllEvalType ( v )
+            if k == "nsteps":
+                step_mu = (options["mumax"] - options["mumin"] ) / options["nsteps"]
+                k,v = "step_mu", step_mu
+            setup[k]=v
+                
+        # setup.update ( dict ( parser["setup"] ) )
     muvals,llhdDict = getLlhds(combiner, setup)
 
     plotOptions = {'xlog' : False, 'ylog' : False, 'yrange' : None,
                     'figsize' : (13,8),'legend' : True}
-    if parser.has_section("plotoptions"):
-        plotOptions = parser.get_section("plotoptions").toDict()
+    if "plotoptions" in parser:
+    # if parser.has_section("plotoptions"):
+        # plotOptions = parser.get_section("plotoptions").toDict()
+        plotOptions = dict ( parser["plotoptions"] )
 
     tpDict = {}
     for ana in tPredsList:
         idDict = {}
-        idDict['ulmu'] = ana.getUpperLimitOnMu( evaluationType = setup["evaluationType"])
+        idDict['ulmu'] = ana.getUpperLimitOnMu( evaluationType = setup["evaluationtype"])
         idDict['mu_obs'] = 1. / ana.getRValue( evaluationType = observed )
         idDict['mu_exp'] = 1. / ana.getRValue( evaluationType = apriori )
         tpDict[ana.dataset.globalInfo.id] = idDict
         tpDict
 
 
-    muhat = combiner.muhat( evaluationType = setup["evaluationType"])
-    nllmin = combiner.lmax( evaluationType = setup["evaluationType"], return_nll = True )
-    nllsm = combiner.lsm( evaluationType = setup["evaluationType"], return_nll = True )
-    nllbsm = combiner.likelihood(mu=1.0, evaluationType = setup["evaluationType"], return_nll = True )
+    evType = setup["evaluationtype"]
+    muhat = combiner.muhat( evaluationType = evType )
+    nllmin = combiner.lmax( evaluationType = evType, return_nll = True )
+    nllsm = combiner.lsm( evaluationType = evType, return_nll = True )
+    nllbsm = combiner.likelihood(mu=1.0, evaluationType = evType, return_nll = True )
     ymin = 0.
 
     fig = plt.figure(figsize=plotOptions['figsize'])
@@ -203,7 +220,7 @@ def getPlot( options : dict ) -> Tuple:
         if anaID == 'combined_prev':
             zorder = 100
             linestyle = '-.'
-            ulmu = combiner.getUpperLimitOnMu( evaluationType = setup["evaluationType"])
+            ulmu = combiner.getUpperLimitOnMu( evaluationType = evType )
             ulmu_comb = ulmu
             # lbl=rf'$\mu^{{UL}}={ulmu:.2f}$'
             lbl = None
@@ -214,7 +231,7 @@ def getPlot( options : dict ) -> Tuple:
         elif anaID == 'combined':
             zorder = 99
             linestyle = '--'
-            ulmu = combiner.getUpperLimitOnMu( evaluationType= setup["evaluationType"])
+            ulmu = combiner.getUpperLimitOnMu( evaluationType= evType)
             ulmu_comb = ulmu
             # lbl=rf'$\mu^{{UL}}={ulmu:.2f}$'
             lbl=None
@@ -243,10 +260,13 @@ def getPlot( options : dict ) -> Tuple:
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
 
     plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
-    if setup["evaluationType"] == aposteriori:
+    print ( f"[plotAnalysisCombinations] we plot with" )
+    for k,v in setup.items():
+        print ( f"      {k}={v}" )
+    if setup["evaluationtype"] == aposteriori:
         ylab = 'post-fit expected '
         shortExpType = 'apost'
-    elif setup["evaluationType"] == apriori:
+    elif setup["evaluationtype"] == apriori:
         ylab = 'pre-fit expected '
         shortExpType = 'exp'
     else:
@@ -296,7 +316,7 @@ def getPlot( options : dict ) -> Tuple:
 
 def main():
     import argparse
-    """ Makes a likelihood plot for  a combination of analyses. """
+    """ Makes a 1d likelihood plot for a combination of analyses. """
     ap = argparse.ArgumentParser( description=
             "Makes a simple likelihood plot for  a combination of analyses. For more options, try out the plotLikelihoods.ipynb notebook." )
     ap.add_argument('-f', '--filename',
@@ -305,7 +325,7 @@ def main():
             help='name of output plot [likelihoods.png]',
             default = 'Likelihoods.png' )
     ap.add_argument('-p', '--parameterFile',
-            help='name of parameter file, where most options are defined',
+            help='name of parameter file, where most options are defined. this is a normal smodels ini file, but do make sure that combineAnas is defined. also an extra [setup] section may be defined see pac.ini in this folder',
             required=True)
     ap.add_argument('-m', '--mumin',
             help='minimum mu [-3.]', type=float,
