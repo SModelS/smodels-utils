@@ -74,6 +74,7 @@ def savefig ( outname : str ):
 
 def show():
     if not in_jupyter_notebook():
+        plt.clf()
         return
     plt.show()
 
