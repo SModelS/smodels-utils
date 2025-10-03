@@ -39,7 +39,7 @@ def getJobStatus  ( jobids : Union[list,int] ) -> dict:
         if len(output)<73:
             output = f"fewer than 73 characters?? {output}"
         else:
-            output = output[60:73]
+            output = output[58:73]
     
     output = output.strip()
     output = output.lower()

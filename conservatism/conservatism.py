@@ -5,17 +5,16 @@
 # ### of the ATLAS and CMS results in the SModelS database
 
 # In[1]:
-
+import matplotlib
+matplotlib.use('Agg')
 
 # the most important parameters
 dictfile = "../../protomodels/historic_database_stats/310.dict"
 dropThese = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06", "CMS-SUS-20-004", "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
 plot_prefix="./plots/"
-ntoys = 1000000 # 25000
-
+ntoys = 100000 # 25000
 
 # In[2]:
-
 
 import scipy.stats
 import numpy as np
@@ -45,7 +44,6 @@ def filterMe ( dataId, values ):
         if dropThis in dataId:
             return False
     return True
-
 
 # In[5]:
 
@@ -86,9 +84,8 @@ def show():
 from multiverse.expResModifier import readDatabaseDictFile
 d = readDatabaseDictFile ( dictfile, filterMe )
 
-header, data = d["meta"], d["data"]   
-#print(header)
-
+header, data = d["meta"], d["data"]
+# print(header)
 
 # In[8]:
 
@@ -113,9 +110,9 @@ for key in data.keys():
         t = t.replace( f"{label}-","")
     t = t[:t.find("-")]
     t = int(t) % 2000
-    if t < 15: 
+    if t < 15:
         energy = 8
-    else: 
+    else:
         energy = 13
     d[energy][key] = {}
     for i in params:
