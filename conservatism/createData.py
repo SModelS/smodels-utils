@@ -14,10 +14,11 @@ def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
     :param nuisanceType: gauss or lognorm
     """
     ret = []
-    for anaID in data.keys():
-        obs = data[anaID]["origN"]
-        bg = data[anaID]["expectedBG"]
-        bgerr = fudge*data[anaID]["bgError"]
+    for dataID in data.keys():
+        anaID, datasetID = dataID.split(":")
+        obs = data[dataID]["origN"]
+        bg = data[dataID]["expectedBG"]
+        bgerr = fudge*data[dataID]["bgError"]
         if bg == 0.: # bg needs to be greater than 0
             continue
 
@@ -28,7 +29,7 @@ def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
         fakeobs = scipy.stats.poisson.rvs ( lmbda )
 
         p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs) )
-        d = { "id": anaID, "p_norm": p, "bg": bg }
+        d = { "id": anaID, "datasetId": datasetID, "p_norm": p, "bg": bg }
 
         # then lognorm
         loc = central**2 / np.sqrt ( central**2 + bgerr**2 )
