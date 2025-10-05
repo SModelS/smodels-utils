@@ -94,7 +94,7 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--ffactors',
             help='fudge factors, a list [None]', type=str,
             default=None)
-    ap.add_argument('-n', '--ntoys',
+    ap.add_argument('-n', '--ntoys', type=int,
             help='number of toys [1000]', default=1000)
     args = ap.parse_args()
     ffactors = args.ffactors
