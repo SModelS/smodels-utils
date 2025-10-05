@@ -28,17 +28,18 @@ def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
         fakeobs = scipy.stats.poisson.rvs ( lmbda )
 
         p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs) )
-        d = { "id": anaID, "p_N": p, "bg": bg }
+        d = { "id": anaID, "p_norm": p, "bg": bg }
 
         # then lognorm
         loc = central**2 / np.sqrt ( central**2 + bgerr**2 )
         stderr = float ( np.sqrt ( np.log ( 1 + bgerr**2 / central**2 ) ) )
-        p = 0.
-        if stderr > 0.:
+        if stderr == 0.:
+            d["p_lognorm"] = 0.
+        else:
             lmbda = scipy.stats.lognorm.rvs ( s=[stderr]*ntoys, scale=[loc]*ntoys )
             fakeobs = scipy.stats.poisson.rvs ( lmbda )
             p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs))
-        d [ "p_LN" ] = p
+            d [ "p_lognorm" ] = p
         ret.append ( d )
     return ret
 
@@ -77,9 +78,21 @@ def createData( dictfile : str, fudge_factors : list,
         p = computePValues( d, fudge, ntoys = ntoys)
         pvalues[float(fudge)]=p
 
-    from ptools.helpers import py_dump
+    from ptools.helpers import py_dumps
     print ( f"[createData] creating {outfile}" )
-    py_dump ( pvalues, outfile, stop_at_level = 2 )
+    with open ( outfile, "wt" ) as f:
+        import time, sys
+        f.write ( f"# this file was created at {time.asctime()}\n" )
+        args = ""
+        for i in sys.argv:
+            if " " in i or "," in i or "[" in i:
+                i = f'"{i}"'
+            args += f"{i} "
+        f.write ( f"# via {args.strip()}\n" )
+        f.write ( "\n" )
+
+        ds = py_dumps ( pvalues ) # , stop_at_level = 2 )
+        f.write ( ds+ "\n" )
 
 if __name__ == "__main__":
     import argparse
