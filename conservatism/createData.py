@@ -9,40 +9,37 @@ import numpy as np
 import sys
 sys.path.insert(0,"../../protomodels/")
 
-def computePValues( data : dict, fudge : float , nuisanceType : str,
-       ntoys : int ) -> dict:
+def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
     """ compute p-values 
     :param nuisanceType: gauss or lognorm
     """
     ret = []
-    min_events = 3.5
-    if nuisanceType == "gauss":
-        for anaID in data.keys():
-            obs = data[anaID]["origN"]
-            bg = data[anaID]["expectedBG"]
-            bgerr = fudge*data[anaID]["bgError"]
-            if bg > min_events:
-                central = bg
-                lmbda = scipy.stats.norm.rvs ( loc=[central]*ntoys, scale=[bgerr]*ntoys )
-                lmbda = lmbda[lmbda>0.]
-                fakeobs = scipy.stats.poisson.rvs ( lmbda )
+    for anaID in data.keys():
+        obs = data[anaID]["origN"]
+        bg = data[anaID]["expectedBG"]
+        bgerr = fudge*data[anaID]["bgError"]
+        if bg == 0.: # bg needs to be greater than 0
+            continue
 
-                p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs))
-                ret.append ( { "id": anaID, "p": p } )
+        ## first gauss
+        central = bg
+        lmbda = scipy.stats.norm.rvs ( loc=[central]*ntoys, scale=[bgerr]*ntoys )
+        lmbda = lmbda[lmbda>0.]
+        fakeobs = scipy.stats.poisson.rvs ( lmbda )
 
-    if nuisanceType == "lognorm":
-        for anaID in data.keys():
-            obs = data[anaID]["origN"]
-            bg = data[anaID]["expectedBG"]
-            bgerr = fudge*data[anaID]["bgError"]
-            if bg > min_events:
-                central = bg
-                loc = central**2 / np.sqrt ( central**2 + bgerr**2 )
-                stderr = np.sqrt ( np.log ( 1 + bgerr**2 / central**2 ) )
-                lmbda = scipy.stats.lognorm.rvs ( s=[stderr]*ntoys, scale=[loc]*ntoys )
-                fakeobs = scipy.stats.poisson.rvs ( lmbda )
-                p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs))
-                ret.append ( { "id": anaID, "p": p } )
+        p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs) )
+        d = { "id": anaID, "p_N": p, "bg": bg }
+
+        # then lognorm
+        loc = central**2 / np.sqrt ( central**2 + bgerr**2 )
+        stderr = float ( np.sqrt ( np.log ( 1 + bgerr**2 / central**2 ) ) )
+        p = 0.
+        if stderr > 0.:
+            lmbda = scipy.stats.lognorm.rvs ( s=[stderr]*ntoys, scale=[loc]*ntoys )
+            fakeobs = scipy.stats.poisson.rvs ( lmbda )
+            p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs))
+        d [ "p_LN" ] = p
+        ret.append ( d )
     return ret
 
 def filterData( data : dict ) -> dict:
@@ -77,7 +74,7 @@ def createData( dictfile : str, fudge_factors : list,
 
     pvalues={}
     for fudge in fudge_factors:
-        p = computePValues(d,fudge,nuisanceType="gauss",ntoys = ntoys)
+        p = computePValues( d, fudge, ntoys = ntoys)
         pvalues[float(fudge)]=p
 
     from ptools.helpers import py_dump
