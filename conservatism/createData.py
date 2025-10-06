@@ -22,25 +22,16 @@ def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
         if bg == 0.: # bg needs to be greater than 0
             continue
 
-        ## first gauss
-        central = bg
-        lmbda = scipy.stats.norm.rvs ( loc=[central]*ntoys, scale=[bgerr]*ntoys )
-        lmbda = lmbda[lmbda>0.]
-        fakeobs = scipy.stats.poisson.rvs ( lmbda )
-
-        p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs) )
-        d = { "id": anaID, "datasetId": datasetID, "p_norm": p, "bg": bg }
-
-        # then lognorm
-        loc = central**2 / np.sqrt ( central**2 + bgerr**2 )
-        stderr = float ( np.sqrt ( np.log ( 1 + bgerr**2 / central**2 ) ) )
-        if stderr == 0.:
-            d["p_lognorm"] = 0.
-        else:
-            lmbda = scipy.stats.lognorm.rvs ( s=[stderr]*ntoys, scale=[loc]*ntoys )
-            fakeobs = scipy.stats.poisson.rvs ( lmbda )
-            p = float ( (sum(fakeobs>obs) + .5*sum(fakeobs==obs)) / len(fakeobs))
-            d [ "p_lognorm" ] = p
+        d = { "id": anaID, "datasetId": datasetID, "bg": bg,
+              "obs": obs, "bgerr": bgerr }
+        debug = True
+        if debug:
+            d["fudge"]=fudge
+        from ptools.helpers import computeP
+        p_norm = computeP ( obs, bg, bgerr, lognormal = False, nmax = ntoys )
+        d["p_norm"]=p_norm
+        p_lognorm = computeP ( obs, bg, bgerr, lognormal = True, nmax = ntoys )
+        d["p_lognorm"] = p_lognorm
         ret.append ( d )
     return ret
 
@@ -70,7 +61,9 @@ def writeHeader ( f ):
     f.write ( f"#\n" )
     f.write ( f"# variables:" )
     f.write ( f"# ==========" )
+    f.write ( f"# obs: observed yield\n" )
     f.write ( f"# bg: background expectation, as a yield\n" )
+    f.write ( f"# bgerr: error on background expectation\n" )
     f.write ( f"# p_norm: p-value for Gaussian nuisances\n" )
     f.write ( f"# p_lognorm: p-value for lognorm nuisances\n" )
     f.write ( "\n" )
@@ -112,7 +105,7 @@ if __name__ == "__main__":
             help='path to database dictionary file [../../protomodels/historic_database_stats/310.dict]', 
             default='../../protomodels/historic_database_stats/310.dict')
     ap.add_argument('-o', '--outfile',
-            help='output file [data.dict]', 
+            help="output file, 'default' -> '<ntoys>.dict' ['data.dict']", 
             default='data.dict')
     ap.add_argument('-f', '--ffactors',
             help='fudge factors, a list [None]', type=str,
@@ -127,6 +120,9 @@ if __name__ == "__main__":
             [0.35 + i*0.025 for i in range(int((0.65-0.35)/0.025)+1)] +
             [0.45 + i*0.0125 for i in range(int((0.55-0.45)/0.0125)+1)]
         )]))
+        ffactors[0]=0.01
     if type(ffactors)==str:
         ffactors = eval(ffactors)
+    if args.outfile == "default":
+        args.outfile = f"{args.ntoys}.dict"
     createData( args.dictfile, ffactors, args.ntoys, args.outfile )

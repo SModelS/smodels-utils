@@ -15,12 +15,11 @@ def filterByAnaId ( data : list, dropThese : list ) -> list:
             ret.append ( entry )
     return ret
 
-def filterByBG ( data : list ) -> list:
+def filterByBG ( data : list, min_bg : float ) -> list:
     """ filter the data by expected background yield """
-    bgmin = 2.5
     ret = []
     for entry in data:
-        if entry["bg"]>bgmin:
+        if entry["bg"]>min_bg:
             ret.append ( entry )
     return ret
 
@@ -72,24 +71,27 @@ def drawP ( args : dict ):
     statmodel = args["statmodel"]
     dropThese = []
     monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
-    dropThese.append  ( x for x in monojets )
-    dropThese.append ( [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16", \
-                  "ATLAS-SUSY-2018-42" ] )
-    dropThese.append ( "ATLAS-SUSY-2017-03" )
-    dropThese.append ( "CMS-SUS-20-004" )
-    dropThese = []
+    softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
+    dEdx = [ "ATLAS-SUSY-2018-42" ]
+    multiL = [ "ATLAS-SUSY-2017-03" ]
+    Hbb = [ "CMS-SUS-20-004" ]
+    dropThese = monojets + softleptons + dEdx + multiL + Hbb
+    # dropThese = [] ## do not drop
     data = filterByAnaId ( data[fudge], dropThese )
     # data = data[fudge]
-    data = filterByBG ( data )
+    data = filterByBG ( data, args["min_bg"] )
+    print ( f"[drawP] we are drawing {len(data)} entries" )
     splitdata = splitBySqrts ( data )
     splitdata = splitByCollaboration ( data )
     pvalues = getPValues ( splitdata, statmodel )
     from matplotlib import pyplot as plt
     bins = np.linspace(0,1,args["nbins"]+1)
-    for label, ps in pvalues.items():
-        plt.hist ( ps, label = label, bins = bins )
+    plt.hist ( pvalues.values(), label = pvalues.keys(), 
+    bins = bins, stacked=True )
+    #for label, ps in pvalues.items():
+    #    plt.hist ( ps, label = label, bins = bins )
     plt.legend()
-    plt.title ( f"Distribution of p-values, fudge={fudge:.1f}" )
+    plt.title ( f"Distribution of p-values, fudge={fudge:.1f} [stacked]" )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence" )
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
@@ -112,6 +114,8 @@ if __name__ == "__main__":
             default='norm' )
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
+    ap.add_argument('-m', '--min_bg', type=float,
+            help='minimum number of expected background events [2.5]', default=2.5 )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
     args = ap.parse_args()
