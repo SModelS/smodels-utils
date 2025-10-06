@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+""" this script does something very similar as plotDBDict,
+namely it draws distributions of p-values, but for various 
+fudge factors """
+
 import numpy as np
 
 def filterByAnaId ( data : list, dropThese : list ) -> list:
@@ -57,6 +61,19 @@ def getPValues ( data : dict, statmodel : str ) -> dict:
             ret[label].append ( entry[ f"p_{statmodel}" ] )
     return ret
 
+def countAnalyses ( data : list ) -> int:
+    """
+    :returns: the number of analyses
+    """
+    anaIds = set()
+    for entry in data:
+        id = entry["id"]
+        labels = [ "-agg", "-multibin", "-strong", "-ewk" ]
+        for label in labels:
+            id = id.replace( label, "" )
+        anaIds.add ( id )
+    return len(anaIds)
+
 def drawP ( args : dict ):
     """ draw a histogram of the pvalues 
     :args dictionary:
@@ -80,20 +97,27 @@ def drawP ( args : dict ):
     data = filterByAnaId ( data[fudge], dropThese )
     # data = data[fudge]
     data = filterByBG ( data, args["min_bg"] )
-    print ( f"[drawP] we are drawing {len(data)} entries" )
+    nSRs = len(data)
+    print ( f"[drawP] we are drawing {nSRs} entries" )
     splitdata = splitBySqrts ( data )
     splitdata = splitByCollaboration ( data )
     pvalues = getPValues ( splitdata, statmodel )
     from matplotlib import pyplot as plt
     bins = np.linspace(0,1,args["nbins"]+1)
     plt.hist ( pvalues.values(), label = pvalues.keys(), 
-    bins = bins, stacked=True )
+               bins = bins, stacked=True )
     #for label, ps in pvalues.items():
     #    plt.hist ( ps, label = label, bins = bins )
     plt.legend()
     plt.title ( f"Distribution of p-values, fudge={fudge:.1f} [stacked]" )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence" )
+    ax = plt.gca()
+    nAnas = countAnalyses ( data )
+    
+    plt.text ( .67, -.12, 
+            f"this plot contains {nSRs} SRs from {nAnas} analyses", 
+            transform=ax.transAxes, c="grey", fontsize=7 )  
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
     outfile = outfile.replace("@@STATMODEL@@",statmodel)
     plt.savefig ( outfile )
