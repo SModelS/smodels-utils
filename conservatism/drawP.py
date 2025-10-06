@@ -4,6 +4,7 @@
 namely it draws distributions of p-values, but for various 
 fudge factors """
 
+from matplotlib import pyplot as plt
 import numpy as np
 
 def filterByAnaId ( data : list, dropThese : list ) -> list:
@@ -102,14 +103,17 @@ def drawP ( args : dict ):
     splitdata = splitBySqrts ( data )
     splitdata = splitByCollaboration ( data )
     pvalues = getPValues ( splitdata, statmodel )
-    from matplotlib import pyplot as plt
+    allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
     plt.hist ( pvalues.values(), label = pvalues.keys(), 
                bins = bins, stacked=True )
     #for label, ps in pvalues.items():
     #    plt.hist ( ps, label = label, bins = bins )
     plt.legend()
-    plt.title ( f"Distribution of p-values, fudge={fudge:.1f} [stacked]" )
+    from chelpers import computeT
+    Ts = computeT ( allpvalues, None )
+    p=Ts["p"]
+    plt.title ( f"Distribution of p-values, fudge={fudge:.1f} [stacked] P={p:.2f}" )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence" )
     ax = plt.gca()
