@@ -57,6 +57,24 @@ def filterData( data : dict ) -> dict:
             d[dataID][i] = data[dataID][i]
     return d
 
+def writeHeader ( f ):
+    """ write the header info into file handle f """
+    import time, sys
+    f.write ( f"# this file was created at {time.asctime()}\n" )
+    args = ""
+    for i in sys.argv:
+        if " " in i or "," in i or "[" in i:
+            i = f'"{i}"'
+        args += f"{i} "
+    f.write ( f"# via {args.strip()}\n" )
+    f.write ( f"#\n" )
+    f.write ( f"# variables:" )
+    f.write ( f"# ==========" )
+    f.write ( f"# bg: background expectation, as a yield\n" )
+    f.write ( f"# p_norm: p-value for Gaussian nuisances\n" )
+    f.write ( f"# p_lognorm: p-value for lognorm nuisances\n" )
+    f.write ( "\n" )
+
 def createData( dictfile : str, fudge_factors : list,
        ntoys : int = 1000, outfile : str = "data.dict" ):
     """ create the data needed for the conservatism plots.
@@ -82,16 +100,7 @@ def createData( dictfile : str, fudge_factors : list,
     from ptools.helpers import py_dumps
     print ( f"[createData] creating {outfile}" )
     with open ( outfile, "wt" ) as f:
-        import time, sys
-        f.write ( f"# this file was created at {time.asctime()}\n" )
-        args = ""
-        for i in sys.argv:
-            if " " in i or "," in i or "[" in i:
-                i = f'"{i}"'
-            args += f"{i} "
-        f.write ( f"# via {args.strip()}\n" )
-        f.write ( "\n" )
-
+        writeHeader ( f )
         ds = py_dumps ( pvalues ) # , stop_at_level = 2 )
         f.write ( ds+ "\n" )
 

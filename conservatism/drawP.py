@@ -70,11 +70,14 @@ def drawP ( args : dict ):
         data = eval(f.read())
     fudge = args["fudge"]
     statmodel = args["statmodel"]
-    dropThese = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06", \
-                  "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16", \
-                  "ATLAS-SUSY-2018-42" ]
+    dropThese = []
+    monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
+    dropThese.append  ( x for x in monojets )
+    dropThese.append ( [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16", \
+                  "ATLAS-SUSY-2018-42" ] )
     dropThese.append ( "ATLAS-SUSY-2017-03" )
     dropThese.append ( "CMS-SUS-20-004" )
+    dropThese = []
     data = filterByAnaId ( data[fudge], dropThese )
     # data = data[fudge]
     data = filterByBG ( data )
@@ -82,8 +85,7 @@ def drawP ( args : dict ):
     splitdata = splitByCollaboration ( data )
     pvalues = getPValues ( splitdata, statmodel )
     from matplotlib import pyplot as plt
-    n_bins = 10
-    bins = np.linspace(0,1,n_bins+1)
+    bins = np.linspace(0,1,args["nbins"]+1)
     for label, ps in pvalues.items():
         plt.hist ( ps, label = label, bins = bins )
     plt.legend()
@@ -91,7 +93,7 @@ def drawP ( args : dict ):
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence" )
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
-    outfile = outfile.replace("@@statmodel@@",statmodel)
+    outfile = outfile.replace("@@STATMODEL@@",statmodel)
     plt.savefig ( outfile )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
@@ -110,5 +112,7 @@ if __name__ == "__main__":
             default='norm' )
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
+    ap.add_argument('-n', '--nbins', type=int,
+            help='number of bins in histogram [10]', default=10)
     args = ap.parse_args()
     drawP( vars(args) )
