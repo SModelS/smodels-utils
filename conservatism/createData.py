@@ -59,8 +59,8 @@ def writeHeader ( f ):
         args += f"{i} "
     f.write ( f"# via {args.strip()}\n" )
     f.write ( f"#\n" )
-    f.write ( f"# variables:" )
-    f.write ( f"# ==========" )
+    f.write ( f"# variables:\n" )
+    f.write ( f"# ==========\n" )
     f.write ( f"# obs: observed yield\n" )
     f.write ( f"# bg: background expectation, as a yield\n" )
     f.write ( f"# bgerr: error on background expectation\n" )

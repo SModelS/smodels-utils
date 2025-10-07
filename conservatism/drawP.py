@@ -7,6 +7,17 @@ fudge factors """
 from matplotlib import pyplot as plt
 import numpy as np
 
+def getPValues ( data : dict, statmodel : str ) -> dict:
+    """ extract the right p-values from the entire entries """
+    ret = {}
+    for label, xdata in data.items():
+        if not label in ret:
+            ret[label] = []
+        for entry in xdata:
+            ret[label].append ( entry[ f"p_{statmodel}" ] )
+    return ret
+
+
 def filterByAnaId ( data : list, dropThese : list ) -> list:
     """ filter by analysis ids 
     :param dropThese: list of analysis ids to drop
@@ -52,16 +63,6 @@ def splitByCollaboration ( data : list ) -> dict:
         ret[coll].append ( entry )
     return ret
     
-def getPValues ( data : dict, statmodel : str ) -> dict:
-    """ extract the right p-values from the entire entries """
-    ret = {}
-    for label, xdata in data.items():
-        if not label in ret:
-            ret[label] = []
-        for entry in xdata:
-            ret[label].append ( entry[ f"p_{statmodel}" ] )
-    return ret
-
 def countAnalyses ( data : list ) -> int:
     """
     :returns: the number of analyses

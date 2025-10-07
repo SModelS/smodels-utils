@@ -1,33 +1,50 @@
 #!/usr/bin/env python3
 
-def calc_T(p,bns):
-    n_bns = len(bns) - 1
-    pj = 1/n_bns
-    size = len(p)
-    counts = [0]*n_bns
-    for i in p:
-        for j in range(n_bns):
-            if i>bns[j] and i<bns[j+1]:
-                counts[j] += 1
-    return sum(((i - size*pj)**2) / (size*pj) for i in counts)
+""" the script used to draw the test statistic of thie binned chi2
+test as a function of the fudge factor """
 
-def calc_Tabove(p,bns):
-    n_bns = int((len(bns) - 1) / 2)
-    pj = 1/n_bns
-    p = [i for i in p if i>0.5]
-    size = len(p)
-    counts = [0]*n_bns
-    for i in p:
-        for j in range(int((len(bns)-1)/2),int(len(bns)-1)):
-            tmp = j - int((len(bns)-1)/2)
-            if i>bns[j] and i<bns[j+1]:
-                counts[tmp] += 1
-    return sum(((i - size*pj)**2) / (size*pj) for i in counts)
+from chelpers import computeT
+import numpy as np
 
-def drawT():
+def getPValues ( data : list, statmodel : str = "norm" ) -> list:
+    """ from a list of entries in data.dict, extract the p values 
+    :param statmodel: norm or lognorm
+    """
+    ret = []
+    for d in data:
+        ret.append ( d[ f"p_{statmodel}" ] )
+    return ret
+
+def getHistoTestStats ( data : dict, bins : list ) -> dict:
+    """ retrieve the test statistics of the histogram,
+    typically the T value """
+    Ts = {}
+    for fudge,entry in data.items():
+        pvalues = getPValues ( entry, "norm" )
+        tstats = computeT ( pvalues, bins )
+        T = tstats["T"]
+        Ts[fudge]=T
+    return Ts
+
+def draw( Ts : dict ):
+    """ the drawing method """
+    from matplotlib import pyplot as plt
+    xs, ys = list ( Ts.keys() ), list ( Ts.values() )
+    plt.plot ( xs, ys )
+    outfile = "T.png"
+    plt.savefig ( outfile )
+    from smodels_utils.plotting.mpkitty import timg
+    timg ( outfile )
+
+def create():
     with open("data.dict","rt") as f:
         data = eval(f.read())
-    print ( data )
+    Ts  = []
+    ## standard bins for now
+    n_bins = 10
+    bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
+    Ts = getHistoTestStats ( data, bins )
+    draw ( Ts )
 
 if __name__ == "__main__":
-    drawT()
+    create()
