@@ -4,7 +4,7 @@
 test as a function of the fudge factor """
 
 from chelpers import computeT, filterByAnaId, filterByBG, splitByCollaboration,\
-     splitBySqrts
+     splitBySqrts, splitBySqrtsAndCollaboration
 import numpy as np
 
 def getPValues ( data : list, statmodel : str = "norm" ) -> list:
@@ -30,7 +30,7 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
 def draw( data : dict, bins : list ):
     """ the drawing method """
     Ts = getHistoTestStats ( data, bins )
-    splitdata = splitByCollaboration ( data )
+    splitdata = splitBySqrtsAndCollaboration ( data )
     # splitdata = splitBySqrts ( splitdata["ATLAS"] )
     split = splitdata.keys()
     Tss={}
