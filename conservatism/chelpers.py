@@ -10,7 +10,8 @@ import numpy as np
 def computeT( p_values : list , bins : Union[str,None,list,int] = None ) -> dict:
     """ given a list of p-values, and a binning,
     return the binned chi2 test statistic
-    :param bins: either list of bins, or number of bins, or default
+    :param bins: either list of bins, or number of bins, or None (default),
+    or "default" or "half"
 
     :returns: dictionary with test statistic, ndf, and p-value for test statistic
     """
@@ -36,7 +37,7 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None ) -> dict
                 counts[i] += 1
     n_pvalues = sum(counts)
     T_i = [ ((c - n_pvalues*p_i)**2) / (n_pvalues*p_i) for c in counts ]
-    T = sum ( T_i )
+    T = float ( sum ( T_i ) )
     from scipy.stats import chi2
-    p = 1. - chi2.cdf ( T, df = n_bins - 1 )
+    p = float ( 1. - chi2.cdf ( T, df = n_bins - 1 ) )
     return { "T": T, "ndf": n_bins-1, "p": p }

@@ -113,9 +113,9 @@ def drawP ( args : dict ):
     from chelpers import computeT
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
-    plt.title ( f"Distribution of p-values, fudge={fudge:.1f} [stacked] P={p:.2f}" )
+    plt.title ( f"Distribution of p-values, fudge={fudge:.1f} P={p:.2f}" )
     plt.xlabel ( "p-values" )
-    plt.ylabel ( "occurrence" )
+    plt.ylabel ( "occurrence [stacked]" )
     ax = plt.gca()
     nAnas = countAnalyses ( data )
     
