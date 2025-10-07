@@ -59,7 +59,7 @@ def create():
         data = eval(f.read())
     Ts  = []
     ## standard bins for now
-    n_bins = 10
+    n_bins = 20
     bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
     monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
     softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
@@ -69,7 +69,7 @@ def create():
     dropThese = monojets + softleptons + dEdx + multiL + Hbb
     # dropThese = []
     data = filterByAnaId ( data, dropThese )
-    data = filterByBG ( data, 4.1 )
+    data = filterByBG ( data, 2.1 )
     draw ( data, bins )
 
 if __name__ == "__main__":
