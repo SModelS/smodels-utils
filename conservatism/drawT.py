@@ -30,12 +30,17 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
 def draw( data : dict, bins : list ):
     """ the drawing method """
     Ts = getHistoTestStats ( data, bins )
-    #TsCMS = getHistoTestStats ( splitdata["CMS"], bins )
+    print ( data.keys() )
+    splitdata = splitByCollaboration ( data )
+    TsCMS = getHistoTestStats ( splitdata["CMS"], bins )
+    TsATLAS = getHistoTestStats ( splitdata["ATLAS"], bins )
     from matplotlib import pyplot as plt
     xs, ys = list ( Ts.keys() ), list ( Ts.values() )
-    #xsCMS, ysCMS = list ( TsCMS.keys() ), list ( TsCMS.values() )
-    plt.plot ( xs, ys, label="T(f)" )
-    #plt.plot ( xsCMS, ysCMS, label="T_{CMS}(f)" )
+    xsCMS, ysCMS = list ( TsCMS.keys() ), list ( TsCMS.values() )
+    xsATLAS, ysATLAS = list ( TsATLAS.keys() ), list ( TsATLAS.values() )
+    plt.plot ( xs, ys, label="$T(f)$" )
+    plt.plot ( xsCMS, ysCMS, label="$T_{CMS}(f)$" )
+    plt.plot ( xsATLAS, ysATLAS, label="$T_{ATLAS}(f)$" )
     ## get the fudge value that minimizes T
     min_fudge = min( Ts, key=Ts.get )
     plt.scatter ( min_fudge, Ts[min_fudge], color="red", s=30,

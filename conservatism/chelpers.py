@@ -38,10 +38,19 @@ def splitBySqrts ( data : list ) -> dict:
         ret[ssqrts].append ( entry )
     return ret
 
-def splitByCollaboration ( data : list ) -> dict:
+def splitByCollaboration ( data : Union[dict,list] ) -> dict:
     """ split up data by collaboration """
-    ret = {}
     from smodels_utils.helper.various import getCollaboration
+    if type(data)==dict:
+        ret = { "CMS": {}, "ATLAS": {} }
+        for label,entries in data.items():
+            ret["CMS"][label]=[]
+            ret["ATLAS"][label]=[]
+            for entry in entries:
+                coll = getCollaboration ( entry["id"] )
+                ret[coll][label].append ( entry )
+        return ret
+    ret = {}
     for entry in data:
         coll = getCollaboration ( entry["id"] )
         if not coll in ret:
