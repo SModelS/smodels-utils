@@ -27,9 +27,17 @@ def filterByAnaId ( data : Union[dict,list], dropThese : list ) \
 
 def splitBySqrts ( data : list ) -> dict:
     """ split up data by sqrts """
-    ret = {}
     from smodels_utils.helper.various import getSqrts
-    # from smodels_utils.helper.various import getSqrts, getCollaboration
+    if type(data)==dict:
+        ret = { 8: {}, 13: {} }
+        for label,entries in data.items():
+            ret[8][label]=[]
+            ret[13][label]=[]
+            for entry in entries:
+                coll = getSqrts ( entry["id"] )
+                ret[coll][label].append ( entry )
+        return ret
+    ret = {}
     for entry in data:
         sqrts = getSqrts ( entry["id"] )
         ssqrts = f"{sqrts} TeV"
@@ -58,6 +66,30 @@ def splitByCollaboration ( data : Union[dict,list] ) -> dict:
         ret[coll].append ( entry )
     return ret
     
+def splitBySqrtsAndCollaboration ( data : Union[dict,list] ) -> dict:
+    """ split up data by sqrts _and_ collaboration """
+    from smodels_utils.helper.various import getCollaboration, getSqrts
+    if type(data)==dict:
+        labels = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
+        ret = { x: {} for x in labels }
+        for ffactor,entries in data.items():
+            for x in labels:
+                ret[x][ffactor]=[]
+            for entry in entries:
+                sqrts = getSqrts ( entry["id"] )
+                coll = getCollaboration ( entry["id"] )
+                label = f"{coll}{sqrts}"
+                ret[label][ffactor].append ( entry )
+        return ret
+    ret = {}
+    for entry in data:
+        coll = getCollaboration ( entry["id"] )
+        sqrts = getSqrts ( entry["id"] )
+        label = f"{coll}{sqrts}"
+        if not label in ret:
+            ret[label]=[]
+        ret[label].append ( entry )
+    return ret
 
 def filterByBG ( data : Union[dict,list], min_bg : float ) -> Union[dict,list]:
     """ filter the data by expected background yield """

@@ -6,7 +6,8 @@ fudge factors """
 
 from matplotlib import pyplot as plt
 import numpy as np
-from chelpers import filterByAnaId, filterByBG, splitBySqrts, splitByCollaboration
+from chelpers import filterByAnaId, filterByBG, splitBySqrts, splitByCollaboration, \
+         splitBySqrtsAndCollaboration
 
 def getPValues ( data : dict, statmodel : str ) -> dict:
     """ extract the right p-values from the entire entries """
@@ -56,16 +57,23 @@ def drawP ( args : dict ):
     data = filterByBG ( data, args["min_bg"] )
     nSRs = len(data)
     print ( f"[drawP] we are drawing {nSRs} entries" )
-    splitdata = splitBySqrts ( data )
-    splitdata = splitByCollaboration ( data )
+    # splitdata = splitBySqrts ( data )
+    # splitdata = splitByCollaboration ( data )
+    splitdata = splitBySqrtsAndCollaboration ( data )
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
-    plt.hist ( pvalues.values(), label = pvalues.keys(), 
+    order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
+    order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
+    ordered_pvalues= [ pvalues[x] for x in order ]
+    plt.hist ( ordered_pvalues, label = order, 
                bins = bins, stacked=True )
     #for label, ps in pvalues.items():
     #    plt.hist ( ps, label = label, bins = bins )
-    plt.legend()
+    # plt.legend()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    # Reverse both
+    plt.legend(handles[::-1], labels[::-1])
     from chelpers import computeT
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]

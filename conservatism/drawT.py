@@ -30,17 +30,17 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
 def draw( data : dict, bins : list ):
     """ the drawing method """
     Ts = getHistoTestStats ( data, bins )
-    print ( data.keys() )
     splitdata = splitByCollaboration ( data )
-    TsCMS = getHistoTestStats ( splitdata["CMS"], bins )
-    TsATLAS = getHistoTestStats ( splitdata["ATLAS"], bins )
+    # splitdata = splitBySqrts ( splitdata["ATLAS"] )
+    split = splitdata.keys()
+    Tss={}
     from matplotlib import pyplot as plt
     xs, ys = list ( Ts.keys() ), list ( Ts.values() )
-    xsCMS, ysCMS = list ( TsCMS.keys() ), list ( TsCMS.values() )
-    xsATLAS, ysATLAS = list ( TsATLAS.keys() ), list ( TsATLAS.values() )
     plt.plot ( xs, ys, label="$T(f)$" )
-    plt.plot ( xsCMS, ysCMS, label="$T_{CMS}(f)$" )
-    plt.plot ( xsATLAS, ysATLAS, label="$T_{ATLAS}(f)$" )
+    for s in split:
+        Tss[s] = getHistoTestStats ( splitdata[s], bins )
+        xsS, ysS = list ( Tss[s].keys() ), list ( Tss[s].values() )
+        plt.plot ( xsS, ysS, label=f"$T_{{{s}}}(f)$" )
     ## get the fudge value that minimizes T
     min_fudge = min( Ts, key=Ts.get )
     plt.scatter ( min_fudge, Ts[min_fudge], color="red", s=30,
@@ -61,15 +61,15 @@ def create():
     ## standard bins for now
     n_bins = 10
     bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
-    dropThese = []
     monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
     softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
     dEdx = [ "ATLAS-SUSY-2018-42" ]
     multiL = [ "ATLAS-SUSY-2017-03" ]
     Hbb = [ "CMS-SUS-20-004" ]
     dropThese = monojets + softleptons + dEdx + multiL + Hbb
+    # dropThese = []
     data = filterByAnaId ( data, dropThese )
-    data = filterByBG ( data, 2.1 )
+    data = filterByBG ( data, 4.1 )
     draw ( data, bins )
 
 if __name__ == "__main__":
