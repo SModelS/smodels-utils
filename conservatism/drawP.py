@@ -6,6 +6,7 @@ fudge factors """
 
 from matplotlib import pyplot as plt
 import numpy as np
+from chelpers import filterByAnaId, filterByBG, splitBySqrts, splitByCollaboration
 
 def getPValues ( data : dict, statmodel : str ) -> dict:
     """ extract the right p-values from the entire entries """
@@ -17,52 +18,6 @@ def getPValues ( data : dict, statmodel : str ) -> dict:
             ret[label].append ( entry[ f"p_{statmodel}" ] )
     return ret
 
-
-def filterByAnaId ( data : list, dropThese : list ) -> list:
-    """ filter by analysis ids 
-    :param dropThese: list of analysis ids to drop
-    """
-    ret = []
-    outfile = "pvalues.png"
-    for entry in data:
-        if entry["id"] in dropThese:
-            continue
-        else:
-            ret.append ( entry )
-    return ret
-
-def filterByBG ( data : list, min_bg : float ) -> list:
-    """ filter the data by expected background yield """
-    ret = []
-    for entry in data:
-        if entry["bg"]>min_bg:
-            ret.append ( entry )
-    return ret
-
-def splitBySqrts ( data : list ) -> dict:
-    """ split up data by sqrts """
-    ret = {}
-    from smodels_utils.helper.various import getSqrts
-    # from smodels_utils.helper.various import getSqrts, getCollaboration
-    for entry in data:
-        sqrts = getSqrts ( entry["id"] )
-        ssqrts = f"{sqrts} TeV"
-        if not ssqrts in ret:
-            ret[ssqrts]=[]
-        ret[ssqrts].append ( entry )
-    return ret
-
-def splitByCollaboration ( data : list ) -> dict:
-    """ split up data by collaboration """
-    ret = {}
-    from smodels_utils.helper.various import getCollaboration
-    for entry in data:
-        coll = getCollaboration ( entry["id"] )
-        if not coll in ret:
-            ret[coll]=[]
-        ret[coll].append ( entry )
-    return ret
-    
 def countAnalyses ( data : list ) -> int:
     """
     :returns: the number of analyses

@@ -7,6 +7,62 @@ conservatism estimates """
 from typing import Union
 import numpy as np
 
+def filterByAnaId ( data : Union[dict,list], dropThese : list ) \
+        -> Union[dict,list]:
+    """ filter by analysis ids 
+    :param dropThese: list of analysis ids to drop
+    """
+    if type(data)==dict:
+        ret = {}
+        for label,entries in data.items():
+            ret[label] = filterByAnaId ( entries, dropThese )
+        return ret
+    ret = []
+    for entry in data:
+        if entry["id"] in dropThese:
+            continue
+        else:
+            ret.append ( entry )
+    return ret
+
+def splitBySqrts ( data : list ) -> dict:
+    """ split up data by sqrts """
+    ret = {}
+    from smodels_utils.helper.various import getSqrts
+    # from smodels_utils.helper.various import getSqrts, getCollaboration
+    for entry in data:
+        sqrts = getSqrts ( entry["id"] )
+        ssqrts = f"{sqrts} TeV"
+        if not ssqrts in ret:
+            ret[ssqrts]=[]
+        ret[ssqrts].append ( entry )
+    return ret
+
+def splitByCollaboration ( data : list ) -> dict:
+    """ split up data by collaboration """
+    ret = {}
+    from smodels_utils.helper.various import getCollaboration
+    for entry in data:
+        coll = getCollaboration ( entry["id"] )
+        if not coll in ret:
+            ret[coll]=[]
+        ret[coll].append ( entry )
+    return ret
+    
+
+def filterByBG ( data : Union[dict,list], min_bg : float ) -> Union[dict,list]:
+    """ filter the data by expected background yield """
+    if type(data)==dict:
+        ret = {}
+        for label,entries in data.items():
+            ret[label] = filterByBG ( entries, min_bg )
+        return ret
+    ret = []
+    for entry in data:
+        if entry["bg"]>min_bg:
+            ret.append ( entry )
+    return ret
+
 def computeT( p_values : list , bins : Union[str,None,list,int] = None ) -> dict:
     """ given a list of p-values, and a binning,
     return the binned chi2 test statistic
