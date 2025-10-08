@@ -104,11 +104,13 @@ def filterByBG ( data : Union[dict,list], min_bg : float ) -> Union[dict,list]:
             ret.append ( entry )
     return ret
 
-def computeT( p_values : list , bins : Union[str,None,list,int] = None ) -> dict:
+def computeT( p_values : list , bins : Union[str,None,list,int] = None,
+       method :str = "default" ) -> dict:
     """ given a list of p-values, and a binning,
     return the binned chi2 test statistic
     :param bins: either list of bins, or number of bins, or None (default),
     or "default" or "half"
+    :param method: default, or fold
 
     :returns: dictionary with test statistic, ndf, and p-value for test statistic
     """
@@ -132,6 +134,10 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None ) -> dict
         for i in range(n_bins):
             if bins[i]<p<bins[i+1]:
                 counts[i] += 1
+        if method == "fold": ## folding
+            for i in range(n_bins):
+                if bins[i]<1-p<bins[i+1]:
+                    counts[i] += 1
     n_pvalues = sum(counts)
     T_i = [ ((c - n_pvalues*p_i)**2) / (n_pvalues*p_i) for c in counts ]
     T = float ( sum ( T_i ) )

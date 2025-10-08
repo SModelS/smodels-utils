@@ -20,9 +20,10 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
     """ retrieve the test statistics of the histogram,
     typically the T value """
     Ts = {}
+    method = "default"
     for fudge,entry in data.items():
         pvalues = getPValues ( entry, "norm" )
-        tstats = computeT ( pvalues, bins )
+        tstats = computeT ( pvalues, bins, method = method )
         T = tstats["T"]
         Ts[fudge]=T
     return Ts
@@ -54,12 +55,12 @@ def draw( data : dict, bins : list ):
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
 
-def create():
-    with open("data.dict","rt") as f:
+def create ( args : dict ):
+    with open( args["inputfile"],"rt") as f:
         data = eval(f.read())
     Ts  = []
     ## standard bins for now
-    n_bins = 20
+    n_bins =args["nbins"]
     bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
     monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
     softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
@@ -73,4 +74,12 @@ def create():
     draw ( data, bins )
 
 if __name__ == "__main__":
-    create()
+    import argparse
+    ap = argparse.ArgumentParser(description=
+            "Produces T-values plots from a createDict.py dict file")
+    ap.add_argument('-i', '--inputfile',
+            help='input file [data.dict]', default='data.dict' )
+    ap.add_argument('-n', '--nbins', type=int,
+            help='number of bins in histogram [10]', default=10)
+    args = ap.parse_args()
+    create( vars(args) )
