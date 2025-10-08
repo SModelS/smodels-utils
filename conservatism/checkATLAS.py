@@ -112,7 +112,7 @@ def checkATLAS():
         if not hasattr ( expRes.globalInfo, "jsonFiles" ):
             continue
         checkATLASResult ( expRes )
-    db.databaseVersion = db.databaseVersion + "pyhf"
+    db.subs[0].databaseVersion = db.databaseVersion + ".pyhf"
     db.createBinaryFile ( "new.pcl" )
 
 if __name__ == "__main__":
