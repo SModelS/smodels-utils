@@ -36,15 +36,15 @@ def draw( data : dict, bins : list ):
     Tss={}
     from matplotlib import pyplot as plt
     xs, ys = list ( Ts.keys() ), list ( Ts.values() )
-    plt.plot ( xs, ys, label="$T(f)$" )
     for s in split:
         Tss[s] = getHistoTestStats ( splitdata[s], bins )
         xsS, ysS = list ( Tss[s].keys() ), list ( Tss[s].values() )
-        plt.plot ( xsS, ysS, label=f"$T_{{{s}}}(f)$" )
+        plt.plot ( xsS, ysS, label=rf"$\mathrm{{T}}_{{{s}}}(f)$" )
     ## get the fudge value that minimizes T
     min_fudge = min( Ts, key=Ts.get )
     plt.scatter ( min_fudge, Ts[min_fudge], color="red", s=30,
                   label = r"$\hat{f}$" )
+    plt.plot ( xs, ys, label=r"$\mathrm{T}(f)$", linewidth=4 )
     plt.legend()
     outfile = "T.png"
     plt.title ( "finding the optimal fudge factor" )
