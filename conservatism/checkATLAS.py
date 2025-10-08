@@ -33,26 +33,30 @@ def getPyhfExpected ( js_content, pyhfSRname ):
         samples = SR["samples"]
         for sample in samples:
             data = sample["data"]
+            mloc = None 
             if type(data) == list:
-                loc += data[0]
+                mloc = data[idx] 
+                loc += mloc
             if type(data) == dict:
-                loc += .5* ( data["hi_data"] + data["lo_data"] )
+                mloc = .5* ( data["hi_data"] + data["lo_data"] )
+                loc += mloc
                 var1 = (data["hi_data"] - loc)**2
                 var2 = (data["lo_data"] - loc)**2
                 var += max(var1,var2)
-        if "modifiers" in sample:
-            for modifier in sample["modifiers"]:
-                # print ( "modifier", modifier )
-                data = modifier["data"]
-                if type(data)==list:
-                    var += data[idx]**2
-                if type(data)==dict:
-                    if "hi" in data:
-                        tvar = (.5*(data["hi"]-data["lo"]))**2
-                        var += tvar
-                    if "hi_data" in data:
-                        tvar = (.5*(data["hi_data"][idx]-data["lo_data"][idx]))**2
-                        var += tvar
+            if "modifiers" in sample:
+                for modifier in sample["modifiers"]:
+                    # print ( "modifier", modifier )
+                    data = modifier["data"]
+                    if type(data)==list:
+                        var += data[idx]**2
+                    if type(data)==dict:
+                        if "hi" in data:
+                            f = .5*(data["hi"]-data["lo"])
+                            tvar = (f * mloc )**2
+                            var += tvar
+                        if "hi_data" in data:
+                            tvar = (.5*(data["hi_data"][idx]-data["lo_data"][idx]))**2
+                            var += tvar
     return loc, var
 
 def checkSR ( SR : dict, jsonFile : str, expRes ):
@@ -97,7 +101,9 @@ def checkATLASResult ( expRes ):
 
 def checkATLAS():
     from smodels.experiment.databaseObj import Database
-    db = Database ( "official" )
+    dbpath = "official"
+    # dbpath = "new.pcl"
+    db = Database ( dbpath )
     expResList = db.getExpResults ( dataTypes=["efficiencyMap"] )
     for expRes in expResList:
         coll = getCollaboration ( expRes.globalInfo.id )
@@ -106,7 +112,8 @@ def checkATLAS():
         if not hasattr ( expRes.globalInfo, "jsonFiles" ):
             continue
         checkATLASResult ( expRes )
-    # db.createBinaryFile ( "new.pcl" )
+    db.databaseVersion = db.databaseVersion + "pyhf"
+    db.createBinaryFile ( "new.pcl" )
 
 if __name__ == "__main__":
     checkATLAS()
