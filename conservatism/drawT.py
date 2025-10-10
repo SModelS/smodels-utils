@@ -32,8 +32,8 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
 def draw( data : dict, bins : list ):
     """ the drawing method """
     Ts = getHistoTestStats ( data, bins )
-    splitdata = splitBySqrtsAndCollaboration ( data )
-    # splitdata = splitByAnalysisGroups ( data )
+    # splitdata = splitBySqrtsAndCollaboration ( data )
+    splitdata = splitByAnalysisGroups ( data )
     # splitdata = splitBySqrts ( splitdata["ATLAS"] )
     split = splitdata.keys()
     Tss={}
@@ -72,7 +72,7 @@ def create ( args : dict ):
     dropThese = monojets + softleptons + dEdx + multiL + Hbb
     # dropThese = []
     data = filterByAnaId ( data, dropThese )
-    data = filterByBG ( data, 4.1 )
+    data = filterByBG ( data, args["min_bg"] )
     draw ( data, bins )
 
 if __name__ == "__main__":
@@ -83,5 +83,7 @@ if __name__ == "__main__":
             help='input file [data.dict]', default='data.dict' )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
+    ap.add_argument('-m', '--min_bg', type=float,
+            help='minimum background exptectation to consider analysis [3.5]', default=3.5 )
     args = ap.parse_args()
     create( vars(args) )
