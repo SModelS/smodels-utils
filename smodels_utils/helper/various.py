@@ -170,8 +170,46 @@ def findCollaboration ( anaid : str ) -> str:
         return "ATLAS"
     return "???"
 
-def cutPoints ( points, ranges ) -> dict:
+def cutPoints ( points : list, ranges : dict ) -> list:
     """ cut the points at ranges
+    :param points: a list of lists of points 
+    a list of points is a line, but we can have several lines
+    :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
+
+    :returns: filtered points
+    """
+    if ranges == None:
+        return points
+    if not "y" in ranges:
+        ranges["y"]=[ float("-inf"), float("inf") ]
+    if not "x" in ranges:
+        ranges["x"]=[ float("-inf"), float("inf") ]
+
+    if not "y" in points:
+        ret = []
+        for line in points:
+            newline = []
+            for pt in line:
+                if ranges["x"][0] < pt["x"] < ranges["x"][1]:
+                        newline.append ( pt )
+            if len(newline)>0:
+                ret.append ( newline )
+        return ret
+
+    ret = []
+    for line in points: ##
+        newline = []
+        for pt in line:
+            if ranges["x"][0] < pt["x"] < ranges["x"][1] and \
+               ranges["y"][0] < pt["y"] < ranges["y"][1]:
+                    newline.append ( pt )
+        if len(newline)>0:
+            ret.append ( newline )
+    return ret
+
+def cutPointsOld ( points, ranges ) -> dict:
+    """ cut the points at ranges, the old version
+    FIXME should be obsolete!
     :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
     :returns: filtered points
     """

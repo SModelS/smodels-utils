@@ -118,6 +118,18 @@ def guessLabel ( label, anaId1, anaId2, valfile1 ):
     print ( f"[plotRatio] have been asked to guess the label for {anaId1} re {anaId2}: {label}" )
     return label
 
+def getCoords ( points : list[list], coord : str ) -> list:
+    """ get only one coordinate of all points 
+    :param points: list of lists of points
+    :param coord: e.g. "x"
+    """
+    ret = []
+    for line in points:
+        for pt in line:
+            ret.append ( pt[coord] )
+    return ret
+
+
 def draw ( options : dict ):
     """ plot.
     :param options: a dictionary of various options:
@@ -485,9 +497,9 @@ def draw ( options : dict ):
                 name = E["name"]
                 # print ( "name", name )
                 hasLegend = True
-                px = E["points"]["x"]
+                px = getCoords( E["points"], "x" )
                 if "y" in E["points"]:
-                    py = E["points"]["y"]
+                    py = getCoords( E["points"], "y" )
                 else:
                     py = px
                     px = [ 0. ] * len (py)
