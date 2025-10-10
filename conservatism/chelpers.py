@@ -65,6 +65,31 @@ def splitByCollaboration ( data : Union[dict,list] ) -> dict:
             ret[coll]=[]
         ret[coll].append ( entry )
     return ret
+
+
+def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
+    """ split up data by sqrts _and_ collaboration """
+    if type(data) == list:
+        print ( f"[chelpers] splitByAnalysisGroups" )
+    from smodels_utils.helper.various import getCollaboration, \
+            getSqrts, getYear
+    ret = { }
+    for ffactor,entries in data.items():
+        for entry in entries:
+            sqrts = getSqrts ( entry["id"] )
+            coll = getCollaboration ( entry["id"] )
+            if coll == "CMS":
+                continue
+            year = getYear ( entry["id"] )
+            label = f"{year}"
+            if not label in ret:
+                ret[label]={}
+            if not ffactor in ret[label]:
+                ret[label][ffactor]=[]
+            #label = f"{coll}{year}"
+            ret[label][ffactor].append ( entry )
+    return ret
+
     
 def splitBySqrtsAndCollaboration ( data : Union[dict,list] ) -> dict:
     """ split up data by sqrts _and_ collaboration """

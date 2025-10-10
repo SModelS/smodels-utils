@@ -128,10 +128,10 @@ def getCollaboration ( anaid : Union[Text,Dict] ) -> str:
             collaboration = "CMS"
     return collaboration
 
-def getSqrts ( anaId : str ) -> Union[int,float]:
-    """ given analysis id <anaId>, determine sqrts
+def getYear ( anaId : str ) -> int:
+    """ given analysis id <anaId>, determine year
     :param anaId: e.g. 'CMS-SUS-20-004'
-    :returns: e.g. 13 or 13.6
+    :returns: e.g. 2018
     """
     if anaId.startswith ( "CMS-EXO-16-057" ): # an exceptional case
         return 8
@@ -142,6 +142,16 @@ def getSqrts ( anaId : str ) -> Union[int,float]:
     year = year.replace("CERN-PH-EP-","")
     p1 = year.find("-")
     year = year[:p1]
+    return int(year)
+
+def getSqrts ( anaId : str ) -> Union[int,float]:
+    """ given analysis id <anaId>, determine sqrts
+    :param anaId: e.g. 'CMS-SUS-20-004'
+    :returns: e.g. 13 or 13.6
+    """
+    if anaId.startswith ( "CMS-EXO-16-057" ): # an exceptional case
+        return 8
+    year = str ( getYear ( anaId ) )
     if year == "20":
         return 13
     if year.startswith("20"):

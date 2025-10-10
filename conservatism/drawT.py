@@ -4,8 +4,9 @@
 test as a function of the fudge factor """
 
 from chelpers import computeT, filterByAnaId, filterByBG, splitByCollaboration,\
-     splitBySqrts, splitBySqrtsAndCollaboration
+     splitBySqrts, splitBySqrtsAndCollaboration, splitByAnalysisGroups
 import numpy as np
+from typing import Union
 
 def getPValues ( data : list, statmodel : str = "norm" ) -> list:
     """ from a list of entries in data.dict, extract the p values 
@@ -32,6 +33,7 @@ def draw( data : dict, bins : list ):
     """ the drawing method """
     Ts = getHistoTestStats ( data, bins )
     splitdata = splitBySqrtsAndCollaboration ( data )
+    # splitdata = splitByAnalysisGroups ( data )
     # splitdata = splitBySqrts ( splitdata["ATLAS"] )
     split = splitdata.keys()
     Tss={}
@@ -70,7 +72,7 @@ def create ( args : dict ):
     dropThese = monojets + softleptons + dEdx + multiL + Hbb
     # dropThese = []
     data = filterByAnaId ( data, dropThese )
-    data = filterByBG ( data, 2.1 )
+    data = filterByBG ( data, 4.1 )
     draw ( data, bins )
 
 if __name__ == "__main__":
