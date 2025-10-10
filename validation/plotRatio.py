@@ -122,6 +122,7 @@ def getCoords ( points : list[list], coord : str ) -> list:
     """ get only one coordinate of all points 
     :param points: list of lists of points
     :param coord: e.g. "x"
+    :returns: list of this coord
     """
     ret = []
     for line in points:
@@ -498,7 +499,7 @@ def draw ( options : dict ):
                 # print ( "name", name )
                 hasLegend = True
                 px = getCoords( E["points"], "x" )
-                if "y" in E["points"]:
+                if "y" in E["points"][0][0]:
                     py = getCoords( E["points"], "y" )
                 else:
                     py = px
