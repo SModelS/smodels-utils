@@ -331,9 +331,9 @@ def streamlineValidationData ( data : dict )-> str:
     data = py_dumps( data, indent=4, stop_at_level = 4, double_quotes = True )
     out = str(data).replace('[fb]','*fb').replace('[pb]','*pb')
     out = out.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
-    while "inf" in out:
+    while "inf," in out:
         out = out.replace("inf,","float('inf')," )
-    while "nan" in out:
+    while "nan," in out:
         out = out.replace("nan,","float('nan')," )
     # out = out.replace( "}, {" , "},\n{" )
     return out
