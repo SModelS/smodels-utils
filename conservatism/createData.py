@@ -23,7 +23,7 @@ def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
             continue
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
-              "obs": obs, "bgerr": bgerr }
+              "obs": obs, "bgerr": bgerr, "txns": data[dataID]["txns"] }
         debug = True
         if debug:
             d["fudge"]=fudge
@@ -39,7 +39,7 @@ def filterData( data : dict ) -> dict:
     """ here we just filter a bit, we dont need all fields, and 
     we drop the upper limits """
     d = {}
-    params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs"]
+    params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs","txns"]
     for dataID in data.keys():
         if ":ul:" in dataID:
             continue
