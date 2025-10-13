@@ -4,7 +4,8 @@
 test as a function of the fudge factor """
 
 from chelpers import computeT, filterByAnaId, filterByBG, splitByCollaboration,\
-     splitBySqrts, splitBySqrtsAndCollaboration, splitByAnalysisGroups
+     splitBySqrts, splitBySqrtsAndCollaboration, splitByAnalysisGroups, \
+     filterByAnaGroups
 import numpy as np
 from typing import Union
 
@@ -32,8 +33,8 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
 def draw( data : dict, bins : list ):
     """ the drawing method """
     Ts = getHistoTestStats ( data, bins )
-    # splitdata = splitBySqrtsAndCollaboration ( data )
-    splitdata = splitByAnalysisGroups ( data )
+    splitdata = splitBySqrtsAndCollaboration ( data )
+    # splitdata = splitByAnalysisGroups ( data )
     # splitdata = splitBySqrts ( splitdata["ATLAS"] )
     split = splitdata.keys()
     Tss={}
@@ -64,6 +65,7 @@ def create ( args : dict ):
     ## standard bins for now
     n_bins =args["nbins"]
     bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
+    """
     monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
     softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
     dEdx = [ "ATLAS-SUSY-2018-42" ]
@@ -72,6 +74,10 @@ def create ( args : dict ):
     dropThese = monojets + softleptons + dEdx + multiL + Hbb
     # dropThese = []
     data = filterByAnaId ( data, dropThese )
+    """
+    print ( f"[drawT] before filtering we have {len(data[1.0])} entries" )
+    data = filterByAnaGroups ( data, "darkmatter+electroweakinos" )
+    print ( f"[drawT] after filtering by analysis groups we have  {len(data[1.0])} entries" )
     data = filterByBG ( data, args["min_bg"] )
     draw ( data, bins )
 

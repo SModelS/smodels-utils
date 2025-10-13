@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-""" simple module that contains helpers for 
+""" simple module that contains helpers for
 conservatism estimates """
 
 from typing import Union
@@ -9,7 +9,7 @@ import numpy as np
 
 def filterByAnaId ( data : Union[dict,list], dropThese : list ) \
         -> Union[dict,list]:
-    """ filter by analysis ids 
+    """ filter by analysis ids
     :param dropThese: list of analysis ids to drop
     """
     if type(data)==dict:
@@ -22,6 +22,28 @@ def filterByAnaId ( data : Union[dict,list], dropThese : list ) \
         if entry["id"] in dropThese:
             continue
         else:
+            ret.append ( entry )
+    return ret
+
+def filterByAnaGroups ( data : Union[dict,list], dropThese : str ) \
+        -> Union[dict,list]:
+    """ filter by analysis groups
+    :param dropThese: string describing analysis groups to drop,
+    e.g. "darkmatter+electroweakinos"
+    """
+    if type(data)==dict:
+        ret = {}
+        for ffactor,entries in data.items():
+            ret[ffactor] = filterByAnaGroups ( entries, dropThese )
+        return ret
+
+    # data is a list
+    ret = []
+    from ptools.moreHelpers import namesForSetsOfTopologies
+    grouptxns = namesForSetsOfTopologies ( dropThese )[0].split(",")
+
+    for entry in data:
+        if not areTxnsInGroups ( entry["txns"], grouptxns ):
             ret.append ( entry )
     return ret
 
@@ -66,10 +88,19 @@ def splitByCollaboration ( data : Union[dict,list] ) -> dict:
         ret[coll].append ( entry )
     return ret
 
-def areTxnsInGroups ( txns : Union[str,tuple], group : str ) -> bool:
-    """ do we find some of the txns in group? """
+def areTxnsInGroups ( txns : Union[str,tuple],
+                      group : Union[tuple,str] ) -> bool:
+    """ do we find some of the txns in group?
+
+    :txns: either e.g. 'T1', or ( 'T1', 'T2' )
+    :group: e.g. 'electroweakinos'
+
+    :returns: true if any of txns is in the group
+    """
     from ptools.moreHelpers import namesForSetsOfTopologies
-    grouptxns = namesForSetsOfTopologies ( group )[0].split(",")
+    grouptxns = group
+    if type(group)==str:
+        grouptxns = namesForSetsOfTopologies ( group )[0].split(",")
     if type(txns) == str: ## turn into tuple
         txns = ( txns, )
     for txn in txns:
@@ -80,11 +111,15 @@ def areTxnsInGroups ( txns : Union[str,tuple], group : str ) -> bool:
 def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
     """ split up data by analysis groups (darkmatter,gluinos,...)
     """
-    groups = [ "darkmatter", "massdegenerate", "rest",
+    from smodels_utils.helper.various import getCollaboration
+    groups = [ "darkmatter", "rest",
         "electroweakinos", "stops" ]
     if type(data) == list:
         ret = { x: [] for x in groups }
         for entry in data:
+            coll = getCollaboration ( entry["id"] )
+            #if coll == "CMS":
+            #    continue
             hasAdded = False
             txns = entry["txns"]
             for group in groups:
@@ -102,6 +137,9 @@ def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
         for x in groups:
             ret[x][ffactor]=[]
         for entry in entries:
+            coll = getCollaboration ( entry["id"] )
+            #if coll == "CMS":
+            #    continue
             hasAdded = False
             txns = entry["txns"]
             for group in groups:
@@ -113,7 +151,7 @@ def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
             if not hasAdded:
                 ret["rest"][ffactor].append ( entry )
     return ret
-    
+
 def splitBySqrtsAndCollaboration ( data : Union[dict,list] ) -> dict:
     """ split up data by sqrts _and_ collaboration """
     from smodels_utils.helper.various import getCollaboration, getSqrts
@@ -173,7 +211,7 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
         bins = list ( map ( float, np.linspace(0.5,1,n_bins+1) ) )
     if type(bins) == int:
         bins = list ( map ( float, np.linspace(0,1,bins+1) ) )
-        
+
     n_bins = len(bins) - 1
     ## the i index runs over bins
     p_i = 1/n_bins # we compare against uniform
@@ -187,6 +225,8 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
                 if bins[i]<1-p<bins[i+1]:
                     counts[i] += 1
     n_pvalues = sum(counts)
+    if n_pvalues == 0:
+        return { "T": 0, "nbins": n_bins, "p": 0 }
     T_i = [ ((c - n_pvalues*p_i)**2) / (n_pvalues*p_i) for c in counts ]
     T = float ( sum ( T_i ) )
     from scipy.stats import chi2

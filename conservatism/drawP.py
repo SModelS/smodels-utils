@@ -8,7 +8,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
      splitByCollaboration, splitBySqrtsAndCollaboration, \
-     splitByAnalysisGroups
+     splitByAnalysisGroups, filterByAnaGroups
+from ptools.moreHelpers import namesForSetsOfTopologies
 
 def getPValues ( data : dict, statmodel : str ) -> dict:
     """ extract the right p-values from the entire entries """
@@ -45,6 +46,7 @@ def drawP ( args : dict ):
         data = eval(f.read())
     fudge = args["fudge"]
     statmodel = args["statmodel"]
+    """
     dropThese = []
     monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
     softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
@@ -52,22 +54,24 @@ def drawP ( args : dict ):
     multiL = [ "ATLAS-SUSY-2017-03" ]
     Hbb = [ "CMS-SUS-20-004" ]
     dropThese = monojets + softleptons + dEdx + multiL + Hbb
+    """
     # dropThese = [] ## do not drop
-    data = filterByAnaId ( data[fudge], dropThese )
+    #data = filterByAnaId ( data[fudge], dropThese )
+    data = filterByAnaGroups ( data[fudge], "darkmatter+electroweakinos+stops" )
     # data = data[fudge]
     data = filterByBG ( data, args["min_bg"] )
     nSRs = len(data)
     print ( f"[drawP] we are drawing {nSRs} entries" )
     # splitdata = splitBySqrts ( data )
     # splitdata = splitByCollaboration ( data )
-    # splitdata = splitBySqrtsAndCollaboration ( data )
-    splitdata = splitByAnalysisGroups ( data )
+    splitdata = splitBySqrtsAndCollaboration ( data )
+    # splitdata = splitByAnalysisGroups ( data )
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
     ## default order is as in the dictionary
     order = list ( pvalues.keys() )
-    order = [ "rest", "stops", "massdegenerate", "electroweakinos", "darkmatter" ]
+    # order = [ "rest", "stops", "electroweakinos", "darkmatter" ]
     #order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
     #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
     ordered_pvalues= [ pvalues[x] for x in order ]
