@@ -6,8 +6,9 @@ fudge factors """
 
 from matplotlib import pyplot as plt
 import numpy as np
-from chelpers import filterByAnaId, filterByBG, splitBySqrts, splitByCollaboration, \
-         splitBySqrtsAndCollaboration
+from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
+     splitByCollaboration, splitBySqrtsAndCollaboration, \
+     splitByAnalysisGroups
 
 def getPValues ( data : dict, statmodel : str ) -> dict:
     """ extract the right p-values from the entire entries """
@@ -59,12 +60,16 @@ def drawP ( args : dict ):
     print ( f"[drawP] we are drawing {nSRs} entries" )
     # splitdata = splitBySqrts ( data )
     # splitdata = splitByCollaboration ( data )
-    splitdata = splitBySqrtsAndCollaboration ( data )
+    # splitdata = splitBySqrtsAndCollaboration ( data )
+    splitdata = splitByAnalysisGroups ( data )
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
-    order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
-    order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
+    ## default order is as in the dictionary
+    order = list ( pvalues.keys() )
+    order = [ "rest", "stops", "massdegenerate", "electroweakinos", "darkmatter" ]
+    #order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
+    #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
     ordered_pvalues= [ pvalues[x] for x in order ]
     plt.hist ( ordered_pvalues, label = order, 
                bins = bins, stacked=True )

@@ -66,30 +66,53 @@ def splitByCollaboration ( data : Union[dict,list] ) -> dict:
         ret[coll].append ( entry )
     return ret
 
+def areTxnsInGroups ( txns : Union[str,tuple], group : str ) -> bool:
+    """ do we find some of the txns in group? """
+    from ptools.moreHelpers import namesForSetsOfTopologies
+    grouptxns = namesForSetsOfTopologies ( group )[0].split(",")
+    if type(txns) == str: ## turn into tuple
+        txns = ( txns, )
+    for txn in txns:
+        if txn in grouptxns:
+            return True
+    return False
 
 def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
-    """ split up data by sqrts _and_ collaboration """
+    """ split up data by analysis groups (darkmatter,gluinos,...)
+    """
+    groups = [ "darkmatter", "massdegenerate", "rest",
+        "electroweakinos", "stops" ]
     if type(data) == list:
-        print ( f"[chelpers] splitByAnalysisGroups" )
-    from smodels_utils.helper.various import getCollaboration, \
-            getSqrts, getYear
-    ret = { }
-    for ffactor,entries in data.items():
+        ret = { x: [] for x in groups }
+        for entry in data:
+            hasAdded = False
+            txns = entry["txns"]
+            for group in groups:
+                inGrp = areTxnsInGroups ( txns, group )
+                # print ( f"@@1 txns {txns} in {group}? {inGrp} hasAdded {hasAdded}" )
+                if inGrp and not hasAdded:
+                    ret[group].append ( entry )
+                    hasAdded = True
+            if not hasAdded:
+                ret["rest"].append ( entry )
+        return ret
+    ## data is a dictionary
+    ret = { x: {} for x in groups }
+    for ffactor, entries in data.items():
+        for x in groups:
+            ret[x][ffactor]=[]
         for entry in entries:
-            sqrts = getSqrts ( entry["id"] )
-            coll = getCollaboration ( entry["id"] )
-            if coll == "CMS":
-                continue
-            year = getYear ( entry["id"] )
-            label = f"{year}"
-            if not label in ret:
-                ret[label]={}
-            if not ffactor in ret[label]:
-                ret[label][ffactor]=[]
-            #label = f"{coll}{year}"
-            ret[label][ffactor].append ( entry )
+            hasAdded = False
+            txns = entry["txns"]
+            for group in groups:
+                inGrp = areTxnsInGroups ( txns, group )
+                # print ( f"@@1 txns {txns} in {group}? {inGrp} hasAdded {hasAdded}" )
+                if inGrp and not hasAdded:
+                    ret[group][ffactor].append ( entry )
+                    hasAdded = True
+            if not hasAdded:
+                ret["rest"][ffactor].append ( entry )
     return ret
-
     
 def splitBySqrtsAndCollaboration ( data : Union[dict,list] ) -> dict:
     """ split up data by sqrts _and_ collaboration """
