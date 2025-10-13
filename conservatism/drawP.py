@@ -124,7 +124,7 @@ if __name__ == "__main__":
             default='norm' )
     ap.add_argument('-F', '--filterBy',
             help='name of pre-filter (anaid, anagroups,nofilter) [anagroups]', 
-            default='anagroups' )
+            default='nofilter' )
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
     ap.add_argument('-m', '--min_bg', type=float,

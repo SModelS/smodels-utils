@@ -9,6 +9,8 @@ import numpy as np
 import sys
 sys.path.insert(0,"../../protomodels/")
 
+hasWarned = { "signals": 0 }
+
 def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
     """ compute p-values 
     :param nuisanceType: gauss or lognorm
@@ -21,16 +23,25 @@ def computePValues( data : dict, fudge : float , ntoys : int ) -> dict:
         bgerr = fudge*data[dataID]["bgError"]
         if bg == 0.: # bg needs to be greater than 0
             continue
+        sigN = 0.
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
               "obs": obs, "bgerr": bgerr, "txns": data[dataID]["txns"] }
+        if "sigN" in data[dataID]:
+            hasWarned["signals"]+=1
+            if hasWarned["signals"]<2:
+                print ( f"[createData] there are signals in the database, we will subtract them from the observation!" )
+            # signal mode, we remove the signal
+            sigN = data[dataID]["sigN"] 
+            d["sigN"] = sigN
+            d["obs"] = obs - sigN 
         debug = True
         if debug:
             d["fudge"]=fudge
         from ptools.helpers import computeP
-        p_norm = computeP ( obs, bg, bgerr, lognormal = False, nmax = ntoys )
+        p_norm = computeP ( obs - sigN, bg, bgerr, lognormal = False, nmax = ntoys )
         d["p_norm"]=p_norm
-        p_lognorm = computeP ( obs, bg, bgerr, lognormal = True, nmax = ntoys )
+        p_lognorm = computeP ( obs - sigN, bg, bgerr, lognormal = True, nmax = ntoys )
         d["p_lognorm"] = p_lognorm
         ret.append ( d )
     return ret
@@ -39,13 +50,15 @@ def filterData( data : dict ) -> dict:
     """ here we just filter a bit, we dont need all fields, and 
     we drop the upper limits """
     d = {}
-    params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs","txns"]
+    params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs","txns",\
+              "sigN"]
     for dataID in data.keys():
         if ":ul:" in dataID:
             continue
         d[dataID] = {}
         for i in params:
-            d[dataID][i] = data[dataID][i]
+            if i in data[dataID]:
+                d[dataID][i] = data[dataID][i]
     return d
 
 def writeHeader ( f ):
