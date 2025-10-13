@@ -46,18 +46,27 @@ def drawP ( args : dict ):
         data = eval(f.read())
     fudge = args["fudge"]
     statmodel = args["statmodel"]
-    """
-    dropThese = []
-    monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
-    softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
-    dEdx = [ "ATLAS-SUSY-2018-42" ]
-    multiL = [ "ATLAS-SUSY-2017-03" ]
-    Hbb = [ "CMS-SUS-20-004" ]
-    dropThese = monojets + softleptons + dEdx + multiL + Hbb
-    """
-    # dropThese = [] ## do not drop
-    #data = filterByAnaId ( data[fudge], dropThese )
-    data = filterByAnaGroups ( data[fudge], "darkmatter+electroweakinos+stops" )
+    # filterBy = "anagroups"
+    filterBy = args["filterBy"]
+    if filterBy == "anaid":
+        dropThese = []
+        monojets = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06" ]
+        softleptons = [ "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
+        dEdx = [ "ATLAS-SUSY-2018-42" ]
+        multiL = [ "ATLAS-SUSY-2017-03" ]
+        Hbb = [ "CMS-SUS-20-004" ]
+        dropThese = monojets + softleptons + dEdx + multiL + Hbb
+        data = filterByAnaId ( data[fudge], dropThese )
+    elif filterBy == "anagroups":
+        data = filterByAnaGroups ( data[fudge], "darkmatter+electroweakinos+massdegenerate" )
+    elif filterBy == "anagroups2":
+        data = filterByAnaGroups ( data[fudge], "darkmatter+electroweakinos+massdegenerate+stops" )
+    elif filterBy != "nofilter":
+        print ( f"[drawP] filterBy {filterBy} unknown" )
+        sys.exit()
+    else:
+        # no filter
+        data = data[fudge]
     # data = data[fudge]
     data = filterByBG ( data, args["min_bg"] )
     nSRs = len(data)
@@ -113,6 +122,9 @@ if __name__ == "__main__":
     ap.add_argument('-s', '--statmodel',
             help='statmodel norm or lognorm [norm]', 
             default='norm' )
+    ap.add_argument('-F', '--filterBy',
+            help='name of pre-filter (anaid, anagroups,nofilter) [anagroups]', 
+            default='anagroups' )
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
     ap.add_argument('-m', '--min_bg', type=float,

@@ -40,10 +40,20 @@ def draw( data : dict, bins : list ):
     Tss={}
     from matplotlib import pyplot as plt
     xs, ys = list ( Ts.keys() ), list ( Ts.values() )
+    colors = { "CMS": "r", "ATLAS": "g" }
+    lstyles = { "13": "solid", "8": "-." }
     for s in split:
         Tss[s] = getHistoTestStats ( splitdata[s], bins )
         xsS, ysS = list ( Tss[s].keys() ), list ( Tss[s].values() )
-        plt.plot ( xsS, ysS, label=rf"$\mathrm{{T}}_{{{s}}}(f)$" )
+        color, linestyle = None, None
+        for clabel,c in colors.items():
+                if clabel in s:
+                    color = c
+        for llabel,l in lstyles.items():
+                if llabel in s:
+                    linestyle = l
+        plt.plot ( xsS, ysS, label=rf"$\mathrm{{T}}_{{{s}}}(f)$",
+                   color = color, linestyle = linestyle  )
     ## get the fudge value that minimizes T
     min_fudge = min( Ts, key=Ts.get )
     plt.scatter ( min_fudge, Ts[min_fudge], color="red", s=30,
