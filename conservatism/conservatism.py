@@ -12,7 +12,7 @@ matplotlib.use('Agg')
 dictfile = "../../protomodels/historic_database_stats/310.dict"
 dropThese = [ "CMS-EXO-20-004", "ATLAS-EXOT-2018-06", "CMS-SUS-20-004", "ATLAS-SUSY-2018-16-hino", "ATLAS-SUSY-2018-16" ]
 plot_prefix="./plots/"
-ntoys = 100000 # 25000
+ntoys = 500000 # 25000
 
 # In[2]:
 
@@ -296,7 +296,10 @@ print(scipy.stats.chi2.ppf(0.90,4))
 # In[18]:
 
 
-fudge_lst = np.linspace(0,1,20)
+fudge_lst = np.linspace(0,1,21)
+fudge_lst = np.array ( [ 0.  , 0.05, 0.1 , 0.15, 0.2 , 0.25, 0.3 , 0.35, 0.4 , 
+        0.425, 0.45, 0.475, 0.5 , 0.525, 0.55, 0.575, 0.6 , 0.65, 0.7 , 0.75, 0.8 , 
+        0.85, 0.9 , 0.95, 1.  ] )
 
 T_all = []
 T_8 = []
@@ -544,7 +547,4 @@ print( f"{atlas_count} ATLAS, {cms_count} CMS, {em_count} EMs, {ul_count} ULs" )
 
 
 # In[ ]:
-
-
-
-
+from ptools.helpers import py_dump
