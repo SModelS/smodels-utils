@@ -128,7 +128,7 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
     ap.add_argument('-m', '--min_bg', type=float,
-            help='minimum number of expected background events [2.5]', default=2.5 )
+            help='minimum number of expected background events [1.1]', default=1.1 )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
     args = ap.parse_args()

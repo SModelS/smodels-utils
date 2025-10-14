@@ -11,10 +11,14 @@ sys.path.insert(0,"../../protomodels/")
 
 hasWarned = { "signals": 0 }
 
-def computePValues( data : dict, fudge : float , nmax : int,
-       nmin : int = 50000 ) -> dict:
+def computePValues( data : dict, fudge : float,
+       nmin : int = 50000, nmax : int = 100000 ) -> dict:
     """ compute p-values
-    :param nuisanceType: gauss or lognorm
+    :param fudge: fudge factor
+    :param nmin: minimum number of toys
+    :param nmax: maximum number of toys
+
+    :returns: dictionary, with id, obs, etc and also p_norm p_lognorm
     """
     ret = []
     for dataID in data.keys():
@@ -39,7 +43,7 @@ def computePValues( data : dict, fudge : float , nmax : int,
         debug = True
         if debug:
             d["fudge"]=fudge
-        from ptools.helpers import computeP, computeP2
+        from ptools.helpers import computeP
         p_norm = computeP ( obs - sigN, bg, bgerr, lognormal = False,
                             nmin = nmin, nmax = nmax )
         d["p_norm"]=p_norm
@@ -85,10 +89,11 @@ def writeHeader ( f ):
     f.write ( "\n" )
 
 def createData( dictfile : str, fudge_factors : list,
-       ntoys : int = 1000, outfile : str = "data.dict" ):
+       nmin : int = 20000, nmax : int = 50000, outfile : str = "data.dict" ):
     """ create the data needed for the conservatism plots.
     :param dictfile: filename of _database.dict file to base this on
-    :param ntoys: number of toys to throw for computation of pvalues
+    :param nmin: minimum number of toys to throw for computation of pvalues
+    :param nmax: maximum number of toys to throw for computation of pvalues
     :param outfile: dict file to store results in
     """
     # the most important parameters
@@ -103,7 +108,7 @@ def createData( dictfile : str, fudge_factors : list,
 
     pvalues={}
     for fudge in fudge_factors:
-        p = computePValues( d, fudge, ntoys = ntoys)
+        p = computePValues( d, fudge, nmin = nmin, nmax = nmax )
         pvalues[float(fudge)]=p
 
     from ptools.helpers import py_dumps
@@ -126,8 +131,10 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--ffactors',
             help='fudge factors, a list [None]', type=str,
             default=None)
-    ap.add_argument('-n', '--nmax', type=int,
-            help='maximum number of toys [50000]', default=50000)
+    ap.add_argument('-n', '--nmin', type=int,
+            help='minimum number of toys [50000]', default=50000)
+    ap.add_argument('-N', '--nmax', type=int,
+            help='maximum number of toys [100000]', default=100000)
     args = ap.parse_args()
     ffactors = args.ffactors
     if ffactors == None:
@@ -141,4 +148,5 @@ if __name__ == "__main__":
         ffactors = eval(ffactors)
     if args.outfile == "default":
         args.outfile = f"{args.ntoys}.dict"
-    createData( args.dictfile, ffactors, args.nmax, args.outfile )
+    createData( args.dictfile, ffactors, nmin = args.nmin, nmax = args.nmax, 
+                outfile = args.outfile )
