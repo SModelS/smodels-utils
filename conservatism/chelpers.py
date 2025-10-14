@@ -177,8 +177,11 @@ def splitBySqrtsAndCollaboration ( data : Union[dict,list] ) -> dict:
         ret[label].append ( entry )
     return ret
 
-def filterByBG ( data : Union[dict,list], min_bg : float ) -> Union[dict,list]:
-    """ filter the data by expected background yield """
+def filterByBG ( data : Union[dict,list], min_bg : float,
+                 filterBy : str = "bg" ) -> Union[dict,list]:
+    """ filter the data by expected background yield
+    :param filterBy: can also filter by obs
+    """
     if type(data)==dict:
         ret = {}
         for label,entries in data.items():
@@ -186,7 +189,7 @@ def filterByBG ( data : Union[dict,list], min_bg : float ) -> Union[dict,list]:
         return ret
     ret = []
     for entry in data:
-        if entry["bg"]>min_bg:
+        if entry[ filterBy ]>min_bg:
             ret.append ( entry )
     return ret
 

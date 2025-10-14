@@ -68,7 +68,7 @@ def drawP ( args : dict ):
         # no filter
         data = data[fudge]
     # data = data[fudge]
-    data = filterByBG ( data, args["min_bg"] )
+    data = filterByBG ( data, args["min_bg"], "bg" )
     nSRs = len(data)
     print ( f"[drawP] we are drawing {nSRs} entries" )
     # splitdata = splitBySqrts ( data )
@@ -95,7 +95,7 @@ def drawP ( args : dict ):
     from chelpers import computeT
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
-    plt.title ( f"Distribution of p-values, fudge={fudge:.1f} P={p:.2f}" )
+    plt.title ( f"Distribution of p-values, fudge={fudge:.2f} P={p:.2f}" )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence [stacked]" )
     ax = plt.gca()
