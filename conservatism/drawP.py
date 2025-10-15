@@ -80,12 +80,18 @@ def drawP ( args : dict ):
     bins = np.linspace(0,1,args["nbins"]+1)
     ## default order is as in the dictionary
     order = list ( pvalues.keys() )
+    labels_dict = { "CMS8": "CMS, 8 TeV", "CMS13": "CMS, 13 TeV", 
+             "ATLAS8": "ATLAS, 8 TeV", "ATLAS13": "ATLAS, 13 TeV" }
+    labels = order[:]
+    for i,label in enumerate(labels):
+        if label in labels_dict:
+            labels[i]=labels_dict[label]
     # order = [ "rest", "stops", "electroweakinos", "darkmatter" ]
     #order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
     #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
     ordered_pvalues= [ pvalues[x] for x in order ]
-    plt.hist ( ordered_pvalues, label = order, 
-               bins = bins, stacked=True )
+    plt.hist ( ordered_pvalues, label = labels, 
+                 bins = bins, stacked=True )
     #for label, ps in pvalues.items():
     #    plt.hist ( ps, label = label, bins = bins )
     # plt.legend()
@@ -95,15 +101,19 @@ def drawP ( args : dict ):
     from chelpers import computeT
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
-    plt.title ( f"Distribution of p-values, fudge={fudge:.2f} P={p:.2f}" )
+    sfudge = f" fudge={fudge:.2f}"
+    if sfudge == 1.0:
+        sfudge = "no fudge"
+    elif fudge * 10 == int(fudge*10):
+        sfudge = f" fudge={fudge:.1f}"
+    plt.title ( f"Distribution of p-values, {sfudge}, P={p:.2f}" )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence [stacked]" )
     ax = plt.gca()
     nAnas = countAnalyses ( data )
     
-    plt.text ( .67, -.12, 
-            f"this plot contains {nSRs} SRs from {nAnas} analyses", 
-            transform=ax.transAxes, c="grey", fontsize=7 )  
+    plt.text(.67, -.12, f"this plot contains {nSRs} SRs from {nAnas} analyses", 
+             transform=ax.transAxes, c="grey", fontsize=7 )    
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
     outfile = outfile.replace("@@STATMODEL@@",statmodel)
     plt.savefig ( outfile )
