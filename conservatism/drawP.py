@@ -102,7 +102,7 @@ def drawP ( args : dict ):
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
     sfudge = f" fudge={fudge:.2f}"
-    if sfudge == 1.0:
+    if fudge == 1.0:
         sfudge = "no fudge"
     elif fudge * 10 == int(fudge*10):
         sfudge = f" fudge={fudge:.1f}"
