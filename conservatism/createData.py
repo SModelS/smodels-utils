@@ -12,11 +12,13 @@ sys.path.insert(0,"../../protomodels/")
 hasWarned = { "signals": 0 }
 
 def computePValues( data : dict, fudge : float,
-       nmin : int = 50000, nmax : int = 100000 ) -> dict:
+       nmin : int = 50000, nmax : int = 100000,
+       subtractSigN : bool = True ) -> dict:
     """ compute p-values
     :param fudge: fudge factor
     :param nmin: minimum number of toys
     :param nmax: maximum number of toys
+    :param subtractSigN: if true, subtract sigN from observation
 
     :returns: dictionary, with id, obs, etc and also p_norm p_lognorm
     """
@@ -32,22 +34,26 @@ def computePValues( data : dict, fudge : float,
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
               "obs": obs, "bgerr": bgerr, "txns": data[dataID]["txns"] }
-        if "sigN" in data[dataID]:
+        if "sigN" in data[dataID] and subtractSigN:
             hasWarned["signals"]+=1
             if hasWarned["signals"]<2:
                 print ( f"[createData] there are signals in the database, we will subtract them from the observation!" )
             # signal mode, we remove the signal
             sigN = data[dataID]["sigN"]
             d["sigN"] = sigN
-            d["obs"] = obs - sigN
+            if subtractSigN:
+                d["obs"] = obs - sigN
         debug = True
         if debug:
             d["fudge"]=fudge
         from ptools.helpers import computeP
-        p_norm = computeP ( obs - sigN, bg, bgerr, lognormal = False,
+        nobs = obs
+        if subtractSigN:
+            nobs = obs - sigN
+        p_norm = computeP ( nobs, bg, bgerr, lognormal = False,
                             nmin = nmin, nmax = nmax )
         d["p_norm"]=p_norm
-        p_lognorm = computeP ( obs - sigN, bg, bgerr, lognormal = True,
+        p_lognorm = computeP ( nobs, bg, bgerr, lognormal = True,
                             nmin = nmin, nmax = nmax )
         d["p_lognorm"] = p_lognorm
         ret.append ( d )
@@ -89,12 +95,14 @@ def writeHeader ( f ):
     f.write ( "\n" )
 
 def createData( dictfile : str, fudge_factors : list,
-       nmin : int = 20000, nmax : int = 50000, outfile : str = "data.dict" ):
+       nmin : int = 20000, nmax : int = 50000, outfile : str = "data.dict",
+       subtractSigN : bool = True ):
     """ create the data needed for the conservatism plots.
     :param dictfile: filename of _database.dict file to base this on
     :param nmin: minimum number of toys to throw for computation of pvalues
     :param nmax: maximum number of toys to throw for computation of pvalues
     :param outfile: dict file to store results in
+    :param subtractSigN: if true, subtract sigN from observation
     """
     # the most important parameters
 
@@ -108,7 +116,8 @@ def createData( dictfile : str, fudge_factors : list,
 
     pvalues={}
     for fudge in fudge_factors:
-        p = computePValues( d, fudge, nmin = nmin, nmax = nmax )
+        p = computePValues( d, fudge, nmin = nmin, nmax = nmax, 
+                subtractSigN = subtractSigN )
         pvalues[float(fudge)]=p
 
     from ptools.helpers import py_dumps
@@ -131,6 +140,8 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--ffactors',
             help='fudge factors, a list [None]', type=str,
             default=None)
+    ap.add_argument('-s', '--subtractSigN',
+            help='subtract the signals from obs', action="store_true" )
     ap.add_argument('-n', '--nmin', type=int,
             help='minimum number of toys [50000]', default=50000)
     ap.add_argument('-N', '--nmax', type=int,
@@ -149,4 +160,4 @@ if __name__ == "__main__":
     if args.outfile == "default":
         args.outfile = f"{args.ntoys}.dict"
     createData( args.dictfile, ffactors, nmin = args.nmin, nmax = args.nmax, 
-                outfile = args.outfile )
+                outfile = args.outfile, subtractSigN = args.subtractSigN )
