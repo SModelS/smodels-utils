@@ -192,9 +192,9 @@ class DecayDrawer:
             l+=label
             if (percentage < 0.9 or len(labels)>1) and not self.options["nopercentage"]:
                 if self.tex:
-                    l+="\\,"+str(int(100*percentage))+"\\\\%" ## trino
+                    l+="\\,"+str(round(100*percentage))+"\\\\%" ## trino
                 else:
-                    l+="\\,"+str(int(100*percentage))+"%"
+                    l+="\\,"+str(round(100*percentage))+"%"
             if ctr % 2 == 1 and ctr != len(labels)-1:
                 l+=",\\,\\\\\\\\"
         if matrixMode: ## make a matrix
