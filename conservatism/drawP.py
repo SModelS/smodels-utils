@@ -106,7 +106,10 @@ def drawP ( args : dict ):
         sfudge = "no fudge"
     elif fudge * 10 == int(fudge*10):
         sfudge = f" fudge={fudge:.1f}"
-    plt.title ( f"Distribution of p-values, {sfudge}, P={p:.2f}" )
+    title = f"Distribution of p-values, {sfudge}, P={p:.2f}"
+    if args["title"] not in [ None, "" ]:
+        title = args["title"]
+    plt.title ( title )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence [stacked]" )
     ax = plt.gca()
@@ -116,6 +119,7 @@ def drawP ( args : dict ):
              transform=ax.transAxes, c="grey", fontsize=7 )    
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
     outfile = outfile.replace("@@STATMODEL@@",statmodel)
+    print ( f"[drawP] saving to {outfile}" )
     plt.savefig ( outfile )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
@@ -135,6 +139,9 @@ if __name__ == "__main__":
     ap.add_argument('-F', '--filterBy',
             help='name of pre-filter (anaid, anagroups,nofilter) [anagroups]', 
             default='nofilter' )
+    ap.add_argument('-t', '--title',
+            help='user-defined title [None]', 
+            default=None )
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
     ap.add_argument('-m', '--min_bg', type=float,
