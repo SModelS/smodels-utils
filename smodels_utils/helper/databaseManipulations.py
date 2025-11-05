@@ -131,6 +131,16 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
+def sortAnalyses ( expResList : list ) -> list:
+    """ sort the analyses, for now just by sqrts """
+    ret = []
+    for sqrts in [ 8, 13, 13.6 ]:
+        for er in expResList:
+            if abs( er.globalInfo.sqrts.asNumber(TeV) - sqrts) > 1e-5:
+                continue
+            ret.append ( er )
+    return ret
+
 def filterNonAggregatedFromList ( expResList, invert = False, really = True,
                                   verbose = False ):
     """ remove results from list of experimental list for which we have 

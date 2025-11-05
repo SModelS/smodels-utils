@@ -18,9 +18,10 @@ from smodels.base.physicsUnits import fb, TeV
 from smodels.experiment.expResultObj import ExpResult
 from smodels_utils.helper.various import hasLLHD
 from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
-from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList
+from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList, sortAnalyses
 from smodels_utils.helper.various import removeAnaIdSuffices
 from smodels_utils.helper.bibtexTools import BibtexWriter
+from smodels_utils.helper.terminalcolors import *
 from typing import Union
 import IPython
 
@@ -95,7 +96,7 @@ class Writer:
         if self.sqrts == "":
             self.sqrts = "all"
         if self.sqrts == "8":
-            print ( "[writeAnalysesTable] sqrts is 8, so no column for combos" )
+            print ( "[latexTableOfAnalyses] sqrts is 8, so no column for combos" )
             self.addcombos = False
         self.keep = args.keep
         self.topos = args.topologies
@@ -144,7 +145,7 @@ class Writer:
             ers = self.filterLowLumiResults ( ers )
         if self.ignorenonvalidated:
             ers = self.filterNonValidated ( ers )
-        self.listOfAnalyses = self.filterResults ( ers, self.args["exclude"].split(",") )
+        self.listOfAnalyses = sortAnalyses ( self.filterResults ( ers, self.args["exclude"].split(",") ) )
 
     def filterLowLumiResults ( self, expResults : list ) -> list:
         """ filter out results with a lumi below self.args['minlumi']
@@ -482,6 +483,8 @@ class Writer:
         toprint += r"\hline"
         toprint += "\n"
         nextIsSame = False ## in case the next is the same, just "eff" not "ul"
+        if len(self.listOfAnalyses)>50 and self.table == "tabular":
+            print ( f"[latexTableOfAnalyses] {RED}we have {len(self.listOfAnalyses)} analyses but latex 'tabular', not 'longtable'. consider --longtable{RESET}" )
         for ctr,ana in enumerate(self.listOfAnalyses):
             if nextIsSame:
                 ## skip! but first check if the next to next is also the same
@@ -520,7 +523,7 @@ class Writer:
         return toprint
 
     def pprint ( self, *args ):
-        print ( "[writeAnalysesTable]",*args )
+        print ( "[latexTableOfAnalyses]",*args )
 
     def createPdfFile ( self ):
         texfile = "tab.tex"
@@ -560,7 +563,7 @@ class Writer:
         if self.bibtex != None:
             bibtexfile = f"{args.database}/database.bib"
             if not os.path.exists ( bibtexfile ):
-                print ( f"[writeAnalysesTable] cannot find bibtexfile {bibtexfile}. skip bibtex." )
+                print ( f"[latexTableOfAnalyses] cannot find bibtexfile {bibtexfile}. skip bibtex." )
             else:
                 cmd = "cp {bibtexfile} ."
                 C.getoutput ( cmd )
@@ -589,17 +592,13 @@ class Writer:
         cmd = f"rm {pngfile.replace('.png','*.png')}"
         C.getoutput ( cmd )
         cmd = f"/usr/bin/convert {swbg} -antialias -density 600 -trim {pdffile} {pngfile}"
-        print ( f"[writeAnalysesTable] {cmd}" )
+        print ( f"[latexTableOfAnalyses] {cmd}" )
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
         if self.timg:
-            a = shutil.which ( "timg" )
-            if a:
-                cmd = f"timg -p kitty {pngfile.replace('.png','*.png')}"
-                # print ( cmd )
-                a = C.getoutput ( cmd )
-                print ( a )
+            from smodels_utils.plotting.mpkitty import timg
+            timg ( f"{pngfile.replace('.png','*.png')}" )
 
 if __name__ == "__main__":
         import setPath, argparse, types, os
