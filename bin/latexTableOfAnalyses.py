@@ -2,7 +2,7 @@
 # vim: fileencoding=latin1
 
 """
-.. module:: writeAnalysesTable
+.. module:: latexTableOfAnalyses
      :synopsis: generates a latex table with all analyses.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -35,7 +35,7 @@ except Exception as e:
         print ( "pip install --user ordered_set" )
     sys.exit()
 
-def isIn ( i, txnames ):
+def isIn ( i : str, txnames : list ) -> bool:
     """ is i in list txnames, leaving out onshell versions """
     for x in txnames:
         if i == x: return True
@@ -130,7 +130,7 @@ class Writer:
                 ret.append ( result )
         return ret
 
-    def getExpResults ( self, superseded ):
+    def getExpResults ( self, superseded : bool ):
         """ get the experimental results, and filter
         :param superseded: allow superseded results
         """
@@ -146,7 +146,7 @@ class Writer:
             ers = self.filterNonValidated ( ers )
         self.listOfAnalyses = self.filterResults ( ers, self.args["exclude"].split(",") )
 
-    def filterLowLumiResults ( self, expResults ):
+    def filterLowLumiResults ( self, expResults : list ) -> list:
         """ filter out results with a lumi below self.args['minlumi']
         """
         ret = []
@@ -156,7 +156,7 @@ class Writer:
                 ret.append ( er )
         return ret
 
-    def filterNonValidated ( self, expResults ):
+    def filterNonValidated ( self, expResults : list ) -> list:
         """ filter out results with a lumi below self.args['minlumi']
         """
         ret = []
@@ -173,14 +173,14 @@ class Writer:
         return ret
 
 
-    def sameAnaIds ( self, ana1, ana2 ):
+    def sameAnaIds ( self, ana1 : ExpResult, ana2 : ExpResult ) -> bool:
         """ check if analysis ids are identical, *after* removing all
             the suffices """
         ana1n = removeAnaIdSuffices ( ana1.globalInfo.id )
         ana2n = removeAnaIdSuffices ( ana2.globalInfo.id )
         return ana1n == ana2n
 
-    def addColor ( self, text ):
+    def addColor ( self, text : str ) -> str:
         if not self.colors:
             return text
         if self.colors:
@@ -428,14 +428,14 @@ class Writer:
             return True
         return False
 
-    def experimentIsMet ( self, anaid ):
+    def experimentIsMet ( self, anaid : str ) -> bool:
         if self.experiment in [ "both", "all" ]:
             return True
         if self.experiment in anaid:
             return True
         return False
 
-    def generateAnalysisTable( self ):
+    def generateAnalysisTable( self ) -> str:
         """ Generates a raw latex table with all the analyses in listOfAnalyses,
         writes it to texfile (if not None), and returns it as its return value.
         :param texfile: where the tex gets written to, e.g. tab.tex
@@ -512,7 +512,7 @@ class Writer:
             outfile.write(toprint)
             outfile.close()
 
-        self.createLatexDocument ( self.texfile )
+        self.createLatexDocument ( )
         self.pprint ( "number of analyses:",self.n_anas )
         self.pprint ( "number of topo/ana pairs:",self.n_topos )
         return toprint
@@ -551,7 +551,7 @@ class Writer:
             for i in [ "smodels.tex", "tab.tex" ]:
                 os.unlink ( i )
 
-    def createLatexDocument ( self, texfile ):
+    def createLatexDocument ( self ):
         repl="@@@TEXFILE@@@"
         bibtexrepl = "@@@BIBTEXSTUFF@@@"
         bibtexstuff = ""
@@ -601,9 +601,8 @@ class Writer:
 
 if __name__ == "__main__":
         import setPath, argparse, types, os
-
         argparser = argparse.ArgumentParser(description=
-                      'simple tool to generate a latex table with all analyses used')
+            'simple tool to generate a latex table with all analyses used')
         dbpath = os.path.abspath( '../../smodels-database/' )
         argparser.add_argument ( '-d', '--database', nargs='?',
             help=f'path to database [{dbpath}]', type=str,
@@ -611,7 +610,8 @@ if __name__ == "__main__":
         argparser.add_argument ( '-r', '--reference_database',
             nargs='?', help=f'path to reference database, if given make new entries bold [None]',
             type=str, default=None )
-        argparser.add_argument ( '--minlumi', help="consider results only above a certain luminosity, in 1/fb [0.]",
+        argparser.add_argument ( '--minlumi',
+            help="consider results only above a certain luminosity, in 1/fb [0.]",
             type=float, default=0. )
         outfile = "tab.tex"
         argparser.add_argument ( '-o', '--output', nargs='?',
@@ -658,7 +658,8 @@ if __name__ == "__main__":
             action='store_true' )
         argparser.add_argument( '-H','--href', help='add href links',
             action='store_true' )
-        argparser.add_argument( '--combinations', help='cycle through all combinations (8TeV/13TeV, CMS/ATLAS)',
+        argparser.add_argument( '--combinations',
+            help='cycle through all combinations (8TeV/13TeV, CMS/ATLAS)',
             action='store_true' )
         argparser.add_argument ( '--exclude',
             help='exclude this comma-separated list of analyses, wildcards allowed [none]',
