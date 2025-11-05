@@ -417,7 +417,9 @@ class Writer:
         lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
-        return "\\n".join ( lines ), len(txnames)
+        ret = "\\n".join ( lines ), len(txnames)
+        # print ( f"writing {ana.globalInfo.id} {ret}" )
+        return ret
 
     def sqrtsIsMet ( self, sqrts ):
         """ the sqrts criterion is met, either because it is "all", or because
@@ -568,7 +570,7 @@ class Writer:
                     bibtexstuff = bibtexstuff.replace(";",";%" )
         path = os.path.dirname ( os.path.abspath ( __file__ ) )
         path = path.replace("/bin","/share")
-        cmd= f"cat {path}/AnalysesListTemplate.tex | sed -e 's/{repl}/{texfile}/' | sed -e 's/{bibtexrepl}/{bibtexstuff}/' | tr ';' '\n' > smodels.tex"
+        cmd= f"cat {path}/AnalysesListTemplate.tex | sed -e 's/{repl}/{self.texfile}/' | sed -e 's/{bibtexrepl}/{bibtexstuff}/' | tr ';' '\n' > smodels.tex"
         o = C.getoutput ( cmd )
 
     def createPngFile ( self ):
