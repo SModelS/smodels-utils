@@ -318,9 +318,12 @@ def filterByContent( expResultList : List[ExpResult],
             ret.append ( ana )
             continue
         # ok, we have a UL-type, so one dataset only
+        hasExpRes = False
         for txn in ana.datasets[0].txnameList:
             if txn.txnameDataExp is not None:
-                ret.append ( ana )
+                hasExpRes = True
+        if hasExpRes:
+            ret.append ( ana )
     return ret
 
 def filterSqrtsFromList ( expResultList, 
