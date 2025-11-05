@@ -18,7 +18,8 @@ from smodels.base.physicsUnits import fb, TeV
 from smodels.experiment.expResultObj import ExpResult
 from smodels_utils.helper.various import hasLLHD
 from smodels_utils.helper.prettyDescriptions import prettyTexAnalysisName
-from smodels_utils.helper.databaseManipulations import filterSupersededFromList, filterFastLimFromList, sortAnalyses
+from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
+         filterSupersededFromList, sortAnalyses, filterByContent
 from smodels_utils.helper.various import removeAnaIdSuffices
 from smodels_utils.helper.bibtexTools import BibtexWriter
 from smodels_utils.helper.terminalcolors import *
@@ -71,7 +72,6 @@ class Writer:
         from smodels.experiment.databaseObj import Database
         self.args = vars ( args )
         self.database = Database ( args.database )
-        self.ignorenonvalidated = args.ignorenonvalidated
         #Creat analyses list:
         self.bibtex = None
         self.timg = args.timg
@@ -137,14 +137,16 @@ class Writer:
         """
         self.listOfAnalyses = []
         ers = self.database.getExpResults(
-            useNonValidated = not self.ignorenonvalidated )
+            useNonValidated = not self.args["ignore_nonvalidated"] )
         ers = filterFastLimFromList ( ers )
         if superseded == False:
             ers = filterSupersededFromList ( ers )
         if self.args["minlumi"] > 0.:
             ers = self.filterLowLumiResults ( ers )
-        if self.ignorenonvalidated:
+        if self.args["ignore_nonvalidated"]:
             ers = self.filterNonValidated ( ers )
+        if self.args["ignore_obs_ul_only"]:
+            ers = filterByContent ( ers )
         self.listOfAnalyses = sortAnalyses ( self.filterResults ( ers, self.args["exclude"].split(",") ) )
 
     def filterLowLumiResults ( self, expResults : list ) -> list:
@@ -408,7 +410,9 @@ class Writer:
             if "eff" in dt:
                 em = check
             #ulobs, ulexp, em, comb = "x", "x", "x", "JSON"
-            lines[0] += f"& {ulobs} & {ulexp} & {em}"
+            if not self.args["ignore_obs_ul_only"]:
+                lines[0] += f"& {ulobs}"
+            lines[0] += f"& {ulexp} & {em}"
         if self.addcombos:
             comb = self.getCombinationType ( ana, nextAna )
             lines[0] += f"& {comb}"
@@ -475,7 +479,9 @@ class Writer:
         if self.likelihoods:
             toprint += "& {\\bf likelihoods}"
         if self.extended_likelihoods:
-            toprint += r"& {\bf UL$_\mathrm{obs}$} & {\bf UL$_\mathrm{exp}$} & {\bf EM}"
+            if not self.args["ignore_obs_ul_only"]:
+                toprint += r"& {\bf UL$_\mathrm{obs}$} "
+            toprint += r"& {\bf UL$_\mathrm{exp}$} & {\bf EM}"
         if self.addcombos:
             toprint += "& {\\bf comb.}"
         toprint += r"\\"
@@ -650,8 +656,11 @@ if __name__ == "__main__":
             action='store_true' )
         argparser.add_argument('--timg', '-T', help='run timg on picture',
             action='store_true' )
-        argparser.add_argument('--ignorenonvalidated',
+        argparser.add_argument('--ignore_nonvalidated',
             help='ignore non-validated results',
+            action='store_true' )
+        argparser.add_argument('--ignore_obs_ul_only',
+            help='ignore results with obs_ul only',
             action='store_true' )
         argparser.add_argument('-N', '--prettyNames',
             help='add column for description of analyses', action='store_true' )

@@ -306,6 +306,23 @@ def filterCollaborationFromList ( expResultList : List[ExpResult],
         ret.append ( ana )
     return ret
 
+def filterByContent( expResultList : List[ExpResult], 
+                     requirement : str = 'expul_or_effmap' ) -> List[ExpResult]:
+    """ filter out entries that e.g. only have obs_ul 
+    :param requirement: currently only 'expul_or_effmap'
+    """
+    assert requirement == "expul_or_effmap", f"requirement {requirement} not implemented"
+    ret = []
+    for ana in expResultList:
+        if ana.datasets[0].dataInfo.dataType == "efficiencyMap":
+            ret.append ( ana )
+            continue
+        # ok, we have a UL-type, so one dataset only
+        for txn in ana.datasets[0].txnameList:
+            if txn.txnameDataExp is not None:
+                ret.append ( ana )
+    return ret
+
 def filterSqrtsFromList ( expResultList, 
         sqrts : int, invert : bool = False ) -> List[ExpResult]:
     """ filter list of exp results by sqrts
