@@ -555,6 +555,9 @@ class Writer:
         if not self.keep:
             for i in [ "smodels.tex", "tab.tex" ]:
                 os.unlink ( i )
+        if self.timg and not self.args["png"]:
+            from smodels_utils.plotting.mpkitty import timg
+            timg ( f"{base}.pdf" )
 
     def createLatexDocument ( self ):
         repl="@@@TEXFILE@@@"
