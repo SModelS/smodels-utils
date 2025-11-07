@@ -35,10 +35,10 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
               "obs": obs, "bgerr": bgerr, "txns": data[dataID]["txns"] }
-        if "sigN" in data[dataID] and subtractSigN:
+        if "sigN" in data[dataID] and ( subtractSigN or addSigN ):
             hasWarned["signals"]+=1
             if hasWarned["signals"]<2:
-                print ( f"[createData] there are signals in the database, we will subtract them from the observation!" )
+                print ( f"[createData] there are signals in the database, we will heed them in the computations" )
             # signal mode, we remove the signal
             sigN = data[dataID]["sigN"]
             d["sigN"] = sigN
@@ -58,7 +58,7 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
                             nmin = nmin, nmax = nmax )
         d["p_norm"]=p_norm
         p_lognorm = computeP ( nobs, nbg, bgerr, lognormal = True,
-                            nmin = nmin, nmax = nmax )
+                               nmin = nmin, nmax = nmax )
         d["p_lognorm"] = p_lognorm
         ret.append ( d )
     return ret
@@ -127,10 +127,10 @@ def createData( args : dict ):
                 progressbar.ETA()])
     pbar.maxval = len(args["ffactors"])
     pbar.start()
-    for fudge in args["ffactors"]:
+    for i,fudge in enumerate(args["ffactors"]):
         p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
                 subtractSigN = args["subtractSigN"], addSigN = args["addSigN"] )
-        pbar.update()
+        pbar.update(i)
         pvalues[float(fudge)]=p
     pbar.finish()
 
