@@ -11,14 +11,15 @@ sys.path.insert(0,"../../protomodels/")
 
 hasWarned = { "signals": 0 }
 
-def computePValues( data : dict, fudge : float,
-       nmin : int = 50000, nmax : int = 100000,
-       subtractSigN : bool = True ) -> dict:
+def computePValues( data : dict, fudge : float, nmin : int = 50000, 
+        nmax : int = 100000, subtractSigN : bool = False, 
+        addSigN : bool = True ) -> dict:
     """ compute p-values
     :param fudge: fudge factor
     :param nmin: minimum number of toys
     :param nmax: maximum number of toys
     :param subtractSigN: if true, subtract sigN from observation
+    :param addSigN: if true, add sigN to expected background
 
     :returns: dictionary, with id, obs, etc and also p_norm p_lognorm
     """
@@ -50,10 +51,13 @@ def computePValues( data : dict, fudge : float,
         nobs = obs
         if subtractSigN:
             nobs = obs - sigN
-        p_norm = computeP ( nobs, bg, bgerr, lognormal = False,
+        nbg = bg
+        if addSigN:
+            nbg = bg + sigN
+        p_norm = computeP ( nobs, nbg, bgerr, lognormal = False,
                             nmin = nmin, nmax = nmax )
         d["p_norm"]=p_norm
-        p_lognorm = computeP ( nobs, bg, bgerr, lognormal = True,
+        p_lognorm = computeP ( nobs, nbg, bgerr, lognormal = True,
                             nmin = nmin, nmax = nmax )
         d["p_lognorm"] = p_lognorm
         ret.append ( d )
@@ -94,20 +98,20 @@ def writeHeader ( f ):
     f.write ( f"# p_lognorm: p-value for lognorm nuisances\n" )
     f.write ( "\n" )
 
-def createData( dictfile : str, fudge_factors : list,
-       nmin : int = 20000, nmax : int = 50000, outfile : str = "data.dict",
-       subtractSigN : bool = True ):
+def createData( args : dict ):
     """ create the data needed for the conservatism plots.
-    :param dictfile: filename of _database.dict file to base this on
-    :param nmin: minimum number of toys to throw for computation of pvalues
-    :param nmax: maximum number of toys to throw for computation of pvalues
-    :param outfile: dict file to store results in
-    :param subtractSigN: if true, subtract sigN from observation
+    :args (dict):
+      - param dictfile: filename of _database.dict file to base this on
+      - param nmin: minimum number of toys to throw for computation of pvalues
+      - param nmax: maximum number of toys to throw for computation of pvalues
+      - param outfile: dict file to store results in
+      - param subtractSigN: if true, subtract sigN from observation
+      - param addSigN: if true, add sigN to expected background
     """
     # the most important parameters
 
     from multiverse.expResModifier import readDatabaseDictFile
-    d = readDatabaseDictFile ( dictfile )
+    d = readDatabaseDictFile ( args["dictfile"] )
 
     header, data = d["meta"], d["data"]
     print ( f"[createData] {len(data)} signal regions will be considered" )
@@ -115,14 +119,24 @@ def createData( dictfile : str, fudge_factors : list,
     d = filterData ( data )
 
     pvalues={}
-    for fudge in fudge_factors:
-        p = computePValues( d, fudge, nmin = nmin, nmax = nmax, 
-                subtractSigN = subtractSigN )
+    import progressbar
+    pbar = progressbar.ProgressBar(widgets=["Creating ", 
+#                progressbar.Counter(format='%(value)d/%(max_value)d '), 
+                progressbar.Percentage(),
+                progressbar.Bar( marker=progressbar.RotatingMarker()), 
+                progressbar.ETA()])
+    pbar.maxval = len(args["ffactors"])
+    pbar.start()
+    for fudge in args["ffactors"]:
+        p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
+                subtractSigN = args["subtractSigN"], addSigN = args["addSigN"] )
+        pbar.update()
         pvalues[float(fudge)]=p
+    pbar.finish()
 
     from ptools.helpers import py_dumps
-    print ( f"[createData] creating {outfile}" )
-    with open ( outfile, "wt" ) as f:
+    print ( f"[createData] creating {args['outfile']}" )
+    with open ( args['outfile'], "wt" ) as f:
         writeHeader ( f )
         ds = py_dumps ( pvalues ) # , stop_at_level = 2 )
         f.write ( ds+ "\n" )
@@ -142,6 +156,8 @@ if __name__ == "__main__":
             default=None)
     ap.add_argument('-s', '--subtractSigN',
             help='subtract the signals from obs', action="store_true" )
+    ap.add_argument('-a', '--addSigN',
+            help='add the signals to expected bg', action="store_true" )
     ap.add_argument('-n', '--nmin', type=int,
             help='minimum number of toys [50000]', default=50000)
     ap.add_argument('-N', '--nmax', type=int,
@@ -157,7 +173,7 @@ if __name__ == "__main__":
         ffactors[0]=0.03
     if type(ffactors)==str:
         ffactors = eval(ffactors)
+    args.ffactors = ffactors
     if args.outfile == "default":
         args.outfile = f"{args.ntoys}.dict"
-    createData( args.dictfile, ffactors, nmin = args.nmin, nmax = args.nmax, 
-                outfile = args.outfile, subtractSigN = args.subtractSigN )
+    createData( vars(args) )
