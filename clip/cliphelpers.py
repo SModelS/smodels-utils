@@ -15,8 +15,10 @@ def readJobIds():
     with open ( "jobs", "rt" ) as f:
         lines = f.readlines()
     for line in lines:
-        jobid = int ( line.strip() )
-        jobids.add ( jobid )
+        line = line.strip()
+        if len(line)>0:
+            jobid = int ( line )
+            jobids.add ( jobid )
     return jobids
 
 def getJobStatus  ( jobids : Union[list,int] ) -> dict:

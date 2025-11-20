@@ -15,3 +15,7 @@ touch /users/$USER/git/smodels-utils/.git/**/*
 touch /users/$USER/git/protomodels/**/*.py
 touch /users/$USER/git/protomodels/**/*.slha
 touch /users/$USER/git/protomodels/.git/**/*
+touch /users/$USER/git/PathFinder/**/*.py
+touch /users/$USER/rundir*/*
+touch /users/$USER/rundir*/*/*
+touch /users/$USER/rundir*/*/*/*
