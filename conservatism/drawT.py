@@ -5,7 +5,7 @@ test as a function of the fudge factor """
 
 from chelpers import computeT, filterByAnaId, filterByBG, splitByCollaboration,\
      splitBySqrts, splitBySqrtsAndCollaboration, splitByAnalysisGroups, \
-     filterByAnaGroups
+     filterByAnaGroups, computeWasserstein
 import numpy as np
 from typing import Union
 
@@ -22,10 +22,12 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
     """ retrieve the test statistics of the histogram,
     typically the T value """
     Ts = {}
-    method = "default"
+    #method = "KL"
+    #method = "default"
+    method = "wasserstein"
     for fudge,entry in data.items():
         pvalues = getPValues ( entry, "norm" )
-        tstats = computeT ( pvalues, bins, method = method )
+        tstats = computeT ( pvalues, bins, method )
         T = tstats["T"]
         Ts[fudge]=T
     return Ts

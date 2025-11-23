@@ -203,6 +203,13 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
 
     :returns: dictionary with test statistic, ndf, and p-value for test statistic
     """
+    assert method in [ "wasserstein", "KL", "default", "fold" ], f"unknown method {method}"
+    if method == "wasserstein":
+        ret = computeWasserstein ( p_values )
+        return ret
+    if method == "KL":
+        ret = computeKLDivergence ( p_values )
+        return ret
     if bins == None:
         n_bins = 10
         bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
@@ -236,3 +243,29 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
     p = float ( 1. - chi2.cdf ( T, df = n_bins - 1 ) )
     return { "T": T, "nbins": n_bins, "p": p }
 
+def computeWasserstein( p_values : list ):
+    """ given a list of p-values
+    return the Wasserstein distance to a uniform distribution
+
+    :returns: dictionary with test statistic, ndf, and p-value for test statistic
+    """
+    from scipy.stats import wasserstein_distance
+    samples = np.array ( p_values )
+    print ( f"len [{len(p_values)}]" )
+    uniform_ref = np.random.uniform(0., 1., size=len(p_values)*1000 )
+    wd = wasserstein_distance(samples, uniform_ref)
+    return { "wd": wd, "type": "wasserstein", "T": wd }
+
+def computeKLDivergence( p_values : list ):
+    """ given a list of p-values
+    return the Wasserstein distance to a uniform distribution
+
+    :returns: dictionary with test statistic, ndf, and p-value for test statistic
+    """
+    from scipy.stats import entropy
+    samples = np.array ( p_values )
+    counts, bin_edges = np.histogram( p_values, bins=20, range=(0., 1.), density=True)
+    q = np.full_like(counts, 1.)
+    mask = counts > 0
+    kl = entropy(counts[mask], q[mask])
+    return { "wd": kl, "type": "KL", "T": kl }
