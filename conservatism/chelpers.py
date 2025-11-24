@@ -203,7 +203,13 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
 
     :returns: dictionary with test statistic, ndf, and p-value for test statistic
     """
-    assert method in [ "wasserstein", "KL", "default", "fold" ], f"unknown method {method}"
+    assert method in [ "wasserstein", "KL", "default", "fold", "KS", "AD" ], f"unknown method {method}"
+    if method == "KS":
+        ret = computeKS ( p_values )
+        return ret
+    if method == "AD":
+        ret = computeAD ( p_values )
+        return ret
     if method == "wasserstein":
         ret = computeWasserstein ( p_values )
         return ret
@@ -251,10 +257,109 @@ def computeWasserstein( p_values : list ):
     """
     from scipy.stats import wasserstein_distance
     samples = np.array ( p_values )
-    print ( f"len [{len(p_values)}]" )
-    uniform_ref = np.random.uniform(0., 1., size=len(p_values)*1000 )
+    #print ( f"len [{len(p_values)}]" )
+    uniform_ref = np.random.uniform(0., 1., size=len(p_values)*300 )
     wd = wasserstein_distance(samples, uniform_ref)
     return { "wd": wd, "type": "wasserstein", "T": wd }
+
+def computeKS( p_values : list ):
+    """ given a list of p-values
+    return the KS statistic
+
+    :returns: dictionary with test statistic
+    """
+    from scipy.stats import kstest
+    samples = np.array ( p_values )
+    x = np.asarray(samples).ravel()
+    if x.size == 0:
+        raise ValueError("samples must contain at least one value")
+
+    # scipy's 'uniform' takes (loc, scale)
+    D, p = kstest(x, 'uniform', args=(0., 1.))
+
+    return { "KS": D, "type": "KS", "T": D }
+
+def anderson_darling_uniform_stat(samples, a=None, b=None, eps=1e-12):
+    """
+    Compute Anderson-Darling A^2 statistic for testing samples ~ Uniform(a,b).
+    - samples: 1D array-like
+    - a, b: support of the hypothesised uniform. If None, infer from samples (min/max).
+    - eps: small clipping constant to avoid log(0).
+    Returns: float A2 (statistic)
+    """
+    x = np.sort(np.asarray(samples).ravel())
+    n = x.size
+    if n == 0:
+        raise ValueError("samples must contain at least one value")
+    if a is None:
+        a = float(x[0])
+    if b is None:
+        b = float(x[-1])
+    if b == a:
+        raise ValueError("a and b must differ (non-degenerate uniform)")
+
+    # compute F(x) for uniform and clip into (0,1)
+    F_x = (x - a) / (b - a)
+    F_x = np.clip(F_x, eps, 1.0 - eps)
+
+    # compute the S sum in the formula
+    i = np.arange(1, n + 1)
+    term1 = np.log(F_x)
+    term2 = np.log(1.0 - F_x[::-1])  # reversed for Y_{n+1-i}
+    S = np.sum(((2 * i - 1) / n) * (term1 + term2))
+
+    A2 = -n - S
+    return float(A2)
+
+def computeAD( p_values : list ):
+    """ given a list of p-values
+    return the AD statistic
+
+    :returns: dictionary with test statistic
+    """
+    rng = np.random.default_rng(0)
+    x = np.asarray(p_values).ravel()
+    n = x.size
+    if n == 0:
+        raise ValueError("samples must contain at least one value")
+    a, b = 0., 1.
+    n_sim = 0
+
+    # If a/b are None we will estimate from the observed sample,
+    # and in Monte-Carlo we must estimate them from each simulated sample likewise.
+    infer_a = (a is None)
+    infer_b = (b is None)
+
+    # compute observed A2 with chosen/estimated a,b
+    if infer_a:
+        a_obs = float(np.min(x))
+    else:
+        a_obs = float(a)
+    if infer_b:
+        b_obs = float(np.max(x)) if infer_b else float(b)
+    # but careful: if only one of a/b is None, handle appropriately
+    if (not infer_a) and (not infer_b):
+        a_obs = float(a); b_obs = float(b)
+    elif (not infer_a) and infer_b:
+        b_obs = float(np.max(x))
+    elif infer_a and (not infer_b):
+        a_obs = float(np.min(x))
+
+    A2_obs = anderson_darling_uniform_stat(x, a=a_obs, b=b_obs)
+
+    pval = None
+    if n_sim and n_sim > 0:
+        sim_stats = np.empty(n_sim, dtype=float)
+        for j in range(n_sim):
+            sim = rng.uniform(a_obs, b_obs, size=n)  # simulate under the hypothesised uniform on [a_obs,b_obs]
+            # if a/b are inferred from data, re-estimate on the simulated sample the same way
+            a_sim = float(np.min(sim)) if infer_a else a_obs
+            b_sim = float(np.max(sim)) if infer_b else b_obs
+            sim_stats[j] = anderson_darling_uniform_stat(sim, a=a_sim, b=b_sim)
+        # p-value: proportion of simulated A2 >= observed A2 (plus 1 for mid-p / conservatism)
+        pval = (np.sum(sim_stats >= A2_obs) + 1) / (n_sim + 1)
+
+    return {"T": float(A2_obs), "A2": float(A2_obs), "p_value": pval, "n_sim": int(n_sim)}
 
 def computeKLDivergence( p_values : list ):
     """ given a list of p-values

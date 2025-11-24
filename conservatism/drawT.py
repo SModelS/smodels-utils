@@ -25,6 +25,8 @@ def getHistoTestStats ( data : dict, bins : list ) -> dict:
     #method = "KL"
     #method = "default"
     method = "wasserstein"
+    method = "KS"
+    method = "AD"
     for fudge,entry in data.items():
         pvalues = getPValues ( entry, "norm" )
         tstats = computeT ( pvalues, bins, method )
