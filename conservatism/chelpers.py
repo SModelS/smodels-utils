@@ -203,7 +203,17 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
 
     :returns: dictionary with test statistic, ndf, and p-value for test statistic
     """
-    assert method in [ "wasserstein", "KL", "default", "fold", "KS", "AD" ], f"unknown method {method}"
+    assert method in [ "wasserstein", "KL", "default", "fold", "KS", "AD", "combo" ], f"unknown method {method}"
+    if method == "combo":
+        ad = computeAD ( p_values )
+        T = ad["T"]/6.
+        ws = computeWasserstein ( p_values )
+        T += ws["T"]/0.055
+        ks = computeKS ( p_values )
+        T += ks["T"]/0.13
+        chi2 = computeChi2 ( p_values, bins )
+        T += chi2["T"]/25.
+        return { "type": "combo", "T": T }
     if method == "KS":
         ret = computeKS ( p_values )
         return ret
@@ -216,6 +226,11 @@ def computeT( p_values : list , bins : Union[str,None,list,int] = None,
     if method == "KL":
         ret = computeKLDivergence ( p_values )
         return ret
+    return computeChi2 ( p_values, bins, method )
+
+def computeChi2( p_values : list , bins : Union[str,None,list,int] = None,
+       method :str = "default" ) -> dict:
+    """ binned chi2 test """
     if bins == None:
         n_bins = 10
         bins = list ( map ( float, np.linspace(0,1,n_bins+1) ) )
