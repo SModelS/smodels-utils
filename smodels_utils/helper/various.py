@@ -23,6 +23,18 @@ def getCommandLine():
         args += f"{i} "
     return args.strip()
 
+def pngMetaInfo():
+    """ the meta info that we put into the png files directly """
+    ret = { "commandline": getCommandLine() }
+    from smodels.installation import version
+    ret["smodels"]=version()
+    from smodels_utils import SModelSUtils
+    ret["smodels_utils"]=SModelSUtils.version()
+    import socket
+    hostname = socket.gethostname()
+    ret["hostname"]=hostname
+    return ret
+
 def repr_double_quotes(obj):
     import json
     if isinstance(obj, str):
@@ -567,7 +579,7 @@ def getValidationModule ( dbpath, analysis, validationfile ):
     :param dbpath: database path, e.g. ~/git/smodels-database
     :param analysis: analysis name, e.g. ATLAS-SUSY-2019-08
     :param validationfile: validationfile, e.g. TChiWH_2EqMassAx_EqMassBy_combined.py
-		:returns: validationData
+        :returns: validationData
     """
     dbpath = os.path.expanduser ( dbpath )
     ipath = getPathName ( dbpath, analysis, validationfile )
@@ -590,5 +602,6 @@ def getValidationModuleFromPath ( ipath, analysis ):
 
 if __name__ == "__main__":
     #from smodels.base.runtime import nCPUs
-    #print ( "This machine has %d CPUs" % nCPUs() )
-    print ( "srqts", getSqrts ( "CMS-EXO-16-057" ) )
+    #print ( f"This machine has {nCPUs()} CPUs" )
+    print ( f"png meta info {pngMetaInfo()}" )
+    # print ( "srqts", getSqrts ( "CMS-EXO-16-057" ) )
