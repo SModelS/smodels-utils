@@ -719,13 +719,10 @@ def clean_dirs( rundir, clean_all = False, verbose=True ):
 def logCall ():
     fname = f"{os.environ['HOME']}/walker.log"
     f=open( fname,"at")
-    args = ""
-    for i in sys.argv:
-        if " " in i or "," in i or "[" in i:
-            i = f'"{i}"'
-        args += f"{i} "
+    from smodels_utils.helper.various import getCommandLine
+    args = getCommandLine()
     # f.write ( f'\n[slurm_walk-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
-    f.write ( f'\n[slurm_walk :: {time.asctime()}]\n{args.strip()}\n' )
+    f.write ( f'\n[slurm_walk :: {time.asctime()}]\n{args}\n' )
     f.close()
 
 def cancelAllRunners():
