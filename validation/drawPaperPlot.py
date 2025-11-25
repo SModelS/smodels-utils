@@ -680,7 +680,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}_obs.png"
     print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
-    plt.savefig(outfile, dpi=250)
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata = pngMetaInfo()
+    plt.savefig(outfile, dpi=250, metadata=metadata )
     plt.clf()
     plt.rcdefaults()
     plt.close()

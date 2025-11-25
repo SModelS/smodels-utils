@@ -69,7 +69,9 @@ def draw( data : dict, bins : list ):
     plt.title ( "finding the optimal fudge factor" )
     plt.xlabel ( "fudge factor $f$" )
     plt.ylabel ( "T values" )
-    plt.savefig ( outfile )
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata = pngMetaInfo()
+    plt.savefig ( outfile, metadata = metadata )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
 

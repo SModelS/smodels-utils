@@ -81,7 +81,9 @@ def plot ( args : dict, points1 : list, points2 : list ):
     filename = args["output"].replace("@a",args["analysis1"])
     filename = filename.replace("@t",topo)
     filename = filename.replace("@sr","")
-    plt.savefig ( filename )
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata = pngMetaInfo()
+    plt.savefig ( filename, metadata = metadata )
 
 def draw ( args : dict ):
     """ draw, with arguments given as a dictionary """

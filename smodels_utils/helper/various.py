@@ -33,6 +33,7 @@ def pngMetaInfo():
     import socket
     hostname = socket.gethostname()
     ret["hostname"]=hostname
+    ret["copyright"]="SModelS collaboration"
     return ret
 
 def repr_double_quotes(obj):
