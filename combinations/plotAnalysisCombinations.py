@@ -112,6 +112,12 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
 
 def getLlhds(combiner,setup):
     from math import isnan
+    if "murange" in setup:
+        setup["mumin"]=setup["murange"][0]
+        setup["mumax"]=setup["murange"][1]
+        setup["nsteps"]=setup["murange"][2]
+    if not "evaluationtype" in setup:
+        setup["evaluationtype"]="observed"
 
     step_mu = ( setup["mumax"]-setup["mumin"] )/ setup["nsteps"]
     muvals = np.arange(setup['mumin'],setup['mumax'],step_mu)
@@ -163,7 +169,10 @@ def getLlhds(combiner,setup):
                     norm += elem
             for i,elem in enumerate(l):
                 if elem != None and not isnan(elem):
-                    llhds[Id][i] = elem/norm
+                    if elem == 0.:
+                        llhds[Id][i] = 0.
+                    else:
+                        llhds[Id][i] = elem/norm
 
     return muvals,llhds
 
@@ -181,12 +190,16 @@ def getPlot( options : dict ) -> Tuple:
     parser = modelTester.getParameters(parameterFile)
     # step_mu = (mumax - mumin ) / nsteps
     setup = {'evaluationtype' : apriori ,'normalize' : "none",
-             'mumin': -5, 'mumax': 5, 'nsteps': 20, 'title' : None }
+             'mumin': -5, 'mumax': 5, 'nsteps': 20, 'title' : None,
+             'ulinlegend': True }
 
-    if "setup" in parser:
+    if not "setup" in parser:
+        print ( f"[plotAnalysisCombinations] you do not have a 'setup' section in {parameterFile}. will fall back to defaults" )
+    else:
     # if parser.has_section("setup"):
         # setup = parser.get_section("setup").toDict()
         for k,v in parser["setup"].items():
+            k = k.lower()
             if not k in setup:
                 print ( f"[plotAnalysisCombinations] do not know of entry {k} in setup" )
                 sys.exit(-1)
@@ -196,6 +209,11 @@ def getPlot( options : dict ) -> Tuple:
                 v = float ( v )
             elif k in [ "nsteps" ]:
                 v = int ( v )
+            elif k in [ "ulinlegend" ]:
+                if v.lower() in [ "false", "0", "no" ]:
+                    v = False
+                else:
+                    v = True
             elif k == "normalize":
                 if v not in [ "none", "max", "area" ]:
                     print ( f"[plotAnalysisCombinations] v has to be one of: none, max, area" )
@@ -217,7 +235,8 @@ def getPlot( options : dict ) -> Tuple:
         idDict = {}
         idDict['ulmu'] = ana.getUpperLimitOnMu( evaluationType = setup["evaluationtype"])
         idDict['mu_obs'] = 1. / ana.getRValue( evaluationType = observed )
-        idDict['mu_exp'] = 1. / ana.getRValue( evaluationType = apriori )
+        rexp = ana.getRValue( evaluationType = apriori )
+        idDict['mu_exp'] = float("nan") if rexp is None else  1. / rexp
         tpDict[ana.dataset.globalInfo.id] = idDict
         tpDict
 
@@ -255,7 +274,11 @@ def getPlot( options : dict ) -> Tuple:
             #Draw vertical lines for muhat
             if muvals[0] <= muhat <= muvals[-1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=f"combined\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}",zorder=zorder,linestyle=linestyle,linewidth=2,color="black")
+            label = "combined"
+            if setup["ulinlegend"]==True:
+                label = f"combined\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}"
+            x = plt.plot( muvals,l,label=label,zorder=zorder,
+                          linestyle=linestyle,linewidth=2,color="black" )
         else:
             if 'prev' in anaID:
                 linestyle = ':'
@@ -267,11 +290,16 @@ def getPlot( options : dict ) -> Tuple:
                 ulmu = tpDict[anaID]['ulmu']
                 muobs = tpDict[anaID]['mu_obs']
                 muexp = tpDict[anaID]['mu_exp']
-                x = plt.plot(muvals,l,label=f"{anaID}\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}",zorder=zorder,linestyle=linestyle,linewidth=2)
+                label = anaID
+                print ( "ulinlegend", setup["ulinlegend"] )
+                if setup["ulinlegend"]==True:
+                    label = f"{anaID}\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}"
+                x = plt.plot( muvals,l,label=label,zorder=zorder,
+                              linestyle=linestyle,linewidth=2 )
             lbl=None
 
         #Draw vertical lines for ulmu
-        if muvals[0] <= ulmu <= muvals[-1]:
+        if ulmu is not None and muvals[0] <= ulmu <= muvals[-1]:
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
 
     plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
