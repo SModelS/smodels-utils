@@ -3,7 +3,7 @@
 import subprocess
 
 def showPath ( path ):
-    o = subprocess.getoutput ( f"cd {path}; ./show_steps.py; cd .." )
+    o = subprocess.getoutput ( f"cd {path}; ln -s ~/git/protomodels/snippets/show_steps.py; ./show_steps.py; cd .." )
     lines = o.split()
     print ( f"{path}: {' '.join(lines[-2:])}" )
 
@@ -16,6 +16,10 @@ def show():
         showPath ( path )
     for p in [ "rundir4", "rundir5", "rundir6" ]:
         showPath ( p )
+    for p in [ "rundir_fake_ewk3", "rundir_fake_ewkoff3", "rundir_fake_stops3" ]:
+        showPath ( p )
+    o = subprocess.getoutput ( f"./printSimpleHiscoreList.py" )
+    print ( o )
 
 if __name__ == "__main__":
     show()
