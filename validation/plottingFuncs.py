@@ -114,7 +114,9 @@ class Recorder:
                     s_args += f"{str(v)}"
             line = f"plt.{self.callable.__name__}({s_args})\n"
             if "savefig" in line:
-                line = "plt.savefig('recorded.png')\n"
+                line = "from smodels_utils.helper.various import pngMetaInfo\n"
+                line += "metadata = pngMetaInfo()\n"
+                line += "plt.savefig('recorded.png',metadata=metadata)\n"
             if "plt.gcf()" in line:
                 line = "fig=plt.gcf()\n"
             self.parent.recordingfile.write ( line )

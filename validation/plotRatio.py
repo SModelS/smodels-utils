@@ -579,7 +579,9 @@ def draw ( options : dict ):
     if hasLegend:
         plt.legend()
     try:
-        plt.savefig ( figname )
+        from smodels_utils.helper.various import pngMetaInfo
+        metadata = pngMetaInfo()
+        plt.savefig ( figname, metadata = metadata )
     except (RuntimeError,FileNotFoundError) as e:
         print ( f"[plotRatio] error when calling savefig: {e}" )
         if "tex" in str(e).lower():

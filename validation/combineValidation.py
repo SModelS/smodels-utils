@@ -162,7 +162,9 @@ class ValidationCombiner:
             axes = meta["axes"].replace(" ","")
         fname = f"combo_{idNoEff}_{self.txShort()}_{axes}.png"
         fname = fname.replace("[","").replace("]","").replace("*","").replace(",","")
-        plt.savefig ( fname )
+        from smodels_utils.helper.various import pngMetaInfo
+        metadata = pngMetaInfo()
+        plt.savefig ( fname, metadata = metadata )
         plt.kittyPlot()
         print ( f"[combineValidation] saving to {fname}" )
 

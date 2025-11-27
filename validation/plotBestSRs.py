@@ -335,7 +335,9 @@ def plot( dbpath : str, analysis : str, validationfiles : str,
         srank = f"{rank}nth"
     fname = fname.replace ( "@r", srank )
     print ( f"[plotBestSRs] saving to {YELLOW}{fname}{RESET}" )
-    plt.savefig ( fname )
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata = pngMetaInfo()
+    plt.savefig ( fname, metadata = metadata )
     if show:
         plt.kittyPlot()
     plt.clf()

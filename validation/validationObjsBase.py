@@ -248,7 +248,9 @@ class ValidationObjsBase():
         if hasattr ( self.plot, "Print" ):
             self.plot.Print(filename)
         if hasattr ( self.plot, "savefig" ):
-            self.plot.savefig(filename)
+            from smodels_utils.helper.various import pngMetaInfo
+            metadata = pngMetaInfo()
+            self.plot.savefig(filename,metadata=metadata)
 
     def savePlot( self,validationDir : Union[None,str] = None,
                   fformat : str = 'png' ):

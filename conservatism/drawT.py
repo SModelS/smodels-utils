@@ -5,7 +5,7 @@ test as a function of the fudge factor """
 
 from chelpers import computeT, filterByAnaId, filterByBG, splitByCollaboration,\
      splitBySqrts, splitBySqrtsAndCollaboration, splitByAnalysisGroups, \
-     filterByAnaGroups
+     filterByAnaGroups, computeWasserstein
 import numpy as np
 from typing import Union
 
@@ -18,21 +18,26 @@ def getPValues ( data : list, statmodel : str = "norm" ) -> list:
         ret.append ( d[ f"p_{statmodel}" ] )
     return ret
 
-def getHistoTestStats ( data : dict, bins : list ) -> dict:
+def getHistoTestStats ( data : dict, bins : list, method : str ) -> dict:
     """ retrieve the test statistics of the histogram,
     typically the T value """
     Ts = {}
-    method = "default"
     for fudge,entry in data.items():
         pvalues = getPValues ( entry, "norm" )
-        tstats = computeT ( pvalues, bins, method = method )
+        tstats = computeT ( pvalues, bins, method )
         T = tstats["T"]
         Ts[fudge]=T
     return Ts
 
 def draw( data : dict, bins : list ):
     """ the drawing method """
-    Ts = getHistoTestStats ( data, bins )
+    #method = "KL"
+    #method = "default"
+    method = "wasserstein"
+    method = "KS"
+    method = "AD"
+    method = "combo"
+    Ts = getHistoTestStats ( data, bins, method )
     splitdata = splitBySqrtsAndCollaboration ( data )
     # splitdata = splitByAnalysisGroups ( data )
     # splitdata = splitBySqrts ( splitdata["ATLAS"] )
@@ -43,7 +48,7 @@ def draw( data : dict, bins : list ):
     colors = { "CMS": "r", "ATLAS": "g" }
     lstyles = { "13": "solid", "8": "-." }
     for s in split:
-        Tss[s] = getHistoTestStats ( splitdata[s], bins )
+        Tss[s] = getHistoTestStats ( splitdata[s], bins, method )
         xsS, ysS = list ( Tss[s].keys() ), list ( Tss[s].values() )
         color, linestyle = None, None
         for clabel,c in colors.items():
@@ -64,7 +69,9 @@ def draw( data : dict, bins : list ):
     plt.title ( "finding the optimal fudge factor" )
     plt.xlabel ( "fudge factor $f$" )
     plt.ylabel ( "T values" )
-    plt.savefig ( outfile )
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata = pngMetaInfo()
+    plt.savefig ( outfile, metadata = metadata )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
 
