@@ -63,12 +63,12 @@ class DecayDrawer:
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
+            # self.addMetaInfo ( wout )
             self.logger.debug ( f"{wout} created with {prog}." )
 
         if self.options["dot"]:
             # wout=out+".dot"
             wout=f"{out}.dot"
-            # print "[drawer.py] write to",wout
             self.G.write(wout)
             self.logger.debug ( f"{wout} created with dot." )
 
@@ -81,6 +81,22 @@ class DecayDrawer:
 
             self.G.draw(wout,prog='dot')
             self.logger.log ( f"{wout} created with dot." )
+
+    def addMetaInfo ( self, plotfile : str ):
+        if not plotfile.endswith ( ".png" ):
+            return
+        try:
+            import PIL
+        except ImportError as e:
+            self.logger.warn ( f"PIL not installed, will not add metadata" ) 
+            return
+        from PIL import Image, PngImagePlugin
+        img = Image.open(plotfile)
+        meta = PngImagePlugin.PngInfo()
+        from smodels_utils.helper.various import pngMetaInfo
+        metadata = pngMetaInfo()
+        for k,v in metadata.items():
+            meta.add_text ( k, v )
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
@@ -334,3 +350,4 @@ class DecayDrawer:
             o = subprocess.getoutput ( cmd )
             if len(o)>0:
                 self.logger.error ( f"conversion output {o}" )
+            self.addMetaInfo ( f"{out}.png" )

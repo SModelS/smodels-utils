@@ -19,7 +19,8 @@ def getCommandLine():
     args = ""
     for i in sys.argv:
         i = i.replace("'",'"' )
-        i = i.replace(os.environ["HOME"],"~")
+        if i.startswith ( os.environ["HOME"] ):
+            i = i.replace(os.environ["HOME"],"~")
         if " " in i or "," in i or "[" in i or "+" in i:
             i = f"'{i}'"
         args += f"{i} "
@@ -38,7 +39,10 @@ def pngMetaInfo():
     ret["Copyright"]="SModelS collaboration"
     from datetime import datetime, timezone
     ret["created"]=datetime.now( timezone.utc ).isoformat()
-    ret["cwd"]=os.getcwd().replace(os.environ["HOME"],"~")
+    cwd = os.getcwd()
+    if cwd.startswith ( os.environ["HOME"] ):
+        cwd = cwd.replace(os.environ["HOME"],"~")
+    ret["cwd"]=cwd
     return ret
 
 def repr_double_quotes(obj):

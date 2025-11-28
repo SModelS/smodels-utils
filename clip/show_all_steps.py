@@ -14,7 +14,7 @@ def show():
     for i in range(1,11):
         path = f"rundir_fakebg{i}_f07"
         showPath ( path )
-    for p in [ "rundir4", "rundir5", "rundir6" ]:
+    for p in [ "rundir4", "rundir5", "rundir6", "rundir7" ]:
         showPath ( p )
     for p in [ "rundir_fake_ewk3", "rundir_fake_ewkoff3", "rundir_fake_stops3" ]:
         showPath ( p )

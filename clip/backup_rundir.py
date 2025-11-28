@@ -19,7 +19,7 @@ def backup( path ):
         execute ( cmd )
 
 def backup_all():
-    dirs = [ "rundir4", "rundir5", "rundir6", "rundir_fake_ewk3", \
+    dirs = [ "rundir4", "rundir5", "rundir6", "rundir7", "rundir_fake_ewk3", \
              "rundir_fake_stops3", "rundir_fake_ewkoff3" ]
     for i in range(1,10):
         dirs.append ( f"rundir_fakebg{i}_f10" )
