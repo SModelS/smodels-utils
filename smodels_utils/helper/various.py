@@ -27,13 +27,15 @@ def pngMetaInfo():
     """ the meta info that we put into the png files directly """
     ret = { "commandline": getCommandLine() }
     from smodels.installation import version
-    ret["SModelS"]=version()
+    ret["smodels"]=version()
     from smodels_utils import SModelSUtils
-    ret["SModelS_utils"]=SModelSUtils.version()
+    ret["smodels-utils"]=SModelSUtils.version()
     import socket
     hostname = socket.gethostname()
     ret["Hostname"]=hostname
     ret["Copyright"]="SModelS collaboration"
+    from datetime import datetime, timezone
+    ret["created"]=datetime.now( timezone.utc ).isoformat()
     return ret
 
 def repr_double_quotes(obj):

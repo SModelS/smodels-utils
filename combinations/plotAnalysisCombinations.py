@@ -123,21 +123,21 @@ def getLlhds(combiner,setup):
     muvals = np.arange(setup['mumin'],setup['mumax'],step_mu)
     evaluationType = setup["evaluationtype"]
     normalize = setup["normalize"]
-    llhds = {'combined' : np.ones(len(muvals))}
+    llhds = {'combined' : np.zeros(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
     tpreds = combiner.theoryPredictions
     for t in tpreds:
         Id = t.analysisId()
         #t.computeStatistics( expected = expected )
         lsm = t.lsm()
-        l = np.array([t.likelihood(mu,evaluationType=evaluationType,return_nll=False) for mu in muvals])
+        l = np.array([t.likelihood(mu,evaluationType=evaluationType,return_nll=True) for mu in muvals])
         # l_prev = np.array([t.likelihood(mu,expected=expected,useCached=False,previous=True) for mu in muvals])
         for i in range(len(muvals)):
             # If the fit did not converge, set the combined likelihood to nan
             if l[i] == None:
                 llhds['combined'][i] = float("nan")
             else:
-                llhds['combined'][i] = llhds['combined'][i]*l[i]
+                llhds['combined'][i] = llhds['combined'][i]+l[i]
             # if l_prev[i] != None:
             #     llhds['combined_prev'][i] = llhds['combined_prev'][i]*l_prev[i]
             # else:
@@ -261,10 +261,11 @@ def getPlot( options : dict ) -> Tuple:
             #Draw vertical lines for muhat
             if setup['murange'][0] <= muhat <= setup['murange'][1]:
                 plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
-            x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=2)
+            x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,
+                         linewidth=2 )
         elif anaID == 'combined':
             zorder = 99
-            linestyle = '--'
+            linestyle = '-'
             ulmu = combiner.getUpperLimitOnMu( evaluationType= evType)
             ulmu_comb = ulmu
             # lbl=rf'$\mu^{{UL}}={ulmu:.2f}$'
@@ -283,19 +284,25 @@ def getPlot( options : dict ) -> Tuple:
             if 'prev' in anaID:
                 linestyle = ':'
                 zorder = 98
-                x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,linewidth=2)
+                x = plt.plot( muvals,l,label=anaID,zorder=zorder,
+                              linestyle=linestyle, linewidth=2 )
             else:
                 linestyle = '-'
+                """
+                if "CMS" in anaID:
+                    linestyle = "dashdot"
+                if "ATLAS" in anaID:
+                    linestyle = "dotted"
+                """
                 zorder = None
                 ulmu = tpDict[anaID]['ulmu']
                 muobs = tpDict[anaID]['mu_obs']
                 muexp = tpDict[anaID]['mu_exp']
                 label = anaID
-                print ( "ulinlegend", setup["ulinlegend"] )
                 if setup["ulinlegend"]==True:
                     label = f"{anaID}\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}"
                 x = plt.plot( muvals,l,label=label,zorder=zorder,
-                              linestyle=linestyle,linewidth=2 )
+                              linestyle=linestyle,linewidth=3 )
             lbl=None
 
         #Draw vertical lines for ulmu
@@ -361,7 +368,9 @@ def getPlot( options : dict ) -> Tuple:
     if plotOptions['legend']:
         plt.legend(fontsize=14)
 
-    plt.savefig(outputFile)
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata = pngMetaInfo()
+    plt.savefig(outputFile, metadata = metadata )
     return fig, outputFile
 
 def main():
