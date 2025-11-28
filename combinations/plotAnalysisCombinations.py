@@ -74,7 +74,10 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
         if not ":" in x:
             continue
         p1 = x.find(":")
-        withDSes[x[:p1]] = x[p1+1:]
+        anaId, dsId = x[:p1], x[p1+1:]
+        if not anaId in withDSes:
+            withDSes[anaId]=[]
+        withDSes[anaId].append ( dsId )
     # Compute theory prediparser = modelTester.getParameters(parameterFile)ctions
     # Get theory prediction for each analysis and print basic output
     combineResults = False
@@ -91,7 +94,7 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
         if tp.dataType() != "combined":
             dsId = tp.dataset.dataInfo.dataId
         if anaId in withDSes:
-            if dsId != withDSes[anaId]:
+            if not dsId in withDSes[anaId]:
                 continue
         filteredPredictions.append ( tp )
 
