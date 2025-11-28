@@ -18,7 +18,9 @@ def getCommandLine():
     """ reconstructs how the executable was called """
     args = ""
     for i in sys.argv:
-        if " " in i or "," in i or "[" in i:
+        i = i.replace("'",'"' )
+        i = i.replace(os.environ["HOME"],"~")
+        if " " in i or "," in i or "[" in i or "+" in i:
             i = f"'{i}'"
         args += f"{i} "
     return args.strip()
@@ -27,13 +29,16 @@ def pngMetaInfo():
     """ the meta info that we put into the png files directly """
     ret = { "commandline": getCommandLine() }
     from smodels.installation import version
-    ret["SModelS"]=version()
+    ret["smodels"]=version()
     from smodels_utils import SModelSUtils
-    ret["SModelS_utils"]=SModelSUtils.version()
+    ret["smodels-utils"]=SModelSUtils.version()
     import socket
     hostname = socket.gethostname()
     ret["Hostname"]=hostname
     ret["Copyright"]="SModelS collaboration"
+    from datetime import datetime, timezone
+    ret["created"]=datetime.now( timezone.utc ).isoformat()
+    ret["cwd"]=os.getcwd().replace(os.environ["HOME"],"~")
     return ret
 
 def repr_double_quotes(obj):

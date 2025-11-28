@@ -63,7 +63,7 @@ def timg( filename : os.PathLike ):
     # print ( f"[mpkitty] {o}" )
     print ( o )
             
-def kittyPlot( filename = None, show = True ):
+def kittyPlot( filename = None, show = True, metadata : dict = {} ):
     """ save to filename, possibly also show in terminal
     :param show: if True, then also print to terminal
     """
@@ -74,7 +74,9 @@ def kittyPlot( filename = None, show = True ):
         # plt.show() should actually work, but doesnt right now
         # return # for now
         deleteIt = True
-    plt.savefig ( filename )
+    from smodels_utils.helper.various import pngMetaInfo
+    metadata.update ( pngMetaInfo() )
+    plt.savefig ( filename, metadata = metadata )
     if show:
         timg ( filename )
     import os
