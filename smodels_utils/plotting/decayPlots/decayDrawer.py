@@ -97,6 +97,11 @@ class DecayDrawer:
         metadata = pngMetaInfo()
         for k,v in metadata.items():
             meta.add_text ( k, v )
+        for k,v in self.options.items():
+            meta.add_text ( k, str(v) )
+        for k,v in self.extra.items():
+            meta.add_text ( k, str(v) )
+        img.save( plotfile, pnginfo=meta)
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
