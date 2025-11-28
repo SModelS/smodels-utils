@@ -373,7 +373,9 @@ class RulerPlot:
                 continue
             of = f"{self.outputfile}.{frmat}"
             self.logger.info ( f"saving to {of}" )
-            plt.savefig ( of )
+            from smodels_utils.helper.various import pngMetaInfo
+            metadata = pngMetaInfo()
+            plt.savefig ( of, metadata = metadata )
             if frmat == "png" and self.trim:
                 cmd = f"convert {of} -trim {of}"
                 subprocess.getoutput ( cmd )
