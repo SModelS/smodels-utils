@@ -18,6 +18,7 @@ import numpy as np
 import pyslha
 import smodels_utils.plotting.mpkitty as plt
 from typing import Tuple
+from math import isnan
 
 def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
     """ get the combination of analyses for inputFile, parameter.ini
@@ -114,41 +115,10 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
                                                            anasOnly)
     return combiner,theoryPredictions
 
-def getLlhds(combiner,setup):
-    from math import isnan
-    if "murange" in setup:
-        setup["mumin"]=setup["murange"][0]
-        setup["mumax"]=setup["murange"][1]
-        setup["nsteps"]=setup["murange"][2]
-    if not "evaluationtype" in setup:
-        setup["evaluationtype"]="observed"
-
-    step_mu = ( setup["mumax"]-setup["mumin"] )/ setup["nsteps"]
-    muvals = np.arange(setup['mumin'],setup['mumax'],step_mu)
-    evaluationType = setup["evaluationtype"]
-    normalize = setup["normalize"]
-    llhds = {'combined' : np.ones(len(muvals))}
-    # llhds['combined_prev'] = np.ones(len(muvals))
-    tpreds = combiner.theoryPredictions
-    for t in tpreds:
-        Id = t.analysisId()
-        if t.dataType() != "combined":
-            Id += ":" + t.dataset.dataInfo.dataId
-        #t.computeStatistics( expected = expected )
-        lsm = t.lsm()
-        l = np.array([t.likelihood(mu,evaluationType=evaluationType,
-                     return_nll=False) for mu in muvals])
-        for i in range(len(muvals)):
-            # If the fit did not converge, set the combined likelihood to nan
-            if l[i] == None:
-                llhds['combined'][i] = float("nan")
-            else:
-                llhds['combined'][i] = llhds['combined'][i]*l[i]
-        llhds[Id]=l
-
-    # Replace the points that did not converge by None in the combined likelihood
-    llhds['combined'] = np.array([llCombined if llCombined != 1 else None for llCombined in llhds['combined'].tolist()])
-    # llhds['combined_prev'] = np.array([llCombined_prev if llCombined_prev!=1 and llCombined_prev!=0 else None for llCombined_prev in llhds['combined_prev'].tolist()])
+def normalizeLikelihoods ( llhds: dict, normalize : str ):
+    """ normalize the likelihoods in llhds according to normalize 
+    :param normalize: either max, or area
+    """
     if normalize == "max":
         for Id,l in llhds.items():
             norm = 0
@@ -174,6 +144,47 @@ def getLlhds(combiner,setup):
                         llhds[Id][i] = 0.
                     else:
                         llhds[Id][i] = elem/norm
+    return llhds
+
+def getLlhds(combiner,setup):
+    if "murange" in setup:
+        setup["mumin"]=setup["murange"][0]
+        setup["mumax"]=setup["murange"][1]
+        setup["nsteps"]=setup["murange"][2]
+    if not "evaluationtype" in setup:
+        setup["evaluationtype"]="observed"
+
+    step_mu = ( setup["mumax"]-setup["mumin"] )/ setup["nsteps"]
+    muvals = np.arange(setup['mumin'],setup['mumax'],step_mu)
+    evaluationType = setup["evaluationtype"]
+    normalize = setup["normalize"]
+    llhds = {'combined' : np.zeros(len(muvals))}
+    # llhds['combined_prev'] = np.ones(len(muvals))
+    tpreds = combiner.theoryPredictions
+    for t in tpreds:
+        Id = t.analysisId()
+        if t.dataType() != "combined":
+            Id += ":" + t.dataset.dataInfo.dataId
+        #t.computeStatistics( expected = expected )
+        lsm = t.lsm()
+        l = np.array([t.nll(mu,evaluationType=evaluationType) for mu in muvals])
+        for i in range(len(muvals)):
+            # If the fit did not converge, set the combined likelihood to nan
+            if l[i] == None:
+                llhds['combined'][i] = float("nan")
+            else:
+                llhds['combined'][i] = llhds['combined'][i]+l[i]
+        llhds[Id]=l
+
+    # Replace the points that did not converge by None in the combined likelihood
+    llhds['combined'] = np.array([llCombined if llCombined != 1 else None for \
+                                  llCombined in llhds['combined'].tolist()])
+
+    ## we switch from nlls to likelihoods here
+    for anaId,llhd in llhds.items():
+        llhds[anaId] = np.exp ( - llhd )
+
+    llhds = normalizeLikelihoods ( llhds, normalize )
 
     return muvals,llhds
 
