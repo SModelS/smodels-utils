@@ -123,27 +123,22 @@ def getLlhds(combiner,setup):
     muvals = np.arange(setup['mumin'],setup['mumax'],step_mu)
     evaluationType = setup["evaluationtype"]
     normalize = setup["normalize"]
-    llhds = {'combined' : np.zeros(len(muvals))}
+    llhds = {'combined' : np.ones(len(muvals))}
     # llhds['combined_prev'] = np.ones(len(muvals))
     tpreds = combiner.theoryPredictions
     for t in tpreds:
         Id = t.analysisId()
         #t.computeStatistics( expected = expected )
         lsm = t.lsm()
-        l = np.array([t.likelihood(mu,evaluationType=evaluationType,return_nll=True) for mu in muvals])
-        # l_prev = np.array([t.likelihood(mu,expected=expected,useCached=False,previous=True) for mu in muvals])
+        l = np.array([t.likelihood(mu,evaluationType=evaluationType,
+                     return_nll=False) for mu in muvals])
         for i in range(len(muvals)):
             # If the fit did not converge, set the combined likelihood to nan
             if l[i] == None:
                 llhds['combined'][i] = float("nan")
             else:
-                llhds['combined'][i] = llhds['combined'][i]+l[i]
-            # if l_prev[i] != None:
-            #     llhds['combined_prev'][i] = llhds['combined_prev'][i]*l_prev[i]
-            # else:
-            #     llhds['combined_prev'][i] = 0
+                llhds['combined'][i] = llhds['combined'][i]*l[i]
         llhds[Id]=l
-        # llhds[Id+' prev']=l_prev
 
     # Replace the points that did not converge by None in the combined likelihood
     llhds['combined'] = np.array([llCombined if llCombined != 1 else None for llCombined in llhds['combined'].tolist()])
@@ -260,7 +255,9 @@ def getPlot( options : dict ) -> Tuple:
             lbl = None
             #Draw vertical lines for muhat
             if setup['murange'][0] <= muhat <= setup['murange'][1]:
-                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
+                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),
+                           linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',
+                           color='black',alpha=0.7)
             x = plt.plot(muvals,l,label=anaID,zorder=zorder,linestyle=linestyle,
                          linewidth=2 )
         elif anaID == 'combined':
@@ -274,7 +271,9 @@ def getPlot( options : dict ) -> Tuple:
             muexp = 1. / combiner.getRValue( evaluationType = apriori )
             #Draw vertical lines for muhat
             if muvals[0] <= muhat <= muvals[-1]:
-                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',color='black',alpha=0.7)
+                plt.vlines(muhat,ymin=ymin,ymax=likelihoodInterp(muhat),
+                           linestyle='-.', label=r'$\hat{\mu}_{\mathrm{Comb}}$',
+                           color='black',alpha=0.7)
             label = "combined"
             if setup["ulinlegend"]==True:
                 label = f"combined\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}"
@@ -307,7 +306,9 @@ def getPlot( options : dict ) -> Tuple:
 
         #Draw vertical lines for ulmu
         if ulmu is not None and muvals[0] <= ulmu <= muvals[-1]:
-            plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),linestyle='dotted',color=x[-1].get_color(),label=lbl,alpha=0.7)
+            plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),
+                       linestyle='dotted',color=x[-1].get_color(),label=lbl,
+                       alpha=0.7)
 
     plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
     print ( f"[plotAnalysisCombinations] we plot with" )
