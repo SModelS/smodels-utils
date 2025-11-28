@@ -76,23 +76,8 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
     combineResults = False
     useBest = True
     combineResults = parser.getboolean("options", "combineSRs")
-#    expFeatures = parser.getboolean("options", "experimentalFeatures")
-#    print ( "expFeatures", expFeatures )
-#    from smodels.base import runtime
-#    runtime._experimental = expFeatures
     allPredictions = theoryPredictionsFor(database, smstoplist,
                        useBestDataset=useBest, combinedResults=combineResults )
-
-    """
-    for pred in predictions:
-    #for expResult in database.getExpResultList():
-    #    theorypredictions = theoryPredictionsFor(expResult, smstoplist,
-    #                                             useBestDataset=useBest, combinedResults=combineResults,
-    #                                             )
-        if not pred:
-            continue
-        allPredictions += pred # ._theoryPredictions
-    """
 
     """Compute chi-square and likelihood"""
     if parser.getboolean("options", "computeStatistics"):
@@ -100,12 +85,20 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
             theoPred.computeStatistics()
 
 
-    """ Define theory predictions list that collects all theoryPrediction objects which satisfy max condition."""
+    """ Define theory predictions list that collects all theoryPrediction objects 
+    which satisfy max condition. """
     maxcond = parser.getfloat("parameters", "maxcond")
-    theoryPredictions = theoryPrediction.TheoryPredictionList(allPredictions, maxcond)
+    theoryPredictions = theoryPrediction.TheoryPredictionList(allPredictions, 
+            maxcond)
 
 
     combineAnas = parser.get("options", "combineAnas").replace(" ","").split(",")
+
+    def removeDS ( dsName : str ):
+        if not ":" in dsName:
+            return dsName
+        return dsName[:dsName.find(":")]
+    combineAnas = [ removeDS ( x ) for x in combineAnas ]
     combiner = TheoryPredictionsCombiner.selectResultsFrom(allPredictions,
                                                                combineAnas)
     return combiner,theoryPredictions
