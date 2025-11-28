@@ -54,10 +54,7 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
     model.updateParticles(inputFile=inputFile,
                           promptWidth=promptWidth, stableWidth=stableWidth)
 
-    """
-    Decompose input model
-    =====================
-    """
+    # Decompose input model
     sigmacut = parser.getfloat("parameters", "sigmacut") * fb
     smstoplist = decomposer.decompose(model, sigmacut,
                                       massCompress=parser.getboolean(
@@ -66,41 +63,52 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
                                           "options", "doInvisible"),
                                       minmassgap=minmassgap)
 
-    """
-    Compute theory prediparser = modelTester.getParameters(parameterFile)ctions
-    ====================================================
-    """
-
-    """ Get theory prediction for each analysis and print basic output """
-    allPredictions = []
-    combineResults = False
-    useBest = True
-    combineResults = parser.getboolean("options", "combineSRs")
-    allPredictions = theoryPredictionsFor(database, smstoplist,
-                       useBestDataset=useBest, combinedResults=combineResults )
-
-    """Compute chi-square and likelihood"""
-    if parser.getboolean("options", "computeStatistics"):
-        for theoPred in allPredictions:
-            theoPred.computeStatistics()
-
-
-    """ Define theory predictions list that collects all theoryPrediction objects 
-    which satisfy max condition. """
-    maxcond = parser.getfloat("parameters", "maxcond")
-    theoryPredictions = theoryPrediction.TheoryPredictionList(allPredictions, 
-            maxcond)
-
-
     combineAnas = parser.get("options", "combineAnas").replace(" ","").split(",")
-
     def removeDS ( dsName : str ):
         if not ":" in dsName:
             return dsName
         return dsName[:dsName.find(":")]
-    combineAnas = [ removeDS ( x ) for x in combineAnas ]
-    combiner = TheoryPredictionsCombiner.selectResultsFrom(allPredictions,
-                                                               combineAnas)
+    anasOnly = [ removeDS ( x ) for x in combineAnas ]
+    withDSes = {}
+    for x in combineAnas:
+        if not ":" in x:
+            continue
+        p1 = x.find(":")
+        withDSes[x[:p1]] = x[p1+1:]
+    # Compute theory prediparser = modelTester.getParameters(parameterFile)ctions
+    # Get theory prediction for each analysis and print basic output
+    combineResults = False
+    useBest = False
+    combineResults = parser.getboolean("options", "combineSRs")
+    allPredictions = theoryPredictionsFor(database, smstoplist,
+                       useBestDataset=useBest, combinedResults=combineResults )
+    filteredPredictions = []
+    for tp in allPredictions:
+        anaId = tp.dataset.globalInfo.id
+        if not anaId in anasOnly:
+            continue
+        dsId = None
+        if tp.dataType() != "combined":
+            dsId = tp.dataset.dataInfo.dataId
+        if anaId in withDSes:
+            if dsId != withDSes[anaId]:
+                continue
+        filteredPredictions.append ( tp )
+
+    # Compute chi-square and likelihood
+    if parser.getboolean("options", "computeStatistics"):
+        for theoPred in filteredPredictions:
+            theoPred.computeStatistics()
+
+
+    # Define theory predictions list that collects all theoryPrediction objects 
+    # which satisfy max condition.
+    maxcond = parser.getfloat("parameters", "maxcond")
+    theoryPredictions = theoryPrediction.TheoryPredictionList(\
+            filteredPredictions, maxcond )
+
+    combiner = TheoryPredictionsCombiner.selectResultsFrom(filteredPredictions,
+                                                           anasOnly)
     return combiner,theoryPredictions
 
 def getLlhds(combiner,setup):
@@ -121,6 +129,8 @@ def getLlhds(combiner,setup):
     tpreds = combiner.theoryPredictions
     for t in tpreds:
         Id = t.analysisId()
+        if t.dataType() != "combined":
+            Id += ":" + t.dataset.dataInfo.dataId
         #t.computeStatistics( expected = expected )
         lsm = t.lsm()
         l = np.array([t.likelihood(mu,evaluationType=evaluationType,
@@ -225,7 +235,11 @@ def getPlot( options : dict ) -> Tuple:
         idDict['mu_obs'] = 1. / ana.getRValue( evaluationType = observed )
         rexp = ana.getRValue( evaluationType = apriori )
         idDict['mu_exp'] = float("nan") if rexp is None else  1. / rexp
-        tpDict[ana.dataset.globalInfo.id] = idDict
+        Id = ana.dataset.globalInfo.id
+        if ana.dataType() != "combined" and ana.dataType() != "upperLimit":
+            # print ( f"@@X Id {Id} dataId {ana.dataset.dataInfo.dataId} dt {ana.dataType()}" )
+            Id += ":" + ana.dataset.dataInfo.dataId
+        tpDict[Id] = idDict
         tpDict
 
 
