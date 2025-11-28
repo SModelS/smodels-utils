@@ -77,8 +77,8 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
         p1 = x.find(":")
         anaId, dsId = x[:p1], x[p1+1:]
         if not anaId in withDSes:
-            withDSes[anaId]=[]
-        withDSes[anaId].append ( dsId )
+            withDSes[anaId]=set()
+        withDSes[anaId].add ( dsId )
     # Compute theory prediparser = modelTester.getParameters(parameterFile)ctions
     # Get theory prediction for each analysis and print basic output
     combineResults = False
