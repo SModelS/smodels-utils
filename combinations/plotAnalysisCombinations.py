@@ -65,12 +65,18 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
                                       minmassgap=minmassgap)
 
     combineAnas = parser.get("options", "combineAnas").replace(" ","").split(",")
+    additionalAnas = []
+
+    if parser.has_option("options","additionalAnas" ):
+        additionalAnas = parser.get("options", "additionalAnas").\
+                                    replace(" ","").split(",")
     def removeDS ( dsName : str ):
         if not ":" in dsName:
             return dsName
         return dsName[:dsName.find(":")]
-    anasOnly = [ removeDS ( x ) for x in combineAnas ]
-    withDSes = {}
+    extrasOnly = [ removeDS ( x ) for x in additionalAnas ]
+    combinablesOnly = [ removeDS ( x ) for x in combineAnas ]
+    withDSes, extrasWithDSes = {}, {}
     for x in combineAnas:
         if not ":" in x:
             continue
@@ -79,6 +85,14 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
         if not anaId in withDSes:
             withDSes[anaId]=set()
         withDSes[anaId].add ( dsId )
+    for x in additionalAnas:
+        if not ":" in x:
+            continue
+        p1 = x.find(":")
+        anaId, dsId = x[:p1], x[p1+1:]
+        if not anaId in extrasWithDSes:
+            extrasWithDSes[anaId]=set()
+        extrasWithDSes[anaId].add ( dsId )
     # Compute theory prediparser = modelTester.getParameters(parameterFile)ctions
     # Get theory prediction for each analysis and print basic output
     combineResults = False
@@ -86,10 +100,10 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
     combineResults = parser.getboolean("options", "combineSRs")
     allPredictions = theoryPredictionsFor(database, smstoplist,
                        useBestDataset=useBest, combinedResults=combineResults )
-    filteredPredictions = []
+    filteredPredictions, extraPredictions = [], []
     for tp in allPredictions:
         anaId = tp.dataset.globalInfo.id
-        if not anaId in anasOnly:
+        if not anaId in combinablesOnly:
             continue
         dsId = None
         if tp.dataType() != "combined":
@@ -99,11 +113,22 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
                 continue
         filteredPredictions.append ( tp )
 
+    for tp in allPredictions:
+        anaId = tp.dataset.globalInfo.id
+        if not anaId in extrasOnly:
+            continue
+        dsId = None
+        if tp.dataType() != "combined":
+            dsId = tp.dataset.dataInfo.dataId
+        if anaId in extrasWithDSes:
+            if not dsId in extrasWithDSes[anaId]:
+                continue
+        extraPredictions.append ( tp )
+
     # Compute chi-square and likelihood
     if parser.getboolean("options", "computeStatistics"):
-        for theoPred in filteredPredictions:
+        for theoPred in filteredPredictions + extraPredictions:
             theoPred.computeStatistics()
-
 
     # Define theory predictions list that collects all theoryPrediction objects 
     # which satisfy max condition.
@@ -112,8 +137,8 @@ def getCombination( inputFile : str , parameterFile : str ) -> Tuple:
             filteredPredictions, maxcond )
 
     combiner = TheoryPredictionsCombiner.selectResultsFrom(filteredPredictions,
-                                                           anasOnly)
-    return combiner,theoryPredictions
+                                                           combinablesOnly)
+    return combiner,theoryPredictions, extraPredictions
 
 def normalizeLikelihoods ( llhds: dict, normalize : str ):
     """ normalize the likelihoods in llhds according to normalize 
@@ -146,7 +171,9 @@ def normalizeLikelihoods ( llhds: dict, normalize : str ):
                         llhds[Id][i] = elem/norm
     return llhds
 
-def getLlhds(combiner,setup):
+def getLlhds( combiner,setup : dict, extraPreds : list ) -> dict:
+    """ get the likelihoods for all relevant datasets 
+    """
     if "murange" in setup:
         setup["mumin"]=setup["murange"][0]
         setup["mumax"]=setup["murange"][1]
@@ -176,6 +203,16 @@ def getLlhds(combiner,setup):
                 llhds['combined'][i] = llhds['combined'][i]+l[i]
         llhds[Id]=l
 
+    extra_llhds = {}
+    for t in extraPreds:
+        Id = t.analysisId()
+        if t.dataType() != "combined":
+            Id += ":" + t.dataset.dataInfo.dataId
+        #t.computeStatistics( expected = expected )
+        lsm = t.lsm()
+        l = np.array([t.nll(mu,evaluationType=evaluationType) for mu in muvals])
+        extra_llhds[Id]=l
+
     # Replace the points that did not converge by None in the combined likelihood
     llhds['combined'] = np.array([llCombined if llCombined != 1 else None for \
                                   llCombined in llhds['combined'].tolist()])
@@ -185,8 +222,14 @@ def getLlhds(combiner,setup):
         llhds[anaId] = np.exp ( - llhd )
 
     llhds = normalizeLikelihoods ( llhds, normalize )
+    
+    ## we switch from nlls to likelihoods here
+    for anaId,llhd in extra_llhds.items():
+        extra_llhds[anaId] = np.exp ( - llhd )
 
-    return muvals,llhds
+    extra_llhds = normalizeLikelihoods ( extra_llhds, normalize )
+
+    return { "muvals": muvals, "llhds": llhds, "extra_llhds": extra_llhds }
 
 def getPlot( options : dict ) -> Tuple:
     """ plot the likelihood.
@@ -198,7 +241,7 @@ def getPlot( options : dict ) -> Tuple:
     from scipy.interpolate import interp1d
     outputFile = options["output"]
 
-    combiner,tPredsList = getCombination(inputFile, parameterFile)
+    combiner,tPredsList,extraPreds = getCombination(inputFile, parameterFile)
     parser = modelTester.getParameters(parameterFile)
     # step_mu = (mumax - mumin ) / nsteps
     setup = {'evaluationtype' : apriori ,'normalize' : "none",
@@ -233,7 +276,9 @@ def getPlot( options : dict ) -> Tuple:
             setup[k]=v
                 
         # setup.update ( dict ( parser["setup"] ) )
-    muvals,llhdDict = getLlhds(combiner, setup)
+    linfo = getLlhds(combiner, setup, extraPreds )
+    muvals, llhdDict, extraLlhds = linfo["muvals"], linfo["llhds"],\
+                                   linfo["extra_llhds"]
 
     plotOptions = {'xlog' : False, 'ylog' : False, 'yrange' : None,
                     'figsize' : (13,8),'legend' : True}
@@ -265,6 +310,7 @@ def getPlot( options : dict ) -> Tuple:
     ymin = 0.
 
     fig = plt.figure(figsize=plotOptions['figsize'])
+
     for anaID,l in llhdDict.items():
         likelihoodInterp = interp1d(muvals,l)
         if anaID == 'combined_prev':
@@ -330,6 +376,41 @@ def getPlot( options : dict ) -> Tuple:
             plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),
                        linestyle='dotted',color=x[-1].get_color(),label=lbl,
                        alpha=0.7)
+
+    for anaID,l in extraLlhds.items():
+        likelihoodInterp = interp1d(muvals,l)
+        if 'prev' in anaID:
+            linestyle = ':'
+            zorder = 98
+            x = plt.plot( muvals,l,label=anaID,zorder=zorder,
+                          linestyle=linestyle, linewidth=2 )
+        else:
+            linestyle = '-'
+            """
+            if "CMS" in anaID:
+                linestyle = "dashdot"
+            if "ATLAS" in anaID:
+                linestyle = "dotted"
+            """
+            zorder = None
+            # ulmu = tpDict[anaID]['ulmu']
+            # muobs = tpDict[anaID]['mu_obs']
+            # muexp = tpDict[anaID]['mu_exp']
+            label = f"{anaID}\n(not in combo)"
+            if False: # setup["ulinlegend"]==True:
+                label = f"{anaID}\n{'$\\mu^{ul}_{obs} = $ %1.2f, $\\mu^{ul}_{exp} = $ %1.2f' % (muobs, muexp)}"
+            x = plt.plot( muvals,l,label=label,zorder=zorder,
+                          linestyle="dotted",linewidth=2 )
+        lbl=None
+
+        #Draw vertical lines for ulmu
+        """
+        if ulmu is not None and muvals[0] <= ulmu <= muvals[-1]:
+            plt.vlines(ulmu,ymin=ymin,ymax=likelihoodInterp(ulmu),
+                       linestyle='dotted',color=x[-1].get_color(),label=lbl,
+                       alpha=0.7)
+        """
+
 
     plt.xlabel( r"Signal Strength $\mu$", fontsize=18)
     print ( f"[plotAnalysisCombinations] we plot with" )
