@@ -9,7 +9,7 @@ from smodels_utils.helper.terminalcolors import *
 from smodels_utils.helper.various import checkNumpyVersion
 from smodels.base.runtime import checkForIncompatibleModuleVersions
 
-checkNumpyVersion()
+# checkNumpyVersion() ## lets drop numpy v1
 smodels_check = checkForIncompatibleModuleVersions()
 
 def execute(cmd):
