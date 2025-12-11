@@ -8,6 +8,7 @@ from typing import Union
 from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
          filterSupersededFromList
 from smodels_utils.helper.terminalcolors import *
+from smodels.experiment.expResultObj import ExpResult
 
 class HepJsonCreator:
     def __init__ ( self, long_version : bool ):
@@ -21,6 +22,7 @@ class HepJsonCreator:
         self.extra_fields = True
         if not os.path.exists ( "cache" ):
             os.mkdir ( "cache" )
+        self.entries = {}
 
     def merge ( self, entry1, entry2, anaId ):
         """ merge two entries """
@@ -139,6 +141,17 @@ class HepJsonCreator:
                 return tmp
             except ValueError as e:
                 pass
+        p1 = txt.find("://inspirehep.net/literature/")
+        while p1 > 0 and len(txt)>0:
+            p1 = txt.find("://inspirehep.net/literature/")
+            txt = txt[p1+27:]
+            p2 = txt.find('"')
+            tmp = txt[:p2]
+            try:
+                tmp = int(tmp)
+                return tmp
+            except ValueError as e:
+                pass
         txt = r.text
         ## now try  hepdata.net/record links
         p1 = txt.find("://www.hepdata.net/record/ins")
@@ -155,92 +168,99 @@ class HepJsonCreator:
                 # print ( e )
         return None
 
+    def collectEntry ( self, i : int, er : ExpResult ):
+        """ collect a single entry, add to self.entries 
+        :param i: entry #
+        :param n_entries: number of entries, total
+        """
+        gI = er.globalInfo
+        from smodels_utils.helper.various import getCollaboration
+        coll = getCollaboration ( gI.id )
+        dses = er.datasets
+        resultType = "EM"
+        SRcomb = None
+        if hasattr ( gI, "covariance" ):
+            SRcomb = "SLv1"
+        if hasattr ( gI, "jsonFiles" ):
+            SRcomb = "pyhf"
+        if len(dses) == 1 and dses[0].dataInfo.dataId == None:
+            resultType = "UL"
+        Id = gI.id
+        for ext in [ "-ma5", "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
+           Id = Id.replace(ext,"")
+        entry = { "exp": coll, "ana_id": Id, "resultType": resultType }
+        path = gI.path.replace("/globalInfo.txt","")
+        p1 = path.rfind("/")
+        entry["path"]=path[p1+1:]
+        if hasattr ( gI, "type" ):
+            entry["signature_type"]=gI.type
+        for ds in dses:
+            if hasattr ( ds.dataInfo, "thirdMoment" ):
+                SRcomb = "SLv2"
+            for txn in ds.txnameList:
+                if not hasattr ( txn, "dataUrl" ):
+                    continue
+                dU = txn.dataUrl
+                if dU == None:
+                    continue
+                if "/ins" in dU:
+                    p1 = dU.find("/ins")
+                    tmp = dU[p1+4:]
+                    p2 = tmp.find("/")
+                    if p2 > -1 :
+                        tmp = tmp[:p2]
+                    p2 = tmp.find("?")
+                    if p2 > -1 :
+                        tmp = tmp[:p2]
+                    p2 = tmp.find("_")
+                    if p2 > -1 :
+                        tmp = tmp[:p2]
+                    # print ( "tmp", dU, "->", tmp )
+                    inspire = tmp
+                    #hepdata = self.getHepData  ( inspire, Id )
+                    # inspire = f"https://inspirehep.net/literature/{tmp}"
+                    #entry["hepdata"]=hepdata
+                    entry["inspire"]=inspire
+                    break
+        if SRcomb != None:
+            entry["SRcomb"]=SRcomb
+        if hasattr ( gI, "arxiv" ):
+            ar = gI.arxiv
+            p1 = ar.rfind("/")
+            entry["arXiv_id"]=ar[p1+1:]
+        if hasattr ( gI, "prettyName" ):
+            entry["pretty_name"]=gI.prettyName
+        if True and hasattr ( gI, "publication" ):
+            entry["paper"]=gI.publication
+        if hasattr ( gI, "publicationDOI" ):
+            doi = gI.publicationDOI
+            # doi = doi.replace("http://doi.org/","")
+            doi = doi.replace("https://doi.org/","")
+            entry["publication_doi"]=doi
+        wiki = gI.url
+        if ";" in wiki:
+            wiki = wiki.find(";")
+        entry["wiki"]=wiki
+        if not "inspire" in entry:
+            inspire = self.getInspireFromWebPage ( gI )
+            if inspire != None:
+                entry["inspire"]=inspire
+                #hepdata = self.getHepData  ( inspire, Id )
+                #entry["hepdata"]= hepdata
+        if Id in self.entries:
+            merged = self.merge ( self.entries[Id], entry, Id )
+            self.entries[Id] = merged
+        else:
+            self.entries[Id] = entry
+        if False:
+            print ( f"[createHepJson] {entry}" )
+
     def collectEntries( self, expResList ) ->  bool:
         """ collect entries into self.entries """
-        from smodels_utils.helper.various import getCollaboration
-
-        entries = {}
+        n_results = len(expResList)
         for i,er in enumerate(expResList):
-            gI = er.globalInfo
-            print ( f"[createHepJson] {i+1}/{len(expResList)}: {gI.id}" )
-            coll = getCollaboration ( gI.id )
-            dses = er.datasets
-            resultType = "EM"
-            SRcomb = None
-            if hasattr ( gI, "covariance" ):
-                SRcomb = "SLv1"
-            if hasattr ( gI, "jsonFiles" ):
-                SRcomb = "pyhf"
-            if len(dses) == 1 and dses[0].dataInfo.dataId == None:
-                resultType = "UL"
-            Id = gI.id
-            for ext in [ "-ma5", "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
-               Id = Id.replace(ext,"")
-            entry = { "exp": coll, "ana_id": Id, "resultType": resultType }
-            path = gI.path.replace("/globalInfo.txt","")
-            p1 = path.rfind("/")
-            entry["path"]=path[p1+1:]
-            if hasattr ( gI, "type" ):
-                entry["signature_type"]=gI.type
-            for ds in dses:
-                if hasattr ( ds.dataInfo, "thirdMoment" ):
-                    SRcomb = "SLv2"
-                for txn in ds.txnameList:
-                    if not hasattr ( txn, "dataUrl" ):
-                        continue
-                    dU = txn.dataUrl
-                    if dU != None and "/ins" in dU:
-                        p1 = dU.find("/ins")
-                        tmp = dU[p1+4:]
-                        p2 = tmp.find("/")
-                        if p2 > -1 :
-                            tmp = tmp[:p2]
-                        p2 = tmp.find("?")
-                        if p2 > -1 :
-                            tmp = tmp[:p2]
-                        p2 = tmp.find("_")
-                        if p2 > -1 :
-                            tmp = tmp[:p2]
-                        # print ( "tmp", dU, "->", tmp )
-                        inspire = tmp
-                        #hepdata = self.getHepData  ( inspire, Id )
-                        # inspire = f"https://inspirehep.net/literature/{tmp}"
-                        #entry["hepdata"]=hepdata
-                        entry["inspire"]=inspire
-                        break
-            if SRcomb != None:
-                entry["SRcomb"]=SRcomb
-            if hasattr ( gI, "arxiv" ):
-                ar = gI.arxiv
-                p1 = ar.rfind("/")
-                entry["arXiv_id"]=ar[p1+1:]
-            if hasattr ( gI, "prettyName" ):
-                entry["pretty_name"]=gI.prettyName
-            if True and hasattr ( gI, "publication" ):
-                entry["paper"]=gI.publication
-            if hasattr ( gI, "publicationDOI" ):
-                doi = gI.publicationDOI
-                # doi = doi.replace("http://doi.org/","")
-                doi = doi.replace("https://doi.org/","")
-                entry["publication_doi"]=doi
-            wiki = gI.url
-            if ";" in wiki:
-                wiki = wiki.find(";")
-            entry["wiki"]=wiki
-            if not "inspire" in entry:
-                inspire = self.getInspireFromWebPage ( gI )
-                if inspire != None:
-                    entry["inspire"]=inspire
-                    #hepdata = self.getHepData  ( inspire, Id )
-                    #entry["hepdata"]= hepdata
-            if Id in entries:
-                merged = self.merge ( entries[Id], entry, Id )
-                entries[Id] = merged
-            else:
-                entries[Id] = entry
-            if False:
-                print ( f"[createHepJson] {entry}" )
-        self.entries = entries
+            print ( f"[createHepJson] {i+1}/{n_results}: {er.globalInfo.id}" )
+            self.collectEntry ( i, er )
         return True
 
     def short_body( self ):
@@ -387,9 +407,6 @@ if __name__ == "__main__":
     ap.add_argument('-o', '--outputfile',
             help='path to database [smodels-analyses.json]',
             default='smodels-analyses.json')
-    #ap.add_argument('-l', '--long_version',
-    #        help='create long version, not short',
-    #        action='store_true' )
     ap.add_argument('-s', '--short_version',
             help='create short version, not long',
             action='store_true' )
