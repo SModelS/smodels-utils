@@ -10,13 +10,13 @@ from smodels_utils.helper.databaseManipulations import filterFastLimFromList,\
 from smodels_utils.helper.terminalcolors import *
 
 class HepJsonCreator:
-    def __init__ ( self, long_version ):
+    def __init__ ( self, long_version : bool ):
         """
-        :ivar extra_fields: if false, then add only fields required by hepdata, if true, add more info
-        like wiki page url, arxiv id, publication, etc
+        :ivar extra_fields: if false, then add only fields required by hepdata, 
+        if true, add more info like wiki page url, arxiv id, publication, etc
         """
         ## the short version is this super simplistic version that
-        ## hepdata is currently using
+        ## hepdata was using initially
         self.long_version = long_version
         self.extra_fields = True
         if not os.path.exists ( "cache" ):
@@ -49,8 +49,8 @@ class HepJsonCreator:
                 if v in entry1[k]:
                     entry1[k]=v
             if str(v) != str(entry1[k]):
-                print ( f"[createHepJson] {RED}entry {k} differs for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
-                print ( f"[createHepJson] will use {entry1[k]}" )
+                print ( f"[createHepJson] {YELLOW}entry '{k}' differs for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
+                print ( f"[createHepJson] {YELLOW}will use {entry1[k]}{RESET}" )
         return entry1
 
     def getHepData ( self, nr : int, ana_id : str ) -> str:
@@ -155,7 +155,8 @@ class HepJsonCreator:
                 # print ( e )
         return None
 
-    def collectEntries( self, expResList ) -> dict:
+    def collectEntries( self, expResList ) ->  bool:
+        """ collect entries into self.entries """
         from smodels_utils.helper.various import getCollaboration
 
         entries = {}
@@ -239,14 +240,15 @@ class HepJsonCreator:
                 entries[Id] = entry
             if False:
                 print ( f"[createHepJson] {entry}" )
-        return entries
+        self.entries = entries
+        return True
 
     def short_body( self ):
         expResList = self.db.getExpResults()
         expResList = filterFastLimFromList ( expResList )
         supersededList = filterSupersededFromList ( expResList, True )
         superseded = set ( [ x.globalInfo.id for x in supersededList ] )
-        entries = self.collectEntries ( expResList )
+        self.collectEntries ( expResList )
         from smodels_utils.helper.various import getSqrts
         first = True
         ver = self.db.databaseVersion
@@ -255,7 +257,7 @@ class HepJsonCreator:
         supersededUrl = f"https://smodels.github.io/docs/ListOfAnalysesWithSuperseded#"
         # baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses{dotlessver}#"
         # baseUrl = f"https://smodels.github.io/docs/ListOfAnalyses{dotlessver}WithSuperseded#"
-        for anaId,entry in entries.items():
+        for anaId,entry in self.entries.items():
             if not "inspire" in entry:
                 continue
             if not first:
@@ -280,10 +282,11 @@ class HepJsonCreator:
             self.f.write ( "\n      ]" )
             first = False
 
-    def body( self):
+    def body( self ):
+        """ the body of the json file, i.e. the actual list of entries """
         expResList = self.db.getExpResults()
         expResList = filterFastLimFromList ( expResList )
-        entries = self.collectEntries ( expResList )
+        self.collectEntries ( expResList )
         from smodels_utils.helper.various import getSqrts
         first = True
         def writeLabel ( label : str, entry : list, isFirst : bool ):
@@ -295,8 +298,9 @@ class HepJsonCreator:
             l = entry[label]
             self.f.write ( f'      "{label}": "{l}"' )
 
-        for anaId,entry in entries.items():
+        for anaId,entry in self.entries.items():
             if not "inspire" in entry:
+                print ( f"[createHepJson] {RED}no inspire id for {entry['ana_id']}: skip!{RESET}" )
                 continue
             if not first:
                 self.f.write ( ',\n' )
@@ -367,7 +371,12 @@ class HepJsonCreator:
             self.short_header( )
             self.short_body( )
             self.short_footer()
+        print ( f"[createHepJson] writing to {outputfile}" )
         self.f.close()
+
+    def interact ( self ):
+        """ start interactive shell, to debug """
+        import sys, IPython; IPython.embed( colors = "neutral" )
 
 if __name__ == "__main__":
     import argparse
@@ -384,8 +393,13 @@ if __name__ == "__main__":
     ap.add_argument('-s', '--short_version',
             help='create short version, not long',
             action='store_true' )
+    ap.add_argument('-i', '--interact',
+            help='launch interactive shell at the end',
+            action='store_true' )
     args = ap.parse_args()
     args.long_version = not args.short_version
     # args.dbpath = "official"
     creator = HepJsonCreator( args.long_version )
     creator.create( args.dbpath, args.outputfile )
+    if args.interact:
+        creator.interact()
