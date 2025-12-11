@@ -122,9 +122,9 @@ class Writer:
             for exclude in excludes:
                 if fnmatch.fnmatch ( anaId, exclude ):
                     if exclude == anaId:
-                      print ( f"[plotBAM] dropping {anaId}" )
+                      print ( f"[latexTableOfAnalyses] dropping {anaId}" )
                     else:
-                        print ( f"[plotBAM] dropping {anaId}: matches {exclude}" )
+                        print ( f"[latexTableOfAnalyses] dropping {anaId}: matches {exclude}" )
                     isExcluded = True
                     break
             if not isExcluded:
@@ -195,11 +195,15 @@ class Writer:
         """ determine which type of SR combination we are dealing
             with """
         comb = " "
+        if self.args["table_version"] == "sabine":
+            comb = "--"
         for x in [ ana, nextAna ]:
             if x is None:
                 continue
             if hasattr ( x.globalInfo, "jsonFiles" ):
                 comb = "\\pyhf"
+                if self.args["table_version"] == "sabine":
+                    comb = "pyhf"
             #if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
             #    comb = "JSON"
             if hasattr ( x.globalInfo, "covariance" ):
@@ -464,7 +468,10 @@ class Writer:
         toprint += r"\hline"
         if self.numbers:
             toprint += r"{\bf \#} &"
-        toprint += "{\\bf ID} & "
+        anaidlabel = "{\\bf ID} & " 
+        if self.args["table_version"] == "sabine":
+            anaidlabel = "{\\bf Analysis ID} & " 
+        toprint += anaidlabel
         if self.prettyNames:
             # toprint += "{\\bf Pretty Name} & "
             toprint += "{\\bf Short Description} & "
@@ -481,7 +488,10 @@ class Writer:
         if self.extended_likelihoods:
             if not self.args["ignore_obs_ul_only"]:
                 toprint += r"& {\bf UL$_\mathrm{obs}$} "
-            toprint += r"& {\bf UL$_\mathrm{exp}$} & {\bf EM}"
+            ullabels = r"& {\bf UL$_\mathrm{exp}$} & {\bf EM}"
+            if self.args["table_version"] == "sabine":
+                ullabels = r"& {\bf UL} & {\bf EM}"
+            toprint += ullabels
         if self.addcombos:
             toprint += "& {\\bf comb.}"
         toprint += r"\\"
@@ -631,6 +641,9 @@ if __name__ == "__main__":
             help='keep tex files', action='store_true' )
         argparser.add_argument ( '-e', '--experiment', nargs='?',
             help='experiment [both]', type=str, default='both')
+        argparser.add_argument ( '--table_version',
+            help='version of table layout [default,sabine]', 
+            type=str, default='default')
         argparser.add_argument ( '-S', '--sqrts', nargs='?',
             help="show only certain runs, e.g. 8, 13, or 'all' ['all']",
             type=str, default='all' )
