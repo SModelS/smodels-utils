@@ -11,9 +11,11 @@ from smodels_utils.helper.terminalcolors import *
 from smodels.experiment.expResultObj import ExpResult
 
 class HepJsonCreator:
-    def __init__ ( self, long_version : bool ):
+    def __init__ ( self, long_version : bool, dbpath : os.PathLike ):
         """
-        :ivar extra_fields: if false, then add only fields required by hepdata, 
+        :ivar extra_fields: if false, then add only fields required by hepdata,
+        :param long_version: create the long, now default version,
+        not the old short version
         if true, add more info like wiki page url, arxiv id, publication, etc
         """
         ## the short version is this super simplistic version that
@@ -23,6 +25,20 @@ class HepJsonCreator:
         if not os.path.exists ( "cache" ):
             os.mkdir ( "cache" )
         self.entries = {}
+
+        from smodels.experiment.databaseObj import Database
+        dbpaths = dbpath.split("+")
+        validNames = [ "official", "superseded", "fastlim", "full_llhds",
+            "nonaggregated", "backup", "latest", "backupunittest",
+            "unittest", "debug" ]
+        for dbp in dbpaths:
+            dbp = dbp.strip()
+            if not os.path.exists ( dbp ):
+               if not dbp in validNames:
+                   print ( f"[createHepJson] {dbpath} not found" )
+                   sys.exit()
+        self.dbpath = dbpath
+        self.db = Database ( dbpath )
 
     def merge ( self, entry1, entry2, anaId ):
         """ merge two entries """
@@ -169,7 +185,7 @@ class HepJsonCreator:
         return None
 
     def collectEntry ( self, i : int, er : ExpResult ):
-        """ collect a single entry, add to self.entries 
+        """ collect a single entry, add to self.entries
         :param i: entry #
         :param n_entries: number of entries, total
         """
@@ -368,20 +384,16 @@ class HepJsonCreator:
             self.f.write ( '\n    }' )
         self.f.write('\n' )
 
-    def create( self, dbpath : os.PathLike, outputfile : os.PathLike ):
+    def check ( self, analysisId : str ):
+        """ check what entry we would get for a single analysis,
+        for debugging """
+        expResList = self.db.getExpResults( analysisIDs = [ analysisId ] )
+        expResList = filterFastLimFromList ( expResList )
+        for er in expResList:
+            print ( er )
+
+    def create( self, outputfile : os.PathLike ):
         """ create smodels-analyses.json """
-        from smodels.experiment.databaseObj import Database
-        dbpaths = dbpath.split("+")
-        validNames = [ "official", "superseded", "fastlim", "full_llhds", 
-            "nonaggregated", "backup", "latest", "backupunittest", 
-            "unittest", "debug" ]
-        for dbp in dbpaths:
-            dbp = dbp.strip()
-            if not os.path.exists ( dbp ):
-               if not dbp in validNames:
-                   print ( f"[createHepJson] {dbpath} not found" )
-                   sys.exit()
-        self.db = Database ( dbpath )
         self.f=open(outputfile,"wt")
         if self.long_version:
             self.header( )
@@ -410,13 +422,19 @@ if __name__ == "__main__":
     ap.add_argument('-s', '--short_version',
             help='create short version, not long',
             action='store_true' )
+    ap.add_argument('-c', '--check',
+            help='check the entry of one analysis',
+            type=str, default=None )
     ap.add_argument('-i', '--interact',
             help='launch interactive shell at the end',
             action='store_true' )
     args = ap.parse_args()
     args.long_version = not args.short_version
     # args.dbpath = "official"
-    creator = HepJsonCreator( args.long_version )
-    creator.create( args.dbpath, args.outputfile )
+    creator = HepJsonCreator( args.long_version, args.dbpath )
+    if args.check not in [ "", None ]:
+        creator.check ( args.check )
+        import sys; sys.exit()
+    creator.create( args.outputfile )
     if args.interact:
         creator.interact()
