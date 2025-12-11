@@ -39,7 +39,7 @@ class Lister:
         sys.path.insert(0,"../../protomodels/ptools")
         sys.path.insert(0,"../../protomodels")
         sys.path.insert(0,"../../")
-        from protomodels.ptools import expResModifier
+        from protomodels.multiverse import expResModifier
         # print ( "[listOfAnalyses] starting roughviz" )
         options = { "compute_ps": True, "suffix": "temp" }
         # options["database"]="../../smodels-database" 
@@ -48,7 +48,7 @@ class Lister:
         modifier = expResModifier.ExpResModifier ( options )
         from protomodels.plotting import plotDBDict
         poptions = { "topologies": None, "roughviz": False }
-        poptions["dictfile"] = "./temp.dict"
+        poptions["dictfile"] = "./temp_database.dict"
         poptions["show"] = True
         poptions["title"] = ""
         # poptions["Zmax"] = 3.25
@@ -79,7 +79,7 @@ class Lister:
             modifier = expResModifier.ExpResModifier ( options )
             from protomodels.plotting import plotDBDict
             poptions = { "topologies": None, "roughviz": False }
-            poptions["dictfile"] = "./fudge.dict"
+            poptions["dictfile"] = "./fudge_database.dict"
             poptions["show"] = True
             poptions["title"] = ""
             # poptions["Zmax"] = 4.25
@@ -584,33 +584,33 @@ class Lister:
         import argparse
         argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
         argparser.add_argument ( '-n', '--no_superseded', action='store_true',
-                                 help='ignore (filter out) superseded results' )
+            help='ignore (filter out) superseded results' )
         argparser.add_argument ( '-A', '--use_aggregated', action='store_true',
-                                 help='add aggregated results' )
+            help='add aggregated results' )
         argparser.add_argument ( '-d', '--database',
-                                 help='path to database [../../smodels-database]',
-                                 type=str, default='../../smodels-database' )
+            help='path to database [../../smodels-database]',
+            type=str, default='../../smodels-database' )
         argparser.add_argument ( '-v', '--verbose',
-                                 help='verbosity level (error, warning, info, debug) [info]',
-                                 type=str, default='info' )
+            help='verbosity level (error, warning, info, debug) [info]',
+            type=str, default='info' )
         argparser.add_argument ( '-i', '--ignore', action='store_true',
-                                  help='ignore the validation flags of analysis '\
-                                  '(i.e. also add non-validated results)' )
+             help='ignore the validation flags of analysis '\
+                  '(i.e. also add non-validated results)' )
         argparser.add_argument ( '-s', '--no_pngs', action='store_true',
-                                  help='do not regenerate the significances plots'\
-                                  '(i.e. also add non-validated results)' )
+             help='do not regenerate the significances plots'\
+                  '(i.e. also add non-validated results)' )
         argparser.add_argument ( '-l', '--likelihoods', action='store_true',
-                                 help='add info about likelihoods' )
+            help='add info about likelihoods' )
         argparser.add_argument ( '-f', '--fastlim', action='store_true',
-                                 help='add fastlim results' )
+            help='add fastlim results' )
         argparser.add_argument ( '-k', '--keep', action='store_true',
-                                 help='keep temporary files, like temp.dict' )
+            help='keep temporary files, like temp_database.dict' )
         argparser.add_argument ( '--fudged', action='store_true',
-                                 help='create also fudged version of significance plot' )
+            help='create also fudged version of significance plot' )
         argparser.add_argument ( '-a', '--add_version', action='store_true',
-                                 help='add version labels to links' )
+            help='add version labels to links' )
         argparser.add_argument ( '-S', '--write_stats', action='store_true',
-                                 help='write the analyses.py stats file' )
+            help='write the analyses.py stats file' )
         args = argparser.parse_args()
         setLogLevel ( args.verbose )
         self.keep = args.keep
