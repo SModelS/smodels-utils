@@ -179,7 +179,7 @@ class Lister:
                     if i.validated in [ True, "N/A", "n/a" ]:
                         topos.add ( i.txName )
                     else:
-                        print ( f"[listOfAnalyses] skipping {expRes.globalInfo.id}:{dataset.dataInfo.dataId}:{i}: validated={i.validated}" )
+                        print ( f"[listOfAnalyses] skipping {expR.globalInfo.id}:{ds.dataInfo.dataId}:{i}: validated={i.validated}" )
                 n_maps += len(topos)
                 # n_maps += len ( ds.txnameList )
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
@@ -435,7 +435,7 @@ class Lister:
                 if ds.getType() == "upperLimit":
                     has["oul"]=True
                     for txn in ds.txnameList:
-                        if hasattr ( txn, "txnameDataExp" ):
+                        if hasattr ( txn, "txnameDataExp" ) and txn.txnameDataExp is not None:
                             has["eul"] = True
             if "-agg" in cana.globalInfo.id:
                 has [ "agg" ] = True
@@ -486,7 +486,7 @@ class Lister:
         if self.includeSuperseded:
             self.f.write ( f"{ssuperseded} |" )
         hasoUL = self.linkIfYes ( has["oul"], ana.globalInfo.id, "ul" )
-        haseUL = self.linkIfYes ( has["oul"], ana.globalInfo.id, "ul" )
+        haseUL = self.linkIfYes ( has["eul"], ana.globalInfo.id, "ul" )
         hasEM = self.linkIfYes ( has["em"], ana.globalInfo.id, "em" )
         self.f.write ( f" {hasoUL} |" ) 
         if self.likelihoods:
@@ -586,7 +586,7 @@ class Lister:
         argparser.add_argument ( '-n', '--no_superseded', action='store_true',
                                  help='ignore (filter out) superseded results' )
         argparser.add_argument ( '-A', '--use_aggregated', action='store_true',
-                                 help='ignore (filter out) superseded results' )
+                                 help='add aggregated results' )
         argparser.add_argument ( '-d', '--database',
                                  help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
