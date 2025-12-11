@@ -8,7 +8,7 @@ from smodels.base.physicsUnits import TeV, fb
 from smodels_utils.helper.various import getCollaboration
 from typing import Union, List, Dict
 
-def combineResults( database: Database, anas_and_SRs : Dict, 
+def combineResults( database: Database, anas_and_SRs : Dict,
         debug : bool = False ) -> ExpResult:
     """ combine the <anas_and_SRs> results in <database>
         to a single result with a diagonal covariance matrix
@@ -73,7 +73,7 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     filtered = filterFastLimFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     # dbverold = dbverold.replace(".","")
-    db.subs[0]._activeResults = filtered[:]    
+    db.subs[0]._activeResults = filtered[:]
     db.subs[0]._allExpResults = filtered
     if invert:
         db.subs[0].txt_meta.databaseVersion = f"fastlim{dbverold}"
@@ -118,7 +118,7 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     filtered = filterNonAggregatedFromList ( db.expResultList, invert )
     dbverold = db.databaseVersion
     db.subs[0]._allExpResults = filtered
-    db.subs[0]._activeResults = filtered[:]    
+    db.subs[0]._activeResults = filtered[:]
     if invert:
         db.subs[0].txt_meta.databaseVersion = f"nonaggregated{dbverold}"
     db.subs = [ db.subs[0] ]
@@ -131,19 +131,40 @@ def removeNonAggregatedFromDB ( db, invert = False, picklefile = "temp.pcl" ):
         db.createBinaryFile( picklefile )
     return db
 
-def sortAnalyses ( expResList : list ) -> list:
-    """ sort the analyses, for now just by sqrts """
+def doSortByYear ( anaIds : list[str] ) -> list[str]:
+    """ sort a list of analysis ids by their years """
+    def sorter ( anaId : str ):
+        ret = anaId.globalInfo.id
+        for i in [ "CMS-", "ATLAS-", "EXOT-", "EXO-", "SUSY-", "SUS-", "PAS-",
+                   "CONF-" ]:
+            ret = ret.replace ( i, "" )
+        ret =ret.replace("-","0")
+        return ret
+    anaIds.sort ( key = sorter )
+    return anaIds
+
+def sortAnalyses ( expResList : list, sortByYear : bool = True ) -> list:
+    """ sort the analyses, sort by sqrts
+    :param sortByYear: if true, then sort by year -- within the runs
+    """
     ret = []
     for sqrts in [ 8, 13, 13.6 ]:
+        run = []
         for er in expResList:
             if abs( er.globalInfo.sqrts.asNumber(TeV) - sqrts) > 1e-5:
                 continue
-            ret.append ( er )
+            run.append ( er )
+        if sortByYear:
+            run = doSortByYear ( run )
+        for r in run:
+            ret.append ( r )
+    #for er in ret:
+    #    print ( er.globalInfo.id )
     return ret
 
 def filterNonAggregatedFromList ( expResList, invert = False, really = True,
                                   verbose = False ):
-    """ remove results from list of experimental list for which we have 
+    """ remove results from list of experimental list for which we have
         an aggregated result
     :param expResList: list of experiment results
     :param invert: if True, then invert the selection, return *only* fastlim
@@ -155,7 +176,7 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True,
     aggs = set()
     maggs = []
     for er in expResList:
-        Id =  er.globalInfo.id 
+        Id =  er.globalInfo.id
         if "-agg" in Id:
             aggs.add ( Id.replace("-agg","") )
             maggs.append ( er )
@@ -164,7 +185,7 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True,
     for er in expResList:
         if False:
             print ( "before filter", er.globalInfo.id )
-        Id =  er.globalInfo.id 
+        Id =  er.globalInfo.id
         hasEnding = False
         doAdd = False
         for end in endings:
@@ -245,7 +266,7 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
     return filteredList
 
 def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
-    """ filter out all results that have jsonFiles_FullLikelihood defined. 
+    """ filter out all results that have jsonFiles_FullLikelihood defined.
         replace jsonFiles with jsonFiles_FullLikelihood, return these results.
     :param expResList: list of experiment results
     :param really: if False, then do not actually filter
@@ -306,9 +327,9 @@ def filterCollaborationFromList ( expResultList : List[ExpResult],
         ret.append ( ana )
     return ret
 
-def filterByContent( expResultList : List[ExpResult], 
+def filterByContent( expResultList : List[ExpResult],
                      requirement : str = 'expul_or_effmap' ) -> List[ExpResult]:
-    """ filter out entries that e.g. only have obs_ul 
+    """ filter out entries that e.g. only have obs_ul
     :param requirement: currently only 'expul_or_effmap'
     """
     assert requirement == "expul_or_effmap", f"requirement {requirement} not implemented"
@@ -326,7 +347,7 @@ def filterByContent( expResultList : List[ExpResult],
             ret.append ( ana )
     return ret
 
-def filterSqrtsFromList ( expResultList, 
+def filterSqrtsFromList ( expResultList,
         sqrts : int, invert : bool = False ) -> List[ExpResult]:
     """ filter list of exp results by sqrts
     :param sqrts: sqrts (int) to keep
