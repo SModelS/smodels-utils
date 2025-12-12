@@ -263,13 +263,15 @@ class HepJsonCreator:
                 entry["inspire"]=inspire
                 #hepdata = self.getHepData  ( inspire, Id )
                 #entry["hepdata"]= hepdata
+        if False:
+            print ( f"[createHepJson] {entry}" )
         if Id in self.entries:
             merged = self.merge ( self.entries[Id], entry, Id )
             self.entries[Id] = merged
+            return merged
         else:
             self.entries[Id] = entry
-        if False:
-            print ( f"[createHepJson] {entry}" )
+        return entry
 
     def collectEntries( self, expResList ) ->  bool:
         """ collect entries into self.entries """
@@ -390,7 +392,9 @@ class HepJsonCreator:
         expResList = self.db.getExpResults( analysisIDs = [ analysisId ] )
         expResList = filterFastLimFromList ( expResList )
         for er in expResList:
+            entry = self.collectEntry ( 0, er )
             print ( er )
+            print ( entry )
 
     def create( self, outputfile : os.PathLike ):
         """ create smodels-analyses.json """
@@ -412,10 +416,13 @@ class HepJsonCreator:
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description="simple script to create the smodels-analyses.json files" )
+    ap = argparse.ArgumentParser(
+        description="simple script to create the smodels-analyses.json files" )
+    dbpath = os.path.abspath ( \
+        f"{os.path.dirname(__file__)}/../../smodels-database" )
     ap.add_argument('-d', '--dbpath',
-            help='path to database [../../smodels-database/]',
-            default='../../smodels-database/')
+            help= f'path to database [{dbpath}]',
+            default=dbpath)
     ap.add_argument('-o', '--outputfile',
             help='path to database [smodels-analyses.json]',
             default='smodels-analyses.json')
