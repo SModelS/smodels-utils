@@ -46,13 +46,13 @@ class HepJsonCreator:
             if not k in entry1:
                 entry1[k]=v
                 continue
-            if k == "resultType" and v != entry1[k]:
-                if v in entry1[k]: ## already in!
-                    continue
+            if k == "resultType": #  and v != entry1[k]:
+                #if v in entry1[k]: ## already in!
+                #    continue
                 entry1[k]+=f",{v}"
                 continue
             if k == "path" and v != entry1[k]:
-                if v in entry1[k]: ## already in!
+                if v in entry1[k].split(","): ## already in!
                     continue
                 entry1[k]+=f",{v}"
                 continue
@@ -69,6 +69,7 @@ class HepJsonCreator:
             if str(v) != str(entry1[k]):
                 print ( f"[createHepJson] {YELLOW}entry '{k}' differs for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
                 print ( f"[createHepJson] {YELLOW}will use {entry1[k]}{RESET}" )
+        entry1["merged"]=True
         return entry1
 
     def getHepData ( self, nr : int, ana_id : str ) -> str:
@@ -140,6 +141,7 @@ class HepJsonCreator:
 
     def getInspireFromWebPage ( self, gI ) -> Union[None,int]:
         """ try to get the inspire number from the wiki page """
+        # print ( f"@@X1 getInspireFromWebPage {gI.id} {gI.url}" )
         if not hasattr ( gI, "url" ):
             return None
         import requests
@@ -152,22 +154,28 @@ class HepJsonCreator:
             txt = txt[p1+25:]
             p2 = txt.find('"')
             tmp = txt[:p2]
-            try:
-                tmp = int(tmp)
-                return tmp
-            except ValueError as e:
-                pass
+            if tmp.endswith("/"):
+                tmp = tmp[:-1]
+            if len(tmp)>0 and not "_INSPIRE_ID" in tmp and not "cord</a>" in tmp:
+                try:
+                    tmp = int(tmp)
+                    return tmp
+                except ValueError as e:
+                    print ( f"[createHepJson] ValueError(1) {e}: {tmp}" )
+                    pass
         p1 = txt.find("://inspirehep.net/literature/")
+        # print ( f"@@X3 p1B {p1}" )
         while p1 > 0 and len(txt)>0:
             p1 = txt.find("://inspirehep.net/literature/")
-            txt = txt[p1+27:]
+            txt = txt[p1+29:]
             p2 = txt.find('"')
             tmp = txt[:p2]
+            #print ( f"@@X4 tmp {tmp}" )
             try:
                 tmp = int(tmp)
                 return tmp
             except ValueError as e:
-                pass
+                print ( f"[createHepJson] ValueError(2) {e}: {tmp}" )
         txt = r.text
         ## now try  hepdata.net/record links
         p1 = txt.find("://www.hepdata.net/record/ins")
@@ -176,18 +184,29 @@ class HepJsonCreator:
             txt = txt[p1+29:]
             p2 = txt.find('"')
             tmp = txt[:p2]
-            try:
-                tmp = int(tmp)
-                return tmp
-            except ValueError as e:
-                pass
-                # print ( e )
+            if len(tmp)>0 and not "_HEPDATA_" in tmp and not "d</a>" in tmp:
+                try:
+                    tmp = int(tmp)
+                    return tmp
+                except ValueError as e:
+                    print ( f"[createHepJson] ValueError(3) {e}: {tmp}" )
+                    # print ( e )
         return None
 
-    def collectEntry ( self, i : int, er : ExpResult ):
-        """ collect a single entry, add to self.entries
+    def getAnaId ( self, descr : str ) -> str:
+        """ for e.g. ATLAS-SUSY-2018-05-ewk get ATLAS-SUSY-2018-05 """
+        extensions = [ "-ma5", "-ewk", "-strong", "-agg", "-hino", "-multibin", \
+                       "-exclusive" ]
+        for ext in extensions:
+           descr = descr.replace(ext,"")
+        return descr
+
+    def collectEntry ( self, i : int, er : ExpResult ) -> dict:
+        """ collect a single entry, return the dictionary
         :param i: entry #
         :param n_entries: number of entries, total
+
+        :returns: the dictionary
         """
         gI = er.globalInfo
         from smodels_utils.helper.various import getCollaboration
@@ -201,9 +220,7 @@ class HepJsonCreator:
             SRcomb = "pyhf"
         if len(dses) == 1 and dses[0].dataInfo.dataId == None:
             resultType = "UL"
-        Id = gI.id
-        for ext in [ "-ma5", "-ewk", "-strong", "-agg", "-hino", "-multibin", "-exclusive" ]:
-           Id = Id.replace(ext,"")
+        Id = self.getAnaId ( gI.id )
         entry = { "exp": coll, "ana_id": Id, "resultType": resultType }
         path = gI.path.replace("/globalInfo.txt","")
         p1 = path.rfind("/")
@@ -265,20 +282,42 @@ class HepJsonCreator:
                 #entry["hepdata"]= hepdata
         if False:
             print ( f"[createHepJson] {entry}" )
-        if Id in self.entries:
-            merged = self.merge ( self.entries[Id], entry, Id )
-            self.entries[Id] = merged
-            return merged
-        else:
-            self.entries[Id] = entry
         return entry
+
+    def sort ( self, expResList ):
+        """ sort the expResList, for now lexigraphically """
+        #ret = [ x for x in expResList ]
+        #return ret
+        label_d = {}
+        for er in expResList:
+            dsId = "em"
+            if er.datasets[0].dataInfo.dataId == None:
+                dsId = "ul"
+            l = f"{er.globalInfo.id}_{dsId}"
+            if l in label_d.keys():
+                print ( f"[createHepJson] {RED}{l} already in {list(label_d.keys())}{RESET}" )
+            label_d[l]=er
+        labels = list ( label_d.keys() )
+        labels.sort()
+        ret = [ label_d[l] for l in labels ]
+        print ( f"[createHepJson] sorting {len(expResList)} -> {len(ret)}" )
+        return ret
 
     def collectEntries( self, expResList ) ->  bool:
         """ collect entries into self.entries """
         n_results = len(expResList)
-        for i,er in enumerate(expResList):
-            print ( f"[createHepJson] {i+1}/{n_results}: {er.globalInfo.id}" )
-            self.collectEntry ( i, er )
+        for i,er in enumerate(self.sort(expResList)):
+            dsId = "em"
+            if er.datasets[0].dataInfo.dataId == None:
+                dsId = "ul"
+            print ( f"[createHepJson] {GREEN}{i+1}/{n_results}: {er.globalInfo.id}:{dsId}{RESET}" )
+            entry = self.collectEntry ( i, er )
+            Id = self.getAnaId ( er.globalInfo.id )
+            if Id in self.entries: #  and not "merged" in self.entries[Id]:
+                merged = self.merge ( self.entries[Id], entry, Id )
+                self.entries[Id] = merged
+            else:
+                self.entries[Id] = entry
         return True
 
     def short_body( self ):
@@ -412,7 +451,7 @@ class HepJsonCreator:
 
     def interact ( self ):
         """ start interactive shell, to debug """
-        import sys, IPython; IPython.embed( colors = "neutral" )
+        import IPython; IPython.embed( colors = "neutral" )
 
 if __name__ == "__main__":
     import argparse
