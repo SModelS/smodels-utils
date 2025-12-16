@@ -720,9 +720,9 @@ def logCall ():
     fname = f"{os.environ['HOME']}/walker.log"
     f=open( fname,"at")
     from smodels_utils.helper.various import getCommandLine
-    args = getCommandLine()
+    cmdline = getCommandLine()
     # f.write ( f'\n[slurm_walk-{time.strftime("%H:%M:%S")}]\n{args.strip()}\n' )
-    f.write ( f'\n[slurm_walk :: {time.asctime()}]\n{args}\n' )
+    f.write ( f'\n[slurm_walk :: {time.asctime()}]\n{cmdline}\n' )
     f.close()
 
 def cancelAllRunners():

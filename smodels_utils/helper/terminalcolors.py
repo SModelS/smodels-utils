@@ -18,3 +18,6 @@ except Exception as e:
     # print ( f"[terminalcolors] no colors: {e}" )
     GREEN, YELLOW, RED, RESET = "\033[32m", "\033[33m", "\033[91m", "\033[0m"
     CYAN, MAGENTA, BLUE = "\033[36m", "\033[35m", "\033[34m"
+
+colordict = { "green": GREEN, "yellow": YELLOW, "red": RED, "reset": RESET,
+              "cyan": CYAN, "magenta": MAGENTA, "blue": BLUE }
