@@ -203,14 +203,18 @@ def getOnshellAxesForOffshell(anaDir : os.PathLike, tx_onshell : str,
         return axes
 
 
-def drawOffshell(excl_lines, excl_off, min_off_y = 0.0, official=False):
-
-    print("[drawPaperPlot] min_off_y ", min_off_y )
+def drawOffshell(excl_lines : dict, excl_off : dict, min_off_y : float = 0.0, 
+        official : bool= False ):
+    """ draw the offshell regions
+    """
+    # print("[drawPaperPlot] min_off_y ", min_off_y )
     for type,excl in excl_lines.items():
         if excl_off[type]["x"] == []:
             continue
 
-        if excl_off[type]["x"][0] > excl_off[type]["x"][-1] or excl_off[type]["x"][1] > excl_off[type]["x"][-2]:
+        if excl_off[type]["x"][0] > excl_off[type]["x"][-1] or \
+                len(excl_off[type]["x"]) > 1 and \
+                excl_off[type]["x"][1] > excl_off[type]["x"][-2]:
             # print("[drawPaperPlot] off reverse")
             excl_off[type]["x"].reverse()
             excl_off[type]["y"].reverse()
