@@ -174,10 +174,12 @@ def getCurveFromJson( anaDir, validationFolder, txname,
                    "exp_excl":{"x":all_exp_x,"y":all_exp_y}}
 
     if ('x - y' in axes or 'x-y' in axes) and eval_axes:
-        print(f"[drawPaperPlot] {type} {txname} {axes} yes")
         for type, excl in excl_lines.items():
-            print ( f"@@0 exclx {excl['x']} type {type}" )
-            excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
+            excl_y = []
+            for l_x, l_y in zip ( excl["x"], excl["y"] ):
+                tmp = (np.array ( l_x ) - np.array ( l_y ) ).tolist()
+                excl_y.append ( tmp )
+            # excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
             excl_lines[type] = {"x":excl["x"],"y":excl_y}
 
     return excl_lines
