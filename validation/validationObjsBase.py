@@ -25,21 +25,30 @@ complaints = { "NoResultsFor": 0 }
 
 class ProgressHandler:
     """ a namespace to handle everything around the progressbar """
-    def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
-        """ store the pid of the progress bar in .progressbar.pid,
-        so the other process can kill it. """
-        f=open(".progressbar.pid","wt")
-        f.write ( f"{pid}\n" )
-        f.close()
 
     def readPid ( pidfile : str = ".progressbar.pid" ) -> int:
         """ read the progressbar pid from the pid file """
         if not os.path.exists ( pidfile ):
             return None
-        f=open(".progressbar.pid","rt")
-        pid = int ( f.read() )
+        try:
+            with open(".progressbar.pid","rt") as f:
+                pid = int ( f.read() )
+                return pid
+        except ValueError as e:
+            pass
+        return None
+
+    def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
+        """ store the pid of the progress bar in .progressbar.pid,
+        so the other process can kill it. """
+        cpid = ProgressHandler.readPid ( pidfile )
+        if cpid != None:
+            print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
+            ProgressHandler.killProgressBar( pidfile )
+        f=open(".progressbar.pid","wt")
+        f.write ( f"{pid}\n" )
         f.close()
-        return pid
+
 
     def rmFile ( pidfile : str = ".progressbar.pid" ):
         if os.path.exists ( pidfile ):

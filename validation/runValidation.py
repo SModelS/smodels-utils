@@ -290,7 +290,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
             f.close()
             os.chmod ( ratioscriptfile, 0o755 )
     else:
-        print ( f"[runValidation] NOT overwriting existing {ratioscriptfile}" )
+        print ( f"[runValidation] {YELLOW}NOT overwriting existing {ratioscriptfile}{RESET}" )
 
     return True
 

@@ -47,31 +47,34 @@ def add_jitter ( y_vals, addJitter : bool ):
         else:
             y_vals[i]= y * random.uniform(.98,1.02)
     return y_vals
-            
 
-def plotLines ( ax, x_vals, y_vals, color : str, linestyle : str, 
+
+def plotLines ( ax, x_vals, y_vals, color : str, linestyle : str,
                label : str ):
     """ plot lines """
     if len(x_vals)==0:
         return
     if type(x_vals[0]) == list:
         for x_val, y_val in zip ( x_vals, y_vals ):
-            ax.plot( x_val, y_val,color=color, linestyle= linestyle, 
+            ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                      label = label )
             label = ""
         return
-    ax.plot( x_vals, y_vals,color=color, linestyle=linestyle, 
+    ax.plot( x_vals, y_vals,color=color, linestyle=linestyle,
              label = label )
 
-def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestSR", "combined"],
-                      axes=None, eval_axes=True ):
+def getCurveFromJson( anaDir, validationFolder, txname,
+        type=["official", "bestSR", "combined"], axes=None,
+        eval_axes : bool = True ):
     """
     Get Exclusion Curve from official and SModelS json files
     :param anaDir: path to dir of analysis
     :param txname: txname for which we need the exclusion curve
-    :param type: type of exclusion curve - official curve, SModelS bestSR, SModelS combined SR
+    :param type: type of exclusion curve -
+    official curve, SModelS bestSR, SModelS combined SR
     :param axes: axes map of official exclusion line
-    returns a dict of obs and exp exclusion lines
+
+    :returns: a dict of obs and exp exclusion lines
     """
     saxes = str(axes).replace(" ","").replace("'","")
 
@@ -127,7 +130,7 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             if f"expExclusion_{axes}" in excl_file[txname].keys():
                 exp_excl_x = getCoords ( excl_file, txname, f"expExclusion_{axes}", "x" )
                 exp_excl_y = getCoords ( excl_file, txname, f"expExclusion_{axes}", "y" )
-            excl_lines = { "obs_excl":{"x":excl_x,"y":excl_y}, 
+            excl_lines = { "obs_excl":{"x":excl_x,"y":excl_y},
                            "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
             return excl_lines
 
@@ -167,12 +170,13 @@ def getCurveFromJson( anaDir, validationFolder, txname, type=["official", "bestS
             if len(all_obs_x)==0:
                 col = RED
             print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
-    excl_lines = { "obs_excl":{"x":all_obs_x,"y":all_obs_y}, 
+    excl_lines = { "obs_excl":{"x":all_obs_x,"y":all_obs_y},
                    "exp_excl":{"x":all_exp_x,"y":all_exp_y}}
 
     if ('x - y' in axes or 'x-y' in axes) and eval_axes:
         print(f"[drawPaperPlot] {type} {txname} {axes} yes")
         for type, excl in excl_lines.items():
+            print ( f"@@0 exclx {excl['x']} type {type}" )
             excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
             excl_lines[type] = {"x":excl["x"],"y":excl_y}
 
@@ -203,7 +207,7 @@ def getOnshellAxesForOffshell(anaDir : os.PathLike, tx_onshell : str,
         return axes
 
 
-def drawOffshell(excl_lines : dict, excl_off : dict, min_off_y : float = 0.0, 
+def drawOffshell(excl_lines : dict, excl_off : dict, min_off_y : float = 0.0,
         official : bool= False ):
     """ draw the offshell regions
     """
@@ -288,12 +292,12 @@ def lifetimeToWidth(time):
     return hbar/time
 
 
-def getExtremeValue(excl_line, extreme : str, e_type : str, 
+def getExtremeValue(excl_line, extreme : str, e_type : str,
         width : bool = False) -> float:
     """ get the extreme  value
     :param extreme: 'min' or 'max'
     """
-    if len(excl_line)==0: 
+    if len(excl_line)==0:
         if extreme == "max":
             return -1
         return np.inf
@@ -326,7 +330,7 @@ def getExtremeValue(excl_line, extreme : str, e_type : str,
             if len(excl_line)>0:
                 mini = min(mini, min(excl_line))
             #else:
-            #    mini = 
+            #    mini =
             return mini
 
 def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
@@ -372,21 +376,27 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
     if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
     if offshell:
-        off_excl = getCurveFromJson(anaDir, validationFolder, txname, type="official", axes = axes_on)
-        off_excl_offshell = getCurveFromJson(anaDir, validationFolder, txnameOff, type="official", axes = axes)
+        off_excl = getCurveFromJson( anaDir, validationFolder, txname,
+                type="official", axes = axes_on)
+        off_excl_offshell = getCurveFromJson( anaDir, validationFolder, txnameOff,
+                type="official", axes = axes )
         off_excl = drawOffshell(off_excl, off_excl_offshell, official=True)
-    else: off_excl = getCurveFromJson(anaDir, validationFolder, txname, type="official", axes = axes, eval_axes=eval_axes)
+    else: off_excl = getCurveFromJson(anaDir, validationFolder, txname,
+                type="official", axes = axes, eval_axes=eval_axes)
 
     bestSR, combSR = True, True
     if offshell:
-        bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname, type="bestSR", axes=axes_on)
-        bestSR_excl_off = getCurveFromJson(anaDir, validationFolder, txnameOff, type="bestSR", axes=axes)
+        bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname,
+                type="bestSR", axes=axes_on)
+        bestSR_excl_off = getCurveFromJson(anaDir, validationFolder, txnameOff,
+                type="bestSR", axes=axes)
         if not bestSR_excl_off:
             print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
             return
         bestSR_excl = drawOffshell(bestSR_excl, bestSR_excl_off)
     else:
-        bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname, type="bestSR", axes=axes, eval_axes=eval_axes)
+        bestSR_excl = getCurveFromJson(anaDir, validationFolder, txname,
+                type="bestSR", axes=axes, eval_axes=eval_axes)
         if not bestSR_excl:
             print(f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txname}:{axes}.")
             bestSR = False
@@ -493,7 +503,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     step_x = int(max_obs_x/100)*10
     mid_x = 0
     if max_obs_x < -.99:
-        print ( f"[drawPaperPlot] seems like exclusion lines are empty" ) 
+        print ( f"[drawPaperPlot] seems like exclusion lines are empty" )
         return
     if max_obs_x > -.99:
         mid_x = int((max_obs_x - min_obs_x)/2)
@@ -598,7 +608,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     exp_name = analysis.split('-')[0]
     # ax.plot(off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
     plotLines ( ax, off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],
-               "black", "solid", label = f'{exp_name} official') 
+               "black", "solid", label = f'{exp_name} official')
     #print("official : ", off_excl["obs_excl"]["y"] )
     if bestSR:
         x_vals = bestSR_excl["obs_excl"]["x"]
@@ -619,7 +629,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
         else:
-            plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR") 
+            plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR")
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 
@@ -729,7 +739,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     exp_name = analysis.split('-')[0]
     plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], "black",
-            "solid", f'{exp_name} official')  
+            "solid", f'{exp_name} official')
 
     if bestSR:
         x_vals = bestSR_excl["exp_excl"]["x"]
