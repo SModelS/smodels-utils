@@ -12,10 +12,8 @@
 
 import sys
 import os
-import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
-from smodels_utils.dataPreparation.particles import rEven
 from smodels_utils.dataPreparation.dataHandlerObjects import hbar
 from smodels_utils.dataPreparation.covarianceHandler import \
          UPROOTCovarianceHandler, CSVCovarianceHandler, PYROOTCovarianceHandler,\
@@ -26,10 +24,6 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.expSMS import ExpSMS
 from smodels.experiment.expAuxiliaryFuncs import smsInStr
-from smodels.installation import version
-import copy
-import math
-import scipy
 from typing import Dict, Union
 
 import logging
@@ -684,7 +678,8 @@ class TxNameInput(Locker):
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
                     'massConstraints', '_dataLabels', 'round_to',
-                    '_databaseParticles', '_smallerThanError', '_particles' ]
+                    '_databaseParticles', '_smallerThanError', '_particles',
+                     '_node2arrayDict']
 
     requiredAttr = [ 'constraint','condition','txName','dataUrl', 'source' ]
     infoAttr.append ( 'finalState' )
@@ -911,7 +906,35 @@ class TxNameInput(Locker):
             massPlane = MassPlane(self._txDecay,massArray)
         self._planes.append(massPlane)
         return massPlane
+    
+    def nodeIndex2arrayIndex(self,nodeIndex,attr='mass'):
+        """
+        Convert the node index to the corresponding entry (array index)
+        in the data grid array for the desired attribute.
+        
+        :param nodeIndex: Index for the particle node in the constraint (i.e. anyBSM(nodeIndex))
+        :param attr: Attribute for which to convert the indices (i.e. mass or totalwidth)
+        """
 
+        if not hasattr(self,'dataMap'):
+            logger.error("Can not convert indices if dataMap has not been defined!")
+            return None
+        # Create inverted dictionary:
+        if not hasattr(self,'_node2arrayDict'):
+            self._node2arrayDict = {}
+        if attr not in self._node2arrayDict:
+            self._node2arrayDict[attr] = {}
+            for iarray,(inode,nodeAttr,_) in self.dataMap.items():
+                if nodeAttr != attr:
+                    continue
+                self._node2arrayDict[attr][inode] = iarray
+        
+        if not nodeIndex in self._node2arrayDict[attr]:
+            logger.error(f"Node {nodeIndex} not found in dataMap for attribute {attr}!")
+            return False
+        
+        return self._node2arrayDict[attr][nodeIndex]
+                
     def getDataFromPlanes(self,dataType):
         """
         Loop over the defined planes and collects the data.
@@ -1490,24 +1513,13 @@ class TxNameInput(Locker):
                 errormsgs[line]=0
             errormsgs[line]+=1
             return True
-        # print ( f"[inputObjects] checkMassConstraints {self.massConstraints} :: {massArray}" )
         for constraint in self.massConstraints:
             # {(1, 3): 80.0, (2, 4): 125.0}
-            for parindices, massGap in constraint.items():
-                # now we need to translate from parameterindices to nodeindices
-                nodeindices = parindices[0]-1,parindices[1]-1 # wrong
-                invertedMap = {}
-                for k,v in self.dataMap.items():
-                    invertedMap[v[0]]=k
-                for x in parindices:
-                    if not x in invertedMap:
-                        complainAbout["x in datamap"]+=1
-                        if complainAbout["x in datamap"]<3:
-                            logger.error ( f"could not find {x} in datamap {self.dataMap}" )
-                        sys.exit()
-                nodeindices = [ invertedMap[x] for x in parindices ]
-
-                dm = massArray[nodeindices[0]]-massArray[nodeindices[1]]
+            for nodeIndices, massGap in constraint.items():
+                # now we need to translate from nodeindices to array indices
+                arrayIndices = [self.nodeIndex2arrayIndex(nodeIndex,attr='mass') 
+                                for nodeIndex in nodeIndices]
+                dm = massArray[arrayIndices[0]]-massArray[arrayIndices[1]]
                 if type(dm)!=float:
                     complainAbout["sympy obj"]+=1
                     if complainAbout["sympy obj"]<3:
@@ -1515,7 +1527,7 @@ class TxNameInput(Locker):
                     if complainAbout["sympy obj"]==4:
                         print ( f"[inputObjects] (quenched more of the above errors)" )
                 if type(dm)==float:
-                    if dm <= massGap:
+                    if dm < massGap:
                         # print ( f"skipping {massArray}: does not meet mass constraint: {constraint}" )
                         return False
         return True
