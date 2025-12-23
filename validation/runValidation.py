@@ -9,11 +9,9 @@
 __all__ = [ "validatePlot" ]
 
 import sys,os,copy
-from smodels_utils.helper.terminalcolors import *
-from smodels.base.physicsUnits import TeV
 import argparse,time
 from sympy import var
-from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
+
 from typing import Union
 
 try:
@@ -21,7 +19,6 @@ try:
 except ImportError as e:
     from configparser import ConfigParser, NoOptionError
 
-from smodels.base.smodelsLogging import logger
 
 def starting( expRes, txnameStr, axes, pretty ):
     from validationHelpers import prettyAxesV3, getAxisType
@@ -719,10 +716,10 @@ if __name__ == "__main__":
     args = ap.parse_args()
 
     if not os.path.isfile(args.parfile):
-        logger.error( f"Parameters file ''{args.parfile}'' not found" )
+        print( f"Parameters file ''{args.parfile}'' not found" )
         sys.exit(-1)
     else:
-        logger.info( f"Reading validation parameters from {args.parfile}" )
+        print( f"Reading validation parameters from {args.parfile}" )
 
     parser = None
     try:
@@ -740,6 +737,11 @@ if __name__ == "__main__":
     from validation import plottingFuncs, validationObjs, graphsValidationObjs
     from smodels.experiment.databaseObj import Database
     from smodels.experiment.expResultObj import ExpResult
+    from smodels_utils.helper.terminalcolors import *
+    from smodels.base.physicsUnits import TeV
+    from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
+    from smodels.base.smodelsLogging import logger
+
 
     #Control output level:
     #numeric_level = getattr(logging,args.verbose.upper(), None)
