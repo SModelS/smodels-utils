@@ -444,7 +444,7 @@ class RefXSecComputer:
                 channel["label"] = f"{int(sqrts)} TeV ({orderStr})"
                 comments[str(pids)+f"{sqrts:.1f}"+str(order)]=comment
                 a = self.dictToXSection ( channel )
-                comments[channel]=ncomment
+                #comments[channel]=ncomment
                 xsecs.add ( a )
         self.xsecs = xsecs
         self.comments = comments
@@ -460,10 +460,16 @@ class RefXSecComputer:
         # productions of same-sign-pid pairs when the particle is within reach
         samesignmodes = ( 1000021, 1000023, 1000025 )
         # production of opposite-sign-pid pairs when the particle is within reach
-        oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 2000011, 2000013, 2000015, 1000024 )
+        oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 2000011, 2000013, 2000015,
+                              1000024 
+                            )
 
         # associate production
-        associateproduction = ( ( 1000001, 1000021 ), ( 1000022, 1000023 ), ( 1000024, 1000023 ), ( -1000024, 1000023 ), ( 1000023, 1000025 ), ( 1000024, 1000025 ), ( -1000024, 1000025 ) )
+        associateproduction = ( ( 1000001, 1000021 ), 
+                                ( 1000022, 1000023 ), 
+                                ( 1000024, 1000023 ), ( -1000024, 1000023 ), 
+#                                ( 1000024, 1000022 ), ( -1000024, 1000022 ) , # uncomment this line to include C1N1 production
+                                ( 1000023, 1000025 ), ( 1000024, 1000025 ), ( -1000024, 1000025 ) )
         schannel = ( 35, )
         ## production modes to add that needs two different particles
         ## to be unfrozen
@@ -635,7 +641,7 @@ class RefXSecComputer:
             isEWK=False
             #order = NNLL # 4
             order = (NLL, NNLL) # specify for both
-        if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
+        if pid1 in [ -1000024 ] and pid2 in [ 1000023, 1000022 ]:
             filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
@@ -648,7 +654,7 @@ class RefXSecComputer:
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
-        if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
+        if pid1 in [ 1000023, 1000022 ] and pid2 in [ 1000024 ]:
             filename = f"xsecN2C1p{sqrts}.txt"
             order = NLL
             pb = False
