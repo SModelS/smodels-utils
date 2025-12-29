@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
-import subprocess
+import subprocess, os
 
 def showPath ( path ):
-    o = subprocess.getoutput ( f"cd {path}; ln -s ~/git/protomodels/snippets/show_steps.py; ./show_steps.py; cd .." )
+    if not os.path.exists ( path ):
+        print ( f"{path}: does not exist" )
+        return
+    cmd = f"cd {path}; ln -s ~/git/protomodels/snippets/show_steps.py; ./show_steps.py; cd .."
+    o = subprocess.getoutput ( cmd )
     lines = o.split()
     print ( f"{path}: {' '.join(lines[-2:])}" )
 

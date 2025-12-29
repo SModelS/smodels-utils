@@ -34,7 +34,7 @@ def getJobStatus  ( jobids : Union[list,int] ) -> dict:
         return ret
     cmd = f"sacct --job {jobids}"
     output = subprocess.getoutput ( cmd ).split("\n")
-    if len(output)<2:
+    if len(output)<3:
         output = f"fewer than two lines?? {output}"
     else:
         output = output[2]
