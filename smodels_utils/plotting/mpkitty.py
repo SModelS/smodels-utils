@@ -52,7 +52,8 @@ def timg( filename : os.PathLike ):
     cols = "120"
     if "MPLBACKEND_KITTY_SIZING" in os.environ:
         cols = os.environ["MPLBACKEND_KITTY_SIZING"]
-    cmd = f"{exe} -pkitty -g {cols}x80 -U -W {filename}"
+    # cmd = f"{exe} -pkitty -g {cols}x80 -U -W {filename}"
+    cmd = f"{exe} -pkitty -U {filename}"
     if "users" in exe:
         cmd = f"{exe} {filename}"
     if ver.startswith ( "1.1" ):
