@@ -21,7 +21,7 @@ def getCommandLine():
         i = i.replace("'",'"' )
         if i.startswith ( os.environ["HOME"] ):
             i = i.replace(os.environ["HOME"],"~")
-        if " " in i or "," in i or "[" in i or "+" in i:
+        if " " in i or "," in i or "[" in i or "+" in i or '"' in i:
             i = f"'{i}'"
         args += f"{i} "
     return args.strip()
