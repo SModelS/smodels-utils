@@ -29,14 +29,16 @@ def getHistoTestStats ( data : dict, bins : list, method : str ) -> dict:
         Ts[fudge]=T
     return Ts
 
-def draw( data : dict, bins : list ):
+def draw( data : dict, bins : list, method : str, show : bool ):
     """ the drawing method """
+    methods = [ "KL", "wasserstein", "KS", "AD", "combo", "default", "fold" ]
+    assert method in methods, f"method {method} unknown. Known methods: {methods}"
     #method = "KL"
     #method = "default"
-    method = "wasserstein"
-    method = "KS"
-    method = "AD"
-    method = "combo"
+    #method = "wasserstein"
+    #method = "KS"
+    #method = "AD"
+    #method = "combo"
     Ts = getHistoTestStats ( data, bins, method )
     splitdata = splitBySqrtsAndCollaboration ( data )
     # splitdata = splitByAnalysisGroups ( data )
@@ -71,9 +73,11 @@ def draw( data : dict, bins : list ):
     plt.ylabel ( "T values" )
     from smodels_utils.helper.various import pngMetaInfo
     metadata = pngMetaInfo()
+    metadata["method"]=method
     plt.savefig ( outfile, metadata = metadata )
-    from smodels_utils.plotting.mpkitty import timg
-    timg ( outfile )
+    if show:
+        from smodels_utils.plotting.mpkitty import timg
+        timg ( outfile )
 
 def create ( args : dict ):
     with open( args["inputfile"],"rt") as f:
@@ -96,7 +100,7 @@ def create ( args : dict ):
     data = filterByAnaGroups ( data, "darkmatter+electroweakinos" )
     print ( f"[drawT] after filtering by analysis groups we have  {len(data[1.0])} entries" )
     data = filterByBG ( data, args["min_bg"] )
-    draw ( data, bins )
+    draw ( data, bins, args["method"], args["show"] )
 
 if __name__ == "__main__":
     import argparse
@@ -108,5 +112,9 @@ if __name__ == "__main__":
             help='number of bins in histogram [10]', default=10)
     ap.add_argument('-m', '--min_bg', type=float,
             help='minimum background exptectation to consider analysis [3.5]', default=3.5 )
+    ap.add_argument('-s', '--show', action="store_true",
+            help='show also output via timg' )
+    ap.add_argument( '--method', type=str,
+            help='criterion to be used, e.g. wasserstein, KS, AD, combo, fold, default [AD]', default="AD" )
     args = ap.parse_args()
     create( vars(args) )
