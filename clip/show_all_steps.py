@@ -3,6 +3,7 @@
 import subprocess, os
 
 def showPath ( path ):
+    print ( f"show {path}" )
     if not os.path.exists ( path ):
         print ( f"{path}: does not exist" )
         return
