@@ -67,7 +67,7 @@ def repr_double_quotes(obj):
     else:
         return repr(obj)
 
-def py_dumps( obj, indent : int = 4, level : int = 0, stop_at_level : int = -1, 
+def py_dumps( obj, indent : int = 4, level : int = 0, stop_at_level : int = -1,
               double_quotes : bool = False ) -> str:
     """ equivalent to json.dumps (ie it pretty prints a given nested structure)
     but tuples are allowed as keys.
@@ -201,14 +201,19 @@ def findCollaboration ( anaid : str ) -> str:
         return "ATLAS"
     return "???"
 
-def cutPoints ( points : list, ranges : dict ) -> list:
+def cutPoints ( points : Union[dict,list], ranges : dict ) -> list:
     """ cut the points at ranges
-    :param points: a list of lists of points 
+    :param points: a list of lists of points
     a list of points is a line, but we can have several lines
+    if this is a dictionary, we assume we are dealing with the old,
+    obsolete format
     :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
 
     :returns: filtered points
     """
+    if type(points)==dict:
+        ## seems to be v1
+        return cutPointsV1 ( points, ranges )
     if ranges == None:
         return points
     if not "y" in ranges:
@@ -238,9 +243,9 @@ def cutPoints ( points : list, ranges : dict ) -> list:
             ret.append ( newline )
     return ret
 
-def cutPointsOld ( points, ranges ) -> dict:
+def cutPointsV1 ( points : dict, ranges : dict ) -> dict:
     """ cut the points at ranges, the old version
-    FIXME should be obsolete!
+    FIXME should eventually become obsolete!
     :param ranges: a dict, e.g. { "x": [0,100], "y": [0,500] }
     :returns: filtered points
     """

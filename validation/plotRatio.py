@@ -125,6 +125,8 @@ def getCoords ( points : list[list], coord : str ) -> list:
     :returns: list of this coord
     """
     ret = []
+    if type(points) == dict:
+        return points[coord]
     for line in points:
         for pt in line:
             ret.append ( pt[coord] )
@@ -499,7 +501,13 @@ def draw ( options : dict ):
                 # print ( "name", name )
                 hasLegend = True
                 px = getCoords( E["points"], "x" )
-                if "y" in E["points"][0][0]:
+                if type ( E["points"] ) == dict:
+                    if "y" in E["points"]:
+                        py = E["points"]["y"]
+                    else:
+                        py = px
+                        px = [ 0. ] * len (py)
+                elif "y" in E["points"][0][0]:
                     py = getCoords( E["points"], "y" )
                 else:
                     py = px
