@@ -15,6 +15,21 @@ from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 
+def fetchCurves ( validationPlot ) -> dict :
+    """ fetch the curves and convert to sahanas format """
+    ret = {}
+    def fetchPoints ( curves : list ) -> dict:
+        ret = { "x": [], "y": [] }
+        for curve in curves:
+            for x in curve["points"]["x"]:
+                ret["x"].append ( x )
+            for y in curve["points"]["y"]:
+                ret["y"].append ( y )
+        return ret
+    ret["obs_excl"] = fetchPoints ( validationPlot.officialCurves )
+    ret["exp_excl"] = fetchPoints ( validationPlot.expectedOfficialCurves )
+    return ret
+
 def getCoords ( efile, curve, entry, coord : str  ):
     """ get the coordinates of curve residing in efile
 
@@ -93,8 +108,8 @@ def getCurveFromJson( anaDir, validationFolder, txname,
         if txname in excl_file:
             if f"obsExclusion_{axes}" not in excl_file[txname].keys():
                 axes_keys = list(excl_file[txname].keys())
-                # print ( f"[drawPaperPlot] draw for {axes}" )
-                # print ( "[drawPaperPlot] candidates", axes_keys )
+                print ( f"[drawPaperPlot] draw for {axes}" )
+                print ( f"[drawPaperPlot] candidates {axes_keys}" )
                 foundNewAxis = False
                 for axis_candidate in axes_keys:
                     maxes = axis_candidate.split('_')[-1]
@@ -371,12 +386,17 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             offshell=True
             txnameOff = txname
             txname = txname.split('off')[0]
+        if False:
+            offshell = True
+            axes_on = axes
+            print ( f"@@99 axes_on {axes_on} txnameOff {txnameOff} axes {axes}" )
 
     #get exclusion lines for official and SModelS
     off_excl, comb_excl, bestSR_excl = [],[],[]
-
     if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
     if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
+    if 'ATLAS-SUSY-2019-09' in analysis: eval_axes = False
+    """
     if offshell:
         off_excl = getCurveFromJson( anaDir, validationFolder, txname,
                 type="official", axes = axes_on)
@@ -385,6 +405,8 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         off_excl = drawOffshell(off_excl, off_excl_offshell, official=True)
     else: off_excl = getCurveFromJson(anaDir, validationFolder, txname,
                 type="official", axes = axes, eval_axes=eval_axes)
+    """
+    off_excl = fetchCurves ( validationPlot )
 
     bestSR, combSR = True, True
     if offshell:
@@ -572,6 +594,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         x_label = '$m(\\tilde{t}$)'
         y_label = '$\\Gamma(\\tilde{t})$'
 
+    if 'ATLAS-SUSY-2019-09' in analysis and txname == "TChiWZoff":
+        x_label = '$m_{\\tilde{\\chi}_1^{\\pm}}, m_{\\tilde{\\chi}_2^0}$ [GeV]'
+        y_label = r'$\Delta m(\tilde{\chi}_2^0,\tilde{\chi}_1^0)$'
 
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
