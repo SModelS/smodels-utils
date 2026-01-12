@@ -91,6 +91,7 @@ def getCurveFromJson( anaDir, validationFolder, txname,
 
     :returns: a dict of obs and exp exclusion lines
     """
+    print ( f"FIXME getCurveFromJson this should slowly get phased out, get the curves from validationPlot.officialCurves directly!!" )
     saxes = str(axes).replace(" ","").replace("'","")
 
     excl_lines = {}
@@ -538,14 +539,25 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     #print("[drawPaperPlot] max exp y ", max_exp_y)
 
     axis_label = prettyAxes(validationPlot).split(',')
+    for i,a in enumerate(axis_label):
+        axis_label[i]=a.replace(" ","")
     # print("[drawPaperPlot] Axis label ", axis_label)
     x_label, y_label = "",""
     massg = ""
     for lbl in axis_label:
-        if "=x" in lbl and "=x -" not in lbl: x_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
-        elif "x=" in lbl: x_label = getPrettyAxisLabels(lbl.split("=")[-1].strip())
-        elif ("=y" in lbl or "- y" in lbl) and "=y -" not in lbl: y_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
-        elif "y=" in lbl: y_label = getPrettyAxisLabels(lbl.split("=")[-1].strip())
+        if "=x" in lbl and "=x-" not in lbl: 
+            x_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
+        elif "=x-y" in lbl: 
+            # y_label = r'$\Delta m$'
+            x_l = x_label.replace("[GeV]","")
+            m2 = getPrettyAxisLabels(lbl.split("=")[0].strip())
+            y_label = x_l + "-" + m2
+        elif "x=" in lbl: 
+            x_label = getPrettyAxisLabels(lbl.split("=")[-1].strip())
+        elif ("=y" in lbl or "-y" in lbl) and "=y-" not in lbl: 
+            y_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
+        elif "y=" in lbl: 
+            y_label = getPrettyAxisLabels(lbl.split("=")[-1].strip())
         else: continue
 
     if '2018-14' in analysis:
@@ -594,9 +606,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         x_label = '$m(\\tilde{t}$)'
         y_label = '$\\Gamma(\\tilde{t})$'
 
-    if 'ATLAS-SUSY-2019-09' in analysis and txname == "TChiWZoff":
-        x_label = '$m_{\\tilde{\\chi}_1^{\\pm}}, m_{\\tilde{\\chi}_2^0}$ [GeV]'
-        y_label = r'$\Delta m(\tilde{\chi}_2^0,\tilde{\chi}_1^0)$'
+    #if 'ATLAS-SUSY-2019-09' in analysis and txname == "TChiWZoff":
+    #    x_label = '$m_{\\tilde{\\chi}_1^{\\pm}}, m_{\\tilde{\\chi}_2^0}$ [GeV]'
+    #    y_label = r'$\Delta m(\tilde{\chi}_2^0,\tilde{\chi}_1^0)$'
 
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
