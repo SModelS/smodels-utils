@@ -334,6 +334,8 @@ def runOneJob ( rvars: dict ):
         for i in drops:
             nvars.pop ( i )
         nvars["catch_exceptions"]=True
+        if "disallowN1N1Prod" in nvars:
+            nvars.pop ( "disallowN1N1Prod" )
         ds = py_dumps ( nvars, indent=4 )
         f.write ( f"factoryOfWalkers.createWalkers ( {ds} )\n" )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
@@ -909,7 +911,7 @@ def main():
                         help='allow N1 N1 production mode',
                         action="store_true" )
     argparser.add_argument ( '--disallowN1N1Prod',
-                        help='allow N1 N1 production mode',
+                        help='disallow N1 N1 production mode (default)',
                         action="store_true" )
     argparser.add_argument ( '--susy_mode',
                         help='susy mode (penalize ssms for being not 1.0)',
