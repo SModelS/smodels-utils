@@ -45,7 +45,6 @@ coords["TChiWffH"]={'masses': [[1, 3, 4], [5, 6]], 'widths': None}
 coords["TChiWffHcheck"]={'masses': [[1, 3, 4], [5, 6]], 'widths': None}
 coords["TChiWHffcheck"]={'masses': [[5, 6], [1,3,4]], 'widths': None}
 coords["TChiWH4fcheck"]={'masses': [[1, 3, 4], [5, 7, 8]], 'widths': None}
-
 coords["TChiWZoffCd2"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["T6ttWW"]={'masses': [[1, 2, 3], [4, 5, 6]], 'widths': None}
 coords["T5ttddbb"]={'masses': [[1, 2], [3, 4]], 'widths': None}
@@ -56,4 +55,5 @@ coords["TRPV2fjj"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TRPVttbj"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TRPVtttbj"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TRPVtbjbbj"]={'masses': [[1, 2], [3, 4]], 'widths': None}
-coords["TZHWee"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TVLLZHee"]={'masses': [[1], [1]], 'widths': None}
+coords["TVLLWWee"]={'masses': [[1], [1]], 'widths': None}

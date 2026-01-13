@@ -404,7 +404,7 @@ class RefXSecComputer:
             #    pids = [ pids[0] ]
             xsecall,order,comment = self.getXSecsFor ( pids[0], pids[1],
                     sqrts, ewk, channel["masses"] )
-            # print ( f"for channel {pids}: {str(xsecall)[:10]}" )
+            #print ( f"for channel {pids}: {str(xsecall)[:10]}" )
             ## interpolate for the mass that we are looking for
             if xsecall == None:
                 continue
@@ -461,7 +461,7 @@ class RefXSecComputer:
         samesignmodes = ( 1000021, 1000023, 1000025 )
         # production of opposite-sign-pid pairs when the particle is within reach
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 2000011, 2000013, 2000015,
-                              1000024 
+                              1000024, 17, 18
                             )
 
         # associate production
@@ -476,8 +476,9 @@ class RefXSecComputer:
         # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
 
         for pid,mass in masses.items():
-            if pid < 999999 and pid not in schannel:
-                continue
+            #if pid < 999999 and pid not in schannel:
+            #if pid not in schannel:
+            #    continue
             if type(mass) not in [ float, int ]:
                 logger.error ( f"I found a mass of {mass} in {slhafile}, do not know what to do with it." )
                 sys.exit(-1)
@@ -490,8 +491,9 @@ class RefXSecComputer:
                 channels.append ( { "pids": (pid,pid), "masses": ( mass, mass ) } )
             if pid in oppositesignmodes:
                 channels.append ( { "pids": (-pid,pid), "masses": ( mass, mass ) } )
-            for jpid, jmass in masses.items():
-                if pid >= jpid or jpid < 999999 or jmass > 5000:
+            for jpid, jmass in masses.items():  
+                #if pid >= jpid or jpid < 999999 or jmass > 5000:    
+                if pid >= jpid or jmass > 5000:
                     continue
                 if (pid,jpid) in associateproduction:
                     channels.append ( { "pids": (jpid,pid), "masses": (jmass, mass ) } )
@@ -738,6 +740,16 @@ class RefXSecComputer:
         if pid1 in [ -2000011, -2000013, -2000015 ] and pid2 == -pid1:
             filename = f"xsecslepRslepR{int(sqrts)}.txt"
             order = NLL # 3
+        if (pid1 == 17 and pid2 == -17) or (pid1 == -17 and pid2 == 17): 
+            #pid1 in [ 17 ] and pid2 == -pid1:
+            filename = f"xsecVLLDL{int(sqrts)}.txt"
+            order = NLO # 2
+            pb = True
+        if (pid1 == 18 and pid2 == -18) or (pid1 == -18 and pid2 == 18): 
+            #pid1 in [ 17 ] and pid2 == -pid1:
+            filename = f"xsecVLLDN{int(sqrts)}.txt"
+            order = NLO # 2
+            pb = True
         if filename == None:
             logger.info ( f"could not identify filename for xsecs for {pid1,pid2}" )
             # logger.info ( "seems like we dont have ref xsecs for the pids %d/%d?" % ( pid1, pid2 ) )
