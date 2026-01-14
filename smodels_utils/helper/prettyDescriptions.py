@@ -1028,7 +1028,7 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
             label = f"w{k-3}"
             if dataMap is None or dataMap[k][1]=="mass":
                 label = f"m{k-2}"
-            if axisMap[k-2]==axisMap[k]: ## same entry!
+            if (k-2) in axisMap and axisMap[k-2]==axisMap[k]: ## same entry!
                 if label in pids:
                     cMap[v]=f"{cMap[v]},{pids[label]}"
             else:
