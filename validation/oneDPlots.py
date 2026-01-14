@@ -49,8 +49,7 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
     if len(xvalues)==0:
         return
     dxmax = getMinGap ( xvalues )
-    from smodels_utils.plotting import mpkitty as plt
-    # from matplotlib import pyplot as plt
+    from matplotlib import pyplot as plt
     chunks = []
     chunk = { "x": [ xvalues[0] ], "y": [ ceilY ( yvalues[0] ) ] }
     for i in range(len(xvalues)-1):
@@ -100,7 +99,8 @@ def create1DPlot( validationPlot, silentMode=True,
 
     dn = 50
     nmax = len(validationPlot.data)
-    from smodels_utils.plotting import mpkitty as plt
+   # from smodels_utils.plotting import mpkitty as plt
+    from matplotlib import pyplot as plt
     plt.dontplot = False
     fig, ax = plt.subplots()
 
