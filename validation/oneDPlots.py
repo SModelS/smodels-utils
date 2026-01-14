@@ -12,6 +12,7 @@ import logging,os,sys,numpy,random,copy
 # sys.path.append('../')
 from array import array
 import math, ctypes
+from typing import Union
 logger = logging.getLogger(__name__)
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -68,6 +69,17 @@ def plot ( xvalues, yvalues, color, marker, label : str = "", linestyle: str = "
         plt.plot ( chunk["x"], chunk["y"], c=color, marker=marker, \
                    label=label, linestyle=linestyle )
         label = ""
+
+def getXValues ( excl_line : Union[list,dict] ) -> set:
+    """ given the excl_line, get its x values,
+    whether its old format or new """
+    if type(excl_line)==dict:
+        return set(excl_line["x"])
+    ret = set()
+    for segment in excl_line:
+        for pt in segment:
+            ret.add ( pt["x"] )
+    return ret
 
 def append ( values : dict , label : str, point : dict ):
     """ convenience function to append a point """
@@ -252,7 +264,9 @@ def create1DPlot( validationPlot, silentMode=True,
             rmin, rmax = .7 * min ( yvs ), min ( 1.6, max ( yvs ) )
             if limitsOnXSecs:
                 rmin, rmax = frac * frac * frac * min(uls) , max ( uls ) / frac
-            xvals = set(o["points"]["x"])
+            # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+            # xvals = set(o["points"]["x"])
+            xvals = getXValues ( o["points"] )
             ## we assume the exclusion lines to be "points", so
             ## we draw horizontal lines in each point
             label = "official observed exclusion"
@@ -266,7 +280,8 @@ def create1DPlot( validationPlot, silentMode=True,
             rmin, rmax = .7 * min ( eyvs ), min ( 2., max ( eyvs ) )
             if limitsOnXSecs:
                 rmin, rmax = frac * min ( euls ), max ( euls ) / frac
-            xvals = set(o["points"]["x"])
+            # xvals = set(o["points"]["x"])
+            xvals = getXValues ( o["points"] )
             label = "dashed lines are expected values"
             for xv in xvals:
                 plt.plot ( [xv]*2, [ rmin, rmax ], c="k", linestyle = ":",
