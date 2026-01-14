@@ -343,6 +343,9 @@ class ValidationObjsBase():
                     #is1D = True
                     return True
                 yvalue = pt["axes"]["y"]
+                xvalue = pt["axes"]["x"]
+                if abs(yvalue - xvalue)/(yvalue+xvalue)<1e-10:
+                    return True
                 if yvalue == "stable":
                     yvalue = 1e-26
                 if type(yvalue) not in [ str ]:
