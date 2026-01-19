@@ -4,6 +4,7 @@
 namely it draws distributions of p-values, but for various 
 fudge factors """
 
+import sys
 from matplotlib import pyplot as plt
 import numpy as np
 from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
@@ -43,7 +44,11 @@ def drawP ( args : dict ):
     :iparam statmodel: norm or lognorm for nuisances
     """
     with open(args["inputfile"],"rt") as f:
-        data = eval(f.read())
+        try:
+            data = eval(f.read())
+        except (ValueError,TypeError,SyntaxError) as e:
+            print ( f"[drawP] could not parse {args['inputfile']}: {e}" )
+            sys.exit()
     fudge = args["fudge"]
     statmodel = args["statmodel"]
     # filterBy = "anagroups"
