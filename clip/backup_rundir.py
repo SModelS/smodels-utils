@@ -26,6 +26,8 @@ def backup_all():
         dirs.append ( f"rundir_fakebg{i}_f10" )
         dirs.append ( f"rundir_fakebg{i}_f07" )
     dirs = [ "rundir_fake_stops3", "rundir_fake_ewk1", "rundir_fake_ewkoff1" ]
+    dirs += [ "rundir_fake_ewk2", "rundir_fake_ewk3", "rundir_fake_ewkoff3" ]
+    dirs += [ "rundir_fake_ewkoff2" ]
     for d in dirs:
         backup ( d )
 
