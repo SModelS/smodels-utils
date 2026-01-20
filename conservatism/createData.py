@@ -27,8 +27,6 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
         obs = data[dataID]["origN"]
         bg = data[dataID]["expectedBG"]
         bgerr = fudge*data[dataID]["bgError"]
-        if bg == 0.: # bg needs to be greater than 0
-            continue
         sigN = 0.
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
