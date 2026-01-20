@@ -90,6 +90,11 @@ def writeHeader ( f ):
     f.write ( f"# p_lognorm: p-value for lognorm nuisances\n" )
     f.write ( "\n" )
 
+def doCompute ( fudge : float, d, args ):
+    p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
+                        addSigN = args["addSigN"] )
+    return p
+
 def createData( args : dict ):
     """ create the data needed for the conservatism plots.
     :args (dict):
@@ -110,20 +115,36 @@ def createData( args : dict ):
     d = filterData ( data )
 
     pvalues={}
-    import progressbar
-    pbar = progressbar.ProgressBar(widgets=["Creating ", 
-#                progressbar.Counter(format='%(value)d/%(max_value)d '), 
-                progressbar.Percentage(),
-                progressbar.Bar( marker=progressbar.RotatingMarker()), 
-                progressbar.ETA()])
-    pbar.maxval = len(args["ffactors"])
-    pbar.start()
-    for i,fudge in enumerate(args["ffactors"]):
-        p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
-                            addSigN = args["addSigN"] )
-        pbar.update(i)
-        pvalues[float(fudge)]=p
-    pbar.finish()
+    n_workers = 8
+    if n_workers == 1:
+        import progressbar
+        pbar = progressbar.ProgressBar(widgets=["Creating ", 
+    #                progressbar.Counter(format='%(value)d/%(max_value)d '), 
+                    progressbar.Percentage(),
+                    progressbar.Bar( marker=progressbar.RotatingMarker()), 
+                    progressbar.ETA()])
+        pbar.maxval = len(args["ffactors"])
+        pbar.start()
+        for i,fudge in enumerate(args["ffactors"]):
+            p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
+                                addSigN = args["addSigN"] )
+            pbar.update(i)
+            pvalues[float(fudge)]=p
+        pbar.finish()
+    else: ## parallel version
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+
+        i = 0
+        with ProcessPoolExecutor(max_workers=n_workers) as exe:
+            futures = [
+                exe.submit( doCompute, f, d, args )
+                for f in args["ffactors"]
+            ]
+            results = [f.result() for f in futures]
+            # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+            for r in results:
+                fudge = r[0]["fudge"]
+                pvalues[ fudge ] = r
 
     from ptools.helpers import py_dumps
     print ( f"[createData] creating {args['outfile']}" )
@@ -142,6 +163,9 @@ if __name__ == "__main__":
     ap.add_argument('-o', '--outfile',
             help="output file, 'default' -> '<ntoys>.dict' ['data.dict']",
             default='data.dict')
+    ap.add_argument('-p', '--n_processes', type=int,
+            help="number of parallel processes [1]",
+            default=1 )
     ap.add_argument('-f', '--ffactors',
             help='fudge factors, a list [None]', type=str,
             default=None)
