@@ -29,7 +29,8 @@ def countAnalyses ( data : list ) -> int:
     anaIds = set()
     for entry in data:
         id = entry["id"]
-        labels = [ "-agg", "-multibin", "-strong", "-ewk" ]
+        labels = [ "-agg", "-multibin", "-strong", "-ewk",
+                   "-hino" ]
         for label in labels:
             id = id.replace( label, "" )
         anaIds.add ( id )
@@ -152,7 +153,7 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
     ap.add_argument('-m', '--min_bg', type=float,
-            help='minimum number of expected background events [1.1]', default=1.1 )
+            help='minimum number of expected background events [0.]', default=0. )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
     args = ap.parse_args()

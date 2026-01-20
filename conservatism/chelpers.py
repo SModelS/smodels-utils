@@ -189,7 +189,7 @@ def filterByBG ( data : Union[dict,list], min_bg : float,
         return ret
     ret = []
     for entry in data:
-        if entry[ filterBy ]>min_bg:
+        if entry[ filterBy ] >= min_bg:
             ret.append ( entry )
     return ret
 
