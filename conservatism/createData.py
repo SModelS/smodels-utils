@@ -22,21 +22,23 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
     :returns: dictionary, with id, obs, etc and also p_norm p_lognorm
     """
     ret = []
+
     for dataID in data.keys():
+        values = data[dataID]
         anaID, datasetID = dataID.split(":")
-        obs = data[dataID]["origN"]
-        bg = data[dataID]["expectedBG"]
-        bgerr = fudge*data[dataID]["bgError"]
+        obs = values["origN"]
+        bg = values["expectedBG"]
+        bgerr = fudge*values["bgError"]
         sigN = 0.
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
-              "obs": obs, "bgerr": bgerr, "txns": data[dataID]["txns"] }
-        if "sigN" in data[dataID] and addSigN:
+              "obs": obs, "bgerr": bgerr, "txns": values["txns"] }
+        if "sigN" in values and addSigN:
             hasWarned["signals"]+=1
             if hasWarned["signals"]<2:
                 print ( f"[createData] there are signals in the database, we will heed them in the computations" )
             # signal mode, we remove the signal
-            sigN = data[dataID]["sigN"]
+            sigN = values["sigN"]
             d["sigN"] = sigN
         debug = True
         if debug:
@@ -46,8 +48,13 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
         nbg = bg
         if addSigN:
             nbg = bg + sigN
-        p_norm = computeP ( nobs, nbg, bgerr, lognormal = False,
-                            nmin = nmin, nmax = nmax )
+        if abs(fudge-1.)<1e-8 and "orig_p" in values:
+            # lets take these values from the original database.dict file
+            # for consistency!
+            p_norm = values["orig_p"]
+        else:
+            p_norm = computeP ( nobs, nbg, bgerr, lognormal = False,
+                                nmin = nmin, nmax = nmax )
         d["p_norm"]=p_norm
         p_lognorm = computeP ( nobs, nbg, bgerr, lognormal = True,
                                nmin = nmin, nmax = nmax )
@@ -60,7 +67,7 @@ def filterData( data : dict ) -> dict:
     we drop the upper limits """
     d = {}
     params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs","txns",\
-              "sigN"]
+              "sigN", "orig_p" ]
     for dataID in data.keys():
         if ":ul:" in dataID:
             continue
@@ -115,7 +122,7 @@ def createData( args : dict ):
     d = filterData ( data )
 
     pvalues={}
-    n_workers = 8
+    n_workers = args["n_processes"]
     if n_workers == 1:
         import progressbar
         pbar = progressbar.ProgressBar(widgets=["Creating ", 
@@ -132,8 +139,7 @@ def createData( args : dict ):
             pvalues[float(fudge)]=p
         pbar.finish()
     else: ## parallel version
-        from concurrent.futures import ProcessPoolExecutor, as_completed
-
+        from concurrent.futures import ProcessPoolExecutor
         i = 0
         with ProcessPoolExecutor(max_workers=n_workers) as exe:
             futures = [
@@ -141,7 +147,6 @@ def createData( args : dict ):
                 for f in args["ffactors"]
             ]
             results = [f.result() for f in futures]
-            # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             for r in results:
                 fudge = r[0]["fudge"]
                 pvalues[ fudge ] = r
