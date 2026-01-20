@@ -12,13 +12,11 @@ sys.path.insert(0,"../../protomodels/")
 hasWarned = { "signals": 0 }
 
 def computePValues( data : dict, fudge : float, nmin : int = 50000, 
-        nmax : int = 100000, subtractSigN : bool = False, 
-        addSigN : bool = True ) -> dict:
+        nmax : int = 100000, addSigN : bool = True ) -> dict:
     """ compute p-values
     :param fudge: fudge factor
     :param nmin: minimum number of toys
     :param nmax: maximum number of toys
-    :param subtractSigN: if true, subtract sigN from observation
     :param addSigN: if true, add sigN to expected background
 
     :returns: dictionary, with id, obs, etc and also p_norm p_lognorm
@@ -35,22 +33,18 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
 
         d = { "id": anaID, "datasetId": datasetID, "bg": bg,
               "obs": obs, "bgerr": bgerr, "txns": data[dataID]["txns"] }
-        if "sigN" in data[dataID] and ( subtractSigN or addSigN ):
+        if "sigN" in data[dataID] and addSigN:
             hasWarned["signals"]+=1
             if hasWarned["signals"]<2:
                 print ( f"[createData] there are signals in the database, we will heed them in the computations" )
             # signal mode, we remove the signal
             sigN = data[dataID]["sigN"]
             d["sigN"] = sigN
-            if subtractSigN:
-                d["obs"] = obs - sigN
         debug = True
         if debug:
             d["fudge"]=fudge
         from ptools.helpers import computeP
         nobs = obs
-        if subtractSigN:
-            nobs = obs - sigN
         nbg = bg
         if addSigN:
             nbg = bg + sigN
@@ -105,7 +99,6 @@ def createData( args : dict ):
       - param nmin: minimum number of toys to throw for computation of pvalues
       - param nmax: maximum number of toys to throw for computation of pvalues
       - param outfile: dict file to store results in
-      - param subtractSigN: if true, subtract sigN from observation
       - param addSigN: if true, add sigN to expected background
     """
     # the most important parameters
@@ -129,7 +122,7 @@ def createData( args : dict ):
     pbar.start()
     for i,fudge in enumerate(args["ffactors"]):
         p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
-                subtractSigN = args["subtractSigN"], addSigN = args["addSigN"] )
+                            addSigN = args["addSigN"] )
         pbar.update(i)
         pvalues[float(fudge)]=p
     pbar.finish()
@@ -154,8 +147,6 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--ffactors',
             help='fudge factors, a list [None]', type=str,
             default=None)
-    ap.add_argument('-s', '--subtractSigN',
-            help='subtract the signals from obs', action="store_true" )
     ap.add_argument('-a', '--addSigN',
             help='add the signals to expected bg', action="store_true" )
     ap.add_argument('-n', '--nmin', type=int,
