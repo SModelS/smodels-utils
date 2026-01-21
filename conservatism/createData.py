@@ -97,9 +97,11 @@ def writeHeader ( f ):
     f.write ( f"# p_lognorm: p-value for lognorm nuisances\n" )
     f.write ( "\n" )
 
-def doCompute ( fudge : float, d, args ):
+def doCompute ( fudge : float, d : dict, args : dict ) -> dict:
+    """ the p-value computation routine, for concurrency """
     p = computePValues( d, fudge, nmin = args["nmin"], nmax = args["nmax"], 
                         addSigN = args["addSigN"] )
+    print ( ".", flush=True, end="" )
     return p
 
 def createData( args : dict ):
@@ -141,6 +143,9 @@ def createData( args : dict ):
     else: ## parallel version
         from concurrent.futures import ProcessPoolExecutor
         i = 0
+        print ( f"[createData] ", end="", flush=True )
+        print(" " * len(args["ffactors"]) + "<", end="\r", flush=True)
+        print ( f"[createData] ", end="", flush=True )
         with ProcessPoolExecutor(max_workers=n_workers) as exe:
             futures = [
                 exe.submit( doCompute, f, d, args )
@@ -150,6 +155,7 @@ def createData( args : dict ):
             for r in results:
                 fudge = r[0]["fudge"]
                 pvalues[ fudge ] = r
+    print ( )
 
     from ptools.helpers import py_dumps
     print ( f"[createData] creating {args['outfile']}" )
