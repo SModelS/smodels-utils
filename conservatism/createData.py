@@ -169,11 +169,11 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=
             "Produce the data for the conservatism plots")
     ap.add_argument('-d', '--dictfile',
-            help='path to database dictionary file [../../protomodels/historic_database_stats/310.dict]',
-            default='../../protomodels/historic_database_stats/310.dict')
+            help='path to database dictionary file [../../protomodels/historic_database_stats/310b.dict]',
+            default='../../protomodels/historic_database_stats/310b.dict')
     ap.add_argument('-o', '--outfile',
-            help="output file, 'default' -> '<ntoys>.dict' ['data.dict']",
-            default='data.dict')
+            help="output file, 'default' -> '<ntoys>.fudges' ['data.fudges']",
+            default='data.fudges')
     ap.add_argument('-p', '--n_processes', type=int,
             help="number of parallel processes [1]",
             default=1 )
@@ -199,5 +199,5 @@ if __name__ == "__main__":
         ffactors = eval(ffactors)
     args.ffactors = ffactors
     if args.outfile == "default":
-        args.outfile = f"{args.ntoys}.dict"
+        args.outfile = f"{args.ntoys}.fudges"
     createData( vars(args) )
