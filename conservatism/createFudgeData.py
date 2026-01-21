@@ -68,7 +68,8 @@ def filterData( data : dict ) -> dict:
     we drop the upper limits """
     d = {}
     params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs","txns",\
-              "sigN", "new_p" ]
+              "sigN" ]
+    # params += [ "new_p" ]
     for dataID in data.keys():
         if ":ul:" in dataID:
             continue
