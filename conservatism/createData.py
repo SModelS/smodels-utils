@@ -36,7 +36,8 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
         if "sigN" in values and addSigN:
             hasWarned["signals"]+=1
             if hasWarned["signals"]<2:
-                print ( f"[createData] there are signals in the database, we will heed them in the computations" )
+                # print ( f"[createData] there are signals in the database, we will heed them in the computations" )
+                pass
             # signal mode, we remove the signal
             sigN = values["sigN"]
             d["sigN"] = sigN
