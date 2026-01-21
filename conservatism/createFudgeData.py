@@ -49,7 +49,7 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
         nbg = bg
         if addSigN:
             nbg = bg + sigN
-        if abs(fudge-1.)<1e-8 and "new_p" in values:
+        if False: # abs(fudge-1.)<1e-8 and "new_p" in values:
             # lets take these values from the original database.dict file
             # for consistency!
             p_norm = values["new_p"]
