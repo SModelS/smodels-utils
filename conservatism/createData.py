@@ -48,10 +48,10 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
         nbg = bg
         if addSigN:
             nbg = bg + sigN
-        if abs(fudge-1.)<1e-8 and "orig_p" in values:
+        if abs(fudge-1.)<1e-8 and "new_p" in values:
             # lets take these values from the original database.dict file
             # for consistency!
-            p_norm = values["orig_p"]
+            p_norm = values["new_p"]
         else:
             p_norm = computeP ( nobs, nbg, bgerr, lognormal = False,
                                 nmin = nmin, nmax = nmax )
@@ -67,7 +67,7 @@ def filterData( data : dict ) -> dict:
     we drop the upper limits """
     d = {}
     params = ["origN","expectedBG","bgError","orig_Z","new_Z","newObs","txns",\
-              "sigN", "orig_p" ]
+              "sigN", "new_p" ]
     for dataID in data.keys():
         if ":ul:" in dataID:
             continue
