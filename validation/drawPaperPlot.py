@@ -18,14 +18,35 @@ from smodels_utils.helper.terminalcolors import *
 def fetchCurves ( validationPlot ) -> dict :
     """ fetch the curves and convert to sahanas format """
     ret = {}
-    def fetchPoints ( curves : list ) -> dict:
+    def fetchPointsNewFormat ( curves : list ) -> dict:
         ret = { "x": [], "y": [] }
         for curve in curves:
-            for x in curve["points"]["x"]:
+            all_segments = curve["points"]
+            for segment in all_segments:
+                for point in segment:
+                    ret["x"].append ( point["x"] )
+                    if "y" in point:
+                        ret["y"].append ( point["y"] )
+        return ret
+
+    def fetchPointsOldFormat ( curves : list ) -> dict:
+        ret = { "x": [], "y": [] }
+        for curve in curves:
+            points = curve["points"]
+            for x in points["x"]:
                 ret["x"].append ( x )
-            for y in curve["points"]["y"]:
+            for y in points["y"]:
                 ret["y"].append ( y )
         return ret
+
+    def fetchPoints ( curves : list ) -> dict:
+        if len ( curves ) == 0:
+            return {}
+        points = curves[0]["points"]
+        if type(points)==list:
+            return fetchPointsNewFormat ( curves )
+        return fetchPointsOldFormat ( curves )
+
     ret["obs_excl"] = fetchPoints ( validationPlot.officialCurves )
     ret["exp_excl"] = fetchPoints ( validationPlot.expectedOfficialCurves )
     return ret
