@@ -326,32 +326,29 @@ def main():
         print ( a )
 
     home = os.environ["HOME"]
-    hasSSHpass = (shutil.which("sshpass")!=None)
-    hasSSHpass = False # 2FA makes this impossible
     if ssh and not args.dry_run:
-        cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
-        if hasSSHpass:
-            cmd2 = f"sshpass -f {home}/.ssh/lxplus {cmd2}"
-        print ( f"{RED}[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):{RESET}" )
-        print ( cmd2 )
+        # 2FA, so just moved them into cernbox, we take it from there
+        # cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
+        cmd2 = f"mv {pclfilename} ~/cernbox/tmp_dbs/"
+        # print ( f"{RED}[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):{RESET}" )
+        print ( f"[publishDatabasePickle] running: {cmd2}" )
         reallyDo = not args.dry_run
-        reallyDo = False # doesnt work no more
+        # reallyDo = False # doesnt work no more
         if reallyDo:
             o = CMD.getoutput ( cmd2 )
             print ( f"[publishDatabasePickle] {cmd2}: {o}" )
         addToCommandsFile ( cmd2 )
-        o = CMD.getoutput ( f"echo '{cmd2}' | xsel -i" )
+        #o = CMD.getoutput ( f"echo '{cmd2}' | xsel -i" )
         if not reallyDo:
             print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
-        if hasSSHpass:
-            cmd = f"sshpass -f {home}/.ssh/lxplus {cmd}"
-        print ( f"[publishDatabasePickle] now do {cmd}" )
-        if reallyDo:
-            o = CMD.getoutput ( cmd )
-            print ( f"[publishDatabasePickle] done: {cmd}: {o}" )
+        print ( f"[publishDatabasePickle] now do -- pasted to clipboard:\n{cmd}" )
+        o = CMD.getoutput ( f"echo '{cmd}' | xsel -i" )
+        #if reallyDo:
+        #    o = CMD.getoutput ( cmd )
+        #    print ( f"[publishDatabasePickle] done: {cmd}: {o}" )
         if args.finalize_commands:
             addToCommandsFile ( cmd )
         print ( )
