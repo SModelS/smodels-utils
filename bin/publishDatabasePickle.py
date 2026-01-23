@@ -17,12 +17,13 @@ import hashlib
 import pathlib
 import gzip, shutil
 from smodels_utils.helper.terminalcolors import *
-from smodels_utils.helper.various import checkNumpyVersion
 from smodels.base.runtime import checkForIncompatibleModuleVersions
 
 from typing import Union, Set, Tuple
 
-checkNumpyVersion()
+# everything should be numpy>=2.x by now
+# from smodels_utils.helper.various import checkNumpyVersion
+# checkNumpyVersion()
 smodels_check = checkForIncompatibleModuleVersions()
 if not smodels_check:
     sys.exit()
