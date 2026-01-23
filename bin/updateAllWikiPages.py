@@ -65,8 +65,8 @@ def main():
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
             action='store_true' )
-    argparser.add_argument ( '--debug', 
-            help='Add the debug version of the pickle file',
+    argparser.add_argument ( '--no_debug', 
+            help='Do not add the debug version of the pickle file',
             action='store_true' )
     argparser.add_argument ( '-d', '--dry_run', 
             help='dry run, write commands, do not execute them',
@@ -130,7 +130,7 @@ def main():
         exec ( cmd + [ "-f", "./nonaggregated.pcl" ], A.dry_run )
         exec ( cmd + [ "-f", "./full_llhds.pcl" ], A.dry_run )
         exec ( cmd + [ "-F", "-f", "./fastlim.pcl" ], A.dry_run )
-        if A.debug:
+        if not A.no_debug:
             exec ( cmd + [ "--txnamevalues", "-b", "-f", db ], A.dry_run )
 
 
