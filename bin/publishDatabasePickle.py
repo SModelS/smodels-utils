@@ -327,6 +327,7 @@ def main():
 
     home = os.environ["HOME"]
     hasSSHpass = (shutil.which("sshpass")!=None)
+    hasSSHpass = False # 2FA makes this impossible
     if ssh and not args.dry_run:
         cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         if hasSSHpass:
@@ -334,6 +335,7 @@ def main():
         print ( f"{RED}[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):{RESET}" )
         print ( cmd2 )
         reallyDo = not args.dry_run
+        reallyDo = False # doesnt work no more
         if reallyDo:
             o = CMD.getoutput ( cmd2 )
             print ( f"[publishDatabasePickle] {cmd2}: {o}" )
@@ -346,8 +348,10 @@ def main():
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
         if hasSSHpass:
             cmd = f"sshpass -f {home}/.ssh/lxplus {cmd}"
-        CMD.getoutput ( cmd )
-        print ( "[publishDatabasePickle] done:", cmd )
+        print ( f"[publishDatabasePickle] now do {cmd}" )
+        if reallyDo:
+            o = CMD.getoutput ( cmd )
+            print ( f"[publishDatabasePickle] done: {cmd}: {o}" )
         if args.finalize_commands:
             addToCommandsFile ( cmd )
         print ( )
