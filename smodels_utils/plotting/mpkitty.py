@@ -36,7 +36,7 @@ importBackend()
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 
-def timg( filename : os.PathLike ):
+def timg( filename : os.PathLike, verbose : bool = False ):
     """ use timg to show filename in the terminal """
     import os
     if not options["hasKittyBackend"] and not "kitty" in os.environ["TERM"]:
@@ -60,6 +60,8 @@ def timg( filename : os.PathLike ):
         cmd = f"{exe} -s 80 -c extended {filename}"
 
     print () # make sure we start in a fresh line
+    if verbose:
+        print ( f"[mpkitty] {cmd}" )
     o = subprocess.getoutput ( cmd )
     # print ( f"[mpkitty] {o}" )
     print ( o )
