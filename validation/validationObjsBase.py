@@ -335,6 +335,7 @@ class ValidationObjsBase():
         if self.data in [ [], None ]:
             return None
         ys = []
+        deltas_xy = []
         for ctPoints,pt in enumerate(self.data):
             if pt == None:
                 continue
@@ -344,12 +345,15 @@ class ValidationObjsBase():
                     return True
                 yvalue = pt["axes"]["y"]
                 xvalue = pt["axes"]["x"]
-                if abs(yvalue - xvalue)/(yvalue+xvalue)<1e-10:
-                    return True
+                delta_xy = abs(yvalue - xvalue)/(yvalue+xvalue)
+                deltas_xy.append ( delta_xy )
                 if yvalue == "stable":
                     yvalue = 1e-26
                 if type(yvalue) not in [ str ]:
                     ys.append ( yvalue )
+        if sum ( deltas_xy ) < 1e-5:
+            ## looks like y values are all equal to x values
+            return True
         if len(ys)>0:
             deltay = max(ys)-min(ys)
             if deltay < 1e-17:
