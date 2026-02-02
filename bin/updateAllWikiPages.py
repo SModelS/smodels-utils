@@ -58,7 +58,7 @@ def main():
     argparser = argparse.ArgumentParser(
             description='Bulk update of all wiki pages. Calls listOfAnalyses.py, ../validation/createWikiPage.py, smsDictionary.py, publishDatabasePickle.py.')
     argparser.add_argument ( '-n', '--non_versioned', 
-            help='update the non-versioned files also (eg Validation.md, not just Validation211.md)',
+            help='update the non-versioned files also (eg Validation.md, not just Validation311.md)',
             action='store_true' )
     argparser.add_argument ( '-f', '--feynman', help='also create Feynman Graphs when calling smsDictionary',
                              action='store_true' )
