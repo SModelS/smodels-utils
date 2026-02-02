@@ -42,7 +42,7 @@ class Lister:
         from protomodels.multiverse import expResModifier
         # print ( "[listOfAnalyses] starting roughviz" )
         options = { "compute_ps": True, "suffix": "temp" }
-        # options["database"]="../../smodels-database" 
+        # options["database"]="../../smodels-database"
         options["dbpath"]=self.dbpath
         options["outfile"]="none"
         modifier = expResModifier.ExpResModifier ( options )
@@ -351,7 +351,7 @@ class Lister:
         return label
 
     def emptyLine( self, ana_name : Union [ None, str]  = None ):
-        """ write a header line in the matrix 
+        """ write a header line in the matrix
         :param ana_name: the analysis name of the next analysis, so we
         can choose an approriate title. If none given, use self.previous
         """
@@ -488,10 +488,10 @@ class Lister:
         hasoUL = self.linkIfYes ( has["oul"], ana.globalInfo.id, "ul" )
         haseUL = self.linkIfYes ( has["eul"], ana.globalInfo.id, "ul" )
         hasEM = self.linkIfYes ( has["em"], ana.globalInfo.id, "em" )
-        self.f.write ( f" {hasoUL} |" ) 
+        self.f.write ( f" {hasoUL} |" )
         if self.likelihoods:
             self.f.write ( f" {haseUL} |" )
-        self.f.write ( f" {hasEM} |" ) 
+        self.f.write ( f" {hasEM} |" )
         if self.likelihoods:
             llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
             self.f.write ( f" {llhd} |" )
@@ -504,7 +504,7 @@ class Lister:
         """
         if B in [ False, "False" ]: return ""
         baseUrl = f"https://smodels.github.io/docs/Validation{self.dotlessv}#"
-        if B in [ True, "True" ]: 
+        if B in [ True, "True" ]:
             return f"[&#x1F517;]({baseUrl}{anaId}_{linkTo})"
             # return f"[&#10004;]({baseUrl}{anaId}_{linkTo})"
         return f"[?]({baseUrl}{anaId}_{linkTo})"
@@ -626,8 +626,10 @@ class Lister:
             dbpath += "+./superseded.pcl"
         self.database = Database ( dbpath )
         ver = ""
+        # original version, whether we are in versionless
+        self.orig_ver = self.database.databaseVersion.replace(".","")
         if args.add_version:
-            ver = self.database.databaseVersion.replace(".","")
+            ver = self.orig_ver
         if "+" in ver:
             ver = ver [ :ver.find("+") ]
         filename = f"ListOfAnalyses{ver}"
@@ -635,7 +637,6 @@ class Lister:
             filename += "WithSuperseded"
         self.filename = filename
         self.add_version = args.add_version ## add version number
-        self.orig_ver = ver # original version, whether we are in versionless
         # mode or not
         self.dotlessv = ""
         if self.add_version:
