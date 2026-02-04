@@ -343,7 +343,11 @@ def runOneJob ( rvars: dict ):
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
     # ram = ram*1.2
-    ram = ram*3.5
+    ram = ram*1.8
+    # ram = ram*3.5
+    if rvars["select"]=="all" or "forbiddenparticles" == []:
+        print ( f"[slurm_walk] FIXME check if we dont need more RAM for this" )
+        # ram = ram * 2. ## full database? we need a lot of RAM!
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.1
     #if "comb" in rundir: ## combinations need more RAM
@@ -360,7 +364,8 @@ def runOneJob ( rvars: dict ):
     cmd = [ "sbatch" ]
     cmd += [ "--error", f"{outputdir}/walk-%j.out",
              "--output", f"{outputdir}/walk-%j.out" ]
-    cmd += ["--cpus-per-task", "3"]
+    cmd += ["--cpus-per-task", "1"]
+    # cmd += ["--cpus-per-task", "3"]
 
     qos = "c_short"
     if time > 48:
