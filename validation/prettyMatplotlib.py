@@ -25,8 +25,8 @@ import matplotlib.ticker as ticker
 from matplotlib.pyplot import contour
 from smodels_utils.helper.terminalcolors import *
 from plottingFuncs import yIsLog, getFigureUrl, getDatasetDescription, \
-         getClosestValue, getAxisRange, isWithinRange, filterWithinRanges, \
-         importMatplot
+         getClosestValue, getAxisRange, isWithinRange, filterWithinRanges
+from smodels_utils.plotting.plottingRecorder import importMatplot
 
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
