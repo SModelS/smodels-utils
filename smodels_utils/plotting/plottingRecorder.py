@@ -24,8 +24,12 @@ class Recorder:
         # from matplotlib.transforms import BboxTransformTo, TransformedBbox, Bbox
         self.recordingfile.write ( "import numpy as np\n" )
         self.recordingfile.write ( "from numpy import array\n" )
+        self.recordingfile.write ( "\n" )
+        self.recordingfile.write ( "# recorded code start here\n" )
         self.obj = obj
         self.callable_results = []
+        self.obj.subplots()
+        self.fig, self.ax = self.obj.subplots()
 
     def closeFile ( self ):
         self.recordingfile.close()
@@ -60,8 +64,8 @@ class Recorder:
                     a=list(a)
                 a = str(a)
                 a = a.replace("nan","np.nan" )
-                a = a.replace( r"\r","\\\\r" )
-                a = a.replace( r"\t","\\\\t" )
+                for l in [ "r", "t", "n", "l", "b" ]:
+                    a = a.replace( rf"\{l}", f"\\\\{l}" )
                 s_args += a
             for k,v in kwargs.items():
                 if "matplotlib.colors.LinearSegmentedColormap" in str(v):
@@ -87,6 +91,8 @@ class Recorder:
                 line += "plt.savefig('recorded.png',metadata=metadata)\n"
             if "plt.gcf()" in line:
                 line = "fig=plt.gcf()\n"
+            if "plt.gca()" in line:
+                line = "ax=plt.gca()\n"
             self.parent.recordingfile.write ( line )
             ret = self.callable(*args, **kwargs)
             self.parent.callable_results.append(ret)
