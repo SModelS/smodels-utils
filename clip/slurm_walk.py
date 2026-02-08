@@ -342,12 +342,10 @@ def runOneJob ( rvars: dict ):
     # Dir = getDirname ( rundir )
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
-    # ram = ram*1.2
-    ram = ram*1.8
-    # ram = ram*3.5
     if rvars["select"]=="all" or "forbiddenparticles" == []:
-        print ( f"[slurm_walk] FIXME check if we dont need more RAM for this" )
-        # ram = ram * 2. ## full database? we need a lot of RAM!
+        ram = ram * 2. ## full database? we need a lot of RAM!
+    else:
+        ram = ram * 1.7
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.1
     #if "comb" in rundir: ## combinations need more RAM
