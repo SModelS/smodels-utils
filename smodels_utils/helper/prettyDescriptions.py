@@ -330,7 +330,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TRPVttbj':'stop --> t neutralino_1, neutralino_1 --> t b s',
     'TRPVtttbj':'gluino --> t t neutralino_1, neutralino_1 --> t b s',
     'TVLLWWee' : 'N --> l- W+',
-    'TVLLZHee' : 'Lp --> l+ Z/ l+ higgs'
+    'TVLLZHee' : 'Lp --> l+ Z/ l+ higgs',
+    'TRV1ee' : 'ZPrime --> e+ e-',
+    'TRV1mumu' : 'ZPrime --> mu+ mu-',
+    'TRV1ll' : 'ZPrime --> l+ l-'
 }
 
 #Name of mother particles
@@ -562,7 +565,10 @@ motherDict = {"T1" :  "gluino gluino",
     "TRPVttbj" : "stop stop",
     "TRPVtttbj" : "gluino gluino",
     "TVLLWWee" : "N Nb",
-    "TVLLZHee" : "Lp Lm" 
+    "TVLLZHee" : "Lp Lm",
+    "TRV1ee" : "ZPrime",
+    "TRV1mumu" : "ZPrime",
+    "TRV1ll" : "ZPrime"
 }
 
 def latexfy(instr : str ) -> str:
