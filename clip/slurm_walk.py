@@ -220,7 +220,7 @@ def runWalkers ( args ) -> int:
                                               args = ( rvars, ) )
                 jobs.append ( p )
                 p.start()
-                time.sleep ( random.uniform ( 0.21, .27 ) )
+                time.sleep ( random.uniform ( 0.57, .67 ) )
             if nprocesses > 2 :
                 print ( f"{intro}creating WALKER_0.py, but wont start it. You can start it manually!" )
                 rvars["nmin"]=0
@@ -343,9 +343,9 @@ def runOneJob ( rvars: dict ):
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
     if rvars["select"]=="all" or "forbiddenparticles" == []:
-        ram = ram * 2. ## full database? we need a lot of RAM!
+        ram = ram * 2.7 ## full database? we need a lot of RAM!
     else:
-        ram = ram * 1.7
+        ram = ram * 1.5 ## lets see how low we can go
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.1
     #if "comb" in rundir: ## combinations need more RAM
