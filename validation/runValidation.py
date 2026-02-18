@@ -253,19 +253,22 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if "comment" in options:
         cmd += f" --comment '{options['comment']}'"
     cmd += f" --output 'ratios_{txname}_{axis}.png'"
-    print ( f"[runValidation] {cmd}" )
     options["dbpath"]=dbpath
     options["analysis1"]=ana1
     options["analysis2"]=ana2
     options["valfile1"]=valfile1
     options["valfile2"]=valfile2
+    print ( f"[runValidation] {cmd}" )
     plotRatio.draw ( options )
 
     ## now the expected case
+    cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2} -e1 -e2"
     options["eul"] = True
     options["eul2"] = True
     output = f"{os.path.dirname(datafile)}/expected_ratios_{txname}_{axis}.png"
+    cmd += f" --output 'expected_ratios_{txname}_{axis}.png'"
     options["output"] = output
+    print ( f"[runValidation] {cmd}" )
     plotRatio.draw ( options )
 
     pathToValDir = os.path.dirname ( os.path.realpath ( __file__ ) )
