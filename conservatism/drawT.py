@@ -29,8 +29,10 @@ def getHistoTestStats ( data : dict, bins : list, method : str ) -> dict:
         Ts[fudge]=T
     return Ts
 
-def draw( data : dict, bins : list, method : str, show : bool ):
+def draw( data : dict, bins : list, args: dict ):
     """ the drawing method """
+    method = args["method"]
+    show = args["show"]
     methods = [ "KL", "wasserstein", "KS", "AD", "combo", "default", "fold" ]
     assert method in methods, f"method {method} unknown. Known methods: {methods}"
     #method = "KL"
@@ -63,8 +65,13 @@ def draw( data : dict, bins : list, method : str, show : bool ):
                    color = color, linestyle = linestyle  )
     ## get the fudge value that minimizes T
     min_fudge = min( Ts, key=Ts.get )
+    label = r"$\hat{f}$"
+    if "f_hat" in args and args["f_hat"]!= None:
+        min_fudge = args["f_hat"]
+        label = f"f={min_fudge}"
+
     plt.scatter ( min_fudge, Ts[min_fudge], color="red", s=30,
-                  label = r"$\hat{f}$" )
+                  label = label, zorder = 5 )
     plt.plot ( xs, ys, label=r"$\mathrm{T}(f)$", linewidth=4 )
     plt.legend()
     outfile = "T.png"
@@ -100,7 +107,7 @@ def create ( args : dict ):
     data = filterByAnaGroups ( data, "darkmatter+electroweakinos" )
     print ( f"[drawT] after filtering by analysis groups we have  {len(data[1.0])} entries" )
     data = filterByBG ( data, args["min_bg"] )
-    draw ( data, bins, args["method"], args["show"] )
+    draw ( data, bins, args )
 
 if __name__ == "__main__":
     import argparse
@@ -114,6 +121,8 @@ if __name__ == "__main__":
             help='minimum background exptectation to consider analysis [3.5]', default=3.5 )
     ap.add_argument('-s', '--show', action="store_true",
             help='show also output via timg' )
+    ap.add_argument('-f', '--f_hat', type=float,
+            help='draw f_hat at certain value', default=None )
     ap.add_argument( '--method', type=str,
             help='criterion to be used, e.g. wasserstein, KS, AD, combo, fold, default [AD]', default="AD" )
     args = ap.parse_args()

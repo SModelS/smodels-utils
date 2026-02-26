@@ -28,6 +28,7 @@ from validation.plottingFuncs import convertNewAxes
 from smodels_utils.helper.terminalcolors import *
 import warnings
 warnings.filterwarnings("ignore")
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +133,16 @@ def getCoords ( points : list[list], coord : str ) -> list:
             ret.append ( pt[coord] )
     return ret
 
+def centerInterval ( vmin : float, vmax : float ) -> Tuple[float,float]:
+    """ center the interval around 1.0, make sure the bigger interval is used in both directions
+    :returns: vmin, vmax
+    """
+    d_upper, d_lower = vmax - 1.0, 1.0 - vmin
+    if d_upper > d_lower:
+        vmin = 1.0 - d_upper
+    else:
+        vmax = 1.0 + d_lower
+    return ( vmin, vmax )
 
 def draw ( options : dict ):
     """ plot.
@@ -374,14 +385,16 @@ def draw ( options : dict ):
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
     vmin, vmax = options["zmin"], options["zmax"]
+    #print ( f"@@0 vmin,vmax={vmin},{vmax}" )
+    #print ( f"@@0 max {numpy.nanmax(col)} min {numpy.nanmin(col)}" )
     if vmax is None or abs(vmax)<1e-5:
-        vmax = min ( numpy.nanmax ( col )*1.1, 2.0 )
+        vmax = min ( numpy.nanmax ( col )*1.03, 2.0 )
     if vmin is None: # or abs(vmin)<1e-5:
-        vmin = abs ( numpy.nanmin ( col )*0.9 - 1.0 )
-    if (vmax - 1.0 ) < ( 1.0 - vmin ):
-        vmax = 2. - vmin
-    else:
-        vmin = 2. - vmax
+        vmin = abs ( numpy.nanmin ( col )*0.97 ) # - 1.0 )
+    #print ( f"@@1 vmin,vmax={vmin},{vmax}" )
+    vmin, vmax = centerInterval ( vmin, vmax )
+
+    #print ( f"@@2 vmin,vmax={vmin},{vmax}" )
     opts = { }
     #print ( "vmax", vmax )
     #if logScale:
@@ -575,11 +588,17 @@ def draw ( options : dict ):
                horizontalalignment="center", transform=fig.transFigure)
 
     #text about no of SR in combined dataset
-    # plt.text ( .97, .0222, "combination of 9 signal regions", transform = fig.transFigure, fontsize=10,
+    # plt.text ( .97, .0222, "combination of 9 signal regions", 
+    #            transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
-    plt.text ( .80, .025, f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$",
-            transform=fig.transFigure, c="grey", fontsize=12  )
+    label = f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$"
+    n_digits = int ( - numpy.log10 ( rstd )) + 1
+    x_pos = .97
+    if n_digits > 3:
+        label = f"$\\bar{{f}}={rmean:.{n_digits}f}\\pm{rstd:.{n_digits}f}$"
+    plt.text ( x_pos, .025, label, transform=fig.transFigure, c="grey", 
+               fontsize=12, ha="right" )
     if options["comment"] not in [ None, "", "None" ]:
         plt.text ( .1, .025, options["comment"], transform=fig.transFigure, 
                    c="grey", fontsize=12  )
@@ -609,7 +628,7 @@ def draw ( options : dict ):
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
             f.write ( f"{figname} {rmean:.2f} +/- {rstd:.2f}\n" )
-    print ( f"[plotRatio] ratio={rmean:.2f} +/- {rstd:.2f} (with {npoints} points)" )
+    print ( f"[plotRatio] ratio={rmean:.5f} +/- {rstd:.5f} (with {npoints} points)" )
     plt.clf()
 
 def writeMDPage( copy ):
@@ -683,11 +702,11 @@ def main():
             help="plot title, guess if None",
             type=str, default=None )
     argparser.add_argument ( "-z", "--zmin",
-            help="minimum z value, None means auto [.5]",
-            type=float, default=.5 )
+            help="minimum z value, None means auto [None]",
+            type=float, default=None )
     argparser.add_argument ( "-Z", "--zmax",
-            help="maximum Z value, None means auto [1.5]",
-            type=float, default=1.5 )
+            help="maximum Z value, None means auto [None]",
+            type=float, default=None )
     argparser.add_argument ( "-x", "--xmin",
             help="minimum x value, None means auto [None]",
             type=float, default=None )
