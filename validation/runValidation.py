@@ -844,7 +844,7 @@ if __name__ == "__main__":
                 "significances": False, ## significance plot instead of ul plot?
                 "continue": False, ## continue old productions
                 "ratio_comment": None, ## comment in ratio plot
-                "expectationType": "posteriori",
+                "expectationType": "aposteriori",
                 "spey": False, ## use spey statistics
                 "writeoutyields": False, ## write out the yields, for NNs
                 "databasepath": "../../smodels-database", ## smodels database
