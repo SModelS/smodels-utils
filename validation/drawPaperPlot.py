@@ -476,29 +476,36 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
 
     #get the range of x values in obs and exp curves to set lim on plot ranges. low limit on y axes usually 0 for plot (except for width plots)
-    max_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "max", e_type="official")
+    min_obs_x, max_obs_x = 0., 0.
+    if "x" in off_excl["obs_excl"]:
+        max_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "max", e_type="official")
+        min_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "min", e_type="official")
+    if bestSR: min_obs_x = min(min_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "min", e_type="bestSR"))
+    if combSR: min_obs_x = min(min_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "min", e_type="combined"))
     if bestSR: max_obs_x = max(max_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "max", e_type="bestSR"))
     if combSR: max_obs_x = max(max_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "max", e_type="combined"))
 
-    max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
+    max_obs_y = 0.
+    if "y" in off_excl["obs_excl"]:
+        max_obs_y = getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
     if bestSR: max_obs_y = max(max_obs_y, getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", e_type="bestSR"))
     if combSR: max_obs_y = max(max_obs_y, getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", e_type="combined"))
 
-    max_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "max", e_type="official")
+    min_exp_x, max_exp_x = 0., 0.
+    if "x" in off_excl["exp_excl"]:
+        max_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "max", e_type="official")
+        min_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "min", e_type="official")
+    if bestSR: min_exp_x = min(min_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "min", e_type="bestSR"))
+    if combSR: min_exp_x = min(min_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "min", e_type="combined"))
     if bestSR: max_exp_x = max(max_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "max", e_type="bestSR"))
     if combSR: max_exp_x = max(max_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "max", e_type="combined"))
 
-    max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
+    max_exp_y = 0.
+    if "y" in off_excl["exp_excl"]:
+        max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
     if bestSR: max_exp_y = max(max_exp_y, getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", e_type="bestSR"))
     if combSR: max_exp_y = max(max_exp_y, getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", e_type="combined"))
 
-    min_obs_x = getExtremeValue(off_excl["obs_excl"]["x"], extreme = "min", e_type="official")
-    if bestSR: min_obs_x = min(min_obs_x, getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "min", e_type="bestSR"))
-    if combSR: min_obs_x = min(min_obs_x, getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "min", e_type="combined"))
-
-    min_exp_x = getExtremeValue(off_excl["exp_excl"]["x"], extreme = "min", e_type="official")
-    if bestSR: min_exp_x = min(min_exp_x, getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "min", e_type="bestSR"))
-    if combSR: min_exp_x = min(min_exp_x, getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "min", e_type="combined"))
 
     num_sr, num_cr = 0, 0
     ver = ""
@@ -667,7 +674,8 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     #plot excl curves
     exp_name = analysis.split('-')[0]
     # ax.plot(off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
-    plotLines ( ax, off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],
+    if "x" in off_excl["obs_excl"]:
+        plotLines ( ax, off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],
                "black", "solid", label = f'{exp_name} official')
     #print("official : ", off_excl["obs_excl"]["y"] )
     if bestSR:
