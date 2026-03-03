@@ -133,7 +133,8 @@ def validate ( args : Dict, idx ):
     :param tempname: if not None, use this for the temp files names
     :param validationfolder: string that replaces @@VALIDATIONFOLDER@@ in inifile
     :param databasepath: string that replaces @@DATABASEPATH@@ in inifile
-    :param spey: use spey, replace @@SPEY@@in inifile
+    :param spey: use spey, replace @@SPEY@@ in inifile
+    :param expectationType: expectationType, replace @@EXPECTATIONTYPE@@ in inifile
     :param limit_points: run over only that many points
     :param model: the model to use (default)
     """
@@ -148,6 +149,7 @@ def validate ( args : Dict, idx ):
     validationfolder = args["validationfolder"]
     databasepath = args["databasepath"]
     spey = args["spey"]
+    expectationType = args["expectationType"]
     limit_points = args["limit_points"]
     generatedata = args["generate_data"]
     dataselector = args["dataselector"]
@@ -206,6 +208,7 @@ def validate ( args : Dict, idx ):
             newline = newline.replace("@@VALIDATIONFOLDER@@", validationfolder )
             newline = newline.replace("@@DATABASEPATH@@", databasepath )
             newline = newline.replace("@@SPEY@@", str(spey) )
+            newline = newline.replace("@@EXPECTATIONTYPE@@", expectationType )
             if tempdir is None and "@@TEMPDIR@@" in line:
                 continue
             if tempdir is not None:
@@ -368,6 +371,8 @@ def main():
                         type=str, default = None )
     argparser.add_argument ( '--databasepath', help='the path to the database [../../smodels-database]',
                         type=str, default = "../../smodels-database" )
+    argparser.add_argument ( '--expectationType', help='expectationType used for eULs [aposteriori]',
+                        type=str, default = "aposteriori" )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
     argparser.add_argument ( '-l', '--limit_points', help='run over no more than many points [all]',
