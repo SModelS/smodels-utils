@@ -806,8 +806,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     plt.title(pName,loc='right', fontsize=12)
 
     exp_name = analysis.split('-')[0]
-    plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], "black",
-            "solid", f'{exp_name} official')
+    if "x" in off_excl["exp_excl"]:
+        plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], 
+                    "black", "solid", f'{exp_name} official')
 
     if bestSR:
         x_vals = bestSR_excl["exp_excl"]["x"]
