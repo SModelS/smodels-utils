@@ -69,10 +69,12 @@ def pprint ( msg, jobnr ):
     if jobnr == 3:
         print ( f"{intro} ... (quenched similar msgs)" )
 
-def mkdir ( Dir : str, symlinks : bool = True ):
+def mkdir ( Dir : str, symlinks : bool = True,
+            chdir : bool = True ):
     """ make a rundir directory. link typical tools
 
     :param symlink: create symlinks?
+    :param chdir: if true, then chdir into it
     """
     if not os.path.exists ( Dir ):
         o = os.mkdir ( Dir )
@@ -182,10 +184,11 @@ def runWalkers ( args ) -> int:
             sys.exit()
     seed = args.seed
 
-    jobsfile = f"{rvars['rundir']}/jobs"
+    mkdir ( f"{rvars['rundir']}/jobs/", chdir=False )
+    jobsfile = f"{rvars['rundir']}/jobs/current"
     if os.path.exists ( jobsfile ):
         from datetime import datetime, timezone
-        dst = f"{rvars['rundir']}/jobs_{datetime.now(timezone.utc).isoformat()}"
+        dst = f"{rvars['rundir']}/jobs/jobs_{datetime.now(timezone.utc).isoformat()}"
         os.rename ( jobsfile, dst )
 
     while True:
@@ -385,7 +388,8 @@ def runOneJob ( rvars: dict ):
         a=subprocess.run ( cmd, capture_output=True )
         sa = str(a)
         sb = str ( a.stdout.decode().strip() )
-        jobsfile = f"{rvars['rundir']}/jobs"
+        mkdir ( f"{rvars['rundir']}/jobs/", chdir = False )
+        jobsfile = f"{rvars['rundir']}/jobs/current"
         with open ( jobsfile, "at" ) as f:
             jobtxt = sb.replace("Submitted batch job ", "" )
             f.write ( jobtxt + "\n" )
