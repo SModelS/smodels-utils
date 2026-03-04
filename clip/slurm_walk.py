@@ -77,7 +77,10 @@ def mkdir ( Dir : str, symlinks : bool = True,
     :param chdir: if true, then chdir into it
     """
     if not os.path.exists ( Dir ):
-        o = os.mkdir ( Dir )
+        try:
+            o = os.mkdir ( Dir )
+        except FileExistsError as e:
+            pass
     os.chdir ( Dir )
     if not symlinks:
         return
