@@ -646,7 +646,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         print ( traceback.format_exc() )
         sys.exit()
 
-    logger.info('-- Running validation...')
+    mentionJobId = "..."
+    if "SLURM_JOBID" in os.environ:
+        jobid = os.environ["SLURM_JOBID"]
+        mentionJobId = f"under job {jobid}"
+
+    logger.info( f'-- Running validation {mentionJobId}')
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
