@@ -12,7 +12,7 @@ def readJobIds():
     jobids = set()
     if not os.path.exists ( "jobs" ):
         return jobids
-    with open ( "jobs", "rt" ) as f:
+    with open ( "jobs/current", "rt" ) as f:
         lines = f.readlines()
     for line in lines:
         line = line.strip()
