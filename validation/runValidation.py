@@ -403,17 +403,21 @@ def runForOneResult ( expRes, options : dict,
             for tf in tokens:
                 tf = tf.strip()
                 #  and not os.path.isfile(tarfile):
-                fname = tf
+                fname_ = tf
                 if ":" in tf:
-                    axis,fname = fname.split(":")[:2]
+                    fname_ = fname_.split("T")
+                    axis = fname_[0][:-1]
+                    fname_ = 'T' + 'T'.join(fname_[1:])
+                    if options["axis"] in [ None, "None", "" ]:
+                        options["axis"] = axis
                 else:
                     hasCorrectAxis = True
-                if fname == "skip": ## we are asked to skip this
+                if fname_ == "skip": ## we are asked to skip this
                     tarfile = "skip"
                     continue
-                tarfile = os.path.join(slhadir, rundir, fname )
+                tarfile = os.path.join(slhadir, rundir, fname_ )
                 if not os.path.isfile ( tarfile ):
-                    tarfile = os.path.join(slhadir,fname )
+                    tarfile = os.path.join(slhadir,fname_ )
                 if not os.path.isfile ( tarfile ):
                     logger.info( f'Missing {tarfile} file for {txnameStr}.' )
             # continue
@@ -448,7 +452,9 @@ def runForOneResult ( expRes, options : dict,
                 kfactor = gkfactor
                 fname_ = "none"
                 if type(namedTarball) == str and ":" in namedTarball:
-                    myaxis,fname_= namedTarball.split(":")[:2]
+                    fname_= namedTarball.split("T")
+                    myaxis = fname_[0][:-1]
+                    fname_ = 'T' + 'T'.join(fname_[1:])
                     myaxis = str ( eval ( myaxis ) )
                     if axisType == "v3":
                         myaxis = axisV2ToV3 ( myaxis )
@@ -464,7 +470,9 @@ def runForOneResult ( expRes, options : dict,
                     # looks like were given multiples
                     for nt in namedTarball:
                         if ":" in nt:
-                            myaxis,fname_= nt.split(":")[:2]
+                            fname_ = nt.split("T")
+                            myaxis = fname_[0][:-1]
+                            fname_ = 'T' + 'T'.join(fname_[1:])
                             if fname_ == "skip":
                                 # spread the lore, we wish to skip this
                                 pnamedTarball = fname_
@@ -485,7 +493,9 @@ def runForOneResult ( expRes, options : dict,
                 if fname_ in kfactorDict:
                     # print ( "namedTarball", namedTarball, "ax", ax )
                     if type(namedTarball) == str and ":" in namedTarball:
-                        myaxis,fname_= namedTarball.split(":")[:2]
+                        fname_ = namedTarball.split("T")
+                        myaxis = fname_[0][:-1]
+                        fname_ = 'T' + 'T'.join(fname_[1:])
                         if compareAxes ( myaxis, ax ):
                             kfactor = float(kfactorDict[fname_])
                             logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
@@ -532,8 +542,10 @@ def runForOneResult ( expRes, options : dict,
             x,y,z = var("x y z")
             ax = str(eval(axis)) ## standardize the string
             if type(namedTarball) == str and ":" in namedTarball:
-                myaxis,fname_= namedTarball.split(":")[:2]
-                if fname == "skip":
+                fname_ = namedTarball.split("T")
+                myaxis = fname_[0][:-1]
+                fname_ = 'T' + 'T'.join(fname_[1:])
+                if fname_ == "skip":
                     tarfile = "skip"
                 else:
                     myaxis = str ( eval ( myaxis ) )
@@ -546,7 +558,9 @@ def runForOneResult ( expRes, options : dict,
                 # looks like were given multiples
                 for nt in namedTarball:
                     if ":" in nt:
-                        myaxis,fname_= nt.split(":")[:2]
+                        fname_ = nt.split("T")
+                        myaxis = fname_[0][:-1]
+                        fname_ = 'T' + 'T'.join(fname_[1:])
                         if fname_ == "skip":
                             tarfile = "skip"
                             continue
