@@ -372,10 +372,15 @@ def draw ( options : dict ):
         x = yx[::,0]
         y = [0.]*len(x)
         s = 20.
-    col = griddata ( points[::,0:2], points[::,dim], yx, rescale=True )
+    xpoints = points[::,0:2]
+    vmin, vmax = options["zmin"], options["zmax"]
+    if len(xpoints)<3:
+        print ( f"[plotRation] only {len(xpoints)} points for griddata. not plotting" )
+        return
+    col = griddata ( xpoints, points[::,dim], yx, rescale=True )
     if err_msgs > 0:
-        print ( "[plotRatio] couldnt find data for %d/%d points" % \
-                (err_msgs, len( content2["data"] ) ) )
+        ntot = len( content2["data"] )
+        print ( f"[plotRatio] couldnt find data for {err_msgs}/{ntot} points" )
 
     #changed colormap to have discrete bins instead of continuous
     try:
@@ -384,7 +389,6 @@ def draw ( options : dict ):
         cm = plt.colormaps["seismic"]
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
-    vmin, vmax = options["zmin"], options["zmax"]
     #print ( f"@@0 vmin,vmax={vmin},{vmax}" )
     #print ( f"@@0 max {numpy.nanmax(col)} min {numpy.nanmin(col)}" )
     if vmax is None or abs(vmax)<1e-5:

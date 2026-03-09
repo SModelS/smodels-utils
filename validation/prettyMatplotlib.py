@@ -108,7 +108,7 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
     import json
     plots = plot_dict
     for name,plot in plots.items():
-        if type(plot["obs_excl"][0])==dict:
+        if len(plot["obs_excl"])>0 and type(plot["obs_excl"][0])==dict:
             print ( f"[prettyMatplotlib] trying to add v2 exclusion lines to v1 file. This doesnt work, but you can simply delete the old json file!" )
             sys.exit(-1)
     if os.path.exists(f"{vDir}/{file_js}"):

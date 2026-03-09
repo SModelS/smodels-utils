@@ -61,12 +61,13 @@ def getCoords ( efile, curve, entry, coord : str  ):
     """
     if "schema_version" in efile and efile["schema_version"]=="2.0":
         values = []
-        for l in efile[curve][entry]:
-            one_curve = []
-            for d in l:
-                if coord in d:
-                    one_curve.append ( d[coord] )
-            values.append ( one_curve )
+        if entry in efile[curve]:
+            for l in efile[curve][entry]:
+                one_curve = []
+                for d in l:
+                    if coord in d:
+                        one_curve.append ( d[coord] )
+                values.append ( one_curve )
         return values
     values = efile[curve][entry][coord]
     return values
