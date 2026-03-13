@@ -41,10 +41,13 @@ def getParticleIdsForTemplateFile ( filename : str ) -> Dict:
             line = line[:p1]
         for x in [ 0, 1, 2 ]:
             for l in [ "m", "M", "w", "W" ]:
+                idx = 0
+                if l.lower() == "w":
+                    idx = 1
                 var = f"{l}{x}"
                 if var in line:
                     tokens = line.split()
-                    pids[var] = int(tokens[0])
+                    pids[var] = int(tokens[idx])
     return pids
 
 def extractSLHAFileFromTarball ( slhafile, tarball=None, extractToDir=None ):
