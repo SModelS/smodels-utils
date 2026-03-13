@@ -788,6 +788,19 @@ class ValidationObjsBase():
             except FileNotFoundError as e:
                 pass
 
+    def getAverageTime ( self ):
+        """ compute the average t spent per point. 
+        we average only over points with results 
+        :returns: average time, in seconds
+        """
+        tot, n = 0., 0
+        for d in self.data:
+            if not "t" in d:
+                continue
+            tot += d["t"]
+            n += 1
+        return round ( tot / n, 3 )
+
     def saveData(self,validationDir : Union[None,os.PathLike] =None,
                  datafile : Union[None,os.PathLike] =None) -> bool:
         """
@@ -879,6 +892,7 @@ class ValidationObjsBase():
             meta["nmax"]=self.pointsInTarFile
         meta["host"]=hostname
         meta["nSRs"]=len ( self.expRes.datasets )
+        meta["avg_t[s]"]=self.getAverageTime()
         if not hasattr ( self, "meta" ):
             self.meta = {}
         if "runs" in self.meta:
@@ -910,7 +924,9 @@ class ValidationObjsBase():
         if asimovIsExpected:
             meta["asimovisexpected"]= asimovIsExpected
         from smodels_utils.helper.various import py_dumps
-        ds = py_dumps ( meta, indent=4, double_quotes = True )
+        comments = { "dt[h]": "wall clock time in hours",
+                     "avg_t[s]": "time spent per point with result in seconds" }
+        ds = py_dumps ( meta, indent=4, double_quotes = True, comments = comments )
         f.write( f"meta = {ds}\n" )
         f.close()
         self.unlockFile ( lockfile )
