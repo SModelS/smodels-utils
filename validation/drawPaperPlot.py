@@ -759,6 +759,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if getAxisType(axes) == "v2":
         axes = axisV2ToV3(axes)
     fig_axes_title = getNiceAxes ( axes )
+    fig_axes_title = fig_axes_title.replace("(","").replace(")","").replace(",","")
     outfiles = []
 
     outfile = f"{vDir}/{txname}_{fig_axes_title}_obs.png"
