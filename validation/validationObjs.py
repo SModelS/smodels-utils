@@ -460,24 +460,21 @@ class ValidationPlot( ValidationObjsBase ):
                 dataset = self.expRes.datasets[0]
 
             txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-            mnw=[]
             massGeV = []
-            if width == None:
-                mnw = mass
-            else:
-                # br=[]
-                for bm,bw in zip(mass,width):
-                    for m,w in zip(bm,bw):
-                        if w == 'stable' or w > .08:
-                            massGeV.append( m )
-                            # br.append( (m,0.0) )
-                        else:
-                            massGeV.append( (m,w) )
-                    # mnw.append(br)
-            # massGeV = addUnit ( mnw, GeV )
+            widthsGeV = []
+            for bm,bw in zip(mass,width):
+                for m,w in zip(bm,bw):
+                    if w == 'stable' or w > .08:
+                        massGeV.append( m )
+                    else:
+                        massGeV.append( m )
+                        widthsGeV.append( w )
+            total = massGeV
+            if len(widthsGeV)>0:
+                total += widthsGeV
             if not "efficiency" in Dict.keys():
                 try:
-                    eff = txname.txnameData.getValueFor(massGeV)
+                    eff = txname.txnameData.getValueFor(total)
                     if eff != None:
                         Dict['efficiency'] = round ( eff, 8 )
                 except SModelSError as e:
