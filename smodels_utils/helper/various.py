@@ -68,7 +68,7 @@ def repr_double_quotes(obj):
         return repr(obj)
 
 def py_dumps( obj, indent : int = 4, level : int = 0, stop_at_level : int = -1,
-              double_quotes : bool = False ) -> str:
+              double_quotes : bool = False, comments : dict = {} ) -> str:
     """ equivalent to json.dumps (ie it pretty prints a given nested structure)
     but tuples are allowed as keys.
 
@@ -76,6 +76,7 @@ def py_dumps( obj, indent : int = 4, level : int = 0, stop_at_level : int = -1,
     :param level: how many indentations are we in?
     :param stop_at_level: stop indentation at that level, if positive number
     :param double_quotes: use double quotes, like json
+    :param comments: a dictionary, add a comment "value" for entry "key".
     """
     sp = ' ' * (level * indent)
     sp_next = ' ' * ((level + 1) * indent)
@@ -87,15 +88,38 @@ def py_dumps( obj, indent : int = 4, level : int = 0, stop_at_level : int = -1,
         if not obj:
             return '{}'
         items = []
+        my_comments = []
         if stop_at_level > 0 and level >= stop_at_level:
             for k, v in obj.items():
-                value = f"{py_dumps(v, indent, level + 1, stop_at_level, double_quotes )}"
+                scomments = {}
+                if k in comments:
+                    scomments = comments[k]
+                value = f"{py_dumps(v, indent, level + 1, stop_at_level, double_quotes, scomments )}"
                 items.append(f"{mrepr(k)}: {value}")
+                my_comments.append ( None )
             return '{ ' + ', '.join(items) + ' }'
         for k, v in obj.items():
-            value = f"{py_dumps(v, indent, level + 1, stop_at_level, double_quotes )}"
+            scomments = {}
+            if k in comments:
+                scomments = comments[k]
+            value = f"{py_dumps(v, indent, level + 1, stop_at_level, double_quotes, scomments )}"
             items.append(f"{sp_next}{mrepr(k)}: {value}")
-        return '{\n' + ',\n'.join(items) + '\n' + sp + '}'
+            if k in comments and type(comments[k]) != dict:
+                my_comments.append ( comments[k] )
+            else:
+                my_comments.append ( None )
+        commented_items = ',\n'.join(items)
+        commented_items = ""
+        for i,item in enumerate(items):
+            if i != 0:
+                commented_items += "\n"
+            commented_items += item
+            if i != len(items)-1:
+                commented_items += ","
+            if my_comments[i]!= None:
+                commented_items += f" # {my_comments[i]}"
+        ret = '{\n' + commented_items + '\n' + sp + '}'
+        return ret
 
     elif isinstance(obj, list):
         if not obj:
@@ -105,7 +129,8 @@ def py_dumps( obj, indent : int = 4, level : int = 0, stop_at_level : int = -1,
             return '[ ' + ', '.join(items) + ' ]'
         return '[\n' + ',\n'.join(items) + '\n' + sp + ']'
 
-    return mrepr(obj)
+    ret = mrepr(obj)
+    return ret
 
 def checkNumpyVersion ():
     """ for pickling we want numpy < 2.0.0, so that the pickle files work for
@@ -616,7 +641,8 @@ def getValidationModuleFromPath ( ipath, analysis ):
 
 
 if __name__ == "__main__":
-    #from smodels.base.runtime import nCPUs
-    #print ( f"This machine has {nCPUs()} CPUs" )
     print ( f"png meta info {pngMetaInfo()}" )
     # print ( "srqts", getSqrts ( "CMS-EXO-16-057" ) )
+    d = { "a": 0, "b": [ 2,3,4], "c": { "d": 7 } }
+    comments = { "a": "comment a", "c": { "d": "comment d" } }
+    print ( py_dumps ( d, comments = comments ) )
