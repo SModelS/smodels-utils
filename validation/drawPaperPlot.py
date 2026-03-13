@@ -566,14 +566,17 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     #print("[drawPaperPlot] max obs y ", max_obs_y)
     #print("[drawPaperPlot] step y", step_y)
     #print("[drawPaperPlot] max exp y ", max_exp_y)
-
-    axis_label = prettyAxes(validationPlot).split(',')
-    for i,a in enumerate(axis_label):
-        axis_label[i]=a.replace(" ","")
-    # print("[drawPaperPlot] Axis label ", axis_label)
     x_label, y_label = "",""
+
+    axis_label = prettyAxes(validationPlot).replace(" ","")
+    axis_label = axis_label.replace( "(x,y)", "(xy)" )
+    axis_label = axis_label.split(',')
+    # print("[drawPaperPlot] Axis label ", axis_label)
     massg = ""
     for lbl in axis_label:
+        if "=(xy)" in lbl:
+            x_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
+            y_label = x_label.replace("m","\\Gamma")
         if "=x" in lbl and "=x-" not in lbl: 
             x_label = getPrettyAxisLabels(lbl.split("=")[0].strip())
         elif "=x-y" in lbl: 
@@ -688,7 +691,8 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
-            if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+            if len(y_diff) > 0 and max(y_diff)>100: 
+                index_max_diff = y_diff.index(max(y_diff))+1
             if len(x_vals)>0:
                 ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
                 ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
@@ -716,10 +720,14 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             y_vals = [10**y for y in y_vals]
             y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
             index_max_diff = -1
-            if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-            ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
-            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid' )
-            sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
+            if len(y_diff)>0 and max(y_diff)>100: 
+                index_max_diff = y_diff.index(max(y_diff))+1
+            ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
+                     color='red', linestyle='solid', label = label )
+            ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
+                     color='red', linestyle='solid' )
+            sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, 
+                        widthToLifetime))
             # print("yes gamma 3")
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
@@ -747,11 +755,15 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         else:
             plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
-    if 'Gamma' in y_label: ax.set_yscale('log')
-    if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
+    if 'Gamma' in y_label: 
+        ax.set_yscale('log')
+    if massg != "":
+        plt.text( 0.6, 0.6, rf"{massg} GeV", transform=fig.transFigure, 
+                  fontsize = 8)
     #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
 
-    plt.text(0.55,0.65, r"$\bf observed~exclusion$", transform=fig.transFigure, fontsize = 10)
+    plt.text( 0.55, 0.65, r"$\bf observed~exclusion$", 
+              transform=fig.transFigure, fontsize = 10 )
     plt.legend(loc='best', frameon=True, fontsize = 10)
     plt.tight_layout()
 
@@ -812,30 +824,38 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], 
                     "black", "solid", f'{exp_name} official')
 
-    if bestSR:
+    if bestSR and "exp_excl" in bestSR_excl and "y" in bestSR_excl["exp_excl"]:
         x_vals = bestSR_excl["exp_excl"]["x"]
         y_vals = bestSR_excl["exp_excl"]["y"]
         if 'Gamma' in y_label:
             print ( f"{RED}[drawPaperPlot:5] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            if type(y_vals[0]) != list:
+            if len(y_vals)==0 or type(y_vals[0]) != list:
                 y_vals = [10**y for y in y_vals]
                 y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
                 index_max_diff = -1
-                if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
+                if len(y_diff)>0 and max(y_diff)>100: 
+                    index_max_diff = y_diff.index(max(y_diff))+1
                 if len(x_vals)>0:
-                    ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
-                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
+                    ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],
+                            color='red', linestyle='dashed', 
+                            label = "SModelS: best SR")
+                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
+                            color='red', linestyle='dashed')
             else:
                 plotLines(ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR" )
             sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
             sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
             sec_ax.set_yscale('log')
-            plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
-            plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
+            plt.tick_params( which='major', axis = 'both', direction = 'in', 
+                             length = 10, top = True, right = False)
+            plt.tick_params( labelbottom=True, labelleft=True, labeltop=False, 
+                             labelright=False)
         else:
             plotLines ( ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR")
-            plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
-            plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
+            plt.tick_params( which='major', axis = 'both', direction = 'in', 
+                             length = 10, top = True, right = True )
+            plt.tick_params( labelbottom=True, labelleft=True, labeltop=False, 
+                             labelright=False )
 
     if combSR:
         x_vals = comb_excl["exp_excl"]["x"]
@@ -846,13 +866,16 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
         if 'Gamma' in y_label:
             print ( f"{RED}[drawPaperPlot:1] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            if type(y_vals[0]) != list:
+            if len(y_vals)==0 or type(y_vals[0]) != list:
                 y_vals = [10**y for y in y_vals]
                 y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
                 index_max_diff = -1
-                if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-                ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='solid', label = label )
-                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='solid')
+                if len(y_diff)>0 and max(y_diff)>100: 
+                    index_max_diff = y_diff.index(max(y_diff))+1
+                ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
+                         color='red', linestyle='solid', label = label )
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
+                         color='red', linestyle='solid')
             else:
                 plotLines(ax, x_vals, y_vals, "red", "dashed", label )
         else:
