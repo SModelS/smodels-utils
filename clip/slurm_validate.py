@@ -315,14 +315,12 @@ def logCall ( jobids : list ):
     f.write ( f"{line}\n" )
     s_jobids = ','.join(map(str,jobids))
     s_jobids = ""
-    newLines = 0
     for i,jobid in enumerate(jobids):
         if i!=0:
             s_jobids += ", "
+            if i % 6 == 0:
+                s_jobids += "\n#        "
         s_jobids += str(jobid)
-        if len(s_jobids)>70*(newLines+1):
-            s_jobids += "\n#        "
-            newLines += 1
     f.write ( f"# jobids: {s_jobids}\n\n" )
     f.close()
 
