@@ -274,7 +274,7 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     # ram = int ( 5. + .7 * nprocesses )
     ram = int ( 2.5 + .6 * nprocesses )
     # ncpus = nproc # int(nproc*1.5)
-    ncpus = int(nprocesses*4)
+    ncpus = int(nprocesses*2.5)
     cmd += [ "--mem", f"{ram}G" ]
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     cmd += [ newFile ]
