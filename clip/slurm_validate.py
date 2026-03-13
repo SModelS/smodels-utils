@@ -16,7 +16,7 @@ if "CODEDIR" in os.environ:
 if "OUTPUTS" in os.environ:
     outputsdir = os.environ["OUTPUTS"]
 
-def mkdir ( Dir ):
+def mkdir ( Dir : os.PathLike ):
     if not os.path.exists ( Dir ):
         cmd = f"mkdir {Dir}"
         subprocess.getoutput ( cmd )
@@ -106,8 +106,6 @@ def cancelRangeOfValidaters( jrange : str ):
         return
     print ( "[slurm_walk] FIXME sth is wrong" )
 
-
-
 def queryStats ( maxsteps : Union[None,int] = None ):
     """ just give us the statistics """
     import running_stats
@@ -121,7 +119,7 @@ def queryStats ( maxsteps : Union[None,int] = None ):
             running_stats.running_stats( "_V" )
             print()
 
-def validate ( args : Dict, idx ):
+def validate ( args : Dict, idx ) -> Union[None,int]:
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
     :param dry_run: dont do anything, just produce script
@@ -137,6 +135,9 @@ def validate ( args : Dict, idx ):
     :param expectationType: expectationType, replace @@EXPECTATIONTYPE@@ in inifile
     :param limit_points: run over only that many points
     :param model: the model to use (default)
+  
+    :param idx: 0 for the first job, 1 for all others
+    :returns: jobid
     """
     inifile = args["validate"]
     dry_run = args["dry_run"]
@@ -280,13 +281,17 @@ def validate ( args : Dict, idx ):
     # cmd += [ "./run_bakery.sh" ]
     print ( f"[slurm_validate.py] validating {' '.join ( cmd )}" )
     if not dry_run:
-        a=subprocess.run ( cmd )
+        a=subprocess.run ( cmd, stdout=subprocess.PIPE )
+        sjobid = str ( a.stdout.strip() ).split(" ")[-1]
+        jobid = int ( sjobid.replace("'","") )
         print ( f"returned: {a}" )
+        return jobid
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm_validate.py] %s %s" % ( cmd, o ) )
+    return None
 
-def logCall ():
+def logCall ( jobids : list ):
     logfile = f"{os.environ['HOME']}/validate.log"
     line = ""
     for i in sys.argv:
@@ -305,7 +310,20 @@ def logCall ():
     if line == lastline: # skip duplicates
         return
     f=open(logfile,"at")
-    f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
+    #f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
+    f.write ( f"# slurm_validate.py-{time.asctime()}\n" )
+    f.write ( f"{line}\n" )
+    s_jobids = ','.join(map(str,jobids))
+    s_jobids = ""
+    newLines = 0
+    for i,jobid in enumerate(jobids):
+        if i!=0:
+            s_jobids += ", "
+        s_jobids += str(jobid)
+        if len(s_jobids)>70*(newLines+1):
+            s_jobids += "\n#        "
+            newLines += 1
+    f.write ( f"# jobids: {s_jobids}\n\n" )
     f.close()
 
 def clean():
@@ -440,10 +458,13 @@ def main():
     # sys.exit()
     if args.repeat > 1:
         args.keep = True
+    jobids = []
     for i in range(args.repeat):
-        validate ( vars ( args ), i )
+        jobid = validate ( vars ( args ), i )
         args.generate_data = "ondemand"
-    logCall()
+        if jobid != None:
+            jobids.append ( jobid )
+    logCall( jobids )
 
 if __name__ == "__main__":
     if "BOOST_ROOT" in os.environ and "1.74" in os.environ["BOOST_ROOT"]:
