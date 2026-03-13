@@ -408,8 +408,8 @@ def runForOneResult ( expRes, options : dict,
                     fname_ = fname_.split("T")
                     axis = fname_[0][:-1]
                     fname_ = 'T' + 'T'.join(fname_[1:])
-                    if options["axis"] in [ None, "None", "" ]:
-                        options["axis"] = axis
+                    #if options["axis"] in [ None, "None", "" ]:
+                    #    options["axis"] = axis
                 else:
                     hasCorrectAxis = True
                 if fname_ == "skip": ## we are asked to skip this
@@ -439,6 +439,10 @@ def runForOneResult ( expRes, options : dict,
                 axes = [txname.axes]
             else:
                 axes = txname.axes
+        if hasattr ( txname, "_axes" ):
+            ## there is an implicit conversion for v2 to v3
+            ## axes now, we want to override this here
+            axes = txname._axes
         axisType = getAxisType(axes)
         axis = options["axis"]
         pnamedTarball = None
@@ -524,7 +528,7 @@ def runForOneResult ( expRes, options : dict,
                     lkeep = keep
                     if cax < len(axes)-1: ## not the last run!!!
                         keep = True # we keep stuff
-                    re = validatePlot(expRes,txnameStr,ax, ltarfile, localopts,
+                    re = validatePlot(expRes,txnameStr, ax, ltarfile, localopts,
                         db, kfactor, p, combine, namedTarball = pnamedTarball,
                         keep = keep )
                     if re.currentSLHADir != None:
