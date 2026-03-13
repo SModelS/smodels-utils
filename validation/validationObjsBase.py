@@ -891,7 +891,11 @@ class ValidationObjsBase():
         if hasattr ( self, "ncpus" ):
             meta["ncpus"]=self.ncpus
         if self.namedTarball != None:
-            meta["namedTarball"]=self.namedTarball
+            nT = self.namedTarball
+            if type(nT) == list:
+                for i,t in enumerate(nT):
+                    nT[i]=t.strip()
+            meta["namedTarball"]=nT
         meta["tarball"]=self.slhaDir[self.slhaDir.rfind("/")+1:]
         useTevatronCLs = False
         asimovIsExpected = False
