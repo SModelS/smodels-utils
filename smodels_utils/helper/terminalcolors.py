@@ -8,13 +8,14 @@
 
 """
 
-GREEN, YELLOW, RED, RESET, CYAN, MAGENTA, BLUE, ORANGE = [ "" ] * 8
+GREEN, YELLOW, RED, RESET, CYAN, MAGENTA, BLUE, ORANGE, LIGHTGREEN = [ "" ]*9
 
 try:
     from colorama import Fore as __c
     GREEN, YELLOW, RED, RESET = __c.GREEN, __c.YELLOW,  __c.RED, __c.RESET
     CYAN, MAGENTA, BLUE = __c.CYAN, __c.MAGENTA, __c.BLUE
     ORANGE = __c.LIGHTRED_EX
+    LIGHTGREEN = __c.LIGHTGREEN_EX
 except Exception as e:
     # print ( f"[terminalcolors] no colors: {e}" )
     GREEN, YELLOW, RED, RESET = "\033[32m", "\033[33m", "\033[91m", "\033[0m"
@@ -22,4 +23,5 @@ except Exception as e:
     # ORANGE = "\033[48:2:255:165:0m"
 
 colordict = { "green": GREEN, "yellow": YELLOW, "red": RED, "reset": RESET,
-              "cyan": CYAN, "magenta": MAGENTA, "blue": BLUE, "orange": ORANGE }
+              "cyan": CYAN, "magenta": MAGENTA, "blue": BLUE, "orange": ORANGE,
+              "lightgreen": LIGHTGREEN }
