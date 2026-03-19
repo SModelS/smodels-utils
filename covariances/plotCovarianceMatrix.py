@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import LogNorm, Normalize, SymLogNorm
 import cov_helpers
+import matplotlib as mpl
 
 def plot():
     import argparse
@@ -32,7 +33,7 @@ def plot():
             help="plot only ending with nmax-th row and column, for debugging [None]",
             type=int, default=None )
     argparser.add_argument ( "-i", "--indices",
-            help="plot only <indices> rows and columns, e.g '1 2 3' for debugging [None]",
+            help="print values of <indices> rows and columns, e.g '1 2 3' [None]",
             type=str, default=None )
     argparser.add_argument ( "-C", "--correlations", action="store_true",
             help="plot correlations matrix, not covariance matrix" )
@@ -52,12 +53,24 @@ def plot():
     n = len ( er.globalInfo.covariance)
     norig = n
     cov = er.globalInfo.covariance
+    orig_cov = cov[:]
     if args.correlations:
         cov = cov_helpers.computeCorrelationMatrix ( cov )
     if args.nmin == None:
         args.nmin = 0
     if args.nmax == None:
         args.nmax = n
+    if args.indices is not None:
+        indices = tuple(map(int,args.indices.split()))
+        for i in indices:
+            for j in indices:
+                if j<i:
+                    continue
+                if args.correlations:
+                    print ( f"corr({i},{j})={cov[i][j]:.3f}" )
+                    print ( f"cov({i},{j})={orig_cov[i][j]:g}" )
+                else:
+                    print ( f"cov({i},{j})={orig_cov[i][j]:g}" )
     cov = cov_helpers.cutMatrix ( cov, args.nmin, args.nmax )
     n = len ( cov )
     print ( f"[plotCovarianceMatrix] we have an {norig}x{norig}->{n}x{n} matrix" )
@@ -76,17 +89,26 @@ def plot():
         labels = None
     cmap = "rocket"
     vmin, vmax = None, None
+    min_cov = min(min(cov))
     if args.correlations:
-        cmap = "RdBu_r"
-        # vmin, vmax = 1e-2, 1.
-        vmin, vmax = -1., 1.
+        cmap = mpl.colormaps['inferno']
+        cmap = cmap.reversed()
+        vmin, vmax = 1e-3, 1.
+        if min_cov < 0.:
+            cmap = "RdBu_r"
+            vmin, vmax = -1., 1.
+        if min_cov > 1e-2:
+            vmin = 1e-2
+        if min_cov > 1e-1:
+            vmin = 1e-1
+        vmin = 0.
     annot_kws = { "fontsize": 10 }
-    print ( "vmin", vmin )
     norm = None
-    if vmin >= 0.:
+    if False and vmin >= 0.:
         norm = LogNorm ( vmin=vmin, vmax=vmax )
     #norm = SymLogNorm ( linthresh=1e-2, linscale=1.0, vmin=vmin,
     #                    vmax=vmax, base=10 )
+    labels = None
     ax = sns.heatmap(cov, cmap=cmap, annot=labels, annot_kws=annot_kws,
                      vmin = vmin, vmax = vmax, fmt='s', norm=norm )
     def fmtTick ( x ):
