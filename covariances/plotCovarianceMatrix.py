@@ -9,9 +9,8 @@ from smodels.experiment.databaseObj import Database
 import IPython
 import matplotlib.pyplot as plt
 import seaborn as sns
-from matplotlib.colors import LogNorm, Normalize
-from matplotlib.colors import LogNorm, Normalize
-import cov_helpers 
+from matplotlib.colors import LogNorm, Normalize, SymLogNorm
+import cov_helpers
 
 def plot():
     import argparse
@@ -43,6 +42,8 @@ def plot():
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
     argparser.add_argument ( "-p", "--push", action="store_true",
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/plots/" )
+    argparser.add_argument ( "-s", "--show", action="store_true",
+            help="show plot in terminal" )
     args = argparser.parse_args()
 
     database = Database( args.dbpath )
@@ -77,11 +78,17 @@ def plot():
     vmin, vmax = None, None
     if args.correlations:
         cmap = "RdBu_r"
-        vmin, vmax = 1e-2, 1.
+        # vmin, vmax = 1e-2, 1.
+        vmin, vmax = -1., 1.
     annot_kws = { "fontsize": 10 }
     print ( "vmin", vmin )
-    ax = sns.heatmap(cov, cmap=cmap, annot=labels, annot_kws=annot_kws, 
-                     vmin = vmin, vmax = vmax, fmt='s', norm=LogNorm( vmin=vmin, vmax=vmax) )
+    norm = None
+    if vmin >= 0.:
+        norm = LogNorm ( vmin=vmin, vmax=vmax )
+    #norm = SymLogNorm ( linthresh=1e-2, linscale=1.0, vmin=vmin,
+    #                    vmax=vmax, base=10 )
+    ax = sns.heatmap(cov, cmap=cmap, annot=labels, annot_kws=annot_kws,
+                     vmin = vmin, vmax = vmax, fmt='s', norm=norm )
     def fmtTick ( x ):
         x = x.replace( "Ewkino", "e" ).replace("stop","t")
         x = x.replace( "MET", "" )
@@ -98,9 +105,9 @@ def plot():
     for t in ticks:
         ticklabels.append ( allticklabels [ t + args.nmin ] )
     # print ( "ticklabels", ticklabels )
-    title = f"covariance matrix, {args.analysis}" 
+    title = f"covariance matrix, {args.analysis}"
     if args.correlations:
-        title = f"correlations matrix, {args.analysis}" 
+        title = f"correlations matrix, {args.analysis}"
     plt.title ( title )
     ax.set_yticklabels ( ticklabels )
     ax.set_xticklabels ( ticklabels, rotation=75 )
@@ -113,6 +120,9 @@ def plot():
     fname = fname.replace( "@t",repl)
     print ( f"[plotCovarianceMatrix] saving to {fname}" )
     plt.savefig ( fname )
+    if args.show:
+        from smodels_utils.plotting.mpkitty import timg
+        timg ( fname )
     if args.interactive:
         import IPython
         IPython.embed ( colors = "neutral" )
