@@ -51,7 +51,8 @@ def fetchCurves ( validationPlot ) -> dict :
     ret["exp_excl"] = fetchPoints ( validationPlot.expectedOfficialCurves )
     return ret
 
-def getCoords ( efile, curve, entry, coord : str  ):
+def getCoords ( efile : dict, curve : str, 
+                entry : str, coord : str  ) -> list:
     """ get the coordinates of curve residing in efile
 
     :param efile: the excl_file
@@ -62,6 +63,9 @@ def getCoords ( efile, curve, entry, coord : str  ):
     if "schema_version" in efile and efile["schema_version"]=="2.0":
         values = []
         if entry in efile[curve]:
+            if coord in efile[curve][entry]:
+                values = efile[curve][entry][coord]
+                return values
             for l in efile[curve][entry]:
                 one_curve = []
                 for d in l:
@@ -705,8 +709,6 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
             plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR")
             plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
             plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
-
-    # print ( f"@@XX here num_sr {num_sr} num_cr {num_cr} mlmodels {hasattr ( validationPlot.expRes.globalInfo, 'mlModels' )}" )
 
     if combSR:
         x_vals = comb_excl["obs_excl"]["x"]
