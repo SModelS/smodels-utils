@@ -886,7 +886,8 @@ if __name__ == "__main__":
                 "interpolationType": "cubic", ## interpolation type for matplotlib plots (linear, nearest, cubic)
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
                 "drawPaperPlot": True,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
-                "createSModelSExclJson": False     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
+                "createSModelSExclJson": False,     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
+                "errorsForR": False, # for the expected UL values, do we want a one-sigma band?
     }
 
     options["continue"]=args.cont

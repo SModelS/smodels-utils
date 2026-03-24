@@ -443,6 +443,10 @@ class ValidationPlot( ValidationObjsBase ):
                     pass # not strictly necessary
         if "chi2" in expRes and expRes["chi2"] != None:
             Dict["chi2"] = round_to_n ( expRes["chi2"], 3 )
+        if 'r_expected_p1' in expRes:
+            Dict['eUL_m1']=expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_p1"]
+        if 'r_expected_m1' in expRes:
+            Dict['eUL_p1']=expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_m1"]
         if 'expected upper limit (fb)' in expRes:
             Dict['eUL']=expRes["expected upper limit (fb)"]
             drawExpected = self.options["drawExpected"]
