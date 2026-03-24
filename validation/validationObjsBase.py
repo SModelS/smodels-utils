@@ -18,6 +18,7 @@ from plottingFuncs import getExclusionCurvesFor
 from smodels_utils.helper.terminalcolors import *
 from smodels.base.smodelsLogging import logger
 from smodels.experiment.databaseObj import Database
+from smodels_utils.helper.various import round_to_n
 
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
@@ -315,7 +316,7 @@ class ValidationObjsBase():
         ff.close()
         if not 'ExptRes' in smodelsOutput:
             ## still get the masses from the slhafile name
-            axes = self.getAxesFromSLHAFileName ( slhafile )
+            axes = self.getXYFromSLHAFileName ( slhafile, asDict = True )
             self.addDictionaryForFailedPoint ( smodelsOutput, axes )
             return 1
         dt = None
@@ -396,9 +397,6 @@ class ValidationObjsBase():
             for i in [ "nll", "nll_SM", "nll_min" ]:
                 Dict[i]=expRes[i]
         if "l_max" in expRes and "likelihood" in expRes:
-            #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
-            #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
-            #Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
             nll = 900.
             if expRes["likelihood"]>0.:
                 nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )

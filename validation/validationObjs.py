@@ -12,7 +12,6 @@ import logging
 import os,sys,time,copy,shutil
 from smodels.base.smodelsLogging import logger
 from smodels.base.physicsUnits import GeV
-from smodels_utils.helper.various import round_to_n
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
          rescaleWidth, addUnit
@@ -117,6 +116,45 @@ class ValidationPlot( ValidationObjsBase ):
         if varsDict == None or asDict:
             return varsDict
         return (varsDict["x"],varsDict["y"])
+
+    def getXYFromSLHAFileNameOld ( self, filename, asDict=False ):
+        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
+        Meant as fallback for when no ExptRes is available.
+        :param asDict: if True, return { "x": x, "y": y } dict, else list
+        """
+        masses = self.getMassesFromSLHAFileName ( filename )
+        widths = self.getWidthsFromSLHAFileName ( filename )
+        if ".5" in self.axes:
+            if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.1:
+                masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
+            if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.1:
+                masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
+        if len(masses[0])>1:
+            ret = [ masses[0][0], masses[0][1] ]
+        else:
+            ret = [ masses[0][0], masses[1][0] ]
+
+        varsDict = self.massPlane.getXYValues(masses,None)
+        if varsDict == None: ## not on this plane!!!
+            ret = None
+        if varsDict != None and "y" in varsDict:
+            ret = [ varsDict["x"], varsDict["y"] ]
+        if "T3GQ" in filename: ## fixme we sure?
+            ret = [ masses[1][0], masses[1][1] ]
+        if "T5GQ" in filename or "T2Disp" in filename: ## fixme we sure?
+            ret = [ masses[0][0], masses[0][1] ]
+        if "THSCPM6" in filename:
+            ret = [ masses[0][0], masses[0][2] ]
+        if asDict and ret !=None:
+            ret = { "x": ret[0], "y": ret[1] }
+        # now remove y values
+        if not "y" in self.axes:
+            if type(ret) == dict:
+                ret.pop("y")
+            if type(ret) == list:
+                ret = [ ret[0] ]
+        return ret
+
 
     def getVarsDict ( self, roundmass, width, expRes, slhafile ):
         # print ( "after", slhafile, roundmass )

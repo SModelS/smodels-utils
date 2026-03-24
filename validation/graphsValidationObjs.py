@@ -158,16 +158,8 @@ class ValidationPlot( ValidationObjsBase ):
             return None
         return None
 
-    def getXYFromSLHAFileName ( self, slhafile : str, asDict : bool ) -> Dict:
-        """ for compatibility only.
-        """
-        D = self.getAxesFromSLHAFileName ( slhafile )
-        if asDict:
-            return D
-        return [ D["x"], D["y"] ]
-
-
-    def getAxesFromSLHAFileName ( self, slhafile : str ) -> Dict:
+    def getXYFromSLHAFileName ( self, slhafile : str, 
+                                asDict : bool = True ) -> Dict:
         """ get the axes dictionary from the slha filename alone.
         meant for points that did not produce any smodels output.
 
@@ -175,10 +167,11 @@ class ValidationPlot( ValidationObjsBase ):
         :returns: dictionary of axes, e.g. { "x": 400, "y": 200 }
         """
         logger.debug ( f"need to find axes for {slhafile} ({self.axes})" )
+        from sympy import var
+        x,y,z,w = var ( "x y z w" )
         axesDict = eval ( self.axes )
         from sympy.parsing.sympy_parser import parse_expr
         from sympy import solve, var, Eq
-        x,y,z,w = var ( "x y z w" )
 
         for nr, expr in axesDict.items():
             axesDict[nr]=parse_expr ( str(expr) )
@@ -210,6 +203,8 @@ class ValidationPlot( ValidationObjsBase ):
             D = { "x": round_to_n(float(tokens[1]),5),
                   "y": round_to_n(float(tokens[3]),5) }
         return D
+
+
 
     def getDataFromPlanes(self):
         """
