@@ -86,8 +86,6 @@ def retrievePoints ( cs : contour ) -> list[list[dict]]:
 
     if hasattr ( cs, "_paths" ):
         paths_cs = cs._paths  #collections[0] refers to the 1st level
-        # print ( f'retrievePoints {paths_cs}' )
-        #import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         exclusion_lines = exclusionLineFromPaths ( paths_cs )
         return exclusion_lines
     return exclusion_lines
@@ -149,6 +147,48 @@ def cleanUpPlots ( plots : dict ) -> dict:
         if len(plot)>0:
             newplots[plotName]=plot
     return newplots
+
+def interpolateOverMissing ( xs, ys, T, fill_value : float = float("nan"),
+       method : str = "linear" ) -> np.ndarray:
+    """ idea copied from
+    https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
+    interpolate over missing values (nans)
+    :param fill_value: what to fill outside of convex hull with
+    :param method: one of: cubic, nearest, linear
+    """
+    image = np.asarray ( T )
+    mask = np.isnan ( T )
+    from scipy import interpolate
+
+    h, w = image.shape[:2]
+    xx, yy = np.meshgrid(np.arange(w), np.arange(h))
+    def pluginValues ( indices, values ):
+        """ translate list of indices to list of values """
+        return [ values[x] for x in indices ]
+
+    known_x = xx[~mask]
+    if len(known_x) == 0:
+        logger.debug ( "we have no known_x values" )
+        return image
+    known_y = yy[~mask]
+    known_v = image[~mask]
+    missing_x = xx[mask]
+    missing_y = yy[mask]
+    vknown_x = pluginValues ( known_x, xs )
+    vknown_y = pluginValues ( known_y, ys )
+    vmissing_x = pluginValues ( missing_x, xs )
+    vmissing_y = pluginValues ( missing_y, ys )
+
+    interp_image = image.copy()
+    try:
+        interp_values = interpolate.griddata(
+            (vknown_x, vknown_y), known_v, (vmissing_x, vmissing_y),
+            method=method, fill_value=fill_value)
+
+        interp_image[missing_y, missing_x] = interp_values
+    except Exception as e:
+        logger.error ( f"interpolation over missing failed: {e}" )
+    return interp_image
 
 def createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files,
@@ -426,47 +466,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 # tmp.append ( float("nan") )
         T.append ( tmp )
         eT.append ( etmp )
-
-    def interpolateOverMissing ( xs, ys, T, fill_value = float("nan"),
-           method = "linear" ):
-        # idea copied from https://stackoverflow.com/questions/37662180/interpolate-missing-values-2d-python
-        """ interpolate over missing values (nans)
-        :param fill_value: what to fill outside of convex hull with
-        :param method: one of: cubic, nearest, linear
-        """
-        image = np.asarray ( T )
-        mask = np.isnan ( T )
-        from scipy import interpolate
-
-        h, w = image.shape[:2]
-        xx, yy = np.meshgrid(np.arange(w), np.arange(h))
-        def pluginValues ( indices, values ):
-            """ translate list of indices to list of values """
-            return [ values[x] for x in indices ]
-
-        known_x = xx[~mask]
-        if len(known_x) == 0:
-            logger.debug ( "we have no known_x values" )
-            return image
-        known_y = yy[~mask]
-        known_v = image[~mask]
-        missing_x = xx[mask]
-        missing_y = yy[mask]
-        vknown_x = pluginValues ( known_x, xs )
-        vknown_y = pluginValues ( known_y, ys )
-        vmissing_x = pluginValues ( missing_x, xs )
-        vmissing_y = pluginValues ( missing_y, ys )
-
-        interp_image = image.copy()
-        try:
-            interp_values = interpolate.griddata(
-                (vknown_x, vknown_y), known_v, (vmissing_x, vmissing_y),
-                method=method, fill_value=fill_value)
-
-            interp_image[missing_y, missing_x] = interp_values
-        except Exception as e:
-            logger.error ( f"interpolation over missing failed: {e}" )
-        return interp_image
 
     interpolation = options["interpolationType"]
     #print ( "before" )
