@@ -17,6 +17,7 @@ from validationHelpers import point_in_hull
 from plottingFuncs import getExclusionCurvesFor
 from smodels_utils.helper.terminalcolors import *
 from smodels.base.smodelsLogging import logger
+from smodels.experiment.databaseObj import Database
 
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
@@ -86,6 +87,147 @@ class ValidationObjsBase():
     The base class for ValidationPlot and GraphsValidationPlot, as they share much
     of their code.
     """
+
+    def super_init ( self, ExptRes, TxNameStr, Axes, db : Database, slhadir=None,
+            databasePath=None, options : dict = {}, kfactor = 1.,
+            namedTarball = None, keep = False, combine = False ):
+        anaID = ExptRes.globalInfo.id
+        if databasePath:
+            if os.path.isdir(databasePath):
+                self.databasePath = databasePath
+            else:
+                logger.error(f"Database folder {databasePath} does not exist")
+                sys.exit()
+        #Try to guess the path:
+        else:
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
+            if not os.path.isdir(self.databasePath):
+                logger.error("Could not define databasePath folder")
+                sys.exit()
+        self.expRes = copy.deepcopy(ExptRes)
+        self.db = db
+        self.ct_nooutput = 0
+        self.keep = keep
+        self.runningDictFile = f"run_{anaID}.dict"
+        self.runningDictLockFile = f"run_{anaID}.lock"
+        if not options["continue"]:
+            if os.path.exists ( self.runningDictFile ):
+                try:
+                    os.unlink ( self.runningDictFile )
+                except FileNotFoundError as e:
+                    pass
+            if os.path.exists ( self.runningDictLockFile ):
+                try:
+                    os.unlink ( self.runningDictLockFile )
+                except FileNotFoundError as e:
+                    pass
+        self.t0 = time.time()
+        self.options = options
+        self.limitPoints = self.options["limitPoints"]
+        self.willRun = []
+        self.txName = TxNameStr
+        self.namedTarball = namedTarball
+        self.axes = Axes.strip()
+        self.slhaDir = None
+        self.currentSLHADir = None
+        self.outputDir = None # define an output directory
+        self.data = []
+        self.validationType = "unknown"
+        drawExpected = self.options["drawExpected"]
+        self.officialCurves = self.getOfficialCurves( get_all = not drawExpected,
+                expected = False )
+        self.expectedOfficialCurves = self.getOfficialCurves( get_all = False,
+                expected = True )
+        self.kfactor = kfactor
+        self.combine = combine
+
+        #Select the desired txname and corresponding datasets in the experimental result:
+        for dataset in self.expRes.datasets:
+            dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == self.txName]
+        self.expRes.datasets = [dataset for dataset in self.expRes.datasets[:] if len(dataset.txnameList) > 0]
+
+        if slhadir: self.setSLHAdir(slhadir)
+        if databasePath:
+            if os.path.isdir(databasePath):
+                self.databasePath = databasePath
+            else:
+                logger.error(f"Database folder {databasePath} does not exist")
+                sys.exit()
+        #Try to guess the path:
+        else:
+            # anaID = ExptRes.globalInfo.id
+            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
+            if not os.path.isdir(self.databasePath):
+                logger.error("Could not define databasePath folder")
+                sys.exit()
+
+        import plottingFuncs ## propagate logging level!
+        plottingFuncs.logger.setLevel ( logger.level )
+        self.specialInits()
+
+    def loadData(self, overwrite : bool = True ) -> int:
+        """
+        Tries to load an already existing python output.
+        :param overwrite:  if True, then overwrite any existing data
+
+        :returns: number of points added
+        """
+
+        validationDir = self.getValidationDir ( None )
+        datafile = self.getDataFile(validationDir)
+        if not os.path.isfile(datafile):
+            if self.options["generateData"] == False:
+                logger.error( f"Validation datafile {datafile} not found" )
+            else:
+                logger.info( f"Validation datafile {datafile} not found" )
+            if overwrite:
+                self.data = []
+            return 0
+        nprev = len(self.data)
+
+        from validationHelpers import getValidationFileContent
+        content = getValidationFileContent ( datafile )
+        if overwrite:
+            self.data = []
+        # dict of current[!] validation content as values, slhafilename as keys
+        slhadict = { x["slhafile"] : x for x in self.data }
+        ctadded = 0
+        # content["data"] is dict of previous[!] validation content
+        for d in content["data"]:
+            slhafile = d["slhafile"]
+            # d here is one entry in the validation dict file
+            if slhafile in slhadict:
+                if not equal_dicts ( d, slhadict[slhafile], {"t",} ):
+                    logger.error ( f"entry {d['slhafile']} changed content {d} != {slhadict[slhafile]}" )
+                continue
+            ctadded+=1
+            self.data.append ( d )
+        try:
+            self.data.sort ( key = lambda x: x["axes"]["x"]*1e6 + x["axes"]["y"] )
+        except:
+            def getKey ( x ):
+                if not "axes" in x or x["axes"] is None or not "x" in x["axes"]:
+                    return -1e9
+                return x["axes"]["x"]
+            self.data.sort ( key = lambda x: getKey ( x ) )
+        self.meta = content["meta"]
+        if self.meta is None:
+            self.meta = {}
+        addedpoints = len(self.data)
+        if not overwrite:
+            logger.info ( f"merging old data with new: {nprev}+{len(content['data'])}={len(self.data)}" )
+            self.meta["runs"]=f"{len(self.data)}"
+        # self.data = content["data"]
+        ndata = 0
+        if self.data != None:
+            ndata = len ( self.data )
+        self.meta["npoints"] = ndata
+        return addedpoints
+
 
     def getValidationDir ( self, validationDir : str ) -> str:
         """ obtain the validation directory, usually,
