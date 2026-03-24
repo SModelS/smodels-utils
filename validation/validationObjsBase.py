@@ -372,7 +372,7 @@ class ValidationObjsBase():
             #print ( f"roundmass is not given in validationObjs.py:{line}" )
             #print ( f"we try to extract the info from the slha file name {slhafile}" )
             roundmass = self.getMassesFromSLHAFileName ( slhafile )
-
+        mass = [br[:] for br in roundmass]
         varsDict = self.getVarsDict ( roundmass, width, expRes, slhafile )
         if varsDict is None:
             logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {self.massPlane}." )
@@ -991,7 +991,6 @@ class ValidationObjsBase():
             f.write(f"promptWidth={promptWidth}\n" )
             expected = self.options["expectationType"]
             f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues={expected}\nprinttimespent=True\n")
-            print ( f"@@ errorsForR {self.options['errorsForR']}" )
             if self.options["errorsForR"]:
                 f.write ( "errorsForR=True\n" )
             if outputformat == 3:
@@ -1114,6 +1113,8 @@ class ValidationObjsBase():
                 continue
             tot += d["t"]
             n += 1
+        if n == 0:
+            return 0.
         return round ( tot / n, 3 )
 
     def saveData(self,validationDir : Union[None,os.PathLike] =None,
