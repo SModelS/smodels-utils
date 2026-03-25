@@ -128,7 +128,7 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
     print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
     plots = cleanUpPlots ( plots )
     from smodels_utils.helper.various import py_dumps
-    ds = py_dumps(plots, indent=4, stop_at_level = 4, double_quotes = True )
+    ds = py_dumps(plots, indent=4, stop_at_level = 5, double_quotes = True )
     file = open(f'{vDir}/{file_js}','w')
     file.write ( ds + "\n" )
     file.close()
@@ -257,6 +257,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     xrange = getAxisRange ( options, "xaxis" )
     yrange = getAxisRange ( options, "yaxis" )
     tgr, etgr, tgrchi2 = [], [], []
+    etgr_p1, etgr_m1 = [], []
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]', r"$r = \sigma_{signal}/\sigma_{UL}$"
     logY = yIsLog ( validationPlot )
@@ -301,6 +302,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             logger.warning( f"no UL for {xvals}: {pt}" )
         r, rexp = float("nan"), float("nan")
+        rexp_p1, rexp_m1 = float("nan"), float("nan")
         if not "error" in pt.keys():
             if pt["UL"]!=None:
                 if type(pt["UL"])==str:
@@ -314,6 +316,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 if pt["eUL"] != None and pt["eUL"] > 0.:
                     hasExpected = True
                     rexp = pt['signal']/pt ['eUL']
+                if "eUL_p1" in pt and pt["eUL_p1"] != None and pt["eUL_p1"] > 0.:
+                    rexp_p1 = pt['signal']/pt ['eUL_p1']
+                if "eUL_m1" in pt and pt["eUL_m1"] != None and pt["eUL_m1"] > 0.:
+                    rexp_m1 = pt['signal']/pt ['eUL_m1']
         if options["significances"]:
             ### dont plot r, plot Z!
             r = float("nan") ## better draw nothing than r instead of Z
@@ -370,6 +376,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 tgr.append( { "i": len(tgr), "x": x, "y": y, "r": r })
                 if np.isfinite ( rexp ):
                     etgr.append( { "i": len(etgr), "x": x, "y": y, "r": rexp } )
+                if np.isfinite ( rexp_p1 ):
+                    etgr_p1.append( { "i": len(etgr), "x": x, "y": y, "r": rexp_p1 } )
+                if np.isfinite ( rexp_m1 ):
+                    etgr_m1.append( { "i": len(etgr), "x": x, "y": y, "r": rexp_m1 } )
                 if "chi2" in pt:
                     tgrchi2.append( { "i": len(tgrchi2), "x": x, "y": y, "chi2": pt["chi2"] / 3.84 } )
     if options["drawExpected"] in [ "auto" ]:
@@ -386,7 +396,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     xs = get( "x", tgr )
     ys = get( "y", tgr )
     exs = get( "x", etgr )
+    exs_p1 = get( "x", etgr_p1 )
+    exs_m1 = get( "x", etgr_m1 )
     eys = get( "y", etgr )
+    eys_p1 = get( "y", etgr_p1 )
+    eys_m1 = get( "y", etgr_m1 )
     if max(ys) == min(ys):
         logger.info("1d data detected, not plotting pretty plot.")
         return None, None
@@ -420,7 +434,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     #Draw temp plot:
     rs = get ( "r", tgr )
     ers = get ( "r", etgr )
+    ers_p1 = get ( "r", etgr_p1 )
+    ers_m1 = get ( "r", etgr_m1 )
     Z, eZ = {}, {}
+    eZ_p1 = {}
+    eZ_m1 = {}
     for t in tgr:
         x,y,r = t["x"],t["y"],t["r"]
         if not isWithinRange ( yrange, y ):
@@ -439,33 +457,61 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         if not x in eZ:
             eZ[x]={}
         eZ[x][y]=float(r)
+    for t in etgr_p1:
+        x,y,r = t["x"],t["y"],t["r"]
+        if not isWithinRange ( yrange, y ):
+            continue
+        if not isWithinRange ( xrange, x ):
+            continue
+        if not x in eZ_p1:
+            eZ_p1[x]={}
+        eZ_p1[x][y]=float(r)
+    for t in etgr_m1:
+        x,y,r = t["x"],t["y"],t["r"]
+        if not isWithinRange ( yrange, y ):
+            continue
+        if not isWithinRange ( xrange, x ):
+            continue
+        if not x in eZ_m1:
+            eZ_m1[x]={}
+        eZ_m1[x][y]=float(r)
     xs = list ( Z.keys() )
     xs.sort( )
     T, eT = [], []
+    eT_p1, eT_m1 = [], []
     ys = list ( set ( ys ) )
     ys.sort( )
     # ys.sort( reverse = True )
     for y in ys:
         tmp, etmp = [], []
+        etmp_p1, etmp_m1 = [], []
         if not isWithinRange ( yrange, y ):
             continue
         for x in xs:
             if not isWithinRange ( xrange, x ):
                 continue
             r, er = float("nan"), float("nan")
+            er_p1, er_m1 = float("nan"), float("nan")
             if x in Z and y in Z[x]:
                 r = Z[x][y]
             if x in eZ and y in eZ[x]:
                 er = eZ[x][y]
-            #else: ## try this if not dense enough
-            #    r = getClosestValue ( x, y, tgr, 1. )
+            if x in eZ_p1 and y in eZ_p1[x]:
+                er_p1 = eZ_p1[x][y]
+            if x in eZ_m1 and y in eZ_m1[x]:
+                er_m1 = eZ_m1[x][y]
             tmp.append ( r )
             etmp.append ( er )
+            etmp_p1.append ( er_p1 )
+            etmp_m1.append ( er_m1 )
             rs.append ( r )
             ers.append ( er )
-                # tmp.append ( float("nan") )
+            ers_p1.append ( er_p1 )
+            ers_m1.append ( er_m1 )
         T.append ( tmp )
         eT.append ( etmp )
+        eT_p1.append ( etmp_p1 )
+        eT_m1.append ( etmp_m1 )
 
     interpolation = options["interpolationType"]
     #print ( "before" )
@@ -473,6 +519,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     T = interpolateOverMissing ( xs, ys, T, float("nan"), interpolation )
     vT = interpolateOverMissing ( xs, ys, T, -10., interpolation )
     eT = interpolateOverMissing ( xs, ys, eT, -10., interpolation )
+    eT_p1 = interpolateOverMissing ( xs, ys, eT_p1, -10., interpolation )
+    eT_m1 = interpolateOverMissing ( xs, ys, eT_m1, -10., interpolation )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
@@ -505,6 +553,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         plt.plot ( px, py, c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
+            if "P1" in p["name"] or "M1" in p ["name"]:
+                continue
             if type(p) not in [ dict ]:
                 logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
                 continue
@@ -535,6 +585,17 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                             transform = fig.transFigure, linestyle="dotted" )
             exp_excl_lines = retrievePoints ( cs )
+
+            if False:
+                cs_m1 = plt.contour( xs, ys, eT_m1, colors="red", 
+                        linestyles = "dotted", levels=[1.],
+                        extent = xtnt, origin="image" )
+                exp_excl_lines_m1 = retrievePoints ( cs_m1 )
+
+                cs_p1 = plt.contour( xs, ys, eT_p1, colors="green", 
+                        linestyles = "dotted", levels=[1.],
+                        extent = xtnt, origin="image" )
+                exp_excl_lines_p1 = retrievePoints ( cs_p1 )
 
         if options["createSModelSExclJson"]:
             writeV1Format = False
