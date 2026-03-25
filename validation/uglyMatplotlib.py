@@ -180,7 +180,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         return ( None, None )
     tavg = tavg / len (validationPlot.data )
 
-    def plotOfficalCurve ( p : dict, xrange, yrange ):
+    def plotOfficalCurve ( p : dict, xrange, yrange, color : str = "black",
+           label : str = "official exclusion", linestyle : str = "-",
+           linewidth : int = 2 ):
         """ plot one of the official curves """
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
@@ -190,18 +192,24 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
         except ValueError as e:
             print ( f"[uglyMatplotlib] ValueError: {e}" )
-        label = "official exclusion"
-        linestyle = "-"
         if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
             label = ""
             linestyle = "dotted"
         try:
-            plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
+            plt.plot ( px, py, c=color, label=label,
+                       linestyle=linestyle, zorder=8, linewidth=linewidth )
         except ValueError as e:
             print ( f"[uglyMatplotlib] ValueError: {e}" )
 
     for p in validationPlot.officialCurves:
-        plotOfficalCurve ( p, xrange, yrange )
+        plotOfficalCurve ( p, xrange, yrange, "black", "official exclusion", "-" )
+
+    for p in validationPlot.expectedOfficialCurves:
+        linewidth, color, label = 1, "black", "official expected exclusion"
+        if "P1" in p['name'] or "M1" in p['name']:
+            linewidth, color, label = 1, "gray", None
+        plotOfficalCurve ( p, xrange, yrange, color, label,
+               "dotted", linewidth )
 
     ax = plt.gca()
     if logY:
