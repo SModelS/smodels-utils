@@ -139,7 +139,7 @@ class ValidationObjsBase():
         drawExpected = self.options["drawExpected"]
         self.officialCurves = self.getOfficialCurves( get_all = not drawExpected,
                 expected = False )
-        self.expectedOfficialCurves = self.getOfficialCurves( get_all = False,
+        self.expectedOfficialCurves = self.getOfficialCurves( get_all = True,
                 expected = True )
         self.kfactor = kfactor
         self.combine = combine
