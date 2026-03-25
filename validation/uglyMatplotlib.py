@@ -180,10 +180,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         return ( None, None )
     tavg = tavg / len (validationPlot.data )
 
-    for p in validationPlot.officialCurves:
+    def plotOfficalCurve ( p : dict, xrange, yrange ):
+        """ plot one of the official curves """
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
-            continue
+            return
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
         try:
             plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
@@ -198,6 +199,10 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             plt.plot ( px, py, c="black", label=label, linestyle=linestyle, zorder=8 )
         except ValueError as e:
             print ( f"[uglyMatplotlib] ValueError: {e}" )
+
+    for p in validationPlot.officialCurves:
+        plotOfficalCurve ( p, xrange, yrange )
+
     ax = plt.gca()
     if logY:
         ax.set_yscale('log')
