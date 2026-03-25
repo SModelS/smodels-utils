@@ -265,7 +265,7 @@ class ValidationPlot( ValidationObjsBase ):
                 continue
             ff.close()
             if not 'ExptRes' in smodelsOutput:
-                axes = self.getAxesFromSLHAFileName ( slhafile )
+                axes = self.getXYFromSLHAFileName ( slhafile )
                 self.addDictionaryForFailedPoint ( smodelsOutput, axes )
                 continue
             dt = None
@@ -313,7 +313,7 @@ class ValidationPlot( ValidationObjsBase ):
             widths = expRes["Width (GeV)"]
             nodesMap = expRes["Nodes Map"]
             if masses == None:
-                axes = self.getAxesFromSLHAFileName ( slhafile )
+                axes = self.getXYFromSLHAFileName ( slhafile )
                 if len(axes)==0: # drop it, doesnt fall in this plane it seems
                     continue
                 D = { "slhafile": slhafile, "error": "no result",
