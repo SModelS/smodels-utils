@@ -204,12 +204,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
     for p in validationPlot.officialCurves:
         plotOfficalCurve ( p, xrange, yrange, "black", "official exclusion", "-" )
 
-    for p in validationPlot.expectedOfficialCurves:
-        linewidth, color, label = 1, "black", "official expected exclusion"
-        if "P1" in p['name'] or "M1" in p['name']:
-            linewidth, color, label = 1, "gray", None
-        plotOfficalCurve ( p, xrange, yrange, color, label,
-               "dotted", linewidth )
+    if options["drawExpected"]:
+        for p in validationPlot.expectedOfficialCurves:
+            linewidth, color, label = 1, "black", "official expected exclusion"
+            if "P1" in p['name'] or "M1" in p['name']:
+                linewidth, color, label = 1, "gray", None
+            plotOfficalCurve ( p, xrange, yrange, color, label,
+                   "dotted", linewidth )
 
     ax = plt.gca()
     if logY:
