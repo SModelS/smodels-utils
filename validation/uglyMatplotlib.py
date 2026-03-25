@@ -189,7 +189,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             return
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
         try:
-            plt.plot ( px, py, c="white", linewidth=4, zorder=7 )
+            plt.plot ( px, py, c="white", linewidth=linewidth+1, zorder=7,
+                       alpha=0.8 )
         except ValueError as e:
             print ( f"[uglyMatplotlib] ValueError: {e}" )
         if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
