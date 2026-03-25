@@ -190,7 +190,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
         px, py = filterWithinRanges ( p["points"], xrange, yrange )
         try:
             plt.plot ( px, py, c="white", linewidth=linewidth+1, zorder=7,
-                       alpha=0.8 )
+                       alpha=0.7 )
         except ValueError as e:
             print ( f"[uglyMatplotlib] ValueError: {e}" )
         if "ExclusionP1" in p["name"] or "ExclusionM1" in p["name"]:
@@ -207,11 +207,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
 
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
-            linewidth, color, label = 1, "black", "official expected exclusion"
+            linewidth, color, label = 2, "black", "official expected exclusion"
             if "P1" in p['name'] or "M1" in p['name']:
                 linewidth, color, label = 1, "gray", None
             plotOfficalCurve ( p, xrange, yrange, color, label,
-                   "dotted", linewidth )
+                   ":", linewidth )
 
     ax = plt.gca()
     if logY:
