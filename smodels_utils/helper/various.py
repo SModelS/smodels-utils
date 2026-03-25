@@ -353,12 +353,11 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
         cnames = [ f"{exp}Exclusion_{maxes}", f"{exp}ExclusionP1_{maxes}",
                    f"{exp}ExclusionM1_{maxes}" ]
 
-    # from smodels_utils.helper.rootTools import exclusionCurveToTGraph
     for cname in cnames:
-        for txn,content in content.items():
+        for txn,co in content.items():
             if txname != None and txn != txname:
                 continue
-            for axis,points in content.items():
+            for axis,points in co.items():
                 points = cutPoints ( points, ranges )
                 p1 = axis.find("_")
                 constr = axis[p1+1:]
@@ -381,7 +380,7 @@ def getExclusionCurvesForV2(jsonfile,txname=None,axes=None, get_all=False,
                         ret[txn][cname]= points
                     else:
                         ret[txn].append( { "points": points, "name": cname } )
-        return ret
+    return ret
 
 
 def getExclusionCurvesFor(jsonfile : os.PathLike , txname : Union[str,None]=None,
@@ -503,10 +502,10 @@ def getExclusionCurvesFor(jsonfile : os.PathLike , txname : Union[str,None]=None
                 return False
         return True
 
-    for txn,content in content.items():
+    for txn,co in content.items():
         if txname != None and txn != txname:
             continue
-        for name,line in content.items():
+        for name,line in co.items():
             if not match ( name ):
                 continue
             if not axisDescriptionsMatch ( name, caxes ):
