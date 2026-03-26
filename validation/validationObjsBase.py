@@ -332,135 +332,6 @@ class ValidationObjsBase():
         else:
             return [ tgraph[0] ]
 
-    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int:
-        """ returns 1 if success else 0 """
-        fout = resultsfile
-        if not os.path.isfile(fout):
-            if self.ct_nooutput>4:
-                ## suppress subsequently same error messages
-                return
-            logger.info( f"No SModelS output found for {slhafile} (should be {fout})" )
-            self.ct_nooutput+=1
-            if self.ct_nooutput==5:
-                logger.info("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
-            return
-        logger.debug ( f"reading {fout}" )
-        ff = open(fout,'r')
-        txt = ff.read()
-        cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
-        myglobals = globals()
-        myglobals["inf"]=float("inf")
-        myglobals["nan"]=float("nan")
-        try:
-            exec( cmd, myglobals )
-        except SyntaxError as e:
-            logger.error ( f"when reading {fout}: {e}. will skip" )
-            os.unlink ( fout )
-            return 0
-        ff.close()
-        if not 'ExptRes' in smodelsOutput:
-            ## still get the masses from the slhafile name
-            axes = self.getXYFromSLHAFileName ( slhafile, asDict = True )
-            self.addDictionaryForFailedPoint ( smodelsOutput, axes )
-            return 1
-        dt = None
-        if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
-            dt = smodelsOutput["OutputStatus"]["time spent"]
-        res = smodelsOutput['ExptRes']
-        expRes = res[0]
-        #Double checks (to make sure SModelS ran as expected):
-        leadingDSes = {}
-        if len(res) != 1:
-            logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
-            found_combined=False
-            for eR in res:
-                datasetId = eR["DataSetID"]
-                if datasetId != None and  "combined" in datasetId:
-                    logger.debug ( "found a combined result. will use it." )
-                    found_combined=True
-                    expRes = eR
-            if self.options["keepTopNSRs"] not in [ None, 0 ]:
-                maxR, expRes = -1., None
-                for eR in res:
-                    if "r_expected" in eR:
-                        r = eR["r_expected"]
-                        while r in leadingDSes: # make sure it's unique
-                            r = r * .9999
-                        leadingDSes[r]=eR["DataSetID"]
-                        if r>maxR:
-                            maxR = eR["r_expected"]
-                            expRes = eR
-            if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
-                logger.warning("We have multiple dataset ids, but none is a combined one. Skipping this point." )
-                return 0
-        if expRes['AnalysisID'] != self.expRes.globalInfo.id:
-            logger.error("Something went wrong. Obtained results for the wrong analyses")
-            return 0
-        if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
-            logger.error( f"Something went wrong. Obtained results for the wrong txname: got {expRes['TxNames']} but want {self.txName}")
-            return 0
-
-        #Replaced rounded masses by original masses
-        #(skip rounding to check if mass is in the plane)
-        roundmass = expRes['Mass (GeV)']
-        width = None
-        if "Width (GeV)" in expRes:
-            width = expRes['Width (GeV)']
-        #print ( "roundmass", slhafile, roundmass )
-        #print ( "expRes", expRes )
-        if roundmass is None or "TGQ12" in slhafile:
-            ## FIXME, for TGQ12 why cant i use exptres?
-            import inspect
-            frame = inspect.currentframe()
-            line = frame.f_lineno
-            #print ( f"roundmass is not given in validationObjs.py:{line}" )
-            #print ( f"we try to extract the info from the slha file name {slhafile}" )
-            roundmass = self.getMassesFromSLHAFileName ( slhafile )
-        mass = [br[:] for br in roundmass]
-        varsDict = self.getVarsDict ( roundmass, width, expRes, slhafile )
-        if varsDict is None:
-            logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {self.massPlane}." )
-            return 0
-        if type(dt) == str:
-            if dt.endswith("s"):
-                dt=dt[:-1]
-            dt=float(dt)
-        Dict = self.dictFromExpRes ( expRes )
-        Dict['slhafile']=slhafile
-        Dict['axes']=varsDict
-        if type(dt)==float:
-            Dict["t"]=round(dt,3) ## in seconds
-        if len(leadingDSes)>0:
-            s = []
-            n = self.options["keepTopNSRs"]
-            for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
-                s.append ( (k,v) )
-            Dict["leadingDSes"]= s
-        if expRes['dataType'] == 'efficiencyMap':
-            #Select the correct dataset (best SR):
-            dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
-            if len(dataset)==1:
-                dataset = dataset[0]
-            else: ## probably the combined case. we take any dataset.
-                dataset = self.expRes.datasets[0]
-
-            txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-            total = self.getMassesAndWidths ( mass, width )
-
-            if not "efficiency" in Dict.keys():
-                try:
-                    eff = txname.txnameData.getValueFor(total)
-                    if eff != None:
-                        Dict['efficiency'] = round ( eff, 8 )
-                except (SModelSError,ValueError) as e:
-                    logger.error ( f"could not handle {slhafile}: {e} ({type(e)}) massGeV={total}" )
-                    Dict=None
-        logger.debug(f'expres keys : {expRes.keys()}')
-        if Dict:
-            self.data.append(Dict)
-            return 1
-        return 0
-
     def getPlotFileName(self,validationDir : str, fformat : str = 'pdf') -> str:
         """
         Defines the name of the plot file and returns it
@@ -996,7 +867,7 @@ class ValidationObjsBase():
             expected = self.options["expectationType"]
             f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues={expected}\nprinttimespent=True\n")
             if self.options["errorsForR"]:
-                f.write ( "errorsForR=True\n" )
+                f.write ( f"errorsForR={self.options['errorsForR']}\n" )
             if outputformat == 3:
                 f.write ( "addNodesMap=True\n" )
             f.close()
