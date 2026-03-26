@@ -11,8 +11,9 @@ __all__ = [ "validatePlot" ]
 import sys,os,copy
 import argparse,time
 from sympy import var
+from typing import Union, Optional
 
-from typing import Union
+from smodels_utils.helper.terminalcolors import *
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -610,7 +611,8 @@ def run ( expResList : list, options : dict,
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          options : dict, tarfiles=None,verbosity : str ='error',
-         combine : bool =False, force_load : Union[str,None]= None, keep : bool = False ):
+         combine : bool =False, force_load : Optional[str]= None,
+         keep : bool = False ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -745,7 +747,7 @@ if __name__ == "__main__":
         print( f"[runValidation] Parameters file ''{args.parfile}'' not found" )
         sys.exit(-1)
     else:
-        print( f"[runValidation] Reading validation parameters from {args.parfile}" )
+        print( f"[runValidation] Reading validation parameters from {GREEN}{args.parfile}{RESET}" )
 
     parser = None
     try:
@@ -763,7 +765,6 @@ if __name__ == "__main__":
     from validation import plottingFuncs, validationObjs, graphsValidationObjs
     from smodels.experiment.databaseObj import Database
     from smodels.experiment.expResultObj import ExpResult
-    from smodels_utils.helper.terminalcolors import *
     from smodels.base.physicsUnits import TeV
     from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
     from smodels.base.smodelsLogging import logger
