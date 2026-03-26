@@ -103,7 +103,14 @@ def createSModelSExclusionJson( all_lines : dict, validationPlot ):
     #store x,y points in json file
     d = {}
     for name,line in all_lines.items():
-        d[ f"{name}_excl" ] = line
+        sname = "obsExclusion"
+        if "exp" in sname:
+            sname = "expExclusion"
+        if "p1" in name:
+            sname += "P1"
+        if "m1" in name:
+            sname += "M1"
+        d[ sname ] = line
     plot_dict = { f"{validationPlot.txName}_{plot_type}_{axes}": d }
         
     vDir = validationPlot.getValidationDir (validationDir=None)
@@ -111,7 +118,10 @@ def createSModelSExclusionJson( all_lines : dict, validationPlot ):
     import json
     plots = plot_dict
     for name,plot in plots.items():
-        if len(plot["obs_excl"])>0 and type(plot["obs_excl"][0])==dict:
+        obsexcl = "obs_excl"
+        if "obsExclusion" in plot:
+            obsexcl = "obsExclusion"
+        if len(plot[ obsexcl ])>0 and type(plot[ obsexcl ][0])==dict:
             print ( f"[prettyMatplotlib] trying to add v2 exclusion lines to v1 file. This doesnt work, but you can simply delete the old json file!" )
             sys.exit(-1)
     if os.path.exists(f"{vDir}/{file_js}"):
@@ -140,10 +150,9 @@ def cleanUpPlots ( plots : dict ) -> dict:
     """
     newplots = {}
     for plotName,plot in plots.items():
-        if "exp_excl" in plot and len(plot["exp_excl"])==0:
-            plot.pop ( "exp_excl" )
-        if "obs_excl" in plot and len(plot["obs_excl"])==0:
-            plot.pop ( "obs_excl" )
+        for i in [ "exp_excl", "obs_excl", "expExclusion", "obsExclusion" ]:
+            if i in plot and len(plot[i])==0:
+                plot.pop ( i )
         if len(plot)>0:
             newplots[plotName]=plot
     return newplots
@@ -579,27 +588,33 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         excl_lines = retrievePoints ( cs )
         exp_excl_lines = []
 
+        all_lines = { "obs": excl_lines }
+
         if options["drawExpected"] in [ "auto", True ] and not np.all ( np.isnan(eT) ):
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],
                               extent = xtnt, origin="image" )
             ecsl = plt.plot([-1,-1],[0,0], c = "blue", label = "exp. excl. (SModelS)",
                             transform = fig.transFigure, linestyle="dotted" )
             exp_excl_lines = retrievePoints ( cs )
+            all_lines["exp"] = exp_excl_lines
 
-            if False:
-                cs_m1 = plt.contour( xs, ys, eT_m1, colors="red", 
+            if True:
+                cs_m1 = plt.contour( xs, ys, eT_m1, colors="blue", 
                         linestyles = "dotted", levels=[1.],
-                        extent = xtnt, origin="image" )
+                        extent = xtnt, origin="image",
+                        linewidths = 1, alpha = 0.5 )
                 exp_excl_lines_m1 = retrievePoints ( cs_m1 )
+                all_lines["exp_m1"] = exp_excl_lines_m1
 
-                cs_p1 = plt.contour( xs, ys, eT_p1, colors="green", 
+                cs_p1 = plt.contour( xs, ys, eT_p1, colors="blue", 
                         linestyles = "dotted", levels=[1.],
-                        extent = xtnt, origin="image" )
+                        extent = xtnt, origin="image",
+                        linewidths = 1, alpha = 0.5 )
                 exp_excl_lines_p1 = retrievePoints ( cs_p1 )
+                all_lines["exp_p1"] = exp_excl_lines_p1
 
         if options["createSModelSExclJson"]:
             writeV1Format = False
-            all_lines = { "obs": excl_lines, "exp": exp_excl_lines }
             if writeV1Format:
                 # thats the old format, list of x values, list of y values
                 createSModelSExclusionJsonV1( all_lines, validationPlot )
