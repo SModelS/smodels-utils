@@ -90,9 +90,10 @@ def retrievePoints ( cs : contour ) -> list[list[dict]]:
         return exclusion_lines
     return exclusion_lines
 
-def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
+def createSModelSExclusionJson( all_lines : dict, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files """
-    if len(excl_lines)==0 and len(exp_excl_lines)==0:
+    npoints = sum ( [len(x) for x in all_lines.values() ] )
+    if npoints == 0:
         print( f"[prettyMatplotlib] {RED}Skipping creation of SModelS Exclusion JSON: no points{RESET}")
         return
 
@@ -100,7 +101,11 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
     else: plot_type = "comb"
     axes = validationPlot.axes
     #store x,y points in json file
-    plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obs_excl":excl_lines, "exp_excl": exp_excl_lines }}
+    d = {}
+    for name,line in all_lines.items():
+        d[ f"{name}_excl" ] = line
+    plot_dict = { f"{validationPlot.txName}_{plot_type}_{axes}": d }
+        
     vDir = validationPlot.getValidationDir (validationDir=None)
     file_js = "SModelS_ExclusionLines.json"
     import json
@@ -119,11 +124,6 @@ def createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot ):
             sys.exit()
 
     plots["schema_version"]="2.0"
-
-    npoints = 0
-    if len(excl_lines)>0:
-        for excl_line in excl_lines:
-            npoints += len(excl_line)
 
     print( f"[prettyMatplotlib] {MAGENTA}Creating SModelS Exclusion JSON at {vDir}/{file_js}: we have {npoints} points{RESET}")
     plots = cleanUpPlots ( plots )
@@ -190,16 +190,16 @@ def interpolateOverMissing ( xs, ys, T, fill_value : float = float("nan"),
         logger.error ( f"interpolation over missing failed: {e}" )
     return interp_image
 
-def createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot ):
+def createSModelSExclusionJsonV1( all_lines, validationPlot ):
     """ create the SModelS_ExclusionLines.json exclusion files,
     this is the old version, all exclusion lines merged, x and y separated,
     no schema_version """
     xobs, yobs, xexp, yexp = [[]], [[]], [[]], [[]]
-    for excl_line in excl_lines:
+    for excl_line in all_lines["obs"]:
         for pt in excl_line:
             xobs[0].append ( pt["x"] )
             yobs[0].append ( pt["y"] )
-    for excl_line in exp_excl_lines:
+    for excl_line in all_lines["exp"]:
         for pt in excl_line:
             xexp[0].append ( pt["x"] )
             yexp[0].append ( pt["y"] )
@@ -599,11 +599,12 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         if options["createSModelSExclJson"]:
             writeV1Format = False
+            all_lines = { "obs": excl_lines, "exp": exp_excl_lines }
             if writeV1Format:
                 # thats the old format, list of x values, list of y values
-                createSModelSExclusionJsonV1( excl_lines, exp_excl_lines, validationPlot )
+                createSModelSExclusionJsonV1( all_lines, validationPlot )
             else:
-                createSModelSExclusionJson( excl_lines, exp_excl_lines, validationPlot )
+                createSModelSExclusionJson( all_lines, validationPlot )
 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:
