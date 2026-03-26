@@ -40,6 +40,16 @@ class ProgressHandler:
             pass
         return None
 
+    def dictFromExpRes ( self, expRes ) -> dict:
+        """ given a SModelS expRes dictionary, create a
+        first incomplete version of a validation dictionary """
+
+        Dict = { 'signal': expRes['theory prediction (fb)'],
+                 'UL': expRes['upper limit (fb)'], 
+                 'condition': expRes['maxcond'],
+                 'dataset': expRes['DataSetID'] }
+        return Dict
+
     def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
         """ store the pid of the progress bar in .progressbar.pid,
         so the other process can kill it. """
@@ -381,10 +391,9 @@ class ValidationObjsBase():
             if dt.endswith("s"):
                 dt=dt[:-1]
             dt=float(dt)
-        Dict = {'slhafile' : slhafile, 'axes' : varsDict,
-                'signal': expRes['theory prediction (fb)'],
-                'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
-                'dataset': expRes['DataSetID'] }
+        Dict = self.dictFromExpRes ( expRes )
+        Dict['slhafile']=slhafile
+        Dict['axes']=varsDict
         if type(dt)==float:
             Dict["t"]=round(dt,3) ## in seconds
         if len(leadingDSes)>0:

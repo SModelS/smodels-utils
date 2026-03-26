@@ -329,10 +329,10 @@ class ValidationPlot( ValidationObjsBase ):
                 if dt.endswith("s"):
                     dt=dt[:-1]
                 dt=float(dt)
-            Dict = {'slhafile' : slhafile, 'axes' : varsDict,
-                    'signal': expRes['theory prediction (fb)'],
-                    'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
-                    'dataset': expRes['DataSetID'] }
+            Dict = self.dictFromExpRes ( expRes )
+            Dict['slhafile']=slhafile
+            Dict['axes']=varsDict
+
             if type(dt)==float:
                 Dict["t"]=round(dt,3) ## in seconds
             if len(leadingDSes)>1:
