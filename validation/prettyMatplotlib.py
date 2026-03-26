@@ -34,8 +34,260 @@ except:
     pass
 
 from scipy import interpolate
-import numpy as np
 from validationHelpers import getAxisType
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
+
+def shade_between_contours(cs1, cs2, ax=None,
+                           facecolor='lightskyblue', alpha=0.12,
+                           edgecolor='none', zorder=2,
+                           close_tol=1e-12,
+                           mode='auto'):
+    """
+    Shade the area between two contour sets, closing open contours in the
+    shortest way possible.
+
+    Modes
+    -----
+    - 'auto' (default):
+        If each cs has exactly one open polyline, build a single ring by
+        connecting nearest endpoints across the two lines (two shortest
+        straight connectors) and fill it. Otherwise fall back to 'compound'.
+    - 'cross':
+        Force the two-connector ring between the (main) polyline from each cs.
+    - 'compound':
+        Close every subpath individually by a straight line from end to start
+        (shortest closure for that subpath) and fill all with even-odd rule.
+        This shades the symmetric difference of all closed loops.
+
+    Parameters
+    ----------
+    cs1, cs2 : contour set-like
+        Objects returned by plt.contour/ax.contour (or similar) that expose
+        `. _paths`, `.allsegs`, or `.collections`.
+    ax : matplotlib.axes.Axes, optional
+        Target axes; defaults to current axes.
+    facecolor : color, default 'lightskyblue'
+        Fill color.
+    alpha : float, default 0.12
+        Transparency for an almost transparent look.
+    edgecolor : color, default 'none'
+        Edge color of the filled patch.
+    zorder : int, default 2
+        Z-order of the fill patch.
+    close_tol : float, default 1e-12
+        Tolerance to consider a path closed based on endpoints.
+    mode : {'auto','cross','compound'}, default 'auto'
+        See description above.
+
+    Returns
+    -------
+    patch : matplotlib.patches.PathPatch
+        The added patch.
+    """
+
+    if ax is None:
+        ax = plt.gca()
+
+    # -------------------- Utilities --------------------
+    def to_path(obj):
+        if isinstance(obj, Path):
+            return obj
+        if hasattr(obj, 'vertices'):
+            v = np.asarray(obj.vertices)
+            c = getattr(obj, 'codes', None)
+            return Path(v, c)
+        arr = np.asarray(obj)
+        if arr.ndim == 2 and arr.shape[1] == 2:
+            return Path(arr)
+        return None
+
+    def split_subpaths(p):
+        # Split a Path with multiple MOVETO/CLOSEPOLY into simple polylines.
+        v = np.asarray(p.vertices)
+        c = p.codes
+        if c is None:
+            return [Path(v)]
+        segs = []
+        start = None
+        curr = []
+        for i, code in enumerate(c):
+            if code == Path.MOVETO:
+                if curr:
+                    segs.append(Path(np.array(curr)))
+                    curr = []
+                start = v[i]
+                curr = [v[i]]
+            elif code == Path.LINETO:
+                curr.append(v[i])
+            elif code == Path.CLOSEPOLY:
+                # CLOSEPOLY closes to the last MOVETO; we can make explicit
+                if curr:
+                    curr.append(curr[0])
+                    segs.append(Path(np.array(curr)))
+                    curr = []
+                start = None
+            else:
+                # Treat unknown as LINETO
+                curr.append(v[i])
+        if curr:
+            segs.append(Path(np.array(curr)))
+        # Keep only segments with 2D points and at least 2 vertices
+        out = []
+        for s in segs:
+            vv = np.asarray(s.vertices)
+            if vv.ndim == 2 and vv.shape[0] >= 2 and vv.shape[1] == 2:
+                out.append(Path(vv))
+        return out if out else [Path(v)]
+
+    def extract_paths(cs):
+        paths = []
+        if hasattr(cs, '_paths') and cs._paths is not None:
+            for p in cs._paths:
+                pp = to_path(p)
+                if pp is not None:
+                    paths.extend(split_subpaths(pp))
+        elif hasattr(cs, 'allsegs') and cs.allsegs is not None:
+            for seglist in cs.allsegs:
+                for seg in seglist:
+                    if seg is None:
+                        continue
+                    pp = to_path(seg)
+                    if pp is not None:
+                        paths.extend(split_subpaths(pp))
+        elif hasattr(cs, 'collections'):
+            for coll in cs.collections:
+                if hasattr(coll, 'get_paths'):
+                    for p in coll.get_paths():
+                        paths.extend(split_subpaths(p))
+        # Keep only paths with at least 2 vertices
+        keep = []
+        for p in paths:
+            v = np.asarray(p.vertices)
+            if v.ndim == 2 and v.shape[0] >= 2 and v.shape[1] == 2:
+                keep.append(Path(v))
+        return keep
+
+    def is_closed(p):
+        v = np.asarray(p.vertices)
+        if v.shape[0] < 3:
+            return False
+        return np.allclose(v[0], v[-1], atol=close_tol, rtol=0.0)
+
+    def close_shortest(p):
+        # Shortest closure for one polyline: straight segment from end to start.
+        if is_closed(p):
+            return p
+        v = np.asarray(p.vertices)
+        if not np.allclose(v[0], v[-1], atol=close_tol, rtol=0.0):
+            v = np.vstack([v, v[0]])
+        codes = np.full(len(v), Path.LINETO, dtype=np.uint8)
+        codes[0] = Path.MOVETO
+        codes[-1] = Path.CLOSEPOLY
+        return Path(v, codes)
+
+    def path_length(v):
+        v = np.asarray(v)
+        if len(v) < 2: return 0.0
+        d = v[1:] - v[:-1]
+        return float(np.sqrt((d * d).sum(axis=1)).sum())
+
+    def main_polyline(paths):
+        # Pick the longest polyline
+        if not paths:
+            return None
+        lengths = [path_length(p.vertices) for p in paths]
+        return paths[int(np.argmax(lengths))]
+
+    def endpoints(p):
+        v = np.asarray(p.vertices)
+        return v[0], v[-1]
+
+    def orient(p, start_pt):
+        v = np.asarray(p.vertices)
+        if np.linalg.norm(v[0] - start_pt) <= np.linalg.norm(v[-1] - start_pt):
+            return Path(v.copy())
+        else:
+            return Path(v[::-1].copy())
+
+    def make_ring_from_two_open(p1, p2):
+        # Build a single closed ring by connecting nearest endpoints across p1 and p2.
+        a1, b1 = endpoints(p1)
+        a2, b2 = endpoints(p2)
+        d1 = np.linalg.norm(a1 - a2) + np.linalg.norm(b1 - b2)
+        d2 = np.linalg.norm(a1 - b2) + np.linalg.norm(b1 - a2)
+        if d1 <= d2:
+            p1o = orient(p1, a1)  # a1 -> b1
+            p2o = orient(p2, b2)  # b2 -> a2 (so we can go b1->b2 then p2o to a2)
+            v1 = np.asarray(p1o.vertices)
+            v2 = np.asarray(p2o.vertices)
+            verts = np.vstack([
+                v1,
+                [v2[0]],   # connector b1->b2 (implicit straight segment)
+                v2,
+                [v1[0]]    # connector a2->a1 (implicit straight segment)
+            ])
+        else:
+            p1o = orient(p1, a1)  # a1 -> b1
+            p2o = orient(p2, a2)  # a2 -> b2 (so we can go b1->a2 then p2o to b2)
+            v1 = np.asarray(p1o.vertices)
+            v2 = np.asarray(p2o.vertices)
+            verts = np.vstack([
+                v1,
+                [v2[0]],   # connector b1->a2
+                v2[::-1],  # traverse to b2 -> a2, but we started at a2, so reverse to go to b2
+                [v1[0]]    # connector b2->a1
+            ])
+        # Build closed Path
+        codes = np.full(len(verts), Path.LINETO, dtype=np.uint8)
+        codes[0] = Path.MOVETO
+        codes[-1] = Path.CLOSEPOLY
+        return Path(verts, codes)
+
+    # -------------------- Extract and decide --------------------
+    paths1 = extract_paths(cs1)
+    paths2 = extract_paths(cs2)
+
+    open1 = [p for p in paths1 if not is_closed(p)]
+    open2 = [p for p in paths2 if not is_closed(p)]
+
+    def add_patch_from_path(p):
+        patch = PathPatch(p, transform=ax.transData,
+                          facecolor=facecolor, edgecolor=edgecolor,
+                          alpha=alpha, zorder=zorder)
+        try:
+            patch.set_fillrule('evenodd')
+        except AttributeError:
+            pass
+        ax.add_patch(patch)
+        return patch
+
+    # Decide mode
+    chosen_mode = mode
+    if mode == 'auto':
+        if len(open1) == 1 and len(open2) == 1 and len(paths1) == 1 and len(paths2) == 1:
+            chosen_mode = 'cross'
+        else:
+            chosen_mode = 'compound'
+
+    # -------------------- Build the fill --------------------
+    if chosen_mode == 'cross':
+        if not open1 or not open2:
+            # Fallback if a closed loop slipped in: compound
+            chosen_mode = 'compound'
+        else:
+            p1 = main_polyline(open1)
+            p2 = main_polyline(open2)
+            ring = make_ring_from_two_open(p1, p2)
+            return add_patch_from_path(ring)
+
+    # 'compound' path: close each subpath individually (shortest closure per path)
+    closed_paths = [close_shortest(p) for p in paths1 + paths2]
+    compound = Path.make_compound_path(*closed_paths)
+    return add_patch_from_path(compound)
 
 def pprint ( xs, ys, values, xrange = None, yrange = None ):
     """ pretty print the values, for debugging """
@@ -602,16 +854,18 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 cs_m1 = plt.contour( xs, ys, eT_m1, colors="blue", 
                         linestyles = "dotted", levels=[1.],
                         extent = xtnt, origin="image",
-                        linewidths = 1, alpha = 0.5 )
+                        linewidths = 1, alpha = 0.5, zorder = 10 )
                 exp_excl_lines_m1 = retrievePoints ( cs_m1 )
                 all_lines["exp_m1"] = exp_excl_lines_m1
 
                 cs_p1 = plt.contour( xs, ys, eT_p1, colors="blue", 
                         linestyles = "dotted", levels=[1.],
                         extent = xtnt, origin="image",
-                        linewidths = 1, alpha = 0.5 )
+                        linewidths = 1, alpha = 0.5, zorder = 10 )
                 exp_excl_lines_p1 = retrievePoints ( cs_p1 )
                 all_lines["exp_p1"] = exp_excl_lines_p1
+
+                shade_between_contours ( cs_m1, cs_p1, alpha=0.3 )
 
         if options["createSModelSExclJson"]:
             writeV1Format = False
