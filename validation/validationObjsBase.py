@@ -48,6 +48,39 @@ class ProgressHandler:
                  'UL': expRes['upper limit (fb)'], 
                  'condition': expRes['maxcond'],
                  'dataset': expRes['DataSetID'] }
+        if "nll_min" in expRes and "nll" in expRes:
+            for i in [ "nll", "nll_SM", "nll_min" ]:
+                Dict[i]=expRes[i]
+        if "l_max" in expRes and "likelihood" in expRes:
+            #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
+            #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+            #Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
+            nll = 900.
+            if expRes["likelihood"]>0.:
+                nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
+            Dict["nll"]= nll
+            nll_min = 900.
+            if expRes["l_max"]>0.:
+                nll_min = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
+            Dict["nll_min"]= nll_min
+            nll_SM = 900.
+            if expRes["l_SM"]>0.:
+                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
+            Dict['nll_SM']= nll_SM
+        if 'r_expected_p1' in expRes:
+            Dict['eUL_m1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_p1"], 5 )
+        if 'r_expected_m1' in expRes:
+            Dict['eUL_p1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_m1"], 5 )
+        if 'expected upper limit (fb)' in expRes:
+            Dict['eUL']=expRes["expected upper limit (fb)"]
+            drawExpected = self.options["drawExpected"]
+            if drawExpected == "auto":
+                drawExpected = True
+            self.options["drawExpected"]=drawExpected
+        if "efficiency" in expRes.keys():
+            Dict["efficiency"] = round ( expRes['efficiency'], 8 )
+        if 'best combination' in expRes.keys():
+            Dict['best combination'] = expRes['best combination']
         return Dict
 
     def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
@@ -402,42 +435,6 @@ class ValidationObjsBase():
             for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
                 s.append ( (k,v) )
             Dict["leadingDSes"]= s
-        if "nll_min" in expRes and "nll" in expRes:
-            for i in [ "nll", "nll_SM", "nll_min" ]:
-                Dict[i]=expRes[i]
-        if "l_max" in expRes and "likelihood" in expRes:
-            nll = 900.
-            if expRes["likelihood"]>0.:
-                nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
-            Dict["nll"]= nll
-            nll_min = 900.
-            if expRes["l_max"]>0.:
-                nll_min = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
-            Dict["nll_min"]= nll_min
-            nll_SM = 900.
-            if expRes["l_SM"]>0.:
-                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
-            Dict['nll_SM']= nll_SM
-            if not "chi2" in expRes:
-                try:
-                    from smodels.tools.statistics import chi2FromLmax
-                    Dict["chi2"] = round_to_n ( chi2FromLmax ( expRes["likelihood"], expRes["l_max"] ), 3 )
-                except Exception as e:
-                    pass # not strictly necessary
-        if "chi2" in expRes and expRes["chi2"] != None:
-            Dict["chi2"] = round_to_n ( expRes["chi2"], 3 )
-        if 'r_expected_p1' in expRes:
-            Dict['eUL_m1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_p1"], 5 )
-        if 'r_expected_m1' in expRes:
-            Dict['eUL_p1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_m1"], 5 )
-        if 'expected upper limit (fb)' in expRes:
-            Dict['eUL']=expRes["expected upper limit (fb)"]
-            drawExpected = self.options["drawExpected"]
-            if drawExpected == "auto":
-                drawExpected = True
-            self.options["drawExpected"]=drawExpected
-        if "efficiency" in expRes.keys():
-            Dict["efficiency"] = round ( expRes['efficiency'], 8 )
         if expRes['dataType'] == 'efficiencyMap':
             #Select the correct dataset (best SR):
             dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
@@ -458,9 +455,6 @@ class ValidationObjsBase():
                     logger.error ( f"could not handle {slhafile}: {e} ({type(e)}) massGeV={total}" )
                     Dict=None
         logger.debug(f'expres keys : {expRes.keys()}')
-        if 'best combination' in expRes.keys():
-            Dict['best combination'] = expRes['best combination']
-
         if Dict:
             self.data.append(Dict)
             return 1
