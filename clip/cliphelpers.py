@@ -12,6 +12,8 @@ def readJobIds():
     jobids = set()
     if not os.path.exists ( "jobs" ):
         return jobids
+    if not os.path.exists ( "jobs/current" ):
+        return jobids
     with open ( "jobs/current", "rt" ) as f:
         lines = f.readlines()
     for line in lines:
