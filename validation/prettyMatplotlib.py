@@ -865,7 +865,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 exp_excl_lines_p1 = retrievePoints ( cs_p1 )
                 all_lines["exp_p1"] = exp_excl_lines_p1
 
-                shade_between_contours ( cs_m1, cs_p1, alpha=0.3 )
+                # shade_between_contours ( cs_m1, cs_p1, alpha=0.3 )
 
         if options["createSModelSExclJson"]:
             writeV1Format = False
