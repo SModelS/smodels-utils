@@ -742,10 +742,10 @@ if __name__ == "__main__":
     args = ap.parse_args()
 
     if not os.path.isfile(args.parfile):
-        print( f"Parameters file ''{args.parfile}'' not found" )
+        print( f"[runValidation] Parameters file ''{args.parfile}'' not found" )
         sys.exit(-1)
     else:
-        print( f"Reading validation parameters from {args.parfile}" )
+        print( f"[runValidation] Reading validation parameters from {args.parfile}" )
 
     parser = None
     try:
