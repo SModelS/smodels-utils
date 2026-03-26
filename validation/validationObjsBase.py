@@ -40,49 +40,6 @@ class ProgressHandler:
             pass
         return None
 
-    def dictFromExpRes ( self, expRes ) -> dict:
-        """ given a SModelS expRes dictionary, create a
-        first incomplete version of a validation dictionary """
-
-        Dict = { 'signal': expRes['theory prediction (fb)'],
-                 'UL': expRes['upper limit (fb)'], 
-                 'condition': expRes['maxcond'],
-                 'dataset': expRes['DataSetID'] }
-        if "nll_min" in expRes and "nll" in expRes:
-            for i in [ "nll", "nll_SM", "nll_min" ]:
-                Dict[i]=expRes[i]
-        if "l_max" in expRes and "likelihood" in expRes:
-            #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
-            #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
-            #Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
-            nll = 900.
-            if expRes["likelihood"]>0.:
-                nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
-            Dict["nll"]= nll
-            nll_min = 900.
-            if expRes["l_max"]>0.:
-                nll_min = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
-            Dict["nll_min"]= nll_min
-            nll_SM = 900.
-            if expRes["l_SM"]>0.:
-                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
-            Dict['nll_SM']= nll_SM
-        if 'r_expected_p1' in expRes:
-            Dict['eUL_m1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_p1"], 5 )
-        if 'r_expected_m1' in expRes:
-            Dict['eUL_p1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_m1"], 5 )
-        if 'expected upper limit (fb)' in expRes:
-            Dict['eUL']=expRes["expected upper limit (fb)"]
-            drawExpected = self.options["drawExpected"]
-            if drawExpected == "auto":
-                drawExpected = True
-            self.options["drawExpected"]=drawExpected
-        if "efficiency" in expRes.keys():
-            Dict["efficiency"] = round ( expRes['efficiency'], 8 )
-        if 'best combination' in expRes.keys():
-            Dict['best combination'] = expRes['best combination']
-        return Dict
-
     def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
         """ store the pid of the progress bar in .progressbar.pid,
         so the other process can kill it. """
@@ -212,6 +169,50 @@ class ValidationObjsBase():
         import plottingFuncs ## propagate logging level!
         plottingFuncs.logger.setLevel ( logger.level )
         self.specialInits()
+
+    def dictFromExpRes ( self, expRes ) -> dict:
+        """ given a SModelS expRes dictionary, create a
+        first incomplete version of a validation dictionary """
+
+        Dict = { 'signal': expRes['theory prediction (fb)'],
+                 'UL': expRes['upper limit (fb)'], 
+                 'condition': expRes['maxcond'],
+                 'dataset': expRes['DataSetID'] }
+        if "nll_min" in expRes and "nll" in expRes:
+            for i in [ "nll", "nll_SM", "nll_min" ]:
+                Dict[i]=expRes[i]
+        if "l_max" in expRes and "likelihood" in expRes:
+            #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
+            #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
+            #Dict['l_SM']= round_to_n ( expRes['l_SM'], 4 )
+            nll = 900.
+            if expRes["likelihood"]>0.:
+                nll = round_to_n ( - np.log ( expRes["likelihood"] ), 4 )
+            Dict["nll"]= nll
+            nll_min = 900.
+            if expRes["l_max"]>0.:
+                nll_min = round_to_n ( - np.log ( expRes["l_max"] ), 4 )
+            Dict["nll_min"]= nll_min
+            nll_SM = 900.
+            if expRes["l_SM"]>0.:
+                nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
+            Dict['nll_SM']= nll_SM
+        if 'r_expected_p1' in expRes:
+            Dict['eUL_m1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_p1"], 5 )
+        if 'r_expected_m1' in expRes:
+            Dict['eUL_p1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_m1"], 5 )
+        if 'expected upper limit (fb)' in expRes:
+            Dict['eUL']=expRes["expected upper limit (fb)"]
+            drawExpected = self.options["drawExpected"]
+            if drawExpected == "auto":
+                drawExpected = True
+            self.options["drawExpected"]=drawExpected
+        if "efficiency" in expRes.keys():
+            Dict["efficiency"] = round ( expRes['efficiency'], 8 )
+        if 'best combination' in expRes.keys():
+            Dict['best combination'] = expRes['best combination']
+        return Dict
+
 
     def loadData(self, overwrite : bool = True ) -> int:
         """
