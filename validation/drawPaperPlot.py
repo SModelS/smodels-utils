@@ -14,6 +14,7 @@ from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
 from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
+from typing import Union
 
 def fetchCurves ( validationPlot ) -> dict :
     """ fetch the curves and convert to sahanas format """
@@ -39,16 +40,39 @@ def fetchCurves ( validationPlot ) -> dict :
                 ret["y"].append ( y )
         return ret
 
-    def fetchPoints ( curves : list ) -> dict:
+    def fetchPoints ( curves : list, idx : int = 0 ) -> dict:
+        """ 
+        :param pm1: "" for central value "P1" or "M1" for +- 1 sigma
+        """
         if len ( curves ) == 0:
             return {}
-        points = curves[0]["points"]
+
+        points = curves[idx]["points"]
         if type(points)==list:
             return fetchPointsNewFormat ( curves )
         return fetchPointsOldFormat ( curves )
+    
+    def getIndex  ( curves : list, pm1 : str ) -> Union[None,int]:
+        for idx, curve in enumerate ( curves ):
+            if pm1 != "" and pm1 in curve["name"]:
+                return idx
+            if pm1 == "" and not "P1" in curve["name"] \
+                    and not "M1" in curve["name"]:
+                return idx
+        return None
 
-    ret["obs_excl"] = fetchPoints ( validationPlot.officialCurves )
-    ret["exp_excl"] = fetchPoints ( validationPlot.expectedOfficialCurves )
+    c_idx = getIndex ( validationPlot.officialCurves, "" )
+    ret["obs_excl"] = fetchPoints ( validationPlot.officialCurves, c_idx )
+    c_idx = getIndex ( validationPlot.expectedOfficialCurves, "" )
+    ret["exp_excl"] = fetchPoints ( validationPlot.expectedOfficialCurves, c_idx )
+    c_idx_p1 = getIndex ( validationPlot.expectedOfficialCurves, "P1" )
+    if c_idx_p1 != None:
+        ret["exp_excl_P1"] = fetchPoints ( \
+                validationPlot.expectedOfficialCurves, c_idx_p1 )
+    c_idx_m1 = getIndex ( validationPlot.expectedOfficialCurves, "M1" )
+    if c_idx_m1 != None:
+        ret["exp_excl_M1"] = fetchPoints ( \
+                validationPlot.expectedOfficialCurves, c_idx_m1 )
     return ret
 
 def getCoords ( efile : dict, curve : str, 
@@ -434,6 +458,8 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
                 type="official", axes = axes, eval_axes=eval_axes)
     """
     off_excl = fetchCurves ( validationPlot )
+    # off_excl.pop ( "exp_excl_P1" )
+    # off_excl.pop ( "exp_excl_M1" )
 
     bestSR, combSR = True, True
     if offshell:
@@ -462,7 +488,6 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
     if os.path.exists ( crDir ):
         cr_excl = getCurveFromJson (crDir, validationFolder, txname, type="combined", axes=axes, eval_axes=eval_axes)
         print ( f"[drawPaperPlot] found curve for {crDir}!" )
-
 
     if offshell:
         comb_excl = getCurveFromJson(anaDir, validationFolder, txname, type="combined", axes=axes_on)
@@ -904,7 +929,9 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     if 'Gamma' in y_label: ax.set_yscale('log')
 
-    if massg != "":plt.text(0.6,0.6, rf"{massg} GeV", transform=fig.transFigure, fontsize = 8)
+    if massg != "":
+        plt.text( 0.6,0.6, rf"{massg} GeV", 
+                  transform=fig.transFigure, fontsize = 8)
     #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
     plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
     plt.legend(loc='best', frameon=True, fontsize = 10)
