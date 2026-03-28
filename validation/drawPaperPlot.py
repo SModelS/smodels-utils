@@ -853,13 +853,15 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
         plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], 
                     "black", "solid", f'{exp_name} official')
 
-    if "x" in off_excl["exp_excl_P1"]:
-        plotLines ( ax, off_excl["exp_excl_P1"]["x"], off_excl["exp_excl_P1"]["y"], 
-                    "black", "dotted", None )
+    plotOffSigmas = True
+    if plotOffSigmas:
+        if "x" in off_excl["exp_excl_P1"]:
+            plotLines ( ax, off_excl["exp_excl_P1"]["x"], off_excl["exp_excl_P1"]["y"], 
+                        "black", "dotted", None )
 
-    if "x" in off_excl["exp_excl_M1"]:
-        plotLines ( ax, off_excl["exp_excl_M1"]["x"], off_excl["exp_excl_M1"]["y"], 
-                    "black", "dotted", None )
+        if "x" in off_excl["exp_excl_M1"]:
+            plotLines ( ax, off_excl["exp_excl_M1"]["x"], off_excl["exp_excl_M1"]["y"], 
+                        "black", "dotted", None )
 
     if bestSR and "exp_excl" in bestSR_excl and "y" in bestSR_excl["exp_excl"]:
         x_vals = bestSR_excl["exp_excl"]["x"]
