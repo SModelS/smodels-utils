@@ -229,8 +229,14 @@ def getCurveFromJson( anaDir, validationFolder, txname,
         if curve != None:
             all_obs_x = getCoords ( excl_file, curve, "obs_excl", "x" )
             all_obs_y = getCoords ( excl_file, curve, "obs_excl", "y" )
+            if all_obs_x == []:
+                all_obs_x = getCoords ( excl_file, curve, "obsExclusion", "x" )
+                all_obs_y = getCoords ( excl_file, curve, "obsExclusion", "y" )
             all_exp_x = getCoords ( excl_file, curve, "exp_excl", "x" )
             all_exp_y = getCoords ( excl_file, curve, "exp_excl", "y" )
+            if all_exp_x == []:
+                all_exp_x = getCoords ( excl_file, curve, "expExclusion", "x" )
+                all_exp_y = getCoords ( excl_file, curve, "expExclusion", "y" )
             #excl_x     = sum( all_obs_x, [])
             #excl_y     = sum( all_obs_y, [])
             #exp_excl_x     = sum( all_exp_x, [])
