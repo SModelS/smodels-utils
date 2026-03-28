@@ -330,8 +330,8 @@ def getPrettyAxisLabels(label):
     #print("label = ", label)
     particle = label.split('m(')[-1]
     particle = label.replace('(','').replace(')','').replace('$','').split('m_')[-1]
-    #print("particle = ", particle)
-    if 'm' in particle[0]: label = f"$m_{{{particle[1:]}}}$ [GeV]"
+    if len(particle) and 'm' in particle[0]: 
+        label = f"$m_{{{particle[1:]}}}$ [GeV]"
     elif 'Gamma' in particle:
         if 'Gamma_' not in particle: label = '$\\Gamma_{' + particle.split('Gamma')[-1] + '}$ [GeV]'
         else: label = f"${particle}$ [GeV]"
