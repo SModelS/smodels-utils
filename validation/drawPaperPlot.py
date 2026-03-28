@@ -19,25 +19,27 @@ from typing import Union
 def fetchCurves ( validationPlot ) -> dict :
     """ fetch the curves and convert to sahanas format """
     ret = {}
-    def fetchPointsNewFormat ( curves : list ) -> dict:
+    def fetchPointsNewFormat ( curves : list, idx : int = 0 ) -> dict:
         ret = { "x": [], "y": [] }
-        for curve in curves:
-            all_segments = curve["points"]
-            for segment in all_segments:
-                for point in segment:
-                    ret["x"].append ( point["x"] )
-                    if "y" in point:
-                        ret["y"].append ( point["y"] )
+        curve = curves[idx]
+        #for curve in curves:
+        all_segments = curve["points"]
+        for segment in all_segments:
+            for point in segment:
+                ret["x"].append ( point["x"] )
+                if "y" in point:
+                    ret["y"].append ( point["y"] )
         return ret
 
-    def fetchPointsOldFormat ( curves : list ) -> dict:
+    def fetchPointsOldFormat ( curves : list, idx : int = 0 ) -> dict:
         ret = { "x": [], "y": [] }
-        for curve in curves:
-            points = curve["points"]
-            for x in points["x"]:
-                ret["x"].append ( x )
-            for y in points["y"]:
-                ret["y"].append ( y )
+        curve = curves[0]
+        #for curve in curves:
+        points = curve["points"]
+        for x in points["x"]:
+            ret["x"].append ( x )
+        for y in points["y"]:
+            ret["y"].append ( y )
         return ret
 
     def fetchPoints ( curves : list, idx : int = 0 ) -> dict:
@@ -49,8 +51,8 @@ def fetchCurves ( validationPlot ) -> dict :
 
         points = curves[idx]["points"]
         if type(points)==list:
-            return fetchPointsNewFormat ( curves )
-        return fetchPointsOldFormat ( curves )
+            return fetchPointsNewFormat ( curves, idx )
+        return fetchPointsOldFormat ( curves, idx )
     
     def getIndex  ( curves : list, pm1 : str ) -> Union[None,int]:
         for idx, curve in enumerate ( curves ):
