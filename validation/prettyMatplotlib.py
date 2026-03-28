@@ -352,6 +352,9 @@ def createSModelSExclusionJson( all_lines : dict, validationPlot ):
     if not validationPlot.combine: plot_type = "bestSR"
     else: plot_type = "comb"
     axes = validationPlot.axes
+    from validationHelpers import getAxisType, axisV2ToV3, getNiceAxes
+    if getAxisType ( axes ) == "v2":
+        axes = axisV2ToV3 ( axes )
     #store x,y points in json file
     d = {}
     for name,line in all_lines.items():
