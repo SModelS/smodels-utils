@@ -829,7 +829,7 @@ def drawPrettyPaperPlot(validationPlot, addJitter : bool = True ) -> list:
 
     ax.set_xlabel(x_label,fontsize = 14)
     ax.set_ylabel(y_label,fontsize = 14)
-    ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
+    # ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
     if 'Gamma' in y_label:
         print ( f"{RED}[drawPaperPlot:7] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
         max_exp_y = getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
