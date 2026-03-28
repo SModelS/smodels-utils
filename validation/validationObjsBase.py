@@ -1140,6 +1140,9 @@ class ValidationObjsBase():
 
         :return: string with a nicer representation of the axes (more suitable for printing)
         """
+        from validationHelpers import getAxisType, axisV2ToV3, getNiceAxes
+        if getAxisType ( axesStr ) == "v2":
+            return getNiceAxes ( axisV2ToV3 ( axesStr ) )
         return self.massPlane.getNiceAxes ( axesStr )
 
     def computeWeight ( self, point ) -> float:
