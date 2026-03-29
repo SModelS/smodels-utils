@@ -17,10 +17,10 @@ from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional
 
 class PaperPlot:
-    def __init__ ( self ):
-        pass
+    def __init__ ( self, validationPlot ):
+        self.validationPlot = validationPlot
 
-    def fetchCurves ( self, validationPlot ) -> dict :
+    def fetchCurves ( self ) -> dict :
         """ fetch the curves and convert to sahanas format """
         ret = {}
         def fetchPointsNewFormat ( curves : list, idx : int = 0 ) -> dict:
@@ -67,6 +67,7 @@ class PaperPlot:
                     return idx
             return None
 
+        validationPlot = self.validationPlot
         c_idx = getIndex ( validationPlot.officialCurves, "" )
         ret["obs_excl"] = fetchPoints ( validationPlot.officialCurves, c_idx )
         c_idx = getIndex ( validationPlot.expectedOfficialCurves, "" )
@@ -136,7 +137,7 @@ class PaperPlot:
 
     def getCurveFromJson( self, anaDir, validationFolder, txname,
             type=["official", "bestSR", "combined"], axes=None,
-            eval_axes : bool = True, validationPlot : Optional = None ):
+            eval_axes : bool = True ):
         """
         Get Exclusion Curve from official and SModelS json files
         :param anaDir: path to dir of analysis
@@ -154,12 +155,12 @@ class PaperPlot:
             ret = curves[idx]["points"][var]
             return ret
 
-        if type == "official" and validationPlot != None:
+        if type == "official":
             print ( f"[drawPaperPlot] returning for {type} from validationPlot" )
-            excl_x = getCoordsFromValPlot ( validationPlot.officialCurves, "x", nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( validationPlot.officialCurves, "y", nSigma = 0 )
-            excl_x = getCoordsFromValPlot ( validationPlot.expectedOfficialCurves, "x", nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( validationPlot.expectedOfficialCurves, "y", nSigma = 0 )
+            excl_x = getCoordsFromValPlot ( self.validationPlot.officialCurves, "x", nSigma = 0 )
+            excl_y = getCoordsFromValPlot ( self.validationPlot.officialCurves, "y", nSigma = 0 )
+            excl_x = getCoordsFromValPlot ( self.validationPlot.expectedOfficialCurves, "x", nSigma = 0 )
+            excl_y = getCoordsFromValPlot ( self.validationPlot.expectedOfficialCurves, "y", nSigma = 0 )
 
 
             excl_lines = { "obs_excl":{"x":excl_x,"y":excl_y},
@@ -432,7 +433,7 @@ class PaperPlot:
                 #    mini =
                 return mini
 
-    def drawPrettyPaperPlot( self, validationPlot, addJitter : bool = True ) -> list:
+    def drawPrettyPaperPlot( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
         :param validationPlot: validationPlot object
@@ -441,6 +442,7 @@ class PaperPlot:
 
         :returns: filenames of plots
         """
+        validationPlot = self.validationPlot
         if validationPlot.isOneDimensional():
             print(f"[drawPaperPlot] currently we don't have 1d versions of the pretty plots. exiting." )
             return []
@@ -481,31 +483,30 @@ class PaperPlot:
         """
         if offshell:
             off_excl = self.getCurveFromJson( anaDir, validationFolder, txname,
-                    type="official", axes = axes_on, validationPlot = validationPlot )
+                    type="official", axes = axes_on )
             off_excl_offshell = self.getCurveFromJson( anaDir, validationFolder, txnameOff,
-                    type="official", axes = axes, validationPlot = validationPlot )
+                    type="official", axes = axes )
             off_excl = self.drawOffshell(off_excl, off_excl_offshell, official=True)
         else: off_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    type="official", axes = axes, eval_axes=eval_axes,
-                    validationPlot = validationPlot )
+                    type="official", axes = axes, eval_axes=eval_axes )
         """
-        off_excl = self.fetchCurves ( validationPlot )
+        off_excl = self.fetchCurves (  )
         # off_excl.pop ( "exp_excl_P1" )
         # off_excl.pop ( "exp_excl_M1" )
 
         bestSR, combSR = True, True
         if offshell:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    type="bestSR", axes=axes_on, validationPlot = validationPlot )
+                    type="bestSR", axes=axes_on )
             bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
-                    type="bestSR", axes=axes, validationPlot = validationPlot )
+                    type="bestSR", axes=axes )
             if not bestSR_excl_off:
                 print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
                 return
             bestSR_excl = self.drawOffshell(bestSR_excl, bestSR_excl_off)
         else:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    type="bestSR", axes=axes, eval_axes=eval_axes, validationPlot = validationPlot )
+                    type="bestSR", axes=axes, eval_axes=eval_axes )
             if not bestSR_excl:
                 print(f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txname}:{axes}.")
                 bestSR = False
@@ -519,22 +520,21 @@ class PaperPlot:
         cr_excl = None
         if os.path.exists ( crDir ):
             cr_excl = self.getCurveFromJson (crDir, validationFolder, txname, 
-                type="combined", axes=axes, eval_axes=eval_axes, validationPlot = validationPlot )
+                type="combined", axes=axes, eval_axes=eval_axes )
             print ( f"[drawPaperPlot] found curve for {crDir}!" )
 
         if offshell:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname, 
-                type="combined", axes=axes_on, validationPlot = validationPlot )
+                type="combined", axes=axes_on )
             comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
-                type="combined", axes=axes, validationPlot = validationPlot )
+                type="combined", axes=axes )
             if not comb_excl_off:
                 print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
                 return
             comb_excl = self.drawOffshell(comb_excl, comb_excl_off)
         else:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname, 
-                type="combined", axes=axes, eval_axes=eval_axes, 
-                validationPlot = validationPlot )
+                type="combined", axes=axes, eval_axes=eval_axes )
             if not comb_excl:
                 print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
                 combSR = False

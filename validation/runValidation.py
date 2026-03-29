@@ -121,8 +121,8 @@ def drawPaperPlot ( valPlot, options : dict ) -> bool:
         return False
 
     from drawPaperPlot import PaperPlot
-    plot = PaperPlot()
-    of = plot.drawPrettyPaperPlot(valPlot)
+    plot = PaperPlot( valPlot )
+    of = plot.drawPrettyPaperPlot()
     if options["show"] and of is not None:
         from validationHelpers import showPlot
         for f in of:
