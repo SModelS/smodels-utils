@@ -120,8 +120,9 @@ def drawPaperPlot ( valPlot, options : dict ) -> bool:
         print ( f"[runValidation] this is not an sr-combine plot: skipping production of red-black paper plot." )
         return False
 
-    from drawPaperPlot import drawPrettyPaperPlot
-    of = drawPrettyPaperPlot(valPlot)
+    from drawPaperPlot import PaperPlot
+    plot = PaperPlot()
+    of = plot.drawPrettyPaperPlot(valPlot)
     if options["show"] and of is not None:
         from validationHelpers import showPlot
         for f in of:
