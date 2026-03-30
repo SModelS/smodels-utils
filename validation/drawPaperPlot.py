@@ -99,7 +99,7 @@ class PaperPlot:
             values = curve[entry][coord]
             return values
         values = []
-        for l in efile[curve][entry]:
+        for l in curve[entry]:
             one_curve = []
             for d in l:
                 if coord in d:
