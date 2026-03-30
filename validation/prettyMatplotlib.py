@@ -405,7 +405,7 @@ def cleanUpPlots ( plots : dict ) -> dict:
     """
     newplots = {}
     for plotName,plot in plots.items():
-        for i in [ "exp_excl", "obs_excl", "expExclusion", "obsExclusion" ]:
+        for i in [ "expExclusion", "obsExclusion", "exp_excl", "obs_excl" ]:
             if i in plot and len(plot[i])==0:
                 plot.pop ( i )
         if len(plot)>0:
@@ -475,13 +475,13 @@ def createSModelSExclusionJsonV1( all_lines, validationPlot ):
     else: plot_type = "comb"
     axes = validationPlot.axes
     #store x,y points in json file
-    plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obs_excl":{'x':xobs,'y':yobs}, "exp_excl":{'x':xexp, 'y':yexp}}}
+    plot_dict = {f"{validationPlot.txName}_{plot_type}_{axes}": {"obsExclusion":{'x':xobs,'y':yobs}, "expExclusion":{'x':xexp, 'y':yexp}}}
     vDir = validationPlot.getValidationDir (validationDir=None)
     file_js = "SModelS_ExclusionLines.json"
     import json
     plots = plot_dict
     for name,plot in plots.items():
-        if type(plot["obs_excl"][0])==list:
+        if type(plot["obsExclusion"][0])==list:
             print ( f"[prettyMatplotlib] trying to add v1 exclusion lines to v2 file. Correct!" )
             sys.exit(-1)
     if os.path.exists(f"{vDir}/{file_js}"):

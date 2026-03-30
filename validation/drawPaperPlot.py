@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+""" the plotting script for the red-black pretty paper plot
+"""
+
 __all__ = [ "drawPrettyPaperPlot" ]
 
 import os, random
@@ -69,18 +72,40 @@ class PaperPlot:
 
         validationPlot = self.validationPlot
         c_idx = getIndex ( validationPlot.officialCurves, "" )
-        ret["obs_excl"] = fetchPoints ( validationPlot.officialCurves, c_idx )
+        ret["obsExclusion"] = fetchPoints ( validationPlot.officialCurves, c_idx )
         c_idx = getIndex ( validationPlot.expectedOfficialCurves, "" )
-        ret["exp_excl"] = fetchPoints ( validationPlot.expectedOfficialCurves, c_idx )
+        ret["expExclusion"] = fetchPoints ( validationPlot.expectedOfficialCurves, c_idx )
         c_idx_p1 = getIndex ( validationPlot.expectedOfficialCurves, "P1" )
         if c_idx_p1 != None:
-            ret["exp_excl_P1"] = fetchPoints ( \
+            ret["expExclusion_P1"] = fetchPoints ( \
                     validationPlot.expectedOfficialCurves, c_idx_p1 )
         c_idx_m1 = getIndex ( validationPlot.expectedOfficialCurves, "M1" )
         if c_idx_m1 != None:
-            ret["exp_excl_M1"] = fetchPoints ( \
+            ret["expExclusion_M1"] = fetchPoints ( \
                     validationPlot.expectedOfficialCurves, c_idx_m1 )
         return ret
+
+    def getCoordsFromLine ( self, curve : dict, 
+                    entry : str, coord : str  ) -> list:
+        """ get the coordinates of curve residing in efile
+
+        :param curve: the curve as dict
+        :param entry: e.g. obsExclusion, or expExclusion
+        :param coord: x, or y
+        """
+        if not entry in curve:
+            return []
+        if coord in curve[entry]:
+            values = curve[entry][coord]
+            return values
+        values = []
+        for l in efile[curve][entry]:
+            one_curve = []
+            for d in l:
+                if coord in d:
+                    one_curve.append ( d[coord] )
+            values.append ( one_curve )
+        return values
 
     def getCoords ( self, efile : dict, curve : str, 
                     entry : str, coord : str  ) -> list:
@@ -88,21 +113,13 @@ class PaperPlot:
 
         :param efile: the excl_file
         :param curve: the curve as lists
-        :param entry: e.g. obs_excl, or exp_excl
+        :param entry: e.g. obsExclusion, or expExclusion
         :param coord: x, or y
         """
         if "schema_version" in efile and efile["schema_version"]=="2.0":
             values = []
             if entry in efile[curve]:
-                if coord in efile[curve][entry]:
-                    values = efile[curve][entry][coord]
-                    return values
-                for l in efile[curve][entry]:
-                    one_curve = []
-                    for d in l:
-                        if coord in d:
-                            one_curve.append ( d[coord] )
-                    values.append ( one_curve )
+                return self.getCoordsFromLine ( efile[curve], entry, coord )
             return values
         values = efile[curve][entry][coord]
         return values
@@ -135,48 +152,74 @@ class PaperPlot:
         ax.plot( x_vals, y_vals,color=color, linestyle=linestyle,
                  label = label )
 
+    def findAxisInExclFile ( self, axis : str, exclfile, 
+            txname : str, type : str ) -> dict:
+        """
+        find axis in all variants in exclfile 
+        :returns: e.g. 'obsExclusion': {'x': [[]], 'y': [[]]}, 'expExclusion': {'x': [[]], 'y': [[]]}}
+        """
+        name = f"{txname}_{type}_{axis}"
+        if name in exclfile.keys():
+            return exclfile[name]
+        if getAxisType ( axis ) == "v2":
+            v3axis = axisV2ToV3 ( axis )
+            name = f"{txname}_{type}_{v3axis}"
+            if name in exclfile.keys():
+                return exclfile[name]
+        if type == "comb":
+            return self.findAxisInExclFile ( axis, exclfile, txname, "combined" )
+        return None
+
     def getCurveFromJson( self, anaDir, validationFolder, txname,
-            type=["official", "bestSR", "combined"], axes=None,
-            eval_axes : bool = True ):
+            typ : str, axes = None, eval_axes : bool = True ):
         """
         Get Exclusion Curve from official and SModelS json files
         :param anaDir: path to dir of analysis
         :param txname: txname for which we need the exclusion curve
-        :param type: type of exclusion curve -
+        :param typ: type of exclusion curve, one of:
+        "official", "bestSR", "combined"
         official curve, SModelS bestSR, SModelS combined SR
         :param axes: axes map of official exclusion line
 
         :returns: a dict of obs and exp exclusion lines
         """
-        def getCoordsFromValPlot ( curves : list, var : str = "x", nSigma : int = 0 ) -> list:
+        def getCoordsFromValPlot ( curves : list, var : str = "x", 
+                                   nSigma : int = 0 ) -> list:
             idx = 0
             if len(curves)==3:
                 idx = nSigma + 1
             ret = curves[idx]["points"][var]
             return ret
 
-        if type == "official":
-            print ( f"[drawPaperPlot] returning for {type} from validationPlot" )
-            excl_x = getCoordsFromValPlot ( self.validationPlot.officialCurves, "x", nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( self.validationPlot.officialCurves, "y", nSigma = 0 )
-            excl_x = getCoordsFromValPlot ( self.validationPlot.expectedOfficialCurves, "x", nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( self.validationPlot.expectedOfficialCurves, "y", nSigma = 0 )
+        if typ == "official":
+            vPlot = self.validationPlot
+            excl_x = getCoordsFromValPlot ( vPlot.officialCurves, "x", 
+                                            nSigma = 0 )
+            excl_y = getCoordsFromValPlot ( vPlot.officialCurves, "y", 
+                                            nSigma = 0 )
+            excl_x = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "x", 
+                                            nSigma = 0 )
+            excl_y = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "y", 
+                                            nSigma = 0 )
 
 
-            excl_lines = { "obs_excl":{"x":excl_x,"y":excl_y},
-                           "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
+            excl_lines = { "obsExclusion":{"x":excl_x,"y":excl_y},
+                           "expExclusion":{"x":expExclusion_x,"y":expExclusion_y}}
             return excl_lines
 
-        saxes = str(axes).replace(" ","").replace("'","")
+        # saxes = str(axes).replace(" ","").replace("'","")
+        #if getAxisType(axes) == "v2":
+        #    axes = axisV2ToV3(axes)
+        saxes = axes
 
         excl_lines = {}
         all_obs_x, all_obs_y, all_exp_x, all_exp_y = [], [], [], []
 
-        if type == "official":
+        if typ == "official":
             fname = f"{anaDir}/exclusion_lines.json"
             file = open( fname )
             excl_file = json.load(file)
-            axes = axes.replace(" ", "")
+            # axes = axes.replace(" ", "")
             import sympy
             x,y,z,w = sympy.var("x y z w")
             daxes = eval(axes)
@@ -219,10 +262,10 @@ class PaperPlot:
                 excl_x = self.getCoords ( excl_file, txname, f"obsExclusion_{axes}", "x" )
                 excl_y = self.getCoords ( excl_file, txname, f"obsExclusion_{axes}", "y" )
                 if f"expExclusion_{axes}" in excl_file[txname].keys():
-                    exp_excl_x = self.getCoords ( excl_file, txname, f"expExclusion_{axes}", "x" )
-                    exp_excl_y = self.getCoords ( excl_file, txname, f"expExclusion_{axes}", "y" )
-                excl_lines = { "obs_excl":{"x":excl_x,"y":excl_y},
-                               "exp_excl":{"x":exp_excl_x,"y":exp_excl_y}}
+                    expExclusion_x = self.getCoords ( excl_file, txname, f"expExclusion_{axes}", "x" )
+                    expExclusion_y = self.getCoords ( excl_file, txname, f"expExclusion_{axes}", "y" )
+                excl_lines = { "obsExclusion":{"x":excl_x,"y":excl_y},
+                               "expExclusion":{"x":expExclusion_x,"y":expExclusion_y}}
                 return excl_lines
 
         else:
@@ -234,50 +277,40 @@ class PaperPlot:
 
             file = open(fname,"r")
             excl_file = json.load(file)
-            if f"{txname}_comb_{axes}" not in excl_file:
-                print(f"[drawPaperPlot] {txname}_comb_{saxes[:20]} not found in {fname}")
-            if f"{txname}_bestSR_{axes}" not in excl_file:
-                print(f"[drawPaperPlot] {txname}_bestSR_{saxes[:20]} not found in {fname}")
-                # return excl_lines
+            saxes = axes.replace(" ","")
+            curve = self.findAxisInExclFile ( axes, excl_file, txname, typ )
             col = CYAN
-            saxes = axes.replace(" ","").replace("'","")
-            curve = None
-            if type == "bestSR" and f'{txname}_bestSR_{axes}' in excl_file:
-                curve = f'{txname}_bestSR_{axes}'
-
-            elif type == "combined" and f'{txname}_comb_{axes}' in excl_file:
-                curve = f'{txname}_comb_{axes}'
-
-
-            if curve != None:
-                all_obs_x = self.getCoords ( excl_file, curve, "obs_excl", "x" )
-                all_obs_y = self.getCoords ( excl_file, curve, "obs_excl", "y" )
+            if curve is None:
+                print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
+            else:
+                all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
+                all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
                 if all_obs_x == []:
-                    all_obs_x = self.getCoords ( excl_file, curve, "obsExclusion", "x" )
-                    all_obs_y = self.getCoords ( excl_file, curve, "obsExclusion", "y" )
-                all_exp_x = self.getCoords ( excl_file, curve, "exp_excl", "x" )
-                all_exp_y = self.getCoords ( excl_file, curve, "exp_excl", "y" )
+                    all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
+                    all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
+                all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
+                all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
                 if all_exp_x == []:
-                    all_exp_x = self.getCoords ( excl_file, curve, "expExclusion", "x" )
-                    all_exp_y = self.getCoords ( excl_file, curve, "expExclusion", "y" )
+                    all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
+                    all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
                 #excl_x     = sum( all_obs_x, [])
                 #excl_y     = sum( all_obs_y, [])
-                #exp_excl_x     = sum( all_exp_x, [])
-                #exp_excl_y     = sum( all_exp_y, [])
+                #expExclusion_x     = sum( all_exp_x, [])
+                #expExclusion_y     = sum( all_exp_y, [])
                 if len(all_obs_x)==0:
                     col = RED
-                print (f"[drawPaperPlot] {col}we have {curve} as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
-        excl_lines = { "obs_excl":{"x":all_obs_x,"y":all_obs_y},
-                       "exp_excl":{"x":all_exp_x,"y":all_exp_y}}
+                print (f"[drawPaperPlot] {col}we have curve as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
+        excl_lines = { "obsExclusion":{"x":all_obs_x,"y":all_obs_y},
+                       "expExclusion":{"x":all_exp_x,"y":all_exp_y}}
 
         if ('x - y' in axes or 'x-y' in axes) and eval_axes:
-            for type, excl in excl_lines.items():
+            for typ, excl in excl_lines.items():
                 excl_y = []
                 for l_x, l_y in zip ( excl["x"], excl["y"] ):
                     tmp = (np.array ( l_x ) - np.array ( l_y ) ).tolist()
                     excl_y.append ( tmp )
                 # excl_y = (np.array(excl["x"]) - np.array(excl["y"])).tolist()
-                excl_lines[type] = {"x":excl["x"],"y":excl_y}
+                excl_lines[typ] = {"x":excl["x"],"y":excl_y}
 
         return excl_lines
 
@@ -433,7 +466,7 @@ class PaperPlot:
                 #    mini =
                 return mini
 
-    def drawPrettyPaperPlot( self, addJitter : bool = True ) -> list:
+    def draw( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
         :param validationPlot: validationPlot object
@@ -488,11 +521,11 @@ class PaperPlot:
                     type="official", axes = axes )
             off_excl = self.drawOffshell(off_excl, off_excl_offshell, official=True)
         else: off_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    type="official", axes = axes, eval_axes=eval_axes )
+                    typ="official", axes = axes, eval_axes=eval_axes )
         """
         off_excl = self.fetchCurves (  )
-        # off_excl.pop ( "exp_excl_P1" )
-        # off_excl.pop ( "exp_excl_M1" )
+        # off_excl.pop ( "expExclusion_P1" )
+        # off_excl.pop ( "expExclusion_M1" )
 
         bestSR, combSR = True, True
         if offshell:
@@ -506,7 +539,7 @@ class PaperPlot:
             bestSR_excl = self.drawOffshell(bestSR_excl, bestSR_excl_off)
         else:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    type="bestSR", axes=axes, eval_axes=eval_axes )
+                    typ="bestSR", axes=axes, eval_axes=eval_axes )
             if not bestSR_excl:
                 print(f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txname}:{axes}.")
                 bestSR = False
@@ -520,21 +553,21 @@ class PaperPlot:
         cr_excl = None
         if os.path.exists ( crDir ):
             cr_excl = self.getCurveFromJson (crDir, validationFolder, txname, 
-                type="combined", axes=axes, eval_axes=eval_axes )
+                typ="comb", axes=axes, eval_axes=eval_axes )
             print ( f"[drawPaperPlot] found curve for {crDir}!" )
 
         if offshell:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname, 
-                type="combined", axes=axes_on )
+                typ="comb", axes=axes_on )
             comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
-                type="combined", axes=axes )
+                typ="comb", axes=axes )
             if not comb_excl_off:
                 print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
                 return
             comb_excl = self.drawOffshell(comb_excl, comb_excl_off)
         else:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname, 
-                type="combined", axes=axes, eval_axes=eval_axes )
+                typ="comb", axes=axes, eval_axes=eval_axes )
             if not comb_excl:
                 print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
                 combSR = False
@@ -544,34 +577,34 @@ class PaperPlot:
 
         #get the range of x values in obs and exp curves to set lim on plot ranges. low limit on y axes usually 0 for plot (except for width plots)
         min_obs_x, max_obs_x = 0., 0.
-        if "x" in off_excl["obs_excl"]:
-            max_obs_x = self.getExtremeValue(off_excl["obs_excl"]["x"], extreme = "max", e_type="official")
-            min_obs_x = self.getExtremeValue(off_excl["obs_excl"]["x"], extreme = "min", e_type="official")
-        if bestSR: min_obs_x = min(min_obs_x, self.getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "min", e_type="bestSR"))
-        if combSR: min_obs_x = min(min_obs_x, self.getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "min", e_type="combined"))
-        if bestSR: max_obs_x = max(max_obs_x, self.getExtremeValue(bestSR_excl["obs_excl"]["x"], extreme = "max", e_type="bestSR"))
-        if combSR: max_obs_x = max(max_obs_x, self.getExtremeValue(comb_excl["obs_excl"]["x"], extreme = "max", e_type="combined"))
+        if "x" in off_excl["obsExclusion"]:
+            max_obs_x = self.getExtremeValue(off_excl["obsExclusion"]["x"], extreme = "max", e_type="official")
+            min_obs_x = self.getExtremeValue(off_excl["obsExclusion"]["x"], extreme = "min", e_type="official")
+        if bestSR: min_obs_x = min(min_obs_x, self.getExtremeValue(bestSR_excl["obsExclusion"]["x"], extreme = "min", e_type="bestSR"))
+        if combSR: min_obs_x = min(min_obs_x, self.getExtremeValue(comb_excl["obsExclusion"]["x"], extreme = "min", e_type="comb"))
+        if bestSR: max_obs_x = max(max_obs_x, self.getExtremeValue(bestSR_excl["obsExclusion"]["x"], extreme = "max", e_type="bestSR"))
+        if combSR: max_obs_x = max(max_obs_x, self.getExtremeValue(comb_excl["obsExclusion"]["x"], extreme = "max", e_type="comb"))
 
         max_obs_y = 0.
-        if "y" in off_excl["obs_excl"]:
-            max_obs_y = self.getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
-        if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", e_type="bestSR"))
-        if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", e_type="combined"))
+        if "y" in off_excl["obsExclusion"]:
+            max_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
+        if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR"))
+        if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb"))
 
         min_exp_x, max_exp_x = 0., 0.
-        if "x" in off_excl["exp_excl"]:
-            max_exp_x = self.getExtremeValue(off_excl["exp_excl"]["x"], extreme = "max", e_type="official")
-            min_exp_x = self.getExtremeValue(off_excl["exp_excl"]["x"], extreme = "min", e_type="official")
-        if bestSR: min_exp_x = min(min_exp_x, self.getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "min", e_type="bestSR"))
-        if combSR: min_exp_x = min(min_exp_x, self.getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "min", e_type="combined"))
-        if bestSR: max_exp_x = max(max_exp_x, self.getExtremeValue(bestSR_excl["exp_excl"]["x"], extreme = "max", e_type="bestSR"))
-        if combSR: max_exp_x = max(max_exp_x, self.getExtremeValue(comb_excl["exp_excl"]["x"], extreme = "max", e_type="combined"))
+        if "x" in off_excl["expExclusion"]:
+            max_exp_x = self.getExtremeValue(off_excl["expExclusion"]["x"], extreme = "max", e_type="official")
+            min_exp_x = self.getExtremeValue(off_excl["expExclusion"]["x"], extreme = "min", e_type="official")
+        if bestSR: min_exp_x = min(min_exp_x, self.getExtremeValue(bestSR_excl["expExclusion"]["x"], extreme = "min", e_type="bestSR"))
+        if combSR: min_exp_x = min(min_exp_x, self.getExtremeValue(comb_excl["expExclusion"]["x"], extreme = "min", e_type="comb"))
+        if bestSR: max_exp_x = max(max_exp_x, self.getExtremeValue(bestSR_excl["expExclusion"]["x"], extreme = "max", e_type="bestSR"))
+        if combSR: max_exp_x = max(max_exp_x, self.getExtremeValue(comb_excl["expExclusion"]["x"], extreme = "max", e_type="comb"))
 
         max_exp_y = 0.
-        if "y" in off_excl["exp_excl"]:
-            max_exp_y = self.getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
-        if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", e_type="bestSR"))
-        if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", e_type="combined"))
+        if "y" in off_excl["expExclusion"]:
+            max_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
+        if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR"))
+        if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb"))
 
 
         num_sr, num_cr = 0, 0
@@ -590,7 +623,7 @@ class PaperPlot:
                     ctr += 1
             return ctr
 
-        if "obs_excl" in comb_excl.keys():
+        if "obsExclusion" in comb_excl.keys():
             if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
                 ver = "(pyhf)" # how to differentiate between simplified and full?
                 for js,regions in validationPlot.expRes.globalInfo.jsonFiles.items():
@@ -714,13 +747,13 @@ class PaperPlot:
         ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
         if 'Gamma' in y_label:
             print ( f"{RED}[drawPaperPlot:3] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            max_obs_y = self.getExtremeValue(off_excl["obs_excl"]["y"], extreme = "max", e_type="official")
-            if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "max", e_type="bestSR", width=True))
-            if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "max", e_type="combined", width=True))
+            max_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
+            if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
+            if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb", width=True))
 
-            min_obs_y = self.getExtremeValue(off_excl["obs_excl"]["y"], extreme = "min", e_type="official")
-            if bestSR: min_obs_y = min(min_obs_y, self.getExtremeValue(bestSR_excl["obs_excl"]["y"], extreme = "min", e_type="bestSR", width=True))
-            if combSR: min_obs_y = min(min_obs_y, self.getExtremeValue(comb_excl["obs_excl"]["y"], extreme = "min", e_type="combined", width=True))
+            min_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "min", e_type="official")
+            if bestSR: min_obs_y = min(min_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
+            if combSR: min_obs_y = min(min_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "min", e_type="comb", width=True))
             step_y = max_obs_y*1000
             #print("min_obs_y ", min_obs_y)
             #print("step ", step_y)
@@ -743,14 +776,14 @@ class PaperPlot:
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
-        # ax.plot(off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
-        if "x" in off_excl["obs_excl"]:
-            self.plotLines ( ax, off_excl["obs_excl"]["x"], off_excl["obs_excl"]["y"],
+        # ax.plot(off_excl["obsExclusion"]["x"], off_excl["obsExclusion"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
+        if "x" in off_excl["obsExclusion"]:
+            self.plotLines ( ax, off_excl["obsExclusion"]["x"], off_excl["obsExclusion"]["y"],
                    "black", "solid", label = f'{exp_name} official')
-        #print("official : ", off_excl["obs_excl"]["y"] )
+        #print("official : ", off_excl["obsExclusion"]["y"] )
         if bestSR:
-            x_vals = bestSR_excl["obs_excl"]["x"]
-            y_vals = bestSR_excl["obs_excl"]["y"]
+            x_vals = bestSR_excl["obsExclusion"]["x"]
+            y_vals = bestSR_excl["obsExclusion"]["y"]
             if 'Gamma' in y_label:
                 print ( f"{RED}[drawPaperPlot:4] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
                 print("yes gamma")
@@ -773,8 +806,8 @@ class PaperPlot:
                 plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 
         if combSR:
-            x_vals = comb_excl["obs_excl"]["x"]
-            y_vals = comb_excl["obs_excl"]["y"]
+            x_vals = comb_excl["obsExclusion"]["x"]
+            y_vals = comb_excl["obsExclusion"]["y"]
             y_vals = self.add_jitter ( y_vals, addJitter )
             label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
@@ -799,8 +832,8 @@ class PaperPlot:
                 self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
 
         if cr_excl not in [ None, [] ]:
-            x_vals = cr_excl["obs_excl"]["x"]
-            y_vals = cr_excl["obs_excl"]["y"]
+            x_vals = cr_excl["obsExclusion"]["x"]
+            y_vals = cr_excl["obsExclusion"]["y"]
             label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
             if cr_is == "orig":
                 label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
@@ -867,13 +900,13 @@ class PaperPlot:
         # ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
         if 'Gamma' in y_label:
             print ( f"{RED}[drawPaperPlot:7] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            max_exp_y = self.getExtremeValue(off_excl["exp_excl"]["y"], extreme = "max", e_type="official")
-            if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "max", e_type="bestSR", width=True))
-            if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "max", e_type="combined", width=True))
+            max_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
+            if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
+            if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb", width=True))
 
-            min_exp_y = self.getExtremeValue(off_excl["exp_excl"]["y"], extreme = "min", e_type="official")
-            if bestSR: min_exp_y = min(min_exp_y, self.getExtremeValue(bestSR_excl["exp_excl"]["y"], extreme = "min", e_type="bestSR", width=True))
-            if combSR: min_exp_y = min(min_exp_y, self.getExtremeValue(comb_excl["exp_excl"]["y"], extreme = "min", e_type="combined", width=True))
+            min_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "min", e_type="official")
+            if bestSR: min_exp_y = min(min_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
+            if combSR: min_exp_y = min(min_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "min", e_type="comb", width=True))
             print("min exp y ", min_exp_y)
             step_y = max_exp_y*1000
             print("step exp y ", step_y)
@@ -884,23 +917,23 @@ class PaperPlot:
         plt.title(pName,loc='right', fontsize=12)
 
         exp_name = analysis.split('-')[0]
-        if "x" in off_excl["exp_excl"]:
-            self.plotLines ( ax, off_excl["exp_excl"]["x"], off_excl["exp_excl"]["y"], 
+        if "x" in off_excl["expExclusion"]:
+            self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"], 
                         "black", "solid", f'{exp_name} official')
 
         plotOffSigmas = True
         if plotOffSigmas:
-            if "x" in off_excl["exp_excl_P1"]:
-                self.plotLines ( ax, off_excl["exp_excl_P1"]["x"], off_excl["exp_excl_P1"]["y"], 
+            if "expExclusion_P1" in off_excl and "x" in off_excl["expExclusion_P1"]:
+                self.plotLines ( ax, off_excl["expExclusion_P1"]["x"], off_excl["expExclusion_P1"]["y"], 
                             "black", "dotted", None )
 
-            if "x" in off_excl["exp_excl_M1"]:
-                self.plotLines ( ax, off_excl["exp_excl_M1"]["x"], off_excl["exp_excl_M1"]["y"], 
+            if "expExclusion_M1" in off_excl and "x" in off_excl["expExclusion_M1"]:
+                self.plotLines ( ax, off_excl["expExclusion_M1"]["x"], off_excl["expExclusion_M1"]["y"], 
                             "black", "dotted", None )
 
-        if bestSR and "exp_excl" in bestSR_excl and "y" in bestSR_excl["exp_excl"]:
-            x_vals = bestSR_excl["exp_excl"]["x"]
-            y_vals = bestSR_excl["exp_excl"]["y"]
+        if bestSR and "expExclusion" in bestSR_excl and "y" in bestSR_excl["expExclusion"]:
+            x_vals = bestSR_excl["expExclusion"]["x"]
+            y_vals = bestSR_excl["expExclusion"]["y"]
             if 'Gamma' in y_label:
                 print ( f"{RED}[drawPaperPlot:5] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
                 if len(y_vals)==0 or type(y_vals[0]) != list:
@@ -932,8 +965,8 @@ class PaperPlot:
                                  labelright=False )
 
         if combSR:
-            x_vals = comb_excl["exp_excl"]["x"]
-            y_vals = comb_excl["exp_excl"]["y"]
+            x_vals = comb_excl["expExclusion"]["x"]
+            y_vals = comb_excl["expExclusion"]["y"]
             y_vals = self.add_jitter ( y_vals, addJitter )
             label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
@@ -955,8 +988,8 @@ class PaperPlot:
             else:
                 self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
         if cr_excl not in [ None, [] ]:
-            x_vals = cr_excl["exp_excl"]["x"]
-            y_vals = cr_excl["exp_excl"]["y"]
+            x_vals = cr_excl["expExclusion"]["x"]
+            y_vals = cr_excl["expExclusion"]["y"]
             label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
             if cr_is == "orig":
                 label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
