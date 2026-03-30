@@ -137,7 +137,7 @@ class ValidationObjsBase():
         self.data = []
         self.validationType = "unknown"
         drawExpected = self.options["drawExpected"]
-        self.officialCurves = self.getOfficialCurves( get_all = not drawExpected,
+        self.officialCurves = self.getOfficialCurves( get_all = True,
                 expected = False )
         self.expectedOfficialCurves = self.getOfficialCurves( get_all = True,
                 expected = True )
