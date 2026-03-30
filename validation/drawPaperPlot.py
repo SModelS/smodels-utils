@@ -23,33 +23,41 @@ class PaperPlot:
     def __init__ ( self, validationPlot ):
         self.validationPlot = validationPlot
 
-    def fetchCurves ( self ) -> dict :
+    def fetchCurves ( self, axes ) -> dict :
         """ fetch the curves and convert to sahanas format """
         ret = {}
-        def fetchPointsNewFormat ( curves : list, idx : int = 0 ) -> dict:
+        def fetchPointsNewFormat ( curves : list, idx : int = 0,
+               x_minus_y : bool = False ) -> dict:
             ret = { "x": [], "y": [] }
             curve = curves[idx]
             #for curve in curves:
             all_segments = curve["points"]
             for segment in all_segments:
                 for point in segment:
-                    ret["x"].append ( point["x"] )
+                    x = point["x"]
+                    ret["x"].append ( x )
                     if "y" in point:
-                        ret["y"].append ( point["y"] )
+                        y = point["y"]
+                        if x_minus_y:
+                            y = x-y
+                        ret["y"].append ( y )
             return ret
 
-        def fetchPointsOldFormat ( curves : list, idx : int = 0 ) -> dict:
+        def fetchPointsOldFormat ( curves : list, idx : int = 0,
+               x_minus_y : bool = False ) -> dict:
             ret = { "x": [], "y": [] }
             curve = curves[idx]
             #for curve in curves:
             points = curve["points"]
-            for x in points["x"]:
+            for x,y in zip(points["x"],points["y"]):
                 ret["x"].append ( x )
-            for y in points["y"]:
+                if x_minus_y:
+                    y = x - y
                 ret["y"].append ( y )
             return ret
 
-        def fetchPoints ( curves : list, idx : int = 0 ) -> dict:
+        def fetchPoints ( curves : list, idx : int = 0,
+                x_minus_y : bool = False ) -> dict:
             """ 
             :param pm1: "" for central value "P1" or "M1" for +- 1 sigma
             """
@@ -57,9 +65,10 @@ class PaperPlot:
                 return {}
 
             points = curves[idx]["points"]
+            x_minus_y = "x-y" in axes.replace(" ","")
             if type(points)==list:
-                return fetchPointsNewFormat ( curves, idx )
-            return fetchPointsOldFormat ( curves, idx )
+                return fetchPointsNewFormat ( curves, idx, x_minus_y )
+            return fetchPointsOldFormat ( curves, idx, x_minus_y )
         
         def getIndex  ( curves : list, pm1 : str ) -> Union[None,int]:
             for idx, curve in enumerate ( curves ):
@@ -313,6 +322,10 @@ class PaperPlot:
         excl_lines = { "obsExclusion":{"x":all_obs_x,"y":all_obs_y},
                        "expExclusion":{"x":all_exp_x,"y":all_exp_y}}
 
+        excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
+        return excl_lines
+
+    def coordinateTransform ( self, excl_lines, axes, eval_axes ):
         if ('x - y' in axes or 'x-y' in axes) and eval_axes:
             for typ, excl in excl_lines.items():
                 excl_y = []
@@ -345,7 +358,6 @@ class PaperPlot:
             return None
         else:
             axes = sm_file_keys[0].split('_')[-1]
-            print("[drawPaperPlot]", axes, type(axes))
             return axes
 
 
@@ -507,7 +519,8 @@ class PaperPlot:
         txnameOff = ''
         axes_on = None
         if 'off' in txname:
-            axes_on = self.getOnshellAxesForOffshell( anaDir, txname.split('off')[0], validationFolder )
+            axes_on = self.getOnshellAxesForOffshell( anaDir, 
+                      txname.split('off')[0], validationFolder )
             if axes_on:
                 # print("[drawPaperPlot] yes offshell")
                 offshell=True
@@ -516,33 +529,30 @@ class PaperPlot:
             if False:
                 offshell = True
                 axes_on = axes
-                print ( f"@@99 axes_on {axes_on} txnameOff {txnameOff} axes {axes}" )
 
         #get exclusion lines for official and SModelS
         off_excl, comb_excl, bestSR_excl = [],[],[]
         if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
         if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
-        if 'ATLAS-SUSY-2019-09' in analysis: eval_axes = False
+        # if 'ATLAS-SUSY-2019-09' in analysis: eval_axes = False
         """
         if offshell:
             off_excl = self.getCurveFromJson( anaDir, validationFolder, txname,
-                    type="official", axes = axes_on )
+                    typ="official", axes = axes_on )
             off_excl_offshell = self.getCurveFromJson( anaDir, validationFolder, txnameOff,
-                    type="official", axes = axes )
+                    typ="official", axes = axes )
             off_excl = self.drawOffshell(off_excl, off_excl_offshell, official=True)
         else: off_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="official", axes = axes, eval_axes=eval_axes )
         """
-        off_excl = self.fetchCurves (  )
-        # off_excl.pop ( "expExclusion_P1" )
-        # off_excl.pop ( "expExclusion_M1" )
+        off_excl = self.fetchCurves ( axes )
 
         bestSR, combSR = True, True
         if offshell:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    type="bestSR", axes=axes_on )
-            bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
-                    type="bestSR", axes=axes )
+                    typ="bestSR", axes=axes_on, eval_axes = eval_axes )
+            bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder, 
+                    txnameOff, typ="bestSR", axes=axes, eval_axes = eval_axes )
             if not bestSR_excl_off:
                 print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
                 return
