@@ -23,7 +23,7 @@ class PaperPlot:
     def __init__ ( self, validationPlot ):
         self.validationPlot = validationPlot
 
-    def fetchCurves ( self, axes ) -> dict :
+    def fetchOfficialExclusionLines ( self, axes ) -> dict :
         """ fetch the curves and convert to sahanas format """
         ret = {}
         def fetchPointsNewFormat ( curves : list, idx : int = 0,
@@ -545,7 +545,7 @@ class PaperPlot:
         else: off_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="official", axes = axes, eval_axes=eval_axes )
         """
-        off_excl = self.fetchCurves ( axes )
+        off_excl = self.fetchOfficialExclusionLines ( axes )
 
         bestSR, combSR = True, True
         if offshell:
