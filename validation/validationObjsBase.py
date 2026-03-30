@@ -177,11 +177,18 @@ class ValidationObjsBase():
             for i,line in enumerate(addTo):
                 cname = line["name"]
                 if name in cname:
-                    for segment in curve["points"]:
-                        for point in segment:
-                            if doTransformCoords:
-                                point["y"]=point["x"]-point["y"]
-                        addTo[i]["points"].append ( segment )
+                    line = curve["points"]
+                    if type(line)==dict:
+                        # old format
+                        for x,y in zip ( line["x"], line["y"] ):
+                            addTo[i]["points"]["x"].append ( x )
+                            addTo[i]["points"]["y"].append ( y )
+                    else:
+                        for segment in line:
+                            for point in segment:
+                                if doTransformCoords:
+                                    point["y"]=point["x"]-point["y"]
+                            addTo[i]["points"].append ( segment )
 
         for curve in curves:
             expected = "expE" in curve["name"]
