@@ -122,6 +122,24 @@ def drawPaperPlot ( valPlot, options : dict ) -> bool:
 
     from drawPaperPlot import PaperPlot
     plot = PaperPlot( valPlot )
+    if "off" in valPlot.txName:
+        ## add onshell exclusion curves
+        onshellTxName = valPlot.txName.replace("off","")
+        obs = valPlot.getOfficialCurves ( True, False, onshellTxName )
+        doTransformCoords = False
+        if len(obs) == 0 and "x - y" in valPlot.axes:
+            axes = valPlot.axes.replace("x - y","y")
+            obs = valPlot.getOfficialCurves ( True, False, onshellTxName,
+                   axes )
+            doTransformCoords = True
+        valPlot.addToOfficialCurves ( obs, doTransformCoords )
+        exp = valPlot.getOfficialCurves ( True, True, onshellTxName )
+        if len(exp) == 0 and "x - y" in valPlot.axes:
+            axes = valPlot.axes.replace("x - y","y")
+            exp = valPlot.getOfficialCurves ( True, True, onshellTxName,
+                   axes )
+        valPlot.addToOfficialCurves ( exp, doTransformCoords )
+
     of = plot.draw()
     if options["show"] and of is not None:
         from validationHelpers import showPlot

@@ -12,7 +12,7 @@
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
 from validationHelpers import getDefaultModel, showPlot, streamlineValidationData
 from smodels.matching import modelTester
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 from validationHelpers import point_in_hull
 from plottingFuncs import getExclusionCurvesFor
 from smodels_utils.helper.terminalcolors import *
@@ -170,12 +170,37 @@ class ValidationObjsBase():
         plottingFuncs.logger.setLevel ( logger.level )
         self.specialInits()
 
+    def addToOfficialCurves ( self, curves : list,
+            doTransformCoords : bool = False ):
+        """ add the curves to .officialCurves or .expectedOfficialCurves """
+        def addCurveTo ( addTo, curve, name ):
+            for i,line in enumerate(addTo):
+                cname = line["name"]
+                if name in cname:
+                    for segment in curve["points"]:
+                        for point in segment:
+                            if doTransformCoords:
+                                point["y"]=point["x"]-point["y"]
+                        addTo[i]["points"].append ( segment )
+
+        for curve in curves:
+            expected = "expE" in curve["name"]
+            addTo = self.expectedOfficialCurves if expected else self.officialCurves
+            exp = "exp" if expected else "obs"
+            pm = ""
+            if "P1" in curve["name"]:
+                pm = "P1"
+            if "M1" in curve["name"]:
+                pm = "M1"
+            name = f"{exp}Exclusion{pm}_"
+            addCurveTo (  addTo, curve, name )
+
     def dictFromExpRes ( self, expRes ) -> dict:
         """ given a SModelS expRes dictionary, create a
         first incomplete version of a validation dictionary """
 
         Dict = { 'signal': expRes['theory prediction (fb)'],
-                 'UL': expRes['upper limit (fb)'], 
+                 'UL': expRes['upper limit (fb)'],
                  'condition': expRes['maxcond'],
                  'dataset': expRes['DataSetID'] }
         if "nll_min" in expRes and "nll" in expRes:
@@ -310,21 +335,28 @@ class ValidationObjsBase():
         return "(" in self.axes
 
     def getOfficialCurves(self, get_all : bool = True,
-            expected : bool = False ) -> Union[Dict,List]:
+            expected : bool = False,
+            txname : Optional[str] = None,
+            axes : Optional[str] = None ) -> Union[Dict,List]:
         """
         Reads the root file associated to the ExpRes and
-        obtain the experimental exclusion curve for the corresponding TxName and Axes.
-
+        obtain the experimental exclusion curve for the corresponding TxName and
+        Axes.
         :param get_all: get also the +- 1 sigma curves
         :param expected: if true, get expected instead of observed
+        :param txname: if not None, then get curves for sth other than self.txName
 
         :return: a container of root TGraph objects
         """
-        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,
-                       axes=self.axes, get_all = get_all, expected=expected )
+        if txname is None:
+            txname = self.txName
+        if axes is None:
+            axes = self.axes
+        tgraphDict = getExclusionCurvesFor(self.expRes,txname=txname,
+                       axes=axes, get_all = get_all, expected=expected )
         if not tgraphDict:
             return []
-        tgraph = tgraphDict[self.txName]
+        tgraph = tgraphDict[txname]
         if len(tgraph)==0:
             return tgraph
         if get_all:
@@ -978,8 +1010,8 @@ class ValidationObjsBase():
                 pass
 
     def getAverageTime ( self ):
-        """ compute the average t spent per point. 
-        we average only over points with results 
+        """ compute the average t spent per point.
+        we average only over points with results
         :returns: average time, in seconds
         """
         tot, n = 0., 0
