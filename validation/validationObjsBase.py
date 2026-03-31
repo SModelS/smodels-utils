@@ -10,7 +10,8 @@
 """
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
-from validationHelpers import getDefaultModel, showPlot, streamlineValidationData
+from validationHelpers import getDefaultModel, showPlot, \
+         streamlineValidationData, equal_dicts
 from smodels.matching import modelTester
 from typing import Union, List, Dict, Optional
 from validationHelpers import point_in_hull
