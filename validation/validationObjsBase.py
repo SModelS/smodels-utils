@@ -20,6 +20,7 @@ from smodels_utils.helper.terminalcolors import *
 from smodels.base.smodelsLogging import logger
 from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.various import round_to_n
+from validationHelpers import getAxisType, axisV2ToV3
 
 #logger = logging.getLogger(__name__)
 #logger.setLevel(level=logging.INFO)
@@ -1080,10 +1081,14 @@ class ValidationObjsBase():
         #hostname = "unknown"
         import socket
         hostname = socket.gethostname()
-        meta = { "smodelsver": installation.version(), "axes": self.axes,
+        axes = self.axes
+        meta = { "smodelsver": installation.version(), "axes": axes,
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
                  "utilsver": SModelSUtils.version(), "timestamp": time.asctime() }
+        if getAxisType ( axes ) == "v2":
+            meta["axes_v2"]=axes
+            meta["axes"]=axisV2ToV3 ( axes )
         if "style" in self.options:
             meta["style"]=self.options["style"]
         if os.path.isfile ( self.slhaDir ):
