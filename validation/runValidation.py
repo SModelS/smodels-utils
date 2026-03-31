@@ -295,6 +295,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     pathToValDir = pathToValDir.replace( os.environ["HOME"], "~" )
     ratioscriptfile = f"{os.path.dirname(datafile)}/ratios_{txname}_{axis}.sh"
     if not os.path.exists ( ratioscriptfile ) or os.stat ( ratioscriptfile ).st_size < 10:
+        cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
         print ( f"[runValidation] now producing {ratioscriptfile}" )
         with open ( ratioscriptfile, "wt" ) as f:
             f.write ( "#!/bin/sh\n" )
