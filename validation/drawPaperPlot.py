@@ -59,7 +59,7 @@ class PaperPlot:
 
         def fetchPoints ( curves : list, idx : int = 0,
                 x_minus_y : bool = False ) -> dict:
-            """ 
+            """
             :param pm1: "" for central value "P1" or "M1" for +- 1 sigma
             """
             if len ( curves ) == 0:
@@ -70,7 +70,7 @@ class PaperPlot:
             if type(points)==list:
                 return fetchPointsNewFormat ( curves, idx, x_minus_y )
             return fetchPointsOldFormat ( curves, idx, x_minus_y )
-        
+
         def getIndex  ( curves : list, pm1 : str ) -> Union[None,int]:
             for idx, curve in enumerate ( curves ):
                 if pm1 != "" and pm1 in curve["name"]:
@@ -105,7 +105,7 @@ class PaperPlot:
                     validationPlot.expectedOfficialCurves, c_idx_m1 )
         return ret
 
-    def getCoordsFromLine ( self, curve : dict, 
+    def getCoordsFromLine ( self, curve : dict,
                     entry : str, coord : str  ) -> list:
         """ get the coordinates of curve residing in efile
 
@@ -127,7 +127,7 @@ class PaperPlot:
             values.append ( one_curve )
         return values
 
-    def getCoords ( self, efile : dict, curve : str, 
+    def getCoords ( self, efile : dict, curve : str,
                     entry : str, coord : str  ) -> list:
         """ get the coordinates of curve residing in efile
 
@@ -172,10 +172,10 @@ class PaperPlot:
         ax.plot( x_vals, y_vals,color=color, linestyle=linestyle,
                  label = label )
 
-    def findAxisInExclFile ( self, axis : str, exclfile, 
+    def findAxisInExclFile ( self, axis : str, exclfile,
             txname : str, type : str ) -> dict:
         """
-        find axis in all variants in exclfile 
+        find axis in all variants in exclfile
         :returns: e.g. 'obsExclusion': {'x': [[]], 'y': [[]]}, 'expExclusion': {'x': [[]], 'y': [[]]}}
         """
         name = f"{txname}_{type}_{axis}"
@@ -203,7 +203,7 @@ class PaperPlot:
 
         :returns: a dict of obs and exp exclusion lines
         """
-        def getCoordsFromValPlot ( curves : list, var : str = "x", 
+        def getCoordsFromValPlot ( curves : list, var : str = "x",
                                    nSigma : int = 0 ) -> list:
             idx = 0
             if len(curves)==3:
@@ -213,13 +213,13 @@ class PaperPlot:
 
         if typ == "official":
             vPlot = self.validationPlot
-            excl_x = getCoordsFromValPlot ( vPlot.officialCurves, "x", 
+            excl_x = getCoordsFromValPlot ( vPlot.officialCurves, "x",
                                             nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( vPlot.officialCurves, "y", 
+            excl_y = getCoordsFromValPlot ( vPlot.officialCurves, "y",
                                             nSigma = 0 )
-            excl_x = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "x", 
+            excl_x = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "x",
                                             nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "y", 
+            excl_y = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "y",
                                             nSigma = 0 )
 
 
@@ -250,7 +250,7 @@ class PaperPlot:
             print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
             return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
         excl_lines = {}
-        for i in [ "obsExclusion", "obsExclusionP1", "obsExclusionM1", 
+        for i in [ "obsExclusion", "obsExclusionP1", "obsExclusionM1",
                    "expExclusion", "expExclusionP1", "expExclusionM1" ]:
             x_ = self.getCoordsFromLine ( curve, i, "x" )
             y_ = self.getCoordsFromLine ( curve, i, "y" )
@@ -258,7 +258,7 @@ class PaperPlot:
                 col = RED
             if False:
                 print (f"[drawPaperPlot] {col}we have exclusion line from {fname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
-            excl_lines[i] = { "x": x_, "y": y_ } 
+            excl_lines[i] = { "x": x_, "y": y_ }
 
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
         return excl_lines
@@ -354,7 +354,7 @@ class PaperPlot:
         #print("label = ", label)
         particle = label.split('m(')[-1]
         particle = label.replace('(','').replace(')','').replace('$','').split('m_')[-1]
-        if len(particle) and 'm' in particle[0]: 
+        if len(particle) and 'm' in particle[0]:
             label = f"$m_{{{particle[1:]}}}$ [GeV]"
         elif 'Gamma' in particle:
             if 'Gamma_' not in particle: label = '$\\Gamma_{' + particle.split('Gamma')[-1] + '}$ [GeV]'
@@ -426,6 +426,35 @@ class PaperPlot:
                 #    mini =
                 return mini
 
+    def plotGammaLines ( self, x_vals, y_vals, ax, label, y_label,
+           linestyle : Optional[str]=None, color : Optional[str]=None ):
+        """ plot the lines in x_vals and y_vals, but heed widths """
+        y_vals = self.add_jitter ( y_vals, self.addJitter )
+        if color == None:
+            color = "red"
+        if 'Gamma' in y_label:
+            print ( f"{RED}[drawPaperPlot:1] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            if len(y_vals)==0 or type(y_vals[0]) != list:
+                y_vals = [10**y for y in y_vals]
+                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
+                index_max_diff = -1
+                if len(y_diff)>0 and max(y_diff)>100:
+                    index_max_diff = y_diff.index(max(y_diff))+1
+                if linestyle == None:
+                    linestyle="solid"
+                ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
+                         color=color, linestyle=linestyle, label = label )
+                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
+                         color=color, linestyle=linestyle )
+            else:
+                if linestyle == None:
+                    linestyle="dashed"
+                self.plotLines(ax, x_vals, y_vals, color, linestyle, label )
+        else:
+            if linestyle == None:
+                linestyle="solid"
+            self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
+
     def draw( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
@@ -435,6 +464,7 @@ class PaperPlot:
 
         :returns: filenames of plots
         """
+        self.addJitter = addJitter
         validationPlot = self.validationPlot
         if validationPlot.isOneDimensional():
             print(f"[drawPaperPlot] currently we don't have 1d versions of the pretty plots. exiting." )
@@ -457,7 +487,7 @@ class PaperPlot:
         txnameOff = ''
         axes_on = None
         if 'off' in txname:
-            axes_on = self.getOnshellAxesForOffshell( anaDir, 
+            axes_on = self.getOnshellAxesForOffshell( anaDir,
                       txname.split('off')[0], validationFolder )
             if axes_on:
                 # print("[drawPaperPlot] yes offshell")
@@ -489,7 +519,7 @@ class PaperPlot:
         if offshell:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="bestSR", axes=axes_on, eval_axes = eval_axes )
-            bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder, 
+            bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder,
                     txnameOff, typ="bestSR", axes=axes, eval_axes = eval_axes )
             if not bestSR_excl_off:
                 print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
@@ -510,12 +540,12 @@ class PaperPlot:
 
         cr_excl = None
         if os.path.exists ( crDir ):
-            cr_excl = self.getCurveFromJson (crDir, validationFolder, txname, 
+            cr_excl = self.getCurveFromJson (crDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
             print ( f"[drawPaperPlot] found curve for {crDir}!" )
 
         if offshell:
-            comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname, 
+            comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                 typ="comb", axes=axes_on )
             comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
                 typ="comb", axes=axes )
@@ -524,7 +554,7 @@ class PaperPlot:
                 return
             comb_excl = self.drawOffshell(comb_excl, comb_excl_off)
         else:
-            comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname, 
+            comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
             if not comb_excl:
                 print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
@@ -634,18 +664,18 @@ class PaperPlot:
             if "=(xy)" in lbl:
                 x_label = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
                 y_label = x_label.replace("m","\\Gamma")
-            if "=x" in lbl and "=x-" not in lbl: 
+            if "=x" in lbl and "=x-" not in lbl:
                 x_label = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
-            elif "=x-y" in lbl: 
+            elif "=x-y" in lbl:
                 # y_label = r'$\Delta m$'
                 x_l = x_label.replace("[GeV]","")
                 m2 = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
                 y_label = x_l + "-" + m2
-            elif "x=" in lbl: 
+            elif "x=" in lbl:
                 x_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
-            elif ("=y" in lbl or "-y" in lbl) and "=y-" not in lbl: 
+            elif ("=y" in lbl or "-y" in lbl) and "=y-" not in lbl:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
-            elif "y=" in lbl: 
+            elif "y=" in lbl:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
             else: continue
 
@@ -741,11 +771,11 @@ class PaperPlot:
         plotOffSigmas = self.options["errorsForR"]
         if plotOffSigmas:
             if "obsExclusion_P1" in off_excl and "x" in off_excl["obsExclusion_P1"]:
-                self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"], off_excl["obsExclusion_P1"]["y"], 
+                self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"], off_excl["obsExclusion_P1"]["y"],
                             "black", "dotted", None )
 
             if "obsExclusion_M1" in off_excl and "x" in off_excl["obsExclusion_M1"]:
-                self.plotLines ( ax, off_excl["obsExclusion_M1"]["x"], off_excl["obsExclusion_M1"]["y"], 
+                self.plotLines ( ax, off_excl["obsExclusion_M1"]["x"], off_excl["obsExclusion_M1"]["y"],
                             "black", "dotted", None )
         #print("official : ", off_excl["obsExclusion"]["y"] )
         if bestSR:
@@ -757,7 +787,7 @@ class PaperPlot:
                 y_vals = [10**y for y in y_vals]
                 y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
                 index_max_diff = -1
-                if len(y_diff) > 0 and max(y_diff)>100: 
+                if len(y_diff) > 0 and max(y_diff)>100:
                     index_max_diff = y_diff.index(max(y_diff))+1
                 if len(x_vals)>0:
                     ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
@@ -784,13 +814,13 @@ class PaperPlot:
                 y_vals = [10**y for y in y_vals]
                 y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
                 index_max_diff = -1
-                if len(y_diff)>0 and max(y_diff)>100: 
+                if len(y_diff)>0 and max(y_diff)>100:
                     index_max_diff = y_diff.index(max(y_diff))+1
                 ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
                          color='red', linestyle='solid', label = label )
                 ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
                          color='red', linestyle='solid' )
-                sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime, 
+                sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
                             self.widthToLifetime))
                 # print("yes gamma 3")
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
@@ -819,14 +849,14 @@ class PaperPlot:
             else:
                 self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
-        if 'Gamma' in y_label: 
+        if 'Gamma' in y_label:
             ax.set_yscale('log')
         if massg != "":
-            plt.text( 0.6, 0.6, rf"{massg} GeV", transform=fig.transFigure, 
+            plt.text( 0.6, 0.6, rf"{massg} GeV", transform=fig.transFigure,
                       fontsize = 8)
         #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
 
-        plt.text( 0.55, 0.65, r"$\bf observed~exclusion$", 
+        plt.text( 0.55, 0.65, r"$\bf observed~exclusion$",
                   transform=fig.transFigure, fontsize = 10 )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
@@ -885,17 +915,17 @@ class PaperPlot:
 
         exp_name = analysis.split('-')[0]
         if "x" in off_excl["expExclusion"]:
-            self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"], 
+            self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"],
                         "black", "solid", f'{exp_name} official')
 
         plotOffSigmas = self.options["errorsForR"]
         if plotOffSigmas:
             if "expExclusion_P1" in off_excl and "x" in off_excl["expExclusion_P1"]:
-                self.plotLines ( ax, off_excl["expExclusion_P1"]["x"], off_excl["expExclusion_P1"]["y"], 
+                self.plotLines ( ax, off_excl["expExclusion_P1"]["x"], off_excl["expExclusion_P1"]["y"],
                             "black", "dotted", None )
 
             if "expExclusion_M1" in off_excl and "x" in off_excl["expExclusion_M1"]:
-                self.plotLines ( ax, off_excl["expExclusion_M1"]["x"], off_excl["expExclusion_M1"]["y"], 
+                self.plotLines ( ax, off_excl["expExclusion_M1"]["x"], off_excl["expExclusion_M1"]["y"],
                             "black", "dotted", None )
 
         if bestSR and "expExclusion" in bestSR_excl and "y" in bestSR_excl["expExclusion"]:
@@ -907,11 +937,11 @@ class PaperPlot:
                     y_vals = [10**y for y in y_vals]
                     y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
                     index_max_diff = -1
-                    if len(y_diff)>0 and max(y_diff)>100: 
+                    if len(y_diff)>0 and max(y_diff)>100:
                         index_max_diff = y_diff.index(max(y_diff))+1
                     if len(x_vals)>0:
                         ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],
-                                color='red', linestyle='dashed', 
+                                color='red', linestyle='dashed',
                                 label = "SModelS: best SR")
                         ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
                                 color='red', linestyle='dashed')
@@ -920,64 +950,53 @@ class PaperPlot:
                 sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime, self.widthToLifetime))
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                 sec_ax.set_yscale('log')
-                plt.tick_params( which='major', axis = 'both', direction = 'in', 
+                plt.tick_params( which='major', axis = 'both', direction = 'in',
                                  length = 10, top = True, right = False)
-                plt.tick_params( labelbottom=True, labelleft=True, labeltop=False, 
+                plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
                                  labelright=False)
             else:
                 self.plotLines ( ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR")
-                plt.tick_params( which='major', axis = 'both', direction = 'in', 
+                plt.tick_params( which='major', axis = 'both', direction = 'in',
                                  length = 10, top = True, right = True )
-                plt.tick_params( labelbottom=True, labelleft=True, labeltop=False, 
+                plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
                                  labelright=False )
 
         if combSR:
             x_vals = comb_excl["expExclusion"]["x"]
             y_vals = comb_excl["expExclusion"]["y"]
-            y_vals = self.add_jitter ( y_vals, addJitter )
             label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
                 label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
-            if 'Gamma' in y_label:
-                print ( f"{RED}[drawPaperPlot:1] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-                if len(y_vals)==0 or type(y_vals[0]) != list:
-                    y_vals = [10**y for y in y_vals]
-                    y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                    index_max_diff = -1
-                    if len(y_diff)>0 and max(y_diff)>100: 
-                        index_max_diff = y_diff.index(max(y_diff))+1
-                    ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
-                             color='red', linestyle='solid', label = label )
-                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
-                             color='red', linestyle='solid')
-                else:
-                    self.plotLines(ax, x_vals, y_vals, "red", "dashed", label )
-            else:
-                self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
+            self.plotGammaLines ( x_vals, y_vals, ax, label, y_label, color="red" )
+            for i in []: # [ "expExclusionP1", "expExclusionM1" ]:
+                if i in comb_excl:
+                    x_vals = comb_excl[i]["x"]
+                    y_vals = comb_excl[i]["y"]
+                    y_vals = self.add_jitter ( y_vals, addJitter )
+                    linestyle = "dashed"
+                    self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
+                           linestyle = "dashed", color = "red" )
+
         if cr_excl not in [ None, [] ]:
             x_vals = cr_excl["expExclusion"]["x"]
             y_vals = cr_excl["expExclusion"]["y"]
             label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
             if cr_is == "orig":
                 label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
-            if 'Gamma' in y_label:
-                print ( f"{RED}[drawPaperPlot:2] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-                if type(y_vals[0]) != list:
-                    y_vals = [10**y for y in y_vals]
-                    y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                    index_max_diff = -1
-                    if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-                    ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
-                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
-                else:
-                    self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
-            else:
-                self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
+            self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
+                   linestyle= None, color = "blue" )
+            for i in [ "expExclusionP1", "expExclusionM1" ]:
+                if i in comb_excl:
+                    x_vals = cr_excl[i]["x"]
+                    y_vals = cr_excl[i]["y"]
+                    linestyle = "dashed"
+                    self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
+                           linestyle = "dashed", color = "blue" )
 
         if 'Gamma' in y_label: ax.set_yscale('log')
 
         if massg != "":
-            plt.text( 0.6,0.6, rf"{massg} GeV", 
+            plt.text( 0.6,0.6, rf"{massg} GeV",
                       transform=fig.transFigure, fontsize = 8)
         #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
         plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
