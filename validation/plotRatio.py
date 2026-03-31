@@ -474,6 +474,8 @@ def draw ( options : dict ):
     axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, dataMap ) #, outputtype="latex" )
     if getAxisType ( axis1 ) == "v2" and getAxisType ( axis2 ) == "v3":
         axis1 = axisV2ToV3 ( axis1 )
+    if getAxisType ( axis1 ) == "v3" and getAxisType ( axis2 ) == "v2":
+        axis2 = axisV2ToV3 ( axis2 )
     if axis1 != axis2:
         print ( f"[plotRatio] error, different axes: {axis1}!={axis2}" )
         # return
