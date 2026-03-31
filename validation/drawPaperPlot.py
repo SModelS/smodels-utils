@@ -248,24 +248,24 @@ class PaperPlot:
         col = CYAN
         if curve is None:
             print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
-        else:
+            return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
+        all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
+        all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
+        if all_obs_x == []:
             all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
             all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
-            if all_obs_x == []:
-                all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
-                all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
+        all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
+        all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
+        if all_exp_x == []:
             all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
             all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
-            if all_exp_x == []:
-                all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
-                all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
-            #excl_x     = sum( all_obs_x, [])
-            #excl_y     = sum( all_obs_y, [])
-            #expExclusion_x     = sum( all_exp_x, [])
-            #expExclusion_y     = sum( all_exp_y, [])
-            if len(all_obs_x)==0:
-                col = RED
-            print (f"[drawPaperPlot] {col}we have curve as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
+        #excl_x     = sum( all_obs_x, [])
+        #excl_y     = sum( all_obs_y, [])
+        #expExclusion_x     = sum( all_exp_x, [])
+        #expExclusion_y     = sum( all_exp_y, [])
+        if len(all_obs_x)==0:
+            col = RED
+        print (f"[drawPaperPlot] {col}we have curve as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
         excl_lines = { "obsExclusion":{"x":all_obs_x,"y":all_obs_y},
                        "expExclusion":{"x":all_exp_x,"y":all_exp_y}}
 
