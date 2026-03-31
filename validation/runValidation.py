@@ -97,6 +97,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
+        drawPaperPlot ( valPlot, options )
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         if options["generateData"]:
@@ -104,7 +105,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"]:
             valPlot.toPdf()
-    drawPaperPlot ( valPlot, options )
     return valPlot
 
 def drawPaperPlot ( valPlot, options : dict ) -> bool:
