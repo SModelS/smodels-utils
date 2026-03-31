@@ -20,8 +20,9 @@ from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional
 
 class PaperPlot:
-    def __init__ ( self, validationPlot ):
+    def __init__ ( self, validationPlot, options : dict ):
         self.validationPlot = validationPlot
+        self.options = options
 
     def fetchOfficialExclusionLines ( self, axes ) -> dict :
         """ fetch the curves and convert to sahanas format """
@@ -800,7 +801,7 @@ class PaperPlot:
         if "x" in off_excl["obsExclusion"]:
             self.plotLines ( ax, off_excl["obsExclusion"]["x"], off_excl["obsExclusion"]["y"],
                    "black", "solid", label = f'{exp_name} official')
-        plotOffSigmas = True
+        plotOffSigmas = self.options["errorsForR"]
         if plotOffSigmas:
             if "obsExclusion_P1" in off_excl and "x" in off_excl["obsExclusion_P1"]:
                 self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"], off_excl["obsExclusion_P1"]["y"], 
@@ -950,7 +951,7 @@ class PaperPlot:
             self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"], 
                         "black", "solid", f'{exp_name} official')
 
-        plotOffSigmas = True
+        plotOffSigmas = self.options["errorsForR"]
         if plotOffSigmas:
             if "expExclusion_P1" in off_excl and "x" in off_excl["expExclusion_P1"]:
                 self.plotLines ( ax, off_excl["expExclusion_P1"]["x"], off_excl["expExclusion_P1"]["y"], 

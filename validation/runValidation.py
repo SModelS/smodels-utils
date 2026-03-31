@@ -108,7 +108,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     return valPlot
 
 def drawPaperPlot ( valPlot, options : dict ) -> bool:
-    # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     if not options["drawPaperPlot"]:
         return
     axis = valPlot.niceAxes
@@ -121,7 +120,7 @@ def drawPaperPlot ( valPlot, options : dict ) -> bool:
         return False
 
     from drawPaperPlot import PaperPlot
-    plot = PaperPlot( valPlot )
+    plot = PaperPlot( valPlot, options )
     if "off" in valPlot.txName:
         ## add onshell exclusion curves
         onshellTxName = valPlot.txName.replace("off","")
