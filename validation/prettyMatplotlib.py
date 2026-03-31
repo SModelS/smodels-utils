@@ -359,7 +359,7 @@ def createSModelSExclusionJson( all_lines : dict, validationPlot ):
     d = {}
     for name,line in all_lines.items():
         sname = "obsExclusion"
-        if "exp" in sname:
+        if "exp" in name:
             sname = "expExclusion"
         if "p1" in name:
             sname += "P1"
