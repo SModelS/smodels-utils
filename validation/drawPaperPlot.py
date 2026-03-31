@@ -235,91 +235,37 @@ class PaperPlot:
         excl_lines = {}
         all_obs_x, all_obs_y, all_exp_x, all_exp_y = [], [], [], []
 
-        if typ == "official":
-            fname = f"{anaDir}/exclusion_lines.json"
-            file = open( fname )
-            excl_file = json.load(file)
-            # axes = axes.replace(" ", "")
-            import sympy
-            x,y,z,w = sympy.var("x y z w")
-            daxes = eval(axes)
-            from sympy.parsing.sympy_parser import parse_expr
-            if txname in excl_file:
-                if f"obsExclusion_{axes}" not in excl_file[txname].keys():
-                    axes_keys = list(excl_file[txname].keys())
-                    print ( f"[drawPaperPlot] draw for {axes}" )
-                    print ( f"[drawPaperPlot] candidates {axes_keys}" )
-                    foundNewAxis = False
-                    for axis_candidate in axes_keys:
-                        maxes = axis_candidate.split('_')[-1]
-                        tmp = maxes.replace("[","").replace("]","")
-                        tokens = tmp.split ( "," )
-                        misses = False
-                        for k,v in daxes.items():
-                            sv = parse_expr ( v )
-                            isInTokens = False
-                            for t in tokens:
-                                try:
-                                    st = parse_expr ( t )
-                                except tokenize.TokenError as e:
-                                    print ( f"[drawPaperPlot] token error '{e}': '{t}' in {fname}" )
-                                    sys.exit(-1)
-                                if st == sv:
-                                    isInTokens = True
-                                    break
-                            if not isInTokens:
-                                misses=True
-                                break
-                        if not misses:
-                            axes = maxes
-                            foundNewAxis = True
-                    if foundNewAxis:
-                        print( f"[drawPaperPlot] {GREEN}converted axis: {axes}{RESET}" )
-                    else:
-                        print( f"[drawPaperPlot] {RED}ERROR could not find new axis. implement! {axes} {RESET}" )
-                        sys.exit(-1)
+        fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
+        if not os.path.exists ( fname ):
+            print ( f"[drawPaperPlot] error: {fname} does not exist!" )
+            return []
+        print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
 
-                excl_x = self.getCoords ( excl_file, txname, f"obsExclusion_{axes}", "x" )
-                excl_y = self.getCoords ( excl_file, txname, f"obsExclusion_{axes}", "y" )
-                if f"expExclusion_{axes}" in excl_file[txname].keys():
-                    expExclusion_x = self.getCoords ( excl_file, txname, f"expExclusion_{axes}", "x" )
-                    expExclusion_y = self.getCoords ( excl_file, txname, f"expExclusion_{axes}", "y" )
-                excl_lines = { "obsExclusion":{"x":excl_x,"y":excl_y},
-                               "expExclusion":{"x":expExclusion_x,"y":expExclusion_y}}
-                return excl_lines
-
+        file = open(fname,"r")
+        excl_file = json.load(file)
+        saxes = axes.replace(" ","")
+        curve = self.findAxisInExclFile ( axes, excl_file, txname, typ )
+        col = CYAN
+        if curve is None:
+            print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
         else:
-            fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
-            if not os.path.exists ( fname ):
-                print ( f"[drawPaperPlot] error: {fname} does not exist!" )
-                return []
-            print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
-
-            file = open(fname,"r")
-            excl_file = json.load(file)
-            saxes = axes.replace(" ","")
-            curve = self.findAxisInExclFile ( axes, excl_file, txname, typ )
-            col = CYAN
-            if curve is None:
-                print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
-            else:
+            all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
+            all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
+            if all_obs_x == []:
                 all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
                 all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
-                if all_obs_x == []:
-                    all_obs_x = self.getCoordsFromLine ( curve, "obsExclusion", "x" )
-                    all_obs_y = self.getCoordsFromLine ( curve, "obsExclusion", "y" )
+            all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
+            all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
+            if all_exp_x == []:
                 all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
                 all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
-                if all_exp_x == []:
-                    all_exp_x = self.getCoordsFromLine ( curve, "expExclusion", "x" )
-                    all_exp_y = self.getCoordsFromLine ( curve, "expExclusion", "y" )
-                #excl_x     = sum( all_obs_x, [])
-                #excl_y     = sum( all_obs_y, [])
-                #expExclusion_x     = sum( all_exp_x, [])
-                #expExclusion_y     = sum( all_exp_y, [])
-                if len(all_obs_x)==0:
-                    col = RED
-                print (f"[drawPaperPlot] {col}we have curve as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
+            #excl_x     = sum( all_obs_x, [])
+            #excl_y     = sum( all_obs_y, [])
+            #expExclusion_x     = sum( all_exp_x, [])
+            #expExclusion_y     = sum( all_exp_y, [])
+            if len(all_obs_x)==0:
+                col = RED
+            print (f"[drawPaperPlot] {col}we have curve as exclusion lines from {fname} with: {sum(len(x) for x in all_obs_x)} (observed) and {sum(len(x) for x in all_exp_x)} (expected) points{RESET}" )
         excl_lines = { "obsExclusion":{"x":all_obs_x,"y":all_obs_y},
                        "expExclusion":{"x":all_exp_x,"y":all_exp_y}}
 
