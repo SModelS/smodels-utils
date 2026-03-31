@@ -29,6 +29,7 @@ from smodels_utils.helper.terminalcolors import *
 import warnings
 warnings.filterwarnings("ignore")
 from typing import Tuple
+from validationHelpers import getAxisType, axisV2ToV3
 
 logger = logging.getLogger(__name__)
 
@@ -471,6 +472,8 @@ def draw ( options : dict ):
     if "meta" in content and "dataMap" in content["meta"]:
         dataMap = content["meta"]["dataMap"]
     axis = prettyDescriptions.prettyAxes ( list(topos)[0], axis1, dataMap ) #, outputtype="latex" )
+    if getAxisType ( axis1 ) == "v2" and getAxisType ( axis2 ) == "v3":
+        axis1 = axisV2ToV3 ( axis1 )
     if axis1 != axis2:
         print ( f"[plotRatio] error, different axes: {axis1}!={axis2}" )
         # return
