@@ -678,9 +678,10 @@ class ValidationObjsBase():
                     countResultExists += 1
                 else:
                     tmp.append ( f )
+
             if countSkipped > 0:
                 logger.info ( f"skipped a total of {countSkipped} points that are in temporary folder: generateData was set to 'ondemand'." )
-                logger.info ( f" -> {countSLHAFileInData} points are already in final validation dictionary, for {countResultExists} points a file exists in the temporary results folder." )
+                logger.info ( f" -> {countSLHAFileInData} points are already in final validation dictionary, for {countResultExists} points a file exists in {self.currentSLHADir}" )
                 # lets randomize in these cases, so we can somewhat parallelize
                 # FIXME it would be better if we locked individual slha files
             import random
