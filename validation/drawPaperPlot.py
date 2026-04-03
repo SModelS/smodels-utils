@@ -66,7 +66,10 @@ class PaperPlot:
                 return {}
 
             points = curves[idx]["points"]
-            x_minus_y = "x-y" in axes.replace(" ","")
+            c_axes = axes.replace(" ","")
+            m_axes = curves[idx]["name"].replace(" ","")
+            x_minus_y = ("x-y" in c_axes and not "x-y" in m_axes) or \
+                        ("x-y" in m_axes and not "x-y" in c_axes )
             if type(points)==list:
                 return fetchPointsNewFormat ( curves, idx, x_minus_y )
             return fetchPointsOldFormat ( curves, idx, x_minus_y )
