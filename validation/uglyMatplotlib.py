@@ -63,6 +63,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
 
     nErrors = 0
     nPointsOnPlane = 0
+    nPointsWithoutAxes = 0
     # Get excluded and allowed points:
     nmax = len(validationPlot.data)
     if False:
@@ -87,12 +88,15 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             print ( "[uglyMatplotlib] emergency break" )
             break
         if "error" in pt.keys():
-            if "axes" in pt and pt["axes"]!=None:
+            if "axes" in pt and pt["axes"]!=None and len(pt["axes"])>0:
                 noresult.append ( pt["axes"] )
                 nErrors += 1
                 nPointsOnPlane += 1
-            continue
-                # we should not even count these, they are not on our plane
+                continue
+            else:
+                nErrors += 1
+                nPointsWithoutAxes += 1
+                continue
         nPointsOnPlane += 1
         if pt["UL"] == None:
             logger.debug ( f"No upper limit for {pt}" )
@@ -107,9 +111,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
                     sys.exit()
 
         xvals = pt['axes']
-        if xvals == None:
+        if xvals == None or len(xvals)==0:
             # dont have any coordinates? skip.
             logger.warning ( f'do I need to skip {pt}?' )
+            nErrors += 1
+            nPointsWithoutAxes += 1
             continue
         if "t" in pt:
             tavg += pt["t"]
