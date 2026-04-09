@@ -13,7 +13,7 @@ import argparse,time
 from sympy import var
 from typing import Union, Optional
 
-from smodels_utils.helper.terminalcolors import *
+
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
@@ -766,7 +766,7 @@ if __name__ == "__main__":
         print( f"[runValidation] Parameters file ''{args.parfile}'' not found" )
         sys.exit(-1)
     else:
-        print( f"[runValidation] Reading validation parameters from {GREEN}{args.parfile}{RESET}" )
+        print( f"[runValidation] Reading validation parameters from {args.parfile}" )
 
     parser = None
     try:
@@ -787,7 +787,7 @@ if __name__ == "__main__":
     from smodels.base.physicsUnits import TeV
     from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
     from smodels.base.smodelsLogging import logger
-
+    from smodels_utils.helper.terminalcolors import *
 
     #Control output level:
     #numeric_level = getattr(logging,args.verbose.upper(), None)
@@ -975,7 +975,7 @@ if __name__ == "__main__":
         else:
             logger.error ( "asked for writeoutyields but don't see any support for it in this SModelS version" )
             sys.exit()
-
+    
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options,
          tarfiles,args.verbose.lower(), combine, force_load, args.keep )
