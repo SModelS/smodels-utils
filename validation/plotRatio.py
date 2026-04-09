@@ -543,10 +543,18 @@ def draw ( options : dict ):
                 hasLegend = True
                 if "points" in E:
                     E = E["points"]
-                px = E["x"]
-                plt.plot ( px, E["y"], color='white', linestyle='-', linewidth=4, label="" )
-                plt.plot ( px, E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
-                label = ""
+                if type(E) == list:
+                    for e in E:
+                        px = [ p["x"]  for p in e ]
+                        py = [ p["y"]  for p in e ]
+                        plt.plot ( px, py, color='white', linestyle='-', linewidth=4, label="" )
+                        plt.plot ( px, py, color='darkred', linestyle='-', linewidth=3, label=label )
+                else:
+                    label = ""
+                    px = E["x"]
+                    plt.plot ( px, E["y"], color='white', linestyle='-', linewidth=4, label="" )
+                    plt.plot ( px, E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
+                    label = ""
     smodels_root = f"{analysis}/{topo}.root"
     if not os.path.exists ( smodels_root ):
         # print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
