@@ -209,7 +209,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2,
             print ( f"[uglyMatplotlib] ValueError: {e}" )
 
     for p in validationPlot.officialCurves:
-        if "P1" in p['name'] or "M1" in p['name']:
+        if not "name" in p or "P1" in p['name'] or "M1" in p['name']:
             continue
         plotOfficalCurve ( p, xrange, yrange, "black", "official exclusion", "-" )
 

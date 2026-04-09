@@ -808,7 +808,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     plt.ylabel ( ylabel )
 
     for p in validationPlot.officialCurves:
-        if "name" in p and "P1" in p["name"] or "M1" in p ["name"]:
+        if not "name" in p or ("P1" in p["name"] or "M1" in p ["name"]):
             continue
         if type(p) not in [ dict ]:
             logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
@@ -819,7 +819,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         plt.plot ( px, py, c="black", label="exclusion (official)" )
     if options["drawExpected"]:
         for p in validationPlot.expectedOfficialCurves:
-            if "P1" in p["name"] or "M1" in p ["name"]:
+            if not "name" in p or ( "P1" in p["name"] or "M1" in p ["name"] ):
                 continue
             if type(p) not in [ dict ]:
                 logger.error ( "exclusion lines are not dicts, are you sure you are not using sms.root files?" )
