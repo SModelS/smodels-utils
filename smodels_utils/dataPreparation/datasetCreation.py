@@ -17,10 +17,14 @@ import re
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.base.smodelsLogging import logger
-from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
+from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer,\
+     LikelihoodComputer
 from smodels.base.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
+
+from smodels.statistics.basicStats import observed, apriori, aposteriori, \
+         NllEvalType
 
 errorcounts = { "errorsvary": 0, "moreconservative": 0 }
 
@@ -86,7 +90,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
             comments.append ( ds.comment )
     if len(comments)>0:
         newds.comment = ";".join ( comments )
-    newds.observedN = observedN
+    newds.observedN = int ( observedN )
     if expectedBG == 0.:
         logger.warning ( f"background estimate for {newds._name} is at 0.0. Will put to {minimumBackgroundEstimate}" )
         expectedBG=minimumBackgroundEstimate
@@ -106,11 +110,12 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # alpha = .05
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-    comp = UpperLimitComputer ( ) # 1. - alpha )
-    logger.error ( "FIXME need to replace with spey!" )
     m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
+    llcomp = LikelihoodComputer ( m )
+    comp = UpperLimitComputer ( llcomp ) # 1. - alpha )
+    logger.error ( "FIXME need to replace with spey!" )
     try:
-        ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber(fb)
+        ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber(fb)
     except Exception as e:
         print ( f"[datasetCreation] Exception {e}" )
         print ( f"[datasetCreation] observed: {newds.observedN}" )
@@ -125,10 +130,10 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
                 analysis = "x", xsection = 1. ) # nsig/lumi )
         # print ( "stat model is", str ( statModel ) )
         # lumi = lumi.asNumber(1./fb)
-        ulspey = statModel.poi_upper_limit ( expected = ExpectationType.observed ) / lumi
-        ulspeyE = statModel.poi_upper_limit ( expected = ExpectationType.apriori ) / lumi
+        ulspey = statModel.poi_upper_limit ( expected = observed ) / lumi
+        ulspeyE = statModel.poi_upper_limit ( expected = apriori ) / lumi
     newds.upperLimit = str(f"{ul:f}*fb" )
-    ule = comp.getUpperLimitOnSigmaTimesEff ( m, expected=True ).asNumber(fb) # / lumi.asNumber(1./fb)
+    ule = comp.getUpperLimitOnSigmaTimesEff ( evaluationType = apriori ).asNumber(fb) # / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str(f"{ule:f}*fb" )
     # print ( f"@@@ UL {ul:.2f} {ulspey:.2f}" )
     # print ( f"@@@ ULE {ule:.2f} {ulspeyE:.2f}" )
