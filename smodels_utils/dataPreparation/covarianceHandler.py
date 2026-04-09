@@ -64,7 +64,7 @@ def aggregateMe ( covariance : list[list], aggregate : list,
         newCov.append ( copy.deepcopy(row) )
     newDSOrder = [ f"{aggprefix}{ctr}" for ctr in range(nNew) ]
     if aggprefix == "SR":
-        newDSOrder = [ f"{aggprefix}{agg}{ctr}" for agg in aggregate ]
+        newDSOrder = [ f"{aggprefix}{ctr+1}" for ctr,_ in enumerate(aggregate) ]
     #logger.error ( f"aggregating cov matrix from {len(covariance)} to {nNew} dims." )
     #logger.error ( f"zeroIndexed {zeroIndexed}" )
     if type(aggregate) == dict:
