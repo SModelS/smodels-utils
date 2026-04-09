@@ -12,7 +12,8 @@ import sys
 import copy
 import logging
 import numpy as np
-from typing import Union
+from typing import Union, Optional
+from collections.abc import Callable
 from smodels_utils.helper import prettyDescriptions
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -187,7 +188,8 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
             max_datasets : Union [int,None] = None,
             aggregate : Union[list,None] = None, aggprefix : str = "ar",
             zeroIndexed : bool = False, scaleCov : float = 1.0,
-            blinded_regions : list = [], datasets : Union[list,None]=None ):
+            blinded_regions : list = [], datasets : Union[list,None]=None,
+            dsnameTranslator : Optional[Callable] = None ):
         """ constructor.
         :param filename: filename of root file to retrieve covariance matrix
         from.
@@ -215,9 +217,12 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         cterr = 0
         # self.interact ( xaxis )
         skipped = 0
+        dses = [ x.dataId for x in datasets ]
         for i in range ( self.n ):
             dsId = xaxis.labels()[i]
-            if datasets != None and dsId not in datasets:
+            if dsnameTranslator != None:
+                dsId = dsnameTranslator  ( dsId )
+            if datasets != None and dsId not in dses:
                 print ( f"[covarianceHandler] skipping {dsId}: not in datasets" )
                 continue
             if i in self.blinded_regions or dsId in self.blinded_regions:
@@ -248,6 +253,8 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
             row = []
             for j in range ( self.n ):
                 dsIdj = xaxis.labels()[j]
+                if dsnameTranslator != None:
+                    dsIdj = dsnameTranslator  ( dsIdj )
                 if j in self.blinded_regions or dsIdj in self.blinded_regions:
                     continue
                 skipIt = False
@@ -269,7 +276,7 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
                    el = 1e-4
                 if i!=j and scaleCov != 1.0:
                     el = scaleCov * el ## slight downscale!
-                row.append ( el )
+                row.append ( float ( el ) )
             self.covariance.append ( row )
 
         self.fullcovariance = copy.deepcopy ( self.covariance )

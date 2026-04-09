@@ -24,7 +24,8 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.dataPreparation.graphMassPlaneObjects import GraphMassPlane
 from smodels.experiment.expSMS import ExpSMS
 from smodels.experiment.expAuxiliaryFuncs import smsInStr
-from typing import Dict, Union
+from typing import Dict, Union, Optional
+from collections.abc import Callable
 
 import logging
 from smodels_utils.helper import prettyDescriptions
@@ -229,7 +230,8 @@ class MetaInfoInput(Locker):
             datasets : Union[list,None] = None,
             matrixIsCorrelations : bool = False,
             aggprefix : str ="ar", zeroIndexed : bool = False,
-            scaleCov : float = 1.0, blinded_regions : list = [] ):
+            scaleCov : float = 1.0, blinded_regions : list = [],
+            dsnameTranslator : Optional[Callable] = None ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -284,7 +286,7 @@ class MetaInfoInput(Locker):
                 handler = UPROOTCovarianceHandler ( filename, histoname,
                     max_datasets, aggregate, aggprefix, zeroIndexed,
                     scaleCov = scaleCov, blinded_regions = blinded_regions,
-                    datasets = datasets )
+                    datasets = datasets, dsnameTranslator = dsnameTranslator )
             except ModuleNotFoundError as e:
                 logger.error ( "could not import uproot, trying pyroot now" )
                 if zeroIndexed:
