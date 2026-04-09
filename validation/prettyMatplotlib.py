@@ -906,7 +906,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     axStr = axStr.replace("0.5",".5")
     axStr = axStr.replace("100.","100")
     axStr = axStr.replace("anyBSM","*")
-    plt.text(.95,.965,axStr,transform=fig.transFigure, fontsize=9,
+    plt.text(.978,.965,axStr,transform=fig.transFigure, fontsize=9,
                horizontalalignment="right" )
     figureUrl = getFigureUrl(validationPlot)
 
