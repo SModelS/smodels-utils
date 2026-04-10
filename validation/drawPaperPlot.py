@@ -305,7 +305,9 @@ class PaperPlot:
     def drawOffshell( self, excl_lines : dict, excl_off : dict, min_off_y : float = 0.0,
             official : bool= False ):
         """ draw the offshell regions
+        no idea what that is
         """
+        return excl_lines
         # print("[drawPaperPlot] min_off_y ", min_off_y )
         for type,excl in excl_lines.items():
             if excl_off[type]["x"] == []:
@@ -542,7 +544,7 @@ class PaperPlot:
             cr_is = "orig"
 
         cr_excl = None
-        if os.path.exists ( crDir ):
+        if anaDir != crDir and os.path.exists ( crDir ):
             cr_excl = self.getCurveFromJson (crDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
             print ( f"[drawPaperPlot] found curve for {crDir}!" )
