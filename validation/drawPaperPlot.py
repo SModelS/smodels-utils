@@ -917,7 +917,7 @@ class PaperPlot:
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
                    linestyle= None, color = "blue" )
             for i in [ "expExclusionP1", "expExclusionM1" ]:
-                if i in comb_excl:
+                if i in cr_excl:
                     x_vals = cr_excl[i]["x"]
                     y_vals = cr_excl[i]["y"]
                     linestyle = "dashed"

@@ -231,10 +231,18 @@ class ValidationObjsBase():
             if expRes["l_SM"]>0.:
                 nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
             Dict['nll_SM']= nll_SM
+        eul = expRes["expected upper limit (fb)"]
+        if type(eul)==str:
+            eul=eval(eul)
         if 'r_expected_p1' in expRes:
-            Dict['eUL_m1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_p1"], 5 )
+            er = expRes["r_expected"]
+            er_p1 = expRes["r_expected_p1"]
+            if er > 0.:
+                Dict['eUL_m1']=round_to_n ( eul / er * erp1, 5 )
         if 'r_expected_m1' in expRes:
-            Dict['eUL_p1']=round_to_n ( expRes["expected upper limit (fb)"] / expRes["r_expected"] * expRes["r_expected_m1"], 5 )
+            er_m1 = expRes["r_expected_p1"]
+            if er > 0.:
+                Dict['eUL_p1']=round_to_n ( eul / er * er_m1, 5 )
         if 'expected upper limit (fb)' in expRes:
             Dict['eUL']=expRes["expected upper limit (fb)"]
             drawExpected = self.options["drawExpected"]
