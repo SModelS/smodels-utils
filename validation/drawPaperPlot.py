@@ -17,7 +17,7 @@ from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
 from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 class PaperPlot:
     def __init__ ( self, validationPlot, options : dict ):
@@ -459,6 +459,24 @@ class PaperPlot:
                 linestyle="solid"
             self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
+    def getRange ( self, lines : dict, whatExcl : str, whatVar : str ) -> Tuple:
+        """
+        :param lines: e.g. { "official": off_excl }
+        :param whatExcl: e.g. obsExclusion
+        :param whatVar: e.g. x
+        :returns tuple (min,max)
+        """
+        min_var, max_var = float("inf"), -float("inf")
+        for name,line in lines.items():
+            if whatVar in line[whatExcl]:
+                max_tmp = self.getExtremeValue( line[whatExcl][whatVar],
+                        extreme = "max", e_type = name )
+                min_tmp = self.getExtremeValue( line[whatExcl][whatVar],
+                        extreme = "min", e_type = name )
+                min_var = min ( min_var, min_tmp )
+                max_var = max ( max_var, max_tmp )
+        return min_var, max_var
+
     def draw( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
@@ -504,20 +522,6 @@ class PaperPlot:
 
         #get exclusion lines for official and SModelS
         off_excl, comb_excl, bestSR_excl = [],[],[]
-        """
-        if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
-        if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
-        if 'ATLAS-SUSY-2019-09' in analysis: eval_axes = False
-        if offshell:
-            off_excl = self.getCurveFromJson( anaDir, validationFolder, txname,
-                    typ="official", axes = axes_on )
-            off_excl_offshell = self.getCurveFromJson( anaDir, validationFolder, txnameOff,
-                    typ="official", axes = axes )
-            off_excl = self.drawOffshell(off_excl, off_excl_offshell, official=True)
-        else: off_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
-                    typ="official", axes = axes, eval_axes=eval_axes )
-        off_excl = self.fetchOfficialExclusionLines ( axes )
-        """
         off_excl = self.fetchOfficialExclusionLines ( axes_on )
 
         bestSR, combSR = True, True
@@ -567,38 +571,18 @@ class PaperPlot:
                 return
             print( f"[drawPaperPlot] got combined curve from {anaDir}" )
 
+        # get the range of x values in obs and exp curves to set lim on plot ranges.
+        # low limit on y axes usually 0 for plot (except for width plots)
+        lines = { "official": off_excl }
+        if bestSR:
+            lines["bestSR"] = bestSR_excl
+        if combSR:
+            lines["comb"] = comb_excl
 
-        #get the range of x values in obs and exp curves to set lim on plot ranges. low limit on y axes usually 0 for plot (except for width plots)
-        min_obs_x, max_obs_x = 0., 0.
-        if "x" in off_excl["obsExclusion"]:
-            max_obs_x = self.getExtremeValue(off_excl["obsExclusion"]["x"], extreme = "max", e_type="official")
-            min_obs_x = self.getExtremeValue(off_excl["obsExclusion"]["x"], extreme = "min", e_type="official")
-        if bestSR: min_obs_x = min(min_obs_x, self.getExtremeValue(bestSR_excl["obsExclusion"]["x"], extreme = "min", e_type="bestSR"))
-        if combSR: min_obs_x = min(min_obs_x, self.getExtremeValue(comb_excl["obsExclusion"]["x"], extreme = "min", e_type="comb"))
-        if bestSR: max_obs_x = max(max_obs_x, self.getExtremeValue(bestSR_excl["obsExclusion"]["x"], extreme = "max", e_type="bestSR"))
-        if combSR: max_obs_x = max(max_obs_x, self.getExtremeValue(comb_excl["obsExclusion"]["x"], extreme = "max", e_type="comb"))
-
-        max_obs_y = 0.
-        if "y" in off_excl["obsExclusion"]:
-            max_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
-        if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR"))
-        if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb"))
-
-        min_exp_x, max_exp_x = 0., 0.
-        if "x" in off_excl["expExclusion"]:
-            max_exp_x = self.getExtremeValue(off_excl["expExclusion"]["x"], extreme = "max", e_type="official")
-            min_exp_x = self.getExtremeValue(off_excl["expExclusion"]["x"], extreme = "min", e_type="official")
-        if bestSR: min_exp_x = min(min_exp_x, self.getExtremeValue(bestSR_excl["expExclusion"]["x"], extreme = "min", e_type="bestSR"))
-        if combSR: min_exp_x = min(min_exp_x, self.getExtremeValue(comb_excl["expExclusion"]["x"], extreme = "min", e_type="comb"))
-        if bestSR: max_exp_x = max(max_exp_x, self.getExtremeValue(bestSR_excl["expExclusion"]["x"], extreme = "max", e_type="bestSR"))
-        if combSR: max_exp_x = max(max_exp_x, self.getExtremeValue(comb_excl["expExclusion"]["x"], extreme = "max", e_type="comb"))
-
-        max_exp_y = 0.
-        if "y" in off_excl["expExclusion"]:
-            max_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
-        if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR"))
-        if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb"))
-
+        min_obs_x, max_obs_x = self.getRange( lines, "obsExclusion", "x" )
+        min_obs_y, max_obs_y = self.getRange( lines, "obsExclusion", "y" )
+        min_exp_x, max_exp_x = self.getRange( lines, "expExclusion", "x" )
+        min_exp_y, max_exp_y = self.getRange( lines, "expExclusion", "y" )
 
         num_sr, num_cr = 0, 0
         ver = ""
@@ -680,58 +664,6 @@ class PaperPlot:
             elif "y=" in lbl:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
             else: continue
-
-        """
-        if '2018-14' in analysis:
-            if 'Sel' in txname: particle = '{\\tilde{e}}'
-            elif 'Smu' in txname: particle = '{\\tilde{\\mu}}'
-            elif 'Stau' in txname: particle = '{\\tilde{\\tau}}'
-            x_label = f'$m_{particle} [GeV]$'
-            y_label = f'$\\Gamma_{particle} [GeV]$'
-            massg = '$ m_{\\tilde{\\chi}_1^0} = 0.0 $'
-
-        if '2018-31' in analysis:
-            if '130' in axis_label[2]: massg = '$m_{\\tilde{\\chi}_1^0} = m_{\\tilde{\\chi}_2^0}$ - ' + axis_label[2].split('-')[1]
-            elif '60' in axis_label[2]: massg = '$m_{\\tilde{\\chi}_1^0}$ = 60'
-            else: massg = '$m_{\\tilde{\\chi}_1^0}$ = ' + axis_label[2].split('=')[1]
-        if massg.count("$") % 2 == 1:
-            print ( f"[drawPaperPlot] something is wrong with the math modes in {massg}" )
-            import sys; sys.exit(-1)
-
-        if '2018-13' in analysis:
-            if 'TRPV1' in txname:
-                if 'm($\\tilde{g}$)' in axis_label[0] and 'x' not in axis_label[0]: massg = '$ m_{\\tilde{g}} = ' + axis_label[0].split('=')[0] + '$'
-                elif 'm($\\tilde{\\chi}_1^0$)' in axis_label[1] and 'x' not in axis_label[1] and 'y' not in axis_label[1] : massg = '$ m_{\\tilde{\\chi}_1^0} = ' + axis_label[1].split('=')[0] + '$'
-                else:
-                    massg = '$ \\Gamma_{\\tilde{\\chi}_1^0} = ' + axis_label[2].split('=')[0] + '$'
-                    # print("massg ", massg)
-                    expo = massg.index('-')
-                    massg = massg[:expo-1] + " \\times 10^{" + massg[expo:-1] + "}$"
-            else:       #TRPVChijjj
-                x_label = '$m_{\\tilde{\\chi}_2^0}$ [GeV]'
-                y_label = '$\\Gamma_{\\tilde{\\chi}_2^0}$ [GeV]'
-
-        if '2018-16' in analysis:
-            if 'TSlep' in txname: y_label = '$  m_{\\tilde{l}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
-            else: y_label = '$  m_{\\tilde{\\chi}_1^{\\pm}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
-
-        if 'CMS-PAS-SUS-16-052' in analysis:
-            if 'T2b' in txname: y_label = '$  m_{\\tilde{\\tau}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
-            else:
-                y_label = '$  m_{\\tilde{\\tau}} - m_{\\tilde{\\chi}_1^0} $ [GeV]'
-                massg = '$  m_{\\tilde{\\chi}_1^{\\pm}} = m_{\\tilde{\\tau}} - 0.5 m_{\\tilde{\\chi}_1^0} $'
-        # print("[drawPaperPlot] massg ", massg)
-        if 'CMS-SUS-16-050-agg' in analysis:
-            if 'T5t' in txname:massg = '$ m_{\\tilde{\\tau}} =  m_{\\tilde{\\chi}_1^0} + 20 $ '
-
-        if 'ATLAS-SUSY-2018-33' in analysis:
-            x_label = '$m(\\tilde{t}$)'
-            y_label = '$\\Gamma(\\tilde{t})$'
-
-        if 'ATLAS-SUSY-2019-09' in analysis and txname == "TChiWZoff":
-            x_label = '$m_{\\tilde{\\chi}_1^{\\pm}}, m_{\\tilde{\\chi}_2^0}$ [GeV]'
-            y_label = r'$\Delta m(\tilde{\chi}_2^0,\tilde{\chi}_1^0)$'
-        """
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
