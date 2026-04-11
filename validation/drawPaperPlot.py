@@ -57,8 +57,7 @@ class PaperPlot:
                 ret["y"].append ( y )
             return ret
 
-        def fetchPoints ( curves : list, idx : int = 0,
-                x_minus_y : bool = False ) -> dict:
+        def fetchPoints ( curves : list, idx : int = 0 ) -> dict:
             """
             :param pm1: "" for central value "P1" or "M1" for +- 1 sigma
             """
@@ -490,7 +489,7 @@ class PaperPlot:
 
         offshell = False
         txnameOff = ''
-        axes_on = None
+        axes_on = axes
         if 'off' in txname:
             axes_on = self.getOnshellAxesForOffshell( anaDir,
                       txname.split('off')[0], validationFolder )
@@ -505,10 +504,10 @@ class PaperPlot:
 
         #get exclusion lines for official and SModelS
         off_excl, comb_excl, bestSR_excl = [],[],[]
+        """
         if 'ATLAS-SUSY-2018-16' in analysis: eval_axes = False
         if 'CMS-PAS-SUS-16-052' in analysis: eval_axes = False
-        # if 'ATLAS-SUSY-2019-09' in analysis: eval_axes = False
-        """
+        if 'ATLAS-SUSY-2019-09' in analysis: eval_axes = False
         if offshell:
             off_excl = self.getCurveFromJson( anaDir, validationFolder, txname,
                     typ="official", axes = axes_on )
@@ -517,8 +516,9 @@ class PaperPlot:
             off_excl = self.drawOffshell(off_excl, off_excl_offshell, official=True)
         else: off_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="official", axes = axes, eval_axes=eval_axes )
-        """
         off_excl = self.fetchOfficialExclusionLines ( axes )
+        """
+        off_excl = self.fetchOfficialExclusionLines ( axes_on )
 
         bestSR, combSR = True, True
         if offshell:
@@ -635,8 +635,6 @@ class PaperPlot:
         if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
             ver = "(SLv2)"
 
-        # print ( f"@@and here num_cr {num_cr}" )
-
         #now plot figure
         # print("[drawPaperPlot] Drawing pretty obs and exp plots")
 
@@ -663,7 +661,6 @@ class PaperPlot:
         axis_label = prettyAxes(validationPlot).replace(" ","")
         axis_label = axis_label.replace( "(x,y)", "(xy)" )
         axis_label = axis_label.split(',')
-        # print("[drawPaperPlot] Axis label ", axis_label)
         massg = ""
         for lbl in axis_label:
             if "=(xy)" in lbl:
@@ -684,6 +681,7 @@ class PaperPlot:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
             else: continue
 
+        """
         if '2018-14' in analysis:
             if 'Sel' in txname: particle = '{\\tilde{e}}'
             elif 'Smu' in txname: particle = '{\\tilde{\\mu}}'
@@ -730,13 +728,13 @@ class PaperPlot:
             x_label = '$m(\\tilde{t}$)'
             y_label = '$\\Gamma(\\tilde{t})$'
 
-        #if 'ATLAS-SUSY-2019-09' in analysis and txname == "TChiWZoff":
-        #    x_label = '$m_{\\tilde{\\chi}_1^{\\pm}}, m_{\\tilde{\\chi}_2^0}$ [GeV]'
-        #    y_label = r'$\Delta m(\tilde{\chi}_2^0,\tilde{\chi}_1^0)$'
+        if 'ATLAS-SUSY-2019-09' in analysis and txname == "TChiWZoff":
+            x_label = '$m_{\\tilde{\\chi}_1^{\\pm}}, m_{\\tilde{\\chi}_2^0}$ [GeV]'
+            y_label = r'$\Delta m(\tilde{\chi}_2^0,\tilde{\chi}_1^0)$'
+        """
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
-        # print ( f"@@@ min_obs_x {min_obs_x}" )
         ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
         if 'Gamma' in y_label:
             print ( f"{RED}[drawPaperPlot:3] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
@@ -763,21 +761,18 @@ class PaperPlot:
         #print(pName)
         plt.title(pName,loc='right', fontsize=12)                           #process srring on right of title
 
-        #plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
-        #plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
-        #plt.tight_layout()
-
         #plot excl curves
         exp_name = analysis.split('-')[0]
-        # ax.plot(off_excl["obsExclusion"]["x"], off_excl["obsExclusion"]["y"],color='black', linestyle='solid', label = f'{exp_name} official')
         if "x" in off_excl["obsExclusion"]:
-            self.plotLines ( ax, off_excl["obsExclusion"]["x"], off_excl["obsExclusion"]["y"],
-                   "black", "solid", label = f'{exp_name} official')
+            self.plotLines ( ax, off_excl["obsExclusion"]["x"],
+                   off_excl["obsExclusion"]["y"],
+                   "black", "solid", label = f'{exp_name} official' )
         plotOffSigmas = self.options["errorsForR"]
         if plotOffSigmas:
             if "obsExclusion_P1" in off_excl and "x" in off_excl["obsExclusion_P1"]:
-                self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"], off_excl["obsExclusion_P1"]["y"],
-                            "black", "dotted", None )
+                self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"],
+                        off_excl["obsExclusion_P1"]["y"],
+                        "black", "dotted", None )
 
             if "obsExclusion_M1" in off_excl and "x" in off_excl["obsExclusion_M1"]:
                 self.plotLines ( ax, off_excl["obsExclusion_M1"]["x"], off_excl["obsExclusion_M1"]["y"],
@@ -797,9 +792,6 @@ class PaperPlot:
                 if len(x_vals)>0:
                     ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
                     ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
-                #sec_ax = ax.secondary_yaxis('right', functions=(widthToLifetime, widthToLifetime))
-                #sec_ax.set_ylabel(r"$\tau$ (s)", fontsize=12)
-                #sec_ax.set_yscale('log')
                 plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
                 plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
             else:
