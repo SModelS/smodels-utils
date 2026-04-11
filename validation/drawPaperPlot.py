@@ -522,6 +522,8 @@ class PaperPlot:
 
         #get exclusion lines for official and SModelS
         off_excl, comb_excl, bestSR_excl = [],[],[]
+        if axes_on == None:
+            axes_on = axes
         off_excl = self.fetchOfficialExclusionLines ( axes_on )
 
         bestSR, combSR = True, True
