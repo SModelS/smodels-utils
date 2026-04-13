@@ -241,7 +241,7 @@ class ValidationObjsBase():
             if er > 0.:
                 Dict['eUL_m1']=round_to_n ( eul / er * er_p1, 5 )
         if 'r_expected_m1' in expRes:
-            er_m1 = expRes["r_expected_p1"]
+            er_m1 = expRes["r_expected_m1"]
             if er > 0.:
                 Dict['eUL_p1']=round_to_n ( eul / er * er_m1, 5 )
         if 'expected upper limit (fb)' in expRes:
