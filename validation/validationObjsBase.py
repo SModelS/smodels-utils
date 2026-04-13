@@ -47,8 +47,9 @@ class ProgressHandler:
         so the other process can kill it. """
         cpid = ProgressHandler.readPid ( pidfile )
         if cpid != None:
-            print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
-            ProgressHandler.killProgressBar( pidfile )
+            pass
+#print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
+#            ProgressHandler.killProgressBar( pidfile )
         f=open(".progressbar.pid","wt")
         f.write ( f"{pid}\n" )
         f.close()
