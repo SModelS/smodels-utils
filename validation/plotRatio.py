@@ -610,7 +610,7 @@ def draw ( options : dict ):
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
     label = f"$\\bar{{f}}={rmean:.2f}\\pm{rstd:.2f}$"
-    n_digits = int ( - numpy.log10 ( rstd )) + 1
+    n_digits = max ( 5, int ( - numpy.log10 ( rstd )) + 1 )
     x_pos = .97
     if n_digits > 3:
         label = f"$\\bar{{f}}={rmean:.{n_digits}f}\\pm{rstd:.{n_digits}f}$"
