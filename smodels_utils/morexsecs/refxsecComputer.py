@@ -611,7 +611,11 @@ class RefXSecComputer:
                 mass = tuple( tokens[x] for x in m )
                 if len(mass) == 1:
                     mass = float(mass)
-            xsec = float(tokens[ columns["xsec"] ] )
+            try:
+                xsec = float(tokens[ columns["xsec"] ] )
+            except Exception as e:
+                logger.error ( f"could not convert {tokens} to xsec in {path}" )
+                sys.exit()
             if not pb:
                 xsec = xsec / 1000.
             ret[ mass ] = xsec
