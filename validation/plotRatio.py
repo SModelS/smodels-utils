@@ -66,7 +66,7 @@ def getSModelSExclusionFromContent ( content ):
 def addDefaults ( options : dict ) -> dict:
     defaults = { "xmin": None, "xmax": None, "xlabel": None, "ylabel": None,
                  "efficiencies": False, "ymin": None, "ymax": None, "zmin": None,
-                 "zmax": None, "title": None, "output": "ratios_@a_@t@sr.png",
+                 "zmax": None, "title": None, "output": "@eratios_@a_@t@sr.png",
                  "label1": None, "label2": None, "show": False, "meta": False,
                  "copy": False, "SR": None, "comment": None, "zlabel_offset": .9,
                 }
@@ -588,6 +588,8 @@ def draw ( options : dict ):
     if output != None:
         figname = output.replace("@t", topo ).replace("@a1", anaId ).replace("@a2", anaId2 )
         figname = figname.replace( "@a",anaId )
+        s_expected = "expected_" if el1_expected or el2_expected else ""
+        figname = figname.replace( "@e", s_expected )
     sr = ""
     if options["SR"] != None:
         sr=f"_{options['SR']}"
@@ -704,8 +706,8 @@ def main():
             help="plot ratio of efficiencies of this signal region. None = bestSR. Will turn on --efficiencies [None]",
             type=str, default=None )
     argparser.add_argument ( "-o", "--output",
-            help="outputfile, the @x's get replaced [ratios_@a_@t@sr.png]",
-            type=str, default="ratios_@a_@t@sr.png" )
+            help="outputfile, the @x's get replaced [@eratios_@a_@t@sr.png]",
+            type=str, default="@eratios_@a_@t@sr.png" )
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2, guess if None [None]",
             type=str, default=None )
