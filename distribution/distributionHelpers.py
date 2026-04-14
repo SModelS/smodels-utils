@@ -121,6 +121,52 @@ def clearJsons ( path : str, verbose : bool ):
     if ctRemoved>0:
         comment ( f"removed {ctRemoved} json files in {rpath}" )
 
+def clearOnnxs ( path : str, verbose : bool ):
+    """ clear the onnxs in the given path. look at globalInfo.txt
+        which onnxs get used. ditch the rest. """
+    gI = f"{path}/globalInfo.txt"
+    rpath = path[path.rfind("/")+1:]
+    if not os.path.exists ( gI ):
+        return
+    usedOnnxs = set()
+    f = open ( gI, "rt" )
+    lines = f.readlines()
+    f.close()
+    from smodels.experiment.expAuxiliaryFuncs import concatenateLines
+    lines = concatenateLines ( lines )
+    from icecream import ic
+    for i,line in enumerate(lines):
+        p1 = line.find("#")
+        if p1 >= 0:
+            line = line[:p1]
+        line = line.strip()
+        if line == "":
+            continue
+        if not "mlModels:" in line:
+            continue
+        txt = line.replace("mlModels:","")
+        try:
+            D = eval(txt)
+        except Exception as e:
+            D = {}
+        for k in D.keys():
+            usedOnnxs.add ( k )
+    onnxs = glob.glob ( f"{path}/*.onnx" )
+    ctRemoved = 0
+    for js in onnxs:
+        fname = os.path.basename ( js )
+        remove = fname not in usedOnnxs
+        if remove:
+            if verbose:
+                ko = f"keeping only {','.join(usedOnnxs)}"
+                if len(usedOnnxs)==0:
+                    ko = "no pyhf models used"
+                comment ( f"removing {fname} in {rpath}: {ko}" )
+            ctRemoved += 1
+            os.unlink ( js )
+    if ctRemoved>0:
+        comment ( f"removed {ctRemoved} onnx files in {rpath}" )
+
 def hasNonValidated ( ers ):
     """ FIXME remove when not anymore used! """
     hasNonValidated = False
