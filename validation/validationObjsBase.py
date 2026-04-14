@@ -8,6 +8,31 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
+
+from smodels.tools.printers.pythonPrinter import PyPrinter
+
+def addErrorsForRValues ( self, obj, resDict : dict ):
+    """ for obj add the errors on the r values to resDict """
+    print ( f"@@XXXX we are here" )
+    import sys; sys.exit()
+    ul_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
+            nSigma = 1 )
+    if ul_e_p1 != None:
+        resDict['r_expected_p1'] = self._round ( ul_e_p1 )
+    ul_e_m1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
+            nSigma = -1 )
+    if ul_e_m1 != None:
+        resDict['r_expected_m1'] = self._round ( ul_e_m1 )
+    # add only for expected
+    r_obs_p1 = obj.getRValue ( evaluationType = observed, nSigma = 1 )
+    r_obs_m1 = obj.getRValue ( evaluationType = observed, nSigma = -1 )
+    if r_obs_p1 != None:
+         resDict['r_p1'] = self._round ( r_obs_p1 )
+    if r_obs_m1 != None:
+         resDict['r_m1'] = self._round ( r_obs_m1 )
+
+PyPrinter.addErrorsForRValues = addErrorsForRValues
+
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
 from validationHelpers import getDefaultModel, showPlot, \
