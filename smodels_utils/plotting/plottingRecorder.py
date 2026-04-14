@@ -77,6 +77,10 @@ class FunctionWrapper:
             line = "ax=plt.gca()\n"
         if "plt.subplots()" in line:
             line = "fig,ax=plt.subplots()\n"
+        if "olorbar" in line:
+            print ( f"@@ {line}" )
+            print ( f"@@ args {args} kwargs {kwargs}" )
+            line = "\n" 
         f.write ( line )
         ret = self.callable(*args, **kwargs)
         self.parent.callable_results.append(ret)
@@ -91,6 +95,10 @@ class Interceptor:
     def __init__ ( self, obj, prefix : str = "plt" ):
         self.obj = obj
         self.prefix = prefix
+
+    def colorbar ( self, obj, **kwargs ):
+        ## dunno, this isnt working
+        pass
 
     def __getattr__(self, attr):
         # print("@@ Getting {0}.{1}".format(type(self.obj).__name__, attr))
