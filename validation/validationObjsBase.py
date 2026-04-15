@@ -31,7 +31,8 @@ def addErrorsForRValues ( self, obj, resDict : dict ):
     if r_obs_m1 != None:
          resDict['r_m1'] = self._round ( r_obs_m1 )
 
-PyPrinter.addErrorsForRValues = addErrorsForRValues
+if True:
+    PyPrinter.addErrorsForRValues = addErrorsForRValues
 
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
