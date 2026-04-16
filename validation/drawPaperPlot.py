@@ -19,6 +19,23 @@ import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional, Tuple
 
+def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
+    """ if y-axes are widths, convert accordingly 
+    :returns tuple of new xvals and yvals
+    """
+    if not "Gamma" in y_label:
+        return x_vals, y_vals
+    print ( f"{RED}[drawPaperPlot:6] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+    if type(x_vals[0]) != list:
+        return x_vals, y_vals
+
+    y_vals = [10**y for y in y_vals]
+    y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
+    index_max_diff = -1
+    if len(y_diff)>0 and max(y_diff)>100:
+        index_max_diff = y_diff.index(max(y_diff))+1
+    return x_vals[:index_max_diff], y_vals[_index_max_diff]
+
 class PaperPlot:
     def __init__ ( self, validationPlot, general_options : dict,
             specific_options : dict ):
@@ -438,28 +455,10 @@ class PaperPlot:
         y_vals = self.add_jitter ( y_vals, self.addJitter )
         if color == None:
             color = "red"
-        if 'Gamma' in y_label:
-            print ( f"{RED}[drawPaperPlot:1] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            if len(y_vals)==0 or type(y_vals[0]) != list:
-                y_vals = [10**y for y in y_vals]
-                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                index_max_diff = -1
-                if len(y_diff)>0 and max(y_diff)>100:
-                    index_max_diff = y_diff.index(max(y_diff))+1
-                if linestyle == None:
-                    linestyle="solid"
-                ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
-                         color=color, linestyle=linestyle, label = label )
-                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
-                         color=color, linestyle=linestyle )
-            else:
-                if linestyle == None:
-                    linestyle="dashed"
-                self.plotLines(ax, x_vals, y_vals, color, linestyle, label )
-        else:
-            if linestyle == None:
-                linestyle="solid"
-            self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
+        x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+        if linestyle == None:
+            linestyle="solid"
+        self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
     def getRange ( self, lines : dict, whatExcl : str, whatVar : str ) -> Tuple:
         """
@@ -717,23 +716,10 @@ class PaperPlot:
         if bestSR:
             x_vals = bestSR_excl["obsExclusion"]["x"]
             y_vals = bestSR_excl["obsExclusion"]["y"]
-            if 'Gamma' in y_label:
-                print ( f"{RED}[drawPaperPlot:4] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-                print("yes gamma")
-                y_vals = [10**y for y in y_vals]
-                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                index_max_diff = -1
-                if len(y_diff) > 0 and max(y_diff)>100:
-                    index_max_diff = y_diff.index(max(y_diff))+1
-                if len(x_vals)>0:
-                    ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='red', linestyle='dashed', label = "SModelS: best SR")
-                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='red', linestyle='dashed')
-                plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = False)
-                plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
-            else:
-                self.plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR")
-                plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
-                plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
+            x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+            self.plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR")
+            plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
+            plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
 
         if combSR:
             x_vals = comb_excl["obsExclusion"]["x"]
@@ -742,24 +728,29 @@ class PaperPlot:
             label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
                 label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
+            x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             if 'Gamma' in y_label:
-                print ( f"{RED}[drawPaperPlot:5] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-                y_vals = [10**y for y in y_vals]
-                y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                index_max_diff = -1
-                if len(y_diff)>0 and max(y_diff)>100:
-                    index_max_diff = y_diff.index(max(y_diff))+1
-                ax.plot( x_vals[:index_max_diff], y_vals[:index_max_diff],
-                         color='red', linestyle='solid', label = label )
-                ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
-                         color='red', linestyle='solid' )
                 sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
                             self.widthToLifetime))
                 # print("yes gamma 3")
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                 sec_ax.set_yscale('log')
-            else:
-                self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
+            self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
+
+            if True:
+                x_vals = comb_excl["obsExclusionP1"]["x"]
+                y_vals = comb_excl["obsExclusionP1"]["y"]
+                y_vals = self.add_jitter ( y_vals, addJitter )
+                label = f"xxx"
+                x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+                if 'Gamma' in y_label:
+                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
+                                self.widthToLifetime))
+                    # print("yes gamma 3")
+                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
+                    sec_ax.set_yscale('log')
+                self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
+
 
         if cr_excl not in [ None, [] ]:
             x_vals = cr_excl["obsExclusion"]["x"]
@@ -767,20 +758,8 @@ class PaperPlot:
             label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
             if cr_is == "orig":
                 label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
-            if 'Gamma' in y_label:
-                print ( f"{RED}[drawPaperPlot:6] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-                if type(x_vals[0]) == list:
-                    y_vals = [10**y for y in y_vals]
-                    y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                    index_max_diff = -1
-                    if max(y_diff)>100: index_max_diff = y_diff.index(max(y_diff))+1
-
-                    ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],color='blue', linestyle='solid', label = label )
-                    ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],color='blue', linestyle='solid')
-                else:
-                    self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
-            else:
-                self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
+            x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+            self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
@@ -864,35 +843,16 @@ class PaperPlot:
         if bestSR and "expExclusion" in bestSR_excl and "y" in bestSR_excl["expExclusion"]:
             x_vals = bestSR_excl["expExclusion"]["x"]
             y_vals = bestSR_excl["expExclusion"]["y"]
-            if 'Gamma' in y_label:
-                print ( f"{RED}[drawPaperPlot:5] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-                if len(y_vals)==0 or type(y_vals[0]) != list:
-                    y_vals = [10**y for y in y_vals]
-                    y_diff = [y_vals[i+1]/y_vals[i] for i in range(len(y_vals)-1)]
-                    index_max_diff = -1
-                    if len(y_diff)>0 and max(y_diff)>100:
-                        index_max_diff = y_diff.index(max(y_diff))+1
-                    if len(x_vals)>0:
-                        ax.plot(x_vals[:index_max_diff], y_vals[:index_max_diff],
-                                color='red', linestyle='dashed',
-                                label = "SModelS: best SR")
-                        ax.plot(x_vals[index_max_diff:], y_vals[index_max_diff:],
-                                color='red', linestyle='dashed')
-                else:
-                    self.plotLines(ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR" )
+            x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+            if "Gamma" in y_label:
                 sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime, self.widthToLifetime))
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                 sec_ax.set_yscale('log')
-                plt.tick_params( which='major', axis = 'both', direction = 'in',
-                                 length = 10, top = True, right = False)
-                plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
-                                 labelright=False)
-            else:
-                self.plotLines ( ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR")
-                plt.tick_params( which='major', axis = 'both', direction = 'in',
-                                 length = 10, top = True, right = True )
-                plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
-                                 labelright=False )
+            self.plotLines ( ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR")
+            plt.tick_params( which='major', axis = 'both', direction = 'in',
+                             length = 10, top = True, right = True )
+            plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
+                             labelright=False )
 
         if combSR:
             x_vals = comb_excl["expExclusion"]["x"]
