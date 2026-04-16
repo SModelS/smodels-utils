@@ -390,16 +390,12 @@ def draw ( options : dict ):
         cm = plt.colormaps["seismic"]
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
-    #print ( f"@@0 vmin,vmax={vmin},{vmax}" )
-    #print ( f"@@0 max {numpy.nanmax(col)} min {numpy.nanmin(col)}" )
     if vmax is None or abs(vmax)<1e-5:
         vmax = min ( numpy.nanmax ( col )*1.03, 2.0 )
     if vmin is None: # or abs(vmin)<1e-5:
         vmin = abs ( numpy.nanmin ( col )*0.97 ) # - 1.0 )
-    #print ( f"@@1 vmin,vmax={vmin},{vmax}" )
     vmin, vmax = centerInterval ( vmin, vmax )
 
-    #print ( f"@@2 vmin,vmax={vmin},{vmax}" )
     opts = { }
     #print ( "vmax", vmax )
     #if logScale:

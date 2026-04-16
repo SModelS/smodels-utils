@@ -280,7 +280,6 @@ class PaperPlot:
             if False:
                 print (f"[drawPaperPlot] {col}we have exclusion line from {fname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
             excl_lines[i] = { "x": x_, "y": y_ }
-            print ( f"[drawPaperPlot] @@7 get coords for {i}: {len(x_)}" )
 
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
         return excl_lines
