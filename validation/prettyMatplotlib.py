@@ -41,6 +41,12 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 
+def getR ( Z, x, y ):
+    r = float("nan")
+    if x in Z and y in Z[x]:
+        r = Z[x][y]
+    return r
+
 def shade_between_contours(cs1, cs2, ax=None,
                            facecolor='lightskyblue', alpha=0.12,
                            edgecolor='none', zorder=2,
@@ -504,6 +510,19 @@ def createSModelSExclusionJsonV1( all_lines, validationPlot ):
     json.dump(plots,file,indent=4)
     file.close()
 
+def createZ ( tgr, xrange, yrange ):
+    Z = {}
+    for t in tgr:
+        x,y,r = t["x"],t["y"],t["r"]
+        if not isWithinRange ( yrange, y ):
+            continue
+        if not isWithinRange ( xrange, x ):
+            continue
+        if not x in Z:
+            Z[x]={}
+        Z[x][y]=float(r)
+    return Z
+
 def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                       looseness : float ):
     """
@@ -522,6 +541,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     yrange = getAxisRange ( options, "yaxis" )
     tgr, etgr, tgrchi2 = [], [], []
     etgr_p1, etgr_m1 = [], []
+    tgr_p1, tgr_m1 = [], []
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]', r"$r = \sigma_{signal}/\sigma_{UL}$"
     logY = yIsLog ( validationPlot )
@@ -568,11 +588,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             logger.warning( f"no UL for {sxvals}" ) # : {pt}" )
         r, rexp = float("nan"), float("nan")
         rexp_p1, rexp_m1 = float("nan"), float("nan")
+        r_p1, r_m1 = float("nan"), float("nan")
         if not "error" in pt.keys():
             if pt["UL"]!=None:
                 if type(pt["UL"])==str:
                     # for float("inf"), float("nan")
                     pt["UL"]=eval(pt["UL"])
+                if "UL_p1" in pt and pt["UL_p1"] != None and pt["UL_p1"] > 0.:
+                    r_p1 = pt['signal']/pt ['UL_p1']
+                if "UL_m1" in pt and pt["UL_m1"] != None and pt["UL_m1"] > 0.:
+                    r_m1 = pt['signal']/pt ['UL_m1']
                 r = pt['signal']/pt ['UL']
             if "eUL" in pt:
                 if type(pt["eUL"])==str:
@@ -645,6 +670,10 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                     etgr_p1.append( { "i": len(etgr), "x": x, "y": y, "r": rexp_p1 } )
                 if np.isfinite ( rexp_m1 ):
                     etgr_m1.append( { "i": len(etgr), "x": x, "y": y, "r": rexp_m1 } )
+                if np.isfinite ( r_p1 ):
+                    tgr_p1.append( { "i": len(etgr), "x": x, "y": y, "r": r_p1 } )
+                if np.isfinite ( r_m1 ):
+                    tgr_m1.append( { "i": len(etgr), "x": x, "y": y, "r": r_m1 } )
                 if "chi2" in pt:
                     tgrchi2.append( { "i": len(tgrchi2), "x": x, "y": y, "chi2": pt["chi2"] / 3.84 } )
     if options["drawExpected"] in [ "auto" ]:
@@ -701,75 +730,46 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     ers = get ( "r", etgr )
     ers_p1 = get ( "r", etgr_p1 )
     ers_m1 = get ( "r", etgr_m1 )
-    Z, eZ = {}, {}
-    eZ_p1 = {}
-    eZ_m1 = {}
-    for t in tgr:
-        x,y,r = t["x"],t["y"],t["r"]
-        if not isWithinRange ( yrange, y ):
-            continue
-        if not isWithinRange ( xrange, x ):
-            continue
-        if not x in Z:
-            Z[x]={}
-        Z[x][y]=float(r)
-    for t in etgr:
-        x,y,r = t["x"],t["y"],t["r"]
-        if not isWithinRange ( yrange, y ):
-            continue
-        if not isWithinRange ( xrange, x ):
-            continue
-        if not x in eZ:
-            eZ[x]={}
-        eZ[x][y]=float(r)
-    for t in etgr_p1:
-        x,y,r = t["x"],t["y"],t["r"]
-        if not isWithinRange ( yrange, y ):
-            continue
-        if not isWithinRange ( xrange, x ):
-            continue
-        if not x in eZ_p1:
-            eZ_p1[x]={}
-        eZ_p1[x][y]=float(r)
-    for t in etgr_m1:
-        x,y,r = t["x"],t["y"],t["r"]
-        if not isWithinRange ( yrange, y ):
-            continue
-        if not isWithinRange ( xrange, x ):
-            continue
-        if not x in eZ_m1:
-            eZ_m1[x]={}
-        eZ_m1[x][y]=float(r)
+    rs_p1 = get ( "r", tgr_p1 )
+    rs_m1 = get ( "r", tgr_m1 )
+    Z = createZ ( tgr, xrange, yrange )
+    Z_p1 = createZ ( tgr_p1, xrange, yrange )
+    Z_m1 = createZ ( tgr_m1, xrange, yrange )
+    eZ = createZ ( etgr, xrange, yrange )
+    eZ_p1 = createZ ( etgr_p1, xrange, yrange )
+    eZ_m1 = createZ ( etgr_m1, xrange, yrange )
     xs = list ( Z.keys() )
     xs.sort( )
     T, eT = [], []
     eT_p1, eT_m1 = [], []
+    T_p1, T_m1 = [], []
     ys = list ( set ( ys ) )
     ys.sort( )
     # ys.sort( reverse = True )
     for y in ys:
         tmp, etmp = [], []
         etmp_p1, etmp_m1 = [], []
+        tmp_p1, tmp_m1 = [], []
         if not isWithinRange ( yrange, y ):
             continue
         for x in xs:
             if not isWithinRange ( xrange, x ):
                 continue
-            r, er = float("nan"), float("nan")
-            er_p1, er_m1 = float("nan"), float("nan")
-            if x in Z and y in Z[x]:
-                r = Z[x][y]
-            if x in eZ and y in eZ[x]:
-                er = eZ[x][y]
-            if x in eZ_p1 and y in eZ_p1[x]:
-                er_p1 = eZ_p1[x][y]
-            if x in eZ_m1 and y in eZ_m1[x]:
-                er_m1 = eZ_m1[x][y]
+            r = getR ( Z, x, y )
+            r_p1 = getR ( Z_p1, x, y )
+            r_m1 = getR ( Z_m1, x, y )
+            er = getR ( eZ, x, y )
+            er_p1 = getR ( eZ_p1, x, y )
+            er_m1 = getR ( eZ_m1, x, y )
             tmp.append ( r )
+            tmp_p1.append ( r_p1 )
+            tmp_m1.append ( r_m1 )
             etmp.append ( er )
             etmp_p1.append ( er_p1 )
             etmp_m1.append ( er_m1 )
             rs.append ( r )
+            rs_p1.append ( r_p1 )
+            rs_m1.append ( r_m1 )
             ers.append ( er )
             ers_p1.append ( er_p1 )
             ers_m1.append ( er_m1 )
@@ -777,12 +777,16 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         eT.append ( etmp )
         eT_p1.append ( etmp_p1 )
         eT_m1.append ( etmp_m1 )
+        T_p1.append ( tmp_p1 )
+        T_m1.append ( tmp_m1 )
 
     interpolation = options["interpolationType"]
     #print ( "before" )
     # pprint ( xs, ys, T ) #, xrange=(500,1000), yrange=(800,900) )
     T = interpolateOverMissing ( xs, ys, T, float("nan"), interpolation )
     vT = interpolateOverMissing ( xs, ys, T, -10., interpolation )
+    vT_p1 = interpolateOverMissing ( xs, ys, T_p1, -10., interpolation )
+    vT_m1 = interpolateOverMissing ( xs, ys, T_m1, -10., interpolation )
     eT = interpolateOverMissing ( xs, ys, eT, -10., interpolation )
     eT_p1 = interpolateOverMissing ( xs, ys, eT_p1, -10., interpolation )
     eT_m1 = interpolateOverMissing ( xs, ys, eT_m1, -10., interpolation )
@@ -847,6 +851,20 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         exp_excl_lines = []
 
         all_lines = { "obs": excl_lines }
+
+        cs_m1 = plt.contour( xs, ys, T_m1, colors="green", 
+                linestyles = "dotted", levels=[1.],
+                extent = xtnt, origin="image",
+                linewidths = 1, alpha = 0.5, zorder = 10 )
+        obs_excl_lines_m1 = retrievePoints ( cs_m1 )
+        all_lines["obs_m1"] = obs_excl_lines_m1
+
+        cs_p1 = plt.contour( xs, ys, T_p1, colors="green", 
+                linestyles = "dotted", levels=[1.],
+                extent = xtnt, origin="image",
+                linewidths = 1, alpha = 0.5, zorder = 10 )
+        obs_excl_lines_p1 = retrievePoints ( cs_p1 )
+        all_lines["obs_p1"] = obs_excl_lines_p1
 
         if options["drawExpected"] in [ "auto", True ] and not np.all ( np.isnan(eT) ):
             cs = plt.contour( xs, ys, eT, colors="blue", linestyles = "dotted", levels=[1.],

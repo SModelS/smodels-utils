@@ -280,6 +280,7 @@ class PaperPlot:
             if False:
                 print (f"[drawPaperPlot] {col}we have exclusion line from {fname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
             excl_lines[i] = { "x": x_, "y": y_ }
+            print ( f"[drawPaperPlot] @@7 get coords for {i}: {len(x_)}" )
 
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
         return excl_lines
@@ -741,7 +742,7 @@ class PaperPlot:
                 x_vals = comb_excl["obsExclusionP1"]["x"]
                 y_vals = comb_excl["obsExclusionP1"]["y"]
                 y_vals = self.add_jitter ( y_vals, addJitter )
-                label = f"xxx"
+                label = f""
                 x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
                 if 'Gamma' in y_label:
                     sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
@@ -749,8 +750,19 @@ class PaperPlot:
                     # print("yes gamma 3")
                     sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                     sec_ax.set_yscale('log')
-                self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
-
+                self.plotLines ( ax, x_vals, y_vals, "red", "dashed", label )
+                x_vals = comb_excl["obsExclusionM1"]["x"]
+                y_vals = comb_excl["obsExclusionM1"]["y"]
+                y_vals = self.add_jitter ( y_vals, addJitter )
+                label = f""
+                x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+                if 'Gamma' in y_label:
+                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
+                                self.widthToLifetime))
+                    # print("yes gamma 3")
+                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
+                    sec_ax.set_yscale('log')
+                self.plotLines ( ax, x_vals, y_vals, "red", "dashed", label )
 
         if cr_excl not in [ None, [] ]:
             x_vals = cr_excl["obsExclusion"]["x"]
@@ -760,6 +772,20 @@ class PaperPlot:
                 label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
+
+            if True:
+                x_vals = cr_excl["obsExclusionP1"]["x"]
+                y_vals = cr_excl["obsExclusionP1"]["y"]
+                y_vals = self.add_jitter ( y_vals, addJitter )
+                label = f"xxx"
+                x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+                if 'Gamma' in y_label:
+                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
+                                self.widthToLifetime))
+                    # print("yes gamma 3")
+                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
+                    sec_ax.set_yscale('log')
+                self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
