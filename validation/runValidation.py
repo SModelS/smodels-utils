@@ -908,6 +908,7 @@ if __name__ == "__main__":
                 "drawPaperPlot": True,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
                 "createSModelSExclJson": False,     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
                 "errorsForR": True, # for the expected UL values, do we want a one-sigma band?
+                "nnErrors": False, # shall we monkey patch the cls root function, for ML models, so we can get the heteroskedastic error?
     }
 
     options["continue"]=args.cont

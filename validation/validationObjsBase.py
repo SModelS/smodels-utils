@@ -9,10 +9,15 @@
 
 """
 
+from typing import Union, List, Dict, Optional, Text, Callable
+from smodels.statistics import nnInterface
+from smodels.statistics.basicStats import NllEvalType, observed, aposteriori
+from smodels.statistics.basicStats import CLsfromNLL
 from smodels.tools.printers.pythonPrinter import PyPrinter
 
-def addErrorsForRValues ( self, obj, resDict : dict ):
-    """ for obj add the errors on the r values to resDict """
+def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
+    """ for obj add the errors on the r values to resDict,
+    monkey patch to also report the observed """
     ul_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
             nSigma = 1 )
     if ul_e_p1 != None:
@@ -25,21 +30,44 @@ def addErrorsForRValues ( self, obj, resDict : dict ):
     from smodels.statistics.basicStats import observed
     r_obs_p1 = obj.getRValue ( evaluationType = observed, nSigma = 1 )
     r_obs_m1 = obj.getRValue ( evaluationType = observed, nSigma = -1 )
-    print ( f"@@XXXX we are in the monkey patch: r_obs_p1 {r_obs_p1}" )
     if r_obs_p1 != None:
-         resDict['r_p1'] = self._round ( r_obs_p1 )
+         resDict['r_nn_p1'] = self._round ( r_obs_p1 )
     if r_obs_m1 != None:
-         resDict['r_m1'] = self._round ( r_obs_m1 )
+         resDict['r_nn_m1'] = self._round ( r_obs_m1 )
 
-if True:
-    PyPrinter.addErrorsForRValues = addErrorsForRValues
+def clsRootMonkeyPatch( mu : float, return_type: Text,
+             modelToUse : Union[None,str], obj : Callable,
+             evaluationType : NllEvalType,
+             nll0 : float, nll0A : float, mu_hat : float,
+             nSigma : int ) -> float:
+    """ and this will be the monkey patch for the clsRoot function """
+    # at - infinity this should be .95,
+    # at + infinity it should -.05
+    # Make sure to always compute the correct llhd value (from
+    # theoryPrediction)
+    # and not used the cached value (which is constant for mu~=1 an mu~=0)
+    nllA = obj.likelihood(mu, return_nll=True,
+            modelToUse = modelToUse, asimov = True )
+    nll = nllA
+    if evaluationType != aposteriori:
+        nll = obj.likelihood(mu, return_nll=True,
+            evaluationType=evaluationType,
+            modelToUse = modelToUse, asimov = False,
+            pmSigma = nSigma )
+    if evaluationType == observed:
+        ## for the monkey patched version for ML,
+        ## we override this
+        nSigma = 0 ## 
+    ret =  CLsfromNLL(nllA, nll0A, nll, nll0, (mu_hat > mu), \
+            return_type=return_type, nSigma = nSigma ) if \
+            (nll is not None and nllA is not None) else None
+    return ret
 
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
 from validationHelpers import getDefaultModel, showPlot, \
          streamlineValidationData, equal_dicts
 from smodels.matching import modelTester
-from typing import Union, List, Dict, Optional
 from validationHelpers import point_in_hull
 from plottingFuncs import getExclusionCurvesFor
 from smodels_utils.helper.terminalcolors import *
@@ -259,6 +287,7 @@ class ValidationObjsBase():
                 nll_SM = round_to_n ( - np.log ( expRes['l_SM'] ), 4 )
             Dict['nll_SM']= nll_SM
         eul = expRes["expected upper limit (fb)"]
+        oul = expRes["upper limit (fb)"]
         if type(eul)==str:
             eul=eval(eul)
         if 'r_expected_p1' in expRes:
@@ -270,6 +299,15 @@ class ValidationObjsBase():
             er_m1 = expRes["r_expected_m1"]
             if er > 0.:
                 Dict['eUL_p1']=round_to_n ( eul / er * er_m1, 5 )
+        if 'r_nn_p1' in expRes:
+            r = expRes["r"]
+            r_p1 = expRes["r_nn_p1"]
+            if r > 0.:
+                Dict['UL_p1']=round_to_n ( oul / r * r_p1, 5 )
+        if 'r_nn_m1' in expRes:
+            er_m1 = expRes["r_nn_m1"]
+            if r > 0.:
+                Dict['UL_m1']=round_to_n ( oul / r * er_m1, 5 )
         if 'expected upper limit (fb)' in expRes:
             Dict['eUL']=expRes["expected upper limit (fb)"]
             drawExpected = self.options["drawExpected"]
@@ -728,6 +766,12 @@ class ValidationObjsBase():
         self.outputDir = outputDir
 
         #Get parameter file:
+        if self.options["nnErrors"]:
+            # monkey patching
+            logger.info ( f"monkey patching clsRootFunc for ML models" )
+            nnInterface.clsRootFunc = clsRootMonkeyPatch
+            PyPrinter.addErrorsForRValues = addErrorsForRValuesMonkeyPatch
+
         parameterFile = self.getParameterFile(tempdir=outputDir,outputformat=outputformat)
         logger.info( f"SLHA dir {self.slhaDir}" )
         logger.info( f"Parameter file: {parameterFile}" )
