@@ -97,7 +97,11 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
-        drawPaperPlot ( valPlot, options )
+        pp_specific_options = {}
+        if parser.has_section("drawPaperPlot"):
+            pp_specific_options = { "drawbestsr": True }
+            updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
+        drawPaperPlot ( valPlot, options, pp_specific_options )
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         if options["generateData"]:
@@ -107,7 +111,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.toPdf()
     return valPlot
 
-def drawPaperPlot ( valPlot, options : dict ) -> bool:
+def drawPaperPlot ( valPlot, general_options : dict,
+       specific_options : dict ) -> bool:
     if not options["drawPaperPlot"]:
         return
     axis = valPlot.niceAxes
@@ -120,7 +125,7 @@ def drawPaperPlot ( valPlot, options : dict ) -> bool:
         return False
 
     from drawPaperPlot import PaperPlot
-    plot = PaperPlot( valPlot, options )
+    plot = PaperPlot( valPlot, general_options, specific_options )
     if "off" in valPlot.txName:
         ## add onshell exclusion curves
         onshellTxName = valPlot.txName.replace("off","")
@@ -710,20 +715,20 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
-def updateOptions ( options : dict, parser ):
+def updateOptions ( options : dict, parser, section : str = "options" ):
     """ update the default options with the content from the config file """
     for option,default in options.items():
         otype = type(default)
-        if parser.has_option("options",option):
+        if parser.has_option(section,option):
             if otype == bool:
-                options[option] = parser.getboolean("options",option)
+                options[option] = parser.getboolean(section,option)
             if otype == int:
-                options[option] = parser.getint("options",option)
+                options[option] = parser.getint(section,option)
             if otype == float:
-                options[option] = parser.getfloat("options",option)
+                options[option] = parser.getfloat(section,option)
             if otype in [ type(None), str ]:
                 # if default is none, we assume its actually a string
-                options[option] = parser.get("options",option)
+                options[option] = parser.get(section,option)
 
 def doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),

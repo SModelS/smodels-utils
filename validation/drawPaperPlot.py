@@ -20,9 +20,11 @@ from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional, Tuple
 
 class PaperPlot:
-    def __init__ ( self, validationPlot, options : dict ):
+    def __init__ ( self, validationPlot, general_options : dict,
+            specific_options : dict ):
         self.validationPlot = validationPlot
-        self.options = options
+        self.general_options = general_options
+        self.specific_options = specific_options
 
     def fetchOfficialExclusionLines ( self, axes ) -> dict :
         """ fetch the curves and convert to sahanas format """
@@ -526,8 +528,8 @@ class PaperPlot:
             axes_on = axes
         off_excl = self.fetchOfficialExclusionLines ( axes_on )
 
-        bestSR, combSR = True, True
-        if offshell:
+        bestSR, combSR = self.specific_options["drawbestsr"], True
+        if offshell and bestSR:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="bestSR", axes=axes_on, eval_axes = eval_axes )
             bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder,
@@ -701,7 +703,7 @@ class PaperPlot:
             self.plotLines ( ax, off_excl["obsExclusion"]["x"],
                    off_excl["obsExclusion"]["y"],
                    "black", "solid", label = f'{exp_name} official' )
-        plotOffSigmas = self.options["errorsForR"]
+        plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
             if "obsExclusion_P1" in off_excl and "x" in off_excl["obsExclusion_P1"]:
                 self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"],
@@ -849,7 +851,7 @@ class PaperPlot:
             self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"],
                         "black", "solid", f'{exp_name} official')
 
-        plotOffSigmas = self.options["errorsForR"]
+        plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
             if "expExclusion_P1" in off_excl and "x" in off_excl["expExclusion_P1"]:
                 self.plotLines ( ax, off_excl["expExclusion_P1"]["x"], off_excl["expExclusion_P1"]["y"],
