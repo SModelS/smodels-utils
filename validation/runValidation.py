@@ -97,9 +97,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
-        pp_specific_options = {}
+        pp_specific_options = { "drawbestsr": True }
         if parser.has_section("drawPaperPlot"):
-            pp_specific_options = { "drawbestsr": True }
             updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
         drawPaperPlot ( valPlot, options, pp_specific_options )
     if pretty in [ False ]:
