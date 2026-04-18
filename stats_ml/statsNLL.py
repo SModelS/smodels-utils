@@ -6,18 +6,12 @@ from smodels.base import runtime
 from smodels.tools.particlesLoader import load
 from smodels.base.model import Model
 from smodels.base.physicsUnits import GeV
-import os, copy
+import os, copy, time
 from smodels.share.models.SMparticles import SMList
 from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.statistics.basicStats import observed, apriori, aposteriori
 
-def removeAllMLModels ( db : Database ):
-    ers = db.getExpResults()
-    for er in ers:
-        if hasattr ( er.globalInfo, "mlModel" ):
-            del er.globalInfo.mlModel
-
-def run():
+def create():
     import warnings
 
     warnings.filterwarnings(
@@ -26,11 +20,9 @@ def run():
         message=r".*RefResolver is deprecated.*",
         module=r"pyhf\.schema\.validator",
     )
-    print ( f"Instantiate the dataabases" )
+    print ( f"[statsNLL] Instantiate the database" )
     db = Database ( "../../smodels-database/" )
-    db2 = Database ( "../../smodels-database/" )
-    print ( f"Lets go" )
-    removeAllMLModels ( db2 )
+    print ( f"[statsNLL] Lets go" )
     db.getExpResults()
     slhafile = os.path.abspath('ewkinos.slha')
     runtime.modelFile = "smodels.share.models.mssm"
@@ -42,18 +34,50 @@ def run():
     topDict = decomposer.decompose(model, sigmacut=0.001,
                            massCompress=True, invisibleCompress=True,
                            minmassgap=5*GeV)
-    allPredsML = theoryPredictionsFor( db, topDict, 
+    print ( f"[statsNLL] decomposed to {len(topDict)} elements" )
+    t0 = time.time()
+    allPreds = theoryPredictionsFor( db, topDict, 
             combinedResults=True )
-    allPredsNoML = theoryPredictionsFor( db, topDict, 
-            combinedResults=True )
-
-    for p in allPredsML:
+    t1 = time.time()
+    print ( f"[statsNLL] we have {len(allPreds)} predictions from ML in {t1-t0:.2f}s" )
+    res = {}
+    for p in allPreds:
+        if p.dataType() != "combined":
+            continue ## irrelevant
         nll = p.nll()
-        print ( p.globalInfo.id, nll )
+        anaId = p.dataset.globalInfo.id
+        isOrig = True if "-orig" in anaId else False
+        nlls = { }
+        anaId = anaId.replace("-orig","")
+        if isOrig:
+            nlls["orig"]=nll
+        else:
+            nlls["center"]=nll
+        try:
+            nll_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
+                        pmSigma = 1 )
+            nlls["p1"] = float ( nll_p1 )
+        except TypeError as e:
+            pass
+        if anaId in res:
+            res[anaId].update ( nlls )
+        else:
+            res[anaId]=nlls
+    print ( res )
+    from ptools.helpers import py_dumps
+    cmd = "cat stats >> stats.all"
+    import subprocess
+    subprocess.getoutput ( cmd )
+    with open ( "stats", "wt" ) as f:
+        ds = py_dumps ( res )
+        f.write ( ds + "\n" )
 
-    for p in allPredsNoML:
-        nll = p.nll()
-        print ( p.globalInfo.id, nll )
+def interpret():
+    with open ( "stats", "rt" ) as f:
+        txt=f.read()
+    d=eval(txt)
+    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
 if __name__ == "__main__":
-    run()
+    # create()
+    interpret()
