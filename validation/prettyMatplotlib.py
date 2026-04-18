@@ -566,6 +566,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
         plt.dontplot = True
         return plt,None
 
+    countWarnings = { "noUL": 0 }
     for pt in validationPlot.data:
         #if "error" in pt.keys():
         #    continue
@@ -585,7 +586,11 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             sxvals = ", ".join ( [ f"{k}={v}" for k,v in xvals.items() ] )
-            logger.warning( f"no UL for {sxvals}" ) # : {pt}" )
+            if countWarnings < 4:
+                logger.warning( f"no UL for {sxvals}" ) # : {pt}" )
+            if countWarnings == 4:
+                logger.warning( f"suppressing further no UL warnings" )
+            countWarnings["noUL"]+=1
         r, rexp = float("nan"), float("nan")
         rexp_p1, rexp_m1 = float("nan"), float("nan")
         r_p1, r_m1 = float("nan"), float("nan")

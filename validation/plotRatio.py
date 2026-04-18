@@ -533,7 +533,11 @@ def draw ( options : dict ):
                 plt.plot ( px, py, color='white', linestyle='-', linewidth=4, label="" )
                 plt.plot ( px, py, color='k', linestyle='-', linewidth=3, label=label )
                 label = ""
-        if el2 != None and t in el2:
+
+        drawRedLines = False
+        if "drawredlines" in options:
+            drawRedLines = options["drawredlines"]
+        if el2 != None and t in el2 and drawRedLines:
             for E in el2[t]:
                 label = anaId2
                 hasLegend = True

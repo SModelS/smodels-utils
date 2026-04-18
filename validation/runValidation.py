@@ -97,7 +97,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
-        pp_specific_options = { "drawbestsr": True }
+        pp_specific_options = { "drawbestsr": True,
+                                "drawofficialpm1": True }
         if parser.has_section("drawPaperPlot"):
             updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
         drawPaperPlot ( valPlot, options, pp_specific_options )
@@ -281,6 +282,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     options["analysis2"]=ana2
     options["valfile1"]=valfile1
     options["valfile2"]=valfile2
+    options["drawredlines"]=False ## draw these red exclusion lines for anaid2
     print ( f"[runValidation] {cmd}" )
     plotRatio.draw ( options )
 

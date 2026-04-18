@@ -105,25 +105,27 @@ class PaperPlot:
         c_idx = getIndex ( validationPlot.officialCurves, "" )
         ret["obsExclusion"] = fetchPoints ( validationPlot.officialCurves, c_idx )
 
-        c_idx_p1 = getIndex ( validationPlot.officialCurves, "P1" )
-        if c_idx_p1 != None:
-            ret["obsExclusion_P1"] = fetchPoints ( \
-                    validationPlot.officialCurves, c_idx_p1 )
-        c_idx_m1 = getIndex ( validationPlot.officialCurves, "M1" )
-        if c_idx_m1 != None:
-            ret["obsExclusion_M1"] = fetchPoints ( \
-                    validationPlot.officialCurves, c_idx_m1 )
+        if self.specific_options["drawofficialpm1"] == True:
+            c_idx_p1 = getIndex ( validationPlot.officialCurves, "P1" )
+            if c_idx_p1 != None:
+                ret["obsExclusion_P1"] = fetchPoints ( \
+                        validationPlot.officialCurves, c_idx_p1 )
+            c_idx_m1 = getIndex ( validationPlot.officialCurves, "M1" )
+            if c_idx_m1 != None:
+                ret["obsExclusion_M1"] = fetchPoints ( \
+                        validationPlot.officialCurves, c_idx_m1 )
 
         c_idx = getIndex ( validationPlot.expectedOfficialCurves, "" )
         ret["expExclusion"] = fetchPoints ( validationPlot.expectedOfficialCurves, c_idx )
-        c_idx_p1 = getIndex ( validationPlot.expectedOfficialCurves, "P1" )
-        if c_idx_p1 != None:
-            ret["expExclusion_P1"] = fetchPoints ( \
-                    validationPlot.expectedOfficialCurves, c_idx_p1 )
-        c_idx_m1 = getIndex ( validationPlot.expectedOfficialCurves, "M1" )
-        if c_idx_m1 != None:
-            ret["expExclusion_M1"] = fetchPoints ( \
-                    validationPlot.expectedOfficialCurves, c_idx_m1 )
+        if self.specific_options["drawofficialpm1"] == True:
+            c_idx_p1 = getIndex ( validationPlot.expectedOfficialCurves, "P1" )
+            if c_idx_p1 != None:
+                ret["expExclusion_P1"] = fetchPoints ( \
+                        validationPlot.expectedOfficialCurves, c_idx_p1 )
+            c_idx_m1 = getIndex ( validationPlot.expectedOfficialCurves, "M1" )
+            if c_idx_m1 != None:
+                ret["expExclusion_M1"] = fetchPoints ( \
+                        validationPlot.expectedOfficialCurves, c_idx_m1 )
         return ret
 
     def getCoordsFromLine ( self, curve : dict,

@@ -48,7 +48,7 @@ def clsRootMonkeyPatch( mu : float, return_type: Text,
     # and not used the cached value (which is constant for mu~=1 an mu~=0)
     nllA = obj.likelihood(mu, return_nll=True,
             modelToUse = modelToUse, asimov = True,
-            pmSigma = nSigma )
+            pmSigma = -nSigma )
     nll = nllA
     if evaluationType != aposteriori:
         nll = obj.likelihood(mu, return_nll=True,
