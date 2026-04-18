@@ -772,7 +772,7 @@ class PaperPlot:
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
-            if True:
+            if "obsExclusionP1" in cr_excl:
                 x_vals = cr_excl["obsExclusionP1"]["x"]
                 y_vals = cr_excl["obsExclusionP1"]["y"]
                 y_vals = self.add_jitter ( y_vals, addJitter )
