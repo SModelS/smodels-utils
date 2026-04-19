@@ -32,7 +32,36 @@ def starting( expRes, txnameStr, axes, pretty ):
         spretty = "pretty"
     id = expRes.globalInfo.id
     print( f"{GREEN}starting {id}:{txnameStr}:{saxes} ({spretty}){RESET}" )
-    #logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
+    # logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
+
+def getValPlotObj ( expRes, txnameStr, axes, db, slhadir, options,
+        kfactor, namedTarball, keep, combine ):
+    """
+    :param expRes: a ExpResult object containing the result to be validated
+    :param txnameStr: String describing the txname (e.g. T2tt)
+    :param axes: the axes string describing the plane to be validated
+                 (e.g.  2*[[x,y]] or {0:'x',1:'y',2:'1',3:'x',4:'y',5:'1'})
+    :param slhadir: folder containing the SLHA files corresponding to txname
+    or the .tar.gz file containing the SLHA files.
+    :param db: the database object
+    :param kfactor: optional global k-factor value to re-scale
+                    all theory prediction values
+    :param pretty: If True it will generate "pretty" plots, if "both", will
+    :param combine: combine signal regions, or use best signal region
+    :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
+    :param keep: keep temporary directories
+    :return: ValidationPlot object
+    """
+    axisType = getAxisType(axes)
+    if axisType=="v3":
+        valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
+                slhadir = None, options = options, kfactor=kfactor,
+                namedTarball = namedTarball, keep = keep, combine = combine )
+    else:
+        valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,db,
+                slhadir = None, options = options, kfactor=kfactor,
+                namedTarball = namedTarball, keep = keep, combine = combine )
+    return valPlot
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         db, kfactor=1., pretty=False, combine=False, namedTarball = None,
@@ -60,15 +89,11 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         if hasattr ( expRes.globalInfo, "jsonFiles_FullLikelihood" ):
             expRes.globalInfo.jsonFiles = expRes.globalInfo.jsonFiles_FullLikelihood
             logger.info ( f"{YELLOW} full pyhf likelihood mode enabled{RESET}" )
-    axisType = getAxisType(axes)
-    if axisType=="v3":
-        valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
+
+    valPlot = getValPlotObj ( expRes, txnameStr, axes = axes, db = db,
                 slhadir = None, options = options, kfactor=kfactor,
                 namedTarball = namedTarball, keep = keep, combine = combine )
-    else:
-        valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,db,
-                slhadir = None, options = options, kfactor=kfactor,
-                namedTarball = namedTarball, keep = keep, combine = combine )
+
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
         return False
@@ -77,10 +102,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         valPlot.getDataFromPlanes()
     else:
         valPlot.loadData()
-    #print ( ">>>>> do we have data?", valPlot.data!=None )
-    #if valPlot.data != None:
-    #    print ( ">>>>>> len: ", len(valPlot.data) )
-    #sys.exit()
     if not valPlot.data:
         if options["generateData"] is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
@@ -97,11 +118,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.savePlot( fformat = "png" )
         if options["pdfPlots"] and pretty not in [ "dictonly" ]:
             valPlot.toPdf()
-        pp_specific_options = { "drawbestsr": True,
-                                "drawofficialpm1": True }
-        if parser.has_section("drawPaperPlot"):
-            updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
-        drawPaperPlot ( valPlot, options, pp_specific_options )
+
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         if options["generateData"]:
@@ -110,6 +127,19 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
         if options["pdfPlots"]:
             valPlot.toPdf()
     return valPlot
+
+def createRedBlackPlot ( expRes, txnameStr, axes, db,
+            slhadir, options, kfactor, namedTarball, keep, combine ):
+    """ create the red-black plots
+    """
+    valPlot = getValPlotObj ( expRes, txnameStr, axes = axes , db=db,
+            slhadir = None, options = options, kfactor=kfactor,
+            namedTarball = namedTarball, keep = keep, combine = combine )
+    pp_specific_options = { "drawbestsr": True,
+                            "drawofficialpm1": True }
+    if parser.has_section("drawPaperPlot"):
+        updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
+    drawPaperPlot ( valPlot, options, pp_specific_options )
 
 def drawPaperPlot ( valPlot, general_options : dict,
        specific_options : dict ) -> bool:
@@ -490,7 +520,7 @@ def runForOneResult ( expRes, options : dict,
                         myaxis = axisV2ToV3 ( myaxis )
                     if compareTwoAxes ( myaxis, ax ):
                         hasCorrectAxis_ = True
-                        if os.path.join(slhadir,fname_) != tarfile and os.path.join(slhadir,rundir, fname_ ) != tarfile: 
+                        if os.path.join(slhadir,fname_) != tarfile and os.path.join(slhadir,rundir, fname_ ) != tarfile:
                             # different tarfile! change also ltarfile!
                             tarfile = os.path.join(slhadir,rundir, fname_)
                             if not os.path.exists ( tarfile ):
@@ -564,10 +594,13 @@ def runForOneResult ( expRes, options : dict,
                     oldNamedTarball = pnamedTarball
                     validationDir = re.getValidationDir ( None )
                     datafile = re.getDataFile(validationDir)
+
+                createRedBlackPlot ( expRes, txnameStr, ax, db, slhadir,
+                        options, kfactor, namedTarball, keep, combine )
                 checkForRatioPlots ( expRes, txnameStr, ax, db, combine,
-                                     localopts, datafile, re.niceAxes )
+                        localopts, datafile, re.niceAxes )
                 checkForBestSRPlots ( expRes, txnameStr, ax, db, combine,
-                                     localopts, datafile, re )
+                        localopts, datafile, re )
         else: # axis is not None
             x,y,z = var("x y z")
             ax = str(eval(axis)) ## standardize the string
@@ -982,7 +1015,7 @@ if __name__ == "__main__":
         else:
             logger.error ( "asked for writeoutyields but don't see any support for it in this SModelS version" )
             sys.exit()
-    
+
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options,
          tarfiles,args.verbose.lower(), combine, force_load, args.keep )
