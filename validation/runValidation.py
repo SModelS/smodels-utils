@@ -670,6 +670,7 @@ def run ( expResList : list, options : dict,
                 hasattr ( expRes.globalInfo, "mlModels" ):
             logger.info ( f"removing mlModels as requested" )
             del expRes.globalInfo.mlModels
+            del expRes.globalInfo.onnxes
         runForOneResult ( expRes, options, keep, db )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
