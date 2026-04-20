@@ -482,10 +482,12 @@ class PaperPlot:
             y1 = np.array ( y_vals1[idx] )
             y2 = np.array ( y_vals2[idx] )
 
+            #x1s, y1s = x1, y1
+            #x2s, y2s = x2, y2
             i1 = np.argsort(x1); x1s, y1s = x1[i1], y1[i1]
             i2 = np.argsort(x2); x2s, y2s = x2[i2], y2[i2]
 
-            lo = max(x1s[0], x2s[0])
+            lo = min(x1s[0], x2s[0])
             hi = max(x1s[-1], x2s[-1])
 
             x_union = np.unique(np.concatenate([
@@ -503,11 +505,11 @@ class PaperPlot:
         if type(x_vals1[0]) == list:
             for x_val, y_val in zip ( x_vals1, y_vals1 ):
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
-                         linewidth = 1, label = label )
+                         linewidth = 1, label = label, zorder=-10 )
                 label = ""
             for x_val, y_val in zip ( x_vals2, y_vals2 ):
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
-                         linewidth = 1, label = label )
+                         linewidth = 1, label = label, zorder=-10 )
                 label = ""
         #    return
 
