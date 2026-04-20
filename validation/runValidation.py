@@ -665,6 +665,11 @@ def run ( expResList : list, options : dict,
     :param db: database, so we can check if ratio plots are desirable
     """
     for expRes in expResList:
+        ## FIXME here we could remove the mlModels entry
+        if options["removeMLModels"] and \
+                hasattr ( expRes.globalInfo, "mlModels" ):
+            logger.info ( f"removing mlModels as requested" )
+            del expRes.globalInfo.mlModels
         runForOneResult ( expRes, options, keep, db )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
@@ -948,6 +953,7 @@ if __name__ == "__main__":
                 "createSModelSExclJson": False,     #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
                 "errorsForR": True, # for the expected UL values, do we want a one-sigma band?
                 "nnErrors": False, # shall we monkey patch the cls root function, for ML models, so we can get the heteroskedastic error?
+                "removeMLModels": False, # remove existing ML models, run with full models instead
     }
 
     options["continue"]=args.cont
