@@ -462,6 +462,55 @@ class PaperPlot:
             linestyle="solid"
         self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
+    def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
+            y_label, color : Optional[str] = None ):
+        if len(x_vals1)==0:
+            return
+        if color == None:
+            color = "red"
+        x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
+        x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
+        indices = list ( range(min(len(x_vals1),len(x_vals2))) )
+        drawBand = True
+        if not drawBand:
+            indices = []
+        for idx in indices:
+            #if not idx in x_vals2:
+            #    continue
+            x1 = np.array ( x_vals1[idx] )
+            x2 = np.array ( x_vals2[idx] )
+            y1 = np.array ( y_vals1[idx] )
+            y2 = np.array ( y_vals2[idx] )
+
+            i1 = np.argsort(x1); x1s, y1s = x1[i1], y1[i1]
+            i2 = np.argsort(x2); x2s, y2s = x2[i2], y2[i2]
+
+            lo = max(x1s[0], x2s[0])
+            hi = max(x1s[-1], x2s[-1])
+
+            x_union = np.unique(np.concatenate([
+                x1s[(x1s >= lo) & (x1s <= hi)],
+                x2s[(x2s >= lo) & (x2s <= hi)],
+            ]))
+            y1u = np.interp(x_union, x1s, y1s)
+            y2u = np.interp(x_union, x2s, y2s)
+
+            plt.fill_between(x_union, y1u, y2u, color=color, alpha=0.4)
+
+            plt.fill_between(x_union, y1u, y2u, color=color, alpha=0.4)
+
+        linestyle = "-"
+        if type(x_vals1[0]) == list:
+            for x_val, y_val in zip ( x_vals1, y_vals1 ):
+                ax.plot( x_val, y_val,color=color, linestyle= linestyle,
+                         linewidth = 1, label = label )
+                label = ""
+            for x_val, y_val in zip ( x_vals2, y_vals2 ):
+                ax.plot( x_val, y_val,color=color, linestyle= linestyle,
+                         linewidth = 1, label = label )
+                label = ""
+        #    return
+
     def getRange ( self, lines : dict, whatExcl : str, whatVar : str ) -> Tuple:
         """
         :param lines: e.g. { "official": off_excl }
@@ -905,13 +954,13 @@ class PaperPlot:
                 label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
                    linestyle= None, color = "blue" )
-            for i in [ "expExclusionP1", "expExclusionM1" ]:
-                if i in cr_excl:
-                    x_vals = cr_excl[i]["x"]
-                    y_vals = cr_excl[i]["y"]
-                    linestyle = "dashed"
-                    self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
-                           linestyle = "dashed", color = "blue" )
+            if "expExclusionP1" in cr_excl and "expExclusionM1" in cr_excl:
+                x_vals1 = cr_excl["expExclusionP1"]["x"]
+                y_vals1 = cr_excl["expExclusionP1"]["y"]
+                x_vals2 = cr_excl["expExclusionM1"]["x"]
+                y_vals2 = cr_excl["expExclusionM1"]["y"]
+                self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
+                        None, y_label, color = "lightblue" )
 
         if 'Gamma' in y_label: ax.set_yscale('log')
 
