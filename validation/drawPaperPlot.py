@@ -19,6 +19,17 @@ import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional, Tuple
 
+def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
+    from matplotlib.patches import Polygon
+    verts = np.vstack([
+        np.column_stack([x1, y1]),
+        np.column_stack([x2[::-1], y2[::-1]]),
+    ])
+    poly = Polygon(verts, closed=True, **kwargs)
+    ax.add_patch(poly)
+    ax.autoscale_view()
+    return poly
+
 def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
     """ if y-axes are widths, convert accordingly 
     :returns tuple of new xvals and yvals
@@ -470,10 +481,12 @@ class PaperPlot:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-        indices = list ( range(min(len(x_vals1),len(x_vals2))) )
+        
         drawBand = True
+        indices = list ( range(min(len(x_vals1),len(x_vals2))) )
         if not drawBand:
             indices = []
+        x1t, x2t, y1t, y2t = np.array([]), np.array([]), np.array([]), np.array([])
         for idx in indices:
             #if not idx in x_vals2:
             #    continue
@@ -486,31 +499,27 @@ class PaperPlot:
             #x2s, y2s = x2, y2
             i1 = np.argsort(x1); x1s, y1s = x1[i1], y1[i1]
             i2 = np.argsort(x2); x2s, y2s = x2[i2], y2[i2]
+            x1t = np.concatenate ( [ x1t, x1s ] )
+            x2t = np.concatenate ( [ x2t, x2s ] )
+            y1t = np.concatenate ( [ y1t, y1s ] )
+            y2t = np.concatenate ( [ y2t, y2s ] )
 
-            lo = min(x1s[0], x2s[0])
-            hi = max(x1s[-1], x2s[-1])
+        poly = fill_between_polylines(ax, x1t, y1t, x2t, y2t,
+                   facecolor='lightblue', alpha=0.4, edgecolor='none')
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
-            x_union = np.unique(np.concatenate([
-                x1s[(x1s >= lo) & (x1s <= hi)],
-                x2s[(x2s >= lo) & (x2s <= hi)],
-            ]))
-            y1u = np.interp(x_union, x1s, y1s)
-            y2u = np.interp(x_union, x2s, y2s)
-
-            plt.fill_between(x_union, y1u, y2u, color=color, alpha=0.4)
-
-            plt.fill_between(x_union, y1u, y2u, color=color, alpha=0.4)
-
-        linestyle = "-"
-        if type(x_vals1[0]) == list:
-            for x_val, y_val in zip ( x_vals1, y_vals1 ):
-                ax.plot( x_val, y_val,color=color, linestyle= linestyle,
-                         linewidth = 1, label = label, zorder=-10 )
-                label = ""
-            for x_val, y_val in zip ( x_vals2, y_vals2 ):
-                ax.plot( x_val, y_val,color=color, linestyle= linestyle,
-                         linewidth = 1, label = label, zorder=-10 )
-                label = ""
+        drawContoursAlso = False
+        if drawContoursAlso:
+            linestyle = "-"
+            if type(x_vals1[0]) == list:
+                for x_val, y_val in zip ( x_vals1, y_vals1 ):
+                    ax.plot( x_val, y_val,color=color, linestyle= linestyle,
+                             linewidth = 1, label = label, zorder=-10 )
+                    label = ""
+                for x_val, y_val in zip ( x_vals2, y_vals2 ):
+                    ax.plot( x_val, y_val,color=color, linestyle= linestyle,
+                             linewidth = 1, label = label, zorder=-10 )
+                    label = ""
         #    return
 
     def getRange ( self, lines : dict, whatExcl : str, whatVar : str ) -> Tuple:
