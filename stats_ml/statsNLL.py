@@ -116,13 +116,19 @@ def createOnePoint( db ):
             nll_m1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                         pmSigma = -1 )
             nll_p1A = None
-            #nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
-            #            pmSigma = 1 )
+            try:
+                nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
+                        pmSigma = 1 )
+            except Exception as e:
+                pass
             nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
                     evaluationType=apriori, pmSigma = 1 )
             nll_p1EA = None
-            #nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
-            #        evaluationType=apriori, pmSigma = 1 )
+            try:
+                nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
+                    evaluationType=apriori, pmSigma = 1 )
+            except Exception as e:
+                pass
             if nll_p1 == None:
                 print ( f"[statsNLL] nll_p1 is None for {anaId}" )
             if nll_p1 != None:
@@ -194,7 +200,7 @@ def loop():
         try:
             createOnePoint( db )
         except Exception as e:
-            print ( f"[statsNLL] {e} -- ignoring" )
+            print ( f"[statsNLL] {type(e)}: {e} -- ignoring" )
 
 def create():
     import argparse
