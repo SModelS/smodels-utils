@@ -129,7 +129,7 @@ def createOnePoint( db ):
             nlls["pull"] = pull
             cleaned[anaId]=nlls
         
-    print ( f"[statsNLL] found {cleaned}: {res}" )
+    print ( f"[statsNLL] found {cleaned}" )
     from ptools.helpers import py_dumps
     import shutil
     if os.path.exists ( "stats" ):
@@ -157,16 +157,22 @@ def loop():
             print ( f"[statsNLL] {e} -- ignoring" )
 
 def create():
+    import argparse
+    ap = argparse.ArgumentParser(description="produces the stats for the nll pulls")
+    ap.add_argument('-n', '--nprocesses',
+            help='number of processes [1]',
+            default = 1, type = int )
+    args = ap.parse_args()
+
     for path in [ "results", "slhafiles" ]:
         if not os.path.exists ( path ):
             os.mkdir ( path )
-    nprocesses = 5
-    # nprocesses = 1
-    if nprocesses == 1:
+    if args.nprocesses == 1:
         loop()
+        return
     from multiprocessing import Process
     processes = []
-    for i in range(nprocesses):
+    for i in range(args.nprocesses):
         p = Process ( target = loop )
         p.start()
         processes.append ( p )
