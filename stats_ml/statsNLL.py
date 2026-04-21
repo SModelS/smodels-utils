@@ -28,11 +28,13 @@ def createSLHAFile() -> os.PathLike:
     slhafile = os.path.abspath('ewkinos.slha')
     mLSP, mC1 = 150, 300
     key = mC1*1000+mLSP
-    while keyExists ( key ):
+    exists = True
+    while exists:
         import random
         mLSP = int ( random.uniform ( 100, 400 ) )
         mC1 = int ( random.uniform ( mLSP + 5, 1000 ) )
         key = mC1*1000+mLSP
+        exists = keyExists ( key )
     masses = { 1000022: mLSP, 1000023: mC1,
                1000024: mC1 }
     decays = { 1000024: { ( 1000022, 24 ): 1 },
