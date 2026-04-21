@@ -486,7 +486,7 @@ class PaperPlot:
         indices = list ( range(min(len(x_vals1),len(x_vals2))) )
         if not drawBand:
             indices = []
-        x1t, x2t, y1t, y2t = np.array([]), np.array([]), np.array([]), np.array([])
+        x1s, x2s, y1s, y2s = np.array([]), np.array([]), np.array([]), np.array([])
         for idx in indices:
             #if not idx in x_vals2:
             #    continue
@@ -495,18 +495,15 @@ class PaperPlot:
             y1 = np.array ( y_vals1[idx] )
             y2 = np.array ( y_vals2[idx] )
 
-            #x1s, y1s = x1, y1
-            #x2s, y2s = x2, y2
-            i1 = np.argsort(x1); x1s, y1s = x1[i1], y1[i1]
-            i2 = np.argsort(x2); x2s, y2s = x2[i2], y2[i2]
-            x1t = np.concatenate ( [ x1t, x1s ] )
-            x2t = np.concatenate ( [ x2t, x2s ] )
-            y1t = np.concatenate ( [ y1t, y1s ] )
-            y2t = np.concatenate ( [ y2t, y2s ] )
+            x1s = np.concatenate ( [ x1s, x1 ] )
+            x2s = np.concatenate ( [ x2s, x2 ] )
+            y1s = np.concatenate ( [ y1s, y1 ] )
+            y2s = np.concatenate ( [ y2s, y2 ] )
 
+        i1 = np.argsort(x1s); x1t, y1t = x1s[i1], y1s[i1]
+        i2 = np.argsort(x2s); x2t, y2t = x2s[i2], y2s[i2]
         poly = fill_between_polylines(ax, x1t, y1t, x2t, y2t,
-                   facecolor='lightblue', alpha=0.4, edgecolor='none')
-        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+                   facecolor='lightblue', alpha=0.4, edgecolor=None )
 
         drawContoursAlso = False
         if drawContoursAlso:
