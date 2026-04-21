@@ -123,8 +123,12 @@ def createOnePoint( db ):
                         pmSigma = 1 )
             except Exception as e:
                 pass
-            nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
+            nll_p1E = None
+            try:
+                nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
                     evaluationType=apriori, pmSigma = 1 )
+            except Exception as e:
+                pass
             nll_p1EA = None
             try:
                 nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
@@ -148,31 +152,38 @@ def createOnePoint( db ):
             res[short_anaId].update ( nlls )
         else:
             res[short_anaId]=nlls
+    print ( f"[statsNLL] done with smodels" )
     if len(res)==0:
         return
     cleaned = {}
     for anaId, nlls in res.items():
+        doAdd = False
         if "p1" in nlls and "orig" in nlls:
             sigma = nlls["p1"]-nlls["center"]
             delta = nlls["center"]-nlls["orig"]
             pull = delta / sigma
             nlls["pull"] = pull
+            doAdd = True
         if "p1A" in nlls and "origA" in nlls:
             sigma = nlls["p1A"]-nlls["centerA"]
             delta = nlls["centerA"]-nlls["origA"]
             pull = delta / sigma
             nlls["pullA"] = pull
+            doAdd = True
         if "p1E" in nlls and "origE" in nlls:
             sigma = nlls["p1E"]-nlls["centerE"]
             delta = nlls["centerE"]-nlls["origE"]
             pull = delta / sigma
             nlls["pullE"] = pull
+            doAdd = True
         if "p1EA" in nlls and "origEA" in nlls:
             sigma = nlls["p1EA"]-nlls["centerEA"]
             delta = nlls["centerEA"]-nlls["origEA"]
             pull = delta / sigma
             nlls["pullEA"] = pull
-        cleaned[anaId]=nlls
+        if doAdd:
+            cleaned[anaId]=nlls
+    print ( f"[statsNLL] done cleaning" )
     if len(cleaned)==0:
         return
         
@@ -188,7 +199,7 @@ def createOnePoint( db ):
     d1 = py_dumps ( cleaned ) + "\n"
     with open ( f"results/{key}", "wt" ) as f:
         f.write ( d1 )
-    writeStats()
+    writeStats( stats )
 
 def writeStats( stats ):
     ds = py_dumps ( stats ) + "\n"
@@ -204,7 +215,7 @@ def loop():
         try:
             createOnePoint( db )
         except Exception as e:
-            print ( f"[statsNLL] {type(e)}: {e} -- ignoring" )
+            print ( f"[statsNLL.createOnePoint] {type(e)}: {e} -- ignoring" )
 
 def create():
     import argparse
