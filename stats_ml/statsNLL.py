@@ -13,6 +13,7 @@ from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.statistics.basicStats import observed, apriori, aposteriori
 from smodels.statistics.nnInterface import NNUpperLimitComputer
 import warnings
+from ptools.helpers import py_dumps
 
 warnings.filterwarnings(
     "ignore",
@@ -65,11 +66,12 @@ def readStats():
         return ret
     with open ( fname, "rt" ) as f:
         ret = eval ( f.read() )
-    """
     import glob
-    for f in glob.glob ( "results/*" ):
-        t = eval(f.read())
-    """
+    for fname in glob.glob ( "results/*" ):
+        bname = os.path.basename ( fname )
+        with open ( fname, "rt" ) as f:
+            t = eval(f.read())
+            ret[bname]=t
     return ret
 
 def createOnePoint( db ):
@@ -176,7 +178,6 @@ def createOnePoint( db ):
         
     sfound = ",".join ( [ f"{anaid}: {values['pull']}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
-    from ptools.helpers import py_dumps
     import shutil
     if os.path.exists ( "stats" ):
         shutil.copyfile ( "stats", "stats.all" )
@@ -184,10 +185,13 @@ def createOnePoint( db ):
     stats = readStats()
     if len(cleaned)>0:
         stats[key]=cleaned
-    ds = py_dumps ( stats ) + "\n"
     d1 = py_dumps ( cleaned ) + "\n"
     with open ( f"results/{key}", "wt" ) as f:
         f.write ( d1 )
+    writeStats()
+
+def writeStats( stats ):
+    ds = py_dumps ( stats ) + "\n"
     with open ( "stats", "wt" ) as f:
         f.write ( ds )
 
@@ -233,5 +237,6 @@ def interpret():
 
 if __name__ == "__main__":
     create()
-    print ( readStats() )
+    #stats = readStats()
+    #writeStats ( stats )
     # interpret()
