@@ -66,6 +66,7 @@ def readStats():
 
 def createOnePoint( db ):
     s = createSLHAFile()
+    print ( f"[statsNLL] created for {s['key']}" )
     slhafile = s["file"]
     runtime.modelFile = "smodels.share.models.mssm"
     BSMList = load()
