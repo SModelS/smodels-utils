@@ -27,21 +27,26 @@ def keyExists ( key ):
 
 def createSLHAFile() -> os.PathLike:
     slhafile = os.path.abspath('ewkinos.slha')
-    mLSP, mC1 = 150, 300
-    key = mC1*1000+mLSP
+    mLSP, mC1, mStau = 150, 300, 300
+    mList = ( mLSP, mC1, mStau )
+    key = abs ( hash ( mList ) )
     exists = True
     while exists:
         import random
-        mLSP = int ( random.uniform ( 100, 400 ) )
-        mC1 = int ( random.uniform ( mLSP + 5, 1000 ) )
-        key = mC1*1000+mLSP
+        mLSP = int ( random.uniform ( 100, 300 ) )
+        mC1 = int ( random.uniform ( mLSP + 5, 600 ) )
+        mStau = int ( random.uniform ( mLSP + 10, 600 ) )
+        mList = ( mLSP, mC1, mStau )
+        key = abs ( hash ( mList ) )
         exists = keyExists ( key )
     masses = { 1000022: mLSP, 1000023: mC1,
-               1000024: mC1 }
+               1000024: mC1, 1000015: mStau }
     decays = { 1000024: { ( 1000022, 24 ): 1 },
                1000023: { ( 1000022, 23 ): .5, ( 1000022, 25 ): .5 },
+               1000015: { ( 1000022, 15 ) : 1 },
                1000022: {} }
     ssms = { ( 1000023, 1000024 ) : 1, (-1000024, 1000023 ) : 1,
+             ( -1000015, 1000015 ) : 1,
              ( 1000023, 1000023 ) : 1, (-1000024, 1000024 ) : 1 }
     pmodel = { "masses": masses, "decays": decays, "ssmultipliers": ssms }
     from protomodels.builder.manipulator import Manipulator
