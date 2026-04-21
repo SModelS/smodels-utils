@@ -6,25 +6,60 @@ from smodels.base import runtime
 from smodels.tools.particlesLoader import load
 from smodels.base.model import Model
 from smodels.base.physicsUnits import GeV
-import os, copy, time
+import os, copy, time, sys
+sys.path.insert(0,"../../" )
 from smodels.share.models.SMparticles import SMList
 from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.statistics.basicStats import observed, apriori, aposteriori
+import warnings
 
-def create():
-    import warnings
+warnings.filterwarnings(
+    "ignore",
+    category=DeprecationWarning,
+    message=r".*RefResolver is deprecated.*",
+    module=r"pyhf\.schema\.validator",
+)
 
-    warnings.filterwarnings(
-        "ignore",
-        category=DeprecationWarning,
-        message=r".*RefResolver is deprecated.*",
-        module=r"pyhf\.schema\.validator",
-    )
-    print ( f"[statsNLL] Instantiate the database" )
-    db = Database ( "../../smodels-database/" )
-    print ( f"[statsNLL] Lets go" )
-    db.getExpResults()
+def keyExists ( key ):
+    key_file = f"results/{key}"
+    return os.path.exists  ( key_file )
+
+def createSLHAFile() -> os.PathLike:
     slhafile = os.path.abspath('ewkinos.slha')
+    mLSP, mC1 = 150, 300
+    key = mC1*1000+mLSP
+    while keyExists ( key ):
+        import random
+        mLSP = int ( random.uniform ( 100, 400 ) )
+        mC1 = int ( random.uniform ( mLSP + 5, 1000 ) )
+        key = mC1*1000+mLSP
+    masses = { 1000022: mLSP, 1000023: mC1,
+               1000024: mC1 }
+    decays = { 1000024: { ( 1000022, 24 ): 1 },
+               1000023: { ( 1000022, 23 ): 1 },
+               1000022: {} }
+    ssms = { ( 1000023, 1000024 ) : 1, (-1000024, 1000023 ) : 1,
+             ( 1000023, 1000023 ) : 1, (-1000024, 1000024 ) : 1 }
+    pmodel = { "masses": masses, "decays": decays, "ssmultipliers": ssms }
+    from protomodels.builder.manipulator import Manipulator
+    from protomodels.base.runEnviron import RunEnviron
+    environ = RunEnviron()
+    ma = Manipulator( pmodel, environ )
+    slhafile = "ewkinos.slha"
+    slhafile = f"slhafiles/{key}.slha"
+    ma.createSLHAFile ( slhafile, addXsecs = True )
+    return { "file": slhafile, "mLSP": mLSP, "mC1": mC1, "key": key }
+
+def readStats():
+    fname = "stats"
+    if not os.path.exists ( fname ):
+        return {}
+    with open ( fname, "rt" ) as f:
+        return eval ( f.read() )
+
+def createOnePoint( db ):
+    s = createSLHAFile()
+    slhafile = s["file"]
     runtime.modelFile = "smodels.share.models.mssm"
     BSMList = load()
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
@@ -57,20 +92,51 @@ def create():
             nll_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                         pmSigma = 1 )
             nlls["p1"] = float ( nll_p1 )
+            sigma = nlls["p1"]-nlls["center"]
+            delta = nlls["center"]-nlls["orig"]
+            pull = delta / sigma
+            nlls["pull"] = pull
         except TypeError as e:
             pass
+        if not "p1" in nlls:
+            continue ## missing sigma
         if anaId in res:
             res[anaId].update ( nlls )
         else:
             res[anaId]=nlls
     print ( res )
     from ptools.helpers import py_dumps
-    cmd = "cat stats >> stats.all"
-    import subprocess
-    subprocess.getoutput ( cmd )
+    import shutil
+    if os.path.exists ( "stats" ):
+        shutil.copyfile ( "stats", "stats.all" )
+    key = s["key"]
+    stats = readStats()
+    if len(res)>0:
+        stats[key]=res
+    ds = py_dumps ( stats ) + "\n"
+    d1 = py_dumps ( res ) + "\n"
+    with open ( f"results/{key}", "wt" ) as f:
+        f.write ( d1 )
     with open ( "stats", "wt" ) as f:
-        ds = py_dumps ( res )
-        f.write ( ds + "\n" )
+        f.write ( ds )
+
+def loop():
+    print ( f"[statsNLL] Instantiate the database" )
+    db = Database ( "../../smodels-database/" )
+    print ( f"[statsNLL] Lets go" )
+    db.getExpResults()
+    while True:
+        createOnePoint( db )
+
+def create():
+    from multiprocessing import Process
+    processes = []
+    for i in range(5):
+        p = Process ( target = loop )
+        p.start()
+        processes.append ( p )
+    for p in processes:
+        p.join()
 
 def interpret():
     with open ( "stats", "rt" ) as f:
@@ -79,5 +145,5 @@ def interpret():
     import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
 if __name__ == "__main__":
-    # create()
-    interpret()
+    create()
+    # interpret()
