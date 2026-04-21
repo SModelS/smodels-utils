@@ -194,6 +194,7 @@ def createOnePoint( db ):
         shutil.copyfile ( "stats", "stats.all" )
     key = s["key"]
     stats = readStats()
+    cleaned["params"]=s
     if len(cleaned)>0:
         stats[key]=cleaned
     d1 = py_dumps ( cleaned ) + "\n"
