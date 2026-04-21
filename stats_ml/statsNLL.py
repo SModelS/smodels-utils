@@ -115,12 +115,14 @@ def createOnePoint( db ):
                         pmSigma = 1 )
             nll_m1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                         pmSigma = -1 )
-            nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
-                        pmSigma = 1 )
+            nll_p1A = None
+            #nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
+            #            pmSigma = 1 )
             nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
                     evaluationType=apriori, pmSigma = 1 )
-            nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
-                    evaluationType=apriori, pmSigma = 1 )
+            nll_p1EA = None
+            #nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
+            #        evaluationType=apriori, pmSigma = 1 )
             if nll_p1 == None:
                 print ( f"[statsNLL] nll_p1 is None for {anaId}" )
             if nll_p1 != None:
