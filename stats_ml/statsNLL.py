@@ -52,10 +52,17 @@ def createSLHAFile() -> os.PathLike:
 
 def readStats():
     fname = "stats"
+    ret = {}
     if not os.path.exists ( fname ):
-        return {}
+        return ret
     with open ( fname, "rt" ) as f:
-        return eval ( f.read() )
+        ret = eval ( f.read() )
+    """
+    import glob
+    for f in glob.glob ( "results/*" ):
+        t = eval(f.read())
+    """
+    return ret
 
 def createOnePoint( db ):
     s = createSLHAFile()
@@ -126,7 +133,10 @@ def loop():
     print ( f"[statsNLL] Lets go" )
     db.getExpResults()
     while True:
-        createOnePoint( db )
+        try:
+            createOnePoint( db )
+        except Exception as e:
+            print ( f"[statsNLL] {e} -- ignoring" )
 
 def create():
     from multiprocessing import Process
@@ -146,4 +156,5 @@ def interpret():
 
 if __name__ == "__main__":
     create()
+    print ( readStats() )
     # interpret()
