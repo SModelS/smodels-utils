@@ -52,7 +52,7 @@ def createSLHAFile() -> os.PathLike:
     from protomodels.builder.manipulator import Manipulator
     from protomodels.base.runEnviron import RunEnviron
     environ = RunEnviron()
-    ma = Manipulator( pmodel, environ )
+    ma = Manipulator( pmodel, environ, walkerid = "statsNLL" )
     slhafile = "ewkinos.slha"
     slhafile = f"slhafiles/{key}.slha"
     ma.createSLHAFile ( slhafile, addXsecs = True )
@@ -98,21 +98,41 @@ def createOnePoint( db ):
         if p.dataType() != "combined":
             continue ## irrelevant
         nll = p.nll()
+        nllA = p.nll( asimov = True )
+        nllE = p.nll( expectationType = apriori )
+        nllEA = p.nll( asimov = True, expectationType = apriori )
         anaId = p.dataset.globalInfo.id
         isOrig = True if "-orig" in anaId else False
         nlls = { }
         # print ( f"@@X anaId is {anaId} computer is {type(p.statsComputer.upperLimitComputer)} isNN {type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer}" )
-        if isOrig:
-            nlls["orig"]=nll
-        else:
-            nlls["center"]=nll
+        prefix = "orig" if isOrig else "center"
+        nlls[f"{prefix}"]=nll
+        nlls[f"{prefix}A"]=nllA
+        nlls[f"{prefix}E"]=nllE
+        nlls[f"{prefix}EA"]=nllEA
         if type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer:
             nll_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                         pmSigma = 1 )
+            nll_m1 = p.statsComputer.upperLimitComputer.nll ( 1.,
+                        pmSigma = -1 )
+            nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
+                        pmSigma = 1 )
+            nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
+                    evaluationType=apriori, pmSigma = 1 )
+            nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
+                    evaluationType=apriori, pmSigma = 1 )
             if nll_p1 == None:
-                print ( f"nll_p1 is None" )
+                print ( f"[statsNLL] nll_p1 is None for {anaId}" )
             if nll_p1 != None:
                 nlls["p1"] = float ( nll_p1 )
+            if nll_m1 != None:
+                nlls["m1"] = float ( nll_m1 )
+            if nll_p1A != None:
+                nlls["p1A"] = float ( nll_p1A )
+            if nll_p1E != None:
+                nlls["p1E"] = float ( nll_p1E )
+            if nll_p1EA != None:
+                nlls["p1EA"] = float ( nll_p1EA )
         short_anaId = anaId.replace("-orig","")
         if short_anaId in res:
             res[short_anaId].update ( nlls )
@@ -127,9 +147,27 @@ def createOnePoint( db ):
             delta = nlls["center"]-nlls["orig"]
             pull = delta / sigma
             nlls["pull"] = pull
-            cleaned[anaId]=nlls
+        if "p1A" in nlls and "origA" in nlls:
+            sigma = nlls["p1A"]-nlls["centerA"]
+            delta = nlls["centerA"]-nlls["origA"]
+            pull = delta / sigma
+            nlls["pullA"] = pull
+        if "p1E" in nlls and "origE" in nlls:
+            sigma = nlls["p1E"]-nlls["centerE"]
+            delta = nlls["centerE"]-nlls["origE"]
+            pull = delta / sigma
+            nlls["pullE"] = pull
+        if "p1EA" in nlls and "origEA" in nlls:
+            sigma = nlls["p1EA"]-nlls["centerEA"]
+            delta = nlls["centerEA"]-nlls["origEA"]
+            pull = delta / sigma
+            nlls["pullEA"] = pull
+        cleaned[anaId]=nlls
+    if len(cleaned)==0:
+        return
         
-    print ( f"[statsNLL] found {cleaned}" )
+    sfound = ",".join ( [ f"{anaid}: {values['pull']}" for anaid,values in cleaned.items() ] )
+    print ( f"[statsNLL] found {sfound}" )
     from ptools.helpers import py_dumps
     import shutil
     if os.path.exists ( "stats" ):
