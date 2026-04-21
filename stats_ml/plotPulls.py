@@ -8,10 +8,10 @@ def getValues():
         d = eval(f.read())
     ret = []
     for point, entry in d.items():
-        print ( point )
         for anaid, values in entry.items():
             pull = values["pull"]
             ret.append ( pull )
+            print ( f"[{point:20d}] {anaid:10s}: {pull:.2f}" )
     return ret
 
 def plot():
