@@ -30,7 +30,6 @@ def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
     from smodels.statistics.basicStats import observed
     r_obs_p1 = obj.getRValue ( evaluationType = observed, pmSigma = 1 )
     r_obs_m1 = obj.getRValue ( evaluationType = observed, pmSigma = -1 )
-    print ( f"@VOB r_obs_p1 {r_obs_p1} r_obs_m1 {r_obs_m1}" )
     if r_obs_p1 != None:
          resDict['r_nn_p1'] = self._round ( r_obs_p1 )
     if r_obs_m1 != None:
