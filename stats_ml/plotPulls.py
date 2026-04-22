@@ -4,20 +4,25 @@
 
 import numpy as np
 
-def getValues():
+def getValues( what : str = "pull" ):
     filename = "stats"
     with open ( filename, "rt" ) as f:
         d = eval(f.read())
     ret = []
     for point, entry in d.items():
         for anaid, values in entry.items():
-            pull = values["pull"]
-            ret.append ( pull )
+            if anaid == "params":
+                continue
+            if not what in values:
+                continue
+            pull = values[ what ]
+            if abs(pull)<6:
+                ret.append ( pull )
             print ( f"[{point}] {anaid:10s}: {pull:.2f}" )
     return ret
 
 def plot():
-    d = getValues()
+    d = getValues( "pull" )
     from matplotlib import pyplot as plt
     import scipy
     plt.hist ( d, label="histo" )

@@ -101,8 +101,8 @@ def createOnePoint( db ):
             continue ## irrelevant
         nll = p.nll()
         nllA = p.nll( asimov = True )
-        nllE = p.nll( expectationType = apriori )
-        nllEA = p.nll( asimov = True, expectationType = apriori )
+        nllE = p.nll( expectationType = aposteriori )
+        nllEA = p.nll( asimov = True, expectationType = aposteriori )
         anaId = p.dataset.globalInfo.id
         isOrig = True if "-orig" in anaId else False
         nlls = { }
@@ -126,13 +126,13 @@ def createOnePoint( db ):
             nll_p1E = None
             try:
                 nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
-                    evaluationType=apriori, pmSigma = 1 )
+                    evaluationType=aposteriori, pmSigma = 1 )
             except Exception as e:
                 pass
             nll_p1EA = None
             try:
                 nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=True,
-                    evaluationType=apriori, pmSigma = 1 )
+                    evaluationType=aposteriori, pmSigma = 1 )
             except Exception as e:
                 pass
             if nll_p1 == None:
@@ -163,6 +163,12 @@ def createOnePoint( db ):
             delta = nlls["center"]-nlls["orig"]
             pull = delta / sigma
             nlls["pull"] = pull
+            doAdd = True
+        if "m1" in nlls and "orig" in nlls:
+            sigma = nlls["m1"]-nlls["center"]
+            delta = nlls["center"]-nlls["orig"]
+            pull = delta / sigma
+            nlls["pullm1"] = pull
             doAdd = True
         if "p1A" in nlls and "origA" in nlls:
             sigma = nlls["p1A"]-nlls["centerA"]
@@ -223,7 +229,7 @@ def create():
     ap = argparse.ArgumentParser(description="produces the stats for the nll pulls")
     ap.add_argument('-n', '--nprocesses',
             help='number of processes [1]',
-            default = 1, type = int )
+            default = 5, type = int )
     args = ap.parse_args()
 
     for path in [ "results", "slhafiles" ]:
