@@ -27,7 +27,6 @@ def keyExists ( key ):
     return os.path.exists  ( key_file )
 
 def createSLHAFile() -> os.PathLike:
-    slhafile = os.path.abspath('ewkinos.slha')
     mLSP, mC1, mStau = 150, 300, 300
     mList = ( mLSP, mC1, mStau )
     key = abs ( hash ( mList ) )
@@ -40,21 +39,31 @@ def createSLHAFile() -> os.PathLike:
         mList = ( mLSP, mC1, mStau )
         key = abs ( hash ( mList ) )
         exists = keyExists ( key )
-    masses = { 1000022: mLSP, 1000023: mC1,
-               1000024: mC1, 1000015: mStau }
-    decays = { 1000024: { ( 1000022, 24 ): 1 },
-               1000023: { ( 1000022, 23 ): .5, ( 1000022, 25 ): .5 },
-               1000015: { ( 1000022, 15 ) : 1 },
-               1000022: {} }
-    ssms = { ( 1000023, 1000024 ) : 1, (-1000024, 1000023 ) : 1,
-             ( -1000015, 1000015 ) : 1,
-             ( 1000023, 1000023 ) : 1, (-1000024, 1000024 ) : 1 }
+    doStaus = True
+    doEWKinos = False
+    masses = { 1000022: mLSP }
+    decays = { 1000022: {} }
+    ssms = {}
+    if doEWKinos:
+        masses[1000023]= mC1
+        masses[1000024]= mC1
+        decays[1000024]= { ( 1000022, 24 ): 1 }
+        decays[1000023]= { ( 1000022, 24 ): 1 }
+        decays[1000023]= { ( 1000022, 23 ): .5, ( 1000022, 25 ): .5 }
+        ssms[ ( 1000023, 1000024 ) ] = 1 
+        ssms[ (-1000024, 1000023 ) ] = 1
+        ssms[ ( 1000023, 1000023 ) ] = 1
+        ssms[ (-1000024, 1000024 ) ] = 1
+    if doStaus:
+        masses[1000015]= mStau
+        decays[1000015]= { ( 1000022, 15 ) : 1 }
+        ssms[ ( -1000015, 1000015 ) ] = 1
     pmodel = { "masses": masses, "decays": decays, "ssmultipliers": ssms }
     from protomodels.builder.manipulator import Manipulator
     from protomodels.base.runEnviron import RunEnviron
     environ = RunEnviron()
     ma = Manipulator( pmodel, environ, walkerid = "statsNLL" )
-    slhafile = "ewkinos.slha"
+    # slhafile = "ewkinos.slha"
     slhafile = f"slhafiles/{key}.slha"
     ma.createSLHAFile ( slhafile, addXsecs = True )
     return { "file": slhafile, "mLSP": mLSP, "mC1": mC1, "key": key }
@@ -100,9 +109,13 @@ def createOnePoint( db ):
         if p.dataType() != "combined":
             continue ## irrelevant
         nll = p.nll()
+        print ( f"[statsNLL] nll {nll}" )
         nllA = p.nll( asimov = True )
+        print ( f"[statsNLL] nllA {nllA}" )
         nllE = p.nll( expectationType = aposteriori )
+        print ( f"[statsNLL] nllE {nllE}" )
         nllEA = p.nll( asimov = True, expectationType = aposteriori )
+        print ( f"[statsNLL] nllEA {nllEA}" )
         anaId = p.dataset.globalInfo.id
         isOrig = True if "-orig" in anaId else False
         nlls = { }
