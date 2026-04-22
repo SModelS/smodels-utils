@@ -28,41 +28,13 @@ def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
         resDict['r_expected_m1'] = self._round ( ul_e_m1 )
     # add only for expected
     from smodels.statistics.basicStats import observed
-    r_obs_p1 = obj.getRValue ( evaluationType = observed, nSigma = 1 )
-    r_obs_m1 = obj.getRValue ( evaluationType = observed, nSigma = -1 )
+    r_obs_p1 = obj.getRValue ( evaluationType = observed, pmSigma = 1 )
+    r_obs_m1 = obj.getRValue ( evaluationType = observed, pmSigma = -1 )
+    print ( f"@VOB r_obs_p1 {r_obs_p1} r_obs_m1 {r_obs_m1}" )
     if r_obs_p1 != None:
          resDict['r_nn_p1'] = self._round ( r_obs_p1 )
     if r_obs_m1 != None:
          resDict['r_nn_m1'] = self._round ( r_obs_m1 )
-
-def clsRootMonkeyPatch( mu : float, return_type: Text,
-             modelToUse : Union[None,str], obj : Callable,
-             evaluationType : NllEvalType,
-             nll0 : float, nll0A : float, mu_hat : float,
-             nSigma : int ) -> float:
-    """ and this will be the monkey patch for the clsRoot function """
-    # at - infinity this should be .95,
-    # at + infinity it should -.05
-    # Make sure to always compute the correct llhd value (from
-    # theoryPrediction)
-    # and not used the cached value (which is constant for mu~=1 an mu~=0)
-    nllA = obj.likelihood(mu, return_nll=True,
-            modelToUse = modelToUse, asimov = True,
-            pmSigma = -nSigma )
-    nll = nllA
-    if evaluationType != aposteriori:
-        nll = obj.likelihood(mu, return_nll=True,
-            evaluationType=evaluationType,
-            modelToUse = modelToUse, asimov = False,
-            pmSigma = nSigma )
-    if evaluationType == observed:
-        ## for the monkey patched version for ML,
-        ## we override this
-        nSigma = 0 ## 
-    ret =  CLsfromNLL(nllA, nll0A, nll, nll0, (mu_hat > mu), \
-            return_type=return_type, nSigma = nSigma ) if \
-            (nll is not None and nllA is not None) else None
-    return ret
 
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
@@ -770,7 +742,6 @@ class ValidationObjsBase():
         if self.options["nnErrors"]:
             # monkey patching
             logger.info ( f"monkey patching clsRootFunc for ML models" )
-            nnInterface.clsRootFunc = clsRootMonkeyPatch
             PyPrinter.addErrorsForRValues = addErrorsForRValuesMonkeyPatch
 
         parameterFile = self.getParameterFile(tempdir=outputDir,outputformat=outputformat)
