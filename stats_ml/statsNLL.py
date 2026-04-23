@@ -40,7 +40,7 @@ def createSLHAFile() -> os.PathLike:
         key = abs ( hash ( mList ) )
         exists = keyExists ( key )
     doStaus = True
-    doEWKinos = False
+    doEWKinos = True
     masses = { 1000022: mLSP }
     decays = { 1000022: {} }
     ssms = {}
@@ -184,6 +184,12 @@ def createOnePoint( db ):
             delta = nlls["center"]-nlls["orig"]
             pull = delta / sigma
             nlls["pull"] = pull
+            doAdd = True
+        if "centerulp1" in nlls and "origul" in nlls:
+            sigma = nlls["centerulp1"]-nlls["centerul"]
+            delta = nlls["centerul"]-nlls["origul"]
+            pull = delta / sigma
+            nlls["pullul"] = pull
             doAdd = True
         if "m1" in nlls and "orig" in nlls:
             sigma = nlls["m1"]-nlls["center"]
