@@ -1,4 +1,4 @@
-#!/usr/bin/env python3    
+#!/usr/bin/env python3
 
 from smodels.experiment.databaseObj import Database
 from smodels.decomposition import decomposer
@@ -33,7 +33,8 @@ def keyExists ( key ):
     key_file = f"results/{key}"
     return os.path.exists  ( key_file )
 
-def createSLHAFile() -> os.PathLike:
+def createSLHAFile( doStaus : bool = True, doEWKinos : bool = False ) \
+        -> os.PathLike:
     mLSP, mC1, mStau = 150, 300, 300
     mList = ( mLSP, mC1, mStau )
     key = abs ( hash ( mList ) )
@@ -46,8 +47,6 @@ def createSLHAFile() -> os.PathLike:
         mList = ( mLSP, mC1, mStau )
         key = abs ( hash ( mList ) )
         exists = keyExists ( key )
-    doStaus = True
-    doEWKinos = True
     masses = { 1000022: mLSP }
     decays = { 1000022: {} }
     ssms = {}
@@ -57,7 +56,7 @@ def createSLHAFile() -> os.PathLike:
         decays[1000024]= { ( 1000022, 24 ): 1 }
         decays[1000023]= { ( 1000022, 24 ): 1 }
         decays[1000023]= { ( 1000022, 23 ): .5, ( 1000022, 25 ): .5 }
-        ssms[ ( 1000023, 1000024 ) ] = 1 
+        ssms[ ( 1000023, 1000024 ) ] = 1
         ssms[ (-1000024, 1000023 ) ] = 1
         ssms[ ( 1000023, 1000023 ) ] = 1
         ssms[ (-1000024, 1000024 ) ] = 1
@@ -90,8 +89,8 @@ def readStats():
             ret[bname]=t
     return ret
 
-def createOnePoint( db ):
-    s = createSLHAFile()
+def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
+    s = createSLHAFile( doStaus = doStaus, doEWKinos = doEWKinos )
     print ( f"[statsNLL] starting {s['key']}" )
     slhafile = s["file"]
     runtime.modelFile = "smodels.share.models.mssm"
@@ -106,7 +105,7 @@ def createOnePoint( db ):
     key = list(topDict.keys())[0]
     print ( f"[statsNLL] decomposed to {len(topDict[key])} elements" )
     t0 = time.time()
-    allPreds = theoryPredictionsFor( db, topDict, 
+    allPreds = theoryPredictionsFor( db, topDict,
             combinedResults=True )
     t1 = time.time()
     sanas = ", ".join ( [ x.dataset.globalInfo.id for x in allPreds ] )
@@ -126,11 +125,14 @@ def createOnePoint( db ):
         pprint ( f"nllE {nllE}" )
         nllEA = p.nll( asimov = 1., expectationType = aposteriori )
         pprint ( f"nllEA {nllEA}" )
-        ul = p.getUpperLimitOnMu()
+        ul = p.getUpperLimitOnMu( pmSigma = 0 )
         pprint ( f"ul {ul}" )
         ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
+        pprint ( f"ulp1 {ulp1}" )
         ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
+        pprint ( f"ulE {ulE}" )
         ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
+        pprint ( f"ulEp1 {ulEp1}" )
         nlls = { }
         # print ( f"@@X anaId is {anaId} computer is {type(p.statsComputer.upperLimitComputer)} isNN {type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer}" )
         prefix = "orig" if isOrig else "center"
@@ -156,8 +158,9 @@ def createOnePoint( db ):
                 pass
             nll_p1E = None
             try:
-                nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1., 
+                nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1.,
                     evaluationType=aposteriori, pmSigma = 1 )
+                pprint ( f"nllEp1 {nll_p1E}" )
             except Exception as e:
                 pass
             nll_p1EA = None
@@ -175,7 +178,6 @@ def createOnePoint( db ):
             if nll_p1A != None:
                 nlls["p1A"] = nll_p1A
             if nll_p1E != None:
-                pprint ( f"nllEp1 nll_p1E" )
                 nlls["p1E"] = nll_p1E
             if nll_p1EA != None:
                 nlls["p1EA"] = nll_p1EA
@@ -236,7 +238,7 @@ def createOnePoint( db ):
     print ( f"[statsNLL] done cleaning" )
     if len(cleaned)==0:
         return
-        
+
     sfound = ",".join ( [ f"{anaid}: {values['pull']}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
     import shutil
@@ -257,14 +259,25 @@ def writeStats( stats ):
     with open ( "stats", "wt" ) as f:
         f.write ( ds )
 
-def loop():
+def loop( doEWKinos : bool ):
     print ( f"[statsNLL] Instantiate the database" )
     db = Database ( "../../smodels-database/" )
     print ( f"[statsNLL] Lets go" )
-    db.getExpResults( dataTypes = "efficiencyMap" )
+    anaIds = [ "ATLAS-SUSY-2018-04" ]
+    if doEWKinos:
+        anaIds = [ "ATLAS-SUSY-2018-04", "ATLAS-SUSY-2019-09",
+                   "ATLAS-SUSY-2019-08", "ATLAS-SUSY-2018-16",
+                   "ATLAS-SUSY-2018-32" ]
+    all_ids = []
+    for aid in anaIds:
+        all_ids.append ( aid )
+        all_ids.append ( aid+"-orig" )
+    db.getExpResults( analysisIDs = all_ids, dataTypes = "efficiencyMap" )
+    doStaus = True
+    # doEWKinos = False
     while True:
         try:
-            createOnePoint( db )
+            createOnePoint( db, doStaus, doEWKinos )
         except Exception as e:
             print ( f"[statsNLL.createOnePoint] {type(e)}: {e} -- ignoring" )
 
@@ -274,13 +287,19 @@ def create():
     ap.add_argument('-n', '--nprocesses',
             help='number of processes [1]',
             default = 5, type = int )
+    ap.add_argument( '-v', '--verbose', help="be more verbose",
+                     action="store_true" )
+    ap.add_argument('-e', '--ewkinos', help="add ewkinos",
+                     action="store_true" )
     args = ap.parse_args()
+    if args.verbose:
+        verbose = True
 
     for path in [ "results", "slhafiles" ]:
         if not os.path.exists ( path ):
             os.mkdir ( path )
     if args.nprocesses == 1:
-        loop()
+        loop( args.ewkinos )
         return
     from multiprocessing import Process
     processes = []
