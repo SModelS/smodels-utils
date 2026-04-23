@@ -127,19 +127,19 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         pprint ( f"nllEA {nllEA}" )
         ul = p.getUpperLimitOnMu( pmSigma = 0 )
         pprint ( f"ul {ul}" )
-        ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
-        pprint ( f"ulp1 {ulp1}" )
         ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
         pprint ( f"ulE {ulE}" )
-        ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
-        pprint ( f"ulEp1 {ulEp1}" )
         nlls = { }
         # print ( f"@@X anaId is {anaId} computer is {type(p.statsComputer.upperLimitComputer)} isNN {type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer}" )
         prefix = "orig" if isOrig else "center"
         nlls[f"{prefix}ul"]=ul
         if not isOrig:
+            ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
+            pprint ( f"ulp1 {ulp1}" )
             nlls[f"{prefix}ulp1"]=ulp1
+            ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
             nlls[f"{prefix}ulEp1"]=ulEp1
+            pprint ( f"ulEp1 {ulEp1}" )
         nlls[f"{prefix}ulE"]=ulE
         nlls[f"{prefix}"]=nll
         nlls[f"{prefix}A"]=nllA
@@ -205,6 +205,13 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullul"] = pull
+                doAdd = True
+        if "centerulEp1" in nlls and "origulE" in nlls:
+            sigma = nlls["centerulEp1"]-nlls["centerulE"]
+            delta = nlls["centerulE"]-nlls["origulE"]
+            if sigma>0.:
+                pull = delta / sigma
+                nlls["pullulE"] = pull
                 doAdd = True
         if "m1" in nlls and "orig" in nlls:
             sigma = nlls["m1"]-nlls["center"]
