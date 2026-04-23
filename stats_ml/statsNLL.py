@@ -25,7 +25,7 @@ warnings.filterwarnings(
 verbose = False
 
 def pprint ( *args ):
-    if verbose:
+    if verbose == False:
         return
     print ( f"[statsNLL] {' '.join(args)}" )
 
