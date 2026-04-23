@@ -110,17 +110,25 @@ def createOnePoint( db ):
             continue ## irrelevant
         nll = p.nll()
         print ( f"[statsNLL] nll {nll}" )
-        nllA = p.nll( asimov = True )
+        nllA = p.nll( asimov = 1. )
         print ( f"[statsNLL] nllA {nllA}" )
         nllE = p.nll( expectationType = aposteriori )
         print ( f"[statsNLL] nllE {nllE}" )
-        nllEA = p.nll( asimov = True, expectationType = aposteriori )
+        nllEA = p.nll( asimov = 1., expectationType = aposteriori )
         print ( f"[statsNLL] nllEA {nllEA}" )
         anaId = p.dataset.globalInfo.id
+        ul = p.getUpperLimitOnMu()
+        ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
+        ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
+        ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
         isOrig = True if "-orig" in anaId else False
         nlls = { }
         # print ( f"@@X anaId is {anaId} computer is {type(p.statsComputer.upperLimitComputer)} isNN {type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer}" )
         prefix = "orig" if isOrig else "center"
+        nlls[f"{prefix}ul"]=ul
+        nlls[f"{prefix}ulp1"]=ulp1
+        nlls[f"{prefix}ulE"]=ulE
+        nlls[f"{prefix}ulEp1"]=ulEp1
         nlls[f"{prefix}"]=nll
         nlls[f"{prefix}A"]=nllA
         nlls[f"{prefix}E"]=nllE
