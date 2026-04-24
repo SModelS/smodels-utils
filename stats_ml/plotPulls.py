@@ -3,6 +3,23 @@
 """ simple pulls plot from stats file """
 
 import numpy as np
+import os, sys
+from ptools.helpers import py_dumps
+
+def readStats():
+    ret={}
+    import glob
+    for fname in glob.glob ( "results/*" ):
+        bname = os.path.basename ( fname )
+        with open ( fname, "rt" ) as f:
+            t = eval(f.read())
+            ret[bname]=t
+    return ret
+
+def writeStats( stats ):
+    ds = py_dumps ( stats ) + "\n"
+    with open ( "stats", "wt" ) as f:
+        f.write ( ds )
 
 def getValues( what : str = "pull" ):
     filename = "stats"
@@ -21,8 +38,8 @@ def getValues( what : str = "pull" ):
             print ( f"[{point}] {anaid:10s}: {pull:.2f}" )
     return ret
 
-def plot():
-    d = getValues( "pull" )
+def plot( what : str ):
+    d = getValues( what )
     from matplotlib import pyplot as plt
     import scipy
     plt.hist ( d, label="histo" )
@@ -32,11 +49,23 @@ def plot():
     plt.plot ( stdnmx, stdnmy, c="black", linestyle="dotted",
                label="standard normal" )
     plt.xlabel ( "pulls" )
-    plt.title ( "pulls of nll estimates" )
-    outfile = "pulls.png"
+    plt.title ( f"pulls of {what} estimates" )
+    outfile = f"{what}.png"
     plt.savefig ( outfile )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
 
 if __name__ == "__main__":
-    plot()
+    import argparse
+    ap = argparse.ArgumentParser(description="plot the pulls")
+    ap.add_argument('-w', '--what',
+            help='what to plot [pull]',
+            default = "pull", type = str )
+    ap.add_argument( '-c', '--create_stats', help="create stats",
+                     action="store_true" )
+    args = ap.parse_args()
+    if args.create_stats:
+        stats = readStats()
+        writeStats ( stats )
+        sys.exit()
+    plot( args.what )
