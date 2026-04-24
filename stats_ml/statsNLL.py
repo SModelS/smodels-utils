@@ -137,6 +137,9 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
             pprint ( f"ulp1 {ulp1}" )
             nlls[f"{prefix}ulp1"]=ulp1
+            ulm1 = p.getUpperLimitOnMu( pmSigma = -1 )
+            pprint ( f"ulm1 {ulm1}" )
+            nlls[f"{prefix}ulm1"]=ulm1
             ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
             nlls[f"{prefix}ulEp1"]=ulEp1
             pprint ( f"ulEp1 {ulEp1}" )
