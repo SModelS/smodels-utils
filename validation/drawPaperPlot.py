@@ -500,9 +500,7 @@ class PaperPlot:
             y1s = np.concatenate ( [ y1s, y1 ] )
             y2s = np.concatenate ( [ y2s, y2 ] )
 
-        i1 = np.argsort(x1s); x1t, y1t = x1s[i1], y1s[i1]
-        i2 = np.argsort(x2s); x2t, y2t = x2s[i2], y2s[i2]
-        poly = fill_between_polylines(ax, x1t, y1t, x2t, y2t,
+        poly = fill_between_polylines(ax, x1s, y1s, x2s, y2s,
                    facecolor='lightblue', alpha=0.4, edgecolor=None )
 
         drawContoursAlso = False
@@ -999,7 +997,6 @@ class PaperPlot:
         if massg != "":
             plt.text( 0.6,0.6, rf"{massg} GeV",
                       transform=fig.transFigure, fontsize = 8)
-        #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
         plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
