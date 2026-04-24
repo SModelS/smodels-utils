@@ -178,7 +178,7 @@ class PaperPlot:
         values = efile[curve][entry][coord]
         return values
 
-    def add_jitter ( self, y_vals, addJitter : bool ):
+    def add_jitter ( self, y_vals, addJitter : bool, delta : bool = .02 ):
         """ add jitter
         :bool addJitter: if false, then dont add jitter """
         if not addJitter:
@@ -186,9 +186,9 @@ class PaperPlot:
         for i, y in enumerate(y_vals):
             if type(y)==list:
                 for j, yy in enumerate(y):
-                    y_vals[i][j]= yy * random.uniform(.98,1.02)
+                    y_vals[i][j]= yy * random.uniform(1-delta,1+delta)
             else:
-                y_vals[i]= y * random.uniform(.98,1.02)
+                y_vals[i]= y * random.uniform(1-delta,1+delta)
         return y_vals
 
 
@@ -474,7 +474,8 @@ class PaperPlot:
         self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
-            y_label, color : Optional[str] = None ):
+            y_label, color : Optional[str] = None, 
+            alpha : float = .4 ):
         if len(x_vals1)==0:
             return
         if color == None:
@@ -501,7 +502,7 @@ class PaperPlot:
             y2s = np.concatenate ( [ y2s, y2 ] )
 
         poly = fill_between_polylines(ax, x1s, y1s, x2s, y2s,
-                   facecolor='lightblue', alpha=0.4, edgecolor=None )
+                   facecolor=color, alpha=alpha, edgecolor=None )
 
         drawContoursAlso = False
         if drawContoursAlso:
@@ -808,30 +809,30 @@ class PaperPlot:
             self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
 
             if True:
-                x_vals = comb_excl["obsExclusionP1"]["x"]
-                y_vals = comb_excl["obsExclusionP1"]["y"]
-                y_vals = self.add_jitter ( y_vals, addJitter )
+                x_valsp1 = comb_excl["obsExclusionP1"]["x"]
+                y_valsp1 = comb_excl["obsExclusionP1"]["y"]
+                addJitter = True
+                print ( f"FIXME large jitter!!" )
+                y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
                 label = f""
-                x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
+                x_valsp1, y_valsp1 = yvalsAreWidths ( y_label, x_valsp1, y_valsp1 )
+                self.plotLines ( ax, x_valsp1, y_valsp1, "red", "dashed", label )
+                x_valsm1 = comb_excl["obsExclusionM1"]["x"]
+                y_valsm1 = comb_excl["obsExclusionM1"]["y"]
+                y_valsm1 = self.add_jitter ( y_valsm1, addJitter, .05 )
+                label = f""
+                x_valsm1, y_valsm1 = yvalsAreWidths ( y_label, x_valsm1, y_valsm1 )
                 if 'Gamma' in y_label:
-                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
-                                self.widthToLifetime))
+                    sec_ax = ax.secondary_yaxis('right', 
+                            functions=(self.widthToLifetime, 
+                            self.widthToLifetime))
                     # print("yes gamma 3")
                     sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                     sec_ax.set_yscale('log')
-                self.plotLines ( ax, x_vals, y_vals, "red", "dashed", label )
-                x_vals = comb_excl["obsExclusionM1"]["x"]
-                y_vals = comb_excl["obsExclusionM1"]["y"]
-                y_vals = self.add_jitter ( y_vals, addJitter )
-                label = f""
-                x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-                if 'Gamma' in y_label:
-                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
-                                self.widthToLifetime))
-                    # print("yes gamma 3")
-                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
-                    sec_ax.set_yscale('log')
-                self.plotLines ( ax, x_vals, y_vals, "red", "dashed", label )
+                self.plotLines ( ax, x_valsm1, y_valsm1, "red", "dashed", 
+                        label )
+                self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
+                        None, y_label, color = "tab:red" )
 
         if cr_excl not in [ None, [] ]:
             x_vals = cr_excl["obsExclusion"]["x"]
