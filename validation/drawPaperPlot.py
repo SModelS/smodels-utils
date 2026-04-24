@@ -31,7 +31,7 @@ def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
     return poly
 
 def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
-    """ if y-axes are widths, convert accordingly 
+    """ if y-axes are widths, convert accordingly
     :returns tuple of new xvals and yvals
     """
     if not "Gamma" in y_label:
@@ -474,7 +474,7 @@ class PaperPlot:
         self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
-            y_label, color : Optional[str] = None, 
+            y_label, color : Optional[str] = None,
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
@@ -482,7 +482,7 @@ class PaperPlot:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-        
+
         drawBand = True
         indices = list ( range(min(len(x_vals1),len(x_vals2))) )
         if not drawBand:
@@ -754,13 +754,13 @@ class PaperPlot:
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
-        plt.title( title, loc='left', fontsize=12)                        
+        plt.title( title, loc='left', fontsize=12)
         # processName
-        # pName = prettyTxname(validationPlot.txName, outputtype="latex" )   
+        # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
         pName = self.getPrettyProcessName(validationPlot.txName)
         #print(pName)
         # process string on right of title
-        plt.title(pName,loc='right', fontsize=12)                           
+        plt.title(pName,loc='right', fontsize=12)
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
@@ -783,11 +783,11 @@ class PaperPlot:
             x_vals = bestSR_excl["obsExclusion"]["x"]
             y_vals = bestSR_excl["obsExclusion"]["y"]
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-            self.plotLines( ax, x_vals, y_vals, "red", "dashed", 
+            self.plotLines( ax, x_vals, y_vals, "red", "dashed",
                             label = "SModelS: best SR")
-            plt.tick_params( which='major', axis = 'both', direction = 'in', 
+            plt.tick_params( which='major', axis = 'both', direction = 'in',
                              length = 10, top = True, right = True)
-            plt.tick_params( labelbottom=True, labelleft=True, labeltop=False, 
+            plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
                              labelright=False )
 
         if combSR:
@@ -813,24 +813,24 @@ class PaperPlot:
                 y_valsp1 = comb_excl["obsExclusionP1"]["y"]
                 addJitter = True
                 print ( f"FIXME large jitter!!" )
-                y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
+                #y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
                 label = f""
                 x_valsp1, y_valsp1 = yvalsAreWidths ( y_label, x_valsp1, y_valsp1 )
-                self.plotLines ( ax, x_valsp1, y_valsp1, "red", "dashed", label )
+                # self.plotLines ( ax, x_valsp1, y_valsp1, "red", "dashed", label )
                 x_valsm1 = comb_excl["obsExclusionM1"]["x"]
                 y_valsm1 = comb_excl["obsExclusionM1"]["y"]
-                y_valsm1 = self.add_jitter ( y_valsm1, addJitter, .05 )
+                #y_valsm1 = self.add_jitter ( y_valsm1, addJitter, .05 )
                 label = f""
                 x_valsm1, y_valsm1 = yvalsAreWidths ( y_label, x_valsm1, y_valsm1 )
                 if 'Gamma' in y_label:
-                    sec_ax = ax.secondary_yaxis('right', 
-                            functions=(self.widthToLifetime, 
+                    sec_ax = ax.secondary_yaxis('right',
+                            functions=(self.widthToLifetime,
                             self.widthToLifetime))
                     # print("yes gamma 3")
                     sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                     sec_ax.set_yscale('log')
-                self.plotLines ( ax, x_valsm1, y_valsm1, "red", "dashed", 
-                        label )
+                #self.plotLines ( ax, x_valsm1, y_valsm1, "red", "dashed",
+                #        label )
                 self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
                         None, y_label, color = "tab:red" )
 
@@ -946,11 +946,11 @@ class PaperPlot:
             y_vals = bestSR_excl["expExclusion"]["y"]
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             if "Gamma" in y_label:
-                sec_ax = ax.secondary_yaxis('right', 
+                sec_ax = ax.secondary_yaxis('right',
                         functions=(self.widthToLifetime, self.widthToLifetime))
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                 sec_ax.set_yscale('log')
-            self.plotLines ( ax, x_vals, y_vals, "red", "dashed", 
+            self.plotLines ( ax, x_vals, y_vals, "red", "dashed",
                              "SModelS: best SR")
             plt.tick_params( which='major', axis = 'both', direction = 'in',
                              length = 10, top = True, right = True )

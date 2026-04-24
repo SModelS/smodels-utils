@@ -120,11 +120,11 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         pprint ( f"first query of {p}" )
         nll = p.nll( asimov = None )
         pprint ( f"nll {nll}" )
-        nllA = p.nll( asimov = 1. )
+        nllA = p.nll( asimov = 1 )
         pprint ( f"nllA {nllA}" )
         nllE = p.nll( expectationType = aposteriori )
         pprint ( f"nllE {nllE}" )
-        nllEA = p.nll( asimov = 1., expectationType = aposteriori )
+        nllEA = p.nll( asimov = 1, expectationType = aposteriori )
         pprint ( f"nllEA {nllEA}" )
         ul = p.getUpperLimitOnMu( pmSigma = 0 )
         pprint ( f"ul {ul}" )
@@ -156,7 +156,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                         pmSigma = -1 )
             nll_p1A = None
             try:
-                nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1.,
+                nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1,
                         pmSigma = 1 )
             except Exception as e:
                 pass
@@ -169,7 +169,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 pass
             nll_p1EA = None
             try:
-                nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1.,
+                nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1,
                     evaluationType=aposteriori, pmSigma = 1 )
             except Exception as e:
                 pass
@@ -208,21 +208,21 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             delta = nlls["center"]-nlls["orig"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pull"] = pull
+                nlls["pull"] = float ( pull )
                 doAdd = True
         if "centerulp1" in nlls and "origul" in nlls:
-            sigma = nlls["centerulp1"]-nlls["centerul"]
+            sigma = abs ( nlls["centerulp1"]-nlls["centerul"] )
             delta = nlls["centerul"]-nlls["origul"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullul"] = pull
+                nlls["pullul"] = float ( pull )
                 doAdd = True
         if "centerulEp1" in nlls and "origulE" in nlls:
-            sigma = nlls["centerulEp1"]-nlls["centerulE"]
+            sigma = abs ( nlls["centerulEp1"]-nlls["centerulE"] )
             delta = nlls["centerulE"]-nlls["origulE"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullulE"] = pull
+                nlls["pullulE"] = float ( pull )
                 doAdd = True
         if "m1" in nlls and "orig" in nlls:
             sigma = nlls["m1"]-nlls["center"]
@@ -298,6 +298,8 @@ def loop( doEWKinos : bool ):
             createOnePoint( db, doStaus, doEWKinos )
         except Exception as e:
             print ( f"[statsNLL.createOnePoint] {type(e)}: {e} -- ignoring" )
+            import traceback
+            traceback.print_exc()
 
 def create():
     import argparse
