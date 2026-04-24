@@ -923,7 +923,7 @@ class PaperPlot:
         title = f"{analysis}: {num_sr} SRs"
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
-        plt.title( title, loc='left', fontsize=12)
+        plt.title( title, loc='left', fontsize=12, x=-.1)
         plt.title(pName,loc='right', fontsize=12)
 
         exp_name = analysis.split('-')[0]

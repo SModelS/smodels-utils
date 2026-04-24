@@ -118,9 +118,10 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         anaId = p.dataset.globalInfo.id
         isOrig = True if "-orig" in anaId else False
         pprint ( f"first query of {p}" )
-        nll = p.nll( asimov = None )
+        nll = p.nll( mu = 1., asimov = None )
         pprint ( f"nll {nll}" )
-        nllA = p.nll( asimov = 1 )
+        nllA = p.nll( mu = 1. , asimov = 1 )
+        nllA0 = p.nll( mu = 0. , asimov = 1 )
         pprint ( f"nllA {nllA}" )
         nllE = p.nll( expectationType = aposteriori )
         pprint ( f"nllE {nllE}" )
@@ -131,7 +132,6 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
         pprint ( f"ulE {ulE}" )
         nlls = { }
-        # print ( f"@@X anaId is {anaId} computer is {type(p.statsComputer.upperLimitComputer)} isNN {type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer}" )
         prefix = "orig" if isOrig else "center"
         nlls[f"{prefix}ul"]=ul
         if not isOrig:
@@ -147,6 +147,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         nlls[f"{prefix}ulE"]=ulE
         nlls[f"{prefix}"]=nll
         nlls[f"{prefix}A"]=nllA
+        nlls[f"{prefix}A0"]=nllA0
         nlls[f"{prefix}E"]=nllE
         nlls[f"{prefix}EA"]=nllEA
         if type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer:
@@ -156,8 +157,8 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                         pmSigma = -1 )
             nll_p1A = None
             try:
-                nll_p1A = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1,
-                        pmSigma = 1 )
+                nll_p1A = p.statsComputer.upperLimitComputer.nll (
+                        mu=1., asimov=1, pmSigma = 1 )
             except Exception as e:
                 pass
             nll_p1E = None
@@ -208,13 +209,13 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             delta = nlls["center"]-nlls["orig"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pull"] = float ( pull )
+                nlls["pull"] = pull
                 doAdd = True
         if "centerulp1" in nlls and "origul" in nlls:
             sigma = abs ( nlls["centerulp1"]-nlls["centerul"] )
             delta = nlls["centerul"]-nlls["origul"]
             if sigma>0.:
-                pull = float ( delta / sigma )
+                pull = delta / sigma
                 nlls["pullul"] = pull
                 pprint ( f"pullul {pull}" )
                 doAdd = True
@@ -222,33 +223,33 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             sigma = abs ( nlls["centerulEp1"]-nlls["centerulE"] )
             delta = nlls["centerulE"]-nlls["origulE"]
             if sigma>0.:
-                pull = float ( delta / sigma )
+                pull = delta / sigma
                 nlls["pullulE"] = pull
                 pprint ( f"pullulE {pull}" )
                 doAdd = True
         if "m1" in nlls and "orig" in nlls:
-            sigma = nlls["m1"]-nlls["center"]
+            sigma = abs ( nlls["m1"]-nlls["center"] )
             delta = nlls["center"]-nlls["orig"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullm1"] = pull
                 doAdd = True
         if "p1A" in nlls and "origA" in nlls:
-            sigma = nlls["p1A"]-nlls["centerA"]
+            sigma = abs ( nlls["p1A"]-nlls["centerA"] )
             delta = nlls["centerA"]-nlls["origA"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullA"] = pull
                 doAdd = True
         if "p1E" in nlls and "origE" in nlls:
-            sigma = nlls["p1E"]-nlls["centerE"]
+            sigma = abs ( nlls["p1E"]-nlls["centerE"] )
             delta = nlls["centerE"]-nlls["origE"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullE"] = pull
                 doAdd = True
         if "p1EA" in nlls and "origEA" in nlls:
-            sigma = nlls["p1EA"]-nlls["centerEA"]
+            sigma = abs ( nlls["p1EA"]-nlls["centerEA"] )
             delta = nlls["centerEA"]-nlls["origEA"]
             if sigma>0.:
                 pull = delta / sigma
