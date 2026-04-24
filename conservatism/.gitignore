@@ -1,2 +1,6 @@
 pvalues*png
 *.fudges
+T*png
+data
+expResModifier.log
+logs
