@@ -748,12 +748,20 @@ class PaperPlot:
         else:
             #print("max_obs_y + step ", max_obs_y+step_y )
             ax.set_ylim([0,round(max_obs_y+step_y,-1)])
-
-        plt.title(analysis, loc='left', fontsize=12)                        #analysis id on left of title
-        #pName = prettyTxname(validationPlot.txName, outputtype="latex" )   #processName
+        if hasattr ( validationPlot.expRes.globalInfo, "includeCRs" ):
+            if validationPlot.expRes.globalInfo.includeCRs == False:
+                num_cr = 0
+        title = f"{analysis}: {num_sr} SRs"
+        if num_cr > 0:
+            title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
+        # analysis id on left of title
+        plt.title( title, loc='left', fontsize=12)                        
+        # processName
+        # pName = prettyTxname(validationPlot.txName, outputtype="latex" )   
         pName = self.getPrettyProcessName(validationPlot.txName)
         #print(pName)
-        plt.title(pName,loc='right', fontsize=12)                           #process srring on right of title
+        # process string on right of title
+        plt.title(pName,loc='right', fontsize=12)                           
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
@@ -776,17 +784,22 @@ class PaperPlot:
             x_vals = bestSR_excl["obsExclusion"]["x"]
             y_vals = bestSR_excl["obsExclusion"]["y"]
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-            self.plotLines(ax, x_vals, y_vals, "red", "dashed", label = "SModelS: best SR")
-            plt.tick_params(which='major', axis = 'both', direction = 'in', length = 10, top = True, right = True)
-            plt.tick_params(labelbottom=True, labelleft=True, labeltop=False, labelright=False)
+            self.plotLines( ax, x_vals, y_vals, "red", "dashed", 
+                            label = "SModelS: best SR")
+            plt.tick_params( which='major', axis = 'both', direction = 'in', 
+                             length = 10, top = True, right = True)
+            plt.tick_params( labelbottom=True, labelleft=True, labeltop=False, 
+                             labelright=False )
 
         if combSR:
             x_vals = comb_excl["obsExclusion"]["x"]
             y_vals = comb_excl["obsExclusion"]["y"]
             y_vals = self.add_jitter ( y_vals, addJitter )
-            label = f"SModelS: comb. {num_sr} SRs {ver}"
+            label = f"SModelS: comb."
+            # label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-                label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
+                label = f"SModelS: NN"
+                # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             if 'Gamma' in y_label:
                 sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
@@ -825,9 +838,11 @@ class PaperPlot:
         if cr_excl not in [ None, [] ]:
             x_vals = cr_excl["obsExclusion"]["x"]
             y_vals = cr_excl["obsExclusion"]["y"]
-            label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
+            label = f"SModelS: CR comb."
+            # label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
             if cr_is == "orig":
-                label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
+                label = f"SModelS: orig pyhf"
+                # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
@@ -906,7 +921,10 @@ class PaperPlot:
             ax.set_ylim([min_exp_y,max_exp_y+step_y])
         else: ax.set_ylim([0,round(max_exp_y+step_y,-1)])
 
-        plt.title(analysis, loc='left', fontsize=12)
+        title = f"{analysis}: {num_sr} SRs"
+        if num_cr > 0:
+            title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
+        plt.title( title, loc='left', fontsize=12)
         plt.title(pName,loc='right', fontsize=12)
 
         exp_name = analysis.split('-')[0]
@@ -929,10 +947,12 @@ class PaperPlot:
             y_vals = bestSR_excl["expExclusion"]["y"]
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             if "Gamma" in y_label:
-                sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime, self.widthToLifetime))
+                sec_ax = ax.secondary_yaxis('right', 
+                        functions=(self.widthToLifetime, self.widthToLifetime))
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                 sec_ax.set_yscale('log')
-            self.plotLines ( ax, x_vals, y_vals, "red", "dashed", "SModelS: best SR")
+            self.plotLines ( ax, x_vals, y_vals, "red", "dashed", 
+                             "SModelS: best SR")
             plt.tick_params( which='major', axis = 'both', direction = 'in',
                              length = 10, top = True, right = True )
             plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
@@ -941,9 +961,11 @@ class PaperPlot:
         if combSR:
             x_vals = comb_excl["expExclusion"]["x"]
             y_vals = comb_excl["expExclusion"]["y"]
-            label = f"SModelS: comb. {num_sr} SRs {ver}"
+            label = f"SModelS: comb."
+            # label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-                label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
+                label = f"SModelS: NN"
+                # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label, color="red" )
             for i in []: # [ "expExclusionP1", "expExclusionM1" ]:
                 if i in comb_excl:
@@ -957,9 +979,11 @@ class PaperPlot:
         if cr_excl not in [ None, [] ]:
             x_vals = cr_excl["expExclusion"]["x"]
             y_vals = cr_excl["expExclusion"]["y"]
-            label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
+            label = f"SModelS: CR comb."
+            # label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
             if cr_is == "orig":
-                label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
+                label = f"SModelS: orig pyhf"
+                # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
                    linestyle= None, color = "blue" )
             if "expExclusionP1" in cr_excl and "expExclusionM1" in cr_excl:
