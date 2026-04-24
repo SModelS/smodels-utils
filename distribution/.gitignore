@@ -2,3 +2,8 @@ database-fastlim-1.0.tgz
 smodels-fastlim/
 database/smodels-database
 database/
+smodels-analyses.json
+smodels-nonaggregated.tar.gz
+smodels-nonaggregated/
+smodels-superseded.tgz
+smodels-superseded/
