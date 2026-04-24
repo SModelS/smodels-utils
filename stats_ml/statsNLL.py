@@ -219,6 +219,14 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 nlls["pullul"] = pull
                 pprint ( f"pullul {pull}" )
                 doAdd = True
+        if "centerulm1" in nlls and "origul" in nlls:
+            sigma = abs ( nlls["centerulm1"]-nlls["centerul"] )
+            delta = nlls["centerul"]-nlls["origul"]
+            if sigma>0.:
+                pull = delta / sigma
+                nlls["pullulm1"] = pull
+                pprint ( f"pullulm1 {pull}" )
+                doAdd = True
         if "centerulEp1" in nlls and "origulE" in nlls:
             sigma = abs ( nlls["centerulEp1"]-nlls["centerulE"] )
             delta = nlls["centerulE"]-nlls["origulE"]
@@ -260,7 +268,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
     if len(cleaned)==0:
         return
 
-    sfound = ",".join ( [ f"{anaid}: {values['pull']}" for anaid,values in cleaned.items() ] )
+    sfound = ",".join ( [ f"{anaid}: {values['pull']:.2f}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
     import shutil
     if os.path.exists ( "stats" ):
