@@ -214,15 +214,17 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             sigma = abs ( nlls["centerulp1"]-nlls["centerul"] )
             delta = nlls["centerul"]-nlls["origul"]
             if sigma>0.:
-                pull = delta / sigma
-                nlls["pullul"] = float ( pull )
+                pull = float ( delta / sigma )
+                nlls["pullul"] = pull
+                pprint ( f"pullul {pull}" )
                 doAdd = True
         if "centerulEp1" in nlls and "origulE" in nlls:
             sigma = abs ( nlls["centerulEp1"]-nlls["centerulE"] )
             delta = nlls["centerulE"]-nlls["origulE"]
             if sigma>0.:
-                pull = delta / sigma
-                nlls["pullulE"] = float ( pull )
+                pull = float ( delta / sigma )
+                nlls["pullulE"] = pull
+                pprint ( f"pullulE {pull}" )
                 doAdd = True
         if "m1" in nlls and "orig" in nlls:
             sigma = nlls["m1"]-nlls["center"]
@@ -337,7 +339,6 @@ def interpret():
     import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
 if __name__ == "__main__":
-    verbose = True
     create()
     #stats = readStats()
     #writeStats ( stats )
