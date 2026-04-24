@@ -14,6 +14,7 @@ from smodels.statistics.basicStats import observed, apriori, aposteriori
 from smodels.statistics.nnInterface import NNUpperLimitComputer
 import warnings
 from ptools.helpers import py_dumps
+import numpy as np
 
 warnings.filterwarnings(
     "ignore",
@@ -194,6 +195,13 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         return
     cleaned = {}
     for anaId, nlls in res.items():
+        newnlls = {}
+        for k,v in nlls.items():
+            ## drop the infinities
+            if not np.isfinite(v):
+                continue
+            newnlls[k]=v
+        nlls = newnlls
         doAdd = False
         if "p1" in nlls and "orig" in nlls:
             sigma = nlls["p1"]-nlls["center"]
