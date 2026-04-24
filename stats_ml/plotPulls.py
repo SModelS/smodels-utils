@@ -49,7 +49,7 @@ def plot( what : str ):
     plt.plot ( stdnmx, stdnmy, c="black", linestyle="dotted",
                label="standard normal" )
     plt.xlabel ( "pulls" )
-    plt.title ( f"pulls of {what} estimates" )
+    plt.title ( f"pulls of {what.replace('pull','')} estimates" )
     outfile = f"{what}.png"
     plt.savefig ( outfile )
     from smodels_utils.plotting.mpkitty import timg
