@@ -35,7 +35,7 @@ def getValues( what : str = "pull" ):
             pull = values[ what ]
             if abs(pull)<6:
                 ret.append ( pull )
-            print ( f"[{point}] {anaid:10s}: {pull:.2f}" )
+            print ( f"[{point}] {anaid:15s}: {pull:.2f}" )
     return ret
 
 def plot( what : str ):
@@ -64,8 +64,8 @@ if __name__ == "__main__":
     ap.add_argument( '-c', '--create_stats', help="create stats",
                      action="store_true" )
     args = ap.parse_args()
-    if args.create_stats:
+    if True: # args.create_stats:
         stats = readStats()
         writeStats ( stats )
-        sys.exit()
+        # sys.exit()
     plot( args.what )

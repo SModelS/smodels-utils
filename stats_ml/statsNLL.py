@@ -144,6 +144,9 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
             nlls[f"{prefix}ulEp1"]=ulEp1
             pprint ( f"ulEp1 {ulEp1}" )
+            ulEm1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = -1 )
+            nlls[f"{prefix}ulEm1"]=ulEm1
+            pprint ( f"ulEm1 {ulEm1}" )
         nlls[f"{prefix}ulE"]=ulE
         nlls[f"{prefix}"]=nll
         nlls[f"{prefix}A"]=nllA
@@ -235,6 +238,14 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 nlls["pullulE"] = pull
                 pprint ( f"pullulE {pull}" )
                 doAdd = True
+        if "centerulEm1" in nlls and "origulE" in nlls:
+            sigma = abs ( nlls["centerulEm1"]-nlls["centerulE"] )
+            delta = nlls["centerulE"]-nlls["origulE"]
+            if sigma>0.:
+                pull = delta / sigma
+                nlls["pullulEm1"] = pull
+                pprint ( f"pullulEm1 {pull}" )
+                doAdd = True
         if "m1" in nlls and "orig" in nlls:
             sigma = abs ( nlls["m1"]-nlls["center"] )
             delta = nlls["center"]-nlls["orig"]
@@ -268,7 +279,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
     if len(cleaned)==0:
         return
 
-    sfound = ",".join ( [ f"{anaid}: {values['pull']:.2f}" for anaid,values in cleaned.items() ] )
+    sfound = ",".join ( [ f"{anaid}: pull_nll={values['pull']:.2f}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
     import shutil
     if os.path.exists ( "stats" ):
