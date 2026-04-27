@@ -12,6 +12,7 @@ from smodels.share.models.SMparticles import SMList
 from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.statistics.basicStats import observed, apriori, aposteriori
 from smodels.statistics.nnInterface import NNUpperLimitComputer
+from smodels_utils.helper.terminalcolors import *
 import warnings
 from ptools.helpers import py_dumps
 import numpy as np
@@ -23,28 +24,31 @@ warnings.filterwarnings(
     module=r"pyhf\.schema\.validator",
 )
 
-verbose = False
+flags = { "verbose": False }
 
 def pprint ( *args ):
-    if verbose == False:
+    if flags["verbose"] == False:
         return
     print ( f"[statsNLL] {' '.join(args)}" )
+
+def pprintVar ( var : str, value : float ):
+    pprint ( f"{var}: {value:.2f}" )
 
 def keyExists ( key ):
     key_file = f"results/{key}"
     return os.path.exists  ( key_file )
 
 def createSLHAFile( doStaus : bool = True, doEWKinos : bool = False ) \
-        -> os.PathLike:
+        -> dict:
     mLSP, mC1, mStau = 150, 300, 300
     mList = ( mLSP, mC1, mStau )
     key = abs ( hash ( mList ) )
     exists = True
     while exists:
         import random
-        mLSP = int ( random.uniform ( 100, 300 ) )
+        mLSP = int ( random.uniform ( 100, 200 ) )
         mC1 = int ( random.uniform ( mLSP + 5, 600 ) )
-        mStau = int ( random.uniform ( mLSP + 10, 600 ) )
+        mStau = int ( random.uniform ( mLSP + 10, 440 ) )
         mList = ( mLSP, mC1, mStau )
         key = abs ( hash ( mList ) )
         exists = keyExists ( key )
@@ -73,7 +77,8 @@ def createSLHAFile( doStaus : bool = True, doEWKinos : bool = False ) \
     # slhafile = "ewkinos.slha"
     slhafile = f"slhafiles/{key}.slha"
     ma.createSLHAFile ( slhafile, addXsecs = True )
-    return { "file": slhafile, "mLSP": mLSP, "mC1": mC1, "key": key }
+    return { "file": slhafile, "mLSP": mLSP, "mC1": mC1, "key": key,
+             "mStau": mStau, "doEWKinos": doEWKinos }
 
 def readStats():
     fname = "stats"
@@ -92,7 +97,8 @@ def readStats():
 
 def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
     s = createSLHAFile( doStaus = doStaus, doEWKinos = doEWKinos )
-    print ( f"[statsNLL] starting {s['key']}" )
+    print ( f"[statsNLL] starting {GREEN}{s['key']}{RESET}" )
+    print ( f"[statsNLL] mLSP={s['mLSP']:.1f} mStau={s['mStau']:.1f}" )
     slhafile = s["file"]
     runtime.modelFile = "smodels.share.models.mssm"
     BSMList = load()
@@ -117,46 +123,43 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             continue ## irrelevant
         anaId = p.dataset.globalInfo.id
         isOrig = True if "-orig" in anaId else False
-        pprint ( f"first query of {p}" )
+        pprint ( f"first query of {YELLOW}{anaId}{RESET}" )
         nll = p.nll( mu = 1., asimov = None )
-        pprint ( f"nll {nll}" )
+        pprintVar ( "nll", nll )
         nll_min = p.nll_min ( )
-        pprint ( f"nll_min {nll_min}" )
+        pprintVar ( "nll_min", nll_min )
         nllA = p.nll( mu = 1. , asimov = 1 )
-        if not hasattr ( p, "nll_min" ):
-            print ( f"@@X {p} {type(p)} doesnt have a nll_min" )
         nllA_min = p.nll_min ( evaluationType = aposteriori )
-        pprint ( f"nllA_min {nllA_min}" )
+        pprintVar ( "nllA_min", nllA_min )
         nllA0 = p.nll( mu = 0., asimov = 1 )
-        pprint ( f"nllA {nllA}" )
+        pprintVar ( "nllA", nllA )
         print ( )
-        print ( f"@@UTIL0 get nll for mu=1 aposteriori isOrig {isOrig} no pmSigma" )
-        nllE = p.nll( mu = 1., evaluationType = aposteriori)
-        pprint ( f"nllE {nllE}" )
-        print ( f"@@UTIL1 nllE {nllE}" )
-        print ( )
-        nllEA = p.nll( asimov = 1, evaluationType = aposteriori )
-        pprint ( f"nllEA {nllEA}" )
+        nllE = p.nll( mu = 1., evaluationType = apriori )
+        pprintVar ( "nllE", nllE )
+        nllEA = p.nll( asimov = 1, evaluationType = apriori )
+        pprintVar ( "nllEA", nllEA )
         ul = p.getUpperLimitOnMu( pmSigma = 0 )
-        pprint ( f"ul {ul}" )
-        ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
-        pprint ( f"ulE {ulE}" )
+        pprintVar ( "ul", ul )
+        ulE = p.getUpperLimitOnMu( evaluationType = apriori )
+        pprintVar ( "ulE", ulE )
+        ulEpost = p.getUpperLimitOnMu( evaluationType = aposteriori )
+        pprintVar ( "ulEpost", ulEpost )
         nlls = { }
         prefix = "orig" if isOrig else "nn"
         nlls[f"{prefix}_ul"]=ul
         if not isOrig:
             ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
-            pprint ( f"ulp1 {ulp1}" )
+            pprintVar ( "ulp1", ulp1 )
             nlls[f"{prefix}_ulp1"]=ulp1
             ulm1 = p.getUpperLimitOnMu( pmSigma = -1 )
-            pprint ( f"ulm1 {ulm1}" )
+            pprintVar ( "ulm1", ulm1 )
             nlls[f"{prefix}_ulm1"]=ulm1
-            ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
+            ulEp1 = p.getUpperLimitOnMu( evaluationType = apriori, pmSigma = 1 )
             nlls[f"{prefix}_ulEp1"]=ulEp1
-            pprint ( f"ulEp1 {ulEp1}" )
-            ulEm1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = -1 )
+            pprintVar ( "ulEp1", ulEp1 )
+            ulEm1 = p.getUpperLimitOnMu( evaluationType = apriori, pmSigma = -1 )
             nlls[f"{prefix}_ulEm1"]=ulEm1
-            pprint ( f"ulEm1 {ulEm1}" )
+            pprintVar ( "ulEm1", ulEm1 )
         nlls[f"{prefix}_ulE"]=ulE
         nlls[f"{prefix}_nll"]=nll
         nlls[f"{prefix}_nll_min"]=nll_min
@@ -166,32 +169,26 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         nlls[f"{prefix}_nllE"]=nllE
         nlls[f"{prefix}_nllEA"]=nllEA
         if type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer:
-            nll_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
-                        pmSigma = 1 )
-            nll_m1 = p.statsComputer.upperLimitComputer.nll ( 1.,
-                        pmSigma = -1 )
+            nll_p1 = p.nll ( mu=1., pmSigma = 1 )
+            nll_m1 = p.nll ( mu=1., pmSigma = -1 )
             nllA_p1 = None
             try:
-                nllA_p1 = p.statsComputer.upperLimitComputer.nll (
-                        mu=1., asimov=1, pmSigma = 1 )
+                nllA_p1 = p.nll (  mu=1., asimov=1, pmSigma = 1 )
             except Exception as e:
-                pass
+                pprint ( f"Exception: {e}" )
             nllE_p1 = None
             try:
                 nllE_p1 = p.nll ( mu= 1., evaluationType=aposteriori,
                                   pmSigma = 1 )
-                nllE_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
-                    evaluationType=aposteriori, pmSigma = 1 )
-                print ( f"@@UTIL2 nllE_p1 {nllE_p1}" )
-                pprint ( f"nllEp1 {nll_p1E}" )
+                pprintVar ( "nllEp1", nllE_p1 )
             except Exception as e:
-                pass
+                pprint ( f"Exception: {e}" )
             nllEA_p1 = None
             try:
-                nllEA_p1 = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1,
-                    evaluationType=aposteriori, pmSigma = 1 )
+                nllEA_p1 = p.nll ( 1., asimov=1, evaluationType=aposteriori,
+                                   pmSigma = 1 )
             except Exception as e:
-                pass
+                pprint ( f"Exception: {e}" )
             if nll_p1 == None:
                 print ( f"[statsNLL] nll_p1 is None for {anaId}" )
             if nll_p1 != None:
@@ -204,6 +201,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 nlls[f"{prefix}_nllE_p1"] = nllE_p1
             if nllEA_p1 != None:
                 nlls[f"{prefix}_nllEA_p1"] = nllEA_p1
+        print ( )
         short_anaId = anaId.replace("-orig","")
         if short_anaId in res:
             res[short_anaId].update ( nlls )
@@ -222,12 +220,19 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             newnlls[k]=v
         nlls = newnlls
         doAdd = False
+        if not "nn_nll_p1" in nlls:
+            print ( f"[statsNLL] no nn_nll_p1: {nlls}" )
+            continue
+        if not "orig_nll" in nlls:
+            print ( f"[statsNLL] no orig_nll: {nlls}" )
+            continue
         if "nn_nll_p1" in nlls and "orig_nll" in nlls:
             sigma = abs ( nlls["nn_nll_p1"]-nlls["nn_nll"] )
             delta = nlls["nn_nll"]-nlls["orig_nll"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_nll"] = pull
+                pprint ( f"pull_nll {pull}" )
                 doAdd = True
         if "nn_ulp1" in nlls and "orig_ul" in nlls:
             sigma = abs ( nlls["nn_ulp1"]-nlls["nn_ul"] )
@@ -275,12 +280,13 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 pull = delta / sigma
                 nlls["pull_nllA"] = pull
                 doAdd = True
-        if "nn_nllE_p1E" in nlls and "orig_nllE" in nlls:
+        if "nn_nllE_p1" in nlls and "orig_nllE" in nlls:
             sigma = abs ( nlls["nn_nllE_p1"]-nlls["nn_nllE"] )
             delta = nlls["nn_nllE"]-nlls["orig_nllE"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_nllE"] = pull
+                pprint ( f"pull_nllE {pull}" )
                 doAdd = True
         if "nn_nllEA_p1" in nlls and "orig_nllEA" in nlls:
             sigma = abs ( nlls["nn_nllEA_p1"]-nlls["nn_nllEA"] )
@@ -295,6 +301,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         return
 
     sfound = ",".join ( [ f"{anaid}: pull_nll={values['pull_nll']:.2f}" for anaid,values in cleaned.items() ] )
+    # sfound = ",".join ( [ f"{anaid}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
     import shutil
     if os.path.exists ( "stats" ):
@@ -354,7 +361,7 @@ def create():
                      action="store_true" )
     args = ap.parse_args()
     if args.verbose:
-        verbose = True
+        flags["verbose"] = True
 
     for path in [ "results", "slhafiles" ]:
         if not os.path.exists ( path ):
