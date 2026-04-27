@@ -157,10 +157,15 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             ulEp1 = p.getUpperLimitOnMu( evaluationType = apriori, pmSigma = 1 )
             nlls[f"{prefix}_ulEp1"]=ulEp1
             pprintVar ( "ulEp1", ulEp1 )
+            ulEpostp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, 
+                                             pmSigma = 1 )
+            pprintVar ( "ulEpostp1", ulEpostp1 )
+            nlls[f"{prefix}_ulEpostp1"]=ulEpostp1
             ulEm1 = p.getUpperLimitOnMu( evaluationType = apriori, pmSigma = -1 )
             nlls[f"{prefix}_ulEm1"]=ulEm1
             pprintVar ( "ulEm1", ulEm1 )
         nlls[f"{prefix}_ulE"]=ulE
+        nlls[f"{prefix}_ulEpost"]=ulEpost
         nlls[f"{prefix}_nll"]=nll
         nlls[f"{prefix}_nll_min"]=nll_min
         nlls[f"{prefix}_nllA"]=nllA
@@ -232,7 +237,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_nll"] = pull
-                pprint ( f"pull_nll {pull}" )
+                pprintVar ( f"pull_nll", pull )
                 doAdd = True
         if "nn_ulp1" in nlls and "orig_ul" in nlls:
             sigma = abs ( nlls["nn_ulp1"]-nlls["nn_ul"] )
@@ -240,7 +245,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_ul"] = pull
-                pprint ( f"pull_ul {pull}" )
+                pprintVar ( "pull_ul", pull )
                 doAdd = True
         if "nn_ulm1" in nlls and "orig_ul" in nlls:
             sigma = abs ( nlls["nn_ulm1"]-nlls["nn_ul"] )
@@ -248,7 +253,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_ulm1"] = pull
-                pprint ( f"pull_ulm1 {pull}" )
+                pprintVar ( f"pull_ulm1", pull )
                 doAdd = True
         if "nn_ulEp1" in nlls and "orig_ulE" in nlls:
             sigma = abs ( nlls["nn_ulEp1"]-nlls["nn_ulE"] )
@@ -256,7 +261,15 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_ulE"] = pull
-                pprint ( f"pull_ulE {pull}" )
+                pprintVar ( "pull_ulE", pull )
+                doAdd = True
+        if "nn_ulEpostp1" in nlls and "orig_ulEpost" in nlls:
+            sigma = abs ( nlls["nn_ulEpostp1"]-nlls["nn_ulEpost"] )
+            delta = nlls["nn_ulEpost"]-nlls["orig_ulEpost"]
+            if sigma>0.:
+                pull = delta / sigma
+                nlls["pull_ulEpost"] = pull
+                pprintVar ( "pull_ulEpost", pull )
                 doAdd = True
         if "nn_ulE_m1" in nlls and "orig_ulE" in nlls:
             sigma = abs ( nlls["nn_ulE_m1"]-nlls["nn_ulE"] )
@@ -264,7 +277,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_ulE_m1"] = pull
-                pprint ( f"pull_ulE_m1 {pull}" )
+                pprintVar ( "pull_ulE_m1", pull )
                 doAdd = True
         if "nn_nll_m1" in nlls and "orig_nll" in nlls:
             sigma = abs ( nlls["nn_nll_m1"]-nlls["orig_nll"] )
@@ -286,7 +299,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull_nllE"] = pull
-                pprint ( f"pull_nllE {pull}" )
+                pprintVar ( "pull_nllE", pull )
                 doAdd = True
         if "nn_nllEA_p1" in nlls and "orig_nllEA" in nlls:
             sigma = abs ( nlls["nn_nllEA_p1"]-nlls["nn_nllEA"] )
