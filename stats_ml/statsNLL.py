@@ -129,8 +129,12 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         pprint ( f"nllA_min {nllA_min}" )
         nllA0 = p.nll( mu = 0., asimov = 1 )
         pprint ( f"nllA {nllA}" )
-        nllE = p.nll( mu = 1., expectationType = aposteriori )
+        print ( )
+        print ( f"@@UTIL0 get nll for mu=1 aposteriori isOrig {isOrig} no pmSigma" )
+        nllE = p.nll( mu = 1., evaluationType = aposteriori)
         pprint ( f"nllE {nllE}" )
+        print ( f"@@UTIL1 nllE {nllE}" )
+        print ( )
         nllEA = p.nll( asimov = 1, evaluationType = aposteriori )
         pprint ( f"nllEA {nllEA}" )
         ul = p.getUpperLimitOnMu( pmSigma = 0 )
@@ -138,65 +142,68 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
         pprint ( f"ulE {ulE}" )
         nlls = { }
-        prefix = "orig" if isOrig else "nll"
-        nlls[f"{prefix}ul"]=ul
+        prefix = "orig" if isOrig else "nn"
+        nlls[f"{prefix}_ul"]=ul
         if not isOrig:
             ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
             pprint ( f"ulp1 {ulp1}" )
-            nlls[f"{prefix}ulp1"]=ulp1
+            nlls[f"{prefix}_ulp1"]=ulp1
             ulm1 = p.getUpperLimitOnMu( pmSigma = -1 )
             pprint ( f"ulm1 {ulm1}" )
-            nlls[f"{prefix}ulm1"]=ulm1
+            nlls[f"{prefix}_ulm1"]=ulm1
             ulEp1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = 1 )
-            nlls[f"{prefix}ulEp1"]=ulEp1
+            nlls[f"{prefix}_ulEp1"]=ulEp1
             pprint ( f"ulEp1 {ulEp1}" )
             ulEm1 = p.getUpperLimitOnMu( evaluationType = aposteriori, pmSigma = -1 )
-            nlls[f"{prefix}ulEm1"]=ulEm1
+            nlls[f"{prefix}_ulEm1"]=ulEm1
             pprint ( f"ulEm1 {ulEm1}" )
-        nlls[f"{prefix}ulE"]=ulE
-        nlls[f"{prefix}"]=nll
-        nlls[f"{prefix}_min"]=nll_min
-        nlls[f"{prefix}A"]=nllA
-        nlls[f"{prefix}A_min"]=nllA_min
-        nlls[f"{prefix}A0"]=nllA0
-        nlls[f"{prefix}E"]=nllE
-        nlls[f"{prefix}EA"]=nllEA
+        nlls[f"{prefix}_ulE"]=ulE
+        nlls[f"{prefix}_nll"]=nll
+        nlls[f"{prefix}_nll_min"]=nll_min
+        nlls[f"{prefix}_nllA"]=nllA
+        nlls[f"{prefix}_nllA_min"]=nllA_min
+        nlls[f"{prefix}_nllA0"]=nllA0
+        nlls[f"{prefix}_nllE"]=nllE
+        nlls[f"{prefix}_nllEA"]=nllEA
         if type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer:
             nll_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                         pmSigma = 1 )
             nll_m1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                         pmSigma = -1 )
-            nll_p1A = None
+            nllA_p1 = None
             try:
-                nll_p1A = p.statsComputer.upperLimitComputer.nll (
+                nllA_p1 = p.statsComputer.upperLimitComputer.nll (
                         mu=1., asimov=1, pmSigma = 1 )
             except Exception as e:
                 pass
-            nll_p1E = None
+            nllE_p1 = None
             try:
-                nll_p1E = p.statsComputer.upperLimitComputer.nll ( 1.,
+                nllE_p1 = p.nll ( mu= 1., evaluationType=aposteriori,
+                                  pmSigma = 1 )
+                nllE_p1 = p.statsComputer.upperLimitComputer.nll ( 1.,
                     evaluationType=aposteriori, pmSigma = 1 )
+                print ( f"@@UTIL2 nllE_p1 {nllE_p1}" )
                 pprint ( f"nllEp1 {nll_p1E}" )
             except Exception as e:
                 pass
-            nll_p1EA = None
+            nllEA_p1 = None
             try:
-                nll_p1EA = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1,
+                nllEA_p1 = p.statsComputer.upperLimitComputer.nll ( 1., asimov=1,
                     evaluationType=aposteriori, pmSigma = 1 )
             except Exception as e:
                 pass
             if nll_p1 == None:
                 print ( f"[statsNLL] nll_p1 is None for {anaId}" )
             if nll_p1 != None:
-                nlls["p1"] = nll_p1
+                nlls[f"{prefix}_nll_p1"] = nll_p1
             if nll_m1 != None:
-                nlls["m1"] = nll_m1
-            if nll_p1A != None:
-                nlls["p1A"] = nll_p1A
-            if nll_p1E != None:
-                nlls["p1E"] = nll_p1E
-            if nll_p1EA != None:
-                nlls["p1EA"] = nll_p1EA
+                nlls[f"{prefix}_nll_m1"] = nll_m1
+            if nllA_p1 != None:
+                nlls[f"{prefix}_nllA_p1"] = nllA_p1
+            if nllE_p1 != None:
+                nlls[f"{prefix}_nllE_p1"] = nllE_p1
+            if nllEA_p1 != None:
+                nlls[f"{prefix}_nllEA_p1"] = nllEA_p1
         short_anaId = anaId.replace("-orig","")
         if short_anaId in res:
             res[short_anaId].update ( nlls )
@@ -215,79 +222,79 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             newnlls[k]=v
         nlls = newnlls
         doAdd = False
-        if "p1" in nlls and "orig" in nlls:
-            sigma = nlls["p1"]-nlls["nll"]
-            delta = nlls["nll"]-nlls["orig"]
+        if "nn_nll_p1" in nlls and "orig_nll" in nlls:
+            sigma = abs ( nlls["nn_nll_p1"]-nlls["nn_nll"] )
+            delta = nlls["nn_nll"]-nlls["orig_nll"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pull"] = pull
+                nlls["pull_nll"] = pull
                 doAdd = True
-        if "nllulp1" in nlls and "origul" in nlls:
-            sigma = abs ( nlls["nllulp1"]-nlls["nllul"] )
-            delta = nlls["nllul"]-nlls["origul"]
+        if "nn_ulp1" in nlls and "orig_ul" in nlls:
+            sigma = abs ( nlls["nn_ulp1"]-nlls["nn_ul"] )
+            delta = nlls["nn_ul"]-nlls["orig_ul"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullul"] = pull
-                pprint ( f"pullul {pull}" )
+                nlls["pull_ul"] = pull
+                pprint ( f"pull_ul {pull}" )
                 doAdd = True
-        if "nllulm1" in nlls and "origul" in nlls:
-            sigma = abs ( nlls["nllulm1"]-nlls["nllul"] )
-            delta = nlls["nllul"]-nlls["origul"]
+        if "nn_ulm1" in nlls and "orig_ul" in nlls:
+            sigma = abs ( nlls["nn_ulm1"]-nlls["nn_ul"] )
+            delta = nlls["nn_ul"]-nlls["orig_ul"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullulm1"] = pull
-                pprint ( f"pullulm1 {pull}" )
+                nlls["pull_ulm1"] = pull
+                pprint ( f"pull_ulm1 {pull}" )
                 doAdd = True
-        if "nllulEp1" in nlls and "origulE" in nlls:
-            sigma = abs ( nlls["nllulEp1"]-nlls["nllulE"] )
-            delta = nlls["nllulE"]-nlls["origulE"]
+        if "nn_ulEp1" in nlls and "orig_ulE" in nlls:
+            sigma = abs ( nlls["nn_ulEp1"]-nlls["nn_ulE"] )
+            delta = nlls["nn_ulE"]-nlls["orig_ulE"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullulE"] = pull
-                pprint ( f"pullulE {pull}" )
+                nlls["pull_ulE"] = pull
+                pprint ( f"pull_ulE {pull}" )
                 doAdd = True
-        if "nllulEm1" in nlls and "origulE" in nlls:
-            sigma = abs ( nlls["nllulEm1"]-nlls["nllulE"] )
-            delta = nlls["nllulE"]-nlls["origulE"]
+        if "nn_ulE_m1" in nlls and "orig_ulE" in nlls:
+            sigma = abs ( nlls["nn_ulE_m1"]-nlls["nn_ulE"] )
+            delta = nlls["nn_ulE"]-nlls["orig_ulE"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullulEm1"] = pull
-                pprint ( f"pullulEm1 {pull}" )
+                nlls["pull_ulE_m1"] = pull
+                pprint ( f"pull_ulE_m1 {pull}" )
                 doAdd = True
-        if "m1" in nlls and "orig" in nlls:
-            sigma = abs ( nlls["m1"]-nlls["nll"] )
-            delta = nlls["nll"]-nlls["orig"]
+        if "nn_nll_m1" in nlls and "orig_nll" in nlls:
+            sigma = abs ( nlls["nn_nll_m1"]-nlls["orig_nll"] )
+            delta = nlls["nn_nll"]-nlls["orig_nll"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullm1"] = pull
+                nlls["pull_nll_m1"] = pull
                 doAdd = True
-        if "p1A" in nlls and "origA" in nlls:
-            sigma = abs ( nlls["p1A"]-nlls["nllA"] )
-            delta = nlls["nllA"]-nlls["origA"]
+        if "nn_nllA_p1" in nlls and "orig_nllA" in nlls:
+            sigma = abs ( nlls["nn_nllA_p1"]-nlls["nn_nllA"] )
+            delta = nlls["nn_nllA"]-nlls["orig_nllA"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullA"] = pull
+                nlls["pull_nllA"] = pull
                 doAdd = True
-        if "p1E" in nlls and "origE" in nlls:
-            sigma = abs ( nlls["p1E"]-nlls["nllE"] )
-            delta = nlls["nllE"]-nlls["origE"]
+        if "nn_nllE_p1E" in nlls and "orig_nllE" in nlls:
+            sigma = abs ( nlls["nn_nllE_p1"]-nlls["nn_nllE"] )
+            delta = nlls["nn_nllE"]-nlls["orig_nllE"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullE"] = pull
+                nlls["pull_nllE"] = pull
                 doAdd = True
-        if "p1EA" in nlls and "origEA" in nlls:
-            sigma = abs ( nlls["p1EA"]-nlls["nllEA"] )
-            delta = nlls["nllEA"]-nlls["origEA"]
+        if "nn_nllEA_p1" in nlls and "orig_nllEA" in nlls:
+            sigma = abs ( nlls["nn_nllEA_p1"]-nlls["nn_nllEA"] )
+            delta = nlls["nn_nllEA"]-nlls["orig_nllEA"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pullEA"] = pull
+                nlls["pull_nllEA"] = pull
         if doAdd:
             cleaned[anaId]=nlls
     print ( f"[statsNLL] done cleaning" )
     if len(cleaned)==0:
         return
 
-    sfound = ",".join ( [ f"{anaid}: pull_nll={values['pull']:.2f}" for anaid,values in cleaned.items() ] )
+    sfound = ",".join ( [ f"{anaid}: pull_nll={values['pull_nll']:.2f}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
     import shutil
     if os.path.exists ( "stats" ):
