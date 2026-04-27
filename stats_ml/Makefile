@@ -5,3 +5,6 @@ fetch:
 
 clean:
 	find results -type f -mtime +1 -delete
+
+clean_all:
+	rm -f results/* slhafiles/*
