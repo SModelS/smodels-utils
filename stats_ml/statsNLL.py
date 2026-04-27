@@ -291,19 +291,23 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
     if os.path.exists ( "stats" ):
         shutil.copyfile ( "stats", "stats.all" )
     key = s["key"]
-    stats = readStats()
     cleaned["params"]=s
-    if len(cleaned)>0:
-        stats[key]=cleaned
     d1 = py_dumps ( cleaned ) + "\n"
     with open ( f"results/{key}", "wt" ) as f:
         f.write ( d1 )
+    """
+    stats = readStats()
+    if len(cleaned)>0:
+        stats[key]=cleaned
     writeStats( stats )
+    """
 
+"""
 def writeStats( stats ):
     ds = py_dumps ( stats ) + "\n"
     with open ( "stats", "wt" ) as f:
         f.write ( ds )
+"""
 
 def loop( doEWKinos : bool ):
     print ( f"[statsNLL] Instantiate the database" )
