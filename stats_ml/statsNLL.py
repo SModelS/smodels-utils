@@ -120,23 +120,25 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         pprint ( f"first query of {p}" )
         nll = p.nll( mu = 1., asimov = None )
         pprint ( f"nll {nll}" )
-        nll_min = p.nll_min ( asimov = None )
+        nll_min = p.nll_min ( )
         pprint ( f"nll_min {nll_min}" )
         nllA = p.nll( mu = 1. , asimov = 1 )
-        nllA_min = p.nll_min( asimov = 1 )
+        if not hasattr ( p, "nll_min" ):
+            print ( f"@@X {p} {type(p)} doesnt have a nll_min" )
+        nllA_min = p.nll_min ( evaluationType = aposteriori )
         pprint ( f"nllA_min {nllA_min}" )
-        nllA0 = p.nll( mu = 0. , asimov = 1 )
+        nllA0 = p.nll( mu = 0., asimov = 1 )
         pprint ( f"nllA {nllA}" )
-        nllE = p.nll( expectationType = aposteriori )
+        nllE = p.nll( mu = 1., expectationType = aposteriori )
         pprint ( f"nllE {nllE}" )
-        nllEA = p.nll( asimov = 1, expectationType = aposteriori )
+        nllEA = p.nll( asimov = 1, evaluationType = aposteriori )
         pprint ( f"nllEA {nllEA}" )
         ul = p.getUpperLimitOnMu( pmSigma = 0 )
         pprint ( f"ul {ul}" )
         ulE = p.getUpperLimitOnMu( evaluationType = aposteriori )
         pprint ( f"ulE {ulE}" )
         nlls = { }
-        prefix = "orig" if isOrig else "center"
+        prefix = "orig" if isOrig else "nll"
         nlls[f"{prefix}ul"]=ul
         if not isOrig:
             ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
@@ -214,68 +216,68 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         nlls = newnlls
         doAdd = False
         if "p1" in nlls and "orig" in nlls:
-            sigma = nlls["p1"]-nlls["center"]
-            delta = nlls["center"]-nlls["orig"]
+            sigma = nlls["p1"]-nlls["nll"]
+            delta = nlls["nll"]-nlls["orig"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pull"] = pull
                 doAdd = True
-        if "centerulp1" in nlls and "origul" in nlls:
-            sigma = abs ( nlls["centerulp1"]-nlls["centerul"] )
-            delta = nlls["centerul"]-nlls["origul"]
+        if "nllulp1" in nlls and "origul" in nlls:
+            sigma = abs ( nlls["nllulp1"]-nlls["nllul"] )
+            delta = nlls["nllul"]-nlls["origul"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullul"] = pull
                 pprint ( f"pullul {pull}" )
                 doAdd = True
-        if "centerulm1" in nlls and "origul" in nlls:
-            sigma = abs ( nlls["centerulm1"]-nlls["centerul"] )
-            delta = nlls["centerul"]-nlls["origul"]
+        if "nllulm1" in nlls and "origul" in nlls:
+            sigma = abs ( nlls["nllulm1"]-nlls["nllul"] )
+            delta = nlls["nllul"]-nlls["origul"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullulm1"] = pull
                 pprint ( f"pullulm1 {pull}" )
                 doAdd = True
-        if "centerulEp1" in nlls and "origulE" in nlls:
-            sigma = abs ( nlls["centerulEp1"]-nlls["centerulE"] )
-            delta = nlls["centerulE"]-nlls["origulE"]
+        if "nllulEp1" in nlls and "origulE" in nlls:
+            sigma = abs ( nlls["nllulEp1"]-nlls["nllulE"] )
+            delta = nlls["nllulE"]-nlls["origulE"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullulE"] = pull
                 pprint ( f"pullulE {pull}" )
                 doAdd = True
-        if "centerulEm1" in nlls and "origulE" in nlls:
-            sigma = abs ( nlls["centerulEm1"]-nlls["centerulE"] )
-            delta = nlls["centerulE"]-nlls["origulE"]
+        if "nllulEm1" in nlls and "origulE" in nlls:
+            sigma = abs ( nlls["nllulEm1"]-nlls["nllulE"] )
+            delta = nlls["nllulE"]-nlls["origulE"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullulEm1"] = pull
                 pprint ( f"pullulEm1 {pull}" )
                 doAdd = True
         if "m1" in nlls and "orig" in nlls:
-            sigma = abs ( nlls["m1"]-nlls["center"] )
-            delta = nlls["center"]-nlls["orig"]
+            sigma = abs ( nlls["m1"]-nlls["nll"] )
+            delta = nlls["nll"]-nlls["orig"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullm1"] = pull
                 doAdd = True
         if "p1A" in nlls and "origA" in nlls:
-            sigma = abs ( nlls["p1A"]-nlls["centerA"] )
-            delta = nlls["centerA"]-nlls["origA"]
+            sigma = abs ( nlls["p1A"]-nlls["nllA"] )
+            delta = nlls["nllA"]-nlls["origA"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullA"] = pull
                 doAdd = True
         if "p1E" in nlls and "origE" in nlls:
-            sigma = abs ( nlls["p1E"]-nlls["centerE"] )
-            delta = nlls["centerE"]-nlls["origE"]
+            sigma = abs ( nlls["p1E"]-nlls["nllE"] )
+            delta = nlls["nllE"]-nlls["origE"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullE"] = pull
                 doAdd = True
         if "p1EA" in nlls and "origEA" in nlls:
-            sigma = abs ( nlls["p1EA"]-nlls["centerEA"] )
-            delta = nlls["centerEA"]-nlls["origEA"]
+            sigma = abs ( nlls["p1EA"]-nlls["nllEA"] )
+            delta = nlls["nllEA"]-nlls["origEA"]
             if sigma>0.:
                 pull = delta / sigma
                 nlls["pullEA"] = pull
