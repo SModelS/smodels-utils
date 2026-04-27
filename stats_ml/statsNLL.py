@@ -120,7 +120,11 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         pprint ( f"first query of {p}" )
         nll = p.nll( mu = 1., asimov = None )
         pprint ( f"nll {nll}" )
+        nll_min = p.nll_min ( asimov = None )
+        pprint ( f"nll_min {nll_min}" )
         nllA = p.nll( mu = 1. , asimov = 1 )
+        nllA_min = p.nll_min( asimov = 1 )
+        pprint ( f"nllA_min {nllA_min}" )
         nllA0 = p.nll( mu = 0. , asimov = 1 )
         pprint ( f"nllA {nllA}" )
         nllE = p.nll( expectationType = aposteriori )
@@ -149,7 +153,9 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
             pprint ( f"ulEm1 {ulEm1}" )
         nlls[f"{prefix}ulE"]=ulE
         nlls[f"{prefix}"]=nll
+        nlls[f"{prefix}_min"]=nll_min
         nlls[f"{prefix}A"]=nllA
+        nlls[f"{prefix}A_min"]=nllA_min
         nlls[f"{prefix}A0"]=nllA0
         nlls[f"{prefix}E"]=nllE
         nlls[f"{prefix}EA"]=nllEA
