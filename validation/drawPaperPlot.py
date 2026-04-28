@@ -225,7 +225,7 @@ class PaperPlot:
         return None
 
     def getCurveFromJson( self, anaDir, validationFolder, txname,
-            typ : str, axes = None, eval_axes : bool = True ):
+            typ : str, axes = None, eval_axes : bool = True ) -> dict:
         """
         Get Exclusion Curve from official and SModelS json files
         :param anaDir: path to dir of analysis
@@ -754,7 +754,7 @@ class PaperPlot:
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
-        plt.title( title, loc='left', fontsize=12, x=-.1)
+        plt.title( title, loc='left', fontsize=12, x=-.12)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
         pName = self.getPrettyProcessName(validationPlot.txName)
@@ -923,7 +923,7 @@ class PaperPlot:
         title = f"{analysis}: {num_sr} SRs"
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
-        plt.title( title, loc='left', fontsize=12, x=-.1)
+        plt.title( title, loc='left', fontsize=12, x=-.12)
         plt.title(pName,loc='right', fontsize=12)
 
         exp_name = analysis.split('-')[0]
