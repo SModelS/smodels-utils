@@ -234,6 +234,8 @@ class PaperPlot:
         "official", "bestSR", "combined"
         official curve, SModelS bestSR, SModelS combined SR
         :param axes: axes map of official exclusion line
+        :param eval_axes: this is true if we need to transform y <-> x-y
+        I believe
 
         :returns: a dict of obs and exp exclusion lines
         """
@@ -284,8 +286,18 @@ class PaperPlot:
             print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
             return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
         excl_lines = {}
+        if "obs_excl" in curve:
+            x_ = self.getCoordsFromLine ( curve, "obs_excl", "x" )
+            y_ = self.getCoordsFromLine ( curve, "obs_excl", "y" )
+            excl_lines["obsExclusion"] = { "x": x_, "y": y_ }
+        if "exp_excl" in curve:
+            x_ = self.getCoordsFromLine ( curve, "exp_excl", "x" )
+            y_ = self.getCoordsFromLine ( curve, "exp_excl", "y" )
+            excl_lines["expExclusion"] = { "x": x_, "y": y_ }
         for i in [ "obsExclusion", "obsExclusionP1", "obsExclusionM1",
                    "expExclusion", "expExclusionP1", "expExclusionM1" ]:
+            if not i in curve:
+                continue
             x_ = self.getCoordsFromLine ( curve, i, "x" )
             y_ = self.getCoordsFromLine ( curve, i, "y" )
             if len(x_)==0:
@@ -560,7 +572,7 @@ class PaperPlot:
             validationFolder = f"validation/{validationFolder}"
         txname = validationPlot.txName
         axes = validationPlot.axes
-        eval_axes = True
+        eval_axes = False
         saxes = str(axes).replace(" ","").replace("'","")
         print(f"[drawPaperPlot] Drawing pretty paper plot for {txname}:{saxes} ")
 
@@ -630,7 +642,7 @@ class PaperPlot:
                 print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
                 combSR = False
                 return
-            print( f"[drawPaperPlot] got combined curve from {anaDir}" )
+            print( f"[drawPaperPlot] got combined curve from {anaDir}: {len(comb_excl)} points" )
 
         # get the range of x values in obs and exp curves to set lim on plot ranges.
         # low limit on y axes usually 0 for plot (except for width plots)
@@ -742,8 +754,6 @@ class PaperPlot:
             #print("min_obs_y ", min_obs_y)
             #print("step ", step_y)
             ax.set_ylim([min_obs_y, max_obs_y+step_y])
-
-
         else:
             #print("max_obs_y + step ", max_obs_y+step_y )
             ax.set_ylim([0,round(max_obs_y+step_y,-1)])
@@ -808,11 +818,10 @@ class PaperPlot:
                 sec_ax.set_yscale('log')
             self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
 
-            if True:
+            if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl:
                 x_valsp1 = comb_excl["obsExclusionP1"]["x"]
                 y_valsp1 = comb_excl["obsExclusionP1"]["y"]
                 addJitter = True
-                print ( f"FIXME large jitter!!" )
                 #y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
                 label = f""
                 x_valsp1, y_valsp1 = yvalsAreWidths ( y_label, x_valsp1, y_valsp1 )
