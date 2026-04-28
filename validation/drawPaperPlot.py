@@ -754,7 +754,7 @@ class PaperPlot:
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
-        plt.title( title, loc='left', fontsize=12)
+        plt.title( title, loc='left', fontsize=12, x=-.1)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
         pName = self.getPrettyProcessName(validationPlot.txName)
