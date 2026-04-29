@@ -63,7 +63,8 @@ class PDFAtlasReader():
         ret = []
         for pt in path:
             if pt[0] not in [ "m", "l" ]:
-                self.pprint ( f"for shape we have '{pt[0]}'" )
+                # self.pprint ( f"for shape we have '{pt[0]}'" )
+                continue
             ret.append ( self.pdfToMasses ( pt[1], pt[2] ) )
         return ret
         
@@ -84,6 +85,7 @@ class PDFAtlasReader():
         self.findOffsets()
         self.ulValues()
         self.exclusionLine()
+        self.exclusionLine(pm=True)
 
     def findOffsets ( self ):
         """ this is about finding the offsets """
@@ -143,7 +145,21 @@ class PDFAtlasReader():
                 return True
         return False
 
-    def exclusionLine ( self ):
+    def isLightGrey ( self, c ):
+        """ check if it is the dark red that ATLAS uses for observed limits """
+        if abs ( c[0]-0.4 ) < 1e-5 and abs ( c[1]-0.4 ) < 1e-5 and \
+           abs ( c[2]-0.4 ) < 1e-5:
+                return True
+        return False
+
+    def isDarkGrey ( self, c ):
+        """ check if it is the dark red that ATLAS uses for observed limits """
+        if abs ( c[0]-0.8 ) < 1e-5 and abs ( c[1]-0.8 ) < 1e-5 and \
+           abs ( c[2]-0.8 ) < 1e-5:
+                return True
+        return False
+
+    def exclusionLine ( self, exp : bool = False, pm : bool = False ):
         line=[]
         ct = 0
         for s in self.page.shapes:
@@ -151,13 +167,24 @@ class PDFAtlasReader():
                 continue
             c = s.stroke.color.as_rgb()
             dash = s.stroke.dash
-            if self.isDarkRed ( c ) and s.stroke.linewidth > 2.1 and dash == ([], 0):
+            if not exp and not pm and self.isDarkRed ( c ) and s.stroke.linewidth > 2.1 and dash == ([], 0):
                 ct += 1
                 cur = self.computeXYShape ( s ) 
                 for pt in cur:
                     if pt[1] < pt[0]:
                         line.append ( pt )
-        f=open ( "excl.csv", "wt" )
+            if pm and self.isDarkGrey ( c ):
+                print ( f"c {c}" )
+                ct += 1
+                cur = self.computeXYShape ( s ) 
+                for pt in cur:
+                    if pt[1] < pt[0]:
+                        line.append ( pt )
+        fname = "excl.csv"
+        if pm == True:
+            fname = "excl_pm.csv"
+        f=open ( fname, "wt" )
+        print ( f"[PDFAtlasReader] writing {fname} with {len(line)} points" )
         for l in line:
             line = f"{l[0]},{l[1]}\n"
             if self.yIsDiff():
