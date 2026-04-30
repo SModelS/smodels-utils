@@ -136,7 +136,8 @@ def createRedBlackPlot ( expRes, txnameStr, axes, db,
             slhadir = None, options = options, kfactor=kfactor,
             namedTarball = namedTarball, keep = keep, combine = combine )
     pp_specific_options = { "drawbestsr": False,
-                            "drawofficialpm1": True }
+                            "drawobsofficialpm1": False,
+                            "drawexpofficialpm1": True }
     if parser.has_section("drawPaperPlot"):
         updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
     drawPaperPlot ( valPlot, options, pp_specific_options )

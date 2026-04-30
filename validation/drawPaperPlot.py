@@ -116,26 +116,26 @@ class PaperPlot:
         c_idx = getIndex ( validationPlot.officialCurves, "" )
         ret["obsExclusion"] = fetchPoints ( validationPlot.officialCurves, c_idx )
 
-        if self.specific_options["drawofficialpm1"] == True:
+        if self.specific_options["drawobsofficialpm1"] == True:
             c_idx_p1 = getIndex ( validationPlot.officialCurves, "P1" )
             if c_idx_p1 != None:
-                ret["obsExclusion_P1"] = fetchPoints ( \
+                ret["obsExclusionP1"] = fetchPoints ( \
                         validationPlot.officialCurves, c_idx_p1 )
             c_idx_m1 = getIndex ( validationPlot.officialCurves, "M1" )
             if c_idx_m1 != None:
-                ret["obsExclusion_M1"] = fetchPoints ( \
+                ret["obsExclusionM1"] = fetchPoints ( \
                         validationPlot.officialCurves, c_idx_m1 )
 
         c_idx = getIndex ( validationPlot.expectedOfficialCurves, "" )
         ret["expExclusion"] = fetchPoints ( validationPlot.expectedOfficialCurves, c_idx )
-        if self.specific_options["drawofficialpm1"] == True:
+        if self.specific_options["drawexpofficialpm1"] == True:
             c_idx_p1 = getIndex ( validationPlot.expectedOfficialCurves, "P1" )
             if c_idx_p1 != None:
-                ret["expExclusion_P1"] = fetchPoints ( \
+                ret["expExclusionP1"] = fetchPoints ( \
                         validationPlot.expectedOfficialCurves, c_idx_p1 )
             c_idx_m1 = getIndex ( validationPlot.expectedOfficialCurves, "M1" )
             if c_idx_m1 != None:
-                ret["expExclusion_M1"] = fetchPoints ( \
+                ret["expExclusionM1"] = fetchPoints ( \
                         validationPlot.expectedOfficialCurves, c_idx_m1 )
         return ret
 
@@ -782,15 +782,11 @@ class PaperPlot:
                    "black", "solid", label = f'{exp_name} official' )
         plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
-            if "obsExclusion_P1" in off_excl and "x" in off_excl["obsExclusion_P1"]:
-                self.plotLines ( ax, off_excl["obsExclusion_P1"]["x"],
-                        off_excl["obsExclusion_P1"]["y"],
-                        "black", "dotted", None )
-
-            if "obsExclusion_M1" in off_excl and "x" in off_excl["obsExclusion_M1"]:
-                self.plotLines ( ax, off_excl["obsExclusion_M1"]["x"], off_excl["obsExclusion_M1"]["y"],
-                            "black", "dotted", None )
-        #print("official : ", off_excl["obsExclusion"]["y"] )
+            for i in [ "obsExclusionP1", "obsExclusionP1", "obsExclusionM1",
+                       "obsExclusionM1" ]:
+                if i in off_excl and "x" in off_excl[i]:
+                    self.plotLines ( ax, off_excl[i]["x"],
+                        off_excl[i]["y"], "black", "dotted", None )
         if bestSR:
             x_vals = bestSR_excl["obsExclusion"]["x"]
             y_vals = bestSR_excl["obsExclusion"]["y"]
@@ -944,12 +940,9 @@ class PaperPlot:
 
         plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
-            if "expExclusion_P1" in off_excl and "x" in off_excl["expExclusion_P1"]:
-                self.plotLines ( ax, off_excl["expExclusion_P1"]["x"], off_excl["expExclusion_P1"]["y"],
-                            "black", "dotted", None )
-
-            if "expExclusion_M1" in off_excl and "x" in off_excl["expExclusion_M1"]:
-                self.plotLines ( ax, off_excl["expExclusion_M1"]["x"], off_excl["expExclusion_M1"]["y"],
+            for i in [ "expExclusionP1", "expExclusionM1" ]:
+                if i in off_excl and "x" in off_excl[i]:
+                    self.plotLines ( ax, off_excl[i]["x"], off_excl[i]["y"],
                             "black", "dotted", None )
 
         if bestSR and "expExclusion" in bestSR_excl and "y" in bestSR_excl["expExclusion"]:
