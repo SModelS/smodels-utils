@@ -104,6 +104,7 @@ class DatabaseCreator(list):
 
         try:
             self.ncpus = 1 #  multiprocessing.cpu_count()
+            logger.warning( f"problem with multiprocessing, for now running with single process" )
             # self.ncpus = int ( multiprocessing.cpu_count() / 2 )
         except:
             self.ncpus = 1
