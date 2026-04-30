@@ -103,7 +103,8 @@ class DatabaseCreator(list):
         self.ncpus = 1 ## the number of CPUs used
 
         try:
-            self.ncpus =  multiprocessing.cpu_count()
+            self.ncpus = 1 #  multiprocessing.cpu_count()
+            # self.ncpus = int ( multiprocessing.cpu_count() / 2 )
         except:
             self.ncpus = 1
 	
