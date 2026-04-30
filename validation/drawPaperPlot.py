@@ -539,6 +539,8 @@ class PaperPlot:
         """
         min_var, max_var = float("inf"), -float("inf")
         for name,line in lines.items():
+            if not whatExcl in line:
+                continue
             if whatVar in line[whatExcl]:
                 max_tmp = self.getExtremeValue( line[whatExcl][whatVar],
                         extreme = "max", e_type = name )
@@ -800,7 +802,7 @@ class PaperPlot:
             plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
                              labelright=False )
 
-        if combSR:
+        if combSR and "obsExclusion" in comb_excl:
             x_vals = comb_excl["obsExclusion"]["x"]
             y_vals = comb_excl["obsExclusion"]["y"]
             y_vals = self.add_jitter ( y_vals, addJitter )
@@ -843,7 +845,7 @@ class PaperPlot:
                 self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
                         None, y_label, color = "tab:red" )
 
-        if cr_excl not in [ None, [] ]:
+        if cr_excl not in [ None, [] ] and "obsExclusion" in cr_excl:
             x_vals = cr_excl["obsExclusion"]["x"]
             y_vals = cr_excl["obsExclusion"]["y"]
             label = f"SModelS: CR comb."
