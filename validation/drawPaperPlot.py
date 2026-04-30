@@ -997,7 +997,16 @@ class PaperPlot:
                 self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
                         None, y_label, color = "lightblue" )
 
-        if 'Gamma' in y_label: ax.set_yscale('log')
+        if 'Gamma' in y_label: 
+            ax.set_yscale('log')
+        if "logy" in self.specific_options:
+            ax.set_yscale('log')
+            ylim = ax.get_ylim()
+            ymin = .3
+            if "logymin" in self.specific_options:
+                ymin = self.specific_options["logymin"]
+            if ylim[0]<1e-10:
+                ax.set_ylim ( .3, ylim[1] )
 
         if massg != "":
             plt.text( 0.6,0.6, rf"{massg} GeV",
