@@ -148,6 +148,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
         prefix = "orig" if isOrig else "nn"
         nlls[f"{prefix}_ul"]=ul
         if not isOrig:
+            # print ( f"@@statsNLL now getUL for pmSigma=1" )
             ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
             pprintVar ( "ulp1", ulp1 )
             nlls[f"{prefix}_ulp1"]=ulp1
@@ -239,7 +240,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 nlls["pull_nll"] = pull
                 pprintVar ( f"pull_nll", pull )
                 doAdd = True
-        if "nn_ulp1" in nlls and "orig_ul" in nlls:
+        if "nn_ulp1" in nlls and "orig_ul" in nlls and "nn_ul" in nlls:
             sigma = abs ( nlls["nn_ulp1"]-nlls["nn_ul"] )
             delta = nlls["nn_ul"]-nlls["orig_ul"]
             if sigma>0.:
@@ -247,7 +248,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 nlls["pull_ul"] = pull
                 pprintVar ( "pull_ul", pull )
                 doAdd = True
-        if "nn_ulm1" in nlls and "orig_ul" in nlls:
+        if "nn_ulm1" in nlls and "orig_ul" in nlls and "nn_ul" in nlls:
             sigma = abs ( nlls["nn_ulm1"]-nlls["nn_ul"] )
             delta = nlls["nn_ul"]-nlls["orig_ul"]
             if sigma>0.:
