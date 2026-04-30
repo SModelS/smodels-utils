@@ -4,8 +4,23 @@
 """
 
 import minecart
-import sys
-import os
+import sys, os, time
+from smodels_utils.helper.various import getCommandLine
+import pdfminer
+
+from pdfminer.pdffont import PDFSimpleFont
+
+orig = PDFSimpleFont.to_unichr
+
+def safe_to_unichr(self, cid):
+    try:
+        return orig(self, cid)
+    except KeyError:
+        return ""  # or "�"
+    except Exception:
+        return ""  # or "�"
+
+PDFSimpleFont.to_unichr = safe_to_unichr
 
 class PDFAtlasReader(): 
     def __init__( self, config : dict ): 
@@ -91,11 +106,11 @@ class PDFAtlasReader():
         """ this is about finding the offsets """
         # pdf_x0 and pdf_y0 are the pdf coordinates of our smallest xs and ys
         # this was a rough guess
-        #self.pdf_x0 = ( self.page.letterings[0].bbox[0] + self.page.letterings[0].bbox[2] ) / 2.
-        #self.pdf_y0 = self.page.letterings[0].bbox[1] + 25.
+        self.pdf_x0 = ( self.page.letterings[0].bbox[0] + self.page.letterings[0].bbox[2] ) / 2.
+        self.pdf_y0 = self.page.letterings[0].bbox[1] + 25.
         # pdf_xmax and pdf_ymax are the pdf coordinates of our largest xs and ys
-        #self.pdf_xmax = self.page.width - 60.
-        #self.pdf_ymax = self.page.height - 50.
+        self.pdf_xmax = self.page.width - 60.
+        self.pdf_ymax = self.page.height - 50.
 
         for s in self.page.shapes:
             if s.stroke == None:
@@ -114,7 +129,6 @@ class PDFAtlasReader():
             self.pdf_y0 = s.path[0][2]
             self.pdf_xmax = s.path[1][1]
             self.pdf_ymax = s.path[2][2]
-
             
 
     def ulValues( self ):
@@ -123,10 +137,12 @@ class PDFAtlasReader():
         f = open ( destname, "wt" )
         filename = os.path.basename ( self.config['name'] )
         f.write ( f"# upper limit values, extracted from {filename}, using PDFAtlasReader\n" )
+        f.write ( f"# produced {time.asctime()}\n" )
         if "axes" in self.config:
             f.write ( f"# axes are {self.config['axes']}\n" )
         f.write ( f"# x range {self.config['x']}\n" )
         f.write ( f"# y range {self.config['y']}\n" )
+        f.write ( f"# cmd: {getCommandLine()}\n" )
         for l,lettering in enumerate(self.page.letterings):
             x, y = self.computeXYLetter ( lettering )
             if False: # lettering.title() in [ "0.39", "0.079", "0.019" ]:
@@ -184,6 +200,12 @@ class PDFAtlasReader():
         if pm == True:
             fname = "excl_pm.csv"
         f=open ( fname, "wt" )
+        f.write ( f"# produced {time.asctime()}\n" )
+        f.write ( f"# cmd: {getCommandLine()}\n" )
+        if "axes" in self.config:
+            f.write ( f"# axes are {self.config['axes']}\n" )
+        f.write ( f"# x range {self.config['x']}\n" )
+        f.write ( f"# y range {self.config['y']}\n" )
         print ( f"[PDFAtlasReader] writing {fname} with {len(line)} points" )
         for l in line:
             line = f"{l[0]},{l[1]}\n"
