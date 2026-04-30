@@ -163,21 +163,24 @@ class PDFAtlasReader():
 
     def isLightGrey ( self, c ):
         """ check if it is the dark red that ATLAS uses for observed limits """
-        if abs ( c[0]-0.4 ) < 1e-5 and abs ( c[1]-0.4 ) < 1e-5 and \
-           abs ( c[2]-0.4 ) < 1e-5:
+        delta = .05
+        if abs ( c[0]-0.4 ) < delta and abs ( c[1]-0.4 ) < delta and \
+           abs ( c[2]-0.4 ) < delta:
                 return True
         return False
 
     def isDarkGrey ( self, c ):
         """ check if it is the dark red that ATLAS uses for observed limits """
-        if abs ( c[0]-0.8 ) < 1e-5 and abs ( c[1]-0.8 ) < 1e-5 and \
-           abs ( c[2]-0.8 ) < 1e-5:
+        delta = .05
+        if abs ( c[0]-0.8 ) < delta and abs ( c[1]-0.8 ) < delta and \
+           abs ( c[2]-0.8 ) < delta:
                 return True
         return False
 
     def exclusionLine ( self, exp : bool = False, pm : bool = False ):
         line=[]
         ct = 0
+        mentioned_colors = set()
         for s in self.page.shapes:
             if s.stroke == None:
                 continue
@@ -189,13 +192,18 @@ class PDFAtlasReader():
                 for pt in cur:
                     if pt[1] < pt[0]:
                         line.append ( pt )
-            if pm and self.isDarkGrey ( c ):
-                print ( f"c {c}" )
+                continue
+            if pm and self.isDarkGrey ( c ): #  and dash == ([], 0):
+                # print ( f"c {c}" )
                 ct += 1
                 cur = self.computeXYShape ( s ) 
                 for pt in cur:
                     if pt[1] < pt[0]:
                         line.append ( pt )
+                continue
+            if c not in [ (0,0,0), (1,1,1) ] and c not in mentioned_colors:
+                mentioned_colors.add ( c )
+                print ( f"[PDFAtlasReader] a line of color {c}" )
         fname = "excl.csv"
         if pm == True:
             fname = "excl_pm.csv"
