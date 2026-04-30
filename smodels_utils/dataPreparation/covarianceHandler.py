@@ -217,7 +217,9 @@ class UPROOTCovarianceHandler ( CovarianceHandler ):
         cterr = 0
         # self.interact ( xaxis )
         skipped = 0
-        dses = [ x.dataId for x in datasets ]
+        dses = None
+        if datasets != None:
+            dses = [ x.dataId for x in datasets ]
         for i in range ( self.n ):
             dsId = xaxis.labels()[i]
             if dsnameTranslator != None:
