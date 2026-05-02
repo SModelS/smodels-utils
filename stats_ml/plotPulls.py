@@ -42,7 +42,7 @@ def plot( what : str ):
     d = getValues( what )
     from matplotlib import pyplot as plt
     import scipy
-    plt.hist ( d, label="histo" )
+    plt.hist ( d, label="histo", bins=20 )
     stdnmx = np.arange(-3,3,.1)
     scale = len(d)
     stdnmy = [ scipy.stats.norm.pdf(x) * scale for x in stdnmx ]
