@@ -34,11 +34,12 @@ def pprint ( *args ):
 def pprintVar ( var : str, value : float ):
     pprint ( f"{var}: {value:.2f}" )
 
-def keyExists ( key ):
-    key_file = f"results/{key}"
+def keyExists ( key, resultsfolder ):
+    key_file = f"{resultsfolder}/{key}"
     return os.path.exists  ( key_file )
 
-def createSLHAFile( doStaus : bool = True, doEWKinos : bool = False ) \
+def createSLHAFile( doStaus : bool, doEWKinos : bool,
+                    resultsfolder : str  ) \
         -> dict:
     mLSP, mC1, mStau = 150, 300, 300
     mList = ( mLSP, mC1, mStau )
@@ -51,7 +52,7 @@ def createSLHAFile( doStaus : bool = True, doEWKinos : bool = False ) \
         mStau = int ( random.uniform ( mLSP + 10, 440 ) )
         mList = ( mLSP, mC1, mStau )
         key = abs ( hash ( mList ) )
-        exists = keyExists ( key )
+        exists = keyExists ( key, resultsfolder )
     masses = { 1000022: mLSP }
     decays = { 1000022: {} }
     ssms = {}
@@ -95,8 +96,9 @@ def readStats():
             ret[bname]=t
     return ret
 
-def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
-    s = createSLHAFile( doStaus = doStaus, doEWKinos = doEWKinos )
+def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
+    s = createSLHAFile( doStaus = doStaus, doEWKinos = doEWKinos,
+                        resultsfolder = resultsfolder )
     print ( f"[statsNLL] starting {GREEN}{s['key']}{RESET}" )
     print ( f"[statsNLL] mLSP={s['mLSP']:.1f} mStau={s['mStau']:.1f}" )
     slhafile = s["file"]
@@ -240,12 +242,23 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
                 nlls["pull_nll"] = pull
                 pprintVar ( f"pull_nll", pull )
                 doAdd = True
+        if "nn_ulp1" in nlls and "orig_ul" in nlls and "nn_ul" in nlls and \
+                "nn_ulm1" in nlls:
+            sigma1 = abs ( nlls["nn_ulp1"]-nlls["nn_ul"] )
+            sigma2 = abs ( nlls["nn_ulm1"]-nlls["nn_ul"] )
+            sigma = max ( sigma1, sigma2 )
+            delta = nlls["nn_ul"]-nlls["orig_ul"]
+            if sigma>0.:
+                pull = delta / sigma
+                nlls["pull_ul"] = pull
+                pprintVar ( "pull_ul", pull )
+                doAdd = True
         if "nn_ulp1" in nlls and "orig_ul" in nlls and "nn_ul" in nlls:
             sigma = abs ( nlls["nn_ulp1"]-nlls["nn_ul"] )
             delta = nlls["nn_ul"]-nlls["orig_ul"]
             if sigma>0.:
                 pull = delta / sigma
-                nlls["pull_ul"] = pull
+                nlls["pull_ulp1"] = pull
                 pprintVar ( "pull_ul", pull )
                 doAdd = True
         if "nn_ulm1" in nlls and "orig_ul" in nlls and "nn_ul" in nlls:
@@ -314,7 +327,8 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
     if len(cleaned)==0:
         return
 
-    sfound = ",".join ( [ f"{anaid}: pull_nll={values['pull_nll']:.2f}" for anaid,values in cleaned.items() ] )
+    sfound = ",".join ( [ f"{anaid}: pull_nll={values['pull_nll']:.2f}" \
+                          for anaid,values in cleaned.items() ] )
     # sfound = ",".join ( [ f"{anaid}" for anaid,values in cleaned.items() ] )
     print ( f"[statsNLL] found {sfound}" )
     import shutil
@@ -323,23 +337,11 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool ):
     key = s["key"]
     cleaned["params"]=s
     d1 = py_dumps ( cleaned ) + "\n"
-    with open ( f"results/{key}", "wt" ) as f:
+    with open ( f"{resultsfolder}/{key}", "wt" ) as f:
         f.write ( d1 )
-    """
-    stats = readStats()
-    if len(cleaned)>0:
-        stats[key]=cleaned
-    writeStats( stats )
-    """
 
-"""
-def writeStats( stats ):
-    ds = py_dumps ( stats ) + "\n"
-    with open ( "stats", "wt" ) as f:
-        f.write ( ds )
-"""
 
-def loop( doEWKinos : bool ):
+def loop( doEWKinos : bool, resultsfolder : str ):
     print ( f"[statsNLL] Instantiate the database" )
     db = Database ( "../../smodels-database/" )
     print ( f"[statsNLL] Lets go" )
@@ -357,7 +359,7 @@ def loop( doEWKinos : bool ):
     # doEWKinos = False
     while True:
         try:
-            createOnePoint( db, doStaus, doEWKinos )
+            createOnePoint( db, doStaus, doEWKinos, resultsfolder )
         except Exception as e:
             print ( f"[statsNLL.createOnePoint] {type(e)}: {e} -- ignoring" )
             import traceback
@@ -373,15 +375,17 @@ def create():
                      action="store_true" )
     ap.add_argument('-e', '--ewkinos', help="add ewkinos",
                      action="store_true" )
+    ap.add_argument('-r', '--resultsfolder', help="folder for results [results]",
+                     default="results", type = str )
     args = ap.parse_args()
     if args.verbose:
         flags["verbose"] = True
 
-    for path in [ "results", "slhafiles" ]:
+    for path in [ args.resultsfolder, "slhafiles" ]:
         if not os.path.exists ( path ):
             os.mkdir ( path )
     if args.nprocesses == 1:
-        loop( args.ewkinos )
+        loop( args.ewkinos, args.resultsfolder )
         return
     from multiprocessing import Process
     processes = []
