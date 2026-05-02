@@ -6,10 +6,10 @@ import numpy as np
 import os, sys
 from ptools.helpers import py_dumps
 
-def readStats():
+def readStats( resultsfolder : str ):
     ret={}
     import glob
-    for fname in glob.glob ( "results/*" ):
+    for fname in glob.glob ( f"{resultsfolder}/*" ):
         bname = os.path.basename ( fname )
         with open ( fname, "rt" ) as f:
             t = eval(f.read())
@@ -63,9 +63,11 @@ if __name__ == "__main__":
             default = "pull", type = str )
     ap.add_argument( '-c', '--create_stats', help="create stats",
                      action="store_true" )
+    ap.add_argument('-r', '--resultsfolder', help="folder for results [results]",
+                     default="results", type = str )
     args = ap.parse_args()
     if True: # args.create_stats:
-        stats = readStats()
+        stats = readStats( args.resultsfolder )
         writeStats ( stats )
         # sys.exit()
     plot( args.what )
