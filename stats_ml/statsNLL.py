@@ -99,6 +99,7 @@ def readStats():
 def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
     s = createSLHAFile( doStaus = doStaus, doEWKinos = doEWKinos,
                         resultsfolder = resultsfolder )
+    print ( f"[statsNLL] {GREEN}---------------------------------{RESET}" )
     print ( f"[statsNLL] starting {GREEN}{s['key']}{RESET}" )
     print ( f"[statsNLL] mLSP={s['mLSP']:.1f} mStau={s['mStau']:.1f}" )
     slhafile = s["file"]
