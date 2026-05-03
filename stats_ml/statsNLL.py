@@ -128,6 +128,8 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
         pprint ( f"first query of {YELLOW}{anaId}{RESET}" )
         nll = p.nll( mu = 1., asimov = None )
         pprintVar ( "nll", nll )
+        CLs = p.CLs ( mu = 1., observed )
+        pprintVar ( "CLs", nll )
         nll_min = p.nll_min ( )
         pprintVar ( "nll_min", nll_min )
         nllA = p.nll( mu = 1. , asimov = 1 )
@@ -168,6 +170,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
             nlls[f"{prefix}_ulEm1"]=ulEm1
             pprintVar ( "ulEm1", ulEm1 )
         nlls[f"{prefix}_ulE"]=ulE
+        nlls[f"{prefix}_CLs"]=CLs
         nlls[f"{prefix}_ulEpost"]=ulEpost
         nlls[f"{prefix}_nll"]=nll
         nlls[f"{prefix}_nll_min"]=nll_min
