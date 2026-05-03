@@ -157,6 +157,8 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
             pprintVar ( "ulp1", ulp1 )
             nlls[f"{prefix}_ulp1"]=ulp1
             CLsp1 = p.CLs ( mu=1, evaluationType = observed, pmSigma = 1 )
+            nlls[f"{prefix}_CLsp1"]=CLsp1
+            pprintVar ( "CLsp1", CLsp1 )
             ulm1 = p.getUpperLimitOnMu( pmSigma = -1 )
             pprintVar ( "ulm1", ulm1 )
             nlls[f"{prefix}_ulm1"]=ulm1
