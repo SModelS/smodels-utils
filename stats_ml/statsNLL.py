@@ -129,7 +129,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
         nll = p.nll( mu = 1., asimov = None )
         pprintVar ( "nll", nll )
         CLs = p.CLs ( mu = 1., evaluationType = observed )
-        pprintVar ( "CLs", nll )
+        pprintVar ( "CLs", CLs )
         nll_min = p.nll_min ( )
         pprintVar ( "nll_min", nll_min )
         nllA = p.nll( mu = 1. , asimov = 1 )
