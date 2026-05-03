@@ -128,7 +128,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
         pprint ( f"first query of {YELLOW}{anaId}{RESET}" )
         nll = p.nll( mu = 1., asimov = None )
         pprintVar ( "nll", nll )
-        CLs = p.CLs ( mu = 1., observed )
+        CLs = p.CLs ( mu = 1., evaluationType = observed )
         pprintVar ( "CLs", nll )
         nll_min = p.nll_min ( )
         pprintVar ( "nll_min", nll_min )
@@ -156,6 +156,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
             ulp1 = p.getUpperLimitOnMu( pmSigma = 1 )
             pprintVar ( "ulp1", ulp1 )
             nlls[f"{prefix}_ulp1"]=ulp1
+            CLsp1 = p.CLs ( mu=1, evaluationType = observed, pmSigma = 1 )
             ulm1 = p.getUpperLimitOnMu( pmSigma = -1 )
             pprintVar ( "ulm1", ulm1 )
             nlls[f"{prefix}_ulm1"]=ulm1
@@ -244,6 +245,14 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
                 pull = delta / sigma
                 nlls["pull_nll"] = pull
                 pprintVar ( f"pull_nll", pull )
+                doAdd = True
+        if "nn_CLsp1" in nlls and "orig_CLs" in nlls and "nn_CLs" in nlls:
+            sigma = abs ( nlls["nn_CLsp1"]-nlls["nn_CLs"] )
+            delta = nlls["nn_CLs"]-nlls["orig_CLs"]
+            if sigma>0.:
+                pull = delta / sigma
+                nlls["pull_CLs"] = pull
+                pprintVar ( "pull_CLs", pull )
                 doAdd = True
         if "nn_ulp1" in nlls and "orig_ul" in nlls and "nn_ul" in nlls and \
                 "nn_ulm1" in nlls:
