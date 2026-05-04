@@ -125,15 +125,19 @@ def getBestSRs ( data, max_x : Union[None,float], max_y : Union[None,float],
         if rank == 0:
             print ( f"[plotBestSRs] you specified a rank of zero. The rank is one-indexed, did you mean rank=1?" )
             sys.exit()
-        if rank > 1:
-            if not "leadingDSes" in point:
-                # print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
-                continue
-            if len(point["leadingDSes"]) < rank:
-                print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
-            ds = point["leadingDSes"][rank-1][1]
-        if axes != None:
-            bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
+        if "StatModel" in point:
+            # seems like we are in a combination
+            bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": point["StatModel"] } )
+        else:
+            if rank > 1:
+                if not "leadingDSes" in point:
+                    # print ( f"[plotBestSRs] you asked for higher ranks but no leadingDSes were found in validation file. Did you maybe provide the combined or the UL dictionary file (I need the effmap one)?")
+                    continue
+                if len(point["leadingDSes"]) < rank:
+                    print ( f"[plotBestSRs] you want to plot the {rank}th entry, but we only have {len(point['leadingDSes'])} entries. Consider cranking up keepTopNSRs in the validation ini file and rerun validation." )
+                ds = point["leadingDSes"][rank-1][1]
+            if axes != None:
+                bestSRs.append ( { "x": axes[1], "y": axes[0], "SR": ds } )
     if skipped > 0:
         print ( f"[plotBestSRs] skipped {skipped}/{len(data)} points: {err}" )
     return bestSRs
