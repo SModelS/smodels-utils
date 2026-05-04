@@ -242,6 +242,8 @@ class ValidationObjsBase():
         if "nll_min" in expRes and "nll" in expRes:
             for i in [ "nll", "nll_SM", "nll_min" ]:
                 Dict[i]=expRes[i]
+        if "StatModel" in expRes:
+            Dict["StatModel"]=expRes["StatModel"]
         if "l_max" in expRes and "likelihood" in expRes:
             #Dict["llhd"]= round_to_n ( expRes["likelihood"], 4 )
             #Dict["lmax"]= round_to_n ( expRes["l_max"], 4 )
@@ -957,7 +959,7 @@ class ValidationObjsBase():
             f.write(f"model={model}\n" )
             f.write(f"promptWidth={promptWidth}\n" )
             expected = self.options["expectationType"]
-            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues={expected}\nprinttimespent=True\n")
+            f.write( f"[python-printer]\naddElementList = False\ntypeOfExpectedValues={expected}\nprintTimeSpent=True\naddStatModel=True\n")
             if self.options["errorsForR"]:
                 f.write ( f"errorsForR={self.options['errorsForR']}\n" )
             if outputformat == 3:
