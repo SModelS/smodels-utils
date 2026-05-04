@@ -388,6 +388,8 @@ def create():
             default = 5, type = int )
     ap.add_argument( '-v', '--verbose', help="be more verbose",
                      action="store_true" )
+    ap.add_argument( '-n', '--no_err_on_min', help="assume nll_min* to have zero errors",
+                     action="store_true" )
     ap.add_argument('-e', '--ewkinos', help="add ewkinos",
                      action="store_true" )
     ap.add_argument('-r', '--resultsfolder', help="folder for results [results]",
@@ -395,6 +397,9 @@ def create():
     args = ap.parse_args()
     if args.verbose:
         flags["verbose"] = True
+    if args.no_err_on_min:
+        from smodels.statistics.nnInterface import nnSettings
+        nnSettings["errs_on_min"]=False
 
     for path in [ args.resultsfolder, "slhafiles" ]:
         if not os.path.exists ( path ):
