@@ -388,7 +388,7 @@ def create():
             default = 5, type = int )
     ap.add_argument( '-v', '--verbose', help="be more verbose",
                      action="store_true" )
-    ap.add_argument( '-n', '--no_err_on_min', help="assume nll_min* to have zero errors",
+    ap.add_argument( '-N', '--no_err_on_min', help="assume nll_min* to have zero errors",
                      action="store_true" )
     ap.add_argument('-e', '--ewkinos', help="add ewkinos",
                      action="store_true" )
