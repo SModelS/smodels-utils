@@ -635,17 +635,21 @@ class PaperPlot:
                 self.pprint(f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txname}:{axes}.")
                 bestSR = False
                 return
-        crDir = anaDir.replace("-eff","-CR")
+        origDir = anaDir.replace("-eff","-CR")
         cr_is = "CR"
-        if not os.path.exists ( crDir ):
-            crDir = anaDir.replace("-eff","-orig")
+        if not os.path.exists ( origDir ):
+            origDir = anaDir.replace("-eff","-orig")
             cr_is = "orig"
 
-        cr_excl = None
-        if anaDir != crDir and os.path.exists ( crDir ):
-            cr_excl = self.getCurveFromJson (crDir, validationFolder, txname,
+        orig_excl = None
+        if anaDir != origDir and os.path.exists ( origDir ):
+            orig_excl = self.getCurveFromJson (origDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
-            self.pprint ( f"found curve for {crDir}!" )
+            if offshell:
+                orig_excl_off = self.getCurveFromJson( origDir, validationFolder,
+                    txnameOff, typ="comb", axes=axes, eval_axes = True )
+                orig_excl = self.addOffshell ( orig_excl, orig_excl_off )
+            self.pprint ( f"found curve for {origDir}!" )
 
         if offshell:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
@@ -860,9 +864,9 @@ class PaperPlot:
                 self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
                         None, y_label, color = "tab:red" )
 
-        if cr_excl not in [ None, [] ] and "obsExclusion" in cr_excl:
-            x_vals = cr_excl["obsExclusion"]["x"]
-            y_vals = cr_excl["obsExclusion"]["y"]
+        if orig_excl not in [ None, [] ] and "obsExclusion" in orig_excl:
+            x_vals = orig_excl["obsExclusion"]["x"]
+            y_vals = orig_excl["obsExclusion"]["y"]
             label = f"SModelS: CR comb."
             # label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
             if cr_is == "orig":
@@ -871,9 +875,9 @@ class PaperPlot:
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
-            if "obsExclusionP1" in cr_excl:
-                x_vals = cr_excl["obsExclusionP1"]["x"]
-                y_vals = cr_excl["obsExclusionP1"]["y"]
+            if "obsExclusionP1" in orig_excl:
+                x_vals = orig_excl["obsExclusionP1"]["x"]
+                y_vals = orig_excl["obsExclusionP1"]["y"]
                 y_vals = self.add_jitter ( y_vals, addJitter )
                 label = f"xxx"
                 x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
@@ -998,9 +1002,9 @@ class PaperPlot:
                     self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
                            linestyle = "dashed", color = "red" )
 
-        if cr_excl not in [ None, [] ]:
-            x_vals = cr_excl["expExclusion"]["x"]
-            y_vals = cr_excl["expExclusion"]["y"]
+        if orig_excl not in [ None, [] ]:
+            x_vals = orig_excl["expExclusion"]["x"]
+            y_vals = orig_excl["expExclusion"]["y"]
             label = f"SModelS: CR comb."
             # label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
             if cr_is == "orig":
@@ -1008,11 +1012,11 @@ class PaperPlot:
                 # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
                    linestyle= None, color = "blue" )
-            if "expExclusionP1" in cr_excl and "expExclusionM1" in cr_excl:
-                x_vals1 = cr_excl["expExclusionP1"]["x"]
-                y_vals1 = cr_excl["expExclusionP1"]["y"]
-                x_vals2 = cr_excl["expExclusionM1"]["x"]
-                y_vals2 = cr_excl["expExclusionM1"]["y"]
+            if "expExclusionP1" in orig_excl and "expExclusionM1" in orig_excl:
+                x_vals1 = orig_excl["expExclusionP1"]["x"]
+                y_vals1 = orig_excl["expExclusionP1"]["y"]
+                x_vals2 = orig_excl["expExclusionM1"]["x"]
+                y_vals2 = orig_excl["expExclusionM1"]["y"]
                 self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
                         None, y_label, color = "lightblue" )
 
