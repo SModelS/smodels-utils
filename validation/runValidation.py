@@ -829,6 +829,7 @@ if __name__ == "__main__":
     ap.add_argument('-k', '--keep', action="store_true", help='keep temp dir' )
     ap.add_argument('-c', '--cont', action="store_true", help='continue a running production, i.e. dont remove running.dict file' )
     ap.add_argument('-s', '--show', action="store_true", help='show plots after producing them. tries a few viewers like timg, see, display. turning this on includes also the progress bar for production' )
+    ap.add_argument('-M', '--monkey_patch', action="store_true", help='monkey patch SModelS so we have ml errors' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
