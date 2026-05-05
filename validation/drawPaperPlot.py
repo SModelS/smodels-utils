@@ -284,8 +284,14 @@ class PaperPlot:
         curve = self.findAxisInExclFile ( axes, excl_file, txname, typ )
         col = CYAN
         if curve is None:
-            print(f"[drawPaperPlot] {RED}{txname}:comb:{saxes} not found in {sfname}{RESET}")
-            return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
+            print(f"[drawPaperPlot] {CYAN}{txname}:{typ}:{saxes} not found in {sfname}{RESET}")
+            if "x - y" in axes:
+                axes2 = axes.replace("x - y","y" )
+                print ( f"[drawPaperPlot] trying now with {axes2}" )
+                curve = self.findAxisInExclFile ( axes2, excl_file, txname, typ )
+            if curve is None:
+                return {}
+                return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
         excl_lines = {}
         if "obs_excl" in curve:
             x_ = self.getCoordsFromLine ( curve, "obs_excl", "x" )
