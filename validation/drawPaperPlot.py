@@ -36,7 +36,7 @@ def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
     """
     if not "Gamma" in y_label:
         return x_vals, y_vals
-    print ( f"{RED}[drawPaperPlot:6] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+    self.pprint ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
     if type(x_vals[0]) != list:
         return x_vals, y_vals
 
@@ -224,6 +224,10 @@ class PaperPlot:
             return self.findAxisInExclFile ( axis, exclfile, txname, "combined" )
         return None
 
+    def prettyPath ( self, path : str ) -> str:
+        sfname = path.replace( os.environ["HOME"], "~" )
+        return sfname
+
     def getCurveFromJson( self, anaDir, validationFolder, txname : str,
             typ : str, axes = None, eval_axes : bool = True ) -> dict:
         """
@@ -273,10 +277,10 @@ class PaperPlot:
 
         fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
         if not os.path.exists ( fname ):
-            print ( f"[drawPaperPlot] error: {fname} does not exist!" )
+            self.pprint ( f"error: {fname} does not exist!" )
             return []
-        sfname = fname.replace( os.environ["HOME"], "~" )
-        print ( f"[drawPaperPlot] we have an exclusion curve file: {sfname}" )
+        sfname = self.prettyPath ( fname )
+        self.pprint ( f"we have an exclusion curve file: {sfname}" )
 
         file = open(fname,"r")
         excl_file = json.load(file)
@@ -287,7 +291,7 @@ class PaperPlot:
             print(f"[drawPaperPlot] {CYAN}{txname}:{typ}:{saxes} not found in {sfname}{RESET}")
             if "x - y" in axes:
                 axes2 = axes.replace("x - y","y" )
-                print ( f"[drawPaperPlot] trying now with {axes2}" )
+                self.pprint ( f"trying now with {axes2}" )
                 curve = self.findAxisInExclFile ( axes2, excl_file, txname, typ )
             if curve is None:
                 return {}
@@ -310,7 +314,7 @@ class PaperPlot:
             if len(x_)==0:
                 col = RED
             if False:
-                print (f"[drawPaperPlot] {col}we have exclusion line from {sfname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
+                self.pprint (f"{col}we have exclusion line from {sfname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
             excl_lines[i] = { "x": x_, "y": y_ }
 
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
@@ -335,7 +339,7 @@ class PaperPlot:
         """
         fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
         if not os.path.exists ( fname ):
-            print ( f"[drawPaperPlot] {fname} does not exist" )
+            self.pprint ( f"{self.prettyPath(fname)} does not exist" )
             return None
         sm_file = open(fname,"r")
         file = open(f"{anaDir}/exclusion_lines.json")
@@ -560,6 +564,9 @@ class PaperPlot:
                 max_var = max ( max_var, max_tmp )
         return min_var, max_var
 
+    def pprint ( self, *args ):
+        print ( f"[drawPaperPlot] {''.join(map(str,*args))}" )
+
     def draw( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
@@ -616,14 +623,14 @@ class PaperPlot:
             bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder,
                     txnameOff, typ="bestSR", axes=axes, eval_axes = eval_axes )
             if not bestSR_excl_off:
-                print( f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txnameOff}. Not drawing paper plot.")
+                self.pprint( f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txnameOff}. Not drawing paper plot.")
                 return
             bestSR_excl = self.drawOffshell(bestSR_excl, bestSR_excl_off)
         else:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="bestSR", axes=axes, eval_axes=eval_axes )
             if not bestSR_excl:
-                print(f"[drawPaperPlot] No best SR SModelS excl line for {anaDir}:{txname}:{axes}.")
+                self.pprint(f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txname}:{axes}.")
                 bestSR = False
                 return
         crDir = anaDir.replace("-eff","-CR")
@@ -636,7 +643,7 @@ class PaperPlot:
         if anaDir != crDir and os.path.exists ( crDir ):
             cr_excl = self.getCurveFromJson (crDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
-            print ( f"[drawPaperPlot] found curve for {crDir}!" )
+            self.pprint ( f"found curve for {crDir}!" )
 
         if offshell:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
@@ -644,17 +651,17 @@ class PaperPlot:
             comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
                 typ="comb", axes=axes )
             if not comb_excl_off:
-                print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
+                self.pprint("No comb SR SModelS excl line. Not drawing paper plot.")
                 return
             comb_excl = self.drawOffshell(comb_excl, comb_excl_off)
         else:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
             if not comb_excl:
-                print("[drawPaperPlot] No comb SR SModelS excl line. Not drawing paper plot.")
+                self.pprint("No comb SR SModelS excl line. Not drawing paper plot.")
                 combSR = False
                 return
-            print( f"[drawPaperPlot] got combined curve from {anaDir}: {len(comb_excl)} points" )
+            self.pprint( f"got combined curve from {anaDir}: {len(comb_excl)} points" )
 
         # get the range of x values in obs and exp curves to set lim on plot ranges.
         # low limit on y axes usually 0 for plot (except for width plots)
@@ -705,7 +712,7 @@ class PaperPlot:
             ver = "(SLv2)"
 
         #now plot figure
-        # print("[drawPaperPlot] Drawing pretty obs and exp plots")
+        # self.pprint("Drawing pretty obs and exp plots")
 
         #--------observed plot-------
         plt.rcParams['text.usetex'] = True
@@ -716,15 +723,15 @@ class PaperPlot:
         step_x = int(max_obs_x/100)*10
         mid_x = 0
         if max_obs_x < -.99:
-            print ( f"[drawPaperPlot] seems like exclusion lines are empty" )
+            self.pprint ( f"seems like exclusion lines are empty" )
             return
         if max_obs_x > -.99:
             mid_x = int((max_obs_x - min_obs_x)/2)
         step_y = int(max_obs_y)
 
-        #print("[drawPaperPlot] max obs y ", max_obs_y)
-        #print("[drawPaperPlot] step y", step_y)
-        #print("[drawPaperPlot] max exp y ", max_exp_y)
+        #self.pprint("max obs y ", max_obs_y)
+        #self.pprint("step y", step_y)
+        #self.pprint("max exp y ", max_exp_y)
         x_label, y_label = "",""
 
         axis_label = prettyAxes(validationPlot).replace(" ","")
@@ -754,7 +761,7 @@ class PaperPlot:
         ax.set_ylabel(y_label,fontsize = 14)
         ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
         if 'Gamma' in y_label:
-            print ( f"{RED}[drawPaperPlot:3] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            self.pprint ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             max_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
             if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
             if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb", width=True))
@@ -763,7 +770,7 @@ class PaperPlot:
             if bestSR: min_obs_y = min(min_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
             if combSR: min_obs_y = min(min_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "min", e_type="comb", width=True))
             step_y = max_obs_y*1000
-            #print("min_obs_y ", min_obs_y)
+            #self.pprint("min_obs_y ", min_obs_y)
             #print("step ", step_y)
             ax.set_ylim([min_obs_y, max_obs_y+step_y])
         else:
@@ -896,7 +903,7 @@ class PaperPlot:
         outfiles = []
 
         outfile = f"{vDir}/{txname}_{fig_axes_title}_obs.png"
-        print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
+        self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         from smodels_utils.helper.various import pngMetaInfo
         metadata = pngMetaInfo()
         plt.savefig(outfile, dpi=250, metadata=metadata )
@@ -923,7 +930,7 @@ class PaperPlot:
         ax.set_ylabel(y_label,fontsize = 14)
         # ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
         if 'Gamma' in y_label:
-            print ( f"{RED}[drawPaperPlot:7] FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+            self.pprint ( f"{RED} FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             max_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
             if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
             if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb", width=True))
@@ -1025,7 +1032,7 @@ class PaperPlot:
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
         outfile = f"{vDir}/{txname}_{fig_axes_title}_exp.png"
-        print ( f"[drawPaperPlot] saving to {YELLOW}{outfile}{RESET}" )
+        self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         plt.savefig( outfile, dpi=250)
         plt.clf()
         plt.rcdefaults()
