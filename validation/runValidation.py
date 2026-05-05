@@ -31,7 +31,7 @@ def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
          resDict['r_nn_m1'] = self._round ( r_obs_m1 )
 
 import sys
-if "-m" in sys.argv or "--monkey_path" in sys.argv:
+if "-M" in sys.argv or "--monkey_path" in sys.argv:
     print ( f"[runValidation] monkey patching PyPrinter" )
     PyPrinter.addErrorsForRValues = addErrorsForRValuesMonkeyPatch
 
