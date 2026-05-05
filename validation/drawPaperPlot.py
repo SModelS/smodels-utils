@@ -224,7 +224,7 @@ class PaperPlot:
             return self.findAxisInExclFile ( axis, exclfile, txname, "combined" )
         return None
 
-    def getCurveFromJson( self, anaDir, validationFolder, txname,
+    def getCurveFromJson( self, anaDir, validationFolder, txname : str,
             typ : str, axes = None, eval_axes : bool = True ) -> dict:
         """
         Get Exclusion Curve from official and SModelS json files
@@ -275,7 +275,8 @@ class PaperPlot:
         if not os.path.exists ( fname ):
             print ( f"[drawPaperPlot] error: {fname} does not exist!" )
             return []
-        print ( f"[drawPaperPlot] we have an exclusion curve file: {fname}" )
+        sfname = fname.replace( os.environ["HOME"], "~" )
+        print ( f"[drawPaperPlot] we have an exclusion curve file: {sfname}" )
 
         file = open(fname,"r")
         excl_file = json.load(file)
@@ -283,7 +284,7 @@ class PaperPlot:
         curve = self.findAxisInExclFile ( axes, excl_file, txname, typ )
         col = CYAN
         if curve is None:
-            print(f"[drawPaperPlot] {txname}:comb:{saxes} not found in {fname}")
+            print(f"[drawPaperPlot] {RED}{txname}:comb:{saxes} not found in {sfname}{RESET}")
             return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
         excl_lines = {}
         if "obs_excl" in curve:
@@ -303,7 +304,7 @@ class PaperPlot:
             if len(x_)==0:
                 col = RED
             if False:
-                print (f"[drawPaperPlot] {col}we have exclusion line from {fname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
+                print (f"[drawPaperPlot] {col}we have exclusion line from {sfname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
             excl_lines[i] = { "x": x_, "y": y_ }
 
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
@@ -323,6 +324,9 @@ class PaperPlot:
 
     def getOnshellAxesForOffshell( self, anaDir : os.PathLike, tx_onshell : str,
             validationFolder : os.PathLike ):
+        """ i think this about understanding what the axes for the onshell
+        version of this offshell topology is, but fixme 
+        """
         fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
         if not os.path.exists ( fname ):
             print ( f"[drawPaperPlot] {fname} does not exist" )
