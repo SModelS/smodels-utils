@@ -12,7 +12,10 @@ from smodels.tools.printers.pythonPrinter import PyPrinter
 
 def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
     """ for obj add the errors on the r values to resDict,
-    monkey patch to also report the observed """
+    monkey patch to also report the observed 
+    see PyPrinter.addErrorsForRValues (and we need to keep them in sync
+    manually)
+    """
     r_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
             nSigma = 1 )
     if r_e_p1 != None:
