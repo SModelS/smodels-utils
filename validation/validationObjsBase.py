@@ -13,27 +13,6 @@ from typing import Union, List, Dict, Optional, Text, Callable
 from smodels.statistics import nnInterface
 from smodels.statistics.basicStats import NllEvalType, observed, aposteriori
 from smodels.statistics.basicStats import CLsfromNLL
-from smodels.tools.printers.pythonPrinter import PyPrinter
-
-def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
-    """ for obj add the errors on the r values to resDict,
-    monkey patch to also report the observed """
-    ul_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
-            nSigma = 1 )
-    if ul_e_p1 != None:
-        resDict['r_expected_p1'] = self._round ( ul_e_p1 )
-    ul_e_m1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
-            nSigma = -1 )
-    if ul_e_m1 != None:
-        resDict['r_expected_m1'] = self._round ( ul_e_m1 )
-    # add only for expected
-    from smodels.statistics.basicStats import observed
-    r_obs_p1 = obj.getRValue ( evaluationType = observed, pmSigma = 1 )
-    r_obs_m1 = obj.getRValue ( evaluationType = observed, pmSigma = -1 )
-    if r_obs_p1 != None:
-         resDict['r_nn_p1'] = self._round ( r_obs_p1 )
-    if r_obs_m1 != None:
-         resDict['r_nn_m1'] = self._round ( r_obs_m1 )
 
 #import logging
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
@@ -738,12 +717,6 @@ class ValidationObjsBase():
             self.data = []
 
         self.outputDir = outputDir
-
-        #Get parameter file:
-        if self.options["nnErrors"]:
-            # monkey patching
-            logger.info ( f"monkey patching clsRootFunc for ML models" )
-            PyPrinter.addErrorsForRValues = addErrorsForRValuesMonkeyPatch
 
         parameterFile = self.getParameterFile(tempdir=outputDir,outputformat=outputformat)
         logger.info( f"SLHA dir {self.slhaDir}" )

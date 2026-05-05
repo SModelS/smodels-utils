@@ -8,12 +8,37 @@
 
 __all__ = [ "validatePlot" ]
 
+from smodels.tools.printers.pythonPrinter import PyPrinter
+
+def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
+    """ for obj add the errors on the r values to resDict,
+    monkey patch to also report the observed """
+    r_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
+            nSigma = 1 )
+    if r_e_p1 != None:
+        resDict['r_expected_p1'] = self._round ( r_e_p1 )
+    r_e_m1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
+            nSigma = -1 )
+    if r_e_m1 != None:
+        resDict['r_expected_m1'] = self._round ( r_e_m1 )
+    # add only for expected
+    from smodels.statistics.basicStats import observed
+    r_obs_p1 = obj.getRValue ( evaluationType = observed, pmSigma = 1 )
+    r_obs_m1 = obj.getRValue ( evaluationType = observed, pmSigma = -1 )
+    if r_obs_p1 != None:
+         resDict['r_nn_p1'] = self._round ( r_obs_p1 )
+    if r_obs_m1 != None:
+         resDict['r_nn_m1'] = self._round ( r_obs_m1 )
+
+import sys
+if "-m" in sys.argv or "--monkey_path" in sys.argv:
+    print ( f"[runValidation] monkey patching PyPrinter" )
+    PyPrinter.addErrorsForRValues = addErrorsForRValuesMonkeyPatch
+
 import sys,os,copy
 import argparse,time
 from sympy import var
 from typing import Union, Optional
-
-
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
