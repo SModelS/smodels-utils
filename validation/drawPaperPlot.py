@@ -359,12 +359,13 @@ class PaperPlot:
             return axes
 
 
-    def drawOffshell( self, excl_lines : dict, excl_off : dict, min_off_y : float = 0.0,
-            official : bool= False ):
-        """ draw the offshell regions
-        no idea what that is
+    def addOffshell( self, excl_lines : dict, excl_off : dict, 
+               min_off_y : float = 0.0, official : bool = False ) -> dict:
+        """ I think this adds the offshell parts to onshell exclusion
+        lines, returns the sum
+        :returns: exclusion lines, on- and offshell together
         """
-        return excl_lines
+        # return excl_lines
         # print("[drawPaperPlot] min_off_y ", min_off_y )
         for type,excl in excl_lines.items():
             if excl_off[type]["x"] == []:
@@ -376,7 +377,8 @@ class PaperPlot:
                 # print("[drawPaperPlot] off reverse")
                 excl_off[type]["x"].reverse()
                 excl_off[type]["y"].reverse()
-            if official: min_off_y = excl_off[type]["y"][0]
+            if official: 
+                min_off_y = excl_off[type]["y"][0]
 
             if excl_off[type]["y"][-1] < excl_off[type]["y"][0]:# and official:
                 # print("[drawPaperPlot] yes ")
@@ -625,7 +627,7 @@ class PaperPlot:
             if not bestSR_excl_off:
                 self.pprint( f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txnameOff}. Not drawing paper plot.")
                 return
-            bestSR_excl = self.drawOffshell(bestSR_excl, bestSR_excl_off)
+            bestSR_excl = self.addOffshell(bestSR_excl, bestSR_excl_off)
         else:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="bestSR", axes=axes, eval_axes=eval_axes )
@@ -648,12 +650,12 @@ class PaperPlot:
         if offshell:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                 typ="comb", axes=axes_on )
-            comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, txnameOff,
-                typ="comb", axes=axes )
+            comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, 
+                    txnameOff, typ="comb", axes=axes )
             if not comb_excl_off:
                 self.pprint("No comb SR SModelS excl line. Not drawing paper plot.")
                 return
-            comb_excl = self.drawOffshell(comb_excl, comb_excl_off)
+            comb_excl = self.addOffshell(comb_excl, comb_excl_off)
         else:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                 typ="comb", axes=axes, eval_axes=eval_axes )
