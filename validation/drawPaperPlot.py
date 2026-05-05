@@ -501,16 +501,36 @@ class PaperPlot:
             linestyle="solid"
         self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
+    def sortSegments ( self, x_vals, y_vals ) -> tuple:
+        if len(x_vals)==1:
+            return x_vals, y_vals
+        new_x, new_y = [], []
+        dct = {}
+        for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
+            min_x = min ( seg_x )
+            while min_x in dct:
+                min_x += 1e-8
+            dct[min_x] = { "x": seg_x, "y": seg_y }
+        keys = list ( dct.keys() )
+        keys.sort( reverse = True )
+        for k in keys:
+            value = dct[k]
+            new_x.append ( value["x"] )
+            new_y.append ( value["y"] )
+        return new_x, new_y
+
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
             y_label, color : Optional[str] = None,
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
+        if color == "tab:red":
+            x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
+            x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
         if color == None:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-
         drawBand = True
         indices = list ( range(min(len(x_vals1),len(x_vals2))) )
         if not drawBand:
@@ -842,14 +862,14 @@ class PaperPlot:
             if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl:
                 x_valsp1 = comb_excl["obsExclusionP1"]["x"]
                 y_valsp1 = comb_excl["obsExclusionP1"]["y"]
-                addJitter = True
-                #y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
+                addJitter = False
+                y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
                 label = f""
                 x_valsp1, y_valsp1 = yvalsAreWidths ( y_label, x_valsp1, y_valsp1 )
                 # self.plotLines ( ax, x_valsp1, y_valsp1, "red", "dashed", label )
                 x_valsm1 = comb_excl["obsExclusionM1"]["x"]
                 y_valsm1 = comb_excl["obsExclusionM1"]["y"]
-                #y_valsm1 = self.add_jitter ( y_valsm1, addJitter, .05 )
+                y_valsm1 = self.add_jitter ( y_valsm1, addJitter, .05 )
                 label = f""
                 x_valsm1, y_valsm1 = yvalsAreWidths ( y_label, x_valsm1, y_valsm1 )
                 if 'Gamma' in y_label:
