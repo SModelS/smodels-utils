@@ -240,10 +240,14 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     filename = os.path.basename ( newini ).replace(".ini",".sh")
     newFile = f"{Dir}/{filename}"
     print ( f"[slurm_validate.py] creating script at {newFile}" )
+    monkey_patch = ""
+    if "monkey_patch" in args an args["monkey_patch"]==True:
+        monkey_patch = "--monkey_patch"
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
             newline = newline.replace("@@CODEDIR@@", codedir )
+            newline = newline.replace("@@MONKEYPATH@@", monkey_patch )
             newline = newline.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@ORIGINIFILE@@", inifile  )
@@ -405,6 +409,8 @@ def main():
             type=str, default = None )
     argparser.add_argument ( '-q','--query',
             help='query status, dont actually run', action="store_true" )
+    argparser.add_argument ( '-M','--monkey_patch',
+            help='monkey patch SModelS so we have nn errors', action="store_true" )
     args=argparser.parse_args()
     if args.usefulljsonlikelihoods and args.validationfolder == None:
         print ( f"[slurm_validate] full json likelihoods and no folder given: will change to validation/fullStats" )
