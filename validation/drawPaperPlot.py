@@ -335,7 +335,7 @@ class PaperPlot:
     def getOnshellAxesForOffshell( self, anaDir : os.PathLike, tx_onshell : str,
             validationFolder : os.PathLike ):
         """ i think this about understanding what the axes for the onshell
-        version of this offshell topology is, but fixme 
+        version of this offshell topology is, but fixme
         """
         fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
         if not os.path.exists ( fname ):
@@ -359,7 +359,7 @@ class PaperPlot:
             return axes
 
 
-    def addOffshell( self, excl_lines : dict, excl_off : dict, 
+    def addOffshell( self, excl_lines : dict, excl_off : dict,
                min_off_y : float = 0.0, official : bool = False ) -> dict:
         """ I think this adds the offshell parts to onshell exclusion
         lines, returns the sum
@@ -377,7 +377,7 @@ class PaperPlot:
                 # print("[drawPaperPlot] off reverse")
                 excl_off[type]["x"].reverse()
                 excl_off[type]["y"].reverse()
-            if official: 
+            if official:
                 min_off_y = excl_off[type]["y"][0]
 
             if excl_off[type]["y"][-1] < excl_off[type]["y"][0]:# and official:
@@ -674,7 +674,7 @@ class PaperPlot:
         if offshell:
             comb_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                 typ="comb", axes=axes_on )
-            comb_excl_off = self.getCurveFromJson(anaDir, validationFolder, 
+            comb_excl_off = self.getCurveFromJson(anaDir, validationFolder,
                     txnameOff, typ="comb", axes=axes )
             if not comb_excl_off:
                 self.pprint("No comb SR SModelS excl line. Not drawing paper plot.")
@@ -688,7 +688,6 @@ class PaperPlot:
                 combSR = False
                 return
             self.pprint( f"got combined curve from {anaDir}: {len(comb_excl)} points" )
-
         # get the range of x values in obs and exp curves to set lim on plot ranges.
         # low limit on y axes usually 0 for plot (except for width plots)
         lines = { "official": off_excl }
@@ -719,21 +718,25 @@ class PaperPlot:
             return ctr
 
         if "obsExclusion" in comb_excl.keys():
-            if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
-                ver = "(pyhf)" # how to differentiate between simplified and full?
-                for js,regions in validationPlot.expRes.globalInfo.jsonFiles.items():
-                    num_sr += countRegionsOfType(regions,"SR")
-                    num_cr += countRegionsOfType(regions,"CR")
-            elif hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
+            if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
                 ver = "ONNX" # how to differentiate between simplified and full?
                 for js,regions in validationPlot.expRes.globalInfo.mlModels.items():
+                    if regions == None and hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and js in validationPlot.expRes.globalInfo.jsonFiles:
+                        regions = validationPlot.expRes.globalInfo.jsonFiles[js]
+                    if regions == None:
+                        continue
+                    num_sr += countRegionsOfType(regions,"SR")
+                    num_cr += countRegionsOfType(regions,"CR")
+            elif hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
+                ver = "(pyhf)" # how to differentiate between simplified and full?
+                for js,regions in validationPlot.expRes.globalInfo.jsonFiles.items():
                     num_sr += countRegionsOfType(regions,"SR")
                     num_cr += countRegionsOfType(regions,"CR")
             else:
                 num_sr = len(validationPlot.expRes.datasets)
 
-            if hasattr ( validationPlot.expRes.globalInfo, "covariance" ): ver = "(SLv1)"   #SLv1 vs SLv2
-
+        if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+            ver = "(SLv1)"   #SLv1 vs SLv2
         if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
             ver = "(SLv2)"
 
@@ -805,7 +808,10 @@ class PaperPlot:
         if hasattr ( validationPlot.expRes.globalInfo, "includeCRs" ):
             if validationPlot.expRes.globalInfo.includeCRs == False:
                 num_cr = 0
-        title = f"{analysis}: {num_sr} SRs"
+        nSRs = f"{num_sr} SRs"
+        if num_sr == 1:
+            nSRs = f"1 SR"
+        title = f"{analysis}: {nSRs}"
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
@@ -970,7 +976,10 @@ class PaperPlot:
             ax.set_ylim([min_exp_y,max_exp_y+step_y])
         else: ax.set_ylim([0,round(max_exp_y+step_y,-1)])
 
-        title = f"{analysis}: {num_sr} SRs"
+        nSRs = f"{num_sr} SRs"
+        if num_sr == 1:
+            nSRs = f"1 SR"
+        title = f"{analysis}: {nSRs}"
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         plt.title( title, loc='left', fontsize=12, x=-.12)
@@ -1040,7 +1049,7 @@ class PaperPlot:
                 self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
                         None, y_label, color = "lightblue" )
 
-        if 'Gamma' in y_label: 
+        if 'Gamma' in y_label:
             ax.set_yscale('log')
         if "logy" in self.specific_options:
             ax.set_yscale('log')
