@@ -717,23 +717,24 @@ class PaperPlot:
                     ctr += 1
             return ctr
 
-        if "obsExclusion" in comb_excl.keys():
-            if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-                ver = "ONNX" # how to differentiate between simplified and full?
-                for js,regions in validationPlot.expRes.globalInfo.mlModels.items():
-                    if regions == None and hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and js in validationPlot.expRes.globalInfo.jsonFiles:
-                        regions = validationPlot.expRes.globalInfo.jsonFiles[js]
-                    if regions == None:
-                        continue
-                    num_sr += countRegionsOfType(regions,"SR")
-                    num_cr += countRegionsOfType(regions,"CR")
-            elif hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
-                ver = "(pyhf)" # how to differentiate between simplified and full?
-                for js,regions in validationPlot.expRes.globalInfo.jsonFiles.items():
-                    num_sr += countRegionsOfType(regions,"SR")
-                    num_cr += countRegionsOfType(regions,"CR")
-            else:
-                num_sr = len(validationPlot.expRes.datasets)
+        gI = validationPlot.expRes.globalInfo
+        if hasattr ( gI, "mlModels" ):
+            ver = "ONNX" # how to differentiate between simplified and full?
+            for js,regions in gI.mlModels.items():
+                if regions == None and hasattr ( gI, "jsonFiles" ) and \
+                        js in gI.jsonFiles:
+                    regions = gI.jsonFiles[js]
+                if regions == None:
+                    continue
+                num_sr += countRegionsOfType(regions,"SR")
+                num_cr += countRegionsOfType(regions,"CR")
+        elif hasattr ( gI, "jsonFiles" ):
+            ver = "(pyhf)" # how to differentiate between simplified and full?
+            for js,regions in gI.jsonFiles.items():
+                num_sr += countRegionsOfType(regions,"SR")
+                num_cr += countRegionsOfType(regions,"CR")
+        else:
+            num_sr = len(validationPlot.expRes.datasets)
 
         if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
             ver = "(SLv1)"   #SLv1 vs SLv2
