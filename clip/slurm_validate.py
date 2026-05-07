@@ -241,7 +241,7 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     newFile = f"{Dir}/{filename}"
     print ( f"[slurm_validate.py] creating script at {newFile}" )
     monkey_patch = ""
-    if "monkey_patch" in args an args["monkey_patch"]==True:
+    if "monkey_patch" in args and args["monkey_patch"]==True:
         monkey_patch = "--monkey_patch"
     with open ( newFile, "wt" ) as f:
         for line in lines:

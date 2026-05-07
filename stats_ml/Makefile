@@ -8,3 +8,6 @@ clean:
 
 clean_all:
 	rm -f results/* slhafiles/*
+
+backup:
+	cp -r results_all results.no_s_min/ /groups/hephy/pheno/ww/
