@@ -114,13 +114,16 @@ class Lister:
 
     def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
+        r = ""
+        if hasattr ( B.globalInfo, "mlModels" ):
+            r = "NN+"
         if hasattr ( B.globalInfo, "jsonFiles" ):
-            return "json"
+            return r+"json"
         if hasattr ( B.globalInfo, "covariance" ):
             if hasattr ( B.datasets[0].dataInfo, "thirdMoment" ) and B.datasets[0].dataInfo.thirdMoment != None:
-                return "SLv2"
-            return "SLv1"
-        return ""
+                return r+"SLv2"
+            return r+"SLv1"
+        return r
 
     def header( self ):
         """
