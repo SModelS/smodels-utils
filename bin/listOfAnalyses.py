@@ -32,7 +32,7 @@ class Lister:
 
     def metaStatisticsPlot ( self ):
         if not self.add_version:
-            ## dont plot again
+            ## dont plot again for the nonversioned case
             return
         # return ## FIXME remove
         import sys
@@ -41,7 +41,12 @@ class Lister:
         sys.path.insert(0,"../../")
         from protomodels.multiverse import expResModifier
         # print ( "[listOfAnalyses] starting roughviz" )
-        options = { "compute_ps": True, "suffix": "temp" }
+        nMCMC_min = 50_000
+        nMCMC_max = 2_000_000
+        # nMCMC_min = 50_000
+        # nMCMC_max = 100_000
+        options = { "compute_ps": True, "suffix": "temp", \
+                    "nMCMC_min": nMCMC_min, "nMCMC_max": nMCMC_max }
         # options["database"]="../../smodels-database"
         options["dbpath"]=self.dbpath
         options["outfile"]="none"
@@ -54,16 +59,16 @@ class Lister:
         # poptions["Zmax"] = 3.25
         poptions["nbins"] = 29
         poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
-           'plotStats': True }
+           'plotStats': True, "no_stacked": False, "draw_reference": True }
         # poptions["roughviz"] = False
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
         poptions["nosuperseded"]= not self.includeSuperseded
         poptions["use_aggregated"]= self.use_aggregated
+        poptions["filternegativesigma"]= None
         poptions["keep"]= False
         poptions["nofastlim"]= not self.includeFastlim
         plotter = plotDBDict.Plotter ( poptions )
-        #print ( "[listOfAnalyses] ending roughviz" )
         sigsplot = self.significancesPlotFileName()
         cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
         os.system ( cmd )
@@ -85,7 +90,8 @@ class Lister:
             # poptions["Zmax"] = 4.25
             poptions["nbins"] = 29
             poptions["options"] = {'ylabel':'# signal regions', \
-                'plot_averages': False, 'plotStats': True }
+                'plot_averages': False, 'plotStats': True,
+                'no_stacked': False , 'draw_reference': True }
             # poptions["roughviz"] = False
             poptions["pvalues"] = False
             poptions["outfile"] = "tmp.png"
