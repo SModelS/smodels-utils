@@ -745,9 +745,23 @@ class DatabaseCreator(list):
         for jsonFile, regions in jsonFiles["jsonFiles"].items():
             setName = jsonFile.replace(".json","")
             srSets [ setName ] = []
+            statModels [ setName ] = []
             for sr in regions:
+                srname = sr
+                if type(sr)==dict:
+                    for l in [ "label", "smodels", "pyhf" ]:
+                        if l in sr:
+                            srname = sr[l]
+                            break
                 SRs.append ( sr )
-                srSets[ setName ].append ( sr )
+                srSets[ setName ].append ( srname )
+            statModels [ setName ].append ( jsonFile )
+        if "mlModels" in jsonFiles:
+            print ( f"FIXME implement 39" )
+        if "jsonFiles_FullLikelihood" in jsonFiles:
+            for jsonFile, regions in jsonFiles["jsonFiles_FullLikelihood"].items():
+                setName = jsonFile.replace(".json","")
+                statModels [ setName ].append ( jsonFile )
         ret += "srMappings: [\n"
         for i,sr in enumerate(SRs):
             msr = sr
@@ -755,7 +769,7 @@ class DatabaseCreator(list):
             ret += f"    {msr}{comma}"
         ret += "],\n"
         ret += f"srSets: {str(srSets)}\n"
-        ret += f"statModels: {str(srSets)}\n"
+        ret += f"statModels: {str(statModels)}\n"
         return ret
 
     def _createInfoFile(self, name, obj, folder):
@@ -802,11 +816,7 @@ class DatabaseCreator(list):
                 if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ] \
                         and type(value) == dict:
                     jsonFiles[attr]=value
-                    if jsonsInNewFormat:
-                        # value = ""
-                        value = self.formatJsonFile ( value ) # remove later
-                    else:
-                        value = self.formatJsonFile ( value )
+                    value = self.formatJsonFile ( value ) # remove later
                 if attr in [ "mlModels" ]:
                     jsonFiles[attr]=value
             if name == "dataInfo" and attr == "jsonfile":
@@ -819,6 +829,9 @@ class DatabaseCreator(list):
                 destfile = destfile.replace("dataInfo.txt", "BkgOnly.json" )
                 shutil.copy ( sourcefile, destfile )
                 value = "BkgOnly.json"
+            if attr in [ "jsonFiles", "jsonFiles_FullLikelihood", "mlModels" ]:
+                if jsonsInNewFormat:
+                    continue
             content = f'{content}{attr}{self.assignmentOperator}{value}\n'
         if jsonsInNewFormat:
             add = self.addJsonsInNewFormat ( jsonFiles )
