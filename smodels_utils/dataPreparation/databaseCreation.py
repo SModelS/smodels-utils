@@ -745,8 +745,12 @@ class DatabaseCreator(list):
         setNames = []
         for jsonFile, regions in jsonFiles["jsonFiles"].items():
             setName = jsonFile.replace(".json","")
+            setName = setName.lower()
             setName = setName.replace("simplified","")
             setName = setName.replace("_cuts","")
+            setName = setName.replace("_bkgonly","")
+            if setName.endswith("_"):
+                setName = setName[:-1]
             if setName == "":
                 setName = "all"
             setNames.append ( setName )
@@ -774,9 +778,22 @@ class DatabaseCreator(list):
             msr = sr
             comma = ",\n" if i < len(SRs)-1 else ""
             ret += f"    {msr}{comma}"
-        ret += "],\n"
-        ret += f"srSets: {str(srSets)}\n"
-        ret += f"statModels: {str(statModels)}\n"
+        ret += "]\n"
+        ret += "srSets: { "
+        for i, ( setName, regions) in enumerate ( srSets.items() ):
+            comma = ",\n    " if i < len(srSets)-1 else ""
+            srset = f"'{setName}': ["
+            for idx,region in enumerate(regions):
+                cc = ",\n          " if idx < len(regions) else ""
+                srset += f"'{region}'{cc}"
+            ret += f"{srset}]{comma}"
+        ret +="}\n"
+        ret += "statModels: { "
+        for i, ( setName, models) in enumerate ( statModels.items() ):
+            comma = ",\n     " if i < len(statModels)-1 else ""
+            setmodels = f"'{setName}': {models}"
+            ret += f"{setmodels}{comma}"
+        ret +="}\n"
         return ret
 
     def _createInfoFile(self, name, obj, folder):
