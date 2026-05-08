@@ -199,12 +199,13 @@ class MetaInfoInput(Locker):
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
                  'publication', 'publicationDOI', 'contact', 'supersededBy',
                  'supersedes', 'comment', 'modelFile', 'datasetOrderForModel',
-                 'mlModels', "srSets", "statModels", "srMappings",
+                 'srMappings', 'srSets', 'statModels',
                  'private', 'implementedBy','lastUpdate', 'datasetOrder',
-                 'covariance', 'combinableWith', 'jsonFiles',
-                 'jsonFiles_FullLikelihood', 'source',
+                 'covariance', 'combinableWith', 'source',
                  'Leff_inner', 'Leff_outer', 'type', 'includeCRs',
                  'onnxFiles', 'resultType', 'signalUncertainty' ]
+    # the ones below are actually obsolete!
+    infoAttr += [ "mlModels", "jsonFiles", "jsonFiles_FullLikelihood" ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
