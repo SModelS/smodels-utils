@@ -24,6 +24,8 @@ from smodels_utils.helper.various import hasLLHD, removeAnaIdSuffices
 from smodels_utils.helper import databaseManipulations as manips
 from typing import Union
 
+warnings = { "skippingNonValidated": 0 }
+
 class Lister:
     def __init__ ( self ):
         self.n_homegrown = 0
@@ -40,17 +42,14 @@ class Lister:
         sys.path.insert(0,"../../protomodels")
         sys.path.insert(0,"../../")
         from protomodels.multiverse import expResModifier
-        # print ( "[listOfAnalyses] starting roughviz" )
-        nMCMC_min = 50_000
-        nMCMC_max = 2_000_000
-        # nMCMC_min = 50_000
-        # nMCMC_max = 100_000
         options = { "compute_ps": True, "suffix": "temp", \
-                    "nMCMC_min": nMCMC_min, "nMCMC_max": nMCMC_max }
+                    "nMCMC_min": self.nMCMC_min, "nMCMC_max": self.nMCMC_max }
         # options["database"]="../../smodels-database"
         options["dbpath"]=self.dbpath
         options["outfile"]="none"
+        print ( f"[listOfAnalyses] instantiating ExpResModifier" )
         modifier = expResModifier.ExpResModifier ( options )
+        print ( f"[listOfAnalyses] done instantiating ExpResModifier" )
         from protomodels.plotting import plotDBDict
         poptions = { "topologies": None, "roughviz": False }
         poptions["dictfile"] = "./temp_database.dict"
@@ -58,8 +57,9 @@ class Lister:
         poptions["title"] = ""
         # poptions["Zmax"] = 3.25
         poptions["nbins"] = 29
-        poptions["options"] = {'ylabel':'# signal regions', 'plot_averages': False,\
-           'plotStats': True, "no_stacked": False, "draw_reference": True }
+        poptions["options"] = {'ylabel':'# signal regions',
+           'plot_averages': False, 'plotStats': True, "no_stacked": False,
+           'draw_reference': True }
         # poptions["roughviz"] = False
         poptions["pvalues"] = False
         poptions["outfile"] = "tmp.png"
@@ -81,7 +81,9 @@ class Lister:
             options["outfile"]="none"
             del plotter
             del modifier
+            print ( f"[listOfAnalyses] instantiating fudged ExpResModifier" )
             modifier = expResModifier.ExpResModifier ( options )
+            print ( f"[listOfAnalyses] done instantiating fudged ExpResModifier" )
             from protomodels.plotting import plotDBDict
             poptions = { "topologies": None, "roughviz": False }
             poptions["dictfile"] = "./fudge_database.dict"
@@ -188,7 +190,9 @@ class Lister:
                     if i.validated in [ True, "N/A", "n/a" ]:
                         topos.add ( i.txName )
                     else:
-                        print ( f"[listOfAnalyses] skipping {expR.globalInfo.id}:{ds.dataInfo.dataId}:{i}: validated={i.validated}" )
+                        if warnings["skippingNonValidated"]<2:
+                            print ( f"[listOfAnalyses] skipping {expR.globalInfo.id}:{ds.dataInfo.dataId}:{i}: validated={i.validated}" )
+                            warnings["skippingNonValidated"]+=1
                 n_maps += len(topos)
                 # n_maps += len ( ds.txnameList )
         self.f.write ( f"# List Of Analyses {version} {titleplus}\n" )
@@ -602,6 +606,12 @@ class Lister:
         argparser.add_argument ( '-v', '--verbose',
             help='verbosity level (error, warning, info, debug) [info]',
             type=str, default='info' )
+        argparser.add_argument ( '--nMCMC_min',
+            help='minimum number of MCMC events when computing p-value [20_000]',
+            type=int, default=20_000 )
+        argparser.add_argument ( '--nMCMC_max',
+            help='maximum number of MCMC events when computing p-value [100_000]',
+            type=int, default=100_000 )
         argparser.add_argument ( '-i', '--ignore', action='store_true',
              help='ignore the validation flags of analysis '\
                   '(i.e. also add non-validated results)' )
@@ -626,6 +636,8 @@ class Lister:
         self.fudged = args.fudged
         self.includeSuperseded = not args.no_superseded
         self.use_aggregated = args.use_aggregated
+        self.nMCMC_min = args.nMCMC_min
+        self.nMCMC_max = args.nMCMC_max
         self.likelihoods = args.likelihoods
         self.write_stats = args.write_stats
         self.dbpath = args.database
