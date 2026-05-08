@@ -719,11 +719,11 @@ class DatabaseCreator(list):
         for idx,entry in enumerate(v_list):
             comma = ",\n" if idx < len(v_list)-1 else ""
             ret += f"  {entry}{comma}"
-        ret += "]\n"
+        ret += "]"
         # ret = f"{ret[:-2]}\n  }}"
         return ret
 
-    def formatJsonFile ( self, value : Union[List,Dict] ) -> str:
+    def format ( self, value : Union[List,Dict] ) -> str:
         """ we have jsonFiles entry given as a dictionary.
         format it nicely.
         """
@@ -731,12 +731,12 @@ class DatabaseCreator(list):
             return self.formatList ( value )
         ret = "{\n"
         for jsonFileName, SRs in value.items():
-            ret += f"  '{jsonFileName}': [\n"
+            newline,spaces = (""," ") if len(SRs)==1 else ("\n","    ")
+            ret += f"  '{jsonFileName}': [{newline}"
             for SR in SRs:
                 if type(SR)==str: 
                     SR = f"'{SR}'"
-                    newline = ""
-                ret += f"    {str(SR)},\n"
+                ret += f"{spaces}{str(SR)},\n"
             ret = f"{ret[:-2]}],\n"
         ret = f"{ret[:-2]}\n  }}"
         return ret
@@ -853,9 +853,9 @@ class DatabaseCreator(list):
                 if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ] \
                         and type(value) == dict:
                     jsonFiles[attr]=value
-                    value = self.formatJsonFile ( value ) # remove later
+                    value = self.format ( value ) # remove later
                 if attr in [ "srSets", "statModels", "srMappings" ]:
-                    value = self.formatJsonFile ( value ) # remove later
+                    value = self.format ( value ) # remove later
                 if attr in [ "mlModels" ]:
                     jsonFiles[attr]=value
             if name == "dataInfo" and attr == "jsonfile":
