@@ -728,6 +728,36 @@ class DatabaseCreator(list):
         ret = f"{ret[:-2]}\n  }}"
         return ret
 
+    def addJsonsInNewFormat ( self, jsonFiles : dict ) -> str:
+        """
+        :param jsonFiles: has as keys "jsonFiles" and "jsonFiles_FullLikelihood"
+        :returns: stuff to add to content
+        """
+        if len(jsonFiles)==0:
+            return ""
+        ret = ""
+        SRs = []
+        srSets = {}
+        statModels = {}
+        if not "jsonFiles" in jsonFiles:
+            print ( f"we have full but not simple json files??" )
+            sys.exit()
+        for jsonFile, regions in jsonFiles["jsonFiles"].items():
+            setName = jsonFile.replace(".json","")
+            srSets [ setName ] = []
+            for sr in regions:
+                SRs.append ( sr )
+                srSets[ setName ].append ( sr )
+        ret += "srMappings: [\n"
+        for i,sr in enumerate(SRs):
+            msr = sr
+            comma = ",\n" if i < len(SRs)-1 else ""
+            ret += f"    {msr}{comma}"
+        ret += "],\n"
+        ret += f"srSets: {str(srSets)}\n"
+        ret += f"statModels: {str(srSets)}\n"
+        return ret
+
     def _createInfoFile(self, name, obj, folder):
 
         """
@@ -753,6 +783,8 @@ class DatabaseCreator(list):
                     logger.error( f"Attribute {attr} must be defined for object type {type(obj)}" )
                     sys.exit()
 
+        jsonFiles = {}
+        jsonsInNewFormat = True ## jsonfiles, add new or old format
         for attr in obj.infoAttr:
             if attr == "originalSRs": # thats only for aggregation
                 continue
@@ -769,7 +801,14 @@ class DatabaseCreator(list):
                     value=f"{value}/fb"
                 if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ] \
                         and type(value) == dict:
-                    value = self.formatJsonFile ( value )
+                    jsonFiles[attr]=value
+                    if jsonsInNewFormat:
+                        # value = ""
+                        value = self.formatJsonFile ( value ) # remove later
+                    else:
+                        value = self.formatJsonFile ( value )
+                if attr in [ "mlModels" ]:
+                    jsonFiles[attr]=value
             if name == "dataInfo" and attr == "jsonfile":
                 # we copy the jsonfile and rewrite the value field
                 sourcefile = f"{self.base}/{value}"
@@ -781,6 +820,10 @@ class DatabaseCreator(list):
                 shutil.copy ( sourcefile, destfile )
                 value = "BkgOnly.json"
             content = f'{content}{attr}{self.assignmentOperator}{value}\n'
+        if jsonsInNewFormat:
+            add = self.addJsonsInNewFormat ( jsonFiles )
+            if len(add)>0:
+                content += add
 
         infoFile = open(self.base + path, 'w')
         self.timeStamp ( f"writing info file {path}" )
