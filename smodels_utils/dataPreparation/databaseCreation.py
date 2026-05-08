@@ -742,8 +742,14 @@ class DatabaseCreator(list):
         if not "jsonFiles" in jsonFiles:
             print ( f"we have full but not simple json files??" )
             sys.exit()
+        setNames = []
         for jsonFile, regions in jsonFiles["jsonFiles"].items():
             setName = jsonFile.replace(".json","")
+            setName = setName.replace("simplified","")
+            setName = setName.replace("_cuts","")
+            if setName == "":
+                setName = "all"
+            setNames.append ( setName )
             srSets [ setName ] = []
             statModels [ setName ] = []
             for sr in regions:
@@ -759,8 +765,9 @@ class DatabaseCreator(list):
         if "mlModels" in jsonFiles:
             print ( f"FIXME implement 39" )
         if "jsonFiles_FullLikelihood" in jsonFiles:
-            for jsonFile, regions in jsonFiles["jsonFiles_FullLikelihood"].items():
-                setName = jsonFile.replace(".json","")
+            for idx, (jsonFile, regions) in enumerate ( \
+                    jsonFiles["jsonFiles_FullLikelihood"].items() ):
+                setName = setNames[idx]
                 statModels [ setName ].append ( jsonFile )
         ret += "srMappings: [\n"
         for i,sr in enumerate(SRs):
