@@ -247,7 +247,7 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
             newline = newline.replace("@@CODEDIR@@", codedir )
-            newline = newline.replace("@@MONKEYPATH@@", monkey_patch )
+            newline = newline.replace("@@MONKEY_PATCH@@", monkey_patch )
             newline = newline.replace("@@ANALYSES@@", analyses )
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@ORIGINIFILE@@", inifile  )
