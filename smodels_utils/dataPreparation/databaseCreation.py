@@ -712,10 +712,23 @@ class DatabaseCreator(list):
             handle.write ( cc )
             handle.close()
 
-    def formatJsonFile ( self, value : Dict ):
+    def formatList ( self, v_list : List ) -> str:
+        """ format the list
+        """
+        ret = "[\n"
+        for idx,entry in enumerate(v_list):
+            comma = ",\n" if idx < len(v_list)-1 else ""
+            ret += f"  {entry}{comma}"
+        ret += "]\n"
+        # ret = f"{ret[:-2]}\n  }}"
+        return ret
+
+    def formatJsonFile ( self, value : Union[List,Dict] ) -> str:
         """ we have jsonFiles entry given as a dictionary.
         format it nicely.
         """
+        if type(value)==list:
+            return self.formatList ( value )
         ret = "{\n"
         for jsonFileName, SRs in value.items():
             ret += f"  '{jsonFileName}': [\n"
@@ -840,6 +853,8 @@ class DatabaseCreator(list):
                 if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ] \
                         and type(value) == dict:
                     jsonFiles[attr]=value
+                    value = self.formatJsonFile ( value ) # remove later
+                if attr in [ "srSets", "statModels", "srMappings" ]:
                     value = self.formatJsonFile ( value ) # remove later
                 if attr in [ "mlModels" ]:
                     jsonFiles[attr]=value

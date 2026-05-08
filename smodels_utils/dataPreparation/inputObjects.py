@@ -197,11 +197,14 @@ class MetaInfoInput(Locker):
     """
 
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
-    'publication', 'publicationDOI', 'contact', 'supersededBy','supersedes', 'comment', 'modelFile', 'datasetOrderForModel', 'mlModels',
-    'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinableWith', 'jsonFiles', 'jsonFiles_FullLikelihood', 'source',
-    'Leff_inner', 'Leff_outer', 'type',
-    'includeCRs', 'onnxFiles', 'resultType', 'signalUncertainty' ]
+                 'publication', 'publicationDOI', 'contact', 'supersededBy',
+                 'supersedes', 'comment', 'modelFile', 'datasetOrderForModel',
+                 'mlModels', "srSets", "statModels", "srMappings",
+                 'private', 'implementedBy','lastUpdate', 'datasetOrder',
+                 'covariance', 'combinableWith', 'jsonFiles',
+                 'jsonFiles_FullLikelihood', 'source',
+                 'Leff_inner', 'Leff_outer', 'type', 'includeCRs',
+                 'onnxFiles', 'resultType', 'signalUncertainty' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
@@ -908,12 +911,12 @@ class TxNameInput(Locker):
             massPlane = MassPlane(self._txDecay,massArray)
         self._planes.append(massPlane)
         return massPlane
-    
+
     def nodeIndex2arrayIndex(self,nodeIndex,attr='mass'):
         """
         Convert the node index to the corresponding entry (array index)
         in the data grid array for the desired attribute.
-        
+
         :param nodeIndex: Index for the particle node in the constraint (i.e. anyBSM(nodeIndex))
         :param attr: Attribute for which to convert the indices (i.e. mass or totalwidth)
         """
@@ -930,13 +933,13 @@ class TxNameInput(Locker):
                 if nodeAttr != attr:
                     continue
                 self._node2arrayDict[attr][inode] = iarray
-        
+
         if not nodeIndex in self._node2arrayDict[attr]:
             logger.error(f"Node {nodeIndex} not found in dataMap for attribute {attr}!")
             return False
-        
+
         return self._node2arrayDict[attr][nodeIndex]
-                
+
     def getDataFromPlanes(self,dataType):
         """
         Loop over the defined planes and collects the data.
@@ -1519,7 +1522,7 @@ class TxNameInput(Locker):
             # {(1, 3): 80.0, (2, 4): 125.0}
             for nodeIndices, massGap in constraint.items():
                 # now we need to translate from nodeindices to array indices
-                arrayIndices = [self.nodeIndex2arrayIndex(nodeIndex,attr='mass') 
+                arrayIndices = [self.nodeIndex2arrayIndex(nodeIndex,attr='mass')
                                 for nodeIndex in nodeIndices]
                 dm = massArray[arrayIndices[0]]-massArray[arrayIndices[1]]
                 if type(dm)!=float:
