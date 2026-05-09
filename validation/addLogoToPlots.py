@@ -37,7 +37,7 @@ def addLogoToPng ( filename : str, logo : Union[str,None] = None ):
     :param logo: path to the logo png image. If None, use default.
     """
     if logo == None:
-        logo = 'smodels-transparent.png'
+        logo = f'{os.path.dirname(__file__)}/smodels-transparent.png'
     from PIL import Image
     #Open original plot
     im = Image.open(filename)
@@ -76,7 +76,7 @@ def addLogoToPdf ( filename : str, logo : Union[str,None] = None ):
     :param logo: path to the logo png image. If None, use default.
     """
     if logo == None:
-        logo = 'smodels-bannerRotated.png'
+        logo = f'{os.path.dirname(__file__)}/smodels-bannerRotated.png'
     from reportlab.pdfgen import canvas
     try:
         from PyPDF2 import PdfWriter, PdfReader
