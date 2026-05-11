@@ -785,7 +785,8 @@ class DatabaseCreator(list):
             for idx, (jsonFile, regions) in enumerate ( \
                     jsonFiles["jsonFiles_FullLikelihood"].items() ):
                 setName = setNames[idx]
-                statModels [ setName ].append ( jsonFile )
+                if not jsonFile in statModels [ setName ]:
+                    statModels [ setName ].append ( jsonFile )
         ret += "srMappings: [\n"
         for i,sr in enumerate(SRs):
             msr = sr
