@@ -701,12 +701,18 @@ def run ( expResList : list, options : dict,
                 hasattr ( expRes.globalInfo, "statModels" ):
             logger.info ( f"removing mlModels as requested" )
             newModels = []
-            for model in expRes.globalInfo.statModels:
-                if model.endswith ( ".onnx" ):
-                    expRes.globalInfo.cachedModels.pop ( model )
+            ### FIXME this is wrong!!
+            for setName,models in expRes.globalInfo.statModels:
+                newModels = []
+                for model in models:
+                    if model.endswith ( ".onnx" ):
+                        expRes.globalInfo.cachedModels.pop ( model )
+                    else:
+                        newModels.append ( model )
+                if len(newModels)==0:
+                    expRes.globalInfo.statModels.pop ( setName )
                 else:
-                    newModels.append ( model )
-            expRes.globalInfo.statModels = newModels
+                    expRes.globalInfo.statModels[setName] = newModels
         runForOneResult ( expRes, options, keep, db )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
