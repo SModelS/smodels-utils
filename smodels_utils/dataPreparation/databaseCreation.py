@@ -839,6 +839,7 @@ class DatabaseCreator(list):
 
         jsonFiles = {}
         jsonsInNewFormat = True ## jsonfiles, add new or old format
+        hasAttrs = set()
         for attr in obj.infoAttr:
             if attr == "originalSRs": # thats only for aggregation
                 continue
@@ -847,7 +848,6 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
-            hasAttrs = set()
             if name == "globalInfo":
                 hasAttrs.add ( attr )
                 if attr == "sqrts" and type(value)==int:
