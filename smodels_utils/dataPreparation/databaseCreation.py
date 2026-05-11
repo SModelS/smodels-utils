@@ -752,8 +752,9 @@ class DatabaseCreator(list):
         srSets = {}
         statModels = {}
         if not "jsonFiles" in jsonFiles:
-            print ( f"we have full but not simple json files??" )
-            sys.exit()
+            print ( f"[databaseCreation] we have full but not simple json files?? {list(jsonFiles.keys())}" )
+            return ""
+            # sys.exit()
         setNames = []
         for jsonFile, regions in jsonFiles["jsonFiles"].items():
             setName = jsonFile.replace(".json","")
