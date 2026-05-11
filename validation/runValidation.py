@@ -698,10 +698,15 @@ def run ( expResList : list, options : dict,
     for expRes in expResList:
         ## FIXME here we could remove the mlModels entry
         if options["removeMLModels"] and \
-                hasattr ( expRes.globalInfo, "mlModels" ):
+                hasattr ( expRes.globalInfo, "statModels" ):
             logger.info ( f"removing mlModels as requested" )
-            del expRes.globalInfo.mlModels
-            del expRes.globalInfo.onnxes
+            newModels = []
+            for model in expRes.globalInfo.statModels:
+                if model.endswith ( ".onnx" ):
+                    expRes.globalInfo.cachedModels.pop ( model )
+                else:
+                    newModels.append ( model )
+            expRes.globalInfo.statModels = newModels
         runForOneResult ( expRes, options, keep, db )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
