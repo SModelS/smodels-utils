@@ -691,7 +691,6 @@ class DatabaseCreator(list):
                 #x = round_to_n ( exclusion.GetPointX(i), 4 )
                 #y = round_to_n ( exclusion.GetPointY(i), 4 )
                 xv.append ( x )
-            # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             if not name in content[dirname]:
                 # content[dirname][name]=xandy
                 if len(yv)==0:
@@ -741,7 +740,7 @@ class DatabaseCreator(list):
         ret = f"{ret[:-2]}\n  }}"
         return ret
 
-    def addJsonsInNewFormat ( self, jsonFiles : dict ) -> str:
+    def addJsonsInNewFormat ( self, jsonFiles : dict, hasAttrs : set ) -> str:
         """
         :param jsonFiles: has as keys "jsonFiles" and "jsonFiles_FullLikelihood"
         :returns: stuff to add to content
@@ -780,34 +779,37 @@ class DatabaseCreator(list):
                 srSets[ setName ].append ( srname )
             statModels [ setName ].append ( jsonFile )
         if "mlModels" in jsonFiles:
-            print ( f"FIXME implement 39" )
+            print ( f"[databaseCreation] FIXME implement mlModels" )
         if "jsonFiles_FullLikelihood" in jsonFiles:
             for idx, (jsonFile, regions) in enumerate ( \
                     jsonFiles["jsonFiles_FullLikelihood"].items() ):
                 setName = setNames[idx]
                 if not jsonFile in statModels [ setName ]:
                     statModels [ setName ].append ( jsonFile )
-        ret += "srMappings: [\n"
-        for i,sr in enumerate(SRs):
-            msr = sr
-            comma = ",\n" if i < len(SRs)-1 else ""
-            ret += f"    {msr}{comma}"
-        ret += "]\n"
-        ret += "srSets: { "
-        for i, ( setName, regions) in enumerate ( srSets.items() ):
-            comma = ",\n    " if i < len(srSets)-1 else ""
-            srset = f"'{setName}': ["
-            for idx,region in enumerate(regions):
-                cc = ",\n          " if idx < len(regions) else ""
-                srset += f"'{region}'{cc}"
-            ret += f"{srset}]{comma}"
-        ret +="}\n"
-        ret += "statModels: { "
-        for i, ( setName, models) in enumerate ( statModels.items() ):
-            comma = ",\n     " if i < len(statModels)-1 else ""
-            setmodels = f"'{setName}': {models}"
-            ret += f"{setmodels}{comma}"
-        ret +="}\n"
+        if not "srMappings" in hasAttrs:
+            ret += "srMappings: [\n"
+            for i,sr in enumerate(SRs):
+                msr = sr
+                comma = ",\n" if i < len(SRs)-1 else ""
+                ret += f"    {msr}{comma}"
+            ret += "]\n"
+        if not "srSets" in hasAttrs:
+            ret += "srSets: { "
+            for i, ( setName, regions) in enumerate ( srSets.items() ):
+                comma = ",\n    " if i < len(srSets)-1 else ""
+                srset = f"'{setName}': ["
+                for idx,region in enumerate(regions):
+                    cc = ",\n          " if idx < len(regions) else ""
+                    srset += f"'{region}'{cc}"
+                ret += f"{srset}]{comma}"
+            ret +="}\n"
+        if not "statModels" in hasAttrs:
+            ret += "statModels: { "
+            for i, ( setName, models) in enumerate ( statModels.items() ):
+                comma = ",\n     " if i < len(statModels)-1 else ""
+                setmodels = f"'{setName}': {models}"
+                ret += f"{setmodels}{comma}"
+            ret +="}\n"
         return ret
 
     def _createInfoFile(self, name, obj, folder):
@@ -845,7 +847,9 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
+            hasAttrs = set()
             if name == "globalInfo":
+                hasAttrs.add ( attr )
                 if attr == "sqrts" and type(value)==int:
                     # normalize inputs!
                     value=f"{value}*TeV"
@@ -874,7 +878,7 @@ class DatabaseCreator(list):
                     continue
             content = f'{content}{attr}{self.assignmentOperator}{value}\n'
         if jsonsInNewFormat:
-            add = self.addJsonsInNewFormat ( jsonFiles )
+            add = self.addJsonsInNewFormat ( jsonFiles, hasAttrs )
             if len(add)>0:
                 content += add
 
