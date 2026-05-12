@@ -699,10 +699,10 @@ def run ( expResList : list, options : dict,
         ## FIXME here we could remove the mlModels entry
         if options["removeMLModels"] and \
                 hasattr ( expRes.globalInfo, "statModels" ):
-            logger.info ( f"removing mlModels as requested" )
+            logger.info ( f"{RED}removing mlModels as requested!{RESET}" )
             newModels = []
             ### FIXME this is wrong!!
-            for setName,models in expRes.globalInfo.statModels:
+            for setName,models in expRes.globalInfo.statModels.items():
                 newModels = []
                 for model in models:
                     if model.endswith ( ".onnx" ):
