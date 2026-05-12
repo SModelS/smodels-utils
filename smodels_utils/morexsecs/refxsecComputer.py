@@ -352,7 +352,7 @@ class RefXSecComputer:
         ## sign flip
         if ( -pids[0], pids[1]) == ignores:
             return True
-        if ( pids[0], -pids[1]) == ignores:
+        if pids[1]!= None and ( pids[0], -pids[1]) == ignores:
             return True
         return False
 
