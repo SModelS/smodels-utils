@@ -724,7 +724,8 @@ class PaperPlot:
         if hasattr ( gI, "statModels" ):
             ver = "(pyhf)" # how to differentiate between simplified and full?
             for srSetName,models in gI.statModels.items():
-                for model  in models:
+                regions = gI.srSets[srSetName]
+                for model in models:
                     if model.endswith ( ".onnx"):
                         ver = "(nn)"
                 num_sr += countRegionsOfType(regions,"SR")
@@ -849,9 +850,12 @@ class PaperPlot:
             y_vals = comb_excl["obsExclusion"]["y"]
             y_vals = self.add_jitter ( y_vals, addJitter )
             label = f"SModelS: comb."
+            gI = validationPlot.expRes.globalInfo
             # label = f"SModelS: comb. {num_sr} SRs {ver}"
-            if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-                label = f"SModelS: NN"
+            if hasattr ( gI, "statModels" ):
+                for srSetName,models in gI.statModels.items():
+                    if models[0].endswith ( ".onnx" ):
+                        label = f"SModelS: NN"
                 # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             if 'Gamma' in y_label:
@@ -931,7 +935,8 @@ class PaperPlot:
         fig_axes_title = fig_axes_title.replace("(","").replace(")","").replace(",","")
         outfiles = []
 
-        outfile = f"{vDir}/{txname}_{fig_axes_title}_obs.png"
+        txn = txname if txnameOff == "" else txnameOff
+        outfile = f"{vDir}/{txn}_{fig_axes_title}_obs.png"
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         from smodels_utils.helper.various import pngMetaInfo
         metadata = pngMetaInfo()
@@ -1015,8 +1020,13 @@ class PaperPlot:
             y_vals = comb_excl["expExclusion"]["y"]
             label = f"SModelS: comb."
             # label = f"SModelS: comb. {num_sr} SRs {ver}"
-            if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ):
-                label = f"SModelS: NN"
+            gI = validationPlot.expRes.globalInfo
+            label = f"SModelS: orig pyhf"
+            if hasattr ( gI, "statModels" ):
+                if hasattr ( gI, "statModels" ):
+                    for srSetName,models in gI.statModels.items():
+                        if models[0].endswith ( ".onnx" ):
+                            label = f"SModelS: NN"
                 # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label, color="red" )
             for i in []: # [ "expExclusionP1", "expExclusionM1" ]:
@@ -1063,7 +1073,8 @@ class PaperPlot:
         plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
-        outfile = f"{vDir}/{txname}_{fig_axes_title}_exp.png"
+        txn = txname if txnameOff == "" else txnameOff
+        outfile = f"{vDir}/{txn}_{fig_axes_title}_exp.png"
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         plt.savefig( outfile, dpi=250)
         plt.clf()

@@ -232,7 +232,7 @@ def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
         ## pyhf combination
         ver = "pyhf"
         for srSetName,models in gI.statModels.items():
-            if models[0].startswith ( ".onnx" ):
+            if models[0].endswith ( ".onnx" ):
                 ver = "NN"
         subtitle = f"{ver} combining {len(validationPlot.expRes.datasets)} SRs: "
     for dataset in validationPlot.expRes.datasets:
