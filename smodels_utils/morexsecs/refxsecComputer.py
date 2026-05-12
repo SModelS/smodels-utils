@@ -722,10 +722,9 @@ class RefXSecComputer:
             isEWK=True
             pb = False
         if pid1 in [ -1000005, -1000006, -2000006 ] and pid2 == -pid1:
-            ## left handed slep- slep+ production.
             filename = f"xsecstop{int(sqrts)}.txt"
             order = (NLL,NNLL) #3
-            columns["xsec"]=2
+            columns["xsec"]=1
             pb = True
         if pid1 in [ -1000024 ] and pid2 == -pid1:
             filename = f"xsecC1C1{int(sqrts)}.txt"
