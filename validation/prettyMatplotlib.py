@@ -719,7 +719,7 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     resultType = f"{str(types)}"
     if len ( validationPlot.expRes.datasets ) > 1 and validationPlot.combine:
         hasCombinedInfo = False
-        for i in [ "covariance", "jsonFiles", "mlModels" ]:
+        for i in [ "covariance", "statModels" ]:
             if hasattr ( validationPlot.expRes.globalInfo, i ):
                 hasCombinedInfo = True
                 resultType = "combined"

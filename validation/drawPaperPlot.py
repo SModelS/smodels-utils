@@ -721,19 +721,12 @@ class PaperPlot:
             return ctr
 
         gI = validationPlot.expRes.globalInfo
-        if hasattr ( gI, "mlModels" ):
-            ver = "ONNX" # how to differentiate between simplified and full?
-            for js,regions in gI.mlModels.items():
-                if regions == None and hasattr ( gI, "jsonFiles" ) and \
-                        js in gI.jsonFiles:
-                    regions = gI.jsonFiles[js]
-                if regions == None:
-                    continue
-                num_sr += countRegionsOfType(regions,"SR")
-                num_cr += countRegionsOfType(regions,"CR")
-        elif hasattr ( gI, "jsonFiles" ):
+        if hasattr ( gI, "statModels" ):
             ver = "(pyhf)" # how to differentiate between simplified and full?
-            for js,regions in gI.jsonFiles.items():
+            for srSetName,models in gI.statModels.items():
+                for model  in models:
+                    if model.endswith ( ".onnx"):
+                        ver = "(nn)"
                 num_sr += countRegionsOfType(regions,"SR")
                 num_cr += countRegionsOfType(regions,"CR")
         else:

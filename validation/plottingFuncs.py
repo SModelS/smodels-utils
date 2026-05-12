@@ -226,14 +226,15 @@ def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
         subtitle = f"single SR: "
     if validationPlot.validationType == "tpredcomb":
         subtitle = f"{len(validationPlot.expRes.datasets)} tpreds: "
+    gI = validationPlot.expRes.globalInfo
 
-    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ) and \
-            validationPlot.combine == True:
+    if hasattr ( gI, "statModels" ) and validationPlot.combine == True:
         ## pyhf combination
-        subtitle = f"pyhf combining {len(validationPlot.expRes.datasets)} SRs: "
-    if hasattr ( validationPlot.expRes.globalInfo, "mlModels" ) and \
-            validationPlot.combine == True:
-        subtitle = f"NN combining {len(validationPlot.expRes.datasets)} SRs: "
+        ver = "pyhf"
+        for srSetName,models in gI.statModels.items():
+            if models[0].startswith ( ".onnx" ):
+                ver = "NN"
+        subtitle = f"{ver} combining {len(validationPlot.expRes.datasets)} SRs: "
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:

@@ -114,8 +114,10 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     """
     starting( expRes, txnameStr, axes, pretty )
     if options["useFullJsonLikelihoods"]==True:
-        if hasattr ( expRes.globalInfo, "jsonFiles_FullLikelihood" ):
-            expRes.globalInfo.jsonFiles = expRes.globalInfo.jsonFiles_FullLikelihood
+        if hasattr ( expRes.globalInfo, "statModels" ):
+            for srNameSet,models in expRes.globalInfo.statModels.items():
+                ## enable the last one
+                expRes.globalInfo.statModels[srNameSet]= [ models[-1] ]
             logger.info ( f"{YELLOW} full pyhf likelihood mode enabled{RESET}" )
 
     valPlot = getValPlotObj ( expRes, txnameStr, axes = axes, db = db,
