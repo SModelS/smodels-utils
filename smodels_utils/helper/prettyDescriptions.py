@@ -1022,7 +1022,7 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
     # the pids look like {'M1': 'm($\\tilde{\\chi}_1^0$)', 'M0': 'm($\\tilde{\\chi}_2^0$)', 'm0': 'm($\\tilde{\\chi}_1^\\pm$)'}
     axisMap = eval ( axes )
     for k,v in axisMap.items():
-        if v.endswith ( ".0" ):
+        if type(v) == str and v.endswith ( ".0" ):
             axisMap[k]=v[:-2]
     cMap = {}
     for k,v in axisMap.items():
