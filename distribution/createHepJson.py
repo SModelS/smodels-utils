@@ -213,11 +213,14 @@ class HepJsonCreator:
         coll = getCollaboration ( gI.id )
         dses = er.datasets
         resultType = "EM"
+        SRcomb = er.typeOfStatsModel ( specifySL = True )
+        """
         SRcomb = None
         if hasattr ( gI, "covariance" ):
             SRcomb = "SLv1"
         if hasattr ( gI, "jsonFiles" ):
             SRcomb = "pyhf"
+        """
         if len(dses) == 1 and dses[0].dataInfo.dataId == None:
             resultType = "UL"
         Id = self.getAnaId ( gI.id )
@@ -228,8 +231,8 @@ class HepJsonCreator:
         if hasattr ( gI, "type" ):
             entry["signature_type"]=gI.type
         for ds in dses:
-            if hasattr ( ds.dataInfo, "thirdMoment" ):
-                SRcomb = "SLv2"
+            #if hasattr ( ds.dataInfo, "thirdMoment" ):
+            #    SRcomb = "SLv2"
             for txn in ds.txnameList:
                 if not hasattr ( txn, "dataUrl" ):
                     continue

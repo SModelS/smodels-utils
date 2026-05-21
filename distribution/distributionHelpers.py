@@ -74,14 +74,14 @@ def clearGlobalInfo( filename : str ):
     cmd = f"cp {fname} {filename}"
     runCmd( cmd, prtMsg=False )
 
-def clearJsons ( path : str, verbose : bool ):
+def clearModels ( path : str, verbose : bool ):
     """ clear the jsons in the given path. look at globalInfo.txt
         which jsons get used. ditch the rest. """
     gI = f"{path}/globalInfo.txt"
     rpath = path[path.rfind("/")+1:]
     if not os.path.exists ( gI ):
         return
-    usedJsons = set()
+    usedModels = set()
     f = open ( gI, "rt" )
     lines = f.readlines()
     f.close()
@@ -95,31 +95,35 @@ def clearJsons ( path : str, verbose : bool ):
         line = line.strip()
         if line == "":
             continue
-        if not "jsonFiles:" in line and not "jsonFiles_FullLikelihood:" in line:
+        if not "statModels:" in line:
             continue
-        txt = line.replace("jsonFiles:","")
-        txt = txt.replace("jsonFiles_FullLikelihood:","")
+        txt = line.replace( "statModels:","")
+        #if not "jsonFiles:" in line and not "jsonFiles_FullLikelihood:" in line:
+        #    continue
+        #txt = line.replace("jsonFiles:","")
+        #txt = txt.replace("jsonFiles_FullLikelihood:","")
         try:
             D = eval(txt)
         except Exception as e:
             D = {}
         for k in D.keys():
             usedJsons.add ( k )
-    jsons = glob.glob ( f"{path}/*.json" )
+    models = glob.glob ( f"{path}/*.json" )
+    models += glob.glob ( f"{path}/*.onnx" )
     ctRemoved = 0
-    for js in jsons:
-        fname = os.path.basename ( js )
-        remove = fname not in usedJsons
+    for model in models:
+        fname = os.path.basename ( model )
+        remove = fname not in usedModels
         if remove:
             if verbose:
-                ko = f"keeping only {','.join(usedJsons)}"
-                if len(usedJsons)==0:
+                ko = f"keeping only {','.join(usedModels)}"
+                if len(usedModels)==0:
                     ko = "no pyhf models used"
                 comment ( f"removing {fname} in {rpath}: {ko}" )
             ctRemoved += 1
             os.unlink ( js )
     if ctRemoved>0:
-        comment ( f"removed {ctRemoved} json files in {rpath}" )
+        comment ( f"removed {ctRemoved} model files in {rpath}" )
 
 def clearOnnxs ( path : str, verbose : bool ):
     """ clear the onnxs in the given path. look at globalInfo.txt

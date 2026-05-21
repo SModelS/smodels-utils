@@ -265,9 +265,35 @@ def filterFastLimFromList ( expResList, invert = False, really = True, update = 
         return fastlimList
     return filteredList
 
+def hasFullLikelihood ( gI ) -> bool:
+    """ does this info object specify a full json likelihood? """
+    # return hasattr ( gI, "jsonFiles_FullLikelihood" )
+    if not hasattr ( gI, "statModels" ):
+        return False
+    def countJsons ( models ):
+        """ count how many json files are specified """
+        ct = 0
+        for model in models:
+            if model.endswith ( ".json" ):
+                ct+=1
+        return ct
+
+    for srSetName, models in gI.statModels.items():
+        nJsons = countJsons ( models )
+        if nJsons > 1:
+            return True
+    return False
+
+def enableFullLlhdModels ( gI ):
+    newModels = {}
+    for srSetName,models in gI.statModels.items():
+        newModels[srSetName]=[ models[-1] ]
+    gI.statModels = newModels
+
 def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
-    """ filter out all results that have jsonFiles_FullLikelihood defined.
-        replace jsonFiles with jsonFiles_FullLikelihood, return these results.
+    """ filter out all results that have more than one jsonFiles 
+    for one srSetName in globalInfo.statModels
+    replace the models with only the full json model
     :param expResList: list of experiment results
     :param really: if False, then do not actually filter
     :param update: consider entries only after this date (yyyy/mm/dd)
@@ -290,20 +316,21 @@ def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
             this = datetime.strptime ( lu, "%Y/%m/%d" )
             if this < after:
                 continue
-        if not hasattr ( gI, "jsonFiles_FullLikelihood" ):
+        if not hasFullLikelihood ( gI ):
             filteredList.append ( e )
             continue
         ctr+=1
         if ctr < 4:
-            print ( "[databaseManipulations] found a full likelihood", gI.id )
+            print ( f"[databaseManipulations] found a full likelihood: {gI.id}" )
         if ctr == 4:
             print ( "                        .... (and a few more) ... " )
 
-        if hasattr ( gI, "jsons" ):
-            del gI.jsons
-        gI.jsonFiles = gI.jsonFiles_FullLikelihood
-        del gI.jsonFiles_FullLikelihood
-        gI.cacheJsons()
+        #if hasattr ( gI, "jsons" ):
+        #    del gI.jsons
+        # gI.jsonFiles = gI.jsonFiles_FullLikelihood
+        #del gI.jsonFiles_FullLikelihood
+        enableFullLlhdModels ( gI )
+        gI.cacheStatsModels()
         fullLLhds.append ( e )
     #if invert:
     #    return filteredList

@@ -367,7 +367,7 @@ def main():
             help='keep the temporary files,do not remove them afterwards',
             action="store_true" )
     argparser.add_argument ( '-j','--usefulljsonlikelihoods',
-            help='use the json file specification given in jsonFiles_FullLikelihoods (if defined)',
+            help='use the json file specification given in the full json files (if defined)',
             action="store_true" )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to run [10]',

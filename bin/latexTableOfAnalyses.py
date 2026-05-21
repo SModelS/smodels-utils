@@ -200,19 +200,22 @@ class Writer:
         for x in [ ana, nextAna ]:
             if x is None:
                 continue
+            if x.hasStatsModel():
+                combs = x.typeOfStatsModel()
+                comb = ",".join ( combs )
+                if self.args["table_version"] != "sabine":
+                    comb.replace("pyhf","\\pyhf" )
+            """
             if hasattr ( x.globalInfo, "jsonFiles" ):
                 comb = "\\pyhf"
                 if self.args["table_version"] == "sabine":
                     comb = "pyhf"
-            #if nextIsSame and hasattr ( nextAna.globalInfo, "jsonFiles" ):
-            #    comb = "JSON"
             if hasattr ( x.globalInfo, "covariance" ):
                 comb = "SLv1"
             if hasattr ( x.datasets[0].dataInfo, "thirdMoment" ) and \
                     x.datasets[0].dataInfo.thirdMoment != None:
                 comb = "SLv2"
-            #if nextIsSame and hasattr ( nextAna.globalInfo, "covariance" ):
-            #    comb = "Cov."
+            """
         return comb
 
     def getHepData ( self, ana : ExpResult ) -> str:

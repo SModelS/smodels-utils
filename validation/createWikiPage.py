@@ -470,8 +470,11 @@ CMS are for on- and off-shell at once.
             return False
         oldDS = oldR[0].datasets
         newDS = newR[0].datasets
-        if newR[0].hasCovarianceMatrix() and not oldR[0].hasCovarianceMatrix():
-            return "cov"
+        if hasattr ( newR[0], "srSets" ):
+            for srSetName,regions in newR[0].srSets.items():
+                if newR[0].typeOfStatsModel( srSetName )=="sl" and not oldR[0].typeOfStatsModel( srSetName ) == "sl":
+                    # if newR[0].hasCovarianceMatrix() and not oldR[0].hasCovarianceMatrix():
+                    return "cov"
         for od,nd in zip ( oldDS, newDS ):
             for otxn,ntxn in zip ( od.txnameList, nd.txnameList ):
                 if otxn.hasLikelihood() != ntxn.hasLikelihood():

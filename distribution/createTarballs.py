@@ -9,7 +9,7 @@
 """
 
 import sys, subprocess, os, time, argparse, glob, shutil 
-from distributionHelpers import clearJsons, comment, runCmd, cloneDatabase, \
+from distributionHelpers import clearModels, comment, runCmd, cloneDatabase, \
          clearGlobalInfos, createDatabase, removeNonValidated, \
          moveNonAggregated, clearOnnxs
 from smodels.experiment.databaseObj import Database
@@ -101,8 +101,7 @@ def cleanDatabase(dirname : str, verbose : bool ):
             fullpath = os.path.join( File, rf )
             if os.path.exists( fullpath):
                 os.unlink( fullpath )
-        clearJsons ( File, verbose )
-        clearOnnxs ( File, verbose )
+        clearModels ( File, verbose )
 
 def moveFastlim ( filename , dirname ):
     """

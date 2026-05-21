@@ -122,6 +122,8 @@ class Lister:
 
     def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
+        return B.typeOfStatsModel( specifySL = True )
+        """
         r = ""
         if hasattr ( B.globalInfo, "jsonFiles" ):
             r ="pyhf"
@@ -133,6 +135,7 @@ class Lister:
         if hasattr ( B.globalInfo, "mlModels" ):
             r += ",NN"
         return r
+        """
 
     def header( self ):
         """
@@ -217,7 +220,8 @@ class Lister:
         sinc = ""
         if self.includeSuperseded:
             sinc = "iss"
-        directory = f"validation/{self.orig_ver}"
+        ver = self.orig_ver.replace("+superseded","")
+        directory = f"validation/{ver}"
         fullname = f"{self.github_io}/{directory}"
         if not os.path.exists ( fullname ):
             os.mkdir ( fullname )

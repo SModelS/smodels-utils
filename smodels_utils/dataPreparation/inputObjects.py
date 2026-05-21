@@ -205,7 +205,7 @@ class MetaInfoInput(Locker):
                  'Leff_inner', 'Leff_outer', 'type', 'includeCRs',
                  'onnxFiles', 'resultType', 'signalUncertainty' ]
     # the ones below are actually obsolete!
-    infoAttr += [ "mlModels", "jsonFiles", "jsonFiles_FullLikelihood" ]
+    # infoAttr += [ "mlModels", "jsonFiles", "jsonFiles_FullLikelihood" ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
