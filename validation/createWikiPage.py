@@ -241,12 +241,16 @@ CMS are for on- and off-shell at once.
                         if hasNewTn: nnewexpres.add ( Idnoagg )
 
                     if len(nres) > 0:
-                        sanalyses = "%d analyses (%s new)" % \
-                                     ( len(nexpres), self.getNumber(len(nnewexpres)) )
-                        sresults = "%d results (%s new)" % \
-                                     ( len(nres), self.getNumber(len(nnewres)) )
-                        self.file.write ( " * [%s %s](#%s%s%d): %s, %s\n" % \
-                                      ( exp, tpe, exp, stpe, sqrts, sanalyses, sresults ) )
+                        nna = self.getNumber(len(nnewexpres))
+                        sanalyses = f"{len(nexpres)} analyses ({nna} new/updated)"
+                                     #( len(nexpres), self.getNumber(len(nnewexpres)) )
+                        nnr = self.getNumber(len(nnewres))
+                        sresults = f"{len(nres)} results ({nnr} new/updated)"
+#                                     ( len(nres), self.getNumber(len(nnewres)) )
+                        l = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {sanalyses}, {sresults}\n"
+                        self.file.write ( l )
+                        #self.file.write ( " * [%s %s](#%s%s%d): %s, %s\n" % \
+                        #              ( exp, tpe, exp, stpe, sqrts, sanalyses, sresults ) )
 
     def isOneDimensional( self, txname ):
         """ simple method that tells us if its a 1d map. In this case, we dont
