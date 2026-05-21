@@ -725,11 +725,15 @@ class PaperPlot:
             ver = "(pyhf)" # how to differentiate between simplified and full?
             for srSetName,models in gI.statModels.items():
                 regions = gI.srSets[srSetName]
+                region_dicts = []
+                for region in regions:
+                    if region in gI.srMappingsDict:
+                        region_dicts.append ( gI.srMappingsDict[region] )
                 for model in models:
                     if model.endswith ( ".onnx"):
                         ver = "(nn)"
-                num_sr += countRegionsOfType(regions,"SR")
-                num_cr += countRegionsOfType(regions,"CR")
+                num_sr += countRegionsOfType(region_dicts,"SR")
+                num_cr += countRegionsOfType(region_dicts,"CR")
         else:
             num_sr = len(validationPlot.expRes.datasets)
 
