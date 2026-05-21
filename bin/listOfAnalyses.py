@@ -516,7 +516,7 @@ class Lister:
                 upd = self.whatLlhdInfo(x)
                 if upd != None:
                     totalset.update ( upd )
-            llhd = "".join ( totalset )
+            llhd = "+".join ( totalset )
             # llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
             self.f.write ( f" {llhd} |" )
         self.f.write ( "\n" )
