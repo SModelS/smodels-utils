@@ -122,7 +122,7 @@ class Lister:
 
     def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
-        return B.typeOfStatsModel( specifySL = True )
+        return B.typeOfStatsModel( srSetName = None, specifySL = True )
         """
         r = ""
         if hasattr ( B.globalInfo, "jsonFiles" ):
@@ -511,7 +511,13 @@ class Lister:
             self.f.write ( f" {haseUL} |" )
         self.f.write ( f" {hasEM} |" )
         if self.likelihoods:
-            llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
+            totalset = set()
+            for x in canas:
+                upd = self.whatLlhdInfo(x)
+                if upd != None:
+                    totalset.update ( upd )
+            llhd = "".join ( totalset )
+            # llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
             self.f.write ( f" {llhd} |" )
         self.f.write ( "\n" )
 
