@@ -866,7 +866,8 @@ class PaperPlot:
                 sec_ax.set_yscale('log')
             self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
 
-            if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl:
+            if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl and \
+                    self.specific_options["drawobspm1"]==True:
                 x_valsp1 = comb_excl["obsExclusionP1"]["x"]
                 y_valsp1 = comb_excl["obsExclusionP1"]["y"]
                 addJitter = False
