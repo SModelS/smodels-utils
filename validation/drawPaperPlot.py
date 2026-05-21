@@ -813,13 +813,14 @@ class PaperPlot:
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
-        plt.title( title, loc='left', fontsize=12, x=-.12)
+        fs = self.specific_options["title_fontsize"]
+        plt.title( title, loc='left', fontsize=fs, x=-.12)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
         pName = self.getPrettyProcessName(validationPlot.txName)
         #print(pName)
         # process string on right of title
-        plt.title(pName,loc='right', fontsize=12)
+        plt.title(pName,loc='right', fontsize=fs)
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
