@@ -235,7 +235,7 @@ class Lister:
             aggnonagg = "aggregated"
         self.f.write ( f"\n\n<a name='A1'>(1)</a> For analyses with both non-aggregated and aggregated signal regions, we use the {aggnonagg} ones.\n\n" )
         self.f.write ( "\n\n<a name='A2'>(2)</a> Expected upper limits ('exp. ULs'): allow SModelS to determine the sensitivity of UL results. Moreover, they may be used to compute a crude approximation of a likelihood, modelled as a truncated Gaussian (currently an experimental feature).\n\n" )
-        self.f.write ( "<a name='A3'>(3)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files.\n\n" )
+        self.f.write ( "<a name='A3'>(3)</a> Likelihood information for combination of signal regions ('SR comb.'): 'SLv1' = a covariance matrix for a simplified likelihood v1. 'SLv2' = a covariance matrix plus third momenta for simplified likelihood v2. 'json' = full likelihoods as pyhf json files, 'onnx' = surrogate machine learned models.\n\n" )
         self.f.write ( "<a name='A4'>(4)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
         self.f.write ( "<a name='A5'>(5)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n\n" )
         if self.includeFastlim:
