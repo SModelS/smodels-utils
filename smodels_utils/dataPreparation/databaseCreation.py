@@ -22,7 +22,7 @@ from math import floor, log10
 from unum import Unum
 import time
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from typing import Dict
+from typing import Union, List, Dict
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
