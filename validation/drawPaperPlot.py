@@ -821,8 +821,10 @@ class PaperPlot:
         plt.title( title, loc='left', fontsize=fs, x=-.12)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
-        pName = self.getPrettyProcessName(validationPlot.txName)
-        #print(pName)
+        ptxname = validationPlot.txName 
+        if txnameOff == txname + "off":
+            ptxname = txname + "on+off"
+        pName = self.getPrettyProcessName(ptxname)
         # process string on right of title
         plt.title(pName,loc='right', fontsize=fs)
 

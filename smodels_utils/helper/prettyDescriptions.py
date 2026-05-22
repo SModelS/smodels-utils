@@ -262,6 +262,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'THigZZ':'H^2 H^2 --> Z Z lsp lsp ',
     'THigZZoff':'H^2 H^2 --> Z^* Z^* lsp lsp ',
     'TChiWZoff':'chargino^pm_1 neutralino_2 --> W^* Z^* lsp lsp ',
+    'TChiWZon+off':'chargino^pm_1 neutralino_2 --> W^{(*)} Z^{(*)} lsp lsp ',
     'TChiWZoffqq':'chargino^pm_1 neutralino_2 --> W^* Z^* lsp lsp ',
     'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
     'TChipChimStauSnu':'chargino^pm_1 --> neutrino stau ( tau sneutrino ), stau --> tau lsp, sneutrino --> neutrino lsp ',
@@ -705,7 +706,7 @@ def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> 
         prodString = latexfy(prodString)
     return prodString.lstrip().rstrip()
 
-def prettyDecay(txname,latex=True):
+def prettyDecay(txname : str ,latex : bool = True ) -> str:
     """
     FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY decay process
@@ -715,10 +716,17 @@ def prettyDecay(txname,latex=True):
                  it will return a more human readable string
 
 
-    :return: string or latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
+    :return: string or latex string,
+    e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
 
     if not txname in decayDict:
+        if "on+" in txname:
+            txr = txname.replace("on+","")
+            if txr in decayDict:
+                ret = prettyDecay ( txr, latex = latex )
+                ret = ret.replace("*","{(*)}")
+                ret = ret.replace("{{","{").replace("}}","}")
         logging.error( f"Txname {txname} not found in decayDict" )
         return None
     decayString = decayDict[txname]
