@@ -505,6 +505,7 @@ class PaperPlot:
         self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
     def sortSegments ( self, x_vals, y_vals ) -> tuple:
+        """ sort the segments, the ones with the lower x values come first """
         if len(x_vals)==1:
             return x_vals, y_vals
         new_x, new_y = [], []
@@ -522,18 +523,35 @@ class PaperPlot:
             new_y.append ( value["y"] )
         return new_x, new_y
 
+    def sortWithinSegments ( self, x_vals, y_vals ) -> tuple:
+        """ sort within segments, if the order of the x values is larger to 
+        smaller, then invert """
+        new_x, new_y = [], []
+        for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
+                n = len(seg_x)
+                x_f, x_m, x_l  = seg_x[0], seg_x[int(n/2)], seg_x[-1]
+                if x_f <= x_m <= x_l: ## right order
+                    new_x.append ( seg_x )
+                    new_y.append ( seg_y )
+                    continue
+                new_x.append ( seg_x[::-1] )
+                new_y.append ( seg_y[::-1] )
+        return new_x, new_y
+
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
             y_label, color : Optional[str] = None,
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
-        if color == "tab:red":
+        if True: # color == "tab:red":
             x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
         if color == None:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
+        x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
+        x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
         drawBand = True
         indices = list ( range(min(len(x_vals1),len(x_vals2))) )
         if not drawBand:
