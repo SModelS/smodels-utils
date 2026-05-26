@@ -4,6 +4,9 @@ import sys
 sys.path.insert(0,"../smodels-utils/")
 sys.path.insert(0,"../smodels-utils/validation/")
 from smodels.tools.printers.pythonPrinter import PyPrinter
+from smodels.matching import theoryPrediction
+
+theoryPrediction.writeYields[0]=True
 
 def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
     """ even more info, for debugging
