@@ -231,8 +231,10 @@ def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
     if hasattr ( gI, "statModels" ) and validationPlot.combine == True:
         ## pyhf combination
         ver = "pyhf"
-        for srSetName,models in gI.statModels.items():
-            if models[0].endswith ( ".onnx" ):
+        for srSetName,model_types in gI.statModels.items():
+            model_type = model_types[0]
+            mtype = model_type[0]
+            if mtype == "onnx":
                 ver = "NN"
         subtitle = f"{ver} combining {len(validationPlot.expRes.datasets)} SRs: "
     for dataset in validationPlot.expRes.datasets:

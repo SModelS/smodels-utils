@@ -741,14 +741,15 @@ class PaperPlot:
         gI = validationPlot.expRes.globalInfo
         if hasattr ( gI, "statModels" ):
             ver = "(pyhf)" # how to differentiate between simplified and full?
-            for srSetName,models in gI.statModels.items():
+            for srSetName,model_types in gI.statModels.items():
                 regions = gI.srSets[srSetName]
                 region_dicts = []
                 for region in regions:
                     if region in gI.srMappingsDict:
                         region_dicts.append ( gI.srMappingsDict[region] )
-                for model in models:
-                    if model.endswith ( ".onnx"):
+                for model_type in model_types:
+                    mtype = model_type[0]
+                    if mtype == "onnx":
                         ver = "(nn)"
                 num_sr += countRegionsOfType(region_dicts,"SR")
                 num_cr += countRegionsOfType(region_dicts,"CR")
@@ -878,8 +879,10 @@ class PaperPlot:
             gI = validationPlot.expRes.globalInfo
             # label = f"SModelS: comb. {num_sr} SRs {ver}"
             if hasattr ( gI, "statModels" ):
-                for srSetName,models in gI.statModels.items():
-                    if models[0].endswith ( ".onnx" ):
+                for srSetName,model_types in gI.statModels.items():
+                    model_type = model_types[0]
+                    mtype = model_type[0]
+                    if mtype == "onnx":
                         label = f"SModelS: NN"
                 # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
@@ -1050,8 +1053,10 @@ class PaperPlot:
             label = f"SModelS: orig pyhf"
             if hasattr ( gI, "statModels" ):
                 if hasattr ( gI, "statModels" ):
-                    for srSetName,models in gI.statModels.items():
-                        if models[0].endswith ( ".onnx" ):
+                    for srSetName,model_types in gI.statModels.items():
+                        model_type = model_types[0]
+                        mtype = model_type[0]
+                        if mtype == "onnx":
                             label = f"SModelS: NN"
                 # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label, color="red" )

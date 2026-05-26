@@ -115,9 +115,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
     starting( expRes, txnameStr, axes, pretty )
     if options["useFullJsonLikelihoods"]==True:
         if hasattr ( expRes.globalInfo, "statModels" ):
-            for srNameSet,models in expRes.globalInfo.statModels.items():
+            for srNameSet,model_types in expRes.globalInfo.statModels.items():
                 ## enable the last one
-                expRes.globalInfo.statModels[srNameSet]= [ models[-1] ]
+                expRes.globalInfo.statModels[srNameSet]= [ model_types[-1] ]
             logger.info ( f"{YELLOW} full pyhf likelihood mode enabled{RESET}" )
 
     valPlot = getValPlotObj ( expRes, txnameStr, axes = axes, db = db,
@@ -704,13 +704,15 @@ def run ( expResList : list, options : dict,
             logger.info ( f"{RED}removing mlModels as requested!{RESET}" )
             newModels = []
             ### FIXME this is wrong!!
-            for setName,models in expRes.globalInfo.statModels.items():
+            for setName,model_types in expRes.globalInfo.statModels.items():
                 newModels = []
-                for model in models:
-                    if model.endswith ( ".onnx" ):
-                        expRes.globalInfo.cachedModels.pop ( model )
+                for model_type in model_types:
+                    mtype = model_type[0]
+                    mname = model_type[1]
+                    if mtype == "onnx":
+                        expRes.globalInfo.cachedModels.pop ( model_type )
                     else:
-                        newModels.append ( model )
+                        newModels.append ( model_type )
                 if len(newModels)==0:
                     expRes.globalInfo.statModels.pop ( setName )
                 else:
