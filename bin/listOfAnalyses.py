@@ -47,6 +47,7 @@ class Lister:
         # options["database"]="../../smodels-database"
         options["dbpath"]=self.dbpath
         options["outfile"]="none"
+        options["verbose"]=self.verbose
         print ( f"[listOfAnalyses] instantiating ExpResModifier" )
         modifier = expResModifier.ExpResModifier ( options )
         print ( f"[listOfAnalyses] done instantiating ExpResModifier" )
@@ -629,6 +630,7 @@ class Lister:
         argparser.add_argument ( '-S', '--write_stats', action='store_true',
             help='write the analyses.py stats file' )
         args = argparser.parse_args()
+        self.verbose = args.verbose
         setLogLevel ( args.verbose )
         self.keep = args.keep
         self.fudged = args.fudged
