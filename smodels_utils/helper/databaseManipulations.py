@@ -270,24 +270,25 @@ def hasFullLikelihood ( gI ) -> bool:
     # return hasattr ( gI, "jsonFiles_FullLikelihood" )
     if not hasattr ( gI, "statModels" ):
         return False
-    def countJsons ( models ):
+    def countJsons ( model_types ):
         """ count how many json files are specified """
         ct = 0
-        for model in models:
-            if model.endswith ( ".json" ):
+        for model_type in model_types:
+            mtype = model_type[0]
+            if "pyhf" in mtype:
                 ct+=1
         return ct
 
-    for srSetName, models in gI.statModels.items():
-        nJsons = countJsons ( models )
+    for srSetName, model_types in gI.statModels.items():
+        nJsons = countJsons ( model_types )
         if nJsons > 1:
             return True
     return False
 
 def enableFullLlhdModels ( gI ):
     newModels = {}
-    for srSetName,models in gI.statModels.items():
-        newModels[srSetName]=[ models[-1] ]
+    for srSetName,model_types in gI.statModels.items():
+        newModels[srSetName]=[ model_types[-1] ]
     gI.statModels = newModels
 
 def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
