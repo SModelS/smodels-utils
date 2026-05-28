@@ -16,6 +16,7 @@ def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
     see PyPrinter.addErrorsForRValues (and we need to keep them in sync
     manually)
     """
+    from smodels.statistics.basicStats import apriori, aposteriori
     r_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
             nSigma = 1 )
     if r_e_p1 != None:
@@ -32,6 +33,10 @@ def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
          resDict['r_nn_p1'] = self._round ( r_obs_p1 )
     if r_obs_m1 != None:
          resDict['r_nn_m1'] = self._round ( r_obs_m1 )
+    eULprior = obj.getUpperLimitOnMu ( evaluationType = apriori )
+    eULposterior = obj.getUpperLimitOnMu ( evaluationType = aposteriori )
+    resDict['eULprior']=eULprior
+    resDict['eULposterior']=eULposterior
 
 import sys
 if "-M" in sys.argv or "--monkey_path" in sys.argv:
