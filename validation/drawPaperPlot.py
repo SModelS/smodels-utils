@@ -1044,7 +1044,7 @@ class PaperPlot:
             plt.tick_params( labelbottom=True, labelleft=True, labeltop=False,
                              labelright=False )
 
-        if combSR:
+        if combSR and "expExclusion" in comb_excl:
             x_vals = comb_excl["expExclusion"]["x"]
             y_vals = comb_excl["expExclusion"]["y"]
             label = f"SModelS: comb."
