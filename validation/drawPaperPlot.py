@@ -543,7 +543,7 @@ class PaperPlot:
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
-        if True: # color == "tab:red":
+        if self.specific_options["sort_segments"]:
             x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
         if color == None:
@@ -585,6 +585,7 @@ class PaperPlot:
                     ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                              linewidth = 1, label = label, zorder=-10 )
                     label = ""
+        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
         #    return
 
     def getRange ( self, lines : dict, whatExcl : str, whatVar : str ) -> Tuple:
