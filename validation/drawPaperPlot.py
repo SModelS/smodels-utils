@@ -885,6 +885,9 @@ class PaperPlot:
                     mtype = model_type[0]
                     if mtype == "onnx":
                         label = f"SModelS: NN"
+                    if mtype == "sl":
+                        ver = validationPlot.expRes.typeOfStatsModel(srSetName, specifySL=True ).replace("sl","SL")
+                        label = f"SModelS: {ver}"
                 # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             if 'Gamma' in y_label:
@@ -1059,6 +1062,9 @@ class PaperPlot:
                         mtype = model_type[0]
                         if mtype == "onnx":
                             label = f"SModelS: NN"
+                        if mtype == "sl":
+                            ver = validationPlot.expRes.typeOfStatsModel(srSetName, specifySL=True ).replace("sl","SL")
+                            label = f"SModelS: {ver}"
                 # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label, color="red" )
             for i in []: # [ "expExclusionP1", "expExclusionM1" ]:

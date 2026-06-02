@@ -236,6 +236,8 @@ def getDatasetDescription ( validationPlot, maxLength : int = 100 ) -> str:
             mtype = model_type[0]
             if mtype == "onnx":
                 ver = "NN"
+            if mtype == "sl":
+                ver = validationPlot.expRes.typeOfStatsModel(srSetName, specifySL=True ).replace("sl","SL")
         subtitle = f"{ver} combining {len(validationPlot.expRes.datasets)} SRs: "
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
