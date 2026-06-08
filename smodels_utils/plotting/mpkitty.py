@@ -5,7 +5,7 @@ import os
 options = { "hasKittyBackend": False }
 
 def importBackend():
-    if "jupyter" in os.environ["_"]:
+    if "_" in os.environ and "jupyter" in os.environ["_"]:
         return
     try:
         import matplotlib, sys, subprocess
