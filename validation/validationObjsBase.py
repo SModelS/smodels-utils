@@ -10,7 +10,10 @@
 """
 
 from typing import Union, List, Dict, Optional, Text, Callable
-from smodels.statistics import nnInterface
+try:
+    from smodels.statistics import nnInterface
+except ImportError as e:
+    print ( f"[validationObjsBase] no nnInterface found -- are you on an old SModelS version?" )
 from smodels.statistics.basicStats import NllEvalType, observed, aposteriori
 from smodels.statistics.basicStats import CLsfromNLL
 
