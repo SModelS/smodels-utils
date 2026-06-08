@@ -651,7 +651,10 @@ if __name__ == "__main__":
     if os.path.exists ( oldtarball ):
         subprocess.getoutput ( f"cp {oldtarball} prev.{oldtarball}" )
     print ( f"[slhaCreator] Now build new tarball in {newtemp}/" )
-    subprocess.getoutput ( f"cd {newtemp}; tar xzvf ../../slha/{tarball}" )
+    from sys import platform
+    ## this line below disables creation of .DS_Store files on macs
+    mac_workaround = "env COPYFILE_DISABLE=1 " if platform == "darwin" else ""
+    subprocess.getoutput ( f"cd {newtemp}; {mac_workaround}tar xzvf ../../slha/{tarball}" )
     cmd = "cp {tempf.tempdir}/{args.topology}*.slha {tempf.tempdir}/recipe {tempf.tempdir}/coordinates {newtemp}"
     # print ( "cmd", cmd )
     subprocess.getoutput ( cmd )
@@ -671,7 +674,7 @@ if __name__ == "__main__":
             if complaints["removingSLHAFile"]==3:
                 print ( f"[slhaCreator] quenching more such messsages" )
             os.unlink ( slhafile )
-    cmd = f"cd {newtemp}; tar czvf ../{tarball} {args.topology}*slha recipe coordinates"
+    cmd = f"cd {newtemp};{mac_workaround} tar czvf ../{tarball} {args.topology}*slha recipe coordinates"
     if False:
         print ( f"[slhaCreator] {cmd}" )
     o = subprocess.getoutput ( cmd )
