@@ -20,7 +20,7 @@ def execute(cmd):
     popen.stdout.close()
     return_code = popen.wait()
     if return_code:
-        raise subprocess.CalledProcessError(return_code, cmd)
+        raise subprocess.CalledProcessError(return_code, ' '.join(cmd))
 
 def exec(cmd, dry_run ):
     if dry_run:
