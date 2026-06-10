@@ -37,49 +37,50 @@ complaints = { "NoResultsFor": 0 }
 
 class ProgressHandler:
     """ a namespace to handle everything around the progressbar """
+    def __init__ ( self ):
+        self.pidfile = ".progressbar.pid"
 
-    def readPid ( pidfile : str = ".progressbar.pid" ) -> int:
+    def readPid ( self ) -> int:
         """ read the progressbar pid from the pid file """
-        if not os.path.exists ( pidfile ):
+        if not os.path.exists ( self.pidfile ):
             return None
         try:
-            with open(".progressbar.pid","rt") as f:
+            with open( self.pidfile, "rt" ) as f:
                 pid = int ( f.read() )
                 return pid
         except ValueError as e:
             pass
         return None
 
-    def storePid ( pid : int, pidfile : str = ".progressbar.pid" ):
-        """ store the pid of the progress bar in .progressbar.pid,
+    def storePid ( self, pid : int ):
+        """ store the pid of the progress bar in self.pidfile,
         so the other process can kill it. """
-        cpid = ProgressHandler.readPid ( pidfile )
+        cpid = self.readPid ( )
         if cpid != None:
             pass
-#print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
-#            ProgressHandler.killProgressBar( pidfile )
-        f=open(".progressbar.pid","wt")
+        #print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
+        # self.killProgressBar( pidfile )
+        f=open(self.pidfile,"wt")
         f.write ( f"{pid}\n" )
         f.close()
 
-
-    def rmFile ( pidfile : str = ".progressbar.pid" ):
-        if os.path.exists ( pidfile ):
+    def rmFile ( self ):
+        if os.path.exists ( self.pidfile ):
             try:
-                os.unlink ( pidfile )
+                os.unlink ( self.pidfile )
             except Exception as e:
                 pass
 
-    def killProgressBar ( pidfile : str = ".progressbar.pid" ):
+    def killProgressBar ( self ):
         """ kill the progressbar """
-        pid = ProgressHandler.readPid()
+        pid = self.readPid()
         if pid == None:
             return
         import psutil
         if psutil.pid_exists ( pid ):
             p = psutil.Process ( pid )
             p.terminate()
-        ProgressHandler.rmFile()
+        self.rmFile()
 
 def sha1sum(filename : os.PathLike ) -> str:
     """ get sha1 hash sums for the tarballs
@@ -739,11 +740,12 @@ class ValidationObjsBase():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
+        phandler = ProgressHandler()
         if self.options["show"]:
             pid = os.fork()
             ## pid == 0 continues on
             if pid == 0:
-                ProgressHandler.storePid ( os.getpid() )
+                phandler.storePid ( os.getpid() )
                 import time
                 from progress import Progress
                 time.sleep(5) ## wait a little
@@ -753,7 +755,7 @@ class ValidationObjsBase():
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
         self.removeFromListOfRunningFiles ( )
-        ProgressHandler.killProgressBar()
+        phandler.killProgressBar()
         return fileList
 
     def pprint ( self, *args ):
