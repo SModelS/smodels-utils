@@ -37,8 +37,11 @@ complaints = { "NoResultsFor": 0 }
 
 class ProgressHandler:
     """ a namespace to handle everything around the progressbar """
-    def __init__ ( self ):
-        self.pidfile = ".progressbar.pid"
+    def __init__ ( self, pidfile : str = ".p.@@MOTHERPID@@.pid" ):
+        pidfile = pidfile.replace("@@MOTHERPID@@",f"{os.getpid()}")
+        self.pidfile = pidfile
+        import multiprocessing as mp
+        mp.set_start_method("spawn", force=True)
 
     def readPid ( self ) -> int:
         """ read the progressbar pid from the pid file """
@@ -74,6 +77,7 @@ class ProgressHandler:
     def killProgressBar ( self ):
         """ kill the progressbar """
         pid = self.readPid()
+        print ( f"[ProgressHandler] killing progress bar {pid}" )
         if pid == None:
             return
         import psutil
