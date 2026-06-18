@@ -8,11 +8,12 @@
 
 import glob, time, sys, copy, os
 from tqdm import tqdm
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 class Progress:
     def __init__ ( self, dirs : Union[None,str,list] = None, 
-                   waitForDirs : bool = True ):
+                   waitForDirs : bool = True,
+                   nmax : Optional[int] = None ):
         """ initialise, and start.
         :param dirs: if None, look for _V* and tmp* directories, else
         consider only the directories given.
@@ -23,6 +24,7 @@ class Progress:
         self.previous = {}
         self.stats = {}
         self.dirs = dirs
+        self.nmax = nmax
         self.parse( )
         self.show()
 
@@ -84,8 +86,12 @@ class Progress:
         """ update an entry in self.tqdms """
         fullname = os.path.basename ( name )
         fullname = f"{fullname:10s}"
-        n = tqdm ( desc=fullname, total = values["npoints"], position = position,
-                   unit = "pt", bar_format="{desc}: {percentage:3.0f}%|{bar:46}| {n_fmt}/{total_fmt} [{remaining}] {postfix}", colour = "green" )
+        nmax = self.nmax
+        if nmax in [ None, -1, 0 ]:
+            nmax = values["npoints"]
+        ff = "{desc}: {percentage:3.0f}%|{bar:46}| {n_fmt}/{total_fmt} [{remaining}] {postfix}"
+        n = tqdm ( desc=fullname, total = nmax, position = position,
+                   unit = "pt", bar_format= ff, colour = "green" )
         self.tqdms[name]=n
 
     def show( self ):

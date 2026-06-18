@@ -38,7 +38,8 @@ complaints = { "NoResultsFor": 0 }
 class ProgressHandler:
     """ a namespace to handle everything around the progressbar """
     def __init__ ( self, pidfile : str = ".p.@@MOTHERPID@@.pid" ):
-        pidfile = pidfile.replace("@@MOTHERPID@@",f"{os.getpid()}")
+        self.motherpid = os.getpid()
+        pidfile = pidfile.replace("@@MOTHERPID@@",f"{self.motherpid}")
         self.pidfile = pidfile
         import multiprocessing as mp
         mp.set_start_method("spawn", force=True)
@@ -77,7 +78,7 @@ class ProgressHandler:
     def killProgressBar ( self ):
         """ kill the progressbar """
         pid = self.readPid()
-        print ( f"[ProgressHandler] killing progress bar {pid}" )
+        print ( f"\n[ProgressHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
         if pid == None:
             return
         import psutil
@@ -745,6 +746,9 @@ class ValidationObjsBase():
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
         phandler = ProgressHandler()
+        nmax = None
+        if "limitPoints" in self.options and self.options["limitPoints"]>0:
+            nmax = self.options["limitPoints"]
         if self.options["show"]:
             pid = os.fork()
             ## pid == 0 continues on
@@ -754,7 +758,7 @@ class ValidationObjsBase():
                 from progress import Progress
                 time.sleep(5) ## wait a little
                 dirs = [ self.outputDir.replace("/results","") ]
-                p = Progress ( dirs = dirs )
+                p = Progress ( dirs = dirs, nmax = nmax )
                 return
         modelTester.testPoints( self.willRun, inDir, outputDir, parser, self.db,
                                timeOut, False, parameterFile )
