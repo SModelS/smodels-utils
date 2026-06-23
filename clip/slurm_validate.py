@@ -288,7 +288,9 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
         a=subprocess.run ( cmd, stdout=subprocess.PIPE )
         sjobid = str ( a.stdout.strip() ).split(" ")[-1]
         jobid = int ( sjobid.replace("'","") )
-        print ( f"returned: {a}" )
+        #cmd = " ".join ( a.args )
+        #print ( f"[slurm_validate.py] {cmd}" )
+        print ( f"[slurm_validate.py] {a.stdout.decode('UTF-8').strip()}: rcode={a.returncode}" )
         return jobid
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
