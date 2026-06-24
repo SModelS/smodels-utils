@@ -746,8 +746,8 @@ class PaperPlot:
                 regions = gI.srSets[srSetName]
                 region_dicts = []
                 for region in regions:
-                    if region in gI.srMappingsDict:
-                        region_dicts.append ( gI.srMappingsDict[region] )
+                    if region in gI.srMappings:
+                        region_dicts.append ( gI.srMappings[region] )
                 for model_type in model_types:
                     mtype = model_type[0]
                     if mtype == "onnx":
