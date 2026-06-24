@@ -538,9 +538,9 @@ class DataSetInput(Locker):
                 print ( f"[inputObjects] Exception {e}, will try with older version" )
             try:
                 # v3.0.0
-                from smodels.statistics.simplifiedLikelihoods import Data, SLUpperLimitComputer
+                from smodels.statistics.simplifiedLikelihoods import SLData, SLUpperLimitComputer
                 # new API
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
+                m = SLData ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
                 comp = SLUpperLimitComputer ( 1. - alpha )
                 ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
