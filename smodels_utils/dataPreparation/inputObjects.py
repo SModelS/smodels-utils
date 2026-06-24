@@ -518,11 +518,11 @@ class DataSetInput(Locker):
             try:
                 # v3.1.0
                 # new API
-                from smodels.statistics.simplifiedLikelihoods import Data, SLUpperLimitComputer, LikelihoodComputer
+                from smodels.statistics.simplifiedLikelihoods import SLData, SLUpperLimitComputer, SLLikelihoodComputer
                 from smodels.statistics.basicStats import aposteriori
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
+                m = SLData ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
-                llhdComp = LikelihoodComputer  ( m )
+                llhdComp = SLLikelihoodComputer  ( m )
                 comp = SLUpperLimitComputer ( llhdComp, 1. - alpha )
                 ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
                 try:

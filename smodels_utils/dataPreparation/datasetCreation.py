@@ -17,8 +17,8 @@ import re
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.base.smodelsLogging import logger
-from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer,\
-     LikelihoodComputer
+from smodels.statistics.simplifiedLikelihoods import SLData, SLUpperLimitComputer,\
+     SLLikelihoodComputer
 from smodels.base.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
@@ -110,9 +110,9 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # alpha = .05
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-    m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
-    llcomp = LikelihoodComputer ( m )
-    comp = UpperLimitComputer ( llcomp ) # 1. - alpha )
+    m = SLData ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
+    llcomp = SLLikelihoodComputer ( m )
+    comp = SLUpperLimitComputer ( llcomp ) # 1. - alpha )
     logger.error ( "FIXME need to replace with spey!" )
     try:
         ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber(fb)

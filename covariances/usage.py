@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer, fb, LikelihoodComputer
+from smodels.tools.simplifiedLikelihoods import SLData, SLUpperLimitComputer, fb, SLLikelihoodComputer
 
 C=[ 18774.2, -2866.97, -5807.3, -4460.52, -2777.25, -1572.97, -846.653, -442.531,
    -2866.97, 496.273, 900.195, 667.591, 403.92, 222.614, 116.779, 59.5958,
@@ -23,7 +23,7 @@ m=Data ( observed=data,
          efficiencies=efficiencies,
          name="CMS-NOTE-2017-001 model" )
 
-LC = LikelihoodComputer ( m )
+LC = SLLikelihoodComputer ( m )
 
 print ( "likelihood for no signal, marginalizing:", LC.likelihood([0.]*m.n, marginalize=True ) )
 signal = [ 10.*x for x in efficiencies ]
