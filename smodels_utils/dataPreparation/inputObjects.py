@@ -518,12 +518,12 @@ class DataSetInput(Locker):
             try:
                 # v3.1.0
                 # new API
-                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
+                from smodels.statistics.simplifiedLikelihoods import Data, SLUpperLimitComputer, LikelihoodComputer
                 from smodels.statistics.basicStats import aposteriori
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
                 llhdComp = LikelihoodComputer  ( m )
-                comp = UpperLimitComputer ( llhdComp, 1. - alpha )
+                comp = SLUpperLimitComputer ( llhdComp, 1. - alpha )
                 ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
                 try:
                     ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
@@ -538,11 +538,11 @@ class DataSetInput(Locker):
                 print ( f"[inputObjects] Exception {e}, will try with older version" )
             try:
                 # v3.0.0
-                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
+                from smodels.statistics.simplifiedLikelihoods import Data, SLUpperLimitComputer
                 # new API
                 m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
-                comp = UpperLimitComputer ( 1. - alpha )
+                comp = SLUpperLimitComputer ( 1. - alpha )
                 ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
                 ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
                 if type(ul) == type(None):
