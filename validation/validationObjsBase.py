@@ -50,7 +50,10 @@ class ProgressHandler:
             return None
         try:
             with open( self.pidfile, "rt" ) as f:
-                pid = int ( f.read() )
+                d = eval ( f.read() )
+                pid = d
+                if type(d)==dict:
+                  pid = d["pid"]
                 return pid
         except ValueError as e:
             pass
@@ -65,7 +68,9 @@ class ProgressHandler:
         #print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
         # self.killProgressBar( pidfile )
         f=open(self.pidfile,"wt")
-        f.write ( f"{pid}\n" )
+        f.write ( "{" )
+        f.write ( f"'pid': {int(pid)}, 'time': {time.time()}" )
+        f.write ( "}\n" )
         f.close()
 
     def rmFile ( self ):
