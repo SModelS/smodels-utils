@@ -133,10 +133,10 @@ class CovarianceHandler:
 
     def checkCovarianceMatrix( self ):
         """ a quick check if the covariance matrix is invertible. """
-        from smodels.statistics.simplifiedLikelihoods import Data
+        from smodels.statistics.simplifiedLikelihoods import SLData
         import scipy.linalg
         n=len(self.covariance)
-        m=Data( [0.]*n, [0.]*n, self.covariance )
+        m=SLData( [0.]*n, [0.]*n, self.covariance )
         logger.info(f"Check {n}-dim covariance matrix for positive definiteness.")
         try:
             # I=(m.covariance)**(-1)
