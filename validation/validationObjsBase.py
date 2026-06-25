@@ -994,7 +994,8 @@ class ValidationObjsBase():
         self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
             from smodels_utils.helper.various import py_dumps
-            f.write ( f"{py_dumps(current)}\n" )
+            d = py_dumps(current)
+            f.write ( f"{d}\n" )
             f.close()
         self.unlockFile()
         self.willRun = []
@@ -1033,7 +1034,9 @@ class ValidationObjsBase():
                     shouldRun.add ( f )
         self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
-            f.write ( f"{current}\n" )
+            from smodels_utils.helper.various import py_dumps
+            d = py_dumps(current)
+            f.write ( f"{d}\n" )
             f.close()
         self.unlockFile()
         return shouldRun
