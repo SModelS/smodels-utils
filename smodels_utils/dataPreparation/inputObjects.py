@@ -524,13 +524,14 @@ class DataSetInput(Locker):
                            lumi = lumi )
                 llhdComp = SLLikelihoodComputer  ( m )
                 comp = SLUpperLimitComputer ( llhdComp, 1. - alpha )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
+                
+                ul = ( comp.getUpperLimitOnMu() / lumi ).asNumber ( fb )
                 try:
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
+                    ulExpected = ( comp.getUpperLimitOnMu( expected=aposteriori ) / lumi ).asNumber ( fb )
                 except Exception as e:
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( evaluationType=aposteriori ).asNumber ( fb )
+                    ulExpected = ( comp.getUpperLimitOnMu ( evaluationType=aposteriori ) / lumi ).asNumber ( fb )
                 if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                    ul = ( comp.getUpperLimitOnMu( m, ) / lumi ).asNumber ( fb )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
                 return ul, ulExpected
 
@@ -543,10 +544,10 @@ class DataSetInput(Locker):
                 m = SLData ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
                            lumi = lumi )
                 comp = SLUpperLimitComputer ( 1. - alpha )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                ul = ( comp.getUpperLimitOnMu ( m ) / lumi ).asNumber ( fb )
+                ulExpected = ( comp.getUpperLimitOnMu ( m, expected="posteriori" ) / lumi ).asNumber ( fb )
                 if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                    ul = ( comp.getUpperLimitOnMu ( m, ) / lumi ).asNumber ( fb )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
                 print ( f"[inputObjects] older version worked!" )
                 return ul, ulExpected
