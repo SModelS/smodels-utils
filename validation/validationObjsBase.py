@@ -993,7 +993,8 @@ class ValidationObjsBase():
                 pass
         self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
-            f.write ( f"{current}\n" )
+            from smodels_utils.helper.various import py_dumps
+            f.write ( f"{py_dumps(current)}\n" )
             f.close()
         self.unlockFile()
         self.willRun = []
