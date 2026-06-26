@@ -383,7 +383,8 @@ class PaperPlot:
             if official:
                 min_off_y = excl_off[typ]["y"][0]
 
-            if excl_off[typ]["y"][-1] < excl_off[typ]["y"][0]:# and official:
+            ## FIXME no idea what that does
+            if type(excl_off[typ]["y"][0]) != list and excl_off[typ]["y"][-1] < excl_off[typ]["y"][0]:# and official:
                 # print("[drawPaperPlot] yes ")
                 index = [i for i,y  in enumerate(excl_off[typ]["y"]) if y>excl_off[typ]["y"][0]+50]
                 if len(index)>0:
@@ -395,7 +396,9 @@ class PaperPlot:
                 excl["x"].reverse()
                 excl["y"].reverse()
 
-            if len(excl_off[typ]["x"])>0 and len(excl["x"])>0 and excl_off[typ]["x"][-1] > excl["x"][0]:
+            ## FIXME no idea what that does
+            if len(excl_off[typ]["x"])>0 and type(excl_off[typ]["x"][0])!=list \
+                    and len(excl["x"])>0 and excl_off[typ]["x"][-1] > excl["x"][0]:
                 index = [i for i,x  in enumerate(excl["x"]) if x>excl_off[typ]["x"][-1]+20]
                 # print("[drawPaperPlot] cut off ", excl["x"][index[0]])
                 if len(index)>0:
