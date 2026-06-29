@@ -76,6 +76,9 @@ def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
     """
     CLs_posteriori = obj.CLs ( mu=1, evaluationType = aposteriori )
     print ( f"CLs_posteriori {CLs_posteriori:.5f}" )
+    ul = obj.getUpperLimitOnMu()
+    print ( f"ul {ul:.3f}" )
+# import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     """
     CLsEpriori = obj.CLs ( mu=1, evaluationType = apriori )
     # nll_min = 0.
