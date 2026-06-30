@@ -150,9 +150,9 @@ def removeAnaIdSuffices ( anaId : str ) -> str:
 
 def round_to_n ( x : float, n : int ) -> float:
     """ round <x> to <n> significant digits """
-    if x in [ None, 0. ]:
-        return x
     import math
+    if x in [ None, 0. ] or math.isnan ( x ) or math.isinf( x ):
+        return x
     if x < 0.:
         return -round(-x, -int(math.floor(math.log10(-x))) + (n - 1))
     return round(x, -int(math.floor(math.log10(x))) + (n - 1))
