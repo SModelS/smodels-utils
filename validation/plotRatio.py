@@ -94,18 +94,25 @@ def hasAxisInfo ( content ):
     print ( f"[plotRatio] when searching for axis info, what case is this: {meta}" )
     return False
 
-def guessLabel ( label, anaId1, anaId2, valfile1 ):
+def guessLabel ( label, anaId1, anaId2, valfile1, content1 ):
     if label != None:
         return label
     label = "???"
-    if anaId2 in anaId1:
+    anaId2l = anaId2.replace("-orig","")
+    if anaId2l in anaId1:
         label = anaId1.replace(anaId2,"")
         if "combined" in valfile1:
             label = "combined"
+        for c in content1["data"]:
+            if "StatModel" in c and c["StatModel"].endswith(".onnx"):
+                label = "NN"
+                break
     if anaId1 in anaId2:
         label = anaId2.lower()
     if anaId2 == f"{anaId1}-eff":
         label = "ul"
+    if "-orig" in anaId1:
+        label = "pyhf"
     if anaId2 == f"{anaId1}-agg":
         label = "ul"
     if anaId2 == anaId1:
@@ -442,16 +449,18 @@ def draw ( options : dict ):
         isEff = True
     origAnaId = anaId = analysis1
     anaId = analysis1.replace("-andre","")
-    anaId = anaId.replace("-orig","").replace("-old","") # .replace("-eff","")
+    anaId = anaId.replace("-old","") # .replace("-eff","")
+    # anaId = anaId.replace("-orig","")
     anaId2 = analysis2.replace("-andre","")
-    anaId2 = anaId2.replace("-orig","").replace("-old","") # .replace("-eff","")
+    anaId2 = anaId2.replace("-old","") # .replace("-eff","")
+    anaId2l = anaId2.replace("-orig","") # .replace("-eff","")
     #title = "%s: $\\frac{\\mathrm{%s}}{\\mathrm{%s}}$" % ( topo, anaId, anaId2 )
     #if anaId2 == anaId:
     #    title = "ratio: %s, %s" % ( anaId, topo )
     title = options["title"]
     if title is None:
-        if anaId2 in anaId:
-            title = anaId2
+        if anaId2l in anaId:
+            title = anaId2l
         if anaId in anaId2:
             title = anaId
     if "eul" in options and options["eul"]==True:
@@ -596,8 +605,10 @@ def draw ( options : dict ):
 
     figname = figname.replace("@sr",sr)
     a1, a2 = options["label1"], options["label2"]
-    a1 = guessLabel ( options["label1"], origAnaId, anaId2, valfile )
-    a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2 )
+    a1 = guessLabel ( options["label1"], origAnaId, anaId2, valfile, 
+                      content1 )
+    a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2,
+                      content2 )
 
     line = f"$f$ = $r$({a1}) / $r$({a2})"
     if options["efficiencies"]:
