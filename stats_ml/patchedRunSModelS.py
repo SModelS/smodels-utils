@@ -22,10 +22,16 @@ def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
     from smodels.statistics.basicStats import aposteriori, apriori
     nll_0 = obj.nll ( mu=0. )
     offset = nll_0
-    print ( f"nll_0={nll_0:.3f}" )
-    nll = obj.nll ( )
-    print ( f"nll={nll:.3f}" )
-    dnll = nll - nll_0
+    print ( f"nll(mu=0)={nll_0:.3f}" )
+    nll06 = obj.nll ( mu=0.6 )
+    print ( f"nll(mu=0.6)={nll06:.3f}" )
+    nll1 = obj.nll ( mu=1 )
+    print ( f"nll(mu=1)={nll1:.3f}" )
+    nll2 = obj.nll ( mu=2 )
+    print ( f"nll(mu=2)={nll2:.3f}" )
+    nll5 = obj.nll ( mu=5 )
+    print ( f"nll(mu=5)={nll5:.3f}" )
+    dnll = nll1 - nll_0
     print ( f"{GREEN}dnll={dnll:.3f}{RESET}" )
     d_nll_min = obj.nll_min ( return_dict = True )
     nll_min = d_nll_min["nll_min"] 
@@ -41,15 +47,25 @@ def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
     dnllA = nllA - nllA0
     print ( f"{GREEN}dnllA={dnllA:.3f}{RESET}" )
     nll_posteriori_0 = obj.nll ( mu=0, evaluationType = aposteriori )
-    print ( f"nll_posteriori_0={nll_posteriori_0:.3f}" )
-    nll_posteriori = obj.nll ( mu=1, evaluationType = aposteriori )
-    print ( f"nll_posteriori_1={nll_posteriori:.3f}" )
-    dnll_posteriori = nll_posteriori - nll_posteriori_0
+    print ( f"nll_posteriori(mu=0)={nll_posteriori_0:.3f}" )
+    nll_posteriori_06 = obj.nll ( mu=.6, evaluationType = aposteriori )
+    print ( f"nll_posteriori(mu=0.6)={nll_posteriori_06:.3f}" )
+    nll_posteriori_1 = obj.nll ( mu=1, evaluationType = aposteriori )
+    print ( f"nll_posteriori(mu=1)={nll_posteriori_1:.3f}" )
+    nll_posteriori_2 = obj.nll ( mu=2, evaluationType = aposteriori )
+    print ( f"nll_posteriori(mu=2)={nll_posteriori_2:.3f}" )
+    nll_posteriori_5 = obj.nll ( mu=5, evaluationType = aposteriori )
+    print ( f"nll_posteriori(mu=5)={nll_posteriori_5:.3f}" )
+    dnll_posteriori = nll_posteriori_1 - nll_posteriori_0
     print ( f"{GREEN}dnll_posteriori={dnll_posteriori:.3f}{RESET}" )
     dnllA = obj.nll ( asimov=0 )  - offset
     dnllE = obj.nll ( mu=1, evaluationType = aposteriori ) - offset
     d_posteriori_min = obj.nll_min ( evaluationType = aposteriori,
                                      return_dict = True )
+    nll_min_post = obj.nll_min ( evaluationType = aposteriori )
+    print ( f"nll_min (posteriori)={nll_min_post:.3f}" )
+    nll_minA_post = obj.nll_min ( evaluationType = aposteriori, asimov=0 )
+    print ( f"nll_minA (posteriori)={nll_minA_post:.3f}" )
     nll_posteriori_min = d_posteriori_min["nll_min"]
     mu_hat_posteriori = d_posteriori_min["muhat"]
     print ( f"nll_posteriori_min={nll_posteriori_min:.3f} muhat {mu_hat_posteriori:.3f}" )
@@ -66,7 +82,10 @@ def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
     dnllEA = obj.nll ( asimov=0, evaluationType = aposteriori ) - offset
 
     CLs = obj.CLs ( mu=1 )
-    print ( f"CLs {CLs:.3f}" )
+    print ( f"CLs(mu=1)={CLs:.3f}" )
+    CLs2 = obj.CLs ( mu=.2, evaluationType = aposteriori )
+    print ( f"CLs(mu=.2,posteriori)={CLs2:.3f}" )
+
     """
     CLs0 = obj.CLs ( mu=0 )
     nllea0 = obj.nll ( mu=0, evaluationType=aposteriori, asimov=0 )
@@ -78,7 +97,8 @@ def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
     print ( f"CLs_posteriori {CLs_posteriori:.5f}" )
     ul = obj.getUpperLimitOnMu()
     print ( f"ul {ul:.3f}" )
-# import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+    if False:
+        import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     """
     CLsEpriori = obj.CLs ( mu=1, evaluationType = apriori )
     # nll_min = 0.
