@@ -19,6 +19,19 @@ import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional, Tuple
 
+def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
+    """ count the number of control regions
+    :param regionType: one of: SR, CR, VR
+    """
+    ctr = 0
+    for r in regions:
+        if "type" in r:
+            if r["type"]==regionType:
+                ctr += 1
+        elif regionType == "SR": # if no type is mentioned, its an SR
+            ctr += 1
+    return ctr
+
 def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
     from matplotlib.patches import Polygon
     verts = np.vstack([
@@ -617,6 +630,40 @@ class PaperPlot:
     def pprint ( self, *args ):
         print ( f"[drawPaperPlot] {''.join(map(str,*args))}" )
 
+    def countDataSets ( self, validationPlot ) -> dict:
+        gI = validationPlot.expRes.globalInfo
+        num_sr, num_cr = 0, 0
+        ver = "1bin"
+        if hasattr ( gI, "statModels" ):
+            ver = "(pyhf)" # how to differentiate between simplified and full?
+            for srSetName,model_types in gI.statModels.items():
+                for model_type in model_types:
+                    mtype = model_type[0]
+                    if mtype == "onnx":
+                        ver = "(nn)"
+                        break
+        g_dict = {}
+        if hasattr ( gI, "srMappings" ):
+            for label,region in gI.srMappings.items():
+                sname = region["smodels"]
+                g_dict [ sname ] = region
+        for ds in validationPlot.expRes.datasets:
+            name = ds.dataInfo.dataId
+            if name in g_dict:
+                t = g_dict[name]["type"]
+                assert t in [ "SR", "CR" ], f"dont know SR type {t}"
+                if t == "SR":
+                    num_sr += 1
+                elif t == "CR":
+                    num_cr += 1
+        if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+            ver = "(SLv1)"   #SLv1 vs SLv2
+        if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
+            ver = "(SLv2)"
+        ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr }
+        return ret
+
+
     def draw( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
@@ -737,41 +784,8 @@ class PaperPlot:
         num_sr, num_cr = 0, 0
         ver = ""
 
-        def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
-            """ count the number of control regions
-            :param regionType: one of: SR, CR, VR
-            """
-            ctr = 0
-            for r in regions:
-                if "type" in r:
-                    if r["type"]==regionType:
-                        ctr += 1
-                elif regionType == "SR": # if no type is mentioned, its an SR
-                    ctr += 1
-            return ctr
-
-        gI = validationPlot.expRes.globalInfo
-        if hasattr ( gI, "statModels" ):
-            ver = "(pyhf)" # how to differentiate between simplified and full?
-            for srSetName,model_types in gI.statModels.items():
-                regions = gI.srSets[srSetName]
-                region_dicts = []
-                for region in regions:
-                    if region in gI.srMappings:
-                        region_dicts.append ( gI.srMappings[region] )
-                for model_type in model_types:
-                    mtype = model_type[0]
-                    if mtype == "onnx":
-                        ver = "(nn)"
-                num_sr += countRegionsOfType(region_dicts,"SR")
-                num_cr += countRegionsOfType(region_dicts,"CR")
-        else:
-            num_sr = len(validationPlot.expRes.datasets)
-
-        if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
-            ver = "(SLv1)"   #SLv1 vs SLv2
-        if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
-            ver = "(SLv2)"
+        nums = self.countDataSets ( validationPlot )
+        ver, num_sr, num_cr = nums["ver"], nums["num_sr"], nums["num_cr"]
 
         #now plot figure
         # self.pprint("Drawing pretty obs and exp plots")
