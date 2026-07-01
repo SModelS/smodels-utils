@@ -225,7 +225,7 @@ class PaperPlot:
                 continue
             ret_x.append( x )
             ret_y.append( y )
-            if True: # "official" in label:
+            if "official" in label:
                 print ( f"{x,y} survived {label}" )
                 
         return ret_x, ret_y
