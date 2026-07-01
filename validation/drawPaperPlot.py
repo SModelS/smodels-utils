@@ -780,6 +780,15 @@ class PaperPlot:
         min_obs_y, max_obs_y = self.getRange( lines, "obsExclusion", "y" )
         min_exp_x, max_exp_x = self.getRange( lines, "expExclusion", "x" )
         min_exp_y, max_exp_y = self.getRange( lines, "expExclusion", "y" )
+        if True: ## harmonize ranges between exp and obs
+            min_x = min ( min_obs_x, min_exp_x )
+            max_x = max ( max_obs_x, max_exp_x )
+            min_y = min ( min_obs_y, min_exp_y )
+            max_y = max ( max_obs_y, max_exp_y )
+            min_obs_x, min_exp_x = min_x, min_x
+            max_obs_x, max_exp_x = max_x, max_x
+            min_obs_y, min_exp_y = min_y, min_y
+            max_obs_y, max_exp_y = max_y, max_y
 
         num_sr, num_cr = 0, 0
         ver = ""
