@@ -111,6 +111,8 @@ def guessLabel ( label, anaId1, anaId2, valfile1, content1 ):
         label = anaId2.lower()
     if anaId2 == f"{anaId1}-eff":
         label = "ul"
+    if anaId2 == f"{anaId1}-orig":
+        label = "ul"
     if "-orig" in anaId1:
         label = "pyhf"
     if anaId2 == f"{anaId1}-agg":
