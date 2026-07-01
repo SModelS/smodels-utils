@@ -855,6 +855,7 @@ class PaperPlot:
             elif "y=" in lbl:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
             else: continue
+        y_label = f"${y_label.replace('$','')}$"
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
@@ -1001,8 +1002,11 @@ class PaperPlot:
                       fontsize = 8)
         #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
 
-        plt.text( 0.55, 0.65, r"$\bf observed~exclusion$",
-                  transform=fig.transFigure, fontsize = 10 )
+        ox,oy,osize=.55,.65, 10
+        if "style" in self.specific_options and self.specific_options["style"]=="sabine":
+            ox,oy,osize = 0.25,0.8, 12
+        plt.text( ox, oy, r"$\bf observed~exclusion$",
+                  transform=fig.transFigure, fontsize = osize )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
 
@@ -1157,7 +1161,12 @@ class PaperPlot:
         if massg != "":
             plt.text( 0.6,0.6, rf"{massg} GeV",
                       transform=fig.transFigure, fontsize = 8)
-        plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
+
+        ox,oy,osize=.55,.65, 10
+        if "style" in self.specific_options and self.specific_options["style"]=="sabine":
+            ox,oy,osize = 0.25,0.8, 12
+        plt.text( ox, oy, r"$\bf expected~exclusion$",
+                  transform=fig.transFigure, fontsize = osize )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
         txn = txname if txnameOff == "" else txnameOff
