@@ -204,6 +204,24 @@ class PaperPlot:
                 y_vals[i]= y * random.uniform(1-delta,1+delta)
         return y_vals
 
+    def removeSegments ( self, x_val : list[float],
+            y_val : list[float] ) -> tuple[list[float]]:
+        if self.specific_options["remove_segments"] in [ None, [] ]:
+            return x_val, y_val
+        if type ( self.specific_options["remove_segments"] ) == str:
+            self.specific_options["remove_segments"] = \
+                eval ( self.specific_options["remove_segments"] )
+        rec = self.specific_options["remove_segments"]
+        assert type(rec)==list, f"remove_segments {rec} needs to be a list of lists"
+        ret_x, ret_y = [], []
+        xmin, xmax = rec[0][0], rec[1][0]
+        ymin, ymax = rec[0][1], rec[1][1]
+        for x,y in zip ( x_val, y_val ):
+            if xmin < x < xmax and ymin < y < ymax:
+                continue
+            ret_x.append( x )
+            ret_y.append( y )
+        return ret_x, ret_y
 
     def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
                    label : str ):
@@ -212,6 +230,7 @@ class PaperPlot:
             return
         if type(x_vals[0]) == list:
             for x_val, y_val in zip ( x_vals, y_vals ):
+                x_val, y_val = self.removeSegments ( x_val, y_val )
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                          label = label )
                 label = ""
@@ -542,6 +561,15 @@ class PaperPlot:
             new_y.append ( value["y"] )
         return new_x, new_y
 
+    def removeAllSegments ( self, x_vals : list, y_vals : list ) -> tuple:
+        nx_vals, ny_vals = [], []
+        for x_val, y_val in zip ( x_vals, y_vals ):
+            x_val, y_val = self.removeSegments ( x_val, y_val )
+            nx_vals.append( x_val )
+            ny_vals.append( y_val )
+        x_vals, y_vals = nx_vals, ny_vals
+        return nx_vals, ny_vals
+
     def sortWithinSegments ( self, x_vals, y_vals ) -> tuple:
         """ sort within segments, if the order of the x values is larger to
         smaller, then invert """
@@ -562,6 +590,8 @@ class PaperPlot:
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
+        x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1 )
+        x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2 )
         if self.specific_options["sort_segments"]:
             x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )

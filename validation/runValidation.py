@@ -174,7 +174,7 @@ def createRedBlackPlot ( expRes, txnameStr, axes, db,
             "drawexpofficialpm1": True, "drawobspm1": False,
             "title_fontsize": 12, "sort_segments": True,
             "max_y": "auto", "min_y": "auto", "min_x": "auto", "max_x": "auto",
-            "style": "default" }
+            "style": "default", "remove_segments": None }
     #pp_specific_options["logy" ] = True
     #pp_specific_options["logymin" ] = .3
     if parser.has_section("drawPaperPlot"):
