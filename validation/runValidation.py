@@ -12,7 +12,7 @@ from smodels.tools.printers.pythonPrinter import PyPrinter
 
 def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
     """ for obj add the errors on the r values to resDict,
-    monkey patch to also report the observed 
+    monkey patch to also report the observed
     see PyPrinter.addErrorsForRValues (and we need to keep them in sync
     manually)
     """
@@ -172,7 +172,8 @@ def createRedBlackPlot ( expRes, txnameStr, axes, db,
             namedTarball = namedTarball, keep = keep, combine = combine )
     pp_specific_options = { "drawbestsr": False, "drawobsofficialpm1": False,
             "drawexpofficialpm1": True, "drawobspm1": False,
-            "title_fontsize": 12, "sort_segments": True }
+            "title_fontsize": 12, "sort_segments": True,
+            "max_y": "auto" }
     #pp_specific_options["logy" ] = True
     #pp_specific_options["logymin" ] = .3
     if parser.has_section("drawPaperPlot"):

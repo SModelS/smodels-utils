@@ -663,6 +663,26 @@ class PaperPlot:
         ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr }
         return ret
 
+    def getRanges ( self, lines ):
+        r = {}
+        r["min_obs_x"], r["max_obs_x"] = \
+            self.getRange( lines, "obsExclusion", "x" )
+        r["min_obs_y"], r["max_obs_y"] = \
+            self.getRange( lines, "obsExclusion", "y" )
+        r["min_exp_x"], r["max_exp_x"] = \
+            self.getRange( lines, "expExclusion", "x" )
+        r["min_exp_y"], r["max_exp_y"] = \
+            self.getRange( lines, "expExclusion", "y" )
+        if True: ## harmonize ranges between exp and obs
+            min_x = min ( r["min_obs_x"], r["min_exp_x"] )
+            max_x = max ( r["max_obs_x"], r["max_exp_x"] )
+            min_y = min ( r["min_obs_y"], r["min_exp_y"] )
+            max_y = max ( r["max_obs_y"], r["max_exp_y"] )
+            r["min_obs_x"], r["min_exp_x"] = min_x, min_x
+            r["max_obs_x"], r["max_exp_x"] = max_x, max_x
+            r["min_obs_y"], r["min_exp_y"] = min_y, min_y
+            r["max_obs_y"], r["max_exp_y"] = max_y, max_y
+        return r
 
     def draw( self, addJitter : bool = True ) -> list:
         """
@@ -776,19 +796,8 @@ class PaperPlot:
         if combSR:
             lines["comb"] = comb_excl
 
-        min_obs_x, max_obs_x = self.getRange( lines, "obsExclusion", "x" )
-        min_obs_y, max_obs_y = self.getRange( lines, "obsExclusion", "y" )
-        min_exp_x, max_exp_x = self.getRange( lines, "expExclusion", "x" )
-        min_exp_y, max_exp_y = self.getRange( lines, "expExclusion", "y" )
-        if True: ## harmonize ranges between exp and obs
-            min_x = min ( min_obs_x, min_exp_x )
-            max_x = max ( max_obs_x, max_exp_x )
-            min_y = min ( min_obs_y, min_exp_y )
-            max_y = max ( max_obs_y, max_exp_y )
-            min_obs_x, min_exp_x = min_x, min_x
-            max_obs_x, max_exp_x = max_x, max_x
-            min_obs_y, min_exp_y = min_y, min_y
-            max_obs_y, max_exp_y = max_y, max_y
+        ranges = self.getRanges( lines )
+
 
         num_sr, num_cr = 0, 0
         ver = ""
@@ -805,18 +814,15 @@ class PaperPlot:
 
         fig,ax = plt.subplots(figsize=(5,4))
 
-        step_x = int(max_obs_x/100)*10
+        step_x = int(ranges["max_obs_x"]/100)*10
         mid_x = 0
-        if max_obs_x < -.99:
+        if ranges["max_obs_x"] < -.99:
             self.pprint ( f"seems like exclusion lines are empty" )
             return
-        if max_obs_x > -.99:
-            mid_x = int((max_obs_x - min_obs_x)/2)
-        step_y = int(max_obs_y)
+        if ranges["max_obs_x"] > -.99:
+            mid_x = int((ranges["max_obs_x"] - ranges["min_obs_x"])/2)
+        step_y = int(ranges["max_obs_y"])
 
-        #self.pprint("max obs y ", max_obs_y)
-        #self.pprint("step y", step_y)
-        #self.pprint("max exp y ", max_exp_y)
         x_label, y_label = "",""
 
         axis_label = prettyAxes(validationPlot).replace(" ","")
@@ -844,23 +850,20 @@ class PaperPlot:
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
-        ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
+        ax.set_xlim([int(ranges["min_obs_x"]/10)*10,round(ranges["max_obs_x"]+step_x,-1)])
         if 'Gamma' in y_label:
             self.pprint ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            max_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
-            if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
-            if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb", width=True))
+            ranges["max_obs_y"] = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
+            if bestSR: ranges["max_obs_y"] = max(ranges["max_obs_y"], self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
+            if combSR: ranges["max_obs_y"] = max(ranges["max_obs_y"], self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb", width=True))
 
-            min_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "min", e_type="official")
-            if bestSR: min_obs_y = min(min_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
-            if combSR: min_obs_y = min(min_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "min", e_type="comb", width=True))
-            step_y = max_obs_y*1000
-            #self.pprint("min_obs_y ", min_obs_y)
-            #print("step ", step_y)
-            ax.set_ylim([min_obs_y, max_obs_y+step_y])
+            ranges["min_obs_y"] = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "min", e_type="official")
+            if bestSR: ranges["min_obs_y"] = min(ranges["min_obs_y"], self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
+            if combSR: ranges["min_obs_y"] = min(ranges["min_obs_y"], self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "min", e_type="comb", width=True))
+            step_y = ranges["max_obs_y"]*1000
+            ax.set_ylim([ranges["min_obs_y"], ranges["max_obs_y"]+step_y])
         else:
-            #print("max_obs_y + step ", max_obs_y+step_y )
-            ax.set_ylim([0,round(max_obs_y+step_y,-1)])
+            ax.set_ylim([0,round(ranges["max_obs_y"]+step_y,-1)])
         if hasattr ( validationPlot.expRes.globalInfo, "includeCRs" ):
             if validationPlot.expRes.globalInfo.includeCRs == False:
                 num_cr = 0
@@ -1019,9 +1022,9 @@ class PaperPlot:
 
         fig,ax = plt.subplots(figsize=(5,4))
 
-        step_x = int(max_exp_x/100)*10
-        mid_x = int((max_exp_x - min_exp_x)/2)
-        step_y = int(max_exp_y)
+        step_x = int(ranges["max_exp_x"]/100)*10
+        mid_x = int((ranges["max_exp_x"] - ranges["min_exp_x"])/2)
+        step_y = int(ranges["max_exp_y"])
 
         #print("max exp y ", max_exp_y)
         #print("exp step y ", step_y)
@@ -1029,21 +1032,24 @@ class PaperPlot:
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
-        # ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
         if 'Gamma' in y_label:
             self.pprint ( f"{RED} FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            max_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
-            if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
-            if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb", width=True))
+            ranges["max_exp_y"] = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
+            if bestSR:
+                ranges["max_exp_y"] = max(ranges["max_exp_y"], self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
+            if combSR:
+                ranges["max_exp_y"] = max(ranges["max_exp_y"], self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb", width=True))
 
-            min_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "min", e_type="official")
-            if bestSR: min_exp_y = min(min_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
-            if combSR: min_exp_y = min(min_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "min", e_type="comb", width=True))
-            print("min exp y ", min_exp_y)
-            step_y = max_exp_y*1000
+            ranges["min_exp_y"] = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "min", e_type="official")
+            if bestSR:
+                ranges["min_exp_y"] = min(ranges["min_exp_y"], self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
+            if combSR:
+                ranges["min_exp_y"] = min(ranges["min_exp_y"], self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "min", e_type="comb", width=True))
+            print("min exp y ", ranges["min_exp_y"])
+            step_y = ranges["max_exp_y"]*1000
             print("step exp y ", step_y)
-            ax.set_ylim([min_exp_y,max_exp_y+step_y])
-        else: ax.set_ylim([0,round(max_exp_y+step_y,-1)])
+            ax.set_ylim([ranges["min_exp_y"],ranges["max_exp_y"]+step_y])
+        else: ax.set_ylim([0,round(ranges["max_exp_y"]+step_y,-1)])
 
         nSRs = f"{num_sr} SRs"
         if num_sr == 1:
