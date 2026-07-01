@@ -205,7 +205,11 @@ class PaperPlot:
         return y_vals
 
     def removeSegments ( self, x_val : list[float],
-            y_val : list[float] ) -> tuple[list[float]]:
+            y_val : list[float], label : str = "" ) -> tuple[list[float]]:
+        """ remove the segments of the line that are in side the remove_segments
+        box.
+        :param label: just for debugging, a name for the line
+        """
         if self.specific_options["remove_segments"] in [ None, [] ]:
             return x_val, y_val
         if type ( self.specific_options["remove_segments"] ) == str:
@@ -221,6 +225,9 @@ class PaperPlot:
                 continue
             ret_x.append( x )
             ret_y.append( y )
+            if True: # "official" in label:
+                print ( f"{x,y} survived {label}" )
+                
         return ret_x, ret_y
 
     def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
@@ -230,7 +237,7 @@ class PaperPlot:
             return
         if type(x_vals[0]) == list:
             for x_val, y_val in zip ( x_vals, y_vals ):
-                x_val, y_val = self.removeSegments ( x_val, y_val )
+                x_val, y_val = self.removeSegments ( x_val, y_val, label = label )
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                          label = label )
                 label = ""
@@ -561,10 +568,11 @@ class PaperPlot:
             new_y.append ( value["y"] )
         return new_x, new_y
 
-    def removeAllSegments ( self, x_vals : list, y_vals : list ) -> tuple:
+    def removeAllSegments ( self, x_vals : list, y_vals : list,
+           label : str = "all" ) -> tuple:
         nx_vals, ny_vals = [], []
         for x_val, y_val in zip ( x_vals, y_vals ):
-            x_val, y_val = self.removeSegments ( x_val, y_val )
+            x_val, y_val = self.removeSegments ( x_val, y_val, label=label )
             nx_vals.append( x_val )
             ny_vals.append( y_val )
         x_vals, y_vals = nx_vals, ny_vals
@@ -590,11 +598,11 @@ class PaperPlot:
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
-        x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1 )
-        x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2 )
+        x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1, "error_band" )
+        x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2, "error_band" )
         if self.specific_options["sort_segments"]:
-            x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
-            x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
+            x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1, "error_band" )
+            x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2, "error_band" )
         if color == None:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
@@ -1117,8 +1125,9 @@ class PaperPlot:
 
         exp_name = analysis.split('-')[0]
         if "x" in off_excl["expExclusion"]:
-            self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"],
-                        "black", "solid", f'{exp_name} official')
+            self.plotLines ( ax, off_excl["expExclusion"]["x"], 
+                    off_excl["expExclusion"]["y"],
+                    "black", "solid", f'{exp_name} official')
 
         plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
