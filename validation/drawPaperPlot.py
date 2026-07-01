@@ -918,15 +918,19 @@ class PaperPlot:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
         fs = self.specific_options["title_fontsize"]
-        plt.title( title, loc='left', fontsize=fs, x=-.12)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
         ptxname = validationPlot.txName
         if txnameOff == txname + "off":
             ptxname = txname + "on+off"
         pName = self.getPrettyProcessName(ptxname)
+        right_title = pName
         # process string on right of title
-        plt.title(pName,loc='right', fontsize=fs)
+        if self.specific_options["style"]=="sabine":
+            title = f"{analysis}: {pName}"
+            right_title = f"{num_sr} SRs + {num_cr} CRs"
+        plt.title( title, loc='left', fontsize=fs, x=-.12)
+        plt.title( right_title,loc='right', fontsize=fs)
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
@@ -1104,8 +1108,12 @@ class PaperPlot:
         title = f"{analysis}: {nSRs}"
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
-        plt.title( title, loc='left', fontsize=12, x=-.12)
-        plt.title(pName,loc='right', fontsize=12)
+        right_title = pName
+        if self.specific_options["style"]=="sabine":
+            title = f"{analysis}: {pName}"
+            right_title = f"{num_sr} SRs + {num_cr} CRs"
+        plt.title( title, loc='left', fontsize=12, x=-.12 )
+        plt.title( right_title,loc='right', fontsize=12 )
 
         exp_name = analysis.split('-')[0]
         if "x" in off_excl["expExclusion"]:
