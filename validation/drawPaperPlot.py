@@ -569,25 +569,29 @@ class PaperPlot:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-        x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
-        x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
+        if self.specific_options["sort_segments"]:
+            x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
+            x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
         drawBand = True
-        indices = list ( range(min(len(x_vals1),len(x_vals2))) )
+        indices = list ( range(max(len(x_vals1),len(x_vals2))) )
         if not drawBand:
             indices = []
         x1s, x2s, y1s, y2s = np.array([]), np.array([]), np.array([]), np.array([])
         for idx in indices:
             #if not idx in x_vals2:
             #    continue
-            x1 = np.array ( x_vals1[idx] )
-            x2 = np.array ( x_vals2[idx] )
-            y1 = np.array ( y_vals1[idx] )
-            y2 = np.array ( y_vals2[idx] )
+            if idx < len(x_vals1):
+                x1 = np.array ( x_vals1[idx] )
+                y1 = np.array ( y_vals1[idx] )
+                x1s = np.concatenate ( [ x1s, x1 ] )
+                y1s = np.concatenate ( [ y1s, y1 ] )
 
-            x1s = np.concatenate ( [ x1s, x1 ] )
-            x2s = np.concatenate ( [ x2s, x2 ] )
-            y1s = np.concatenate ( [ y1s, y1 ] )
-            y2s = np.concatenate ( [ y2s, y2 ] )
+            if idx < len(x_vals2):
+                x2 = np.array ( x_vals2[idx] )
+                y2 = np.array ( y_vals2[idx] )
+
+                x2s = np.concatenate ( [ x2s, x2 ] )
+                y2s = np.concatenate ( [ y2s, y2 ] )
 
         poly = fill_between_polylines(ax, x1s, y1s, x2s, y2s,
                    facecolor=color, alpha=alpha, edgecolor=None )
