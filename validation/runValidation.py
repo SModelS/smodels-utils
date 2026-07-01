@@ -172,8 +172,7 @@ def createRedBlackPlot ( expRes, txnameStr, axes, db,
             namedTarball = namedTarball, keep = keep, combine = combine )
     pp_specific_options = { "drawbestsr": False, "drawobsofficialpm1": False,
             "drawexpofficialpm1": True, "drawobspm1": False,
-            "title_fontsize": 12, "sort_segments": True,
-            "origvalidationfolder": "validation" }
+            "title_fontsize": 12, "sort_segments": True }
     #pp_specific_options["logy" ] = True
     #pp_specific_options["logymin" ] = .3
     if parser.has_section("drawPaperPlot"):
@@ -308,7 +307,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
     saxes = saxes.replace('130.0','130').replace('0.0','0')
     output = f"{os.path.dirname(datafile)}/ratios_{txname}_{saxes}.png"
-    options = { "show": opts["show"], "output": output }
+    options = { "show": opts["show"], "output": output,
+                "folder2": "validation" }
     ana2origtest = f"{os.path.dirname(datafile)}../../../{ana2}-orig"
     ana2origtest = os.path.abspath ( ana2origtest )
     if os.path.exists ( ana2origtest ) and not "-orig" in ana1:
@@ -334,8 +334,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
             if p1 > 0:
                 folder1 = folder1[p1+1:]
             options["folder1"]="validation"
-    if not "folder2" in options:
-        options["folder2"]="validation"
+    if "origValidationFolder" in opts:
+        options["folder2"] = opts["origValidationFolder"]
     options["comment"]=opts["ratio_comment"]
     sdbpath = dbpath.replace(f"/scratch-cbe{os.environ['HOME']}","~").replace(f"{os.environ['HOME']}","~")
     cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
@@ -1005,6 +1005,7 @@ if __name__ == "__main__":
                 "ncpus": -4, ## number of processes, if zero or negative, subtract that number from number of cores on the machine.
                 "drawPaperPlot": True,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
                 "createSModelSExclJson": True, #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
+                "origValidationFolder": "validation", # folder for the -orig info for ratio- and red-black plots
                 "errorsForR": True, # for the expected UL values, do we want a one-sigma band?
                 "nnErrors": False, # shall we monkey patch the cls root function, for ML models, so we can get the heteroskedastic error?
                 "removeMLModels": False, # remove existing ML models, run with full models instead

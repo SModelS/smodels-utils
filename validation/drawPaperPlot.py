@@ -690,8 +690,8 @@ class PaperPlot:
             cr_is = "orig"
 
         origValidationFolder = validationFolder
-        if "origvalidationfolder" in self.specific_options:
-            origValidationFolder = self.specific_options["origvalidationfolder"]
+        if "origvalidationfolder" in self.general_options:
+            origValidationFolder = self.general_options["origvalidationfolder"]
 
         orig_excl = None
         if anaDir != origDir and os.path.exists ( origDir ):
