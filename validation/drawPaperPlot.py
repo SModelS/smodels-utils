@@ -228,12 +228,15 @@ class PaperPlot:
         sfname = path.replace( os.environ["HOME"], "~" )
         return sfname
 
-    def getCurveFromJson( self, anaDir, validationFolder, txname : str,
-            typ : str, axes = None, eval_axes : bool = True ) -> dict:
+    def getCurveFromJson( self, anaDir : str, validationFolder : str,
+            txname : str, typ : str, axes = None,
+            eval_axes : bool = True ) -> dict:
         """
         Get Exclusion Curve from official and SModelS json files
         :param anaDir: path to dir of analysis
-        :param txname: txname for which we need the exclusion curve
+        :param validationFolder: usually 'validation'
+        :param txname: txname for which we need the exclusion curve,
+        e.g. 'TChiWZ'
         :param typ: type of exclusion curve, one of:
         "official", "bestSR", "combined"
         official curve, SModelS bestSR, SModelS combined SR
@@ -527,7 +530,7 @@ class PaperPlot:
         return new_x, new_y
 
     def sortWithinSegments ( self, x_vals, y_vals ) -> tuple:
-        """ sort within segments, if the order of the x values is larger to 
+        """ sort within segments, if the order of the x values is larger to
         smaller, then invert """
         new_x, new_y = [], []
         for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
@@ -686,13 +689,18 @@ class PaperPlot:
             origDir = anaDir.replace("-eff","-orig")
             cr_is = "orig"
 
+        origValidationFolder = validationFolder
+        if "origvalidationfolder" in self.specific_options:
+            origValidationFolder = self.specific_options["origvalidationfolder"]
+
         orig_excl = None
         if anaDir != origDir and os.path.exists ( origDir ):
-            orig_excl = self.getCurveFromJson (origDir, validationFolder, txname,
-                typ="comb", axes=axes, eval_axes=eval_axes )
+            orig_excl = self.getCurveFromJson (origDir, origValidationFolder,
+                    txname, typ="comb", axes=axes, eval_axes=eval_axes )
             if offshell:
-                orig_excl_off = self.getCurveFromJson( origDir, validationFolder,
-                    txnameOff, typ="comb", axes=axes, eval_axes = True )
+                orig_excl_off = self.getCurveFromJson( origDir,
+                    origValidationFolder, txnameOff, typ="comb", axes=axes,
+                    eval_axes = True )
                 orig_excl = self.addOffshell ( orig_excl, orig_excl_off )
             self.pprint ( f"found curve for {origDir}!" )
 
@@ -844,7 +852,7 @@ class PaperPlot:
         plt.title( title, loc='left', fontsize=fs, x=-.12)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
-        ptxname = validationPlot.txName 
+        ptxname = validationPlot.txName
         if txnameOff == txname + "off":
             ptxname = txname + "on+off"
         pName = self.getPrettyProcessName(ptxname)
@@ -1079,7 +1087,7 @@ class PaperPlot:
                     self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
                            linestyle = "dashed", color = "red" )
 
-        if orig_excl not in [ None, [] ]:
+        if orig_excl not in [ None, [], {} ] and "expExclusion" in orig_excl:
             x_vals = orig_excl["expExclusion"]["x"]
             y_vals = orig_excl["expExclusion"]["y"]
             label = f"SModelS: CR comb."
