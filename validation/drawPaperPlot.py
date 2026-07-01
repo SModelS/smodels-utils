@@ -678,6 +678,14 @@ class PaperPlot:
             max_x = max ( r["max_obs_x"], r["max_exp_x"] )
             min_y = min ( r["min_obs_y"], r["min_exp_y"] )
             max_y = max ( r["max_obs_y"], r["max_exp_y"] )
+            if "max_y" in self.specific_options and self.specific_options["max_y"] not in [ None, "auto" ]:
+                max_y = float ( self.specific_options["max_y"] ) / 2.
+            if "min_y" in self.specific_options and self.specific_options["min_y"] not in [ None, "auto" ]:
+                min_y = float ( self.specific_options["min_y"] )
+            if "max_x" in self.specific_options and self.specific_options["max_x"] not in [ None, "auto" ]:
+                max_x = float ( self.specific_options["max_x"] )
+            if "min_x" in self.specific_options and self.specific_options["min_x"] not in [ None, "auto" ]:
+                min_x = float ( self.specific_options["min_x"] )
             r["min_obs_x"], r["min_exp_x"] = min_x, min_x
             r["max_obs_x"], r["max_exp_x"] = max_x, max_x
             r["min_obs_y"], r["min_exp_y"] = min_y, min_y
@@ -757,8 +765,8 @@ class PaperPlot:
             cr_is = "orig"
 
         origValidationFolder = validationFolder
-        if "origvalidationfolder" in self.general_options:
-            origValidationFolder = self.general_options["origvalidationfolder"]
+        if "origValidationFolder" in self.general_options:
+            origValidationFolder = self.general_options["origValidationFolder"]
 
         orig_excl = None
         if anaDir != origDir and os.path.exists ( origDir ):
@@ -1032,6 +1040,7 @@ class PaperPlot:
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
+        ax.set_xlim([int(ranges["min_obs_x"]/10)*10,round(ranges["max_obs_x"]+step_x,-1)])
         if 'Gamma' in y_label:
             self.pprint ( f"{RED} FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
             ranges["max_exp_y"] = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
