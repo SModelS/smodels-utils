@@ -233,10 +233,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton slepton neutrino stau, slepton --> lepton lsp, stau --> tau lsp',
     'TChiChipmStauL':'neutralino_2 chargino^pm_1  --> tau stau ( neutrino sneutrino ) tau sneutrino ( neutrino stau ), stau --> tau lsp, sneutrino --> neutrino lsp',
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
-    'TChiWH':'neutralino_2 chargino^pm_1 --> W H lsp lsp ',
-    'TChiHH':'neutralino_2 neutralino_2 --> H H lsp lsp ',
-    'TChiHHG':'neutralino_2 neutralino_2 --> H H lsp lsp ',
-    'TChiWW':'chargino^pm_1 --> W lsp ',
+    'TChiWH':'neutralino_2 chargino^pm_1 --> W H lsp lsp',
+    'TChiHH':'neutralino_2 neutralino_2 --> H H lsp lsp',
+    'TChiHHG':'neutralino_2 neutralino_2 --> H H lsp lsp',
+    'TChiWW':'chargino^pm_1 --> W lsp',
     'TChiH': 'neutralino_1 --> Z/h gravitino',
     'TChiZ': 'neutralino_1 --> Z lsp',
     'TChiQ': 'squark --> q lsp',
@@ -335,6 +335,11 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TRV1ee' : 'ZPrime --> e+ e-',
     'TRV1mumu' : 'ZPrime --> mu+ mu-',
     'TRV1ll' : 'ZPrime --> l+ l-'
+}
+
+signedDecayDict = { # the same decay dict, but the signed version,
+    # in case this matters
+    'TSlepSlep':'slepton+ slepton- --> lepton+ lepton- lsp lsp',
 }
 
 #Name of mother particles
@@ -572,7 +577,7 @@ motherDict = {"T1" :  "gluino gluino",
     "TRV1ll" : "ZPrime"
 }
 
-def latexfy(instr : str ) -> str:
+def latexfy(instr : str, addDollars : bool = False ) -> str:
     """
     Tries to convert the string to its latex form,
     using ROOT conventions
@@ -598,7 +603,18 @@ def latexfy(instr : str ) -> str:
         if f"/{key}" in outstr:
             outstr = outstr.replace(f"/{key}",f"/{rep}")
     outstr = outstr.replace('-->','#rightarrow')
+    outstr = outstr.replace ( "ZPrime", "Z'" )
+    outstr = outstr.replace ( "H0", "H^0" )
+    outstr = outstr.replace ( "#", "\\" )
+    outstr = outstr.replace ( "^+", "+" )
+    outstr = outstr.replace ( "^{+}", "+" )
+    outstr = outstr.replace ( "^-", "+" )
+    outstr = outstr.replace ( "^{-}", "-" )
+    outstr = outstr.replace ( "+", "^{+}" )
+    outstr = outstr.replace ( "-", "^{-}" )
     outstr = outstr.lstrip().rstrip()
+    if addDollars:
+        outstr = f"${outstr}$"
     return outstr
 
 def getMothers(txname):
@@ -670,7 +686,8 @@ def getDaughters(txname):
     return list(daughters)
 
 
-def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> str:
+def prettyProduction( txname : str,latex : bool =True, 
+                      protons : bool =True ) -> str:
     """
     FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY production process
@@ -706,7 +723,8 @@ def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> 
 
     return prodString.lstrip().rstrip()
 
-def prettyDecay(txname : str ,latex : bool = True ) -> str:
+def prettyDecay(txname : str ,latex : bool = True,
+       signs : bool = True ) -> str:
     """
     FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY decay process
@@ -714,11 +732,12 @@ def prettyDecay(txname : str ,latex : bool = True ) -> str:
     :param: txname (string) (e.g. 'T1')
     :param latex: If True it will return the latex version, otherwise
                  it will return a more human readable string
-
-
+    :param signs: if true, return e.g. l+ instead of l-
     :return: string or latex string,
     e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
+    if signs and txname in signedDecayDict:
+        return latexfy ( signedDecayDict[txname], addDollars = True )
 
     if not txname in decayDict:
         if "on+" in txname:
@@ -734,14 +753,14 @@ def prettyDecay(txname : str ,latex : bool = True ) -> str:
         decayString = latexfy(decayString)
 
     if decayString is not None and latex:
-        decayString = decayString.replace ( "ZPrime", "Z'" )
-        decayString = decayString.replace ( "H0", "H^0" )
-        decayString = "$" + decayString.replace("#","\\" ) + "$"
+        decayString = "$" + decayString + "$"
 
     if decayString is None:
         logging.warn( f"decay string for {txname} not defined" )
         decayString = f"?{txname}?"
 
+    if txname == "TSlepSlep":
+        import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     return decayString.lstrip().rstrip()
 
 def rootToLatex ( string : str, outputtype : str = "latex",
