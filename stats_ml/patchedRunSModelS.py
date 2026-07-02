@@ -64,8 +64,8 @@ def addErrorsForRValuesMonkeyPatchFull ( self, obj, resDict : dict ):
                                      return_dict = True )
     nll_min_post = obj.nll_min ( evaluationType = aposteriori )
     print ( f"nll_min (posteriori)={nll_min_post:.3f}" )
-    nll_minA_post = obj.nll_min ( evaluationType = aposteriori, asimov=0 )
-    print ( f"nll_minA (posteriori)={nll_minA_post:.3f}" )
+    # nll_minA_post = obj.nll_min ( evaluationType = aposteriori, asimov=0 )
+    # print ( f"nll_minA (posteriori)={nll_minA_post:.3f}" )
     nll_posteriori_min = d_posteriori_min["nll_min"]
     mu_hat_posteriori = d_posteriori_min["muhat"]
     print ( f"nll_posteriori_min={nll_posteriori_min:.3f} muhat {mu_hat_posteriori:.3f}" )
