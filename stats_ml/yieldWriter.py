@@ -43,6 +43,7 @@ def writeOutYields ( theoryPred : TheoryPrediction,
     Dict["most_sensitive"]=ms.name
     Dict["ul_min"]=ms.getUpperLimitOnMu()
     mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
+    from smodels.statistics.basicStats import observed
     for mu in mus:
         smu = str(int(mu)) if mu==int(mu) else f"{mu:.2f}" 
         Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu, writeYields = False )
