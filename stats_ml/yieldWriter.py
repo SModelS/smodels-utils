@@ -41,6 +41,7 @@ def writeOutYields ( theoryPred : TheoryPrediction,
     dicts = []
     Dict = { "anaId": gI.id, "masses": masses,
              "txnames":list( set(map(str,theoryPred.txnames))) }
+    Dict["mus"]=mus
     ms = theoryPred.statsComputer.getMostSensitiveModel()
     Dict["most_sensitive"]=ms.name
     Dict["ul(mu)"]=ms.getUpperLimitOnMu()
