@@ -689,21 +689,21 @@ def prettyProduction(txname : str,latex : bool =True, protons : bool =True ) -> 
     prodString = motherDict[txname].lstrip().rstrip().split()
     #Check if a single mother was given. If so, duplicate it
     prodString = " ".join ( prodString )
-    """
-    if len(prodString) == 1:
-        pass
-        # prodString = prodString[0]+" "+prodString[0]
-    elif len(prodString) == 2:
-        prodString = prodString[0]+" "+prodString[1]
-    else:
-        logging.error(f"More than two mothers given: {motherDict[txname]}" )
-        return None
-    """
 
     if protons:
         prodString = f"pp --> {prodString}"
     if latex:
         prodString = latexfy(prodString)
+
+    if prodString is not None and latex:
+        prodString = prodString.replace ( "ZPrime", "Z'" )
+        prodString = prodString.replace ( "H0", "H^0" )
+        prodString = "$" + prodString.replace("#","\\" ) + "$"
+
+    if prodString is None:
+        logging.warn( f"production string for {txname} not defined" )
+        prodString = f"?{txname}?"
+
     return prodString.lstrip().rstrip()
 
 def prettyDecay(txname : str ,latex : bool = True ) -> str:
@@ -732,6 +732,16 @@ def prettyDecay(txname : str ,latex : bool = True ) -> str:
     decayString = decayDict[txname]
     if latex:
         decayString = latexfy(decayString)
+
+    if decayString is not None and latex:
+        decayString = decayString.replace ( "ZPrime", "Z'" )
+        decayString = decayString.replace ( "H0", "H^0" )
+        decayString = "$" + decayString.replace("#","\\" ) + "$"
+
+    if decayString is None:
+        logging.warn( f"decay string for {txname} not defined" )
+        decayString = f"?{txname}?"
+
     return decayString.lstrip().rstrip()
 
 def rootToLatex ( string : str, outputtype : str = "latex",
@@ -781,22 +791,9 @@ def prettyTxname(txname : str, protons : bool =True,
 
     prodString = prettyProduction(txname,latex,protons)
     decayString = prettyDecay(txname,latex)
-    if prodString is None:
-        logging.warn( f"production string for {txname} not defined" )
-        prodString = f"?{txname}?"
-    if decayString is None:
-        logging.warn( f"decay string for {txname} not defined" )
-        decayString = f"?{txname}?"
-    if outputtype == "latex":
-        prodString = "$" + prodString.replace("#","\\" ) + "$"
-        decayString = "$" + decayString.replace("#","\\" ) + "$"
 
-    if prodString is not None:
-        prodString = prodString.replace ( "ZPrime", "Z'" )
-        prodString = prodString.replace ( "H0", "H^0" )
-    if decayString is not None:
-        decayString = decayString.replace ( "ZPrime", "Z'" )
-        decayString = decayString.replace ( "H0", "H^0" )
+    print ( f"@@0 prettyTxname {txname} {latex} {protons}" )
+    print ( f"@@1 {prodString} :: {decayString}" )
 
     if prodString and decayString:
         return f"{prodString}, {decayString}"

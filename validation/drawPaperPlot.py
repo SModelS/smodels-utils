@@ -13,7 +13,8 @@ import json, tokenize, sys
 import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
+from smodels_utils.helper.prettyDescriptions import prettyTxname, \
+         prettyAxesV2, prettyDecay
 from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
@@ -454,12 +455,16 @@ class PaperPlot:
 
     def getPrettyProcessName( self, txname):
         # remove pp->intermediate state
+        pName = prettyDecay(txname, latex = True )
+        """
         pName = prettyTxname(txname, outputtype="latex" ).split(',')
         # print("pnamr ", pName)
         if len(pName)>2:
             pName = ','.join(pName[1:])
         else:
             pName = pName[1]
+        """
+        print ( f"@@ pretty name for {txname}: {pName}" )
         return pName
 
     def getPrettyAxisLabels( self, label):
