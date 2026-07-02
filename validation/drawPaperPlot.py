@@ -606,8 +606,8 @@ class PaperPlot:
         x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1, "error_band" )
         x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2, "error_band" )
         if self.specific_options["sort_segments"]:
-            x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1, "error_band" )
-            x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2, "error_band" )
+            x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
+            x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
         if color == None:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
