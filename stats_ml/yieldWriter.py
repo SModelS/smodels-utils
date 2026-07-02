@@ -15,13 +15,15 @@ from typing import Optional
 from smodels.matching.theoryPrediction import TheoryPrediction
 
 def writeOutYields ( theoryPred : TheoryPrediction,
-        filename : Optional[os.PathLike] = None ):
+        filename : Optional[os.PathLike] = None,
+        mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ] ):
     """ a function for debugging only: writes the actual NN input
     into a file called filename
 
     :param theoryPred: The theory prediction to write yields out for
     :param filename: output file name, if None, then it is
     yields_<massparams>.json
+    :param mus: list of mu_values to compute quantities for
     """
 
     from smodels.base.physicsUnits import GeV
@@ -41,13 +43,13 @@ def writeOutYields ( theoryPred : TheoryPrediction,
              "txnames":list( set(map(str,theoryPred.txnames))) }
     ms = theoryPred.statsComputer.getMostSensitiveModel()
     Dict["most_sensitive"]=ms.name
-    Dict["ul_min"]=ms.getUpperLimitOnMu()
-    mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
+    Dict["ul(mu)"]=ms.getUpperLimitOnMu()
+    # mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
     from smodels.statistics.basicStats import observed
     for mu in mus:
-        smu = str(int(mu)) if mu==int(mu) else f"{mu:.2f}" 
+        smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
         Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu, writeYields = False )
-        Dict["nllA_mu{smu}"]=theoryPred.nll ( mu=mu, 
+        Dict[f"nllA_mu{smu}"]=theoryPred.nll ( mu=mu, 
                              evaluationType = observed, asimov = 0 )
     dicts.append ( Dict )
 
@@ -61,19 +63,16 @@ def writeOutYields ( theoryPred : TheoryPrediction,
     for computer in theoryPred.statsComputer.subComputers:
         if not hasattr ( computer, "totalYieldsFromSignals" ):
             continue
+        if computer.name != ms.name:
+            ## only the one used
+            continue
         Dict = {}
-        # m = computer.data
-        yields_0 = computer.totalYieldsFromSignals( 0. )
-        yields_1 = computer.totalYieldsFromSignals( 1. )
-        yields_5 = computer.totalYieldsFromSignals( 5. )
-        # scaled_yields = computer.scaleYields ( yields, m )
-        # nn_input = scaled_yields.tolist()
         Dict["model"]=computer.name
         Dict["nsignals"]=removeZeros ( computer.nsignals )
-        Dict["yields_mu0"]= yields_0
-        Dict["yields_mu1"]= yields_1
-        Dict["yields_mu5"]= yields_5
-        # Dict["nn_input"]=nn_input
+        for mu in mus:
+            smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
+            yields = computer.totalYieldsFromSignals( mu )
+            Dict[ f"yields_mu{smu}" ]= yields
         dicts.append ( Dict )
 
     with open ( filename, "wt" ) as f:
