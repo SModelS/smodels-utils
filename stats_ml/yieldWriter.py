@@ -22,21 +22,20 @@ def writeOutYields ( theoryPred : TheoryPrediction,
 
     :param theoryPred: The theory prediction to write yields out for
     :param filename: output file name, if None, then it is
-    yields_<massparams>.json
+    yields/yields_<anaId>_<massparams>.json
     :param mus: list of mu_values to compute quantities for
     """
-
     from smodels.base.physicsUnits import GeV
     masses = []
     for node in theoryPred.smsList[0].nodes:
         if node.particle.isSM:
             continue
         masses.append ( float(node.particle.mass.asNumber(GeV)) )
-    if filename == None:
-        filename = f"yields_{'_'.join(map(str,map(int,masses)))}.json"
     gI = theoryPred.dataset.globalInfo
-    if "-orig" in gI.id:
-        return
+    if filename == None:
+        filename = f"yields/yields_{gI.id}_{'_'.join(map(str,map(int,masses)))}.json"
+    from pathlib import Path
+    Path("yields/").mkdir(exist_ok=True)
     print ( f"[nnInterface] writing yields for {gI.id} to {filename}" )
     dicts = []
     Dict = { "anaId": gI.id, "masses": masses,
