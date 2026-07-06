@@ -14,16 +14,16 @@ import os
 from typing import Optional
 from smodels.matching.theoryPrediction import TheoryPrediction
 
-def writeOutYields ( theoryPred : TheoryPrediction,
-        filename : Optional[os.PathLike] = None,
-        mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ] ):
+def yieldsToDicts ( theoryPred : TheoryPrediction,
+        mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ] ) -> list[dict]:
     """ a function for debugging only: writes the actual NN input
     into a file called filename
 
     :param theoryPred: The theory prediction to write yields out for
-    :param filename: output file name, if None, then it is
     yields/yields_<anaId>_<massparams>.json
     :param mus: list of mu_values to compute quantities for
+
+    :returns: list of all dictionaries
     """
     from smodels.base.physicsUnits import GeV
     masses = []
@@ -32,11 +32,9 @@ def writeOutYields ( theoryPred : TheoryPrediction,
             continue
         masses.append ( float(node.particle.mass.asNumber(GeV)) )
     gI = theoryPred.dataset.globalInfo
-    if filename == None:
-        filename = f"yields/yields_{gI.id}_{'_'.join(map(str,map(int,masses)))}.json"
+
     from pathlib import Path
     Path("yields/").mkdir(exist_ok=True)
-    print ( f"[nnInterface] writing yields for {gI.id} to {filename}" )
     dicts = []
     Dict = { "anaId": gI.id, "masses": masses,
              "txnames":list( set(map(str,theoryPred.txnames))) }
@@ -48,7 +46,7 @@ def writeOutYields ( theoryPred : TheoryPrediction,
     from smodels.statistics.basicStats import observed
     for mu in mus:
         smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
-        Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu, writeYields = False )
+        Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu )
         Dict[f"nllA_mu{smu}"]=theoryPred.nll ( mu=mu, 
                              evaluationType = observed, asimov = 0 )
     dicts.append ( Dict )
@@ -75,8 +73,4 @@ def writeOutYields ( theoryPred : TheoryPrediction,
             Dict[ f"yields_mu{smu}" ]= yields
         dicts.append ( Dict )
 
-    with open ( filename, "wt" ) as f:
-        import json
-        d = json.dumps ( dicts, indent=4 )
-        f.write ( d )
-        f.close()
+    return dicts

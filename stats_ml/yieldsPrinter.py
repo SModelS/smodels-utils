@@ -12,83 +12,58 @@
 
 import os
 from typing import Optional
-from smodels.matching.theoryPrediction import TheoryPrediction
+from smodels.matching.theoryPrediction import TheoryPredictionList
 from smodels.tools.printers.basicPrinter import BasicPrinter
+from smodels.base.smodelsLogging import logger
+
+import sys
+sys.path.insert(0,".")
+from .yieldsWriter import yieldsToDicts
 
 class YieldsPrinter(BasicPrinter):
     """ Printer class exclusively to print signal yields 
     into a yield*.json file """
-	  def __init__( self, output : str= 'yields.json', 
+    def __init__( self, output : str = 'yields.json', 
                   filename : Optional[os.PathLiker]=None,
                    outputFormat : str = 'version3' ):
         BasicPrinter.__init__(self, output, filename, outputFormat)
-        self.name = "json"
+        self.toPrint = []
 
-def writeOutYields ( theoryPred : TheoryPrediction,
-        filename : Optional[os.PathLike] = None,
-        mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ] ):
-    """ this is the function that writes the yields into 
-    the json file. Can also be used standalone.
-    a function for debugging only: writes the actual NN input
-    into a file called filename
+    def setOutPutFile( self, filename : os.PathLike, overwrite : bool = True, 
+                       silent : bool = False ):
+        """
+        Set the basename for the text printer. The output filename will be
 
-    :param theoryPred: The theory prediction to write yields out for
-    :param filename: output file name, if None, then it is
-    yields/yields_<anaId>_<massparams>.json
-    :param mus: list of mu_values to compute quantities for
-    """
-    from smodels.base.physicsUnits import GeV
-    masses = []
-    for node in theoryPred.smsList[0].nodes:
-        if node.particle.isSM:
-            continue
-        masses.append ( float(node.particle.mass.asNumber(GeV)) )
-    gI = theoryPred.dataset.globalInfo
-    if filename == None:
-        filename = f"yields/yields_{gI.id}_{'_'.join(map(str,map(int,masses)))}.json"
-    from pathlib import Path
-    Path("yields/").mkdir(exist_ok=True)
-    print ( f"[nnInterface] writing yields for {gI.id} to {filename}" )
-    dicts = []
-    Dict = { "anaId": gI.id, "masses": masses,
-             "txnames":list( set(map(str,theoryPred.txnames))) }
-    Dict["mus"]=mus
-    ms = theoryPred.statsComputer.getMostSensitiveModel()
-    Dict["most_sensitive"]=ms.name
-    Dict["ul(mu)"]=ms.getUpperLimitOnMu()
-    # mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
-    from smodels.statistics.basicStats import observed
-    for mu in mus:
-        smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
-        Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu, writeYields = False )
-        Dict[f"nllA_mu{smu}"]=theoryPred.nll ( mu=mu, 
-                             evaluationType = observed, asimov = 0 )
-    dicts.append ( Dict )
+        filename.py.
+        :param filename: Base filename
+        :param overwrite: If True and the file already exists, it will be removed.
+        :param silent: dont comment removing old files
+        """
 
-    def removeZeros ( nsig : dict ) -> dict:
-        newD = {}
-        for k,v in nsig.items():
-            if v > 0.:
-                newD[k]=v
-        return newD
+        filename = filename.replace(".slha","")
+        self.filename = f'{filename}.json'
+        if overwrite and os.path.isfile(self.filename):
+            if not silent:
+                logger.warning( f"Removing old output file {self.filename}" )
+            os.remove(self.filename)
+        logger.info ( f"we set output file to {self.filename}" )
 
-    for computer in theoryPred.statsComputer.subComputers:
-        if not hasattr ( computer, "totalYieldsFromSignals" ):
-            continue
-        if computer.name != ms.name:
-            ## only the one used
-            continue
-        Dict = {}
-        Dict["model"]=computer.name
-        Dict["nsignals"]=removeZeros ( computer.nsignals )
-        for mu in mus:
-            smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
-            yields = computer.totalYieldsFromSignals( mu )
-            Dict[ f"yields_mu{smu}" ]= yields
-        dicts.append ( Dict )
+    def flush ( self ):
+        logger.info ( f"writing yields to {self.filename}" )
+        for tp in self.toPrint:
+            dicts = yieldsToDicts ( tp )
+        with open ( self.filename, "wt" ) as f:
+            import json
+            d = json.dumps ( dicts, indent=4 )
+            f.write ( d )
+            f.close()
 
-    with open ( filename, "wt" ) as f:
-        import json
-        d = json.dumps ( dicts, indent=4 )
-        f.write ( d )
-        f.close()
+    def addObj(self,obj):
+        if type(obj) != TheoryPredictionList:
+            return
+        logger.info ( f"adding {type(obj).__name__}" )
+        for tp in obj:
+            self.toPrint.append( tp )
+
+from smodels.tools.printers.printerRegistry import PrinterRegistry
+PrinterRegistry.register ( YieldsPrinter, "yields" )
