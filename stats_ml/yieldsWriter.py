@@ -2,17 +2,28 @@
 
 """
 .. module:: yieldWriter
-   :synopsis: this is a module with just a single function
-   that writes the yields into a json file. For debugging
-   ML models.
+   :synopsis: this is a module meant to get yields,
+   in dicts. For debugging ML models.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
 
-import os
-from typing import Optional
 from smodels.matching.theoryPrediction import TheoryPrediction
+
+def generalInfo ( theoryPred : TheoryPrediction ) -> dict:
+    """ this is the general info block, extracts  masses, txnames
+    :returns: dictionary with particle masses, and txnames
+    """
+    from smodels.base.physicsUnits import GeV
+    masses = []
+    for node in theoryPred.smsList[0].nodes:
+        if node.particle.isSM:
+            continue
+        masses.append ( float(node.particle.mass.asNumber(GeV)) )
+    Dict = { "masses": masses,
+             "txnames":list( set(map(str,theoryPred.txnames))) }
+    return Dict
 
 def yieldsToDicts ( theoryPred : TheoryPrediction,
         mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ] ) -> list[dict]:
@@ -36,18 +47,18 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
     from pathlib import Path
     Path("yields/").mkdir(exist_ok=True)
     dicts = []
-    Dict = { "anaId": gI.id, "masses": masses,
-             "txnames":list( set(map(str,theoryPred.txnames))) }
-    Dict["mus"]=mus
+    Dict = { "anaId": gI.id } # , "masses": masses,
+    # "txnames":list( set(map(str,theoryPred.txnames))) }
+    # Dict["mus"]=mus
     ms = theoryPred.statsComputer.getMostSensitiveModel()
     Dict["most_sensitive"]=ms.name
     Dict["ul(mu)"]=ms.getUpperLimitOnMu()
     # mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
     from smodels.statistics.basicStats import observed
     for mu in mus:
-        smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
+        smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}"
         Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu )
-        Dict[f"nllA_mu{smu}"]=theoryPred.nll ( mu=mu, 
+        Dict[f"nllA_mu{smu}"]=theoryPred.nll ( mu=mu,
                              evaluationType = observed, asimov = 0 )
     dicts.append ( Dict )
 
@@ -68,7 +79,7 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
         Dict["model"]=computer.name
         Dict["nsignals"]=removeZeros ( computer.nsignals )
         for mu in mus:
-            smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}" 
+            smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}"
             yields = computer.totalYieldsFromSignals( mu )
             Dict[ f"yields_mu{smu}" ]= yields
         dicts.append ( Dict )
