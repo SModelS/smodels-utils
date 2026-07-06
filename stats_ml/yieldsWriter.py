@@ -16,13 +16,16 @@ def generalInfo ( theoryPred : TheoryPrediction ) -> dict:
     :returns: dictionary with particle masses, and txnames
     """
     from smodels.base.physicsUnits import GeV
-    masses = []
+    masses = {}
     for node in theoryPred.smsList[0].nodes:
         if node.particle.isSM:
             continue
-        masses.append ( float(node.particle.mass.asNumber(GeV)) )
+        mass = float(node.particle.mass.asNumber(GeV))
+        name = node.particle.label
+        name = name.replace("+","")
+        masses[name] = mass
     Dict = { "masses": masses,
-             "txnames":list( set(map(str,theoryPred.txnames))) }
+             "txnames": list( set(map(str,theoryPred.txnames))) }
     return Dict
 
 def yieldsToDicts ( theoryPred : TheoryPrediction,
