@@ -18,7 +18,7 @@ from smodels.base.smodelsLogging import logger
 
 import sys
 sys.path.insert(0,".")
-from .yieldsWriter import yieldsToDicts
+from .yieldsWriter import yieldsToDicts, generalInfo
 
 class YieldsPrinter(BasicPrinter):
     """ Printer class exclusively to print signal yields 
@@ -50,11 +50,22 @@ class YieldsPrinter(BasicPrinter):
 
     def flush ( self ):
         logger.info ( f"writing yields to {self.filename}" )
+        import json, copy
+        all_dicts = {}
+        oldGInfo = None
+        mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
         for tp in self.toPrint:
+            gInfo = generalInfo ( tp )
+            gInfo["mus"] = mus
+            if oldGInfo == None:
+                all_dicts["general_info"] = gInfo
+            elif oldGInfo != gInfo:
+                logger.error ( f"general info changed: {gInfo} != {oldGInfo}" )
             dicts = yieldsToDicts ( tp )
+            all_dicts[tp.dataset.globalInfo.id] = dicts
+            oldGInfo = copy.deepcopy ( gInfo )
         with open ( self.filename, "wt" ) as f:
-            import json
-            d = json.dumps ( dicts, indent=4 )
+            d = json.dumps ( all_dicts, indent=4 )
             f.write ( d )
             f.close()
 
@@ -63,6 +74,7 @@ class YieldsPrinter(BasicPrinter):
             return
         logger.info ( f"adding {type(obj).__name__}" )
         for tp in obj:
+            logger.info ( f"adding {tp.dataset.globalInfo.id}" )
             self.toPrint.append( tp )
 
 from smodels.tools.printers.printerRegistry import PrinterRegistry
