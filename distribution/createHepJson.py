@@ -213,9 +213,20 @@ class HepJsonCreator:
         coll = getCollaboration ( gI.id )
         dses = er.datasets
         resultType = "EM"
-        SRcomb = er.typeOfStatsModel ( specifySL = True )
+        allSRcombs = er.typeOfStatsModel ( regionSetName = None, specifySL = True )
+        SRcomb = ", ".join ( allSRcombs ) if allSRcombs != None else None
         """
         SRcomb = None
+        if allSRcombs != None:
+            SRcomb = ", ".join ( allSRcombs )
+            if "onnx" in allSRcombs:
+                SRcomb = "onnx"
+            if "pyhf" in allSRcombs:
+                SRcomb = "pyhf"
+            if "slv2" in allSRcombs:
+                SRcomb = "SLv2"
+            if "slv1" in allSRcombs:
+                SRcomb = "SLv1"
         if hasattr ( gI, "covariance" ):
             SRcomb = "SLv1"
         if hasattr ( gI, "jsonFiles" ):
@@ -380,7 +391,10 @@ class HepJsonCreator:
 
         for anaId,entry in self.entries.items():
             if not "inspire" in entry:
-                print ( f"[createHepJson] {RED}no inspire id for {entry['ana_id']}: skip!{RESET}" )
+                col = RED
+                if "PAS" in anaId or "CONF" in anaId:
+                    col = YELLOW
+                print ( f"[createHepJson] {col}no inspire id for {anaId}: skip!{RESET}" )
                 continue
             if not first:
                 self.f.write ( ',\n' )
