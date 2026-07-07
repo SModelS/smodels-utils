@@ -127,4 +127,4 @@ if __name__ == "__main__":
     if args.point != None:
         points = getPoints()
         prepare()
-        runForOnePoint ( points[args.point] )
+        runOnePoint ( points[args.point] )
