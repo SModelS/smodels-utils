@@ -709,7 +709,7 @@ def run ( expResList : list, options : dict,
         ## FIXME here we could remove the mlModels entry
         if options["removeMLModels"] and \
                 hasattr ( expRes.globalInfo, "statModels" ):
-            logger.info ( f"{RED}removing mlModels as requested!{RESET}" )
+            logger.info ( f"{RED}removing statModels as requested!{RESET}" )
             newModels = []
             ### FIXME this is wrong!!
             for setName,model_types in expRes.globalInfo.statModels.items():
