@@ -10,7 +10,7 @@
 
 """
 
-import os
+import os, time
 from typing import Optional
 from smodels.matching.theoryPrediction import TheoryPredictionList
 from smodels.tools.printers.basicPrinter import BasicPrinter
@@ -28,6 +28,7 @@ class YieldsPrinter(BasicPrinter):
                   outputFormat : str = 'version3' ):
         BasicPrinter.__init__(self, output, filename, outputFormat)
         self.toPrint = []
+        self.t0 = time.time()
 
     def setOutPutFile( self, filename : os.PathLike, overwrite : bool = True, 
                        silent : bool = False ):
@@ -60,6 +61,7 @@ class YieldsPrinter(BasicPrinter):
         for tp in self.toPrint:
             gInfo = generalInfo ( tp )
             gInfo["mus"] = mus
+            gInfo["dt[h]"] = (time.time() - self.t0)/60./60.
             if oldGInfo == None:
                 all_dicts["general_info"] = gInfo
             elif oldGInfo != gInfo:
