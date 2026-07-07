@@ -11,7 +11,7 @@
 import sys, subprocess, os, time, argparse, glob, shutil 
 from distributionHelpers import clearModels, comment, runCmd, cloneDatabase, \
          clearGlobalInfos, createDatabase, removeNonValidated, \
-         moveNonAggregated, clearOnnxs
+         moveNonAggregated
 from smodels.experiment.databaseObj import Database
 from typing import Union
 sys.path.insert(0,"../")

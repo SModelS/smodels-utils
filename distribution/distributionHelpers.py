@@ -13,14 +13,16 @@ from pathlib import Path
 from typing import Union
 from smodels_utils.helper.terminalcolors import *
 
-def comment( text : str, urgency : str = "info" ):
+def comment( text : str, urgency : str = "warn" ):
     """ comment on what you are doing """
     urgency = urgency.lower()
-    col=YELLOW
+    col=""
     pre=""
     if "err" in urgency:
         pre="ERROR: "
         col=RED
+    if "warn" in urgency:
+        col=YELLOW
     if not "deb" in urgency:
         print( f"{col}[{time.asctime()}] {pre}{text} {RESET}" )
     f=open("./create.log","at")
@@ -106,8 +108,9 @@ def clearModels ( path : str, verbose : bool ):
             D = eval(txt)
         except Exception as e:
             D = {}
-        for k in D.keys():
-            usedModels.add ( k )
+        for k, models in D.items():
+            for model in models:
+                usedModels.add ( model[1] )
     models = glob.glob ( f"{path}/*.json" )
     models += glob.glob ( f"{path}/*.onnx" )
     ctRemoved = 0
@@ -123,53 +126,7 @@ def clearModels ( path : str, verbose : bool ):
             ctRemoved += 1
             os.unlink ( model )
     if ctRemoved>0:
-        comment ( f"removed {ctRemoved} model files in {rpath}" )
-
-def clearOnnxs ( path : str, verbose : bool ):
-    """ clear the onnxs in the given path. look at globalInfo.txt
-        which onnxs get used. ditch the rest. """
-    gI = f"{path}/globalInfo.txt"
-    rpath = path[path.rfind("/")+1:]
-    if not os.path.exists ( gI ):
-        return
-    usedOnnxs = set()
-    f = open ( gI, "rt" )
-    lines = f.readlines()
-    f.close()
-    from smodels.experiment.expAuxiliaryFuncs import concatenateLines
-    lines = concatenateLines ( lines )
-    from icecream import ic
-    for i,line in enumerate(lines):
-        p1 = line.find("#")
-        if p1 >= 0:
-            line = line[:p1]
-        line = line.strip()
-        if line == "":
-            continue
-        if not "statModels:" in line:
-            continue
-        txt = line.replace("statModels:","")
-        try:
-            D = eval(txt)
-        except Exception as e:
-            D = {}
-        for k in D.keys():
-            usedOnnxs.add ( k )
-    onnxs = glob.glob ( f"{path}/*.onnx" )
-    ctRemoved = 0
-    for js in onnxs:
-        fname = os.path.basename ( js )
-        remove = fname not in usedOnnxs
-        if remove:
-            if verbose:
-                ko = f"keeping only {','.join(usedOnnxs)}"
-                if len(usedOnnxs)==0:
-                    ko = "no pyhf models used"
-                comment ( f"removing {fname} in {rpath}: {ko}" )
-            ctRemoved += 1
-            os.unlink ( js )
-    if ctRemoved>0:
-        comment ( f"removed {ctRemoved} onnx files in {rpath}" )
+        comment ( f"removed {ctRemoved} model files in {rpath}", urgency="info" )
 
 def hasNonValidated ( ers ):
     """ FIXME remove when not anymore used! """
