@@ -107,7 +107,7 @@ def clearModels ( path : str, verbose : bool ):
         except Exception as e:
             D = {}
         for k in D.keys():
-            usedJsons.add ( k )
+            usedModels.add ( k )
     models = glob.glob ( f"{path}/*.json" )
     models += glob.glob ( f"{path}/*.onnx" )
     ctRemoved = 0
@@ -121,7 +121,7 @@ def clearModels ( path : str, verbose : bool ):
                     ko = "no pyhf models used"
                 comment ( f"removing {fname} in {rpath}: {ko}" )
             ctRemoved += 1
-            os.unlink ( js )
+            os.unlink ( model )
     if ctRemoved>0:
         comment ( f"removed {ctRemoved} model files in {rpath}" )
 
@@ -146,9 +146,9 @@ def clearOnnxs ( path : str, verbose : bool ):
         line = line.strip()
         if line == "":
             continue
-        if not "mlModels:" in line:
+        if not "statModels:" in line:
             continue
-        txt = line.replace("mlModels:","")
+        txt = line.replace("statModels:","")
         try:
             D = eval(txt)
         except Exception as e:
