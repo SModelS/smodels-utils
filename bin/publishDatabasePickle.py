@@ -3,12 +3,11 @@
 """
 .. module:: publishDatabasePickle
    :synposis: makes database pickle files publically available. FIXME this
-              script should be split in two: one script that prepares all pickles
-              (official, fastlim, nonaggregated, superseded, full_llhds),
-              another script that uploads them and writes the jsons
+   script should be split in two: one script that prepares all pickles
+   (official, fastlim, nonaggregated, superseded, full_llhds),
+   another script that uploads them and writes the jsons
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
-
 """
 
 from __future__ import print_function
@@ -59,10 +58,16 @@ def _getSHA1 ( filename : os.PathLike ) -> str:
 
 eosdir = "/eos/project/s/smodels/www/database/"
 
-def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
+def createInfoFile ( infofile : str, pclfilename : str ):
     """ create the file with the python dictionary that contains all
     meta info about the pickle file, e.g.:
-    {"lastchanged": 1746624990.8478498, "mtime": "Wed May  7 15:36:30 2025", "size": 90289590, "url": "https://smodels.web.cern.ch/smodels/database/unittest310.pcl", "sha1": "5b7d238b401aab442e7944c6afdbb31e9b4c444c"}
+    {
+        "lastchanged": 1746624990.8478498,
+        "mtime": "Wed May  7 15:36:30 2025",
+        "size": 90289590,
+        "url": "https://smodels.web.cern.ch/smodels/database/unittest310.pcl",
+        "sha1": "5b7d238b401aab442e7944c6afdbb31e9b4c444c"
+    }
     :param infofile: path to info file containing above python dictionary
     :param pclfilename: path to pickle file
 	  """
@@ -73,9 +78,10 @@ def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
     sha = _getSHA1 ( pclfilename )
     lastchanged = time.time()
     mtime = time.asctime(time.localtime(lastchanged))
-    Dict = { "lastchanged": lastchanged, "mtime": mtime, "size": os.stat(pclfilename).st_size,
-             "url": f"https://smodels.web.cern.ch/smodels/database/{pclfilename}",
-             "sha1": sha }
+    baseurl = "https://smodels.web.cern.ch/smodels/database"
+    Dict = { "lastchanged": lastchanged, "mtime": mtime,
+             "size": os.stat(pclfilename).st_size,
+             "url": f"{baseurl}/{pclfilename}", "sha1": sha }
     from ptools.helpers import py_dumps
     ds = py_dumps ( Dict, double_quotes = True )
     f.write ( ds+ "\n" )
@@ -101,22 +107,50 @@ def checkNonValidated( database ) -> Tuple[bool,Set]:
     return has_nonValidated, nonValidateds
 
 def main():
-    ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
-    ap.add_argument('-f', '--filename', help='name of pickle file [database.pcl]', default="database.pcl" )
-    ap.add_argument( '--db_name', help='give an explicit name for this database [auto]', default=None )
-    ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
-    ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
-    ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
-    ap.add_argument('-t', '--txnamevalues', help='when building, add txname values', action="store_true" )
-    ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
-    ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
-    ap.add_argument('-a', '--remove_nonaggregated', help='build pickle file, remove nonaggregated results', action="store_true" )
-    ap.add_argument( '--full_llhds', help='create also full llhds pickle file', action="store_true" )
-    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
-    ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
-    ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
-    ap.add_argument ( '-p', '--prepare_commands', help='prepare the commands file', action='store_true' )
-    ap.add_argument ( '-F', '--finalize_commands', help='finalize the commands file', action='store_true' )
+    descr="makes a database pickle file publically available (creating via SModelS)"
+    ap = argparse.ArgumentParser( description=descr )
+    ap.add_argument( '-f', '--filename',
+        help='name of pickle file [database.pcl]',
+        default="database.pcl" )
+    ap.add_argument( '--db_name',
+        help='give an explicit name for this database [auto]', default=None )
+    ap.add_argument('-d', '--dry_run',
+        help='dont copy to final destination',
+        action="store_true" )
+    ap.add_argument('-l', '--latest',
+        help='define as latest database',
+        action="store_true" )
+    ap.add_argument('-b', '--build',
+        help='build pickle file, assume filename is directory name',
+        action="store_true" )
+    ap.add_argument('-t', '--txnamevalues',
+        help='when building, add txname values',
+        action="store_true" )
+    ap.add_argument('-r', '--remove_fastlim',
+        help='build pickle file, remove fastlim results',
+        action="store_true" )
+    ap.add_argument('-s', '--remove_superseded',
+        help='build pickle file, remove superseded results',
+        action="store_true" )
+    ap.add_argument('-a', '--remove_nonaggregated',
+        help='build pickle file, remove nonaggregated results',
+        action="store_true" )
+    ap.add_argument( '--full_llhds',
+        help='create also full llhds pickle file',
+        action="store_true" )
+    ap.add_argument('-P', '--smodelsPath',
+        help='path to the SModelS folder [None]',
+        default=None )
+    ap.add_argument('-V', '--skipValidation',
+        help='if set will skip the check of validation flags [False]',
+        default=False, action="store_true" )
+    ap.add_argument ( '-i', '--ignore',
+        help='ignore the validation flags of analysis (i.e. also add non-validated results)',
+        action='store_true' )
+    ap.add_argument ( '-p', '--prepare_commands',
+        help='prepare the commands file', action='store_true' )
+    ap.add_argument ( '-F', '--finalize_commands',
+        help='finalize the commands file', action='store_true' )
     args = ap.parse_args()
     if args.prepare_commands:
         prepareCommandsFile()
@@ -343,7 +377,7 @@ def main():
         addToCommandsFile ( cmd2 )
         #o = CMD.getoutput ( f"echo '{cmd2}' | xsel -i" )
         if not reallyDo:
-            print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
+            print ( f"[publishDatabasePickle] NOT done (because commands.sh): {cmd2}" )
         print ( )
         # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
