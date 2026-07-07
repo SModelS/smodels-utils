@@ -780,8 +780,10 @@ class DatabaseCreator(list):
                 srSets[ setName ].append ( srname )
             statModels [ setName ].append ( jsonFile )
         if "mlModels" in jsonFiles:
-            print ( f"[databaseCreation] FIXME implement mlModels" )
+            raise Exception ( f"attr {attr} no longer supported!" )
+#            print ( f"[databaseCreation] FIXME implement mlModels" )
         if "jsonFiles_FullLikelihood" in jsonFiles:
+            raise Exception( f"jsonFiles_FullLikelihood" )
             for idx, (jsonFile, regions) in enumerate ( \
                     jsonFiles["jsonFiles_FullLikelihood"].items() ):
                 setName = setNames[idx]
@@ -856,14 +858,16 @@ class DatabaseCreator(list):
                     value=f"{value}*TeV"
                 if attr == "lumi" and type(value) in [ int, float ]:
                     value=f"{value}/fb"
-                if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ] \
-                        and type(value) == dict:
-                    jsonFiles[attr]=value
-                    value = self.format ( value ) # remove later
+                if attr in [ "jsonFiles", "jsonFiles_FullLikelihood" ]: # \
+# and type(value) == dict:
+                    raise Exception ( f"attr {attr} no longer supported!" )
+#                    jsonFiles[attr]=value
+#                    value = self.format ( value ) # remove later
                 if attr in [ "regionSets", "statModels", "regionMappings" ]:
                     value = self.format ( value ) # remove later
                 if attr in [ "mlModels" ]:
-                    jsonFiles[attr]=value
+                    raise Exception ( f"attr {attr} no longer supported!" )
+                    #jsonFiles[attr]=value
             if name == "dataInfo" and attr == "jsonfile":
                 # we copy the jsonfile and rewrite the value field
                 sourcefile = f"{self.base}/{value}"
@@ -875,6 +879,7 @@ class DatabaseCreator(list):
                 shutil.copy ( sourcefile, destfile )
                 value = "BkgOnly.json"
             if attr in [ "jsonFiles", "jsonFiles_FullLikelihood", "mlModels" ]:
+                raise Exception ( f"attr {attr} no longer supported!" )
                 if jsonsInNewFormat:
                     continue
             content = f'{content}{attr}{self.assignmentOperator}{value}\n'
