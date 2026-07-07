@@ -67,7 +67,7 @@ class HepJsonCreator:
                 if v in entry1[k]:
                     entry1[k]=v
             if str(v) != str(entry1[k]):
-                print ( f"[createHepJson] {YELLOW}entry '{k}' differs for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
+                print ( f"[createHepJson] {YELLOW}entry '{k}' differs between ul and em for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
                 print ( f"[createHepJson] {YELLOW}will use {entry1[k]}{RESET}" )
         entry1["merged"]=True
         return entry1
@@ -149,6 +149,8 @@ class HepJsonCreator:
         if "ATLAS" in gI.id and not url.endswith ( "index.php" ):
             if url.endswith ( "/") :
                 url += "index.php"
+            else:
+                url += "/index.php"
         r = requests.get ( url )
         txt = r.text
         ## first search for inspirehep.net/record links
@@ -289,7 +291,7 @@ class HepJsonCreator:
                 #entry["hepdata"]= hepdata
         if False:
             print ( f"[createHepJson] {entry}" )
-        if False and Id == "ATLAS-SUSY-2019-09": #  and resultType == "EM":
+        if False and Id == "ATLAS-SUSY-2019-04": #  and resultType == "EM":
             import sys, IPython; IPython.embed( colors = "neutral" )
         return entry
 
