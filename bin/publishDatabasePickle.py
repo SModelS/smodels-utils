@@ -76,7 +76,10 @@ def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
     Dict = { "lastchanged": lastchanged, "mtime": mtime, "size": os.stat(pclfilename).st_size,
              "url": f"https://smodels.web.cern.ch/smodels/database/{pclfilename}",
              "sha1": sha }
-    f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
+    from ptools.helpers import py_dumps
+    ds = py_dumps ( Dict, double_quotes = True )
+    f.write ( ds+ "\n" )
+    # f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
 
 def checkNonValidated( database ) -> Tuple[bool,Set]:
