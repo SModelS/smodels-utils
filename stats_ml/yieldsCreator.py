@@ -96,7 +96,7 @@ def prepare():
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
     Path ( "my_results/" ).mkdir(exist_ok=True)
 
-def getPoints()
+def getPoints():
     points = []
     points.append ( { "mN2": 180,  "mC1": 180, "mN1": 157 } )
     points.append ( { "mN2": 405,  "mC1": 405, "mN1": 360 } )

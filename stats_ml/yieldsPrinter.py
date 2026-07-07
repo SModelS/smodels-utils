@@ -24,7 +24,7 @@ class YieldsPrinter(BasicPrinter):
     """ Printer class exclusively to print signal yields 
     into a yield*.json file """
     def __init__( self, output : str = 'yields.json', 
-                  filename : Optional[os.PathLiker]=None,
+                  filename : Optional[os.PathLike]=None,
                   outputFormat : str = 'version3' ):
         BasicPrinter.__init__(self, output, filename, outputFormat)
         self.toPrint = []
