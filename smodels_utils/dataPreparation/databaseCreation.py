@@ -711,33 +711,44 @@ class DatabaseCreator(list):
             handle.write ( cc )
             handle.close()
 
-    def formatList ( self, v_list : List ) -> str:
+    def formatList ( self, v_list : List, backToLine : bool = True ) -> str:
         """ format the list
         """
-        ret = "[\n"
+        endOfLine, spaces = ("\n", "    ") if backToLine else ("", " ")
+        ret = "[" + endOfLine
         for idx,entry in enumerate(v_list):
-            comma = ",\n" if idx < len(v_list)-1 else ""
-            ret += f"  {entry}{comma}"
-        ret += "]"
-        # ret = f"{ret[:-2]}\n  }}"
+            ret += f"{spaces}{entry},{endOfLine}"
+        ret = f"{ret[:-2]}{endOfLine}]" if backToLine else f"{ret[:-1]}{endOfLine} ]"
         return ret
 
-    def format ( self, value : Union[List,Dict] ) -> str:
-        """ we have jsonFiles entry given as a dictionary.
-        format it nicely.
+    def format ( self, value : Union[List,Dict], backToLine : bool = True ) -> str:
+        """ we have some entry given as a dictionary.
+        Format it nicely.
+        :backToLine: if True, come back to line for each entry. If False, write everything on the same line.
         """
-        if type(value)==list:
-            return self.formatList ( value )
-        ret = "{\n"
-        for jsonFileName, SRs in value.items():
-            newline,spaces = (""," ") if len(SRs)==1 else ("\n","    ")
-            ret += f"  '{jsonFileName}': [{newline}"
-            for SR in SRs:
-                if type(SR)==str: 
-                    SR = f"'{SR}'"
-                ret += f"{spaces}{str(SR)},\n"
-            ret = f"{ret[:-2]}],\n"
-        ret = f"{ret[:-2]}\n  }}"
+        
+        endOfLine = "\n" if backToLine else ""
+        if type(value) == list:
+            return self.formatList ( value, backToLine )
+        ret = "{" + endOfLine
+        for Name, SRs in value.items():
+            newline,spaces = (f"{endOfLine}","    ")
+            if not backToLine:
+                spaces = " "
+            # If value is {"regionName": {'smodels': 'regionName', 'type: 'SR'}, ...}
+            if type(SRs) == dict:
+                ret += f"{spaces}'{Name}': {SRs},{endOfLine}"
+            # If value is {"jsonName": ['SR1', 'SR2', ...]}
+            elif type(SRs) == list:
+                ret += f"{spaces}'{Name}': [{newline}"
+                for SR in SRs:
+                    if type(SR)==str: 
+                        SR = f"'{SR}'"
+                    ret = ret + f"{spaces}{spaces}{str(SR)},{endOfLine}" if backToLine else ret + f"{spaces}{str(SR)},"
+                ret = f"{ret[:-2]}\n{spaces}],\n" if backToLine else f"{ret[:-1]} ],"
+            else:
+                logger.warning(f"Non-standard entry given to MetaInfoInput: {SRs} is not a dict nor a list!")
+        ret = f"{ret[:-2]}\n}}" if backToLine else f"{ret[:-1]} }}"
         return ret
 
     def addJsonsInNewFormat ( self, jsonFiles : dict, hasAttrs : set ) -> str:
@@ -864,7 +875,9 @@ class DatabaseCreator(list):
 #                    jsonFiles[attr]=value
 #                    value = self.format ( value ) # remove later
                 if attr in [ "regionSets", "statModels", "regionMappings" ]:
-                    value = self.format ( value ) # remove later
+                    backToLine = True
+                    if len(value) < 2: backToLine = False
+                    value = self.format ( value, backToLine ) # remove later
                 if attr in [ "mlModels" ]:
                     raise Exception ( f"attr {attr} no longer supported!" )
                     #jsonFiles[attr]=value
