@@ -307,7 +307,9 @@ def main():
         ssh = False
     print ( f"[publishDatabasePickle] writing {pclfilename}" )
     d.createBinaryFile ( pclfilename )
-    print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(pclfilename).st_size ) )
+    sze = sizeof_fmt ( os.stat(pclfilename).st_size )
+    sha1sum = _getSHA1 ( pclfilename )
+    print ( f"[publishDatabasePickle] database size {sze} sha1sum {sha1sum}" )
     createInfoFile ( infofile, pclfilename ) # , meta.mtime )
     if has_nonValidated:
         nvlist = ",".join(which)
