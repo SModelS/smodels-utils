@@ -3,6 +3,7 @@
 import shutil, os
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
+from pathlib import Path
 
 from stats_ml import yieldsPrinter # yieldsPrinter is self-registering
 
@@ -76,6 +77,7 @@ def addXSec ( filename ):
     from smodels.tools import xsecComputer
     print ( f"[yieldsCreator] computing xsecs" )
     xsecComputer.main ( xargs )
+    Path ( pythiaCard ).unlink ( missing_ok = True )
 
 def runOnePoint ( p ):
     print ( f"[yieldsCreator] run for {p['mN2']},{p['mC1']},{p['mN1']}" )
@@ -92,7 +94,6 @@ def runOnePoint ( p ):
         database, timeout, development, parameterFile )
 
 def prepare():
-    from pathlib import Path
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
     Path ( "my_results/" ).mkdir(exist_ok=True)
 
@@ -114,17 +115,57 @@ def runAll():
     for p in points:
         runOnePoint ( p )
 
+def submit ( mN2, mC1, mN1 ):
+    cmd = [ "sbatch", "-c", "2", "--time", "479" ]
+    cmd += [ "./yieldsCreator.py", "--mN1", f"{mN1}", "--mC1", f"{mC1}" ]
+    cmd += [ "--mN2", f"{mN2}" ]
+    import subprocess
+    a = subprocess.run ( cmd, stdout = subprocess.PIPE )
+    print ( str ( a.stdout.strip() ) )
+
+def runGrid():
+    for mN2 in range(100,401,50 ):
+        for mN1 in range ( 0, 401, 30 ):
+            if mN1 > mN2:
+                continue
+            if mN2 - mN1 > 80:
+                continue
+            submit ( mN2, mN2, mN1 )
+    for mN2 in range(100,351,50 ):
+        for mN1 in range ( 20, 300, 30 ):
+            mC1 = mN2 - mN1/2.
+            if mN1 > mC1:
+                continue
+            if mN2 - mN1 > 80.:
+                continue
+            submit ( mN2, mC1, mN1 )
+    import sys; sys.exit()
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(description="create points for joaquin" )
     ap.add_argument( '--all',
             help='do all points', action='store_true')
+    ap.add_argument( '--grid',
+            help='a grid', action='store_true')
     ap.add_argument( '--point',
             help='one specific point', type=int, default = None )
+    ap.add_argument( '--mN1',
+            help='mass of N1', type=float, default = None )
+    ap.add_argument( '--mC1',
+            help='mass of C1', type=float, default = None )
+    ap.add_argument( '--mN2',
+            help='mass of N2', type=float, default = None )
     args = ap.parse_args()
     if args.all:
         runAll()
+    if args.grid:
+        runGrid()
     if args.point != None:
         points = getPoints()
         prepare()
         runOnePoint ( points[args.point] )
+    if args.mN1 != None:
+        prepare()
+        point = { "mN1": args.mN1, "mN2": args.mN2, "mC1": args.mC1 }
+        runOnePoint ( point )
