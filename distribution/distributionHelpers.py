@@ -41,8 +41,8 @@ def runCmd ( cmd : str, prtMsg : bool = True ):
     # print('CMD=',cmd)
     o=(subprocess.check_output( cmd, shell=True )).decode("utf-8")
     if len(o)>0:
-        print(f"[distribution] {o:>.80}" )
-        f.write( f"{o!s}\n" )
+        print(f"{CYAN}[distribution] {o:>.80}" )
+        f.write( f"{o!s}{RESET}\n" )
     f.close()
     return str(o)
 
@@ -157,7 +157,7 @@ def removeNonValidated( db : Database, dirname : str = "database/" ):
                 for txn in dataset.txnameList:
 #                    if txn.validated in [ None, False ]:
                     if txn.validated in [ False ]:
-                        comment( f"{er}/{dataset}/{txn} is not validated. Delete it." )
+                        comment( f"{er}/{dataset}:: {txn} is not validated. Delete it." )
                         cmd=f"rm '{txn.path}'"
                         runCmd( cmd )
                     else:
