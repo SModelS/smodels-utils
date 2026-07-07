@@ -35,14 +35,16 @@ from validationHelpers import getAxisType, axisV2ToV3
 
 complaints = { "NoResultsFor": 0 }
 
-class ProgressHandler:
-    """ a namespace to handle everything around the progressbar """
+class ProgressBarHandler:
+    """ a class to handle everything around the progressbar """
     def __init__ ( self, pidfile : str = ".p.@@MOTHERPID@@.pid" ):
         self.motherpid = os.getpid()
         pidfile = pidfile.replace("@@MOTHERPID@@",f"{self.motherpid}")
         self.pidfile = pidfile
         import multiprocessing as mp
         mp.set_start_method("spawn", force=True)
+        # in every run, remove files older than 24 hours
+        self.removeStalePidFiles ( 24. )
 
     def readPid ( self ) -> int:
         """ read the progressbar pid from the pid file """
@@ -59,13 +61,27 @@ class ProgressHandler:
             pass
         return None
 
+    def removeStalePidFiles ( self, max_hours : float = 24 ):
+        """ all pid files that are older than 24 hours,
+        remove them.
+        """
+        files = glob.glob ( ".p.*.pid" )
+        t0 = time.time()
+        for fname in files:
+            with open ( fname, "rt" ) as f:
+                d = eval ( f.read() )
+            # dt in hours
+            dt = ( t0 - d["time"] ) / 60. / 60.
+            if dt > max_hours:
+                shutil.rmtree ( fname )
+
     def storePid ( self, pid : int ):
         """ store the pid of the progress bar in self.pidfile,
         so the other process can kill it. """
         cpid = self.readPid ( )
         if cpid != None:
             pass
-        #print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
+        #print ( f"[ProgressBarHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
         # self.killProgressBar( pidfile )
         f=open(self.pidfile,"wt")
         f.write ( "{" )
@@ -83,7 +99,7 @@ class ProgressHandler:
     def killProgressBar ( self ):
         """ kill the progressbar """
         pid = self.readPid()
-        print ( f"\n[ProgressHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
+        print ( f"\n[ProgressBarHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
         if pid == None:
             return
         import psutil
@@ -758,7 +774,7 @@ class ValidationObjsBase():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        phandler = ProgressHandler()
+        phandler = ProgressBarHandler()
         nmax = None
         if "limitPoints" in self.options and self.options["limitPoints"]>0:
             nmax = self.options["limitPoints"]
