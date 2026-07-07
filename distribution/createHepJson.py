@@ -145,7 +145,11 @@ class HepJsonCreator:
         if not hasattr ( gI, "url" ):
             return None
         import requests
-        r = requests.get ( gI.url )
+        url = gI.url
+        if "ATLAS" in gI.id and not url.endswith ( "index.php" ):
+            if url.endswith ( "/") :
+                url += "index.php"
+        r = requests.get ( url )
         txt = r.text
         ## first search for inspirehep.net/record links
         p1 = txt.find("://inspirehep.net/record/")
@@ -216,17 +220,6 @@ class HepJsonCreator:
         allSRcombs = er.typeOfStatsModel ( regionSetName = None, specifySL = True )
         SRcomb = ", ".join ( allSRcombs ) if allSRcombs != None else None
         """
-        SRcomb = None
-        if allSRcombs != None:
-            SRcomb = ", ".join ( allSRcombs )
-            if "onnx" in allSRcombs:
-                SRcomb = "onnx"
-            if "pyhf" in allSRcombs:
-                SRcomb = "pyhf"
-            if "slv2" in allSRcombs:
-                SRcomb = "SLv2"
-            if "slv1" in allSRcombs:
-                SRcomb = "SLv1"
         if hasattr ( gI, "covariance" ):
             SRcomb = "SLv1"
         if hasattr ( gI, "jsonFiles" ):
@@ -296,6 +289,8 @@ class HepJsonCreator:
                 #entry["hepdata"]= hepdata
         if False:
             print ( f"[createHepJson] {entry}" )
+        if False and Id == "ATLAS-SUSY-2019-09": #  and resultType == "EM":
+            import sys, IPython; IPython.embed( colors = "neutral" )
         return entry
 
     def sort ( self, expResList ):
