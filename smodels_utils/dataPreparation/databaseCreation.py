@@ -787,8 +787,8 @@ class DatabaseCreator(list):
                 setName = setNames[idx]
                 if not jsonFile in statModels [ setName ]:
                     statModels [ setName ].append ( jsonFile )
-        if not "srMappings" in hasAttrs:
-            ret += "srMappings: [\n"
+        if not "regionMappings" in hasAttrs:
+            ret += "regionMappings: [\n"
             for i,sr in enumerate(SRs):
                 msr = sr
                 comma = ",\n" if i < len(SRs)-1 else ""
@@ -860,7 +860,7 @@ class DatabaseCreator(list):
                         and type(value) == dict:
                     jsonFiles[attr]=value
                     value = self.format ( value ) # remove later
-                if attr in [ "srSets", "statModels", "srMappings" ]:
+                if attr in [ "regionSets", "statModels", "regionMappings" ]:
                     value = self.format ( value ) # remove later
                 if attr in [ "mlModels" ]:
                     jsonFiles[attr]=value

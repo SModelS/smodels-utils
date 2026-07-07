@@ -124,7 +124,7 @@ class Lister:
 
     def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
-        return B.typeOfStatsModel( srSetName = None, specifySL = True )
+        return B.typeOfStatsModel( regionSetName = None, specifySL = True )
 
     def header( self ):
         """

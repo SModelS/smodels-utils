@@ -690,8 +690,8 @@ class PaperPlot:
                         ver = "(nn)"
                         break
         g_dict = {}
-        if hasattr ( gI, "srMappings" ):
-            for label,region in gI.srMappings.items():
+        if hasattr ( gI, "regionMappings" ):
+            for label,region in gI.regionMappings.items():
                 sname = region["smodels"]
                 g_dict [ sname ] = region
         for ds in validationPlot.expRes.datasets:

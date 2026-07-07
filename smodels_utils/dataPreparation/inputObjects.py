@@ -199,7 +199,7 @@ class MetaInfoInput(Locker):
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
                  'publication', 'publicationDOI', 'contact', 'supersededBy',
                  'supersedes', 'comment', 'modelFile', 'datasetOrderForModel',
-                 'srMappings', 'srSets', 'statModels',
+                 'regionMappings', 'regionSets', 'statModels',
                  'private', 'implementedBy','lastUpdate', 'datasetOrder',
                  'covariance', 'combinableWith', 'source',
                  'Leff_inner', 'Leff_outer', 'type', 'includeCRs',
