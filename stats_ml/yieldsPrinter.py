@@ -43,9 +43,12 @@ class YieldsPrinter(BasicPrinter):
         filename = filename.replace(".slha","")
         self.filename = f'{filename}.json'
         if overwrite and os.path.isfile(self.filename):
+            newfilename = self.filename.replace(".json",".json.old")
             if not silent:
-                logger.warning( f"Removing old output file {self.filename}" )
-            os.remove(self.filename)
+                # logger.warning( f"removing output file {self.filename}" )
+                logger.warning( f"moving old output file {self.filename} to {newfilename}" )
+            shutil.move ( self.filename, newfilename )
+            # os.remove(self.filename)
         logger.info ( f"we set output file to {self.filename}" )
 
     def flush ( self ):
