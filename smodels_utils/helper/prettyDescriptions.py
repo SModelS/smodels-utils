@@ -811,8 +811,8 @@ def prettyTxname(txname : str, protons : bool =True,
     prodString = prettyProduction(txname,latex,protons)
     decayString = prettyDecay(txname,latex)
 
-    print ( f"@@0 prettyTxname {txname} {latex} {protons}" )
-    print ( f"@@1 {prodString} :: {decayString}" )
+    # print ( f"@@0 prettyTxname {txname} {latex} {protons}" )
+    # print ( f"@@1 {prodString} :: {decayString}" )
 
     if prodString and decayString:
         return f"{prodString}, {decayString}"
