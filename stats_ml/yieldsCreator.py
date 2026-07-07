@@ -121,7 +121,7 @@ def submit ( mN2, mC1, mN1 ):
     cmd += [ "--mN2", f"{mN2}" ]
     import subprocess
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
-    print ( str ( a.stdout.strip() ) )
+    print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
 
 def runGrid():
     for mN2 in range(100,401,50 ):
