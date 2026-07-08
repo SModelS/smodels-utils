@@ -32,6 +32,8 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
+def pprint ( self, *args ):
+    print ( f"[publishDatabasePickle] {ORANGE}{*args}{RESET}" )
 
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
@@ -101,7 +103,7 @@ def checkNonValidated( database ) -> Tuple[bool,Set]:
                 if tx.validated in [ False, True, "N/A", "n/a" ]:
                     continue
                 sds = str(ds).replace("Dataset ","")
-                print ( f"[publishDatabasePickle] {RED}Non-validated result: {e.globalInfo.id}{RESET}:{sds}, {tx}: {tx.validated} " )
+                pprint ( f"{RED}Non-validated result: {e.globalInfo.id}{RESET}:{sds}, {tx}: {tx.validated} " )
                 has_nonValidated = True
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
@@ -187,27 +189,27 @@ def main():
                 shutil.unpack_archive( filename=t, extract_dir=dbname)
         force_load = None
         if args.txnamevalues:
-            print ( "[publishDatabasePickle] building with txname values!" )
+            pprint ( "building with txname values!" )
             import smodels.experiment.txnameObj
             smodels.experiment.txnameObj.TxNameData._keep_values = True
             force_load = "txt"
         import smodels
-        print ( f"[publishDatabasePickle] building database ''{dbname}'' with ''{os.path.dirname ( smodels.__file__ )}''" )
+        pprint ( f"building database ''{dbname}'' with ''{os.path.dirname ( smodels.__file__ )}''" )
         d = Database ( dbname, progressbar=True, force_load = force_load )
         if args.txnamevalues:
             txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
             if not hasattr ( txnd, "origdata" ):
-                print ( "[publishDatabasePickle] FATAL: why arent there origdata in tnamedata??" )
+                pprint ( "FATAL: why arent there origdata in tnamedata??" )
                 sys.exit()
         else:
             txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
             if hasattr ( txnd, "origdata" ):
-                print ( "[publishDatabasePickle] we have orig data! lets repickle with force_load = txt" )
+                pprint ( "we have orig data! lets repickle with force_load = txt" )
                 force_load = "txt"
                 d = Database ( dbname, progressbar=True, force_load = force_load )
                 txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
                 if hasattr ( txnd, "origdata" ):
-                    print ( "[publishDatabasePickle] FATAL: we still have orig data!" )
+                    pprint ( "FATAL: we still have orig data!" )
                     sys.exit()
 
 
@@ -218,7 +220,7 @@ def main():
         # e = copy.deepcopy( d )
         e = Database ( picklefile, progressbar=True )
         e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
-        print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
+        pprint ( f"superseded database is called {e.databaseVersion}" )
         d = removeSupersededFromDB ( d )
     if args.remove_fastlim:
         # e = copy.deepcopy( d )
@@ -246,7 +248,7 @@ def main():
         f = Database ( picklefile, progressbar=True )
         f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
         f.subs[0].databaseVersion=dbver
-        print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )
+        pprint ( f"dbver {dbver} ver {f.databaseVersion}" )
         del f
 
     if not args.skipValidation:
@@ -261,7 +263,7 @@ def main():
     fastlim = meta.hasFastLim
     if args.remove_fastlim:
         fastlim = False
-    print ( f"[publishDatabasePickle] {meta}" )
+    pprint ( f"{meta}" )
     ver = meta.databaseVersion.replace(".","")
     sfastlim=""
     if fastlim:
@@ -305,11 +307,11 @@ def main():
     ssh = True
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
-    print ( f"[publishDatabasePickle] writing {pclfilename}" )
+    pprint ( f"writing {pclfilename}" )
     d.createBinaryFile ( pclfilename )
     sze = sizeof_fmt ( os.stat(pclfilename).st_size )
     sha1sum = _getSHA1 ( pclfilename )
-    print ( f"[publishDatabasePickle] database size {sze} sha1sum {sha1sum}" )
+    pprint ( f"database size {sze} sha1sum {sha1sum}" )
     createInfoFile ( infofile, pclfilename ) # , meta.mtime )
     if has_nonValidated:
         nvlist = ",".join(which)
@@ -327,9 +329,9 @@ def main():
         cmd = f"cp {pclfilename} {eosdir}/"
         a=CMD.getoutput ( cmd )
         if len(a)>0:
-            print ( f"[publishDatabasePickle] {a}" )
+            pprint ( f"{a}" )
     cmd = f"mv {infofile} ../../smodels.github.io/database/{infofile}"
-    print ( f"[publishDatabasePickle] {sexec} {cmd}" )
+    pprint ( f"{sexec} {cmd}" )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
@@ -341,7 +343,7 @@ def main():
         cmd = f"cp ../../smodels.github.io/database/{infofile} ../../smodels.github.io/database/{latestfile}"
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
-            print ( f"[publishDatabasePickle] update latest: {cmd} {a}" )
+            pprint ( f"update latest: {cmd} {a}" )
     backupfile = None
     if args.db_name is None and not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = f"backup{ver}"
@@ -351,7 +353,7 @@ def main():
                ( infofile, backupfile )
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
-            print ( "[publishDatabasePickle] update backup:", cmd, a )
+            pprint ( f"update backup: {cmd} {a}" )
     cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
     if backupfile != None:
         cmd += f"git add database/{backupfile}; "
@@ -370,24 +372,24 @@ def main():
         # cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         cmd2 = f"mv {pclfilename} ~/cernbox/tmp_dbs/"
         # print ( f"{RED}[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):{RESET}" )
-        print ( f"[publishDatabasePickle] running: {cmd2}" )
+        pprint ( f"running: {cmd2}" )
         reallyDo = not args.dry_run
         # reallyDo = False # doesnt work no more
         if reallyDo:
             o = CMD.getoutput ( cmd2 )
-            print ( f"[publishDatabasePickle] {cmd2}: {o}" )
+            pprint ( f"{cmd2}: {o}" )
         addToCommandsFile ( cmd2 )
         #o = CMD.getoutput ( f"echo '{cmd2}' | xsel -i" )
         if not reallyDo:
-            print ( f"[publishDatabasePickle] NOT done (because commands.sh): {cmd2}" )
+            pprint ( f"NOT done (because commands.sh): {cmd2}" )
         print ( )
-        # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
+        # pprint ( "(have to do this by hand, if no password-less ssh is configured)" )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
-        print ( f"[publishDatabasePickle] now do -- pasted to clipboard:\n{cmd}" )
+        pprint ( f"now do -- pasted to clipboard:\n{cmd}" )
         o = CMD.getoutput ( f"echo '{cmd}' | xsel -i" )
         #if reallyDo:
         #    o = CMD.getoutput ( cmd )
-        #    print ( f"[publishDatabasePickle] done: {cmd}: {o}" )
+        #    pprint ( f"done: {cmd}: {o}" )
         if args.finalize_commands:
             addToCommandsFile ( cmd )
         print ( )
