@@ -13,7 +13,7 @@ from smodels.base.runtime import checkForIncompatibleModuleVersions
 smodels_check = checkForIncompatibleModuleVersions()
 
 def execute(cmd):
-    print ( f"[cmd] {' '.join(cmd)}" )
+    print ( f"[cmd] {MAGENTA}{' '.join(cmd)}{RESET}" )
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line 
