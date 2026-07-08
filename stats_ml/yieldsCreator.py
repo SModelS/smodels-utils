@@ -80,6 +80,9 @@ def addXSec ( filename ):
     Path ( pythiaCard ).unlink ( missing_ok = True )
 
 def runOnePoint ( p ):
+    for particle,mass in p.items():
+        if mass == int(mass):
+            p[particle]=int(mass)
     print ( f"[yieldsCreator] run for {p['mN2']},{p['mC1']},{p['mN1']}" )
     inFile = getSLHAFile ( p )
     parameterFile="inis/1909.ini"
