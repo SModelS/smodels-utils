@@ -32,8 +32,8 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
-def pprint ( self, *args ):
-    print ( f"[publishDatabasePickle] {ORANGE}{*args}{RESET}" )
+def pprint ( *args ):
+    print ( f"[publishDatabasePickle] {CYAN}", *args, RESET )
 
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
@@ -263,7 +263,7 @@ def main():
     fastlim = meta.hasFastLim
     if args.remove_fastlim:
         fastlim = False
-    pprint ( f"{meta}" )
+    pprint ( f"\n{meta}" )
     ver = meta.databaseVersion.replace(".","")
     sfastlim=""
     if fastlim:
