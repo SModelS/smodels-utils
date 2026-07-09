@@ -67,13 +67,14 @@ class ProgressBarHandler:
         """
         files = glob.glob ( ".p.*.pid" )
         t0 = time.time()
+        from pathlib import Path
         for fname in files:
             with open ( fname, "rt" ) as f:
                 d = eval ( f.read() )
             # dt in hours
             dt = ( t0 - d["time"] ) / 60. / 60.
             if dt > max_hours:
-                shutil.rmtree ( fname )
+                Path ( fname ).unlink ( missing_ok = True )
 
     def storePid ( self, pid : int ):
         """ store the pid of the progress bar in self.pidfile,
