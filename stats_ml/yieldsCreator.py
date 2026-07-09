@@ -153,7 +153,7 @@ if __name__ == "__main__":
     ap.add_argument( '--grid',
             help='a grid', action='store_true')
     ap.add_argument( '--point',
-            help='one specific point', type=int, default = None )
+            help='one specific point [0-6]', type=int, default = None )
     ap.add_argument( '--mN1',
             help='mass of N1', type=float, default = None )
     ap.add_argument( '--mC1',

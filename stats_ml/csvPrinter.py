@@ -59,7 +59,7 @@ class CsvPrinter(BasicPrinter):
         regions = []
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
-            if False and not "-orig" in anaId:
+            if True and not "-orig" in anaId:
                 continue
             dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
             nlls = dicts[0]
