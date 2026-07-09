@@ -5,7 +5,8 @@ from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
 
-from stats_ml import yieldsPrinter # yieldsPrinter is self-registering
+# printers are self-registering
+from stats_ml import yieldsPrinter, csvPrinter
 
 def getSLHAFile ( masses ):
     ## we copy file, to keep track
