@@ -28,14 +28,21 @@ def generalInfo ( theoryPred : TheoryPrediction ) -> dict:
              "txnames": list( set(map(str,theoryPred.txnames))) }
     return Dict
 
+def formatMu ( mu : float ) -> str:
+    """ 100. -> '100', .0010 -> '.001', etc """
+    smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}"
+    return smu
+
 def yieldsToDicts ( theoryPred : TheoryPrediction,
-        mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ] ) -> list[dict]:
+        mus : list = [ 0., .001, .2, .4, 1., 2., 5., 100. ],
+        expected_also : bool = False ) -> list[dict]:
     """ a function for debugging only: writes the actual NN input
     into a file called filename
 
     :param theoryPred: The theory prediction to write yields out for
     yields/yields_<anaId>_<massparams>.json
     :param mus: list of mu_values to compute quantities for
+    :param expected_also: if true, then also add a priori expected
 
     :returns: list of all dictionaries
     """
@@ -57,12 +64,18 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
     Dict["most_sensitive"]=ms.name
     Dict["ul(mu)"]=ms.getUpperLimitOnMu()
     # mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
-    from smodels.statistics.basicStats import observed
+    from smodels.statistics.basicStats import observed, apriori
     for mu in mus:
-        smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}"
+        smu = formatMu ( mu )
+        # smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}"
         Dict[f"nll_mu{smu}"]=theoryPred.nll ( mu=mu )
         Dict[f"nllA_mu{smu}"]=theoryPred.nll ( mu=mu,
                              evaluationType = observed, asimov = 0 )
+        if expected_also:
+            Dict[f"nllE_mu{smu}"] = theoryPred.nll ( mu=mu,\
+                    evaluationType = apriori )
+            Dict[f"nllEA_mu{smu}"] = theoryPred.nll ( mu=mu,\
+                    evaluationType = apriori, asimov = 0 )
     dicts.append ( Dict )
 
     def removeZeros ( nsig : dict ) -> dict:

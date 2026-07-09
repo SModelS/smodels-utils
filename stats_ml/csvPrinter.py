@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 """
-.. module:: yieldPrinter
+.. module:: csvPrinter
    :synopsis: a printer that prints the signal yields
-   of predictions into json files. Mostly for debugging
-   ML models.
+   and nlls into csv files, for joaquin to used for training.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -18,17 +17,16 @@ from smodels.base.smodelsLogging import logger
 
 import sys
 sys.path.insert(0,".")
-from .yieldsWriter import yieldsToDicts, generalInfo
+from .yieldsWriter import yieldsToDicts, formatMu
 
-class YieldsPrinter(BasicPrinter):
+class CsvPrinter(BasicPrinter):
     """ Printer class exclusively to print signal yields 
-    into a yield*.json file """
-    def __init__( self, output : str = 'yields.json', 
+    into a yield*.csv file """
+    def __init__( self, output : str = 'yields.csv', 
                   filename : Optional[os.PathLike]=None,
                   outputFormat : str = 'version3' ):
         BasicPrinter.__init__(self, output, filename, outputFormat)
         self.toPrint = []
-        self.t0 = time.time()
 
     def setOutPutFile( self, filename : os.PathLike, overwrite : bool = True, 
                        silent : bool = False ):
@@ -42,9 +40,9 @@ class YieldsPrinter(BasicPrinter):
         """
 
         filename = filename.replace(".slha","")
-        self.filename = f'{filename}.json'
+        self.filename = f'{filename}.csv'
         if overwrite and os.path.isfile(self.filename):
-            newfilename = self.filename.replace(".json",".json.old")
+            newfilename = self.filename.replace(".csv",".csv.old")
             if not silent:
                 # logger.warning( f"removing output file {self.filename}" )
                 logger.warning( f"moving old output file {self.filename} to {newfilename}" )
@@ -54,25 +52,27 @@ class YieldsPrinter(BasicPrinter):
 
     def flush ( self ):
         logger.info ( f"writing yields to {self.filename}" )
-        import json, copy
-        all_dicts = {}
-        oldGInfo = None
+        import copy
         mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
-        for tp in self.toPrint:
-            gInfo = generalInfo ( tp )
-            gInfo["mus"] = mus
-            gInfo["dt[h]"] = (time.time() - self.t0)/60./60.
-            if oldGInfo == None:
-                all_dicts["general_info"] = gInfo
-            elif oldGInfo != gInfo:
-                logger.error ( f"general info changed: {gInfo} != {oldGInfo}" )
-            dicts = yieldsToDicts ( tp, mus = mus )
-            all_dicts[tp.dataset.globalInfo.id] = dicts
-            oldGInfo = copy.deepcopy ( gInfo )
         with open ( self.filename, "wt" ) as f:
-            d = json.dumps ( all_dicts, indent=4 )
-            f.write ( d )
-            f.close()
+            for tp in self.toPrint:
+                dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
+                nlls = dicts[0]
+                for d in dicts[1:]:
+                    print ( d )
+                    for mu in mus:
+                        smu = formatMu ( mu )
+                        yields = d[f"yields_mu{smu}"]
+                        nll = nlls[ f"nll_mu{smu}" ]
+                        nllE = nlls[ f"nllE_mu{smu}" ]
+                        nllA = nlls[ f"nllA_mu{smu}" ]
+                        nllEA = nlls[ f"nllEA_mu{smu}" ]
+                    line = ",".join(map(str,yields))
+                    line += f",{nll},{nllE},{nllA},{nllEA}"
+                    print ( line )
+                # d = json.dumps ( all_dicts, indent=4 )
+                # f.write ( d )
+                f.close()
 
     def addObj(self,obj):
         if type(obj) != TheoryPredictionList:
@@ -83,4 +83,4 @@ class YieldsPrinter(BasicPrinter):
             self.toPrint.append( tp )
 
 from smodels.tools.printers.printerRegistry import PrinterRegistry
-PrinterRegistry.register ( YieldsPrinter, "yields" )
+PrinterRegistry.register ( CsvPrinter, "csv" )
