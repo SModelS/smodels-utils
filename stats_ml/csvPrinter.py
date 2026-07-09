@@ -51,28 +51,48 @@ class CsvPrinter(BasicPrinter):
         logger.info ( f"we set output file to {self.filename}" )
 
     def flush ( self ):
+        """ write it all out """
         logger.info ( f"writing yields to {self.filename}" )
         import copy
-        mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
-        with open ( self.filename, "wt" ) as f:
-            for tp in self.toPrint:
-                dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
-                nlls = dicts[0]
-                for d in dicts[1:]:
-                    print ( d )
-                    for mu in mus:
-                        smu = formatMu ( mu )
-                        yields = d[f"yields_mu{smu}"]
-                        nll = nlls[ f"nll_mu{smu}" ]
-                        nllE = nlls[ f"nllE_mu{smu}" ]
-                        nllA = nlls[ f"nllA_mu{smu}" ]
-                        nllEA = nlls[ f"nllEA_mu{smu}" ]
+        mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
+        csvlines = []
+        regions = []
+        for tp in self.toPrint:
+            anaId = tp.dataset.globalInfo.id
+            if False and not "-orig" in anaId:
+                continue
+            dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
+            nlls = dicts[0]
+            for d in dicts[1:]:
+                oldregions = regions[:]
+                regions = [ k for k,v in d["nsignals"].items() ]
+                if oldregions != []:
+                    assert regions == oldregions, f"regions changed from {oldregions} to {regions}??"
+                nll_0 = nlls[ "nll_mu0" ] 
+                nllE_0 = nlls[ "nllE_mu0" ] 
+                nllA_0 = nlls[ "nllA_mu0" ] 
+                nllEA_0 = nlls[ "nllEA_mu0" ] 
+                for mu in mus:
+                    smu = formatMu ( mu )
+                    yields = d[f"yields_mu{smu}"]
+                    nll = nlls[ f"nll_mu{smu}" ]
+                    nllE = nlls[ f"nllE_mu{smu}" ]
+                    nllA = nlls[ f"nllA_mu{smu}" ]
+                    nllEA = nlls[ f"nllEA_mu{smu}" ]
                     line = ",".join(map(str,yields))
-                    line += f",{nll},{nllE},{nllA},{nllEA}"
-                    print ( line )
-                # d = json.dumps ( all_dicts, indent=4 )
-                # f.write ( d )
-                f.close()
+                    line += f",{nllE_0},{nllE},{nll_0},{nll}"
+                    line += f",{nllEA_0},{nllEA},{nllA_0},{nllA}"
+                    csvlines.append ( line )
+        regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0", 
+                     "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1", 
+                     "nLLA_obs_mu0", "nLLA_obs_mu1" ]
+        fline = ",".join(regions)
+        with open ( self.filename, "wt" ) as f:
+            f.write ( fline + "\n" )
+            for line in csvlines:
+                f.write ( line + "\n" )
+                # print ( line )
+            f.close()
 
     def addObj(self,obj):
         if type(obj) != TheoryPredictionList:
