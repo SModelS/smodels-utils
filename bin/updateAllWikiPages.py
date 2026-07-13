@@ -125,9 +125,10 @@ def main():
         cmd = [ "./publishDatabasePickle.py" ]
         if A.ignore:
             cmd += [ "-i" ]
-        exec ( cmd + [ "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
+        exec ( cmd + [ "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-y", "-f", db ], A.dry_run )
         exec ( cmd + [ "-f", "./superseded.pcl" ], A.dry_run )
         exec ( cmd + [ "-f", "./nonaggregated.pcl" ], A.dry_run )
+        exec ( cmd + [ "-f", "./yields_only.pcl" ], A.dry_run )
         exec ( cmd + [ "-f", "./full_llhds.pcl" ], A.dry_run )
         exec ( cmd + [ "-F", "-f", "./fastlim.pcl" ], A.dry_run )
         if not A.no_debug:

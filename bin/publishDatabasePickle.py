@@ -131,6 +131,9 @@ def main():
     ap.add_argument('-r', '--remove_fastlim',
         help='build pickle file, remove fastlim results',
         action="store_true" )
+    ap.add_argument('-y', '--remove_yields_only',
+        help='build pickle file, remove yields only results',
+        action="store_true" )
     ap.add_argument('-s', '--remove_superseded',
         help='build pickle file, remove superseded results',
         action="store_true" )
@@ -160,18 +163,15 @@ def main():
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
 
-    from smodels.experiment.databaseObj import Database
-    try:
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB, selectFullLikelihoodsFromDB
-    except ModuleNotFoundError:
-        sys.path.append('../')
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
-
+    from smodels_utils.helper.databaseManipulations import removeFastLimFromDB,\
+        removeSupersededFromDB, removeNonAggregatedFromDB,\
+        selectFullLikelihoodsFromDB, removeYieldsOnlyFromDB
 
     has_nonValidated = False
     nonValidated = []
     fastlim = True
     picklefile = dbname
+    from smodels.experiment.databaseObj import Database
     if not args.build:
         d = Database ( dbname )
         dbver = d.databaseVersion
@@ -237,16 +237,30 @@ def main():
         # e = copy.deepcopy( d )
         e = Database ( picklefile, progressbar=True )
         ## create fastlim only
-        e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
+        e = removeNonAggregatedFromDB ( e, invert = True,
+                picklefile = "nonaggregated.pcl" )
         d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
         d.pcl_meta.hasFastLim = False
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion=f"nonaggregated{dbver}"
         del e
+    if args.remove_yields_only:
+        # e = copy.deepcopy( d )
+        e = Database ( picklefile, progressbar=True )
+        ## create fastlim only
+        e = removeYieldsOnlyFromDB ( e, invert = True,
+                picklefile = "yields_only.pcl" )
+        d = removeYieldsOnlyFromDB ( d, picklefile = "official.pcl" )
+        # d.pcl_meta.hasFastLim = False
+        # d.txt_meta.hasFastLim = False
+        d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+        e.subs[0].databaseVersion=f"yields_only{dbver}"
+        del e
     if args.full_llhds:
         f = Database ( picklefile, progressbar=True )
-        f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
+        f = selectFullLikelihoodsFromDB ( f,
+                picklefile = "full_llhds.pcl" )
         f.subs[0].databaseVersion=dbver
         pprint ( f"dbver {dbver} ver {f.databaseVersion}" )
         del f
@@ -264,7 +278,11 @@ def main():
     if args.remove_fastlim:
         fastlim = False
     pprint ( f"\n{meta}" )
-    ver = meta.databaseVersion.replace(".","")
+    ver = meta.databaseVersion
+    if type(ver) == str:
+        ver = ver.replace(".","")
+    else:
+        ver = str(ver)
     sfastlim=""
     if fastlim:
         sfastlim="_fastlim"
@@ -281,6 +299,9 @@ def main():
     if "nonaggregated" in ver:
         infofile = f"nonaggregated{ver.replace('nonaggregated', '')}"
         pclfilename = f"nonaggregated{ver.replace('nonaggregated', '')}.pcl"
+    if "yieldsonly" in ver:
+        infofile = f"yieldsonly{ver.replace('yieldsonly', '')}"
+        pclfilename = f"yieldsonly{ver.replace('yieldsonly', '')}.pcl"
     if "full_llhds" in ver:
         infofile = f"full_llhds{ver.replace('full_llhds', '')}"
         pclfilename = f"full_llhds{ver.replace('full_llhds', '')}.pcl"
