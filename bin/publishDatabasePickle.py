@@ -196,21 +196,29 @@ def main():
         import smodels
         pprint ( f"building database ''{dbname}'' with ''{os.path.dirname ( smodels.__file__ )}''" )
         d = Database ( dbname, progressbar=True, force_load = force_load )
-        if args.txnamevalues:
-            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
-            if not hasattr ( txnd, "origdata" ):
-                pprint ( "FATAL: why arent there origdata in tnamedata??" )
-                sys.exit()
-        else:
-            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
-            if hasattr ( txnd, "origdata" ):
-                pprint ( "we have orig data! lets repickle with force_load = txt" )
-                force_load = "txt"
-                d = Database ( dbname, progressbar=True, force_load = force_load )
-                txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
-                if hasattr ( txnd, "origdata" ):
-                    pprint ( "FATAL: we still have orig data!" )
+        ers = d.getExpResults()
+        assert len(ers)>0, f"no experimental results in database?"
+        er0 = d.getExpResults()[0]
+        assert len(er0.datasets)>0, f"no datasets in {er0.globalInfo.id}?"
+        ds0 = er0.datasets[0]
+        if len(ds0.txnameList)>0:
+            txn0 = ds0.txnameList[0]
+            txnd = txn0.txnameData
+            if args.txnamevalues:
+                if not hasattr ( txnd, "origdata" ):
+                    pprint ( "FATAL: why arent there origdata in tnamedata??" )
                     sys.exit()
+            else:
+                if hasattr ( txnd, "origdata" ):
+                    pprint ( "we have orig data! lets repickle with force_load = txt" )
+                    force_load = "txt"
+                    d = Database ( dbname, progressbar=True, force_load = force_load )
+                    ds0 = d.getExpResults()[0].datasets[0]
+                    txn0 = ds0.txnameList[0]
+                    txnd = txnd.txnameData
+                    if hasattr ( txnd, "origdata" ):
+                        pprint ( "FATAL: we still have orig data!" )
+                        sys.exit()
 
 
         dbver = d.databaseVersion
