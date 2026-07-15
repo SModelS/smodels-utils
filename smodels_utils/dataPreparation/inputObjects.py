@@ -518,13 +518,15 @@ class DataSetInput(Locker):
             try:
                 # v3.1.0
                 # new API
-                from smodels.statistics.simplifiedLikelihoods import SLData, SLUpperLimitComputer, SLLikelihoodComputer
+                from smodels.statistics.simplifiedLikelihoods import SLData, \
+                    SLUpperLimitComputer
                 from smodels.statistics.basicStats import aposteriori
-                m = SLData ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
-                           lumi = lumi )
-                llhdComp = SLLikelihoodComputer  ( m )
-                comp = SLUpperLimitComputer ( llhdComp, 1. - alpha )
-                
+                m = SLData ( self.observedN, self.expectedBG, self.bgError**2,
+                        None, 1., lumi = lumi )
+                #llhdComp = SLLikelihoodComputer  ( m )
+                #comp = SLUpperLimitComputer ( llhdComp, 1. - alpha )
+                comp = SLUpperLimitComputer ( m, 1. - alpha )
+
                 ul = ( comp.getUpperLimitOnMu() / lumi ).asNumber ( fb )
                 try:
                     ulExpected = ( comp.getUpperLimitOnMu( expected=aposteriori ) / lumi ).asNumber ( fb )
@@ -539,10 +541,11 @@ class DataSetInput(Locker):
                 print ( f"[inputObjects] Exception {e}, will try with older version" )
             try:
                 # v3.0.0
-                from smodels.statistics.simplifiedLikelihoods import SLData, SLUpperLimitComputer
+                from smodels.statistics.simplifiedLikelihoods import SLData, \
+                    SLUpperLimitComputer
                 # new API
-                m = SLData ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
-                           lumi = lumi )
+                m = SLData ( self.observedN, self.expectedBG, self.bgError**2,
+                        None, 1., lumi = lumi )
                 comp = SLUpperLimitComputer ( 1. - alpha )
                 ul = ( comp.getUpperLimitOnMu ( m ) / lumi ).asNumber ( fb )
                 ulExpected = ( comp.getUpperLimitOnMu ( m, expected="posteriori" ) / lumi ).asNumber ( fb )

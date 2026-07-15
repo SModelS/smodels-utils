@@ -111,8 +111,8 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
     m = SLData ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
-    llcomp = SLLikelihoodComputer ( m )
-    comp = SLUpperLimitComputer ( llcomp ) # 1. - alpha )
+    # llcomp = SLLikelihoodComputer ( m )
+    comp = SLUpperLimitComputer ( m ) # 1. - alpha )
     logger.error ( "FIXME need to replace with spey!" )
     try:
         ul = ( comp.getUpperLimitOnMu ( ) / lumi ).asNumber(fb)
