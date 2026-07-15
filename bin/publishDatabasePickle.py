@@ -3,12 +3,11 @@
 """
 .. module:: publishDatabasePickle
    :synposis: makes database pickle files publically available. FIXME this
-              script should be split in two: one script that prepares all pickles
-              (official, fastlim, nonaggregated, superseded, full_llhds),
-              another script that uploads them and writes the jsons
+   script should be split in two: one script that prepares all pickles
+   (official, fastlim, nonaggregated, superseded, full_llhds),
+   another script that uploads them and writes the jsons
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
-
 """
 
 from __future__ import print_function
@@ -33,6 +32,8 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
+def pprint ( *args ):
+    print ( f"[publishDatabasePickle] {CYAN}", *args, RESET )
 
 def sizeof_fmt(num, suffix='B'):
     for unit in [ '','K','M','G','T','P' ]:
@@ -59,10 +60,16 @@ def _getSHA1 ( filename : os.PathLike ) -> str:
 
 eosdir = "/eos/project/s/smodels/www/database/"
 
-def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
+def createInfoFile ( infofile : str, pclfilename : str ):
     """ create the file with the python dictionary that contains all
     meta info about the pickle file, e.g.:
-    {"lastchanged": 1746624990.8478498, "mtime": "Wed May  7 15:36:30 2025", "size": 90289590, "url": "https://smodels.web.cern.ch/smodels/database/unittest310.pcl", "sha1": "5b7d238b401aab442e7944c6afdbb31e9b4c444c"}
+    {
+        "lastchanged": 1746624990.8478498,
+        "mtime": "Wed May  7 15:36:30 2025",
+        "size": 90289590,
+        "url": "https://smodels.web.cern.ch/smodels/database/unittest310.pcl",
+        "sha1": "5b7d238b401aab442e7944c6afdbb31e9b4c444c"
+    }
     :param infofile: path to info file containing above python dictionary
     :param pclfilename: path to pickle file
 	  """
@@ -73,10 +80,14 @@ def createInfoFile ( infofile : str, pclfilename : str ): # , lastchanged ):
     sha = _getSHA1 ( pclfilename )
     lastchanged = time.time()
     mtime = time.asctime(time.localtime(lastchanged))
-    Dict = { "lastchanged": lastchanged, "mtime": mtime, "size": os.stat(pclfilename).st_size,
-             "url": f"https://smodels.web.cern.ch/smodels/database/{pclfilename}",
-             "sha1": sha }
-    f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
+    baseurl = "https://smodels.web.cern.ch/smodels/database"
+    Dict = { "lastchanged": lastchanged, "mtime": mtime,
+             "size": os.stat(pclfilename).st_size,
+             "url": f"{baseurl}/{pclfilename}", "sha1": sha }
+    from ptools.helpers import py_dumps
+    ds = py_dumps ( Dict, double_quotes = True )
+    f.write ( ds+ "\n" )
+    # f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
 
 def checkNonValidated( database ) -> Tuple[bool,Set]:
@@ -92,28 +103,59 @@ def checkNonValidated( database ) -> Tuple[bool,Set]:
                 if tx.validated in [ False, True, "N/A", "n/a" ]:
                     continue
                 sds = str(ds).replace("Dataset ","")
-                print ( f"[publishDatabasePickle] {RED}Non-validated result: {e.globalInfo.id}{RESET}:{sds}, {tx}: {tx.validated} " )
+                pprint ( f"{RED}Non-validated result: {e.globalInfo.id}{RESET}:{sds}, {tx}: {tx.validated} " )
                 has_nonValidated = True
                 nonValidateds.add ( e.globalInfo.id )
     return has_nonValidated, nonValidateds
 
 def main():
-    ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
-    ap.add_argument('-f', '--filename', help='name of pickle file [database.pcl]', default="database.pcl" )
-    ap.add_argument( '--db_name', help='give an explicit name for this database [auto]', default=None )
-    ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
-    ap.add_argument('-l', '--latest', help='define as latest database', action="store_true" )
-    ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
-    ap.add_argument('-t', '--txnamevalues', help='when building, add txname values', action="store_true" )
-    ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
-    ap.add_argument('-s', '--remove_superseded', help='build pickle file, remove superseded results', action="store_true" )
-    ap.add_argument('-a', '--remove_nonaggregated', help='build pickle file, remove nonaggregated results', action="store_true" )
-    ap.add_argument( '--full_llhds', help='create also full llhds pickle file', action="store_true" )
-    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
-    ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
-    ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
-    ap.add_argument ( '-p', '--prepare_commands', help='prepare the commands file', action='store_true' )
-    ap.add_argument ( '-F', '--finalize_commands', help='finalize the commands file', action='store_true' )
+    descr="makes a database pickle file publically available (creating via SModelS)"
+    ap = argparse.ArgumentParser( description=descr )
+    ap.add_argument( '-f', '--filename',
+        help='name of pickle file [database.pcl]',
+        default="database.pcl" )
+    ap.add_argument( '--db_name',
+        help='give an explicit name for this database [auto]', default=None )
+    ap.add_argument('-d', '--dry_run',
+        help='dont copy to final destination',
+        action="store_true" )
+    ap.add_argument('-l', '--latest',
+        help='define as latest database',
+        action="store_true" )
+    ap.add_argument('-b', '--build',
+        help='build pickle file, assume filename is directory name',
+        action="store_true" )
+    ap.add_argument('-t', '--txnamevalues',
+        help='when building, add txname values',
+        action="store_true" )
+    ap.add_argument('-r', '--remove_fastlim',
+        help='build pickle file, remove fastlim results',
+        action="store_true" )
+    ap.add_argument('-y', '--remove_yields_only',
+        help='build pickle file, remove yields only results',
+        action="store_true" )
+    ap.add_argument('-s', '--remove_superseded',
+        help='build pickle file, remove superseded results',
+        action="store_true" )
+    ap.add_argument('-a', '--remove_nonaggregated',
+        help='build pickle file, remove nonaggregated results',
+        action="store_true" )
+    ap.add_argument( '--full_llhds',
+        help='create also full llhds pickle file',
+        action="store_true" )
+    ap.add_argument('-P', '--smodelsPath',
+        help='path to the SModelS folder [None]',
+        default=None )
+    ap.add_argument('-V', '--skipValidation',
+        help='if set will skip the check of validation flags [False]',
+        default=False, action="store_true" )
+    ap.add_argument ( '-i', '--ignore',
+        help='ignore the validation flags of analysis (i.e. also add non-validated results)',
+        action='store_true' )
+    ap.add_argument ( '-p', '--prepare_commands',
+        help='prepare the commands file', action='store_true' )
+    ap.add_argument ( '-F', '--finalize_commands',
+        help='finalize the commands file', action='store_true' )
     args = ap.parse_args()
     if args.prepare_commands:
         prepareCommandsFile()
@@ -121,18 +163,15 @@ def main():
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
 
-    from smodels.experiment.databaseObj import Database
-    try:
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB, selectFullLikelihoodsFromDB
-    except ModuleNotFoundError:
-        sys.path.append('../')
-        from smodels_utils.helper.databaseManipulations import removeFastLimFromDB, removeSupersededFromDB, removeNonAggregatedFromDB
-
+    from smodels_utils.helper.databaseManipulations import removeFastLimFromDB,\
+        removeSupersededFromDB, removeNonAggregatedFromDB,\
+        selectFullLikelihoodsFromDB, removeYieldsOnlyFromDB
 
     has_nonValidated = False
     nonValidated = []
     fastlim = True
     picklefile = dbname
+    from smodels.experiment.databaseObj import Database
     if not args.build:
         d = Database ( dbname )
         dbver = d.databaseVersion
@@ -150,28 +189,36 @@ def main():
                 shutil.unpack_archive( filename=t, extract_dir=dbname)
         force_load = None
         if args.txnamevalues:
-            print ( "[publishDatabasePickle] building with txname values!" )
+            pprint ( "building with txname values!" )
             import smodels.experiment.txnameObj
             smodels.experiment.txnameObj.TxNameData._keep_values = True
             force_load = "txt"
         import smodels
-        print ( f"[publishDatabasePickle] building database ''{dbname}'' with ''{os.path.dirname ( smodels.__file__ )}''" )
+        pprint ( f"building database ''{dbname}'' with ''{os.path.dirname ( smodels.__file__ )}''" )
         d = Database ( dbname, progressbar=True, force_load = force_load )
-        if args.txnamevalues:
-            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
-            if not hasattr ( txnd, "origdata" ):
-                print ( "[publishDatabasePickle] FATAL: why arent there origdata in tnamedata??" )
-                sys.exit()
-        else:
-            txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
-            if hasattr ( txnd, "origdata" ):
-                print ( "[publishDatabasePickle] we have orig data! lets repickle with force_load = txt" )
-                force_load = "txt"
-                d = Database ( dbname, progressbar=True, force_load = force_load )
-                txnd = d.getExpResults()[0].datasets[0].txnameList[0].txnameData
-                if hasattr ( txnd, "origdata" ):
-                    print ( "[publishDatabasePickle] FATAL: we still have orig data!" )
+        ers = d.getExpResults()
+        assert len(ers)>0, f"no experimental results in database?"
+        er0 = d.getExpResults()[0]
+        assert len(er0.datasets)>0, f"no datasets in {er0.globalInfo.id}?"
+        ds0 = er0.datasets[0]
+        if len(ds0.txnameList)>0:
+            txn0 = ds0.txnameList[0]
+            txnd = txn0.txnameData
+            if args.txnamevalues:
+                if not hasattr ( txnd, "origdata" ):
+                    pprint ( "FATAL: why arent there origdata in tnamedata??" )
                     sys.exit()
+            else:
+                if hasattr ( txnd, "origdata" ):
+                    pprint ( "we have orig data! lets repickle with force_load = txt" )
+                    force_load = "txt"
+                    d = Database ( dbname, progressbar=True, force_load = force_load )
+                    ds0 = d.getExpResults()[0].datasets[0]
+                    txn0 = ds0.txnameList[0]
+                    txnd = txnd.txnameData
+                    if hasattr ( txnd, "origdata" ):
+                        pprint ( "FATAL: we still have orig data!" )
+                        sys.exit()
 
 
         dbver = d.databaseVersion
@@ -181,7 +228,7 @@ def main():
         # e = copy.deepcopy( d )
         e = Database ( picklefile, progressbar=True )
         e2 = removeSupersededFromDB ( e, invert=True, outfile="superseded.pcl" )
-        print ( "[publishDatabasePickle] superseded database is called", e.databaseVersion )
+        pprint ( f"superseded database is called {e.databaseVersion}" )
         d = removeSupersededFromDB ( d )
     if args.remove_fastlim:
         # e = copy.deepcopy( d )
@@ -198,18 +245,32 @@ def main():
         # e = copy.deepcopy( d )
         e = Database ( picklefile, progressbar=True )
         ## create fastlim only
-        e = removeNonAggregatedFromDB ( e, invert = True, picklefile = "nonaggregated.pcl" )
+        e = removeNonAggregatedFromDB ( e, invert = True,
+                picklefile = "nonaggregated.pcl" )
         d = removeNonAggregatedFromDB ( d, picklefile = "official.pcl" )
         d.pcl_meta.hasFastLim = False
         d.txt_meta.hasFastLim = False
         d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
         e.subs[0].databaseVersion=f"nonaggregated{dbver}"
         del e
+    if args.remove_yields_only:
+        # e = copy.deepcopy( d )
+        e = Database ( picklefile, progressbar=True )
+        ## create fastlim only
+        e = removeYieldsOnlyFromDB ( e, invert = True,
+                picklefile = "yields_only.pcl" )
+        d = removeYieldsOnlyFromDB ( d, picklefile = "official.pcl" )
+        # d.pcl_meta.hasFastLim = False
+        # d.txt_meta.hasFastLim = False
+        d.subs[0].databaseVersion = dbver # .replace("fastlim","official")
+        e.subs[0].databaseVersion=f"yields_only{dbver}"
+        del e
     if args.full_llhds:
         f = Database ( picklefile, progressbar=True )
-        f = selectFullLikelihoodsFromDB ( f, picklefile = "full_llhds.pcl" )
+        f = selectFullLikelihoodsFromDB ( f,
+                picklefile = "full_llhds.pcl" )
         f.subs[0].databaseVersion=dbver
-        print ( f"[publishDatabasePickle] dbver {dbver} ver {f.databaseVersion}" )
+        pprint ( f"dbver {dbver} ver {f.databaseVersion}" )
         del f
 
     if not args.skipValidation:
@@ -224,8 +285,12 @@ def main():
     fastlim = meta.hasFastLim
     if args.remove_fastlim:
         fastlim = False
-    print ( f"[publishDatabasePickle] {meta}" )
-    ver = meta.databaseVersion.replace(".","")
+    pprint ( f"\n{meta}" )
+    ver = meta.databaseVersion
+    if type(ver) == str:
+        ver = ver.replace(".","")
+    else:
+        ver = str(ver)
     sfastlim=""
     if fastlim:
         sfastlim="_fastlim"
@@ -242,6 +307,9 @@ def main():
     if "nonaggregated" in ver:
         infofile = f"nonaggregated{ver.replace('nonaggregated', '')}"
         pclfilename = f"nonaggregated{ver.replace('nonaggregated', '')}.pcl"
+    if "yieldsonly" in ver:
+        infofile = f"yieldsonly{ver.replace('yieldsonly', '')}"
+        pclfilename = f"yieldsonly{ver.replace('yieldsonly', '')}.pcl"
     if "full_llhds" in ver:
         infofile = f"full_llhds{ver.replace('full_llhds', '')}"
         pclfilename = f"full_llhds{ver.replace('full_llhds', '')}.pcl"
@@ -268,9 +336,11 @@ def main():
     ssh = True
     if os.path.exists ( eosdir ): ## eos exists locally? copy!
         ssh = False
-    print ( f"[publishDatabasePickle] writing {pclfilename}" )
+    pprint ( f"writing {pclfilename}" )
     d.createBinaryFile ( pclfilename )
-    print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(pclfilename).st_size ) )
+    sze = sizeof_fmt ( os.stat(pclfilename).st_size )
+    sha1sum = _getSHA1 ( pclfilename )
+    pprint ( f"database size {sze} sha1sum {sha1sum}" )
     createInfoFile ( infofile, pclfilename ) # , meta.mtime )
     if has_nonValidated:
         nvlist = ",".join(which)
@@ -288,9 +358,9 @@ def main():
         cmd = f"cp {pclfilename} {eosdir}/"
         a=CMD.getoutput ( cmd )
         if len(a)>0:
-            print ( f"[publishDatabasePickle] {a}" )
+            pprint ( f"{a}" )
     cmd = f"mv {infofile} ../../smodels.github.io/database/{infofile}"
-    print ( f"[publishDatabasePickle] {sexec} {cmd}" )
+    pprint ( f"{sexec} {cmd}" )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
@@ -302,7 +372,7 @@ def main():
         cmd = f"cp ../../smodels.github.io/database/{infofile} ../../smodels.github.io/database/{latestfile}"
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
-            print ( f"[publishDatabasePickle] update latest: {cmd} {a}" )
+            pprint ( f"update latest: {cmd} {a}" )
     backupfile = None
     if args.db_name is None and not args.txnamevalues and not "superseded" in ver and not "full_llhds" in ver and not "nonaggregated" in ver and not "fastlim" in ver: # build the backup version
         backupfile = f"backup{ver}"
@@ -312,7 +382,7 @@ def main():
                ( infofile, backupfile )
         if not args.dry_run:
             a=CMD.getoutput ( cmd )
-            print ( "[publishDatabasePickle] update backup:", cmd, a )
+            pprint ( f"update backup: {cmd} {a}" )
     cmd = f"cd ../../smodels.github.io/; git pull; git add database/{infofile}; "
     if backupfile != None:
         cmd += f"git add database/{backupfile}; "
@@ -331,24 +401,24 @@ def main():
         # cmd2 = f"scp {pclfilename} lxplus.cern.ch:{eosdir}{pclfilename}"
         cmd2 = f"mv {pclfilename} ~/cernbox/tmp_dbs/"
         # print ( f"{RED}[publishDatabasePickle] Now please execute manually (and I copied the command to your clipboard):{RESET}" )
-        print ( f"[publishDatabasePickle] running: {cmd2}" )
+        pprint ( f"running: {cmd2}" )
         reallyDo = not args.dry_run
         # reallyDo = False # doesnt work no more
         if reallyDo:
             o = CMD.getoutput ( cmd2 )
-            print ( f"[publishDatabasePickle] {cmd2}: {o}" )
+            pprint ( f"{cmd2}: {o}" )
         addToCommandsFile ( cmd2 )
         #o = CMD.getoutput ( f"echo '{cmd2}' | xsel -i" )
         if not reallyDo:
-            print ( "[publishDatabasePickle] NOT done (because commands.sh):", cmd2 )
+            pprint ( f"NOT done (because commands.sh): {cmd2}" )
         print ( )
-        # print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
+        # pprint ( "(have to do this by hand, if no password-less ssh is configured)" )
         cmd = f"ssh lxplus.cern.ch smodels/www/database/create.py"
-        print ( f"[publishDatabasePickle] now do -- pasted to clipboard:\n{cmd}" )
+        pprint ( f"now do -- pasted to clipboard:\n{cmd}" )
         o = CMD.getoutput ( f"echo '{cmd}' | xsel -i" )
         #if reallyDo:
         #    o = CMD.getoutput ( cmd )
-        #    print ( f"[publishDatabasePickle] done: {cmd}: {o}" )
+        #    pprint ( f"done: {cmd}: {o}" )
         if args.finalize_commands:
             addToCommandsFile ( cmd )
         print ( )

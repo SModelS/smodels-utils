@@ -77,12 +77,13 @@ class Lister:
         if os.path.exists ( poptions["dictfile"] ) and not self.keep:
             os.unlink ( poptions["dictfile"] )
         if self.fudged:
-            options["fudge"]=0.7
+            fudge = 0.7
+            options["fudge"]=fudge
             options["suffix"]="fudge"
             options["outfile"]="none"
             del plotter
             del modifier
-            print ( f"[listOfAnalyses] instantiating fudged ExpResModifier" )
+            print ( f"[listOfAnalyses] instantiating fudged (f={fudge:.1f}) ExpResModifier" )
             modifier = expResModifier.ExpResModifier ( options )
             print ( f"[listOfAnalyses] done instantiating fudged ExpResModifier" )
             from protomodels.plotting import plotDBDict
@@ -123,7 +124,7 @@ class Lister:
 
     def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
-        return B.typeOfStatsModel( srSetName = None, specifySL = True )
+        return B.typeOfStatsModel( regionSetName = None, specifySL = True )
 
     def header( self ):
         """

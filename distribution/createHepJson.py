@@ -67,7 +67,7 @@ class HepJsonCreator:
                 if v in entry1[k]:
                     entry1[k]=v
             if str(v) != str(entry1[k]):
-                print ( f"[createHepJson] {YELLOW}entry '{k}' differs for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
+                print ( f"[createHepJson] {YELLOW}entry '{k}' differs between ul and em for {anaId}: '{v}' != '{entry1[k]}'{RESET}" )
                 print ( f"[createHepJson] {YELLOW}will use {entry1[k]}{RESET}" )
         entry1["merged"]=True
         return entry1
@@ -145,7 +145,13 @@ class HepJsonCreator:
         if not hasattr ( gI, "url" ):
             return None
         import requests
-        r = requests.get ( gI.url )
+        url = gI.url
+        if "ATLAS" in gI.id and not url.endswith ( "index.php" ):
+            if url.endswith ( "/") :
+                url += "index.php"
+            else:
+                url += "/index.php"
+        r = requests.get ( url )
         txt = r.text
         ## first search for inspirehep.net/record links
         p1 = txt.find("://inspirehep.net/record/")
@@ -213,9 +219,9 @@ class HepJsonCreator:
         coll = getCollaboration ( gI.id )
         dses = er.datasets
         resultType = "EM"
-        SRcomb = er.typeOfStatsModel ( specifySL = True )
+        allSRcombs = er.typeOfStatsModel ( regionSetName = None, specifySL = True )
+        SRcomb = ", ".join ( allSRcombs ) if allSRcombs != None else None
         """
-        SRcomb = None
         if hasattr ( gI, "covariance" ):
             SRcomb = "SLv1"
         if hasattr ( gI, "jsonFiles" ):
@@ -285,6 +291,8 @@ class HepJsonCreator:
                 #entry["hepdata"]= hepdata
         if False:
             print ( f"[createHepJson] {entry}" )
+        if False and Id == "ATLAS-SUSY-2019-04": #  and resultType == "EM":
+            import sys, IPython; IPython.embed( colors = "neutral" )
         return entry
 
     def sort ( self, expResList ):
@@ -380,7 +388,10 @@ class HepJsonCreator:
 
         for anaId,entry in self.entries.items():
             if not "inspire" in entry:
-                print ( f"[createHepJson] {RED}no inspire id for {entry['ana_id']}: skip!{RESET}" )
+                col = RED
+                if "PAS" in anaId or "CONF" in anaId:
+                    col = YELLOW
+                print ( f"[createHepJson] {col}no inspire id for {anaId}: skip!{RESET}" )
                 continue
             if not first:
                 self.f.write ( ',\n' )

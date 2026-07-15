@@ -6,7 +6,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.experiment.expResultObj import ExpResult
 from smodels.base.physicsUnits import TeV, fb
 from smodels_utils.helper.various import getCollaboration
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 
 def combineResults( database: Database, anas_and_SRs : Dict,
         debug : bool = False ) -> ExpResult:
@@ -63,7 +63,8 @@ def combineResults( database: Database, anas_and_SRs : Dict,
     er.globalInfo.covariance = covariance_matrix
     return er
 
-def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
+def removeFastLimFromDB ( db : Database, invert : bool = False,
+        picklefile  : os.PathLike = "temp.pcl" ) -> Database:
     """ remove fastlim results from database db
     :param db: database object
     :param invert: if True, then invert the selection, keep *only* fastlim
@@ -82,6 +83,31 @@ def removeFastLimFromDB ( db, invert = False, picklefile = "temp.pcl" ):
     if not invert:
         db.txt_meta.hasFastLim = False
         db.txt_meta.databaseVersion = f"fastlim{dbverold}" # FIXME why?
+        db.subs[0].pcl_meta.hasFastLim = False
+    if picklefile not in [ None, "" ]:
+        db.createBinaryFile( picklefile )
+    return db
+
+def removeYieldsOnlyFromDB ( db : Database, invert : bool = False,
+        picklefile  : os.PathLike = "temp.pcl" ) -> Database:
+    """ remove results with yields only entries from database db
+    :param db: database object
+    :param invert: if True, then invert the selection, keep *only* fastlim
+    :param picklefile: picklefile to store noTxEntries-free database
+    """
+    print ( f"[databaseManipulations] before {removalOrSelection(invert)} of empty {len(db.expResultList)} results" )
+    filtered = filterYieldsOnlyFromList ( db.expResultList, invert )
+    dbverold = db.databaseVersion
+    # dbverold = dbverold.replace(".","")
+    db.subs[0]._activeResults = filtered[:]
+    db.subs[0]._allExpResults = filtered
+    if invert:
+        db.subs[0].txt_meta.databaseVersion = f"yieldsonly{dbverold}"
+    db.subs = [ db.subs[0] ]
+    print ( f"[databaseManipulations] after {removalOrSelection(invert)} of noTxEntries {len(db.expResultList)} results" )
+    if not invert:
+        db.txt_meta.hasFastLim = False
+        db.txt_meta.databaseVersion = f"yieldsonly{dbverold}" # FIXME why?
         db.subs[0].pcl_meta.hasFastLim = False
     if picklefile not in [ None, "" ]:
         db.createBinaryFile( picklefile )
@@ -227,8 +253,41 @@ def filterNonAggregatedFromList ( expResList, invert = False, really = True,
             print ( "after filter", i.globalInfo.id )
     return ret
 
-def filterFastLimFromList ( expResList, invert = False, really = True, update = None ):
-    """ remove fastlim results from list of experimental list
+def filterYieldsOnlyFromList ( expResList : list, invert : bool = False,
+        really : bool = True, update : Optional[str] = None ) -> list:
+    """ remove results with no txnames -- yields only -- from
+    list of experimental results
+    :param expResList: list of experiment results
+    :param invert: if True, then invert the selection, return *only* fastlim
+    :param really: if False, then do not actually filter
+    :param update: consider entries only after this date (yyyy/mm/dd)
+    """
+    if not really:
+        return expResList
+    yieldsOnlyList,filteredList = [], []
+    for e in expResList:
+        assert len(e.datasets)>0, f"expResult has no datasets??"
+        hasYieldsOnly = False
+        hasWithTx = False
+        for dataset in e.datasets:
+            if len(dataset.txnameList) == 0:
+                hasTxFree = True
+            else:
+                hasWithTx = True
+        if hasYieldsOnly and hasWithTx:
+            logger.error ( f"I am confused, we have an expResult that has both yields-only as well as txnamed datasets??" )
+            sys.exit(-1)
+        if hasYieldsOnly:
+            yieldsOnlyList.append ( e )
+        else:
+            filteredList.append ( e )
+    if invert:
+        return yieldsOnlyList
+    return filteredList
+
+def filterFastLimFromList ( expResList : list, invert : bool = False,
+        really : bool = True, update : Optional[str] = None ) -> list:
+    """ remove fastlim results from list of experimental results
     :param expResList: list of experiment results
     :param invert: if True, then invert the selection, return *only* fastlim
     :param really: if False, then do not actually filter
@@ -292,7 +351,7 @@ def enableFullLlhdModels ( gI ):
     gI.statModels = newModels
 
 def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
-    """ filter out all results that have more than one jsonFiles 
+    """ filter out all results that have more than one jsonFiles
     for one srSetName in globalInfo.statModels
     replace the models with only the full json model
     :param expResList: list of experiment results

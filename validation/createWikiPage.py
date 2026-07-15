@@ -38,6 +38,16 @@ def sortingFunc ( x : str ) -> str:
     x = x.replace("CONF","")
     return x
 
+import logging
+
+class IgnoreWarningFilter(logging.Filter):
+    def filter(self, record):
+        return not record.getMessage().startswith(
+            "WARNING in infoObj.__init__() in 100: Tag "
+        )
+
+logging.getLogger().addFilter(IgnoreWarningFilter())
+
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,

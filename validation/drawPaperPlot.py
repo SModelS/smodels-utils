@@ -13,11 +13,25 @@ import json, tokenize, sys
 import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxesV2
+from smodels_utils.helper.prettyDescriptions import prettyTxname, \
+         prettyAxesV2, prettyDecay
 from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 import matplotlib.ticker as ticker
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, Optional, Tuple
+
+def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
+    """ count the number of control regions
+    :param regionType: one of: SR, CR, VR
+    """
+    ctr = 0
+    for r in regions:
+        if "type" in r:
+            if r["type"]==regionType:
+                ctr += 1
+        elif regionType == "SR": # if no type is mentioned, its an SR
+            ctr += 1
+    return ctr
 
 def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
     from matplotlib.patches import Polygon
@@ -191,6 +205,31 @@ class PaperPlot:
                 y_vals[i]= y * random.uniform(1-delta,1+delta)
         return y_vals
 
+    def removeSegments ( self, x_val : list[float],
+            y_val : list[float], label : str = "" ) -> tuple[list[float]]:
+        """ remove the segments of the line that are in side the remove_segments
+        box.
+        :param label: just for debugging, a name for the line
+        """
+        if self.specific_options["remove_segments"] in [ None, [] ]:
+            return x_val, y_val
+        if type ( self.specific_options["remove_segments"] ) == str:
+            self.specific_options["remove_segments"] = \
+                eval ( self.specific_options["remove_segments"] )
+        rec = self.specific_options["remove_segments"]
+        assert type(rec)==list, f"remove_segments {rec} needs to be a list of lists"
+        ret_x, ret_y = [], []
+        xmin, xmax = rec[0][0], rec[1][0]
+        ymin, ymax = rec[0][1], rec[1][1]
+        for x,y in zip ( x_val, y_val ):
+            if xmin < x < xmax and ymin < y < ymax:
+                continue
+            ret_x.append( x )
+            ret_y.append( y )
+            if "official" in label:
+                print ( f"{x,y} survived {label}" )
+                
+        return ret_x, ret_y
 
     def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
                    label : str ):
@@ -199,6 +238,7 @@ class PaperPlot:
             return
         if type(x_vals[0]) == list:
             for x_val, y_val in zip ( x_vals, y_vals ):
+                x_val, y_val = self.removeSegments ( x_val, y_val, label = label )
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                          label = label )
                 label = ""
@@ -228,12 +268,15 @@ class PaperPlot:
         sfname = path.replace( os.environ["HOME"], "~" )
         return sfname
 
-    def getCurveFromJson( self, anaDir, validationFolder, txname : str,
-            typ : str, axes = None, eval_axes : bool = True ) -> dict:
+    def getCurveFromJson( self, anaDir : str, validationFolder : str,
+            txname : str, typ : str, axes = None,
+            eval_axes : bool = True ) -> dict:
         """
         Get Exclusion Curve from official and SModelS json files
         :param anaDir: path to dir of analysis
-        :param txname: txname for which we need the exclusion curve
+        :param validationFolder: usually 'validation'
+        :param txname: txname for which we need the exclusion curve,
+        e.g. 'TChiWZ'
         :param typ: type of exclusion curve, one of:
         "official", "bestSR", "combined"
         official curve, SModelS bestSR, SModelS combined SR
@@ -383,7 +426,8 @@ class PaperPlot:
             if official:
                 min_off_y = excl_off[typ]["y"][0]
 
-            if excl_off[typ]["y"][-1] < excl_off[typ]["y"][0]:# and official:
+            ## FIXME no idea what that does
+            if type(excl_off[typ]["y"][0]) != list and excl_off[typ]["y"][-1] < excl_off[typ]["y"][0]:# and official:
                 # print("[drawPaperPlot] yes ")
                 index = [i for i,y  in enumerate(excl_off[typ]["y"]) if y>excl_off[typ]["y"][0]+50]
                 if len(index)>0:
@@ -395,7 +439,9 @@ class PaperPlot:
                 excl["x"].reverse()
                 excl["y"].reverse()
 
-            if len(excl_off[typ]["x"])>0 and len(excl["x"])>0 and excl_off[typ]["x"][-1] > excl["x"][0]:
+            ## FIXME no idea what that does
+            if len(excl_off[typ]["x"])>0 and type(excl_off[typ]["x"][0])!=list \
+                    and len(excl["x"])>0 and excl_off[typ]["x"][-1] > excl["x"][0]:
                 index = [i for i,x  in enumerate(excl["x"]) if x>excl_off[typ]["x"][-1]+20]
                 # print("[drawPaperPlot] cut off ", excl["x"][index[0]])
                 if len(index)>0:
@@ -409,12 +455,16 @@ class PaperPlot:
 
     def getPrettyProcessName( self, txname):
         # remove pp->intermediate state
+        pName = prettyDecay(txname, latex = True )
+        """
         pName = prettyTxname(txname, outputtype="latex" ).split(',')
         # print("pnamr ", pName)
         if len(pName)>2:
             pName = ','.join(pName[1:])
         else:
             pName = pName[1]
+        """
+        print ( f"@@ pretty name for {txname}: {pName}" )
         return pName
 
     def getPrettyAxisLabels( self, label):
@@ -523,8 +573,18 @@ class PaperPlot:
             new_y.append ( value["y"] )
         return new_x, new_y
 
+    def removeAllSegments ( self, x_vals : list, y_vals : list,
+           label : str = "all" ) -> tuple:
+        nx_vals, ny_vals = [], []
+        for x_val, y_val in zip ( x_vals, y_vals ):
+            x_val, y_val = self.removeSegments ( x_val, y_val, label=label )
+            nx_vals.append( x_val )
+            ny_vals.append( y_val )
+        x_vals, y_vals = nx_vals, ny_vals
+        return nx_vals, ny_vals
+
     def sortWithinSegments ( self, x_vals, y_vals ) -> tuple:
-        """ sort within segments, if the order of the x values is larger to 
+        """ sort within segments, if the order of the x values is larger to
         smaller, then invert """
         new_x, new_y = [], []
         for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
@@ -543,6 +603,8 @@ class PaperPlot:
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
+        x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1, "error_band" )
+        x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2, "error_band" )
         if self.specific_options["sort_segments"]:
             x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
@@ -550,25 +612,29 @@ class PaperPlot:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-        x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
-        x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
+        if self.specific_options["sort_segments"]:
+            x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
+            x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
         drawBand = True
-        indices = list ( range(min(len(x_vals1),len(x_vals2))) )
+        indices = list ( range(max(len(x_vals1),len(x_vals2))) )
         if not drawBand:
             indices = []
         x1s, x2s, y1s, y2s = np.array([]), np.array([]), np.array([]), np.array([])
         for idx in indices:
             #if not idx in x_vals2:
             #    continue
-            x1 = np.array ( x_vals1[idx] )
-            x2 = np.array ( x_vals2[idx] )
-            y1 = np.array ( y_vals1[idx] )
-            y2 = np.array ( y_vals2[idx] )
+            if idx < len(x_vals1):
+                x1 = np.array ( x_vals1[idx] )
+                y1 = np.array ( y_vals1[idx] )
+                x1s = np.concatenate ( [ x1s, x1 ] )
+                y1s = np.concatenate ( [ y1s, y1 ] )
 
-            x1s = np.concatenate ( [ x1s, x1 ] )
-            x2s = np.concatenate ( [ x2s, x2 ] )
-            y1s = np.concatenate ( [ y1s, y1 ] )
-            y2s = np.concatenate ( [ y2s, y2 ] )
+            if idx < len(x_vals2):
+                x2 = np.array ( x_vals2[idx] )
+                y2 = np.array ( y_vals2[idx] )
+
+                x2s = np.concatenate ( [ x2s, x2 ] )
+                y2s = np.concatenate ( [ y2s, y2 ] )
 
         poly = fill_between_polylines(ax, x1s, y1s, x2s, y2s,
                    facecolor=color, alpha=alpha, edgecolor=None )
@@ -610,6 +676,68 @@ class PaperPlot:
 
     def pprint ( self, *args ):
         print ( f"[drawPaperPlot] {''.join(map(str,*args))}" )
+
+    def countDataSets ( self, validationPlot ) -> dict:
+        gI = validationPlot.expRes.globalInfo
+        num_sr, num_cr = 0, 0
+        ver = "1bin"
+        if hasattr ( gI, "statModels" ):
+            ver = "(pyhf)" # how to differentiate between simplified and full?
+            for srSetName,model_types in gI.statModels.items():
+                for model_type in model_types:
+                    mtype = model_type[0]
+                    if mtype == "onnx":
+                        ver = "(nn)"
+                        break
+        g_dict = {}
+        if hasattr ( gI, "regionMappings" ):
+            for label,region in gI.regionMappings.items():
+                sname = region["smodels"]
+                g_dict [ sname ] = region
+        for ds in validationPlot.expRes.datasets:
+            name = ds.dataInfo.dataId
+            if name in g_dict:
+                t = g_dict[name]["type"]
+                assert t in [ "SR", "CR" ], f"dont know SR type {t}"
+                if t == "SR":
+                    num_sr += 1
+                elif t == "CR":
+                    num_cr += 1
+        if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+            ver = "(SLv1)"   #SLv1 vs SLv2
+        if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
+            ver = "(SLv2)"
+        ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr }
+        return ret
+
+    def getRanges ( self, lines ):
+        r = {}
+        r["min_obs_x"], r["max_obs_x"] = \
+            self.getRange( lines, "obsExclusion", "x" )
+        r["min_obs_y"], r["max_obs_y"] = \
+            self.getRange( lines, "obsExclusion", "y" )
+        r["min_exp_x"], r["max_exp_x"] = \
+            self.getRange( lines, "expExclusion", "x" )
+        r["min_exp_y"], r["max_exp_y"] = \
+            self.getRange( lines, "expExclusion", "y" )
+        if True: ## harmonize ranges between exp and obs
+            min_x = min ( r["min_obs_x"], r["min_exp_x"] )
+            max_x = max ( r["max_obs_x"], r["max_exp_x"] )
+            min_y = min ( r["min_obs_y"], r["min_exp_y"] )
+            max_y = max ( r["max_obs_y"], r["max_exp_y"] )
+            if "max_y" in self.specific_options and self.specific_options["max_y"] not in [ None, "auto" ]:
+                max_y = float ( self.specific_options["max_y"] ) / 2.
+            if "min_y" in self.specific_options and self.specific_options["min_y"] not in [ None, "auto" ]:
+                min_y = float ( self.specific_options["min_y"] )
+            if "max_x" in self.specific_options and self.specific_options["max_x"] not in [ None, "auto" ]:
+                max_x = float ( self.specific_options["max_x"] )
+            if "min_x" in self.specific_options and self.specific_options["min_x"] not in [ None, "auto" ]:
+                min_x = float ( self.specific_options["min_x"] )
+            r["min_obs_x"], r["min_exp_x"] = min_x, min_x
+            r["max_obs_x"], r["max_exp_x"] = max_x, max_x
+            r["min_obs_y"], r["min_exp_y"] = min_y, min_y
+            r["max_obs_y"], r["max_exp_y"] = max_y, max_y
+        return r
 
     def draw( self, addJitter : bool = True ) -> list:
         """
@@ -683,13 +811,18 @@ class PaperPlot:
             origDir = anaDir.replace("-eff","-orig")
             cr_is = "orig"
 
+        origValidationFolder = validationFolder
+        if "origValidationFolder" in self.general_options:
+            origValidationFolder = self.general_options["origValidationFolder"]
+
         orig_excl = None
         if anaDir != origDir and os.path.exists ( origDir ):
-            orig_excl = self.getCurveFromJson (origDir, validationFolder, txname,
-                typ="comb", axes=axes, eval_axes=eval_axes )
+            orig_excl = self.getCurveFromJson (origDir, origValidationFolder,
+                    txname, typ="comb", axes=axes, eval_axes=eval_axes )
             if offshell:
-                orig_excl_off = self.getCurveFromJson( origDir, validationFolder,
-                    txnameOff, typ="comb", axes=axes, eval_axes = True )
+                orig_excl_off = self.getCurveFromJson( origDir,
+                    origValidationFolder, txnameOff, typ="comb", axes=axes,
+                    eval_axes = True )
                 orig_excl = self.addOffshell ( orig_excl, orig_excl_off )
             self.pprint ( f"found curve for {origDir}!" )
 
@@ -718,49 +851,14 @@ class PaperPlot:
         if combSR:
             lines["comb"] = comb_excl
 
-        min_obs_x, max_obs_x = self.getRange( lines, "obsExclusion", "x" )
-        min_obs_y, max_obs_y = self.getRange( lines, "obsExclusion", "y" )
-        min_exp_x, max_exp_x = self.getRange( lines, "expExclusion", "x" )
-        min_exp_y, max_exp_y = self.getRange( lines, "expExclusion", "y" )
+        ranges = self.getRanges( lines )
+
 
         num_sr, num_cr = 0, 0
         ver = ""
 
-        def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
-            """ count the number of control regions
-            :param regionType: one of: SR, CR, VR
-            """
-            ctr = 0
-            for r in regions:
-                if "type" in r:
-                    if r["type"]==regionType:
-                        ctr += 1
-                elif regionType == "SR": # if no type is mentioned, its an SR
-                    ctr += 1
-            return ctr
-
-        gI = validationPlot.expRes.globalInfo
-        if hasattr ( gI, "statModels" ):
-            ver = "(pyhf)" # how to differentiate between simplified and full?
-            for srSetName,model_types in gI.statModels.items():
-                regions = gI.srSets[srSetName]
-                region_dicts = []
-                for region in regions:
-                    if region in gI.srMappingsDict:
-                        region_dicts.append ( gI.srMappingsDict[region] )
-                for model_type in model_types:
-                    mtype = model_type[0]
-                    if mtype == "onnx":
-                        ver = "(nn)"
-                num_sr += countRegionsOfType(region_dicts,"SR")
-                num_cr += countRegionsOfType(region_dicts,"CR")
-        else:
-            num_sr = len(validationPlot.expRes.datasets)
-
-        if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
-            ver = "(SLv1)"   #SLv1 vs SLv2
-        if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
-            ver = "(SLv2)"
+        nums = self.countDataSets ( validationPlot )
+        ver, num_sr, num_cr = nums["ver"], nums["num_sr"], nums["num_cr"]
 
         #now plot figure
         # self.pprint("Drawing pretty obs and exp plots")
@@ -771,18 +869,15 @@ class PaperPlot:
 
         fig,ax = plt.subplots(figsize=(5,4))
 
-        step_x = int(max_obs_x/100)*10
+        step_x = int(ranges["max_obs_x"]/100)*10
         mid_x = 0
-        if max_obs_x < -.99:
+        if ranges["max_obs_x"] < -.99:
             self.pprint ( f"seems like exclusion lines are empty" )
             return
-        if max_obs_x > -.99:
-            mid_x = int((max_obs_x - min_obs_x)/2)
-        step_y = int(max_obs_y)
+        if ranges["max_obs_x"] > -.99:
+            mid_x = int((ranges["max_obs_x"] - ranges["min_obs_x"])/2)
+        step_y = int(ranges["max_obs_y"])
 
-        #self.pprint("max obs y ", max_obs_y)
-        #self.pprint("step y", step_y)
-        #self.pprint("max exp y ", max_exp_y)
         x_label, y_label = "",""
 
         axis_label = prettyAxes(validationPlot).replace(" ","")
@@ -807,26 +902,24 @@ class PaperPlot:
             elif "y=" in lbl:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
             else: continue
+        y_label = f"${y_label.replace('$','')}$"
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
-        ax.set_xlim([int(min_obs_x/10)*10,round(max_obs_x+step_x,-1)])
+        ax.set_xlim([int(ranges["min_obs_x"]/10)*10,round(ranges["max_obs_x"]+step_x,-1)])
         if 'Gamma' in y_label:
             self.pprint ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            max_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
-            if bestSR: max_obs_y = max(max_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
-            if combSR: max_obs_y = max(max_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb", width=True))
+            ranges["max_obs_y"] = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "max", e_type="official")
+            if bestSR: ranges["max_obs_y"] = max(ranges["max_obs_y"], self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
+            if combSR: ranges["max_obs_y"] = max(ranges["max_obs_y"], self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "max", e_type="comb", width=True))
 
-            min_obs_y = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "min", e_type="official")
-            if bestSR: min_obs_y = min(min_obs_y, self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
-            if combSR: min_obs_y = min(min_obs_y, self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "min", e_type="comb", width=True))
-            step_y = max_obs_y*1000
-            #self.pprint("min_obs_y ", min_obs_y)
-            #print("step ", step_y)
-            ax.set_ylim([min_obs_y, max_obs_y+step_y])
+            ranges["min_obs_y"] = self.getExtremeValue(off_excl["obsExclusion"]["y"], extreme = "min", e_type="official")
+            if bestSR: ranges["min_obs_y"] = min(ranges["min_obs_y"], self.getExtremeValue(bestSR_excl["obsExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
+            if combSR: ranges["min_obs_y"] = min(ranges["min_obs_y"], self.getExtremeValue(comb_excl["obsExclusion"]["y"], extreme = "min", e_type="comb", width=True))
+            step_y = ranges["max_obs_y"]*1000
+            ax.set_ylim([ranges["min_obs_y"], ranges["max_obs_y"]+step_y])
         else:
-            #print("max_obs_y + step ", max_obs_y+step_y )
-            ax.set_ylim([0,round(max_obs_y+step_y,-1)])
+            ax.set_ylim([0,round(ranges["max_obs_y"]+step_y,-1)])
         if hasattr ( validationPlot.expRes.globalInfo, "includeCRs" ):
             if validationPlot.expRes.globalInfo.includeCRs == False:
                 num_cr = 0
@@ -838,15 +931,19 @@ class PaperPlot:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
         # analysis id on left of title
         fs = self.specific_options["title_fontsize"]
-        plt.title( title, loc='left', fontsize=fs, x=-.12)
         # processName
         # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
-        ptxname = validationPlot.txName 
+        ptxname = validationPlot.txName
         if txnameOff == txname + "off":
             ptxname = txname + "on+off"
         pName = self.getPrettyProcessName(ptxname)
+        right_title = pName
         # process string on right of title
-        plt.title(pName,loc='right', fontsize=fs)
+        if self.specific_options["style"]=="sabine":
+            title = f"{analysis}: {pName}"
+            right_title = f"{num_sr} SRs + {num_cr} CRs"
+        plt.title( title, loc='left', fontsize=fs, x=-.12)
+        plt.title( right_title,loc='right', fontsize=fs)
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
@@ -956,8 +1053,11 @@ class PaperPlot:
                       fontsize = 8)
         #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
 
-        plt.text( 0.55, 0.65, r"$\bf observed~exclusion$",
-                  transform=fig.transFigure, fontsize = 10 )
+        ox,oy,osize=.55,.65, 10
+        if "style" in self.specific_options and self.specific_options["style"]=="sabine":
+            ox,oy,osize = 0.25,0.8, 12
+        plt.text( ox, oy, r"$\bf observed~exclusion$",
+                  transform=fig.transFigure, fontsize = osize )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
 
@@ -985,9 +1085,9 @@ class PaperPlot:
 
         fig,ax = plt.subplots(figsize=(5,4))
 
-        step_x = int(max_exp_x/100)*10
-        mid_x = int((max_exp_x - min_exp_x)/2)
-        step_y = int(max_exp_y)
+        step_x = int(ranges["max_exp_x"]/100)*10
+        mid_x = int((ranges["max_exp_x"] - ranges["min_exp_x"])/2)
+        step_y = int(ranges["max_exp_y"])
 
         #print("max exp y ", max_exp_y)
         #print("exp step y ", step_y)
@@ -995,21 +1095,25 @@ class PaperPlot:
 
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
-        # ax.set_xlim([int(min_exp_x/10)*10,round(max_exp_x+step_x,-1)])
+        ax.set_xlim([int(ranges["min_obs_x"]/10)*10,round(ranges["max_obs_x"]+step_x,-1)])
         if 'Gamma' in y_label:
             self.pprint ( f"{RED} FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
-            max_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
-            if bestSR: max_exp_y = max(max_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
-            if combSR: max_exp_y = max(max_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb", width=True))
+            ranges["max_exp_y"] = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "max", e_type="official")
+            if bestSR:
+                ranges["max_exp_y"] = max(ranges["max_exp_y"], self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "max", e_type="bestSR", width=True))
+            if combSR:
+                ranges["max_exp_y"] = max(ranges["max_exp_y"], self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "max", e_type="comb", width=True))
 
-            min_exp_y = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "min", e_type="official")
-            if bestSR: min_exp_y = min(min_exp_y, self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
-            if combSR: min_exp_y = min(min_exp_y, self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "min", e_type="comb", width=True))
-            print("min exp y ", min_exp_y)
-            step_y = max_exp_y*1000
+            ranges["min_exp_y"] = self.getExtremeValue(off_excl["expExclusion"]["y"], extreme = "min", e_type="official")
+            if bestSR:
+                ranges["min_exp_y"] = min(ranges["min_exp_y"], self.getExtremeValue(bestSR_excl["expExclusion"]["y"], extreme = "min", e_type="bestSR", width=True))
+            if combSR:
+                ranges["min_exp_y"] = min(ranges["min_exp_y"], self.getExtremeValue(comb_excl["expExclusion"]["y"], extreme = "min", e_type="comb", width=True))
+            print("min exp y ", ranges["min_exp_y"])
+            step_y = ranges["max_exp_y"]*1000
             print("step exp y ", step_y)
-            ax.set_ylim([min_exp_y,max_exp_y+step_y])
-        else: ax.set_ylim([0,round(max_exp_y+step_y,-1)])
+            ax.set_ylim([ranges["min_exp_y"],ranges["max_exp_y"]+step_y])
+        else: ax.set_ylim([0,round(ranges["max_exp_y"]+step_y,-1)])
 
         nSRs = f"{num_sr} SRs"
         if num_sr == 1:
@@ -1017,13 +1121,18 @@ class PaperPlot:
         title = f"{analysis}: {nSRs}"
         if num_cr > 0:
             title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
-        plt.title( title, loc='left', fontsize=12, x=-.12)
-        plt.title(pName,loc='right', fontsize=12)
+        right_title = pName
+        if self.specific_options["style"]=="sabine":
+            title = f"{analysis}: {pName}"
+            right_title = f"{num_sr} SRs + {num_cr} CRs"
+        plt.title( title, loc='left', fontsize=12, x=-.12 )
+        plt.title( right_title,loc='right', fontsize=12 )
 
         exp_name = analysis.split('-')[0]
         if "x" in off_excl["expExclusion"]:
-            self.plotLines ( ax, off_excl["expExclusion"]["x"], off_excl["expExclusion"]["y"],
-                        "black", "solid", f'{exp_name} official')
+            self.plotLines ( ax, off_excl["expExclusion"]["x"], 
+                    off_excl["expExclusion"]["y"],
+                    "black", "solid", f'{exp_name} official')
 
         plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
@@ -1076,7 +1185,7 @@ class PaperPlot:
                     self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
                            linestyle = "dashed", color = "red" )
 
-        if orig_excl not in [ None, [] ]:
+        if orig_excl not in [ None, [], {} ] and "expExclusion" in orig_excl:
             x_vals = orig_excl["expExclusion"]["x"]
             y_vals = orig_excl["expExclusion"]["y"]
             label = f"SModelS: CR comb."
@@ -1108,7 +1217,12 @@ class PaperPlot:
         if massg != "":
             plt.text( 0.6,0.6, rf"{massg} GeV",
                       transform=fig.transFigure, fontsize = 8)
-        plt.text(0.55,0.65, r"$\bf expected~exclusion$", transform=fig.transFigure, fontsize = 10)
+
+        ox,oy,osize=.55,.65, 10
+        if "style" in self.specific_options and self.specific_options["style"]=="sabine":
+            ox,oy,osize = 0.25,0.8, 12
+        plt.text( ox, oy, r"$\bf expected~exclusion$",
+                  transform=fig.transFigure, fontsize = osize )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
         txn = txname if txnameOff == "" else txnameOff

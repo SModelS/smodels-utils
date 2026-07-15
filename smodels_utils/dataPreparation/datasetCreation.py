@@ -17,8 +17,8 @@ import re
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.base.smodelsLogging import logger
-from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer,\
-     LikelihoodComputer
+from smodels.statistics.simplifiedLikelihoods import SLData, SLUpperLimitComputer,\
+     SLLikelihoodComputer
 from smodels.base.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
@@ -110,12 +110,12 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
     # alpha = .05
     # lumi = eval ( databaseCreator.metaInfo.lumi )
     # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-    m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
-    llcomp = LikelihoodComputer ( m )
-    comp = UpperLimitComputer ( llcomp ) # 1. - alpha )
+    m = SLData ( newds.observedN, newds.expectedBG, bgErr2, None, lumi = lumi )
+    # llcomp = SLLikelihoodComputer ( m )
+    comp = SLUpperLimitComputer ( m ) # 1. - alpha )
     logger.error ( "FIXME need to replace with spey!" )
     try:
-        ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber(fb)
+        ul = ( comp.getUpperLimitOnMu ( ) / lumi ).asNumber(fb)
     except Exception as e:
         print ( f"[datasetCreation] Exception {e}" )
         print ( f"[datasetCreation] observed: {newds.observedN}" )
@@ -133,7 +133,7 @@ def aggregateToOne ( origDataSets, covariance, aggidx, agg, lumi, aggprefix ):
         ulspey = statModel.poi_upper_limit ( expected = observed ) / lumi
         ulspeyE = statModel.poi_upper_limit ( expected = apriori ) / lumi
     newds.upperLimit = str(f"{ul:f}*fb" )
-    ule = comp.getUpperLimitOnSigmaTimesEff ( evaluationType = apriori ).asNumber(fb) # / lumi.asNumber(1./fb)
+    ule = ( comp.getUpperLimitOnMu ( evaluationType = apriori ) / lumi ).asNumber(fb) # / lumi.asNumber(1./fb)
     newds.expectedUpperLimit =  str(f"{ule:f}*fb" )
     # print ( f"@@@ UL {ul:.2f} {ulspey:.2f}" )
     # print ( f"@@@ ULE {ule:.2f} {ulspeyE:.2f}" )

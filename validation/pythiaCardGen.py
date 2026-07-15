@@ -2,30 +2,33 @@
 
 """
 .. module:: pythiaCardGen
-   :synopsis: Method to generate a process-specific pythia card 
+   :synopsis: Method to generate a process-specific pythia card
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
 
-import tempfile,os
+import tempfile, os
 import logging
 logger = logging.getLogger(__name__)
+from typing import Optional, Union
 
-
-def getPythiaCardFor(momPDGs,filename=None,pythiaVersion=6):
+def getPythiaCardFor( momPDGs : list,filename : Optional[os.PathLike] = None,
+                      pythiaVersion : int = 6 ) -> Union[bool,str]:
     """
-    Generates a pythia card to run only production of the process contaning the mother PDGs.
-    For Pythia 6 uses a pre-define dictionary, while for Pythia 8 simply restrict the production
-    channels using the mom PDGs.
-    :param momPDGs: list with one or two PDGs. If only one is defined, pair production
-                    of the same mother is assumed
-    :param filename: Name for the pythia.card file. If no name is defined, a temporary name will be
-                     assigned.
+    Generates a pythia card to run only production of the process contaning the
+    mother PDGs.
+    For Pythia 6 uses a pre-define dictionary, while for Pythia 8 simply
+    restrict the production channels using the mom PDGs.
+    :param momPDGs: list with one or two PDGs. If only one is defined, pair
+    production of the same mother is assumed
+    :param filename: Name for the pythia.card file. If no name is defined, a
+    temporary name will be assigned.
     :param pythiaVersion: Version of Pythia to be used (6 or 8)
-    :return: Name of the file generated
+
+    :returns: Name of the file generated, or False
     """
-    
+
     if pythiaVersion == 6:
         return getPythia6CardFor(momPDGs,filename)
     elif pythiaVersion == 8:
@@ -56,7 +59,7 @@ def getPythia8CardFor(momPDGs,filename=None):
     susyIdA = f"SUSY:idA = {momPDGs[0]}"
     susyIdB = f"SUSY:idB = {momPDGs[1]}"
     if len(momPDGs)>2:
-        pdgids = ",".join ( map ( str, momPDGs ) ) 
+        pdgids = ",".join ( map ( str, momPDGs ) )
         susyIdA = f"SUSY:idVecA = {pdgids}"
         susyIdB = f"SUSY:idVecB = {pdgids}"
 #Define initial block:
@@ -101,7 +104,7 @@ PhaseSpace:useBreitWigners = off" %(susyIdA,susyIdB)
     f.close()
 
     return filename
-   
+
 
 
 
@@ -115,13 +118,13 @@ def getPythia6CardFor(momPDGs,filename=None):
                      assigned.
     :return: Name of the file generated
     """
-    
+
     if not filename:
         filename = tempfile.mkstemp(prefix="pythia_",suffix=".card",dir=os.getcwd())
         os.close(filename[0])
         filename = filename[1]
     f = open(filename,'w')
-    
+
     #Define initial block:
     header = "! Pythia6 template configuration used when running smodels, for\n\
 ! the computation of the LO cross sections. \n\
@@ -140,7 +143,7 @@ MSTP(111)=0    ! No hadronization\n\
 MSTJ(1)=0      ! No fragmentation\n\
 MSEL=0        ! All MSSM processes, except Higgs production\n"
     f.write(header)
-    
+
     #Define the processes to be generated:
     if len(momPDGs) == 1: pids = [[momPDGs[0],momPDGs[0]]]
     else:
@@ -148,15 +151,15 @@ MSEL=0        ! All MSSM processes, except Higgs production\n"
         for ipdg1,pdg1 in enumerate(momPDGs):
             for ipdg2 in range(ipdg1,len(momPDGs)):
                 pids.append([pdg1,momPDGs[ipdg2]])
-    
+
     for pid in pids:
         procs = getProcessesFor(pid)
-        if not procs: 
+        if not procs:
             continue
             # return False
         for p in procs:
             f.write(f"MSUB({p!s})=1\n")
-    
+
     #Write footer:
     footer = "end\nNEVENTS,0,0,SQRTSD0\nend\n"
     f.write(footer)
@@ -170,7 +173,7 @@ def getProcessesFor(pidPair):
     :param pidPair: pair of PDGs (i.e. [1000011,1000011])
     :return: list of msub values
     """
-    
+
     msubDict = [[[1000011,1000011],[201]], [[2000011,2000011],[202]], [[1000011,2000011],[203]],
                [[1000013,1000013],[204]], [[2000013,2000013],[205]], [[1000013,2000013],[206]],
                [[1000015,1000015],[207]], [[2000015,2000015],[208]], [[1000015,2000015],[209]],
@@ -198,12 +201,12 @@ def getProcessesFor(pidPair):
                [[2000005,'sqL'],[283,286]],
                [[1000005,1000005],[287,289,291]], [[2000005,2000005],[288,290,292]], [[1000005,2000005],[293,296]],
                [[1000005,1000021],[294]], [[2000005,1000021],[295]]]
-    
+
     ptcDic = {'sqL' : [i for i in range(1000001,1000005)], 'sqR' : [i for i in range(2000001,2000005)]}
-    
+
     #Make sure the PDGs are positive:
     pids = [abs(pidPair[0]),abs(pidPair[1])]
-    
+
     for msub in msubDict:
         pair = msub[0]
         isub = msub[1]
@@ -212,18 +215,18 @@ def getProcessesFor(pidPair):
             if pids[0] in ptcDic[pair[0]] and pids[1] == pair[1]:
                 return isub
             elif pids[1] in ptcDic[pair[0]] and pids[0] == pair[1]:
-                return isub 
+                return isub
         elif isinstance(pair[1],str) and not isinstance(pair[0],str):
             if pids[0] in ptcDic[pair[1]] and pids[1] == pair[0]:
                 return isub
             elif pids[1] in ptcDic[pair[1]] and pids[0] == pair[0]:
-                return isub 
-        elif isinstance(pair[0],str) and isinstance(pair[1],str):            
+                return isub
+        elif isinstance(pair[0],str) and isinstance(pair[1],str):
             if pids[0] in ptcDic[pair[0]] and pids[1] in ptcDic[pair[1]]:
                 return isub
             elif pids[0] in ptcDic[pair[1]] and pids[1] in ptcDic[pair[0]]:
                 return isub
-    
+
     logger.warning(f"Pythia process for {str(pidPair)} not found")
 #     import sys
 #     sys.exit()

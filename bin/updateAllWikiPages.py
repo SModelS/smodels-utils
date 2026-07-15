@@ -13,7 +13,7 @@ from smodels.base.runtime import checkForIncompatibleModuleVersions
 smodels_check = checkForIncompatibleModuleVersions()
 
 def execute(cmd):
-    print ( f"[cmd] {' '.join(cmd)}" )
+    print ( f"[cmd] {MAGENTA}{' '.join(cmd)}{RESET}" )
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line 
@@ -125,9 +125,10 @@ def main():
         cmd = [ "./publishDatabasePickle.py" ]
         if A.ignore:
             cmd += [ "-i" ]
-        exec ( cmd + [ "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-f", db ], A.dry_run )
+        exec ( cmd + [ "-a", "-p", "-s", "-r", "--full_llhds", "-b", "-y", "-f", db ], A.dry_run )
         exec ( cmd + [ "-f", "./superseded.pcl" ], A.dry_run )
         exec ( cmd + [ "-f", "./nonaggregated.pcl" ], A.dry_run )
+        exec ( cmd + [ "-f", "./yields_only.pcl" ], A.dry_run )
         exec ( cmd + [ "-f", "./full_llhds.pcl" ], A.dry_run )
         exec ( cmd + [ "-F", "-f", "./fastlim.pcl" ], A.dry_run )
         if not A.no_debug:

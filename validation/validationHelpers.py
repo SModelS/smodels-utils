@@ -213,6 +213,18 @@ def compareTwoAxes ( axis1 : str, axis2 : str ) -> bool:
                     return False
                 ctr+=1
         return True
+    # Check if a dict is a subset of the other one, and if the longest dict has not values not appearing in the subset one
+    if type(d1) == dict and type(d2) == dict and d1 != d2:
+        if len(d1.keys()) < len(d2.keys()): # d2 is the longer one
+            for k,v in d2.items():
+                if (k in d1.keys() and d1[k] != d2[k]) or (k not in d1.keys() and d2[k] not in d1.values()):
+                    return False
+        else: # d2 is smaller or equal to d1
+            for k,v in d1.items():
+                if (k in d2.keys() and d2[k] != d1[k]) or (k not in d2.keys() and d1[k] not in d2.values()):
+                    return False
+        print(f"The 2 axes {axis1} and {axis2} are not identical, you may want to check the convert.py. In the meantime, I will consider they are.")
+        return True
     return d1 == d2
 
 

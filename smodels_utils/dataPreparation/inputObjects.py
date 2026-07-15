@@ -199,7 +199,7 @@ class MetaInfoInput(Locker):
     infoAttr = [ 'id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
                  'publication', 'publicationDOI', 'contact', 'supersededBy',
                  'supersedes', 'comment', 'modelFile', 'datasetOrderForModel',
-                 'srMappings', 'srSets', 'statModels',
+                 'regionMappings', 'regionSets', 'statModels',
                  'private', 'implementedBy','lastUpdate', 'datasetOrder',
                  'covariance', 'combinableWith', 'source',
                  'Leff_inner', 'Leff_outer', 'type', 'includeCRs',
@@ -518,19 +518,22 @@ class DataSetInput(Locker):
             try:
                 # v3.1.0
                 # new API
-                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
+                from smodels.statistics.simplifiedLikelihoods import SLData, \
+                    SLUpperLimitComputer
                 from smodels.statistics.basicStats import aposteriori
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
-                           lumi = lumi )
-                llhdComp = LikelihoodComputer  ( m )
-                comp = UpperLimitComputer ( llhdComp, 1. - alpha )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( ).asNumber ( fb )
+                m = SLData ( self.observedN, self.expectedBG, self.bgError**2,
+                        None, 1., lumi = lumi )
+                #llhdComp = SLLikelihoodComputer  ( m )
+                #comp = SLUpperLimitComputer ( llhdComp, 1. - alpha )
+                comp = SLUpperLimitComputer ( m, 1. - alpha )
+
+                ul = ( comp.getUpperLimitOnMu() / lumi ).asNumber ( fb )
                 try:
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( expected=aposteriori ).asNumber ( fb )
+                    ulExpected = ( comp.getUpperLimitOnMu( expected=aposteriori ) / lumi ).asNumber ( fb )
                 except Exception as e:
-                    ulExpected = comp.getUpperLimitOnSigmaTimesEff ( evaluationType=aposteriori ).asNumber ( fb )
+                    ulExpected = ( comp.getUpperLimitOnMu ( evaluationType=aposteriori ) / lumi ).asNumber ( fb )
                 if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                    ul = ( comp.getUpperLimitOnMu( m, ) / lumi ).asNumber ( fb )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
                 return ul, ulExpected
 
@@ -538,15 +541,16 @@ class DataSetInput(Locker):
                 print ( f"[inputObjects] Exception {e}, will try with older version" )
             try:
                 # v3.0.0
-                from smodels.statistics.simplifiedLikelihoods import Data, UpperLimitComputer
+                from smodels.statistics.simplifiedLikelihoods import SLData, \
+                    SLUpperLimitComputer
                 # new API
-                m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1.,
-                           lumi = lumi )
-                comp = UpperLimitComputer ( 1. - alpha )
-                ul = comp.getUpperLimitOnSigmaTimesEff ( m ).asNumber ( fb )
-                ulExpected = comp.getUpperLimitOnSigmaTimesEff ( m, expected="posteriori" ).asNumber ( fb )
+                m = SLData ( self.observedN, self.expectedBG, self.bgError**2,
+                        None, 1., lumi = lumi )
+                comp = SLUpperLimitComputer ( 1. - alpha )
+                ul = ( comp.getUpperLimitOnMu ( m ) / lumi ).asNumber ( fb )
+                ulExpected = ( comp.getUpperLimitOnMu ( m, expected="posteriori" ) / lumi ).asNumber ( fb )
                 if type(ul) == type(None):
-                    ul = comp.getUpperLimitOnSigmaTimesEff ( m, )
+                    ul = ( comp.getUpperLimitOnMu ( m, ) / lumi ).asNumber ( fb )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
                 print ( f"[inputObjects] older version worked!" )
                 return ul, ulExpected

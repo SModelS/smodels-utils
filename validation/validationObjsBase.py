@@ -35,14 +35,16 @@ from validationHelpers import getAxisType, axisV2ToV3
 
 complaints = { "NoResultsFor": 0 }
 
-class ProgressHandler:
-    """ a namespace to handle everything around the progressbar """
+class ProgressBarHandler:
+    """ a class to handle everything around the progressbar """
     def __init__ ( self, pidfile : str = ".p.@@MOTHERPID@@.pid" ):
         self.motherpid = os.getpid()
         pidfile = pidfile.replace("@@MOTHERPID@@",f"{self.motherpid}")
         self.pidfile = pidfile
         import multiprocessing as mp
         mp.set_start_method("spawn", force=True)
+        # in every run, remove files older than 24 hours
+        self.removeStalePidFiles ( 24. )
 
     def readPid ( self ) -> int:
         """ read the progressbar pid from the pid file """
@@ -50,11 +52,29 @@ class ProgressHandler:
             return None
         try:
             with open( self.pidfile, "rt" ) as f:
-                pid = int ( f.read() )
+                d = eval ( f.read() )
+                pid = d
+                if type(d)==dict:
+                  pid = d["pid"]
                 return pid
         except ValueError as e:
             pass
         return None
+
+    def removeStalePidFiles ( self, max_hours : float = 24 ):
+        """ all pid files that are older than 24 hours,
+        remove them.
+        """
+        files = glob.glob ( ".p.*.pid" )
+        t0 = time.time()
+        from pathlib import Path
+        for fname in files:
+            with open ( fname, "rt" ) as f:
+                d = eval ( f.read() )
+            # dt in hours
+            dt = ( t0 - d["time"] ) / 60. / 60.
+            if dt > max_hours:
+                Path ( fname ).unlink ( missing_ok = True )
 
     def storePid ( self, pid : int ):
         """ store the pid of the progress bar in self.pidfile,
@@ -62,10 +82,12 @@ class ProgressHandler:
         cpid = self.readPid ( )
         if cpid != None:
             pass
-        #print ( f"[ProgressHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
+        #print ( f"[ProgressBarHandler] {YELLOW}when storing pid, we found an old pid ({cpid}). will kill it.{RESET}" )
         # self.killProgressBar( pidfile )
         f=open(self.pidfile,"wt")
-        f.write ( f"{pid}\n" )
+        f.write ( "{" )
+        f.write ( f"'pid': {int(pid)}, 'time': {time.time()}" )
+        f.write ( "}\n" )
         f.close()
 
     def rmFile ( self ):
@@ -78,7 +100,7 @@ class ProgressHandler:
     def killProgressBar ( self ):
         """ kill the progressbar """
         pid = self.readPid()
-        print ( f"\n[ProgressHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
+        print ( f"\n[ProgressBarHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
         if pid == None:
             return
         import psutil
@@ -255,19 +277,27 @@ class ValidationObjsBase():
         if 'r_expected_p1' in expRes:
             er = expRes["r_expected"]
             er_p1 = expRes["r_expected_p1"]
+            if type(er_p1)==str:
+                er_p1=eval(er_p1)
             if er > 0.:
                 Dict['eUL_m1']=round_to_n ( eul / er * er_p1, 5 )
         if 'r_expected_m1' in expRes:
             er_m1 = expRes["r_expected_m1"]
+            if type(er_m1)==str:
+                er_m1=eval(er_m1)
             if er > 0.:
                 Dict['eUL_p1']=round_to_n ( eul / er * er_m1, 5 )
         if 'r_nn_p1' in expRes:
             r = expRes["r"]
             r_p1 = expRes["r_nn_p1"]
+            if type(r_p1)==str:
+                r_p1=eval(r_p1)
             if r > 0.:
                 Dict['UL_p1']=round_to_n ( oul / r * r_p1, 5 )
         if 'r_nn_m1' in expRes:
             er_m1 = expRes["r_nn_m1"]
+            if type(er_m1)==str:
+                er_p1=eval(er_m1)
             if r > 0.:
                 Dict['UL_m1']=round_to_n ( oul / r * er_m1, 5 )
         if 'expected upper limit (fb)' in expRes:
@@ -745,7 +775,7 @@ class ValidationObjsBase():
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
         self.willRun = self.addToListOfRunningFiles ( fileList )
-        phandler = ProgressHandler()
+        phandler = ProgressBarHandler()
         nmax = None
         if "limitPoints" in self.options and self.options["limitPoints"]>0:
             nmax = self.options["limitPoints"]
@@ -988,7 +1018,9 @@ class ValidationObjsBase():
                 pass
         self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
-            f.write ( f"{current}\n" )
+            from smodels_utils.helper.various import py_dumps
+            d = py_dumps(current)
+            f.write ( f"{d}\n" )
             f.close()
         self.unlockFile()
         self.willRun = []
@@ -1027,7 +1059,9 @@ class ValidationObjsBase():
                     shouldRun.add ( f )
         self.lockFile()
         with open ( self.runningDictFile, "wt" ) as f:
-            f.write ( f"{current}\n" )
+            from smodels_utils.helper.various import py_dumps
+            d = py_dumps(current)
+            f.write ( f"{d}\n" )
             f.close()
         self.unlockFile()
         return shouldRun

@@ -11,7 +11,7 @@
 import sys
 sys.path.insert(0,"../")
 import unittest
-from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer, LikelihoodComputer
+from smodels.tools.simplifiedLikelihoods import SLData, UpperLimitComputer, SLLikelihoodComputer
 from numpy import sqrt, arange, array
 
 class SLTest(unittest.TestCase):
@@ -30,7 +30,7 @@ class SLTest(unittest.TestCase):
         C=[]
         for i in range(ni,n):
             C.append ( C_[ni+ncov*i:ncov*i+n] )
-        m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S, 
+        m = SLData ( observed=D, backgrounds=B, covariance=C, third_moment=S,
                     nsignal=sig, name=f"model{int(n)}", deltas_rel=deltas_rel )
         return m
 
@@ -44,9 +44,9 @@ class SLTest(unittest.TestCase):
         """ test the evolution of likelihoods """
         m = self.createModel ( 4, 2, 0. )
         m02 = self.createModel ( 4, 2, 0.2 )
-        l = LikelihoodComputer ( m )
+        l = SLLikelihoodComputer ( m )
         ulComp = UpperLimitComputer(ntoys=10000, cl=.95 )
-        l02 = LikelihoodComputer ( m02 )
+        l02 = SLLikelihoodComputer ( m02 )
         print ( "m obs=", m.observed )
         print ( "m bg=", m.backgrounds )
         print ( "m signal=", m.nsignal )
@@ -83,7 +83,7 @@ class SLTest(unittest.TestCase):
         plt.xlabel( "$\\mu$")
         plt.legend ()
         plt.savefig ( "signal_uncertainties.png" )
-            
+
 
     def normalizeDict ( self, dct ):
         s = sum ( dct.values() )

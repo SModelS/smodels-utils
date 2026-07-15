@@ -134,7 +134,8 @@ class TemplateFile(object):
 
         if self.motherPDGs:
             print ( f"[slhaCreator] setting things up with the following potential mother pids: {' '.join(map(str,self.motherPDGs))}" )
-            self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
+            self.pythiaCard = getPythiaCardFor( self.motherPDGs,
+                pythiaVersion=pythiaVersion )
             if not self.keep:
                 __tempfiles__.add ( self.pythiaCard )
         #Define original plot
