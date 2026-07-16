@@ -55,6 +55,7 @@ class CsvPrinter(BasicPrinter):
         :returns: e.g. SRA,SRB,nLL_exp_mu0,nLL_exp_mu1,nLL_obs_mu0,nLL_obs_mu1,
         nLLA_exp_mu0,nLLA_exp_mu1,nLLA_obs_mu0,nLLA_obs_mu1
         """
+        regions = []
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
             if "-orig" in anaId: #we get the regions from the NN run
@@ -62,7 +63,7 @@ class CsvPrinter(BasicPrinter):
             dicts = yieldsToDicts ( tp, mus=[], expected_also = True )
             assert len(dicts) == 2, f"len dicts {len(dicts)}"
             d = dicts[1]
-            regions = [ k for k,v in d["nsignals"].items() ]
+            regions += [ k for k,v in d["nsignals"].items() ]
         regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0", 
                      "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1", 
                      "nLLA_obs_mu0", "nLLA_obs_mu1" ]
@@ -116,7 +117,9 @@ class CsvPrinter(BasicPrinter):
         mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
         regions = self.getRegions()
         all_dicts = self.getDicts( mus )
-        assert len(all_dicts)==2, f"was expecting two entries"
+        if len(all_dicts)!=2:
+            print ( f"[csvPrinter] was expecting two entries but got {len(all_dicts)}: {all_dicts}" )
+            return
         csvlines = self.getCsvLines( all_dicts, mus )
         fline = ",".join(regions)
         filename = self.filename

@@ -2,6 +2,7 @@
 
 """ module that contains a few methods to manipulate the database """
 
+import os
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.expResultObj import ExpResult
 from smodels.base.physicsUnits import TeV, fb
