@@ -212,7 +212,6 @@ def runGrid( options : dict ):
             if mN2 - mN1 > 80.:
                 continue
             submit ( mN2, mC1, mN1, options )
-    import sys; sys.exit()
 
 if __name__ == "__main__":
     import argparse
@@ -248,6 +247,7 @@ if __name__ == "__main__":
     if args.grid:
         runGrid( vars(args) )
         logCall([])
+        import sys; sys.exit()
     if args.point != None:
         points = getPoints()
         prepare( vars(args) )
