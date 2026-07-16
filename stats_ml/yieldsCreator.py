@@ -8,6 +8,39 @@ from pathlib import Path
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
 
+def logCall ( jobids : list ):
+    logfile = f"{os.environ['HOME']}/yields_creator.log"
+    line = ""
+    for i in sys.argv:
+        if " " in i or "," in i:
+            i = f'"{i}"'
+        line += f"{i} "
+    line = line.strip()
+    lastline = ""
+    if os.path.exists( logfile ):
+        f=open(logfile,"rt")
+        lines = f.readlines()
+        f.close()
+        lastline = lines[-1].strip()
+        p = lastline.find("]")
+        lastline = lastline[p+2:]
+    if line == lastline: # skip duplicates
+        return
+    f=open(logfile,"at")
+    #f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
+    f.write ( f"# yieldsCreator.py-{time.asctime()}\n" )
+    f.write ( f"{line}\n" )
+    s_jobids = ','.join(map(str,jobids))
+    s_jobids = ""
+    for i,jobid in enumerate(jobids):
+        if i!=0:
+            s_jobids += ", "
+            if i % 6 == 0:
+                s_jobids += "\n#         "
+        s_jobids += str(jobid)
+    f.write ( f"# jobids: {s_jobids}\n\n" )
+    f.close()
+
 def getSLHAFile ( masses ):
     ## we copy file, to keep track
     mN2 = masses["mN2"]
@@ -140,19 +173,22 @@ def submit ( mN2, mC1, mN1, options ):
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
     cmd = [ "sbatch", "-c", "2", "--time", "479" ]
-    cmd += [ "./yieldsCreator.py" ] 
+    cmd += [ "./yieldsCreator.py" ]
     cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     for option, value in options.items():
         if option in [ "grid", "all", "point" ]:
             continue
         if type(value)==bool:
-            cmd += [ f"--{option}" ]
+            if value == True:
+                cmd += [ f"--{option}" ]
+            else:
+                pass
 #        elif type(value)!=str:
 #            print ( f"[yieldsCreator] option {option} is {type(value)} {value}" )
         else:
-            cmd += [ f"--{option}", value ]
+            cmd += [ f"--{option}", str(value) ]
+    print ( f"[yieldsCreator] {cmd}" )
     if options["dry_run"]:
-        print ( f"[yieldsCreator] dry: {cmd}" )
         return
     import subprocess
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
@@ -204,6 +240,7 @@ if __name__ == "__main__":
     ap.add_argument( '--outputdir',
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
+    logCall([])
     args = ap.parse_args()
     if args.all:
         runAll( vars(args) )
