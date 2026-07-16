@@ -17,11 +17,13 @@ def getSLHAFile ( masses ):
     destf = f"TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}.slha"
     src = f"../smodels-utils/slha/{srcf}"
     if os.path.exists ( src ):
+        print ( f"[yieldsCreator] did not find {src}: need to make it" )
         ## cool, we can just copy
         dest = f"slha_scan/{destf}"
         shutil.copyfile ( src, dest )
         return dest
     else:
+        print ( f"[yieldsCreator] found {src}: will use it" )
         return createSLHAFile ( masses )
 
 def createSLHAFile ( masses ):
@@ -79,6 +81,14 @@ def addXSec ( filename ):
     print ( f"[yieldsCreator] computing xsecs" )
     xsecComputer.main ( xargs )
     Path ( pythiaCard ).unlink ( missing_ok = True )
+    print ( f"[yieldsCreator] done computing xsecs" )
+
+def enableFullLlhds ( database ):
+    """ turn on full llhds """
+    from smodels_utils.helpers.databaseManipulations import enableFullLlhdModels
+    return
+    for er in database.getExpResults():
+        enableFullLlhdModels ( er.globalInfo )
 
 def runOnePoint ( p ):
     for particle,mass in p.items():
@@ -90,6 +100,7 @@ def runOnePoint ( p ):
     parser = modelTester.getParameters(parameterFile)
     database = Database ( "../smodels-database/" )
     modelTester.loadDatabaseResults(parser, database)
+    enableFullLlhds ( database )
     fileList, inDir = modelTester.getAllInputFiles(inFile)
     development = False
     timeout = 0

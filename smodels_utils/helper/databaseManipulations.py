@@ -344,13 +344,16 @@ def hasFullLikelihood ( gI ) -> bool:
             return True
     return False
 
-def enableFullLlhdModels ( gI ):
+def enableFullLlhdModels ( globalInfo ):
+    """ turn on the full statistical models for the expRes 
+    that comes with this globalInfo """
     newModels = {}
-    for srSetName,model_types in gI.statModels.items():
+    for srSetName,model_types in globalInfo.statModels.items():
         newModels[srSetName]=[ model_types[-1] ]
-    gI.statModels = newModels
+    globalInfo.statModels = newModels
 
-def filterFullLikelihoodsFromList ( expResList, really = True, update = None ):
+def filterFullLikelihoodsFromList ( expResList, really : bool = True,
+        update : Optional[str] = None ) -> list:
     """ filter out all results that have more than one jsonFiles
     for one srSetName in globalInfo.statModels
     replace the models with only the full json model
