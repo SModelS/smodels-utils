@@ -88,9 +88,13 @@ def addXSec ( filename ):
 
 def enableFullLlhds ( database ):
     """ turn on full llhds """
-    from smodels_utils.helpers.databaseManipulations import enableFullLlhdModels
-    return
+    from smodels_utils.helper.databaseManipulations import enableFullLlhdModels
     for er in database.getExpResults():
+        if not hasattr ( er.globalInfo, "statModels" ):
+            continue
+        if not "-orig" in er.globalInfo.id:
+            continue
+        print ( f"[yieldsCreator] enable full model for {er.globalInfo.id}" )
         enableFullLlhdModels ( er.globalInfo )
 
 def runOnePoint ( p, options ):
@@ -133,11 +137,20 @@ def runAll( options ):
         runOnePoint ( p, options )
 
 def submit ( mN2, mC1, mN1, options ):
+    for m in [ "mN1", "mC1", "mN2" ]:
+        options.pop(m,None)
     cmd = [ "sbatch", "-c", "2", "--time", "479" ]
-    cmd += [ "./yieldsCreator.py", "--mN1", f"{mN1}", "--mC1", f"{mC1}" ]
-    cmd += [ "--mN2", f"{mN2}" ]
-    print ( f"@@XX options {options}" )
-    import sys; sys.exit()
+    cmd += [ "./yieldsCreator.py" ] 
+    cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
+    for option, value in options.items():
+        if option in [ "grid", "all", "point" ]:
+            continue
+        if type(value)==True:
+            cmd += [ f"--{option}" ]
+        elif type(value)!=str:
+            print ( f"[yieldsCreator] option {option} is {type(value)} {value}" )
+        else:
+            cmd += [ f"--{option}", value ]
     import subprocess
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
     print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
