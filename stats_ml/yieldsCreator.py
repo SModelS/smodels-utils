@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import shutil, os
+import shutil, os, sys, time
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
@@ -9,7 +9,8 @@ from pathlib import Path
 from stats_ml import yieldsPrinter, csvPrinter
 
 def logCall ( jobids : list ):
-    logfile = f"{os.environ['HOME']}/yields_creator.log"
+    logfile = f"yields_creator.log"
+    #logfile = f"{os.environ['HOME']}/yields_creator.log"
     line = ""
     for i in sys.argv:
         if " " in i or "," in i:
@@ -21,9 +22,10 @@ def logCall ( jobids : list ):
         f=open(logfile,"rt")
         lines = f.readlines()
         f.close()
-        lastline = lines[-1].strip()
-        p = lastline.find("]")
-        lastline = lastline[p+2:]
+        if len(lines)>0:
+            lastline = lines[-1].strip()
+            p = lastline.find("]")
+            lastline = lastline[p+2:]
     if line == lastline: # skip duplicates
         return
     f=open(logfile,"at")
@@ -240,12 +242,12 @@ if __name__ == "__main__":
     ap.add_argument( '--outputdir',
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
-    logCall([])
     args = ap.parse_args()
     if args.all:
         runAll( vars(args) )
     if args.grid:
         runGrid( vars(args) )
+        logCall([])
     if args.point != None:
         points = getPoints()
         prepare( vars(args) )
