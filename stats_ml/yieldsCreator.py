@@ -145,26 +145,29 @@ def submit ( mN2, mC1, mN1, options ):
     for option, value in options.items():
         if option in [ "grid", "all", "point" ]:
             continue
-        if type(value)==True:
+        if type(value)==bool:
             cmd += [ f"--{option}" ]
-        elif type(value)!=str:
-            print ( f"[yieldsCreator] option {option} is {type(value)} {value}" )
+#        elif type(value)!=str:
+#            print ( f"[yieldsCreator] option {option} is {type(value)} {value}" )
         else:
             cmd += [ f"--{option}", value ]
+    if options["dry_run"]:
+        print ( f"[yieldsCreator] dry: {cmd}" )
+        return
     import subprocess
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
     print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
 
 def runGrid( options : dict ):
-    for mN2 in range(100,401,50 ):
-        for mN1 in range ( 0, 401, 30 ):
+    for mN2 in range(100,401,int ( options["dmMothers"] ) ):
+        for mN1 in range ( 0, 401, int ( options["dmN1"] ) ):
             if mN1 > mN2:
                 continue
             if mN2 - mN1 > 80:
                 continue
             submit ( mN2, mN2, mN1, options )
-    for mN2 in range(100,351,50 ):
-        for mN1 in range ( 20, 300, 30 ):
+    for mN2 in range(100,351, int ( options["dmMothers"] ) ):
+        for mN1 in range ( 20, 300, int ( options["dmN1"] ) ):
             mC1 = mN2 - mN1/2.
             if mN1 > mC1:
                 continue
@@ -180,10 +183,16 @@ if __name__ == "__main__":
             help='do all points', action='store_true')
     ap.add_argument( '--grid',
             help='a grid', action='store_true')
+    ap.add_argument( '--dry_run',
+            help='just show the batch jobs', action='store_true')
     ap.add_argument( '--enable_full',
             help='enable full likelihoods', action='store_true')
     ap.add_argument( '--point',
             help='one specific point [0-6]', type=int, default = None )
+    ap.add_argument( '--dmMothers',
+            help='dm for the grid', type=int, default = 50 )
+    ap.add_argument( '--dmN1',
+            help='dm for the grid', type=int, default = 30 )
     ap.add_argument( '--mN1',
             help='mass of N1', type=float, default = None )
     ap.add_argument( '--mC1',
