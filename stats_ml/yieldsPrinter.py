@@ -61,14 +61,15 @@ class YieldsPrinter(BasicPrinter):
         for tp in self.toPrint:
             gInfo = generalInfo ( tp )
             gInfo["mus"] = mus
-            gInfo["dt[h]"] = (time.time() - self.t0)/60./60.
             if oldGInfo == None:
                 all_dicts["general_info"] = gInfo
             elif oldGInfo != gInfo:
                 logger.error ( f"general info changed: {gInfo} != {oldGInfo}" )
+            gInfo["dt[h]"] = (time.time() - self.t0)/60./60.
             dicts = yieldsToDicts ( tp, mus = mus )
             all_dicts[tp.dataset.globalInfo.id] = dicts
             oldGInfo = copy.deepcopy ( gInfo )
+            oldGInfo.pop ( "dt[h]" )
         with open ( self.filename, "wt" ) as f:
             d = json.dumps ( all_dicts, indent=4 )
             f.write ( d )

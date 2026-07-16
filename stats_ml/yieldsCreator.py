@@ -15,15 +15,18 @@ def getSLHAFile ( masses ):
     mN1 = masses["mN1"]
     srcf = f"TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}.slha"
     destf = f"TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    src = f"../smodels-utils/slha/{srcf}"
+    src_d = "../smodels-utils/slha"
+    if not os.path.exists ( src_d ):
+        src_d = "../../smodels-utils/slha"
+    src = os.path.abspath ( f"{src_d}/{srcf}" )
     if os.path.exists ( src ):
-        print ( f"[yieldsCreator] did not find {src}: need to make it" )
+        print ( f"[yieldsCreator] found {src}: will use it" )
         ## cool, we can just copy
         dest = f"slha_scan/{destf}"
         shutil.copyfile ( src, dest )
         return dest
     else:
-        print ( f"[yieldsCreator] found {src}: will use it" )
+        print ( f"[yieldsCreator] did not find {src}: need to make it" )
         return createSLHAFile ( masses )
 
 def createSLHAFile ( masses ):
@@ -90,27 +93,26 @@ def enableFullLlhds ( database ):
     for er in database.getExpResults():
         enableFullLlhdModels ( er.globalInfo )
 
-def runOnePoint ( p ):
+def runOnePoint ( p, options ):
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
-    print ( f"[yieldsCreator] run for {p['mN2']},{p['mC1']},{p['mN1']}" )
+    print ( f"[yieldsCreator] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
     inFile = getSLHAFile ( p )
-    parameterFile="inis/1909.ini"
-    parser = modelTester.getParameters(parameterFile)
-    database = Database ( "../smodels-database/" )
+    parser = modelTester.getParameters(options["inifile"])
+    database = Database ( parser["database"]["path"] )
     modelTester.loadDatabaseResults(parser, database)
-    enableFullLlhds ( database )
+    if options["enable_full"]:
+        enableFullLlhds ( database )
     fileList, inDir = modelTester.getAllInputFiles(inFile)
     development = False
     timeout = 0
-    outputDir = "my_results/"
-    modelTester.testPoints ( fileList , inDir, outputDir, parser,
-        database, timeout, development, parameterFile )
+    modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
+        database, timeout, development, options["inifile"] )
 
-def prepare():
+def prepare( options ):
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
-    Path ( "my_results/" ).mkdir(exist_ok=True)
+    Path ( options["outputdir"] ).mkdir(exist_ok=True)
 
 def getPoints():
     points = []
@@ -124,28 +126,30 @@ def getPoints():
     # points.append ( { "mN2": 225,  "mC1": 225, "mN1": 211 } )
     return points
 
-def runAll():
-    prepare()
+def runAll( options ):
+    prepare( options )
     points = getPoints()
     for p in points:
-        runOnePoint ( p )
+        runOnePoint ( p, options )
 
-def submit ( mN2, mC1, mN1 ):
+def submit ( mN2, mC1, mN1, options ):
     cmd = [ "sbatch", "-c", "2", "--time", "479" ]
     cmd += [ "./yieldsCreator.py", "--mN1", f"{mN1}", "--mC1", f"{mC1}" ]
     cmd += [ "--mN2", f"{mN2}" ]
+    print ( f"@@XX options {options}" )
+    import sys; sys.exit()
     import subprocess
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
     print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
 
-def runGrid():
+def runGrid( options : dict ):
     for mN2 in range(100,401,50 ):
         for mN1 in range ( 0, 401, 30 ):
             if mN1 > mN2:
                 continue
             if mN2 - mN1 > 80:
                 continue
-            submit ( mN2, mN2, mN1 )
+            submit ( mN2, mN2, mN1, options )
     for mN2 in range(100,351,50 ):
         for mN1 in range ( 20, 300, 30 ):
             mC1 = mN2 - mN1/2.
@@ -153,7 +157,7 @@ def runGrid():
                 continue
             if mN2 - mN1 > 80.:
                 continue
-            submit ( mN2, mC1, mN1 )
+            submit ( mN2, mC1, mN1, options )
     import sys; sys.exit()
 
 if __name__ == "__main__":
@@ -163,6 +167,8 @@ if __name__ == "__main__":
             help='do all points', action='store_true')
     ap.add_argument( '--grid',
             help='a grid', action='store_true')
+    ap.add_argument( '--enable_full',
+            help='enable full likelihoods', action='store_true')
     ap.add_argument( '--point',
             help='one specific point [0-6]', type=int, default = None )
     ap.add_argument( '--mN1',
@@ -171,16 +177,21 @@ if __name__ == "__main__":
             help='mass of C1', type=float, default = None )
     ap.add_argument( '--mN2',
             help='mass of N2', type=float, default = None )
+    ap.add_argument( '--inifile',
+            help='path to ini file', type=str, default = "default.ini" )
+    ap.add_argument( '--outputdir',
+            help='output directory [yields_results]',
+            type=str, default = "yields_results" )
     args = ap.parse_args()
     if args.all:
-        runAll()
+        runAll( vars(args) )
     if args.grid:
-        runGrid()
+        runGrid( vars(args) )
     if args.point != None:
         points = getPoints()
-        prepare()
-        runOnePoint ( points[args.point] )
+        prepare( vars(args) )
+        runOnePoint ( points[args.point], vars(args) )
     if args.mN1 != None:
-        prepare()
+        prepare( vars(args) )
         point = { "mN1": args.mN1, "mN2": args.mN2, "mC1": args.mC1 }
-        runOnePoint ( point )
+        runOnePoint ( point, vars(args) )
