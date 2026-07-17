@@ -7,7 +7,7 @@ from pathlib import Path
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
-from .yields_helpers import outputFile
+from yields_helpers import outputFile
 
 def getSLHAFile ( masses ):
     ## we copy file, to keep track
