@@ -7,41 +7,7 @@ from pathlib import Path
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
-
-def logCall ( jobids : list ):
-    logfile = f"yields_creator.log"
-    #logfile = f"{os.environ['HOME']}/yields_creator.log"
-    line = ""
-    for i in sys.argv:
-        if " " in i or "," in i:
-            i = f'"{i}"'
-        line += f"{i} "
-    line = line.strip()
-    lastline = ""
-    if os.path.exists( logfile ):
-        f=open(logfile,"rt")
-        lines = f.readlines()
-        f.close()
-        if len(lines)>0:
-            lastline = lines[-1].strip()
-            p = lastline.find("]")
-            lastline = lastline[p+2:]
-    if line == lastline: # skip duplicates
-        return
-    f=open(logfile,"at")
-    #f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
-    f.write ( f"# yieldsCreator.py-{time.asctime()}\n" )
-    f.write ( f"{line}\n" )
-    s_jobids = ','.join(map(str,jobids))
-    s_jobids = ""
-    for i,jobid in enumerate(jobids):
-        if i!=0:
-            s_jobids += ", "
-            if i % 6 == 0:
-                s_jobids += "\n#         "
-        s_jobids += str(jobid)
-    f.write ( f"# jobids: {s_jobids}\n\n" )
-    f.close()
+from .yields_helpers import outputFile
 
 def getSLHAFile ( masses ):
     ## we copy file, to keep track
@@ -132,7 +98,23 @@ def enableFullLlhds ( database ):
         print ( f"[yieldsCreator] enable full model for {er.globalInfo.id}" )
         enableFullLlhdModels ( er.globalInfo )
 
+def lock ( oft ):
+    d = { "time": time.time(), "asctime": time.asctim() }
+    from ptools.helpers import py_dumps
+    ds = py_dumps ( d, indent=4, double_quotes=True )
+    with open ( oft, "wt" ) as f:
+        f.write ( ds + "\n" )
+
+def unlock ( oft ):
+    Path ( oft ).unlink ( missing_ok = True )
+
 def runOnePoint ( p, options ):
+    of = outputFile ( p['mN2'], p['mC1'], p['mN1'], options )
+    oft = f"{of}.temp"
+    if os.path.exists ( oft )
+        print ( f"[yieldsCreator] {oft} exists. not running" )
+        return
+    lock ( oft )
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
@@ -148,88 +130,19 @@ def runOnePoint ( p, options ):
     timeout = 0
     modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
         database, timeout, development, options["inifile"] )
+    unlock ( oft )
 
 def prepare( options ):
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
     Path ( options["outputdir"] ).mkdir(exist_ok=True)
 
-def getPoints():
-    points = []
-    points.append ( { "mN2": 180,  "mC1": 180, "mN1": 157 } )
-    points.append ( { "mN2": 405,  "mC1": 405, "mN1": 360 } )
-    points.append ( { "mN2": 360,  "mC1": 360, "mN1": 285 } )
-    points.append ( { "mN2": 105,  "mC1": 105, "mN1": 60 } )
-    points.append ( { "mN2": 285,  "mC1": 285, "mN1": 240 } )
-    points.append ( { "mN2": 150,  "mC1": 110, "mN1": 70 } )
-    points.append ( { "mN2": 120,  "mC1": 150, "mN1": 100 } )
-    # points.append ( { "mN2": 225,  "mC1": 225, "mN1": 211 } )
-    return points
-
-def runAll( options ):
-    prepare( options )
-    points = getPoints()
-    for p in points:
-        runOnePoint ( p, options )
-
-def submit ( mN2, mC1, mN1, options ):
-    for m in [ "mN1", "mC1", "mN2" ]:
-        options.pop(m,None)
-    cmd = [ "sbatch", "-c", "2", "--time", "479" ]
-    cmd += [ "./yieldsCreator.py" ]
-    cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
-    for option, value in options.items():
-        if option in [ "grid", "all", "point" ]:
-            continue
-        if type(value)==bool:
-            if value == True:
-                cmd += [ f"--{option}" ]
-            else:
-                pass
-#        elif type(value)!=str:
-#            print ( f"[yieldsCreator] option {option} is {type(value)} {value}" )
-        else:
-            cmd += [ f"--{option}", str(value) ]
-    print ( f"[yieldsCreator] {cmd}" )
-    if options["dry_run"]:
-        return
-    import subprocess
-    a = subprocess.run ( cmd, stdout = subprocess.PIPE )
-    print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
-
-def runGrid( options : dict ):
-    for mN2 in range(100,401,int ( options["dmMothers"] ) ):
-        for mN1 in range ( 0, 401, int ( options["dmN1"] ) ):
-            if mN1 > mN2:
-                continue
-            if mN2 - mN1 > 80:
-                continue
-            submit ( mN2, mN2, mN1, options )
-    for mN2 in range(100,351, int ( options["dmMothers"] ) ):
-        for mN1 in range ( 20, 300, int ( options["dmN1"] ) ):
-            mC1 = (mN2 + mN1)/2.
-            if mN1 > mC1:
-                continue
-            if mN2 - mN1 > 80.:
-                continue
-            submit ( mN2, mC1, mN1, options )
-
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(description="create points for joaquin" )
-    ap.add_argument( '--all',
-            help='do all points', action='store_true')
-    ap.add_argument( '--grid',
-            help='a grid', action='store_true')
     ap.add_argument( '--dry_run',
             help='just show the batch jobs', action='store_true')
     ap.add_argument( '--enable_full',
             help='enable full likelihoods', action='store_true')
-    ap.add_argument( '--point',
-            help='one specific point [0-6]', type=int, default = None )
-    ap.add_argument( '--dmMothers',
-            help='dm for the grid', type=int, default = 50 )
-    ap.add_argument( '--dmN1',
-            help='dm for the grid', type=int, default = 30 )
     ap.add_argument( '--mN1',
             help='mass of N1', type=float, default = None )
     ap.add_argument( '--mC1',
@@ -242,17 +155,6 @@ if __name__ == "__main__":
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
     args = ap.parse_args()
-    if args.all:
-        runAll( vars(args) )
-    if args.grid:
-        runGrid( vars(args) )
-        logCall([])
-        import sys; sys.exit()
-    if args.point != None:
-        points = getPoints()
-        prepare( vars(args) )
-        runOnePoint ( points[args.point], vars(args) )
-    if args.mN1 != None:
-        prepare( vars(args) )
-        point = { "mN1": args.mN1, "mN2": args.mN2, "mC1": args.mC1 }
-        runOnePoint ( point, vars(args) )
+    prepare( vars(args) )
+    point = { "mN1": args.mN1, "mN2": args.mN2, "mC1": args.mC1 }
+    runOnePoint ( point, vars(args) )

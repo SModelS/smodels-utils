@@ -70,6 +70,8 @@ class YieldsPrinter(BasicPrinter):
             all_dicts[tp.dataset.globalInfo.id] = dicts
             oldGInfo = copy.deepcopy ( gInfo )
             oldGInfo.pop ( "dt[h]" )
+        if len(all_dicts)==0:
+            return
         with open ( self.filename, "wt" ) as f:
             d = json.dumps ( all_dicts, indent=4 )
             f.write ( d )

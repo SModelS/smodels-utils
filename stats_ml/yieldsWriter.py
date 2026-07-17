@@ -61,7 +61,7 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
     # "txnames":list( set(map(str,theoryPred.txnames))) }
     # Dict["mus"]=mus
     if type(theoryPred.statsComputer) == str:
-        Dicts["statsComputer"]=theoryPred.statsComputer
+        Dict["statsComputer"]=theoryPred.statsComputer
         dicts.append ( Dict )
         return dicts
     ms = theoryPred.statsComputer.getMostSensitiveModel()

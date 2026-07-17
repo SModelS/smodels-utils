@@ -117,12 +117,16 @@ class CsvPrinter(BasicPrinter):
         mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
         regions = self.getRegions()
         all_dicts = self.getDicts( mus )
+        filename = self.filename
         if len(all_dicts)!=2:
+            filename = filename.replace(".csv",".err")
+            with open ( filename, "wt" ) as f:
+                f.write ( f"[csvPrinter] was expecting two entries but got {len(all_dicts)}: {all_dicts}\n" )
+                f.write ( f"[csvPrinter] regions {regions}\n" )
             print ( f"[csvPrinter] was expecting two entries but got {len(all_dicts)}: {all_dicts}" )
             return
         csvlines = self.getCsvLines( all_dicts, mus )
         fline = ",".join(regions)
-        filename = self.filename
         with open ( filename, "wt" ) as f:
             f.write ( fline + "\n" )
             for line in csvlines:
