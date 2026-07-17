@@ -206,7 +206,7 @@ def runGrid( options : dict ):
             submit ( mN2, mN2, mN1, options )
     for mN2 in range(100,351, int ( options["dmMothers"] ) ):
         for mN1 in range ( 20, 300, int ( options["dmN1"] ) ):
-            mC1 = mN2 - mN1/2.
+            mC1 = (mN2 + mN1)/2.
             if mN1 > mC1:
                 continue
             if mN2 - mN1 > 80.:
