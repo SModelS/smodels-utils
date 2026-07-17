@@ -98,23 +98,8 @@ def enableFullLlhds ( database ):
         print ( f"[yieldsCreator] enable full model for {er.globalInfo.id}" )
         enableFullLlhdModels ( er.globalInfo )
 
-def lock ( oft ):
-    d = { "time": time.time(), "asctime": time.asctim() }
-    from ptools.helpers import py_dumps
-    ds = py_dumps ( d, indent=4, double_quotes=True )
-    with open ( oft, "wt" ) as f:
-        f.write ( ds + "\n" )
-
-def unlock ( oft ):
-    Path ( oft ).unlink ( missing_ok = True )
-
 def runOnePoint ( p, options ):
     of = outputFile ( p['mN2'], p['mC1'], p['mN1'], options )
-    oft = f"{of}.temp"
-    if os.path.exists ( oft )
-        print ( f"[yieldsCreator] {oft} exists. not running" )
-        return
-    lock ( oft )
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
@@ -130,7 +115,7 @@ def runOnePoint ( p, options ):
     timeout = 0
     modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
         database, timeout, development, options["inifile"] )
-    unlock ( oft )
+    unlock ( of )
 
 def prepare( options ):
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
