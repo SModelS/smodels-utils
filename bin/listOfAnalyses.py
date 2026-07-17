@@ -76,14 +76,13 @@ class Lister:
         print ( f"[listOfAnalyses] {cmd}" )
         if os.path.exists ( poptions["dictfile"] ) and not self.keep:
             os.unlink ( poptions["dictfile"] )
-        if self.fudged:
-            fudge = 0.7
-            options["fudge"]=fudge
+        if self.fudge != None and abs ( self.fudge - 1. ) < 1e-6:
+            options["fudge"]=self.fudge
             options["suffix"]="fudge"
             options["outfile"]="none"
             del plotter
             del modifier
-            print ( f"[listOfAnalyses] instantiating fudged (f={fudge:.1f}) ExpResModifier" )
+            print ( f"[listOfAnalyses] instantiating fudged (f={self.fudge:.1f}) ExpResModifier" )
             modifier = expResModifier.ExpResModifier ( options )
             print ( f"[listOfAnalyses] done instantiating fudged ExpResModifier" )
             from protomodels.plotting import plotDBDict
@@ -595,7 +594,9 @@ class Lister:
 
     def main( self ):
         import argparse
-        argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
+        url = 'https://smodels.github.io/docs/ListOfAnalyses'
+        argparser = argparse.ArgumentParser(description=\
+            f'Create list of analyses in wiki format, see {url}' )
         argparser.add_argument ( '-n', '--no_superseded', action='store_true',
             help='ignore (filter out) superseded results' )
         argparser.add_argument ( '-A', '--use_aggregated', action='store_true',
@@ -624,8 +625,8 @@ class Lister:
             help='add fastlim results' )
         argparser.add_argument ( '-k', '--keep', action='store_true',
             help='keep temporary files, like temp_database.dict' )
-        argparser.add_argument ( '--fudged', action='store_true',
-            help='create also fudged version of significance plot' )
+        argparser.add_argument ( '--fudge', type=float, default = None,
+            help='create also fudged version of significance plot with the given fudge factor [None = no fudged version]' )
         argparser.add_argument ( '-a', '--add_version', action='store_true',
             help='add version labels to links' )
         argparser.add_argument ( '-S', '--write_stats', action='store_true',
@@ -634,7 +635,7 @@ class Lister:
         self.verbose = args.verbose
         setLogLevel ( args.verbose )
         self.keep = args.keep
-        self.fudged = args.fudged
+        self.fudge = args.fudge
         self.includeSuperseded = not args.no_superseded
         self.use_aggregated = args.use_aggregated
         self.nMCMC_min = args.nMCMC_min

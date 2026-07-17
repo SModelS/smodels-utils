@@ -40,7 +40,7 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
     into a file called filename
 
     :param theoryPred: The theory prediction to write yields out for
-    yields/yields_<anaId>_<massparams>.json
+    e.g. yields_<anaId>_<massparams>.json
     :param mus: list of mu_values to compute quantities for
     :param expected_also: if true, then also add a priori expected
 
@@ -54,12 +54,16 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
         masses.append ( float(node.particle.mass.asNumber(GeV)) )
     gI = theoryPred.dataset.globalInfo
 
-    from pathlib import Path
-    Path("yields/").mkdir(exist_ok=True)
+    # from pathlib import Path
+    # Path("yields/").mkdir(exist_ok=True)
     dicts = []
     Dict = { "anaId": gI.id } # , "masses": masses,
     # "txnames":list( set(map(str,theoryPred.txnames))) }
     # Dict["mus"]=mus
+    if type(theoryPred.statsComputer) == str:
+        Dicts["statsComputer"]=theoryPred.statsComputer
+        dicts.append ( Dict )
+        return dicts
     ms = theoryPred.statsComputer.getMostSensitiveModel()
     Dict["most_sensitive"]=ms.name
     Dict["ul(mu)"]=ms.getUpperLimitOnMu()

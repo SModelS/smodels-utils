@@ -215,7 +215,7 @@ def main():
                     d = Database ( dbname, progressbar=True, force_load = force_load )
                     ds0 = d.getExpResults()[0].datasets[0]
                     txn0 = ds0.txnameList[0]
-                    txnd = txnd.txnameData
+                    txnd = txn0.txnameData
                     if hasattr ( txnd, "origdata" ):
                         pprint ( "FATAL: we still have orig data!" )
                         sys.exit()

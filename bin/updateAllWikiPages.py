@@ -96,7 +96,7 @@ def main():
             ver = ver.strip()
     ## list of analyses, with and without superseded
     gprint ( "\nCreate ListOfAnalyses" )
-    cmd = [ "./listOfAnalyses.py", "--fudged", "-a", "-l", "-d", db ]
+    cmd = [ "./listOfAnalyses.py", "--fudge", "0.6", "-a", "-l", "-d", db ]
     if A.ignore:
         cmd += [ "-i" ]
     exec ( cmd + [ "-f" ], A.dry_run )

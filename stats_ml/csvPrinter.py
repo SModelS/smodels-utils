@@ -50,44 +50,80 @@ class CsvPrinter(BasicPrinter):
             # os.remove(self.filename)
         logger.info ( f"we set output file to {self.filename}" )
 
-    def flush ( self ):
-        """ write it all out """
-        logger.info ( f"writing yields to {self.filename}" )
-        import copy
-        mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
-        csvlines = []
+    def getRegions ( self ) -> list:
+        """ get the regions as they appear, including the nLLs
+        :returns: e.g. SRA,SRB,nLL_exp_mu0,nLL_exp_mu1,nLL_obs_mu0,nLL_obs_mu1,
+        nLLA_exp_mu0,nLLA_exp_mu1,nLLA_obs_mu0,nLLA_obs_mu1
+        """
         regions = []
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
-            if True and not "-orig" in anaId:
+            if "-orig" in anaId: #we get the regions from the NN run
                 continue
-            dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
-            nlls = dicts[0]
-            for d in dicts[1:]:
-                oldregions = regions[:]
-                regions = [ k for k,v in d["nsignals"].items() ]
-                if oldregions != []:
-                    assert regions == oldregions, f"regions changed from {oldregions} to {regions}??"
-                nll_0 = nlls[ "nll_mu0" ] 
-                nllE_0 = nlls[ "nllE_mu0" ] 
-                nllA_0 = nlls[ "nllA_mu0" ] 
-                nllEA_0 = nlls[ "nllEA_mu0" ] 
-                for mu in mus:
-                    smu = formatMu ( mu )
-                    yields = d[f"yields_mu{smu}"]
-                    nll = nlls[ f"nll_mu{smu}" ]
-                    nllE = nlls[ f"nllE_mu{smu}" ]
-                    nllA = nlls[ f"nllA_mu{smu}" ]
-                    nllEA = nlls[ f"nllEA_mu{smu}" ]
-                    line = ",".join(map(str,yields))
-                    line += f",{nllE_0},{nllE},{nll_0},{nll}"
-                    line += f",{nllEA_0},{nllEA},{nllA_0},{nllA}"
-                    csvlines.append ( line )
+            dicts = yieldsToDicts ( tp, mus=[], expected_also = True )
+            assert len(dicts) == 2, f"len dicts {len(dicts)}"
+            d = dicts[1]
+            regions += [ k for k,v in d["nsignals"].items() ]
         regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0", 
                      "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1", 
                      "nLLA_obs_mu0", "nLLA_obs_mu1" ]
+        return regions
+
+    def getDicts ( self, mus : list ) -> dict:
+        """ get the dictionaries from yieldsToDicts
+
+        :returns: a dictionary with "orig" and "nn"
+        """
+        all_dicts = {}
+        for tp in self.toPrint:
+            anaId = tp.dataset.globalInfo.id
+            label = "orig" if "-orig" in anaId else "nn"
+            if False and not "-orig" in anaId:
+                print ( f"[csvPrinter] anaId {anaId} has no -orig, skip it" )
+                continue
+            dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
+            all_dicts[label] = dicts
+        return all_dicts
+
+    def getCsvLines ( self, all_dicts : dict, mus : list ) -> list[str]:
+        """ create the csv lines from dicts
+        :param all_dicts: both dictionaries, nn and orig
+
+        :returns: csv lines, like [ "6.0,1.4,0.3,74.9,....", "..." ]
+        """
+        nlls = all_dicts["orig"][0]
+        d_yields = all_dicts["nn"][1]
+        nll_0 = nlls[ "nll_mu0" ]
+        nllE_0 = nlls[ "nllE_mu0" ]
+        nllA_0 = nlls[ "nllA_mu0" ]
+        nllEA_0 = nlls[ "nllEA_mu0" ]
+        csvlines = []
+        for mu in mus:
+            smu = formatMu ( mu )
+            yields = d_yields[f"yields_mu{smu}"]
+            nll = nlls[ f"nll_mu{smu}" ]
+            nllE = nlls[ f"nllE_mu{smu}" ]
+            nllA = nlls[ f"nllA_mu{smu}" ]
+            nllEA = nlls[ f"nllEA_mu{smu}" ]
+            line = ",".join(map(str,yields))
+            line += f",{nllE_0},{nllE},{nll_0},{nll}"
+            line += f",{nllEA_0},{nllEA},{nllA_0},{nllA}"
+            csvlines.append ( line )
+        return csvlines
+
+    def flush ( self ):
+        """ write it all out """
+        logger.info ( f"writing yields to {self.filename}" )
+        mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
+        regions = self.getRegions()
+        all_dicts = self.getDicts( mus )
+        if len(all_dicts)!=2:
+            print ( f"[csvPrinter] was expecting two entries but got {len(all_dicts)}: {all_dicts}" )
+            return
+        csvlines = self.getCsvLines( all_dicts, mus )
         fline = ",".join(regions)
-        with open ( self.filename, "wt" ) as f:
+        filename = self.filename
+        with open ( filename, "wt" ) as f:
             f.write ( fline + "\n" )
             for line in csvlines:
                 f.write ( line + "\n" )
