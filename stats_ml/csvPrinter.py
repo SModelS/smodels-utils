@@ -61,7 +61,10 @@ class CsvPrinter(BasicPrinter):
             if "-orig" in anaId: #we get the regions from the NN run
                 continue
             dicts = yieldsToDicts ( tp, mus=[], expected_also = True )
-            assert len(dicts) == 2, f"len dicts {len(dicts)}"
+            if len(dicts) != 2:
+                print ( f"[csvPrinter] we have only one dict {dicts}" )
+                continue
+
             d = dicts[1]
             regions += [ k for k,v in d["nsignals"].items() ]
         regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0", 
@@ -91,6 +94,8 @@ class CsvPrinter(BasicPrinter):
 
         :returns: csv lines, like [ "6.0,1.4,0.3,74.9,....", "..." ]
         """
+        if len(all_dicts["nn"])<2:
+            return []
         nlls = all_dicts["orig"][0]
         d_yields = all_dicts["nn"][1]
         nll_0 = nlls[ "nll_mu0" ]
