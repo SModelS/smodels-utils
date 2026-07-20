@@ -50,7 +50,7 @@ def addLogoToPng ( filename : str, logo : str|None = None,
     #Open logo image
     mark = Image.open(logo)
     # Scale logo image:
-    scale = 0.165*4
+    scale = 0.165*6
     if dpi != None:
         scale *= dpi/600.
     w = int(mark.size[0]*scale)
@@ -64,9 +64,9 @@ def addLogoToPng ( filename : str, logo : str|None = None,
     # layer.paste(mark, (0, 505))
     y =layer.size[1]
     if y > 550:
-        y = y - 45*4
+        y = y - 45*6
     else:
-        y = y - 40*4
+        y = y - 40*6
     layer.paste(mark, (0, y) )
     #Merge original image and layer and save
     tmpF = tempfile.mktemp(suffix=".png",dir="./")
