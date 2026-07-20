@@ -14,27 +14,31 @@ import glob,os,shutil
 import tempfile
 from typing import Union
 
-def addLogo( filename : str, logo : Union[str,None] = None ):
+def addLogo( filename : str, logo : Union[str,None] = None,
+             dpi : int|None = None ):
     """
     Add the logo image to the original plot.
     
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
+    :param dpi: plot is at that dpi
     """
     if not os.path.exists (filename ):
         print ( f"[addLogoToPlots] error cannot add watermark to non-existing file {filename}" )
         return
 
     if '.pdf' in filename:
-        addLogoToPdf ( filename, logo )
+        addLogoToPdf ( filename, logo, dpi )
 
     elif '.png' in filename:
-        addLogoToPng ( filename, logo )
+        addLogoToPng ( filename, logo, dpi )
 
-def addLogoToPng ( filename : str, logo : Union[str,None] = None ):
+def addLogoToPng ( filename : str, logo : str|None = None,
+                   dpi : int|None = None ):
     """ slap our logo onto a png file
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
+    :param dpi: plot is at that dpi
     """
     if logo == None:
         logo = f'{os.path.dirname(__file__)}/smodels-transparent.png'
@@ -46,8 +50,11 @@ def addLogoToPng ( filename : str, logo : Union[str,None] = None ):
     #Open logo image
     mark = Image.open(logo)
     # Scale logo image:
-    w = int(mark.size[0]*0.165)
-    h = int(mark.size[1]*0.165)
+    scale = 0.165*4
+    if dpi != None:
+        scale *= dpi/600.
+    w = int(mark.size[0]*scale)
+    h = int(mark.size[1]*scale)
     mark = mark.resize((w, h))
     
     #Create a new layer
@@ -57,9 +64,9 @@ def addLogoToPng ( filename : str, logo : Union[str,None] = None ):
     # layer.paste(mark, (0, 505))
     y =layer.size[1]
     if y > 550:
-        y = y - 45
+        y = y - 45*4
     else:
-        y = y - 40
+        y = y - 40*4
     layer.paste(mark, (0, y) )
     #Merge original image and layer and save
     tmpF = tempfile.mktemp(suffix=".png",dir="./")
@@ -70,10 +77,12 @@ def addLogoToPng ( filename : str, logo : Union[str,None] = None ):
         print ( f"[addLogoToPlots] could not rename {tmpF} to {filename}: {e}. Will try to move." )
         shutil.move ( tmpF, filename )
 
-def addLogoToPdf ( filename : str, logo : Union[str,None] = None ):
+def addLogoToPdf ( filename : str, logo : str|None = None,
+                   dpi : int|None = None ):
     """ slap our logo onto a pdf file
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
+    :param dpi: plot is at that dpi
     """
     if logo == None:
         logo = f'{os.path.dirname(__file__)}/smodels-bannerRotated.png'
