@@ -113,13 +113,17 @@ def drawP ( args : dict ):
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
     sfudge = f" fudge={fudge:.2f}"
-    if fudge == 1.0:
+    if abs ( fudge - 1.0 ) < 1e-4:
         sfudge = "no fudge"
     elif fudge * 10 == int(fudge*10):
         sfudge = f" fudge={fudge:.1f}"
-    title = f"Distribution of p-values, {sfudge}, P={p:.2f}"
+    title = f"Distribution of p-values, {sfudge}"
+    printP = False
+    if printP:
+        title += f", P={p:.2f}"
     if args["title"] not in [ None, "" ]:
         title = args["title"]
+        print ( f"[drawP] overriding the title to {title}" )
     plt.title ( title )
     plt.xlabel ( "p-values" )
     plt.ylabel ( "occurrence [stacked]" )
