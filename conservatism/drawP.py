@@ -19,7 +19,7 @@ def getPValues ( data : dict, statmodel : str ) -> dict:
         if not label in ret:
             ret[label] = []
         for entry in xdata:
-            ret[label].append ( entry[ f"p_{statmodel}" ] )
+            ret[label].append ( entry[ f"p_{statmodel}" ][0] )
     return ret
 
 def countAnalyses ( data : list ) -> int:
