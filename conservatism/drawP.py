@@ -5,8 +5,6 @@ namely it draws distributions of p-values, but for various
 fudge factors """
 
 import os
-if os.environ.get("XDG_SESSION_TYPE") == "wayland":
-    os.environ["QT_QPA_PLATFORM"] = "wayland"
 import sys
 from matplotlib import pyplot as plt
 import numpy as np
@@ -150,7 +148,7 @@ if __name__ == "__main__":
             help='statmodel norm or lognorm [norm]',
             default='norm' )
     ap.add_argument('-F', '--filterBy',
-            help='name of pre-filter (anaid, anagroups,nofilter) [anagroups]',
+            help='name of pre-filter (anaid, anagroups,nofilter) [nofilter]',
             default='nofilter' )
     ap.add_argument('-t', '--title',
             help='user-defined title [None]',
