@@ -25,7 +25,7 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
 
     for dataID in data.keys():
         values = data[dataID]
-        anaID, datasetID = dataID.split(":")
+        anaID, datasetID = dataID.split(":",maxsplit=1)
         obs = values["origN"]
         bg = values["expectedBG"]
         bgerr = fudge*values["bgError"]
