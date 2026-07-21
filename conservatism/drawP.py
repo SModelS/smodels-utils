@@ -128,11 +128,12 @@ def drawP ( args : dict ):
     #order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
     #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
     ordered_pvalues= [ pvalues[x] for x in order ]
-    plt.hist ( ordered_pvalues, label = labels,
+    h = plt.hist ( ordered_pvalues, label = labels,
                  bins = bins, stacked=True )
-    #for label, ps in pvalues.items():
-    #    plt.hist ( ps, label = label, bins = bins )
-    # plt.legend()
+    if args["draw_reference"]:
+        ex=np.mean(h[0][-1])
+        plt.plot ( [0,1], [ex,ex], c="k", linestyle="dotted",
+                   label="SM hypothesis" )
     handles, labels = plt.gca().get_legend_handles_labels()
     # Reverse both
     plt.legend(handles[::-1], labels[::-1])
@@ -195,6 +196,7 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--fudge', type=str,
             help='fudge factor [1.0]', default="1.0" )
     ap.add_argument('-l', '--list_fudges', action="store_true" )
+    ap.add_argument('--draw_reference', action="store_true" )
     ap.add_argument('--order', type=str,
             help="order of entries ['ATLAS13','CMS13','ATLAS8','CMS8']",
             default="['ATLAS13','CMS13','ATLAS8','CMS8']" )
