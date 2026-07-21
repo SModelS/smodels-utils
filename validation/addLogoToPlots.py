@@ -15,30 +15,32 @@ import tempfile
 from typing import Union
 
 def addLogo( filename : str, logo : Union[str,None] = None,
-             dpi : int|None = None ):
+             dpi : int|None = None, y_offset : float = 0 ):
     """
     Add the logo image to the original plot.
     
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
     :param dpi: plot is at that dpi
+    :param y_offset: specify an optional offset in y
     """
     if not os.path.exists (filename ):
         print ( f"[addLogoToPlots] error cannot add watermark to non-existing file {filename}" )
         return
 
     if '.pdf' in filename:
-        addLogoToPdf ( filename, logo, dpi )
+        addLogoToPdf ( filename, logo, dpi, y_offset )
 
     elif '.png' in filename:
-        addLogoToPng ( filename, logo, dpi )
+        addLogoToPng ( filename, logo, dpi, y_offset )
 
 def addLogoToPng ( filename : str, logo : str|None = None,
-                   dpi : int|None = None ):
+                   dpi : int|None = None, y_offset : float = 0 ):
     """ slap our logo onto a png file
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
     :param dpi: plot is at that dpi
+    :param y_offset: specify an optional offset in y
     """
     if logo == None:
         logo = f'{os.path.dirname(__file__)}/smodels-transparent.png'
@@ -67,6 +69,7 @@ def addLogoToPng ( filename : str, logo : str|None = None,
         y = y - 45*6
     else:
         y = y - 40*6
+    y -= y_offset
     layer.paste(mark, (0, y) )
     #Merge original image and layer and save
     tmpF = tempfile.mktemp(suffix=".png",dir="./")
@@ -78,11 +81,12 @@ def addLogoToPng ( filename : str, logo : str|None = None,
         shutil.move ( tmpF, filename )
 
 def addLogoToPdf ( filename : str, logo : str|None = None,
-                   dpi : int|None = None ):
+                   dpi : int|None = None, y_offset : float = 0 ):
     """ slap our logo onto a pdf file
     :param filename: path to the original plot (pdf or png)
     :param logo: path to the logo png image. If None, use default.
     :param dpi: plot is at that dpi
+    :param y_offset: specify an optional offset in y
     """
     if logo == None:
         logo = f'{os.path.dirname(__file__)}/smodels-bannerRotated.png'

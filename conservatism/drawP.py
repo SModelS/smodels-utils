@@ -114,10 +114,11 @@ def drawP ( args : dict ):
     p=Ts["p"]
     sfudge = f" fudge={fudge:.2f}"
     if abs ( fudge - 1.0 ) < 1e-4:
-        sfudge = "no fudge"
+        sfudge = ", no fudge"
+        sfudge = ""
     elif fudge * 10 == int(fudge*10):
-        sfudge = f" fudge={fudge:.1f}"
-    title = f"Distribution of p-values, {sfudge}"
+        sfudge = f", fudge={fudge:.1f}"
+    title = f"Distribution of p-values{sfudge}"
     printP = False
     if printP:
         title += f", P={p:.2f}"
@@ -137,7 +138,12 @@ def drawP ( args : dict ):
     print ( f"[drawP] saving to {outfile}" )
     from smodels_utils.helper.various import pngMetaInfo
     metadata = pngMetaInfo()
-    plt.savefig ( outfile, metadata = metadata )
+    dpi = 300
+    plt.savefig ( outfile, metadata = metadata, dpi = dpi )
+    add_logo = True
+    if add_logo:
+        from validation.addLogoToPlots import addLogo
+        addLogo ( outfile, dpi = dpi, y_offset = -125 )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
 
