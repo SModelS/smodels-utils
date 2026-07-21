@@ -5,6 +5,7 @@ namely it draws distributions of p-values, but for various
 fudge factors """
 
 import os
+os.environ["QT_QPA_PLATFORM"]="xcb"
 os.environ.pop("XDG_SESSION_TYPE",None)
 import sys
 from matplotlib import pyplot as plt
