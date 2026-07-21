@@ -136,7 +136,7 @@ def drawP ( args : dict ):
                    label="SM hypothesis" )
     handles, labels = plt.gca().get_legend_handles_labels()
     # Reverse both
-    plt.legend(handles[::-1], labels[::-1])
+    plt.legend(handles[::-1], labels[::-1],loc="lower right")
     from chelpers import computeT
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
