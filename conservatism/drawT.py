@@ -3,6 +3,9 @@
 """ the script used to draw the test statistic of thie binned chi2
 test as a function of the fudge factor """
 
+import os
+os.environ["QT_QPA_PLATFORM"]="xcb"
+os.environ.pop("XDG_SESSION_TYPE",None)
 from chelpers import computeT, filterByAnaId, filterByBG, splitByCollaboration,\
      splitBySqrts, splitBySqrtsAndCollaboration, splitByAnalysisGroups, \
      filterByAnaGroups, computeWasserstein
@@ -18,11 +21,14 @@ def getPValues ( data : list, statmodel : str = "norm" ) -> list:
         ret.append ( d[ f"p_{statmodel}" ][0] )
     return ret
 
-def getHistoTestStats ( data : dict, bins : list, method : str ) -> dict:
+def getHistoTestStats ( data : dict, bins : list, method : str,
+       args : dict ) -> dict:
     """ retrieve the test statistics of the histogram,
     typically the T value """
     Ts = {}
     for fudge,entry in data.items():
+        if fudge < args["f_min"]:
+            continue
         pvalues = getPValues ( entry, "norm" )
         tstats = computeT ( pvalues, bins, method )
         T = tstats["T"]
@@ -41,7 +47,7 @@ def draw( data : dict, bins : list, args: dict ):
     #method = "KS"
     #method = "AD"
     #method = "combo"
-    Ts = getHistoTestStats ( data, bins, method )
+    Ts = getHistoTestStats ( data, bins, method, args )
     splitdata = splitBySqrtsAndCollaboration ( data )
     # splitdata = splitByAnalysisGroups ( data )
     # splitdata = splitBySqrts ( splitdata["ATLAS"] )
@@ -52,7 +58,10 @@ def draw( data : dict, bins : list, args: dict ):
     colors = { "CMS": "r", "ATLAS": "g" }
     lstyles = { "13": "solid", "8": "-." }
     for s in split:
-        Tss[s] = getHistoTestStats ( splitdata[s], bins, method )
+        coll = "ATLAS" if "ATLAS" in s else "CMS"
+        sqrts = "8" if "8" in s else "13"
+
+        Tss[s] = getHistoTestStats ( splitdata[s], bins, method, args )
         xsS, ysS = list ( Tss[s].keys() ), list ( Tss[s].values() )
         color, linestyle = None, None
         for clabel,c in colors.items():
@@ -61,27 +70,29 @@ def draw( data : dict, bins : list, args: dict ):
         for llabel,l in lstyles.items():
                 if llabel in s:
                     linestyle = l
-        plt.plot ( xsS, ysS, label=rf"$\mathrm{{T}}_{{{s}}}(f)$",
+        label = r"$\mathrm{T}_{\mathrm{%s}}^{%s}(f_f)$" % ( coll, sqrts)
+        plt.plot ( xsS, ysS, label= label,
                    color = color, linestyle = linestyle  )
     ## get the fudge value that minimizes T
     min_fudge = min( Ts, key=Ts.get )
-    label = r"$\hat{f}$"
+    label = r"$\hat{f_f}$"
     if "f_hat" in args and args["f_hat"]!= None:
         min_fudge = args["f_hat"]
-        label = f"f={min_fudge}"
+        label = f"f_f={min_fudge}"
 
     plt.scatter ( min_fudge, Ts[min_fudge], color="red", s=30,
                   label = label, zorder = 5 )
-    plt.plot ( xs, ys, label=r"$\mathrm{T}(f)$", linewidth=4 )
+    plt.plot ( xs, ys, label=r"$\mathrm{T}(f_f)$", linewidth=4 )
     plt.legend()
     outfile = "T.png"
-    plt.title ( "finding the optimal fudge factor" )
-    plt.xlabel ( "fudge factor $f$" )
+    plt.title ( "finding the optimal fudge factor $f_f$" )
+    plt.xlabel ( "fudge factor $f_f$" )
     plt.ylabel ( "T values" )
     from smodels_utils.helper.various import pngMetaInfo
     metadata = pngMetaInfo()
     metadata["method"]=method
-    plt.savefig ( outfile, metadata = metadata )
+    dpi = 300
+    plt.savefig ( outfile, metadata = metadata, dpi = 300 )
     if show:
         from smodels_utils.plotting.mpkitty import timg
         timg ( outfile )
@@ -123,6 +134,8 @@ if __name__ == "__main__":
             help='show also output via timg' )
     ap.add_argument('-f', '--f_hat', type=float,
             help='draw f_hat at certain value', default=None )
+    ap.add_argument('--f_min', type=float,
+            help='minimum fudge factor to consider', default=.2 )
     ap.add_argument( '--method', type=str,
             help='criterion to be used, e.g. wasserstein, KS, AD, combo, fold, default [AD]', default="AD" )
     args = ap.parse_args()
