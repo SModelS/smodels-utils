@@ -15,7 +15,7 @@ def getPValues ( data : list, statmodel : str = "norm" ) -> list:
     """
     ret = []
     for d in data:
-        ret.append ( d[ f"p_{statmodel}" ] )
+        ret.append ( d[ f"p_{statmodel}" ][0] )
     return ret
 
 def getHistoTestStats ( data : dict, bins : list, method : str ) -> dict:
