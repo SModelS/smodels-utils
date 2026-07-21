@@ -55,10 +55,10 @@ def computePValues( data : dict, fudge : float, nmin : int = 50000,
             p_norm = values["new_p"]
         else:
             p_norm = computeP ( nobs, nbg, bgerr, lognormal = False,
-                                nmin = nmin, nmax = nmax )
+                                nmin = nmin, nmax = nmax, srName = dataID )
         d["p_norm"]=p_norm
         p_lognorm = computeP ( nobs, nbg, bgerr, lognormal = True,
-                               nmin = nmin, nmax = nmax )
+                               nmin = nmin, nmax = nmax, srName = dataID )
         d["p_lognorm"] = p_lognorm
         ret.append ( d )
     return ret
@@ -180,7 +180,7 @@ if __name__ == "__main__":
             help="number of parallel processes [1]",
             default=1 )
     ap.add_argument('-f', '--ffactors',
-            help='fudge factors, a list [None]', type=str,
+            help='fudge factors, a list. If None, then we use a well-defined default [None]', type=str,
             default=None)
     ap.add_argument('-a', '--addSigN',
             help='add the signals to expected bg', action="store_true" )
