@@ -114,7 +114,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=
             "Produces T-values plots from a createDict.py dict file")
     ap.add_argument('-i', '--inputfile',
-            help='input file [data.dict]', default='data.dict' )
+            help='input file [data.fudge]', default='data.fudge' )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
     ap.add_argument('-m', '--min_bg', type=float,
