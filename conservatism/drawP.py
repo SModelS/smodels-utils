@@ -4,6 +4,8 @@
 namely it draws distributions of p-values, but for various
 fudge factors """
 
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "wayland")
 import sys
 from matplotlib import pyplot as plt
 import numpy as np
