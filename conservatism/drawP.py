@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """ this script does something very similar as plotDBDict,
-namely it draws distributions of p-values, but for various 
+namely it draws distributions of p-values, but for various
 fudge factors """
 
 import sys
@@ -37,7 +37,7 @@ def countAnalyses ( data : list ) -> int:
     return len(anaIds)
 
 def drawP ( args : dict ):
-    """ draw a histogram of the pvalues 
+    """ draw a histogram of the pvalues
     :args dictionary:
     :iparam fudge: draw for that fudge factor
     :iparam inputFile: path to input data create by createData.py
@@ -85,10 +85,12 @@ def drawP ( args : dict ):
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
     ## default order is as in the dictionary
-    order = list ( pvalues.keys() )
-    labels_dict = { "CMS8": "CMS, 8 TeV", "CMS13": "CMS, 13 TeV", 
+    #order = list ( pvalues.keys() )
+    order = args["order"]
+    labels_dict = { "CMS8": "CMS, 8 TeV", "CMS13": "CMS, 13 TeV",
              "ATLAS8": "ATLAS, 8 TeV", "ATLAS13": "ATLAS, 13 TeV" }
     labels = order[:]
+    # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     for i,label in enumerate(labels):
         if label in labels_dict:
             labels[i]=labels_dict[label]
@@ -96,7 +98,7 @@ def drawP ( args : dict ):
     #order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
     #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
     ordered_pvalues= [ pvalues[x] for x in order ]
-    plt.hist ( ordered_pvalues, label = labels, 
+    plt.hist ( ordered_pvalues, label = labels,
                  bins = bins, stacked=True )
     #for label, ps in pvalues.items():
     #    plt.hist ( ps, label = label, bins = bins )
@@ -120,9 +122,9 @@ def drawP ( args : dict ):
     plt.ylabel ( "occurrence [stacked]" )
     ax = plt.gca()
     nAnas = countAnalyses ( data )
-    
-    plt.text(.67, -.12, f"this plot contains {nSRs} SRs from {nAnas} analyses", 
-             transform=ax.transAxes, c="grey", fontsize=7 )    
+
+    plt.text(.67, -.12, f"this plot contains {nSRs} SRs from {nAnas} analyses",
+             transform=ax.transAxes, c="grey", fontsize=7 )
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
     outfile = outfile.replace("@@STATMODEL@@",statmodel)
     print ( f"[drawP] saving to {outfile}" )
@@ -137,24 +139,28 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=
             "Produces p-values plots for a specific fudge factor")
     ap.add_argument('-i', '--inputfile',
-            help='input file [data.dict]', default='data.dict' )
+            help='input file [data.fudge]', default='data.fudge' )
     ap.add_argument('-o', '--outputfile',
-            help='output file [pvalues@@FUDGE@@.png]', 
+            help='output file [pvalues@@FUDGE@@.png]',
             default='pvalues@@FUDGE@@_@@STATMODEL@@.png' )
     ap.add_argument('-s', '--statmodel',
-            help='statmodel norm or lognorm [norm]', 
+            help='statmodel norm or lognorm [norm]',
             default='norm' )
     ap.add_argument('-F', '--filterBy',
-            help='name of pre-filter (anaid, anagroups,nofilter) [anagroups]', 
+            help='name of pre-filter (anaid, anagroups,nofilter) [anagroups]',
             default='nofilter' )
     ap.add_argument('-t', '--title',
-            help='user-defined title [None]', 
+            help='user-defined title [None]',
             default=None )
     ap.add_argument('-f', '--fudge', type=float,
             help='fudge factor [1.0]', default=1.0 )
+    ap.add_argument('--order', type=str,
+            help="order of entries ['ATLAS13','CMS13','ATLAS8','CMS8']",
+            default="['ATLAS13','CMS13','ATLAS8','CMS8']" )
     ap.add_argument('-m', '--min_bg', type=float,
             help='minimum number of expected background events [0.]', default=None )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
     args = ap.parse_args()
+    args.order  = eval(args.order)
     drawP( vars(args) )
