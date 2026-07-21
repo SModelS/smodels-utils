@@ -7,7 +7,7 @@ fudge factors """
 import os
 os.environ["QT_QPA_PLATFORM"]="xcb"
 os.environ.pop("XDG_SESSION_TYPE",None)
-import sys
+import sys, copy
 from matplotlib import pyplot as plt
 import numpy as np
 from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
@@ -39,6 +39,25 @@ def countAnalyses ( data : list ) -> int:
         anaIds.add ( id )
     return len(anaIds)
 
+def loadInputFile ( inputfile : str ) -> dict:
+    import pickle
+    pcl_f = inputfile.replace(".fudge",".pcl")
+    if os.path.exists ( pcl_f ):
+        with open ( pcl_f, "rb" ) as f:
+            data = pickle.load ( f )
+            return data
+
+    with open( inputfile ,"rt") as f:
+        try:
+            data = eval(f.read())
+        except (ValueError,TypeError,SyntaxError) as e:
+            print ( f"[drawP] could not parse {inputfile}: {e}" )
+            sys.exit()
+    with open ( pcl_f, "wb" ) as f:
+        pickle.dump ( data, f )
+        f.close()
+    return data
+
 def drawP ( args : dict ):
     """ draw a histogram of the pvalues
     :args dictionary:
@@ -47,13 +66,21 @@ def drawP ( args : dict ):
     :iparam outfile: png file
     :iparam statmodel: norm or lognorm for nuisances
     """
-    with open(args["inputfile"],"rt") as f:
-        try:
-            data = eval(f.read())
-        except (ValueError,TypeError,SyntaxError) as e:
-            print ( f"[drawP] could not parse {args['inputfile']}: {e}" )
-            sys.exit()
+    data = loadInputFile ( args["inputfile" ] )
+    if args["list_fudges"]:
+        ffs = list ( data.keys() )
+        print ( ffs )
+        return
     fudge = args["fudge"]
+    if fudge == "all":
+        ffactors = list ( data.keys() )
+        for ff in ffactors:
+            margs = copy.deepcopy ( args )
+            margs["fudge"]=ff
+            drawP ( margs )
+            plt.clf()
+        return
+    fudge = float(fudge)
     statmodel = args["statmodel"]
     # filterBy = "anagroups"
     filterBy = args["filterBy"]
@@ -143,7 +170,7 @@ def drawP ( args : dict ):
     add_logo = True
     if add_logo:
         from validation.addLogoToPlots import addLogo
-        addLogo ( outfile, dpi = dpi, y_offset = -125 )
+        addLogo ( outfile, dpi = dpi, y_offset = -140 )
     from smodels_utils.plotting.mpkitty import timg
     timg ( outfile )
 
@@ -165,8 +192,9 @@ if __name__ == "__main__":
     ap.add_argument('-t', '--title',
             help='user-defined title [None]',
             default=None )
-    ap.add_argument('-f', '--fudge', type=float,
-            help='fudge factor [1.0]', default=1.0 )
+    ap.add_argument('-f', '--fudge', type=str,
+            help='fudge factor [1.0]', default="1.0" )
+    ap.add_argument('-l', '--list_fudges', action="store_true" )
     ap.add_argument('--order', type=str,
             help="order of entries ['ATLAS13','CMS13','ATLAS8','CMS8']",
             default="['ATLAS13','CMS13','ATLAS8','CMS8']" )
@@ -176,4 +204,7 @@ if __name__ == "__main__":
             help='number of bins in histogram [10]', default=10)
     args = ap.parse_args()
     args.order  = eval(args.order)
+    if not args.inputfile.endswith ( ".fudge" ):
+        print ( f"[drawP] inputfile {args.inputfile} needs to have .fudge as extension" )
+        sys.exit()
     drawP( vars(args) )
