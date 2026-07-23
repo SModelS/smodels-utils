@@ -544,15 +544,19 @@ class ValidationObjsBase():
                    looseness = 1.2, options = options )
         self.pretty = True
 
-    def savefig ( self, filename : str ):
+    def savefig ( self, filename : str, add_logo : bool = False ):
         """ save the figure, never mind if root or matplotlib """
+        dpi = 300
+        y_offset = -145
         self.pprint ( f"saving to {YELLOW}{filename}{RESET}" )
         if hasattr ( self.plot, "Print" ):
             self.plot.Print(filename)
         if hasattr ( self.plot, "savefig" ):
             from smodels_utils.helper.various import pngMetaInfo
             metadata = pngMetaInfo()
-            self.plot.savefig(filename,metadata=metadata)
+            self.plot.savefig(filename,metadata=metadata , dpi = dpi )
+        from addLogoToPlots import addLogo
+        addLogo ( filename, dpi = dpi, y_offset = y_offset )
 
     def savePlot( self,validationDir : Union[None,str] = None,
                   fformat : str = 'png' ):
@@ -579,12 +583,10 @@ class ValidationObjsBase():
         filename = self.getPlotFileName(vDir,fformat)
 
         if self.pretty:
-            from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace(f".{fformat}",f"_pretty.{fformat}")
             logger.info ( f"saving to {YELLOW}{filename}{RESET}" )
-            self.savefig ( filename )
-            addLogo ( filename )
+            self.savefig ( filename, add_logo = True )
             newfilename = filename.replace(f".{fformat}",'.pdf')
             if self.options["pdfPlots"]:
                cmd = f"convert {filename} {newfilename}"
