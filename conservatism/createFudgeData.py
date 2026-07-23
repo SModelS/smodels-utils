@@ -180,7 +180,7 @@ if __name__ == "__main__":
             help="number of parallel processes [1]",
             default=1 )
     ap.add_argument('-f', '--ffactors',
-            help='fudge factors, a list. If None, then we use a well-defined default [None]', type=str,
+            help='fudge factors, a list. If None, then we use a well-defined default. if "fine" then we make it finer [None]', type=str,
             default=None)
     ap.add_argument('-a', '--addSigN',
             help='add the signals to expected bg', action="store_true" )
@@ -194,6 +194,13 @@ if __name__ == "__main__":
         ffactors = sorted(set([round(x,5) for x in (
             [i*0.05 for i in range(21)] +
             [0.3 + i*0.025 for i in range(int((0.65-0.3)/0.025)+1)] +
+            [0.35 + i*0.0125 for i in range(int((0.55-0.35)/0.0125)+1)]
+        )]))
+        ffactors[0]=0.03
+    if ffactors == "fine":
+        ffactors = sorted(set([round(x,5) for x in (
+            [i*0.025 for i in range(41)] +
+            [0.3 + i*0.0125 for i in range(int((0.65-0.3)/0.0125)+1)] +
             [0.35 + i*0.0125 for i in range(int((0.55-0.35)/0.0125)+1)]
         )]))
         ffactors[0]=0.03
