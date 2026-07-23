@@ -413,6 +413,9 @@ class PaperPlot:
         if type ( excl_lines ) == list:
             print("[drawPaperPlot] error: addOffshell for lists not implemented" )
             return excl_lines
+        if len(excl_lines)==0 and len(excl_off) > 0:
+            ## seems a simple case
+            return excl_off
         for typ,excl in excl_lines.items():
             if excl_off[typ]["x"] == []:
                 continue
