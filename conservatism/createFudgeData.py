@@ -82,13 +82,13 @@ def filterData( data : dict ) -> dict:
 def writeHeader ( f ):
     """ write the header info into file handle f """
     import time, sys
-    f.write ( f"# this file was created at {time.asctime()}\n" )
+    f.write ( f"# this file was created at {time.asctime()} via\n" )
     args = ""
     for i in sys.argv:
         if " " in i or "," in i or "[" in i:
             i = f'"{i}"'
         args += f"{i} "
-    f.write ( f"# via {args.strip()}\n" )
+    f.write ( f"# {args.strip()}\n" )
     f.write ( f"#\n" )
     f.write ( f"# variables:\n" )
     f.write ( f"# ==========\n" )
