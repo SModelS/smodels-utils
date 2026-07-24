@@ -133,7 +133,7 @@ def runOnePoint ( p, options ) -> bool:
     parser = modelTester.getParameters(options["inifile"])
     txname = parser["database"]["txnames"]
     options["txname"]=txname
-    of = outputFile ( p['mN2'], p['mC1'], p['mN1'], options )
+    of = outputFile ( int(p['mN2']), int(p['mC1']), int(p['mN1']), options )
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
@@ -151,6 +151,7 @@ def runOnePoint ( p, options ) -> bool:
     timeout = 0
     modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
         database, timeout, development, options["inifile"] )
+    print ( f"[yieldsCreator] {of} done!" )
     unlock ( of )
     return True
 
