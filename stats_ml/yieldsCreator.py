@@ -130,13 +130,14 @@ def runOnePoint ( p, options ) -> bool:
     """
     :returns True if success
     """
+    parser = modelTester.getParameters(options["inifile"])
+    txname = parser["database"]["txnames"]
+    options["txname"]=txname
     of = outputFile ( p['mN2'], p['mC1'], p['mN1'], options )
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
     print ( f"[yieldsCreator] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
-    parser = modelTester.getParameters(options["inifile"])
-    txname = parser["database"]["txnames"]
     inFile = getSLHAFile ( p, txname, options )
     if inFile == None:
         unlock ( of )

@@ -77,13 +77,15 @@ def submit ( mN2, mC1, mN1, options ):
     cmd = []
     if shutil.which ( "sbatch" ) != None:
         cmd = [ "sbatch", "-c", "6", "--time", "479" ]
+        jobname = f"{options['txname']}_{mN2}_{mC1}_{mN1}"
+        cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
         cmd += [ "--error", f"./slurm_logs/%j.out",
                  "--output", f"./slurm_logs/%j.out" ]
     cmd += [ "./yieldsCreator.py" ]
     cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     for option, value in options.items():
-        if option in [ "grid", "all", "point" ]:
+        if option in [ "grid", "all", "point", "txname" ]:
             continue
         if type(value)==bool:
             if value == True:
@@ -101,8 +103,15 @@ def submit ( mN2, mC1, mN1, options ):
     lock ( oFile )
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
     print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
+    sjobid = str ( a.stdout.strip() ).split(" ")[-1]
+    try:
+        jobid = int ( sjobid.replace("'","") )
+        return jobid
+    except ValueError as e:
+        pass
+    return None
 
-def runGrid( options : dict ):
+def runGrid( options : dict ) -> list:
     prepare ( options )
     dmMothers = int ( options["dmMothers"] )
     dmN1 = int ( options["dmN1"] )
@@ -120,6 +129,7 @@ def runGrid( options : dict ):
     parser = modelTester.getParameters(options["inifile"])
     txname = parser["database"]["txnames"]
     options["txname"]=txname
+    jobids = []
     if not halfway:
         for mN2 in range(minMothers,maxMothers, dmMothers ):
             for mN1 in range ( minN1, maxN1, dmN1 ):
@@ -127,7 +137,9 @@ def runGrid( options : dict ):
                     continue
                 if mN2 - mN1 > max_dm:
                     continue
-                submit ( mN2, mN2, mN1, options )
+                jobid = submit ( mN2, mN2, mN1, options )
+                if jobid != None:
+                    jobids.append ( jobid )
     if halfway:
         for mN2 in range( minMothers, maxMothers, dmMothers ):
             for mN1 in range ( minN1, maxN1, dmN1 ):
@@ -138,15 +150,14 @@ def runGrid( options : dict ):
                     continue
                 if mN2 - mN1 > max_dm:
                     continue
-                submit ( mN2, mC1, mN1, options )
+                jobid = submit ( mN2, mC1, mN1, options )
+                if jobid != None:
+                    jobids.append ( jobid )
+    return jobids
 
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(description="create points for joaquin" )
-    ap.add_argument( '--all',
-            help='do all points', action='store_true')
-    ap.add_argument( '--grid',
-            help='a grid', action='store_true')
     ap.add_argument( '--halfway',
             help='put mC1 halfway between mN2 and mN1', action='store_true')
     ap.add_argument( '--dry_run',
@@ -181,7 +192,6 @@ if __name__ == "__main__":
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
     args = ap.parse_args()
-    if args.grid:
-        runGrid( vars(args) )
-        logCall([])
-        import sys; sys.exit()
+
+    jobids = runGrid( vars(args) )
+    logCall(jobids)
