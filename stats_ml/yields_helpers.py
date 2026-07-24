@@ -19,8 +19,7 @@ def unlock ( oft ):
         oft += ".temp"
     Path ( oft ).unlink ( missing_ok = True )
 
-
 def outputFile ( mN2, mC1, mN1, options ):
-    ret = f"{options['outputdir']}/TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}"
+    ret = f"{options['outputdir']}/{options['txname']}_{mN2}_{mN1}_{mC1}_{mN1}"
     return ret
 

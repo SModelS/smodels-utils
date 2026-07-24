@@ -114,6 +114,10 @@ def runGrid( options : dict ):
     for i in [ "dmMothers", "dmN1", "minMothers", "minN1", \
                "maxMothers", "maxN1", "max_dm", "min_dm", "halfway" ]:
         options.pop ( i )
+    from smodels.matching import modelTester
+    parser = modelTester.getParameters(options["inifile"])
+    txname = parser["database"]["txnames"]
+    options["txname"]=txname
     if not halfway:
         for mN2 in range(minMothers,maxMothers, dmMothers ):
             for mN1 in range ( minN1, maxN1, dmN1 ):
