@@ -206,7 +206,8 @@ class PaperPlot:
         return y_vals
 
     def removeSegments ( self, x_val : list[float],
-            y_val : list[float], label : str = "" ) -> tuple[list[float]]:
+            y_val : list[float], label : str = "",
+            verbose : bool = False ) -> tuple[list[float]]:
         """ remove the segments of the line that are in side the remove_segments
         box.
         :param label: just for debugging, a name for the line
@@ -223,7 +224,11 @@ class PaperPlot:
         ymin, ymax = rec[0][1], rec[1][1]
         for x,y in zip ( x_val, y_val ):
             if xmin < x < xmax and ymin < y < ymax:
+                if verbose:
+                    print ( f"[removeSegments] removing {x,y}" )
                 continue
+            if verbose:
+                print ( f"[removeSegments] keeping  {x,y}" )
             ret_x.append( x )
             ret_y.append( y )
             if "official" in label:
@@ -563,6 +568,8 @@ class PaperPlot:
         new_x, new_y = [], []
         dct = {}
         for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
+            if len(seg_x)==0:
+                continue
             min_x = min ( seg_x )
             while min_x in dct:
                 min_x += 1e-8
