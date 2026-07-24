@@ -7,7 +7,7 @@ from pathlib import Path
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
-from yields_helpers import outputFile
+from yields_helpers import outputFile, unlock
 
 def getSLHAFile ( masses, txname : str ):
     ## we copy file, to keep track
@@ -16,9 +16,10 @@ def getSLHAFile ( masses, txname : str ):
     mN1 = masses["mN1"]
     srcf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
     destf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    src_d = "../smodels-utils/slha"
-    if not os.path.exists ( src_d ):
-        src_d = "../../smodels-utils/slha"
+    current_dir = Path(__file__).resolve().parent
+    #src_d = "../smodels-utils/slha"
+    #if not os.path.exists ( src_d ):
+    src_d = f"{current_dir}/../slha"
     src = os.path.abspath ( f"{src_d}/{srcf}" )
     if os.path.exists ( src ):
         print ( f"[yieldsCreator] found {src}: will use it" )
@@ -35,7 +36,9 @@ def createSLHAFile ( masses, txname : str ):
     mC1 = masses["mC1"]
     mN1 = masses["mN1"]
     destf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    with open ( f"templates/{txname}.template", "rt" ) as f:
+    current_dir = Path(__file__).resolve().parent
+    templ_d = os.path.abspath ( f"{current_dir}/../slha/templates/" )
+    with open ( f"{templ_d}/{txname}.template", "rt" ) as f:
         lines = f.readlines()
         f.close()
     dest = f"slha_scan/{destf}"

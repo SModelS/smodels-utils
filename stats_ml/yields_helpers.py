@@ -3,6 +3,7 @@
 """ helpers for the whole yields business """
 
 import time
+from pathlib import Path
 
 def lock ( oft : str ):
     if not oft.endswith ( ".temp" ):
