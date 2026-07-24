@@ -654,8 +654,6 @@ class PaperPlot:
                     ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                              linewidth = 1, label = label, zorder=-10 )
                     label = ""
-        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
-        #    return
 
     def getRange ( self, lines : dict, whatExcl : str, whatVar : str ) -> Tuple:
         """
@@ -680,6 +678,28 @@ class PaperPlot:
     def pprint ( self, *args ):
         print ( f"[drawPaperPlot] {''.join(map(str,*args))}" )
 
+    def getStatModel ( self, validationPlot ):
+        """ find out which stat model was used, complain if not always
+        the same """
+        validationPlot.loadData()
+        ret = None
+        for entry in validationPlot.data:
+            if "StatModel" in entry:
+                tmp = entry["StatModel"]
+                if ret != None and tmp != ret:
+                    print ( f"[drawPaperPlot] ERROR: stat model changed {ret}!={tmp}" )
+                    sys.exit(-1)
+                ret = tmp
+        return ret
+
+    def countRegions ( self, gI : "GlobalInfo", regionName : str ) -> dict:
+        nums = { "SR": 0, "CR": 0 }
+        regionSet = gI.regionSets [ regionName ]
+        for regionName in regionSet:
+            mapping = gI.regionMappings[regionName]
+            nums[mapping["type"]]+=1
+        return nums
+
     def countDataSets ( self, validationPlot ) -> dict:
         gI = validationPlot.expRes.globalInfo
         num_sr, num_cr = 0, 0
@@ -697,6 +717,18 @@ class PaperPlot:
             for label,region in gI.regionMappings.items():
                 sname = region["smodels"]
                 g_dict [ sname ] = region
+        if hasattr ( gI, "statModels" ):
+            statModel = self.getStatModel ( validationPlot )
+            regionName = None
+            for sM,models in gI.statModels.items():
+                for model in models:
+                    if statModel == model[1]: ## we found it!
+                        regionName = sM
+                        break
+            nums = self.countRegions ( gI, regionName )
+            num_sr += nums["SR"]
+            num_cr += nums["CR"]
+        """
         for ds in validationPlot.expRes.datasets:
             name = ds.dataInfo.dataId
             if name in g_dict:
@@ -708,6 +740,7 @@ class PaperPlot:
                     num_cr += 1
         if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
             ver = "(SLv1)"   #SLv1 vs SLv2
+        """
         if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
             ver = "(SLv2)"
         ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr }
@@ -1076,7 +1109,13 @@ class PaperPlot:
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         from smodels_utils.helper.various import pngMetaInfo
         metadata = pngMetaInfo()
-        plt.savefig(outfile, dpi=250, metadata=metadata )
+        dpi = 300
+        plt.savefig(outfile, dpi=dpi, metadata=metadata )
+        add_logos = True
+        logos_y_offset = -125
+        if add_logos:
+            from addLogoToPlots import addLogo
+            addLogo ( outfile, dpi = dpi, y_offset = logos_y_offset )
         plt.clf()
         plt.rcdefaults()
         plt.close()
@@ -1231,7 +1270,10 @@ class PaperPlot:
         txn = txname if txnameOff == "" else txnameOff
         outfile = f"{vDir}/{txn}_{fig_axes_title}_exp.png"
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
-        plt.savefig( outfile, dpi=250)
+        plt.savefig( outfile, dpi=dpi)
+        if add_logos:
+            from addLogoToPlots import addLogo
+            addLogo ( outfile, dpi = dpi, y_offset = logos_y_offset )
         plt.clf()
         plt.rcdefaults()
         plt.close()
