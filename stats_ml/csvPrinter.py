@@ -75,18 +75,23 @@ class CsvPrinter(BasicPrinter):
     def getDicts ( self, mus : list ) -> dict:
         """ get the dictionaries from yieldsToDicts
 
-        :returns: a dictionary with "orig" and "nn"
+        :returns: a dictionary 
         """
         all_dicts = {}
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
-            label = "orig" if "-orig" in anaId else "nn"
+            # we only need the -orig entries
+            if not "-orig" in anaId:
+                continue
+            """
             if False and not "-orig" in anaId:
                 print ( f"[csvPrinter] anaId {anaId} has no -orig, skip it" )
                 continue
+            """
             dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
-            all_dicts[label] = dicts
-        return all_dicts
+            return dicts
+        #    all_dicts[label] = dicts
+        #return all_dicts
 
     def getCsvLines ( self, all_dicts : dict, mus : list ) -> list[str]:
         """ create the csv lines from dicts
@@ -94,10 +99,10 @@ class CsvPrinter(BasicPrinter):
 
         :returns: csv lines, like [ "6.0,1.4,0.3,74.9,....", "..." ]
         """
-        if len(all_dicts["nn"])<2:
-            return []
-        nlls = all_dicts["orig"][0]
-        d_yields = all_dicts["nn"][1]
+        #if len(all_dicts["nn"])<2:
+        #    return []
+        nlls = all_dicts[0]
+        d_yields = all_dicts[1]
         nll_0 = nlls[ "nll_mu0" ]
         nllE_0 = nlls[ "nllE_mu0" ]
         nllA_0 = nlls[ "nllA_mu0" ]
@@ -123,12 +128,14 @@ class CsvPrinter(BasicPrinter):
         regions = self.getRegions()
         all_dicts = self.getDicts( mus )
         filename = self.filename
-        if len(all_dicts)!=2:
+        if len(all_dicts)==0:
             filename = filename.replace(".csv",".err")
             with open ( filename, "wt" ) as f:
-                f.write ( f"[csvPrinter] was expecting two entries but got {len(all_dicts)}: {all_dicts}\n" )
-                f.write ( f"[csvPrinter] regions {regions}\n" )
-            print ( f"[csvPrinter] was expecting two entries but got {len(all_dicts)}: {all_dicts}" )
+                f.write ( r"{\n" )
+                f.write ( fr"    'error': 'no entries',\n" )
+                f.write ( fr"    'regions': {regions},\n" )
+                f.write ( r"}\n" )
+            print ( f"[csvPrinter] no entries for {filename}" )
             return
         csvlines = self.getCsvLines( all_dicts, mus )
         fline = ",".join(regions)
