@@ -58,7 +58,7 @@ class CsvPrinter(BasicPrinter):
         regions = []
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
-            if "-orig" in anaId: #we get the regions from the NN run
+            if not "-orig" in anaId: #we get the regions from the NN no orig run
                 continue
             dicts = yieldsToDicts ( tp, mus=[], expected_also = True )
             if len(dicts) != 2:
@@ -77,7 +77,6 @@ class CsvPrinter(BasicPrinter):
 
         :returns: a dictionary 
         """
-        all_dicts = {}
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
             # we only need the -orig entries
@@ -90,6 +89,7 @@ class CsvPrinter(BasicPrinter):
             """
             dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
             return dicts
+        return {}
         #    all_dicts[label] = dicts
         #return all_dicts
 
@@ -131,10 +131,10 @@ class CsvPrinter(BasicPrinter):
         if len(all_dicts)==0:
             filename = filename.replace(".csv",".err")
             with open ( filename, "wt" ) as f:
-                f.write ( r"{\n" )
-                f.write ( fr"    'error': 'no entries',\n" )
-                f.write ( fr"    'regions': {regions},\n" )
-                f.write ( r"}\n" )
+                f.write ( "{\n" )
+                f.write ( "    'error': 'no entries',\n" )
+                f.write ( f"    'regions': {regions},\n" )
+                f.write ( "}\n" )
             print ( f"[csvPrinter] no entries for {filename}" )
             return
         csvlines = self.getCsvLines( all_dicts, mus )
