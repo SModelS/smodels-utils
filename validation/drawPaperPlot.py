@@ -467,7 +467,6 @@ class PaperPlot:
         else:
             pName = pName[1]
         """
-        print ( f"@@ pretty name for {txname}: {pName}" )
         return pName
 
     def getPrettyAxisLabels( self, label):
