@@ -101,6 +101,7 @@ def submit ( mN2, mC1, mN1, options ):
     print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
 
 def runGrid( options : dict ):
+    prepare ( options )
     dmMothers = int ( options["dmMothers"] )
     dmN1 = int ( options["dmN1"] )
     minMothers = int ( options["minMothers"] )
@@ -168,8 +169,8 @@ if __name__ == "__main__":
             help='mass of C1', type=float, default = None )
     ap.add_argument( '--mN2',
             help='mass of N2', type=float, default = None )
-    ap.add_argument( '--inifile [default.ini]',
-            help='path to ini file', type=str, default = "default.ini" )
+    ap.add_argument( '--inifile',
+            help='path to ini file [default.ini]', type=str, default = "default.ini" )
     ap.add_argument( '--outputdir',
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
