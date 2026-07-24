@@ -75,9 +75,11 @@ def submit ( mN2, mC1, mN1, options ):
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
     cmd = []
+    jobname = f"{options['txname']}_{mN2}_{mC1}_{mN1}"
+    if options["enable_full"]:
+        jobname = f"f{jobname}"
     if shutil.which ( "sbatch" ) != None:
         cmd = [ "sbatch", "-c", "6", "--time", "479" ]
-        jobname = f"{options['txname']}_{mN2}_{mC1}_{mN1}"
         cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
         cmd += [ "--error", f"./slurm_logs/%j.out",
