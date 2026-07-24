@@ -53,8 +53,22 @@ def createSLHAFile ( masses, txname : str ):
             t = t.replace("m0",f"{mC1}" )
             f.write ( t )
         f.close()
-    addXSec ( dest )
+    addRefXSec ( dest )
     return dest
+
+def addRefXSec ( filename ):
+    from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
+    first = True
+    verbose = True
+    computer = RefXSecComputer( verbose, first )
+    c = f"produced via slhaCreator v{self.version}"
+    ewk = None
+    if comment != None:
+        c+= f": {comment}"
+    if ewk != "wino":
+        c+= f" [{ewk}]"
+    computer.computeForOneFile ( [13], filename, True,
+            comment = c, ignore_pids = ignore_pids, ewk = ewk )
 
 def addXSec ( filename ):
     from validation.pythiaCardGen import getPythiaCardFor
