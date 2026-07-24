@@ -61,8 +61,11 @@ def addRefXSec ( filename ):
     first = True
     verbose = True
     computer = RefXSecComputer( verbose, first )
-    c = f"produced via slhaCreator v{self.version}"
+    version = "1.0.0"
+    c = f"produced via yieldsCreator v{version}"
     ewk = None
+    comment = None
+    ignore_pids = []
     if comment != None:
         c+= f": {comment}"
     if ewk != "wino":
