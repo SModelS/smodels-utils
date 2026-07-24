@@ -97,7 +97,8 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
             continue
         Dict = {}
         Dict["model"]=computer.name
-        Dict["nsignals"]=removeZeros ( computer.nsignals )
+        Dict["nsignals"]=removeZeros ( computer.data.nsignals )
+        # Dict["nsignals"]=removeZeros ( computer.nsignals )
         for mu in mus:
             smu = str(int(mu)) if mu==int(mu) else f"{mu:.1g}"
             yields = computer.totalYieldsFromSignals( mu )
