@@ -103,25 +103,35 @@ def submit ( mN2, mC1, mN1, options ):
 def runGrid( options : dict ):
     dmMothers = int ( options["dmMothers"] )
     dmN1 = int ( options["dmN1"] )
-    options.pop ( "dmMothers" )
-    options.pop ( "dmN1" )
-    for mN2 in range(100,401, dmMothers ):
-        for mN1 in range ( 0, 401, dmN1 ):
-            if mN1 > mN2:
-                continue
-            if mN2 - mN1 > 80:
-                continue
-            submit ( mN2, mN2, mN1, options )
-    for mN2 in range(100,351, dmMothers ):
-        for mN1 in range ( 20, 300, dmN1 ):
-            mC1 = (mN2 + mN1)/2.
-            if mC1 == int(mC1):
-                mC1 = int(mC1)
-            if mN1 > mC1:
-                continue
-            if mN2 - mN1 > 80.:
-                continue
-            submit ( mN2, mC1, mN1, options )
+    minMothers = int ( options["minMothers"] )
+    minN1 = int ( options["minN1"] )
+    maxMothers = int ( options["maxMothers"] )
+    maxN1 = int ( options["maxN1"] )
+    max_dm = int ( options["max_dm"] )
+    min_dm = int ( options["min_dm"] )
+    halfway = bool ( options["halfway"] )
+    for i in [ "dmMothers", "dmN1", "minMothers", "minN1", \
+               "maxMothers", "maxN1", "max_dm", "min_dm", "halfway" ]:
+        options.pop ( i )
+    if not halfway:
+        for mN2 in range(minMothers,maxMothers, dmMothers ):
+            for mN1 in range ( minN1, maxN1, dmN1 ):
+                if mN2 - mN1 < min_dm:
+                    continue
+                if mN2 - mN1 > max_dm:
+                    continue
+                submit ( mN2, mN2, mN1, options )
+    if halfway:
+        for mN2 in range( minMothers, maxMothers, dmMothers ):
+            for mN1 in range ( minN1, maxN1, dmN1 ):
+                mC1 = (mN2 + mN1)/2.
+                if mC1 == int(mC1):
+                    mC1 = int(mC1)
+                if mC1 - mN1 < min_dm:
+                    continue
+                if mN2 - mN1 > max_dm:
+                    continue
+                submit ( mN2, mC1, mN1, options )
 
 if __name__ == "__main__":
     import argparse
@@ -130,14 +140,28 @@ if __name__ == "__main__":
             help='do all points', action='store_true')
     ap.add_argument( '--grid',
             help='a grid', action='store_true')
+    ap.add_argument( '--halfway',
+            help='put mC1 halfway between mN2 and mN1', action='store_true')
     ap.add_argument( '--dry_run',
             help='just show the batch jobs', action='store_true')
     ap.add_argument( '--enable_full',
             help='enable full likelihoods', action='store_true')
     ap.add_argument( '--dmMothers',
-            help='dm for the grid', type=int, default = 50 )
+            help='dm(mothers) for the grid', type=int, default = 50 )
+    ap.add_argument( '--minMothers',
+            help='minimum mass of mothers for the grid', type=int, default = 100 )
+    ap.add_argument( '--maxMothers',
+            help='maximum mass of mothers for the grid', type=int, default = 401 )
     ap.add_argument( '--dmN1',
-            help='dm for the grid', type=int, default = 30 )
+            help='dm(LSP) for the grid', type=int, default = 30 )
+    ap.add_argument( '--max_dm',
+            help='max_dm between mothers and LSP', type=int, default = 80 )
+    ap.add_argument( '--min_dm',
+            help='min_dm between mothers and LSP', type=int, default = 0 )
+    ap.add_argument( '--minN1',
+            help='minimum mass of LSP for the grid', type=int, default = 0 )
+    ap.add_argument( '--maxN1',
+            help='maximum mass of LSP for the grid', type=int, default = 300 )
     ap.add_argument( '--mN1',
             help='mass of N1', type=float, default = None )
     ap.add_argument( '--mC1',
