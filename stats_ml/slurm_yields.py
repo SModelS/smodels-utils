@@ -75,9 +75,12 @@ def submit ( mN2, mC1, mN1, options ):
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
     cmd = []
-    jobname = f"{options['txname'][1:]}{mN2}{mC1}{mN1}"
+    txname = options['txname'][1:]
+    if txname == "SlepSlep":
+        txname = "Slep"
+    jobname = f"{txname}{mN2}{mC1}_{mN1}"
     if mC1 == mN2:
-        jobname = f"{options['txname'][1:]}{mN2}{mN1}"
+        jobname = f"{txname}{mN2}_{mN1}"
     if options["enable_full"]:
         jobname = f"f{jobname}"
     if shutil.which ( "sbatch" ) != None:
