@@ -147,28 +147,28 @@ if __name__ == "__main__":
     ap.add_argument( '--enable_full',
             help='enable full likelihoods', action='store_true')
     ap.add_argument( '--dmMothers',
-            help='dm(mothers) for the grid', type=int, default = 50 )
+            help='dm(mothers) for the grid [50]', type=int, default = 50 )
     ap.add_argument( '--minMothers',
-            help='minimum mass of mothers for the grid', type=int, default = 100 )
+            help='minimum mass of mothers for the grid [100]', type=int, default = 100 )
     ap.add_argument( '--maxMothers',
-            help='maximum mass of mothers for the grid', type=int, default = 401 )
+            help='maximum mass of mothers for the grid [401]', type=int, default = 401 )
     ap.add_argument( '--dmN1',
-            help='dm(LSP) for the grid', type=int, default = 30 )
+            help='dm(LSP) for the grid [30]', type=int, default = 30 )
     ap.add_argument( '--max_dm',
-            help='max_dm between mothers and LSP', type=int, default = 80 )
+            help='max_dm between mothers and LSP [80]', type=int, default = 80 )
     ap.add_argument( '--min_dm',
-            help='min_dm between mothers and LSP', type=int, default = 0 )
+            help='min_dm between mothers and LSP [0]', type=int, default = 0 )
     ap.add_argument( '--minN1',
-            help='minimum mass of LSP for the grid', type=int, default = 0 )
+            help='minimum mass of LSP for the grid [0]', type=int, default = 0 )
     ap.add_argument( '--maxN1',
-            help='maximum mass of LSP for the grid', type=int, default = 300 )
+            help='maximum mass of LSP for the grid [300]', type=int, default = 300 )
     ap.add_argument( '--mN1',
             help='mass of N1', type=float, default = None )
     ap.add_argument( '--mC1',
             help='mass of C1', type=float, default = None )
     ap.add_argument( '--mN2',
             help='mass of N2', type=float, default = None )
-    ap.add_argument( '--inifile',
+    ap.add_argument( '--inifile [default.ini]',
             help='path to ini file', type=str, default = "default.ini" )
     ap.add_argument( '--outputdir',
             help='output directory [yields_results]',
