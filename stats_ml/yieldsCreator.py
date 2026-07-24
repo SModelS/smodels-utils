@@ -17,7 +17,7 @@ def getTopLevelDir ():
     current_dir = Path(__file__).resolve().parent.parent
     return current_dir
 
-def getSLHAFile ( masses, txname : str ):
+def getSLHAFile ( masses, txname : str, options ):
     ## we copy file, to keep track
     mN2 = masses["mN2"]
     mC1 = masses["mC1"]
@@ -33,8 +33,12 @@ def getSLHAFile ( masses, txname : str ):
         shutil.copyfile ( src, dest )
         return dest
     else:
-        print ( f"[yieldsCreator] did not find {src}: need to make it" )
-        return createSLHAFile ( masses, txname )
+        if options["compute_xsecs"]:
+            print ( f"[yieldsCreator] did not find {src}: need to make it" )
+            return createSLHAFile ( masses, txname )
+        else:
+            print ( f"[yieldsCreator] did not find {src}: skip it" )
+            return None
 
 def createSLHAFile ( masses, txname : str ):
     mN2 = masses["mN2"]
@@ -122,7 +126,10 @@ def enableFullLlhds ( database ):
         print ( f"[yieldsCreator] enable full model for {er.globalInfo.id}" )
         enableFullLlhdModels ( er.globalInfo )
 
-def runOnePoint ( p, options ):
+def runOnePoint ( p, options ) -> bool:
+    """
+    :returns True if success
+    """
     of = outputFile ( p['mN2'], p['mC1'], p['mN1'], options )
     for particle,mass in p.items():
         if mass == int(mass):
@@ -130,7 +137,10 @@ def runOnePoint ( p, options ):
     print ( f"[yieldsCreator] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
     parser = modelTester.getParameters(options["inifile"])
     txname = parser["database"]["txnames"]
-    inFile = getSLHAFile ( p, txname )
+    inFile = getSLHAFile ( p, txname, options )
+    if inFile == None:
+        unlock ( of )
+        return False
     database = Database ( parser["database"]["path"] )
     modelTester.loadDatabaseResults(parser, database)
     if options["enable_full"]:
@@ -141,6 +151,7 @@ def runOnePoint ( p, options ):
     modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
         database, timeout, development, options["inifile"] )
     unlock ( of )
+    return True
 
 def prepare( options ):
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
@@ -153,6 +164,8 @@ if __name__ == "__main__":
             help='just show the batch jobs', action='store_true')
     ap.add_argument( '--enable_full',
             help='enable full likelihoods', action='store_true')
+    ap.add_argument( '--compute_xsecs',
+            help='compute xsecs if missing', action='store_true')
     ap.add_argument( '--mN1',
             help='mass of N1', type=float, default = None )
     ap.add_argument( '--mC1',
