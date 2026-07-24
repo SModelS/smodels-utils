@@ -9,13 +9,13 @@ from pathlib import Path
 from stats_ml import yieldsPrinter, csvPrinter
 from yields_helpers import outputFile
 
-def getSLHAFile ( masses ):
+def getSLHAFile ( masses, txname : str ):
     ## we copy file, to keep track
     mN2 = masses["mN2"]
     mC1 = masses["mC1"]
     mN1 = masses["mN1"]
-    srcf = f"TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    destf = f"TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}.slha"
+    srcf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
+    destf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
     src_d = "../smodels-utils/slha"
     if not os.path.exists ( src_d ):
         src_d = "../../smodels-utils/slha"
@@ -28,14 +28,14 @@ def getSLHAFile ( masses ):
         return dest
     else:
         print ( f"[yieldsCreator] did not find {src}: need to make it" )
-        return createSLHAFile ( masses )
+        return createSLHAFile ( masses, txname )
 
-def createSLHAFile ( masses ):
+def createSLHAFile ( masses, txname : str ):
     mN2 = masses["mN2"]
     mC1 = masses["mC1"]
     mN1 = masses["mN1"]
-    destf = f"TChiWZoff_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    with open ( f"templates/TChiWZoff.template", "rt" ) as f:
+    destf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
+    with open ( f"templates/{txname}.template", "rt" ) as f:
         lines = f.readlines()
         f.close()
     dest = f"slha_scan/{destf}"
@@ -104,8 +104,9 @@ def runOnePoint ( p, options ):
         if mass == int(mass):
             p[particle]=int(mass)
     print ( f"[yieldsCreator] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
-    inFile = getSLHAFile ( p )
     parser = modelTester.getParameters(options["inifile"])
+    txname = parser["database"]["txnames"]
+    inFile = getSLHAFile ( p, txname )
     database = Database ( parser["database"]["path"] )
     modelTester.loadDatabaseResults(parser, database)
     if options["enable_full"]:
