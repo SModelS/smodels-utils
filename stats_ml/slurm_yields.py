@@ -10,7 +10,7 @@ from stats_ml import yieldsPrinter, csvPrinter
 from yields_helpers import outputFile, lock, unlock
 
 def logCall ( jobids : list ):
-    logfile = f"yields_creator.log"
+    logfile = f"slurm_yields.log"
     #logfile = f"{os.environ['HOME']}/yields_creator.log"
     line = ""
     for i in sys.argv:
