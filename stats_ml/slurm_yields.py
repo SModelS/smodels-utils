@@ -74,10 +74,12 @@ def submit ( mN2, mC1, mN1, options ):
             # print ( f"[slurm_yields] {fn} doesnt exist" )
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
-    cmd = [ "sbatch", "-c", "6", "--time", "479" ]
-    #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
-    cmd += [ "--error", f"./slurm_logs/%j.out",
-             "--output", f"./slurm_logs/%j.out" ]
+    cmd = []
+    if shutil.which ( "sbatch" ) != None:
+        cmd = [ "sbatch", "-c", "6", "--time", "479" ]
+        #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
+        cmd += [ "--error", f"./slurm_logs/%j.out",
+                 "--output", f"./slurm_logs/%j.out" ]
     cmd += [ "./yieldsCreator.py" ]
     cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     for option, value in options.items():
