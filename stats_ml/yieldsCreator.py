@@ -9,6 +9,14 @@ from pathlib import Path
 from stats_ml import yieldsPrinter, csvPrinter
 from yields_helpers import outputFile, unlock
 
+def getTopLevelDir ():
+    """ get the path to smodels-utils/ """
+    current_dir = "/users/wolfgan.waltenberger/git/smodels-utils/"
+    if os.path.exists ( current_dir ):
+        return current_dir
+    current_dir = Path(__file__).resolve().parent.parent
+    return current_dir
+
 def getSLHAFile ( masses, txname : str ):
     ## we copy file, to keep track
     mN2 = masses["mN2"]
@@ -16,10 +24,7 @@ def getSLHAFile ( masses, txname : str ):
     mN1 = masses["mN1"]
     srcf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
     destf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    current_dir = Path(__file__).resolve().parent
-    #src_d = "../smodels-utils/slha"
-    #if not os.path.exists ( src_d ):
-    src_d = f"{current_dir}/../slha"
+    src_d = f"{getTopLevelDir()}/slha"
     src = os.path.abspath ( f"{src_d}/{srcf}" )
     if os.path.exists ( src ):
         print ( f"[yieldsCreator] found {src}: will use it" )
@@ -36,8 +41,7 @@ def createSLHAFile ( masses, txname : str ):
     mC1 = masses["mC1"]
     mN1 = masses["mN1"]
     destf = f"{txname}_{mN2}_{mN1}_{mC1}_{mN1}.slha"
-    current_dir = Path(__file__).resolve().parent
-    templ_d = os.path.abspath ( f"{current_dir}/../slha/templates/" )
+    templ_d = os.path.abspath ( f"{getTopLevelDir()}/slha/templates/" )
     with open ( f"{templ_d}/{txname}.template", "rt" ) as f:
         lines = f.readlines()
         f.close()
