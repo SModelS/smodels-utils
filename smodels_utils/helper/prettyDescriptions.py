@@ -771,7 +771,7 @@ def rootToLatex ( string : str, outputtype : str = "latex",
     if outputtype == "root":
         return string
     def rectifyCommands ( string : str ):
-        for i in [ "t", "p", "c", "g", "q", "b", "u", "d" ]:
+        for i in [ "t", "p", "c", "g", "q", "b", "u", "d", "m" ]:
             string = string.replace(f"\\\\{i}",f"\\{i}")
         return string
     if type ( string ) in [ list, tuple ]:
