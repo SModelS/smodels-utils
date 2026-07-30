@@ -58,6 +58,7 @@ class YieldsPrinter(BasicPrinter):
         all_dicts = {}
         oldGInfo = None
         mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
+        exp_also = True
         for tp in self.toPrint:
             gInfo = generalInfo ( tp )
             gInfo["mus"] = mus
@@ -66,7 +67,7 @@ class YieldsPrinter(BasicPrinter):
             elif oldGInfo != gInfo:
                 logger.error ( f"general info changed: {gInfo} != {oldGInfo}" )
             gInfo["dt[h]"] = (time.time() - self.t0)/60./60.
-            dicts = yieldsToDicts ( tp, mus = mus )
+            dicts = yieldsToDicts ( tp, mus = mus, expected_also = exp_also )
             all_dicts[tp.dataset.globalInfo.id] = dicts
             oldGInfo = copy.deepcopy ( gInfo )
             oldGInfo.pop ( "dt[h]" )
