@@ -115,10 +115,10 @@ def addXSec ( filename ):
     Path ( pythiaCard ).unlink ( missing_ok = True )
     print ( f"[yieldsCreator] done computing xsecs" )
 
-def enableFullLlhds ( database ):
+def enableFullLlhds ( database, anaids ):
     """ turn on full llhds """
     from smodels_utils.helper.databaseManipulations import enableFullLlhdModels
-    for er in database.getExpResults():
+    for er in database.getExpResults( analysisIDs = anaids ):
         if not hasattr ( er.globalInfo, "statModels" ):
             continue
         if not "-orig" in er.globalInfo.id:
@@ -132,6 +132,8 @@ def runOnePoint ( p, options ) -> bool:
     """
     parser = modelTester.getParameters(options["inifile"])
     txname = parser["database"]["txnames"]
+    anaids = parser["database"]["analyses"].split(",")
+    anaids = [ x.strip() for x in anaids ]
     options["txname"]=txname
     of = outputFile ( int(p['mN2']), int(p['mC1']), int(p['mN1']), options )
     for particle,mass in p.items():
@@ -143,9 +145,10 @@ def runOnePoint ( p, options ) -> bool:
         unlock ( of )
         return False
     database = Database ( parser["database"]["path"] )
+    database.getExpResults ( analysisIDs = anaids )
     modelTester.loadDatabaseResults(parser, database)
     if options["enable_full"]:
-        enableFullLlhds ( database )
+        enableFullLlhds ( database, anaids )
     fileList, inDir = modelTester.getAllInputFiles(inFile)
     development = False
     timeout = 0

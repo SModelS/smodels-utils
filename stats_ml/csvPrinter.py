@@ -127,19 +127,19 @@ class CsvPrinter(BasicPrinter):
         mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
         regions = self.getRegions()
         all_dicts = self.getDicts( mus )
-        filename = self.filename
+        basename = self.filename.replace(".csv","")
         if len(all_dicts)==0:
-            filename = filename.replace(".csv",".err")
+            filename = f"{basename}.err"
             with open ( filename, "wt" ) as f:
                 f.write ( "{\n" )
                 f.write ( "    'error': 'no entries',\n" )
                 f.write ( f"    'regions': {regions},\n" )
                 f.write ( "}\n" )
-            print ( f"[csvPrinter] no entries for {filename}" )
+            print ( f"[csvPrinter] no entries for {basename}" )
             return
         csvlines = self.getCsvLines( all_dicts, mus )
         fline = ",".join(regions)
-        with open ( filename, "wt" ) as f:
+        with open ( self.filename, "wt" ) as f:
             f.write ( fline + "\n" )
             for line in csvlines:
                 f.write ( line + "\n" )
