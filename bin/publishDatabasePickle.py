@@ -256,7 +256,7 @@ def main():
     if args.remove_yields_only:
         # e = copy.deepcopy( d )
         e = Database ( picklefile, progressbar=True )
-        ## create fastlim only
+        ## create yields only
         e = removeYieldsOnlyFromDB ( e, invert = True,
                 picklefile = "yields_only.pcl" )
         d = removeYieldsOnlyFromDB ( d, picklefile = "official.pcl" )

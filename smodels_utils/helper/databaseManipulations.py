@@ -2,7 +2,7 @@
 
 """ module that contains a few methods to manipulate the database """
 
-import os
+import os, copy
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.expResultObj import ExpResult
 from smodels.base.physicsUnits import TeV, fb
@@ -52,9 +52,9 @@ def combineResults( database: Database, anas_and_SRs : Dict,
         #er.datasets = er.datasets[:1]
 
     if debug:
-        print ( "[combineResults] cov_matrx", covariance_matrix )
-        print ( "[combineResults] datasets", datasets )
-        print ( "[combineResults] anaIds", anaIds )
+        print ( f"[databaseManipulations] cov_matrx {covariance_matrix}" )
+        print ( f"[databaseManipulations] datasets {datasets}" )
+        print ( f"[databaseManipulations] anaIds {anaIds}" )
     ## construct a fake result with these <n> datasets and and
     ## an nxn covariance matrix
     er = copy.deepcopy ( expResults[0] )
@@ -267,18 +267,26 @@ def filterYieldsOnlyFromList ( expResList : list, invert : bool = False,
         return expResList
     yieldsOnlyList,filteredList = [], []
     for e in expResList:
+        dsWithTx, dsWithoutTx = [], []
         assert len(e.datasets)>0, f"expResult has no datasets??"
         hasYieldsOnly = False
         hasWithTx = False
         for dataset in e.datasets:
             if len(dataset.txnameList) == 0:
-                hasTxFree = True
+                dsWithoutTx.append ( dataset )
+                hasYieldsOnly = True
             else:
+                dsWithTx.append ( dataset )
                 hasWithTx = True
         if hasYieldsOnly and hasWithTx:
-            logger.error ( f"I am confused, we have an expResult that has both yields-only as well as txnamed datasets??" )
-            sys.exit(-1)
-        if hasYieldsOnly:
+            eWithTx, eWithoutTx = copy.deepcopy ( e ), copy.deepcopy ( e )
+            eWithTx.datasets = dsWithTx
+            eWithoutTx.datasets = dsWithoutTx
+            yieldsOnlyList.append ( eWithoutTx )
+            filteredList.append ( eWithTx )
+            print ( f"[databaseManipulations] expResult {e.globalInfo.id} goes into both pickles!" )
+            # sys.exit(-1)
+        elif hasYieldsOnly:
             yieldsOnlyList.append ( e )
         else:
             filteredList.append ( e )
