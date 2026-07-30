@@ -21,12 +21,16 @@ from .yieldsWriter import yieldsToDicts, formatMu
 
 class CsvPrinter(BasicPrinter):
     """ Printer class exclusively to print signal yields
-    into a yield*.csv file """
+    into a yield*.csv file 
+    :ivar useSModelSNames: if true, then write the smodels names into 
+    the first line, else the pyhf names
+    """
     def __init__( self, output : str = 'yields.csv',
                   filename : Optional[os.PathLike]=None,
                   outputFormat : str = 'version3' ):
         BasicPrinter.__init__(self, output, filename, outputFormat)
         self.toPrint = []
+        self.useSModelSNames = False
 
     def setOutPutFile( self, filename : os.PathLike, overwrite : bool = True,
                        silent : bool = False ):
@@ -57,7 +61,7 @@ class CsvPrinter(BasicPrinter):
         """
         regions = []
         pyhfNames = {}
-        useSModelSNames = False
+        addM0 = True
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
             if not "-orig" in anaId: #we get the regions from the NN no orig run
@@ -68,12 +72,14 @@ class CsvPrinter(BasicPrinter):
                 continue
 
             d = dicts[1]
-            if useSModelSNames:
+            if self.useSModelSNames:
                 regions += [ k for k,v in d["nsignals"].items() ]
             else:
                 for region in d["nsignals"].keys():
                     rdict = tp.dataset.globalInfo.regionMappings[ region ]
                     pyhfname = rdict [ "pyhf" ]
+                    if addM0 and pyhfname.endswith  ("cuts"):
+                        pyhfname += "-0"
                     regions.append ( pyhfname )
         regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0",
                      "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1",
