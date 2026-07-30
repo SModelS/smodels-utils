@@ -20,15 +20,15 @@ sys.path.insert(0,".")
 from .yieldsWriter import yieldsToDicts, formatMu
 
 class CsvPrinter(BasicPrinter):
-    """ Printer class exclusively to print signal yields 
+    """ Printer class exclusively to print signal yields
     into a yield*.csv file """
-    def __init__( self, output : str = 'yields.csv', 
+    def __init__( self, output : str = 'yields.csv',
                   filename : Optional[os.PathLike]=None,
                   outputFormat : str = 'version3' ):
         BasicPrinter.__init__(self, output, filename, outputFormat)
         self.toPrint = []
 
-    def setOutPutFile( self, filename : os.PathLike, overwrite : bool = True, 
+    def setOutPutFile( self, filename : os.PathLike, overwrite : bool = True,
                        silent : bool = False ):
         """
         Set the basename for the text printer. The output filename will be
@@ -56,6 +56,8 @@ class CsvPrinter(BasicPrinter):
         nLLA_exp_mu0,nLLA_exp_mu1,nLLA_obs_mu0,nLLA_obs_mu1
         """
         regions = []
+        pyhfNames = {}
+        useSModelSNames = False
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
             if not "-orig" in anaId: #we get the regions from the NN no orig run
@@ -66,16 +68,23 @@ class CsvPrinter(BasicPrinter):
                 continue
 
             d = dicts[1]
-            regions += [ k for k,v in d["nsignals"].items() ]
-        regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0", 
-                     "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1", 
+            if useSModelSNames:
+                regions += [ k for k,v in d["nsignals"].items() ]
+            else:
+                for region in d["nsignals"].keys():
+                    rdict = tp.dataset.globalInfo.regionMappings[ region ]
+                    pyhfname = rdict [ "pyhf" ]
+                    regions.append ( pyhfname )
+        regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0",
+                     "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1",
                      "nLLA_obs_mu0", "nLLA_obs_mu1" ]
+        self.pyhfNames = pyhfNames
         return regions
 
     def getDicts ( self, mus : list ) -> dict:
         """ get the dictionaries from yieldsToDicts
 
-        :returns: a dictionary 
+        :returns: a dictionary
         """
         for tp in self.toPrint:
             anaId = tp.dataset.globalInfo.id
@@ -126,6 +135,7 @@ class CsvPrinter(BasicPrinter):
         logger.info ( f"writing yields to {self.filename}" )
         mus = [ 0., .001, .01, .05, .2, .4, 1., 2., 5., 20., 100. ]
         regions = self.getRegions()
+
         all_dicts = self.getDicts( mus )
         basename = self.filename.replace(".csv","")
         if len(all_dicts)==0:
