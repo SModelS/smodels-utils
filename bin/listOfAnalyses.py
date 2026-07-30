@@ -56,7 +56,7 @@ class Lister:
         poptions["dictfile"] = "./temp_database.dict"
         poptions["show"] = True
         poptions["title"] = ""
-        # poptions["Zmax"] = 3.25
+        # poptions["Zmax"] = 4.25
         poptions["nbins"] = 29
         poptions["options"] = {'ylabel':'# signal regions',
            'plot_averages': False, 'plotStats': True, "no_stacked": False,
@@ -69,6 +69,7 @@ class Lister:
         poptions["filternegativesigma"]= None
         poptions["keep"]= False
         poptions["nofastlim"]= not self.includeFastlim
+        poptions["noyieldsonly"]= not self.includeYieldsOnly
         plotter = plotDBDict.Plotter ( poptions )
         sigsplot = self.significancesPlotFileName()
         cmd = f"mv tmp.png {self.github_io}/{sigsplot}"
@@ -85,7 +86,6 @@ class Lister:
             print ( f"[listOfAnalyses] instantiating fudged (f={self.fudge:.1f}) ExpResModifier" )
             modifier = expResModifier.ExpResModifier ( options )
             print ( f"[listOfAnalyses] done instantiating fudged ExpResModifier" )
-            from protomodels.plotting import plotDBDict
             poptions = { "topologies": None, "roughviz": False }
             poptions["dictfile"] = "./fudge_database.dict"
             poptions["show"] = True
@@ -99,6 +99,7 @@ class Lister:
             poptions["pvalues"] = False
             poptions["outfile"] = "tmp.png"
             poptions["nosuperseded"]=not self.includeSuperseded
+            poptions["noyieldsonly"]= not self.includeYieldsOnly
             plotter = plotDBDict.Plotter ( poptions )
             #print ( "[listOfAnalyses] ending roughviz" )
             sigsplot = self.significancesPlotFileName( "fudged" )
@@ -623,6 +624,8 @@ class Lister:
             help='add info about likelihoods' )
         argparser.add_argument ( '-f', '--fastlim', action='store_true',
             help='add fastlim results' )
+        argparser.add_argument ( '--yields_only', action='store_true',
+            help='include yields-only results' )
         argparser.add_argument ( '-k', '--keep', action='store_true',
             help='keep temporary files, like temp_database.dict' )
         argparser.add_argument ( '--fudge', type=float, default = None,
@@ -666,6 +669,7 @@ class Lister:
             self.dotlessv = ver
         self.ignore = args.ignore ## ignore validation flags
         self.includeFastlim = args.fastlim
+        self.includeYieldsOnly = args.yields_only
         self.expRes = self.database.getExpResults ( useNonValidated = self.ignore  )
         if not self.includeSuperseded:
             self.expRes = manips.filterSupersededFromList ( self.expRes )
