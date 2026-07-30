@@ -14,7 +14,9 @@ def copy():
 
 def gitClone():
     Dir = f"/scratch-cbe/users/{os.environ['USER']}/git/"
-    for i in [ "smodels", "smodels-utils", "smodels-database", "em-creator", "smodels.github.io", "protomodels" ]:
+    workspaces = [ "smodels", "smodels-utils", "smodels-database", "em-creator", "smodels.github.io", "protomodels" ]
+    workspaces = [ "smodels", "smodels-utils", "smodels-database", "smodels.github.io", "protomodels" ]
+    for i in workspaces:
         if not os.path.exists ( f"{Dir}/{i}" ):
             cmd = f"cd {Dir}; git clone git+ssh://git@github.com/SModelS/{i}.git"
             print ( cmd )
