@@ -139,7 +139,7 @@ def runOnePoint ( p, options ) -> bool:
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
-    print ( f"[yieldsCreator] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
+    print ( f"[yieldsCreator:{time.asctime()}] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
     inFile = getSLHAFile ( p, txname, options )
     if inFile == None:
         unlock ( of )

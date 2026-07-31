@@ -10,7 +10,7 @@ from stats_ml import yieldsPrinter, csvPrinter
 from yields_helpers import outputFile, lock, unlock
 
 def logCall ( jobids : list ):
-    logfile = f"slurm_yields.log"
+    logfile = f"slurm.log"
     #logfile = f"{os.environ['HOME']}/yields_creator.log"
     line = ""
     for i in sys.argv:
@@ -29,7 +29,7 @@ def logCall ( jobids : list ):
             lastline = lastline[p+2:]
     if line == lastline: # skip duplicates
         return
-    jobid_logs = "slurm_jobids"
+    jobid_logs = "slurm_jobids.log"
     # short version in logfile, long version with jobids in jobid_logs
     f=open(logfile,"at")
     g=open(jobid_logs,"at")
