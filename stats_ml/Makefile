@@ -1,7 +1,8 @@
 all: fetch
 
 fetch:
-	scp -r clip-login-1:git/smodels-utils/stats_ml/\*_results .
+	mv full_* /tmp
+	scp -r clip-login-1:git/smodels-utils/stats_ml/full_\* .
 
 clean:
 	find results -type f -mtime +1 -delete
