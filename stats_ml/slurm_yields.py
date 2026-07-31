@@ -29,10 +29,15 @@ def logCall ( jobids : list ):
             lastline = lastline[p+2:]
     if line == lastline: # skip duplicates
         return
+    jobid_logs = "slurm_jobids"
+    # short version in logfile, long version with jobids in jobid_logs
     f=open(logfile,"at")
-    #f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
+    g=open(jobid_logs,"at")
     f.write ( f"# slurm_yields.py-{time.asctime()}\n" )
-    f.write ( f"{line}\n" )
+    f.write ( f"{line}\n\n" )
+    f.close()
+    g.write ( f"# slurm_yields.py-{time.asctime()}\n" )
+    g.write ( f"{line}\n" )
     s_jobids = ','.join(map(str,jobids))
     s_jobids = ""
     for i,jobid in enumerate(jobids):
@@ -41,8 +46,8 @@ def logCall ( jobids : list ):
             if i % 6 == 0:
                 s_jobids += "\n#         "
         s_jobids += str(jobid)
-    f.write ( f"# jobids: {s_jobids}\n\n" )
-    f.close()
+    g.write ( f"# jobids: {s_jobids}\n\n" )
+    g.close()
 
 def prepare( options ):
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
