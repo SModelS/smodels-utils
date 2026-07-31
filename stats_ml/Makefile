@@ -1,7 +1,7 @@
 all: fetch
 
 fetch:
-	rm -rf /tmp/full_\*
+	rm -rf /tmp/full_*
 	mv full_* /tmp
 	scp -r clip-login-1:git/smodels-utils/stats_ml/full_\* .
 	rm -rf full_*/*.temp
