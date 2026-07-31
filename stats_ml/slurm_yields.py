@@ -89,7 +89,7 @@ def submit ( mN2, mC1, mN1, options ):
     if options["enable_full"]:
         jobname = f"f{jobname}"
     if shutil.which ( "sbatch" ) != None:
-        cmd = [ "sbatch", "-c", "6", "--time", "479" ]
+        cmd = [ "sbatch", "-c", "6", "--time", "479", "--mem", "2G" ]
         cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
         cmd += [ "--error", f"./slurm_logs/%j.out",
