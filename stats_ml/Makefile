@@ -1,5 +1,9 @@
 all: fetch
 
+count:
+	wc -l full_slep/*csv
+	wc -l full_chiwzoff/*csv
+
 fetch:
 	rm -rf /tmp/full_*
 	mv full_* /tmp
