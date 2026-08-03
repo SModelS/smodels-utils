@@ -187,7 +187,7 @@ if __name__ == "__main__":
     ap.add_argument( '--max_dm',
             help='max_dm between mothers and LSP [80]', type=int, default = 80 )
     ap.add_argument( '--min_dm',
-            help='min_dm between mothers and LSP [0]', type=int, default = 0 )
+            help='min_dm between mothers and LSP [0]', type=int, default = 1 )
     ap.add_argument( '--minN1',
             help='minimum mass of LSP for the grid [0]', type=int, default = 0 )
     ap.add_argument( '--maxN1',
