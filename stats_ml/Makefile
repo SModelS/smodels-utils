@@ -1,10 +1,13 @@
 all: fetch
 
+touch_all:
+	touch full_*/*csv full_*/*json
+
 count:
 	wc -l full_slep/*csv
 	wc -l full_chiwzoff/*csv
 
-fetch:
+fetch: touch_all
 	./fetch.sh
 
 clean:
