@@ -67,6 +67,7 @@ def yieldsToDicts ( theoryPred : TheoryPrediction,
     ms = theoryPred.statsComputer.getMostSensitiveModel()
     Dict["most_sensitive"]=ms.name
     Dict["ul(mu)"]=ms.getUpperLimitOnMu()
+    Dict["nll_min"]=theoryPred.nll_min()
     # mus = [ 0., .001, .2, .4, 1., 2., 5., 100. ]
     from smodels.statistics.basicStats import observed, apriori
     for mu in mus:
