@@ -70,7 +70,7 @@ DECAY  24 2.085000e+00 # WW
 DECAY  25 4.170000e-03 # WH 
 DECAY  32 W0 # WZp
 #  BR             NDA  ID1    ID2    
-   1.000000e+00   2    11     -11
+   1.000000e+00   2    13     -13
 #
 DECAY  34 1.012700e+02 # WWp 
 ## Dependent parameters, given by model restrictions.
