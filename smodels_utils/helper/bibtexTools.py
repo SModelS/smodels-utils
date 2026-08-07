@@ -113,9 +113,10 @@ class BibtexWriter:
     def header ( self ):
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "% References for the analyses included in this version of the database %\n" )
-        self.i.write ( f"{f'% This file was created at {time.asctime()} for db v{self.db.databaseVersion}         '[:71]}%\n" )
+        self.i.write ( f"{f'% This file was created at {time.asctime()} by {os.path.basename(__file__)}         '[:71]}%\n" )
+        self.i.write ( f"{f'% for db v{self.db.databaseVersion}         '[:71]}%\n" )
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
-        self.i.write ( "\n" )
+        # self.i.write ( "\n" )
 
     def copy ( self ):
         """ copy the files to the database path. """
@@ -430,6 +431,8 @@ class BibtexWriter:
             return
         self.log ( f" * Id, url: {Id}, {url}" )
         # self.log ( f" * no publication DOI given (consider supplying one), trying via inspire" )
+        if url.count("http")>1:
+            self.warn( f"something is wrong with url {url} in {Id}" )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
             self.writeBibEntry ( bib, Id )
@@ -644,6 +647,9 @@ class BibtexWriter:
     def getBibtex ( self, bibtexfile : str ):
         """ get the bibtex content from file, hopefully working with
         bibtexparser v1 and v2 alike """
+        ver = bibtexparser.__version__
+        if ver[0]=="1":
+            self.log ( f"You have bibtexparser {ver} but I recommend v2" )
         # v1
         if not hasattr ( bibtexparser, "parse_file" ):
             with open( bibtexfile ) as handle:
@@ -661,6 +667,7 @@ class BibtexWriter:
         f.close()
         self.i.write ( "\n" )
         self.i.write ( self.createSummaryCitation ( bibtex, "CMS" ) )
+        self.i.write ( "\n" )
         self.i.write ( "\n" )
         self.i.write ( self.createSummaryCitation ( bibtex, "ATLAS" ) )
         self.i.write ( "\n" )

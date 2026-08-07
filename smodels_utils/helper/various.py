@@ -144,7 +144,7 @@ def checkNumpyVersion ():
 def removeAnaIdSuffices ( anaId : str ) -> str:
     """ given  analysis id <anaId>, remove all kinds of suffices """
     for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
-               "-hino", "-wino", "-incl", "-trim" ]:
+               "-hino", "-wino", "-incl", "-trim", "-wbplus" ]:
         anaId = anaId.replace(i,"")
     return anaId
 
