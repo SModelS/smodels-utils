@@ -114,7 +114,7 @@ class BibtexWriter:
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "% References for the analyses included in this version of the database %\n" )
         self.i.write ( f"{f'% This file was created at {time.asctime()} by {os.path.basename(__file__)}         '[:71]}%\n" )
-        self.i.write ( f"{f'% for db v{self.db.databaseVersion}         '[:71]}%\n" )
+        self.i.write ( f"{f'% for db v{self.db.databaseVersion}                                                        '[:71]}%\n" )
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         # self.i.write ( "\n" )
 
