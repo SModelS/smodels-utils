@@ -152,9 +152,9 @@ class HepJsonCreator:
             else:
                 url += "/index.php"
         try:
-            r = requests.get ( url )
+            r = requests.get ( url, timeout=300 )
         except Exception as e:
-            print ( f"[createHepJson] could not retrieve inspire id from page {url} for {gI.id}: {e}" )
+            print ( f"[createHepJson] not getting inspire id for {gI.id} from {url}: {e}. skipping!" )
             return None
         txt = r.text
         ## first search for inspirehep.net/record links
