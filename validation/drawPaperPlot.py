@@ -701,9 +701,12 @@ class PaperPlot:
     def countRegions ( self, gI : "GlobalInfo", regionName : str ) -> dict:
         nums = { "SR": 0, "CR": 0 }
         regionSet = gI.regionSets [ regionName ]
-        for regionName in regionSet:
-            mapping = gI.regionMappings[regionName]
-            nums[mapping["type"]]+=1
+        if not hasattr ( gI, "regionMappings" ):
+            nums["SR"]=len(regionSet)
+        else:
+            for regionName in regionSet:
+                mapping = gI.regionMappings[regionName]
+                nums[mapping["type"]]+=1
         return nums
 
     def countDataSets ( self, validationPlot ) -> dict:
