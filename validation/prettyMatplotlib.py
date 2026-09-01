@@ -920,8 +920,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             backend = "CheckMate"
         if "adl" in comment or "cutlang" in comment:
             backend = "CutLang"
-    if backend!="":
-        plt.text(.2,.0222,f"backend: {backend}",transform=fig.transFigure,
+    if backend!="" and "write_backend" in options and options["write_backend"]:
+        plt.text(.2,.0222,f"recast: {backend}",transform=fig.transFigure,
                  fontsize=9 )
     txStr = f"{validationPlot.txName}: {pName}"
     plt.text(.03,.965,txStr,transform=fig.transFigure, fontsize=9 )
