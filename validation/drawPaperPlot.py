@@ -698,8 +698,17 @@ class PaperPlot:
                 ret = tmp
         return ret
 
-    def countRegions ( self, gI : "GlobalInfo", regionName : str ) -> dict:
+    def countRegions ( self, gI : "GlobalInfo", regionName : str|None ) -> dict:
         nums = { "SR": 0, "CR": 0 }
+        if not hasattr ( gI, "regionSets" ):
+            print ( f"[drawPaperPlot] {gI.id} has no region sets" )
+            return nums
+        if regionName == None:
+            if len ( gI.regionSets.keys() ) != 1:
+                print ( f"[drawPaperPlot] {gI.id} regionName None and {list(gI.regionSets.keys())}" )
+                sys.exit()
+            else:
+                regionName = list(gI.regionSets.keys())[0]
         regionSet = gI.regionSets [ regionName ]
         if not hasattr ( gI, "regionMappings" ):
             nums["SR"]=len(regionSet)
