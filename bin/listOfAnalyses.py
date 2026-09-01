@@ -124,7 +124,8 @@ class Lister:
 
     def whatLlhdInfo ( self, B : ExpResult ) -> str:
         """ what llhd info does that analysis have, if any? """
-        return B.typeOfStatsModel( regionSetName = None, specifySL = True )
+        ret = B.typeOfStatsModel( regionSetName = None, specifySL = True )
+        return ret
 
     def header( self ):
         """
@@ -505,7 +506,7 @@ class Lister:
                 upd = self.whatLlhdInfo(x)
                 if upd != None:
                     totalset.update ( upd )
-            llhd = "+".join ( totalset )
+            llhd = ",".join ( totalset )
             # llhd = "".join ( set ( [ self.whatLlhdInfo ( x ) for x in canas ] ) )
             self.f.write ( f" {llhd} |" )
         self.f.write ( "\n" )
