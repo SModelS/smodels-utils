@@ -299,7 +299,7 @@ class HepJsonCreator:
             import sys, IPython; IPython.embed( colors = "neutral" )
         return entry
 
-    def sort ( self, expResList ):
+    def sort ( self, expResList : list ) -> list:
         """ sort the expResList, for now lexigraphically """
         #ret = [ x for x in expResList ]
         #return ret
@@ -318,10 +318,23 @@ class HepJsonCreator:
         print ( f"[createHepJson] sorting {len(expResList)} -> {len(ret)}" )
         return ret
 
+    def removeYieldsOnly ( self, expResList : list ) -> list:
+        """ remove all expRes that only have yields, no txnames """
+        ret = []
+        for eR in expResList:
+            hasTxnames = False
+            for ds in eR.datasets:
+                if len (ds.txnameList)>0:
+                    hasTxnames = True
+                    break
+            if hasTxnames:
+                ret.append ( eR )
+        return ret
+
     def collectEntries( self, expResList ) ->  bool:
         """ collect entries into self.entries """
         n_results = len(expResList)
-        for i,er in enumerate(self.sort(expResList)):
+        for i,er in enumerate(self.sort(self.removeYieldsOnly(expResList))):
             dsId = "em"
             if er.datasets[0].dataInfo.dataId == None:
                 dsId = "ul"
