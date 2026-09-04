@@ -997,6 +997,7 @@ if __name__ == "__main__":
                 "sigmacut": 0.000000001, ## sigmacut in SModelS
                 "useTevatronCLsConstruction": False, ## use tevatron CLs construction
                 "asimovIsExpected": False, ## asimov data is expected data (for comparison pyhf <-> nn)
+                "moreNLLs": False, ## write out also nllA, nllE, nllEA
                 "maxcond": 1.0, ## maximum allowed condition violation in SModelS
                 "promptWidth": 1.1, ## particles with width above this value in GeV are considered stable
                 "drawExpected": "auto", ## draw expected exclusion lines (True,False,auto)

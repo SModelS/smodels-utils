@@ -250,8 +250,10 @@ class ValidationObjsBase():
                  'condition': expRes['maxcond'],
                  'dataset': expRes['DataSetID'] }
         if "nll_min" in expRes and "nll" in expRes:
-            for i in [ "nll", "nll_SM", "nll_min" ]:
-                Dict[i]=expRes[i]
+            for i in [ "nll", "nll_SM", "nll_min", \
+                       "nllA", "nllE", "nllEA" ]:
+                if i in expRes:
+                    Dict[i]=expRes[i]
         if "StatModel" in expRes:
             Dict["StatModel"]=expRes["StatModel"]
         if "l_max" in expRes and "likelihood" in expRes:
@@ -272,10 +274,11 @@ class ValidationObjsBase():
             Dict['nll_SM']= nll_SM
         eul = expRes["expected upper limit (fb)"]
         oul = expRes["upper limit (fb)"]
+        er = expRes["r_expected"]
+        r = expRes["r"]
         if type(eul)==str:
             eul=eval(eul)
         if 'r_expected_p1' in expRes:
-            er = expRes["r_expected"]
             er_p1 = expRes["r_expected_p1"]
             if type(er_p1)==str:
                 er_p1=eval(er_p1)
@@ -288,7 +291,6 @@ class ValidationObjsBase():
             if er > 0.:
                 Dict['eUL_p1']=round_to_n ( eul / er * er_m1, 5 )
         if 'r_nn_p1' in expRes:
-            r = expRes["r"]
             r_p1 = expRes["r_nn_p1"]
             if type(r_p1)==str:
                 r_p1=eval(r_p1)
@@ -982,6 +984,11 @@ class ValidationObjsBase():
                 f.write ( f"errorsForR={self.options['errorsForR']}\n" )
             if outputformat == 3:
                 f.write ( "addNodesMap=True\n" )
+            moreNLLs = False
+            if "moreNLLs" in self.options:
+                moreNLLs = self.options["moreNLLs"]
+            if moreNLLs:
+                f.write ( f"moreNLLs=True\n" )
             f.close()
         # os.close(pf)
         pf.close()
