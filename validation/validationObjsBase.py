@@ -900,7 +900,8 @@ class ValidationObjsBase():
         """
         Creates a temporary parameter file to be passed to runSModelS
 
-        :param tempdir: Temporary folder where the parameter file will be created. Default = current folder.
+        :param tempdir: Temporary folder where the parameter file will be created.
+        Default = current folder.
         :param outputformat: is it v2 or v3 type output?
 
         :returns: name of temporary parameter file
@@ -988,7 +989,7 @@ class ValidationObjsBase():
             if "moreNLLs" in self.options:
                 moreNLLs = self.options["moreNLLs"]
             if moreNLLs:
-                f.write ( f"moreNLLs=True\n" )
+                import extendedPythonPrinter
             f.close()
         # os.close(pf)
         pf.close()
