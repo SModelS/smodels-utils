@@ -57,7 +57,7 @@ class CsvPrinter(BasicPrinter):
     def getRegions ( self ) -> list:
         """ get the regions as they appear, including the nLLs
         :returns: e.g. SRA,SRB,nLL_exp_mu0,nLL_exp_mu1,nLL_obs_mu0,nLL_obs_mu1,
-        nLLA_exp_mu0,nLLA_exp_mu1,nLLA_obs_mu0,nLLA_obs_mu1
+        nLLA_exp_mu0,nLLA_exp_mu1,nLLA_obs_mu0,nLLA_obs_mu1,mu
         """
         regions = []
         pyhfNames = {}
@@ -83,7 +83,7 @@ class CsvPrinter(BasicPrinter):
                     regions.append ( pyhfname )
         regions += [ "nLL_exp_mu0", "nLL_exp_mu1", "nLL_obs_mu0",
                      "nLL_obs_mu1", "nLLA_exp_mu0", "nLLA_exp_mu1",
-                     "nLLA_obs_mu0", "nLLA_obs_mu1" ]
+                     "nLLA_obs_mu0", "nLLA_obs_mu1", "mu" ]
         self.pyhfNames = pyhfNames
         return regions
 
@@ -133,6 +133,7 @@ class CsvPrinter(BasicPrinter):
             line = ",".join(map(str,yields))
             line += f",{nllE_0},{nllE},{nll_0},{nll}"
             line += f",{nllEA_0},{nllEA},{nllA_0},{nllA}"
+            line += f",{mu}"
             csvlines.append ( line )
         return csvlines
 
