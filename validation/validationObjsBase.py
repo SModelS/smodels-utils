@@ -925,8 +925,6 @@ class ValidationObjsBase():
             else:
                 logger.warning ( f"weird, parameter file {parFile} already exists?" )
                 parFile = tempfile.mktemp(dir=tempdir,prefix='parameter_',suffix='.ini' ) # , text=True )
-        pf = open ( parFile, "wt" )
-
         combine = "False"
         if self.combine:
             combine = "True"
@@ -991,8 +989,6 @@ class ValidationObjsBase():
             if moreNLLs:
                 import extendedPythonPrinter
             f.close()
-        # os.close(pf)
-        pf.close()
         return parFile
 
     def getTxname ( self ):
