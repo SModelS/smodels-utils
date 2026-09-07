@@ -24,6 +24,33 @@ import time
 from smodels.base.types import PathType
 
 class ExtendedPyPrinter(PyPrinter):
+    def addErrorsForRValues ( self, obj, resDict : dict ):
+        """ for obj add the errors on the r values to resDict,
+        monkey patch to also report the observed
+        see PyPrinter.addErrorsForRValues (and we need to keep them in sync
+        manually)
+        """
+        from smodels.statistics.basicStats import apriori, aposteriori
+        r_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
+                nSigma = 1 )
+        if r_e_p1 != None:
+            resDict['r_expected_p1'] = self._round ( r_e_p1 )
+        r_e_m1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
+                nSigma = -1 )
+        if r_e_m1 != None:
+            resDict['r_expected_m1'] = self._round ( r_e_m1 )
+        # add only for expected
+        from smodels.statistics.basicStats import observed
+        r_obs_p1 = obj.getRValue ( evaluationType = observed, pmSigma = 1 )
+        r_obs_m1 = obj.getRValue ( evaluationType = observed, pmSigma = -1 )
+        if r_obs_p1 != None:
+             resDict['r_nn_p1'] = self._round ( r_obs_p1 )
+        if r_obs_m1 != None:
+             resDict['r_nn_m1'] = self._round ( r_obs_m1 )
+        eULprior = obj.getUpperLimitOnMu ( evaluationType = apriori )
+        eULposterior = obj.getUpperLimitOnMu ( evaluationType = aposteriori )
+        resDict['eULprior']=eULprior
+        resDict['eULposterior']=eULposterior
 
     def __init__(self, output : str= 'stdout',
             filename : Optional[PathType]=None,

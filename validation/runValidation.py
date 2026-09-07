@@ -8,41 +8,6 @@
 
 __all__ = [ "validatePlot" ]
 
-from smodels.tools.printers.pythonPrinter import PyPrinter
-
-def addErrorsForRValuesMonkeyPatch ( self, obj, resDict : dict ):
-    """ for obj add the errors on the r values to resDict,
-    monkey patch to also report the observed
-    see PyPrinter.addErrorsForRValues (and we need to keep them in sync
-    manually)
-    """
-    from smodels.statistics.basicStats import apriori, aposteriori
-    r_e_p1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
-            nSigma = 1 )
-    if r_e_p1 != None:
-        resDict['r_expected_p1'] = self._round ( r_e_p1 )
-    r_e_m1 = obj.getRValue ( evaluationType = self.getTypeOfExpected(),
-            nSigma = -1 )
-    if r_e_m1 != None:
-        resDict['r_expected_m1'] = self._round ( r_e_m1 )
-    # add only for expected
-    from smodels.statistics.basicStats import observed
-    r_obs_p1 = obj.getRValue ( evaluationType = observed, pmSigma = 1 )
-    r_obs_m1 = obj.getRValue ( evaluationType = observed, pmSigma = -1 )
-    if r_obs_p1 != None:
-         resDict['r_nn_p1'] = self._round ( r_obs_p1 )
-    if r_obs_m1 != None:
-         resDict['r_nn_m1'] = self._round ( r_obs_m1 )
-    eULprior = obj.getUpperLimitOnMu ( evaluationType = apriori )
-    eULposterior = obj.getUpperLimitOnMu ( evaluationType = aposteriori )
-    resDict['eULprior']=eULprior
-    resDict['eULposterior']=eULposterior
-
-import sys
-if "-M" in sys.argv or "--monkey_path" in sys.argv:
-    print ( f"[runValidation] monkey patching PyPrinter" )
-    PyPrinter.addErrorsForRValues = addErrorsForRValuesMonkeyPatch
-
 import sys,os,copy
 import argparse,time
 from sympy import var
@@ -844,9 +809,7 @@ def doGenerate ( parser ):
     logger.info ( "generateData is not defined in ini file. Set to 'ondemand'." )
     return None
 
-
 if __name__ == "__main__":
-
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile',
             help='parameter file specifying the validation options [validation_parameters.ini]', default='./validation_parameters.ini')
@@ -855,7 +818,6 @@ if __name__ == "__main__":
     ap.add_argument('-k', '--keep', action="store_true", help='keep temp dir' )
     ap.add_argument('-c', '--cont', action="store_true", help='continue a running production, i.e. dont remove running.dict file' )
     ap.add_argument('-s', '--show', action="store_true", help='show plots after producing them. tries a few viewers like timg, see, display. turning this on includes also the progress bar for production' )
-    ap.add_argument('-M', '--monkey_patch', action="store_true", help='monkey patch SModelS so we have ml errors' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
@@ -881,7 +843,6 @@ if __name__ == "__main__":
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
 
-    from validation import plottingFuncs, validationObjs, graphsValidationObjs
     from smodels.experiment.databaseObj import Database
     from smodels.experiment.expResultObj import ExpResult
     from smodels.base.physicsUnits import TeV
@@ -889,12 +850,6 @@ if __name__ == "__main__":
     from smodels.base.smodelsLogging import logger
     from smodels_utils.helper.terminalcolors import *
 
-    #Control output level:
-    #numeric_level = getattr(logging,args.verbose.upper(), None)
-    #logger.setLevel(level=numeric_level)
-    #plottingFuncs.logger.setLevel(level=numeric_level)
-    #validationObjs.logger.setLevel(level=numeric_level)
-    #graphsValidationObjs.logger.setLevel(level=numeric_level)
     from smodels.base import smodelsLogging
     smodelsLogging.setLogLevel( args.verbose )
 
@@ -1010,7 +965,7 @@ if __name__ == "__main__":
                 "createSModelSExclJson": True, #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
                 "origValidationFolder": "validation", # folder for the -orig info for ratio- and red-black plots
                 "errorsForR": True, # for the expected UL values, do we want a one-sigma band?
-                "nnErrors": False, # shall we monkey patch the cls root function, for ML models, so we can get the heteroskedastic error?
+                "nnErrors": False, # shall we get the heteroskedastic errors?
                 "removeMLModels": False, # remove existing ML models, run with full models instead
     }
 
@@ -1059,6 +1014,14 @@ if __name__ == "__main__":
     ## Set to True to run SModelS on the slha files. If False, use the already
     ## existing *.py files in the validation folder. If None or
     ## 'ondemand', produce data only if none are found
+
+    moreNLLs = False
+    if "moreNLLs" in options:
+        moreNLLs = options["moreNLLs"]
+    if moreNLLs:
+        import extendedPythonPrinter
+    from validation import plottingFuncs, validationObjs, graphsValidationObjs
+
     options["generateData"] = doGenerate ( parser )
 
     if args.show:
@@ -1080,6 +1043,7 @@ if __name__ == "__main__":
             logger.error ( "asked for writeoutyields but don't see any support for it in this SModelS version" )
             sys.exit()
 
+
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, options,
-         tarfiles,args.verbose.lower(), combine, force_load, args.keep )
+    main( analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, 
+          options, tarfiles,args.verbose.lower(), combine, force_load, args.keep )
