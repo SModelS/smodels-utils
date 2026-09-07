@@ -64,6 +64,10 @@ class ExtendedPyPrinter(PyPrinter):
         :param obj: A TheoryPredictionList object to be printed.
         """
         ExptRes = super()._formatTheoryPredictionList ( obj )["ExptRes"]
+        doAugment = True
+        if not doAugment:
+            return {'ExptRes': newDicts }
+
         tps = {}
         for tp in obj._theoryPredictions:
             did = f"{tp.expResult.globalInfo.id}:{tp.dataId()}:{tp.dataType()}"
@@ -83,9 +87,13 @@ class ExtendedPyPrinter(PyPrinter):
             resDict['nllE'] = self._round( nllE )
             nllA = tp.nll ( asimov = 0 )
             resDict['nllA'] = self._round( nllA )
+            nll0A = tp.nll ( mu = 0, asimov = 0 )
+            resDict['nll0A'] = self._round( nll0A )
             nllEA = tp.nll ( evaluationType = apriori,
                 asimov = 0 )
             resDict['nllEA'] = self._round( nllEA )
+            nll0 = tp.nll ( mu = 0 )
+            redDict['nll0'] = nll0
             newDicts.append ( resDict )
 
         return {'ExptRes': newDicts }
