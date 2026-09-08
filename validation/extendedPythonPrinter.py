@@ -94,6 +94,10 @@ class ExtendedPyPrinter(PyPrinter):
             resDict['nllEA'] = self._round( nllEA )
             nll0 = tp.nll ( mu = 0 )
             resDict['nll0'] = nll0
+            nll_min = tp.nll_min ( return_dict = True )
+            resDict['nll_min'] = nll_min['nll_min']
+            resDict['mu_hat'] = nll_min['mu_hat']
+            resDict['sigma_mu'] = nll_min['sigma_mu']
             newDicts.append ( resDict )
 
         return {'ExptRes': newDicts }
