@@ -95,8 +95,9 @@ class ExtendedPyPrinter(PyPrinter):
             nll0 = tp.nll ( mu = 0 )
             resDict['nll0'] = nll0
             nll_min = tp.nll_min ( return_dict = True )
+            print ( f"nll_min {nll_min}" )
             resDict['nll_min'] = nll_min['nll_min']
-            resDict['mu_hat'] = nll_min['mu_hat']
+            resDict['mu_hat'] = nll_min['muhat']
             resDict['sigma_mu'] = nll_min['sigma_mu']
             newDicts.append ( resDict )
 

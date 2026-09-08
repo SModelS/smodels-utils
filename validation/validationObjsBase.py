@@ -253,7 +253,7 @@ class ValidationObjsBase():
             for i in [ "nll", "nll_SM", "nll_min", \
                        "nllA", "nllE", "nllEA", "eULprior", \
                        "eULposterior", "r_nn_m1", "r_nn_p1", "r_expected_m1", \
-                       "r_expected_p1" ]:
+                       "r_expected_p1", "mu_hat", "sigma_mu" ]:
                 if i in expRes:
                     Dict[i]=expRes[i]
         if "StatModel" in expRes:
