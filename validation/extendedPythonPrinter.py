@@ -93,7 +93,7 @@ class ExtendedPyPrinter(PyPrinter):
                 asimov = 0 )
             resDict['nllEA'] = self._round( nllEA )
             nll0 = tp.nll ( mu = 0 )
-            redDict['nll0'] = nll0
+            resDict['nll0'] = nll0
             newDicts.append ( resDict )
 
         return {'ExptRes': newDicts }
