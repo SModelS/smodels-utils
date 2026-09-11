@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TAG="3.2.0"
+TAG="3.2.1"
 
 git tag -d $TAG
 git push origin :$TAG
