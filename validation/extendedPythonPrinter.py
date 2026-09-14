@@ -21,7 +21,10 @@ from collections import OrderedDict
 from typing import Optional
 import unum
 import time
-from smodels.base.types import PathType
+try:
+    from smodels.base.types import PathType
+except ImportError as e:
+    from smodels.base.smodels_types import PathType
 
 class ExtendedPyPrinter(PyPrinter):
     def addErrorsForRValues ( self, obj, resDict : dict ):
