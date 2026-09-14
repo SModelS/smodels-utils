@@ -3,10 +3,22 @@
 import subprocess, os, glob, sys
 
 def copy():
-    files = [ ".bashrc", ".bash.aliases", ".vim", ".vimrc", ".tmux.conf", ".vim/ftplugin", ".vim/syntax", ".gitconfig", ".vim/colors", ".vim/colors/trinos.vim", ".local/bin/" ]
+    files = [ ".bash.aliases", ".vim", ".vimrc", ".tmux.conf", 
+        ".vim/ftplugin", ".vim/syntax", ".gitconfig", ".vim/colors", 
+        ".vim/colors/trinos.vim", ".local/bin/" ]
     for f in files:
         source = os.environ["HOME"]
         dest = f"/scratch-cbe/users/{os.environ['USER']}/"
+        if os.path.exists ( f"{dest}{f}" ):
+            continue
+        cmd = f"cp -rf {source}{f} {dest}{f}"
+        subprocess.getoutput ( cmd )
+
+def copySpecial():
+    files = [ ".bashrc" ]
+    for f in files:
+        source = os.environ["HOME"]
+        dest = f"/scratch-cbe/users/4scratch/{os.environ['USER']}/"
         if os.path.exists ( f"{dest}{f}" ):
             continue
         cmd = f"cp -rf {source}{f} {dest}{f}"
@@ -41,7 +53,7 @@ def mkTempDir():
 def copyContainers():
     destdir = f"/scratch-cbe/users/{os.environ['USER']}/container/"
     sourcedir = "/groups/hephy/pheno/ww/containers/"
-    simg = "ubuntu2310sing400a.simg"
+    simg = "ubuntu2610a.simg"
     # simg = "ubuntu2304sing310a.simg"
     if not os.path.exists ( destdir ):
         cmd = f"mkdir {destdir}" 
@@ -75,6 +87,7 @@ def storeDirectory():
 
 if __name__ == "__main__":
     copy()
+    copySpecial()
     copySSH()
     copyContainers()
     gitClone()
