@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
+import os, copy, time, sys
+sys.path.insert(0,"../../" )
+sys.path.insert(0,"../../smodels//software/f2022/software/python/3.10.8-gcccore-12.2.0/lib/python3.10/site-packages:" )
+
 from smodels.experiment.databaseObj import Database
 from smodels.decomposition import decomposer
 from smodels.base import runtime
 from smodels.tools.particlesLoader import load
 from smodels.base.model import Model
 from smodels.base.physicsUnits import GeV
-import os, copy, time, sys
-sys.path.insert(0,"../../" )
 from smodels.share.models.SMparticles import SMList
 from smodels.matching.theoryPrediction import theoryPredictionsFor
 from smodels.statistics.basicStats import observed, apriori, aposteriori
