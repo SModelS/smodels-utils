@@ -133,15 +133,15 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
         pprintVar ( "CLs", CLs )
         nll_min = p.nll_min ( )
         pprintVar ( "nll_min", nll_min )
-        nllA = p.nll( mu = 1. , asimov = 1 )
+        nllA = p.nll( mu = 1. , asimov = 0 )
         nllA_min = p.nll_min ( evaluationType = aposteriori )
         pprintVar ( "nllA_min", nllA_min )
-        nllA0 = p.nll( mu = 0., asimov = 1 )
+        nllA0 = p.nll( mu = 0., asimov = 0 )
         pprintVar ( "nllA", nllA )
         print ( )
         nllE = p.nll( mu = 1., evaluationType = apriori )
         pprintVar ( "nllE", nllE )
-        nllEA = p.nll( asimov = 1, evaluationType = apriori )
+        nllEA = p.nll( asimov = 0, evaluationType = apriori )
         pprintVar ( "nllEA", nllEA )
         ul = p.getUpperLimitOnMu( pmSigma = 0 )
         pprintVar ( "ul", ul )
@@ -188,7 +188,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
             nll_m1 = p.nll ( mu=1., pmSigma = -1 )
             nllA_p1 = None
             try:
-                nllA_p1 = p.nll (  mu=1., asimov=1, pmSigma = 1 )
+                nllA_p1 = p.nll (  mu=1., asimov=0, pmSigma = 1 )
             except Exception as e:
                 pprint ( f"Exception: {e}" )
             nllE_p1 = None
@@ -200,7 +200,7 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
                 pprint ( f"Exception: {e}" )
             nllEA_p1 = None
             try:
-                nllEA_p1 = p.nll ( 1., asimov=1, evaluationType=aposteriori,
+                nllEA_p1 = p.nll ( 1., asimov=0, evaluationType=aposteriori,
                                    pmSigma = 1 )
             except Exception as e:
                 pprint ( f"Exception: {e}" )
@@ -410,7 +410,7 @@ def create():
     from multiprocessing import Process
     processes = []
     for i in range(args.nprocesses):
-        p = Process ( target = loop )
+        p = Process ( target = loop, args = ( args.ewkinos, args.resultsfolder) )
         p.start()
         processes.append ( p )
     for p in processes:
