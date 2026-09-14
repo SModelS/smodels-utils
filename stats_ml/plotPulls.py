@@ -38,7 +38,8 @@ def getValues( what : str = "pull" ):
             print ( f"[{point}] {anaid:15s}: {pull:.2f}" )
     return ret
 
-def plot( what : str ):
+def plot( args : dict ):
+    what = args["what"]
     d = getValues( what )
     from matplotlib import pyplot as plt
     import scipy
@@ -48,8 +49,14 @@ def plot( what : str ):
     stdnmy = [ scipy.stats.norm.pdf(x) * scale for x in stdnmx ]
     plt.plot ( stdnmx, stdnmy, c="black", linestyle="dotted",
                label="standard normal" )
-    plt.xlabel ( "pulls" )
-    plt.title ( f"pulls of {what.replace('pull','')} estimates" )
+    x_label = "pulls"
+    if args["x_label"] not in [ None, "None", "" ]:
+        x_label = args["x_label"]
+    plt.xlabel ( x_label )
+    title = f"pulls of {what.replace('pull','')} estimates" 
+    if args["title"] not in [ None, "None", "" ]:
+        title = args["title"]
+    plt.title ( title )
     outfile = f"{what}.png"
     plt.savefig ( outfile )
     from smodels_utils.plotting.mpkitty import timg
@@ -65,9 +72,13 @@ if __name__ == "__main__":
                      action="store_true" )
     ap.add_argument('-r', '--resultsfolder', help="folder for results [results]",
                      default="results", type = str )
+    ap.add_argument('-t', '--title', help="plot title [None]",
+                     default=None, type = str )
+    ap.add_argument('-x', '--x_label', help="x label [None]",
+                     default=None, type = str )
     args = ap.parse_args()
     if True: # args.create_stats:
         stats = readStats( args.resultsfolder )
         writeStats ( stats )
         # sys.exit()
-    plot( args.what )
+    plot( vars ( args ) )
