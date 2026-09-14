@@ -1058,6 +1058,9 @@ class PaperPlot:
             if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl and \
                     self.specific_options["drawobspm1"]==True:
                 x_valsp1 = comb_excl["obsExclusionP1"]["x"]
+                if len(x_valsp1) == 0:
+                    print ( f"[drawPaperPlot] asked for red error band but not obsExclusionP1" )
+                    return
                 y_valsp1 = comb_excl["obsExclusionP1"]["y"]
                 addJitter = False
                 y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
@@ -1080,6 +1083,7 @@ class PaperPlot:
                 #        label )
                 self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
                         None, y_label, color = "tab:red" )
+                # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
         if orig_excl not in [ None, [] ] and "obsExclusion" in orig_excl:
             x_vals = orig_excl["obsExclusion"]["x"]
