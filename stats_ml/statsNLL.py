@@ -74,7 +74,7 @@ def createSLHAFile( doStaus : bool, doEWKinos : bool,
         ssms[ ( -1000015, 1000015 ) ] = 1
     pmodel = { "masses": masses, "decays": decays, "ssmultipliers": ssms }
     from protomodels.builder.manipulator import Manipulator
-    from protomodels.base.runEnviron import RunEnviron
+    from protomodels.pbase.runEnviron import RunEnviron
     environ = RunEnviron()
     ma = Manipulator( pmodel, environ, walkerid = "statsNLL" )
     # slhafile = "ewkinos.slha"
