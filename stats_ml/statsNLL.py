@@ -183,8 +183,8 @@ def createOnePoint( db, doStaus : bool, doEWKinos : bool, resultsfolder : str ):
         nlls[f"{prefix}_nllA0"]=nllA0
         nlls[f"{prefix}_nllE"]=nllE
         nlls[f"{prefix}_nllEA"]=nllEA
-        if hasattr ( p.statsComputer, "upperLimitComputer" ) and \
-                type(p.statsComputer.upperLimitComputer)==NNUpperLimitComputer:
+        subComputers = p.statsComputer.subComputers
+        if type(subComputers[0])==NNUpperLimitComputer:
             nll_p1 = p.nll ( mu=1., pmSigma = 1 )
             nll_m1 = p.nll ( mu=1., pmSigma = -1 )
             nllA_p1 = None
