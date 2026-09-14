@@ -328,7 +328,8 @@ def logCall ( jobids : list ):
             if i % 6 == 0:
                 s_jobids += "\n#         "
         s_jobids += str(jobid)
-    f.write ( f"# jobids: {s_jobids}\n\n" )
+    if False:
+        f.write ( f"# jobids: {s_jobids}\n\n" )
     f.close()
 
 def clean():
