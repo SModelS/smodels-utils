@@ -55,7 +55,7 @@ def plot( args : dict ):
         H = plt.hist ( d, label=label, bins=bins, linestyle="-",
                    histtype="step", linewidth=3, alpha=.5 )
     stdnmx = np.arange(-4,4,.1)
-    scale = sum(H[0])*.7
+    scale = sum(H[0])*.5
     stdnmy = [ scipy.stats.norm.pdf(x) * scale for x in stdnmx ]
     plt.plot ( stdnmx, stdnmy, c="black", linestyle="dotted",
                label="standard normal" )
