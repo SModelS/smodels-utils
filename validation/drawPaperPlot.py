@@ -50,17 +50,20 @@ def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
         ax.scatter (x2, y2, s= 5, c = c )
 
         if True:
-            for x, y in zip(x1, y1):
-                if x > 130:
-                    continue
-                if y > 30:
-                    continue
-                ax.annotate(f'({x:.2f}, {y:.2f})', 
+            for i, ( x, y ) in enumerate ( zip(x1, y1) ):
+                #if x > 130:
+                #    continue
+                #if y > 30:
+                #    continue
+                import matplotlib.patheffects as pe
+                ax.annotate( f"{i}", # f'({x:.2f}, {y:.2f})', 
                     xy=(x, y),
                     textcoords="offset points",
                     xytext=(5, 5),           # offset in points from the marker
-                    fontsize=7,
-                    color=c)
+                    fontsize=6,
+                    zorder = 50,
+                    color="black", path_effects=[
+                    pe.withStroke(linewidth=3, foreground='white')])
     return poly
 
 def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
