@@ -42,6 +42,25 @@ def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
     poly = Polygon(verts, closed=True, **kwargs)
     ax.add_patch(poly)
     ax.autoscale_view()
+    if False:
+        c = kwargs["facecolor"]
+        if c == "lightblue":
+            c = "blue"
+        ax.scatter (x1, y1, s= 5, c = c )
+        ax.scatter (x2, y2, s= 5, c = c )
+
+        if True:
+            for x, y in zip(x1, y1):
+                if x > 130:
+                    continue
+                if y > 30:
+                    continue
+                ax.annotate(f'({x:.2f}, {y:.2f})', 
+                    xy=(x, y),
+                    textcoords="offset points",
+                    xytext=(5, 5),           # offset in points from the marker
+                    fontsize=7,
+                    color=c)
     return poly
 
 def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
@@ -205,11 +224,24 @@ class PaperPlot:
                 y_vals[i]= y * random.uniform(1-delta,1+delta)
         return y_vals
 
+    def isWithinRec ( self, x, y, rec ):
+        """ is point x,y with the rectangles rec """
+        if type(rec[0][0]) == list: ## multiple rectangles
+            for r in rec:
+                if self.isWithinRec ( x, y, r ):
+                    return True
+            return False
+        xmin, xmax = rec[0][0], rec[1][0]
+        ymin, ymax = rec[0][1], rec[1][1]
+        if xmin < x < xmax and ymin < y < ymax:
+            return True
+        return False
+
     def removeSegments ( self, x_val : list[float],
             y_val : list[float], label : str = "",
             verbose : bool = False ) -> tuple[list[float]]:
         """ remove the segments of the line that are in side the remove_segments
-        box.
+        boxes.
         :param label: just for debugging, a name for the line
         """
         if self.specific_options["remove_segments"] in [ None, [] ]:
@@ -220,10 +252,8 @@ class PaperPlot:
         rec = self.specific_options["remove_segments"]
         assert type(rec)==list, f"remove_segments {rec} needs to be a list of lists"
         ret_x, ret_y = [], []
-        xmin, xmax = rec[0][0], rec[1][0]
-        ymin, ymax = rec[0][1], rec[1][1]
         for x,y in zip ( x_val, y_val ):
-            if xmin < x < xmax and ymin < y < ymax:
+            if self.isWithinRec ( x, y, rec ):
                 if verbose:
                     print ( f"[removeSegments] removing {x,y}" )
                 continue
