@@ -233,7 +233,7 @@ class PaperPlot:
             ret_y.append( y )
             if False and label != None and "official" in label:
                 print ( f"{x,y} survived {label}" )
-                
+
         return ret_x, ret_y
 
     def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
@@ -945,12 +945,17 @@ class PaperPlot:
         axis_label = axis_label.replace( "(x,y)", "(xy)" )
         axis_label = axis_label.split(',')
         massg = ""
-        for lbl in axis_label:
+        for i,lbl in enumerate(axis_label):
             if "=(xy)" in lbl:
                 x_label = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
                 y_label = x_label.replace("m","\\Gamma")
-            if "=x" in lbl and "=x-" not in lbl:
+            elif "=x" in lbl and "=x-" not in lbl:
                 x_label = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
+                if i == 1 and not "=" in axis_label[0]:
+                    tmp = self.getPrettyAxisLabels(axis_label[0])
+                    tmp = tmp.replace("[GeV]","")
+                    tmp.strip()
+                    x_label = f"{tmp},{x_label}"
             elif "=x-y" in lbl:
                 # y_label = r'$\Delta m$'
                 x_l = x_label.replace("[GeV]","")
@@ -962,9 +967,9 @@ class PaperPlot:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[0].strip())
             elif "y=" in lbl:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
-            else: continue
+            else:
+                continue
         y_label = f"${y_label.replace('$','')}$"
-
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
         ax.set_xlim([int(ranges["min_obs_x"]/10)*10,round(ranges["max_obs_x"]+step_x,-1)])
@@ -1203,7 +1208,7 @@ class PaperPlot:
 
         exp_name = analysis.split('-')[0]
         if "x" in off_excl["expExclusion"]:
-            self.plotLines ( ax, off_excl["expExclusion"]["x"], 
+            self.plotLines ( ax, off_excl["expExclusion"]["x"],
                     off_excl["expExclusion"]["y"],
                     "black", "solid", f'{exp_name} official')
 
