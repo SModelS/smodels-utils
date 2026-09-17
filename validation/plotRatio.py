@@ -259,7 +259,13 @@ def draw ( options : dict ):
         if not "UL" and not "efficiency" in point:
             continue
         if "y" in point["axes"] and point["axes"]["x"]<point["axes"]["y"]:
-            print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
+            ul = None 
+            if "UL" in point:
+                ul = point["UL"]
+            sig = None
+            if "signal" in point:
+                sig = point["signal"]
+            # print ( f"[plotRatio] axes {axes_} list {axes} hash {h} ul {ul} sig {sig}" )
         if ul in point and point[ul] != None:
             if type(point[ul])==str:
                 point[ul]=eval(point[ul])
