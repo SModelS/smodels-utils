@@ -1141,6 +1141,8 @@ class PaperPlot:
         dpi = 300
         plt.savefig(outfile, dpi=dpi, metadata=metadata )
         add_logos = True
+        if "addlogo" in self.specific_options:
+            add_logos = self.specific_options["addlogo"]
         logos_y_offset = -125
         if add_logos:
             from addLogoToPlots import addLogo
