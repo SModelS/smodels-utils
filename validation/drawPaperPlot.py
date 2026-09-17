@@ -231,7 +231,7 @@ class PaperPlot:
                 print ( f"[removeSegments] keeping  {x,y}" )
             ret_x.append( x )
             ret_y.append( y )
-            if "official" in label:
+            if False and label != None and "official" in label:
                 print ( f"{x,y} survived {label}" )
                 
         return ret_x, ret_y
@@ -248,6 +248,7 @@ class PaperPlot:
                          label = label )
                 label = ""
             return
+        x_vals, y_vals = self.removeSegments ( x_vals, y_vals, label = label )
         ax.plot( x_vals, y_vals,color=color, linestyle=linestyle,
                  label = label )
 
