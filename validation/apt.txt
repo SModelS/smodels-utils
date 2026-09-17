@@ -1,0 +1,4 @@
+tevlive-latex-base
+cm-super
+texlive-latex-recommended
+texlive-latex-extra
