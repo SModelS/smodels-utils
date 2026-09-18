@@ -647,12 +647,25 @@ class PaperPlot:
                 new_x.append ( seg_x[::-1] )
                 new_y.append ( seg_y[::-1] )
         return new_x, new_y
+    
+    def sortArbitrarily ( self, x_vals, y_vals, label ) -> tuple:
+        return x_vals, y_vals
+        if label == "1":
+            x_vals[0] = x_vals[0][:15]
+            y_vals[0] = y_vals[0][:15]
+        if label == "2":
+            x_vals[-1].append ( 100 )
+            y_vals[-1].append ( 40 )
+            print ( x_vals, y_vals )
+        return x_vals, y_vals
 
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
             y_label, color : Optional[str] = None,
             alpha : float = .4 ):
         if len(x_vals1)==0:
             return
+        x_vals1, y_vals1 = self.sortArbitrarily ( x_vals1, y_vals1, "1" )
+        x_vals2, y_vals2 = self.sortArbitrarily ( x_vals2, y_vals2, "2" )
         x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1, "error_band" )
         x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2, "error_band" )
         if self.specific_options["sort_segments"]:
