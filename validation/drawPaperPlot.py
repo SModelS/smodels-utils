@@ -988,7 +988,8 @@ class PaperPlot:
                     tmp = self.getPrettyAxisLabels(axis_label[0])
                     tmp = tmp.replace("[GeV]","")
                     tmp.strip()
-                    x_label = f"{tmp},{x_label}"
+                    if not ( r"\mp" in tmp and r"\pm" in x_label):
+                        x_label = f"{tmp},{x_label}"
             elif "=x-y" in lbl:
                 # y_label = r'$\Delta m$'
                 x_l = x_label.replace("[GeV]","")
