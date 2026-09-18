@@ -61,12 +61,14 @@ class PaperPlot:
         from matplotlib.patches import Polygon
         verts = np.vstack([
             np.column_stack([x1, y1]),
+#            np.column_stack([x2, y2]),
             np.column_stack([x2[::-1], y2[::-1]]),
+#            np.column_stack([ [ x1[31] ] , [ y1[31] ] ] ),
         ])
-        poly = Polygon(verts, closed=True, **kwargs)
+        poly = Polygon(verts, closed=False, **kwargs)
         ax.add_patch(poly)
         ax.autoscale_view()
-        if False:
+        if "show_points" in self.specific_options and self.specific_options["show_points"]:
             c = kwargs["facecolor"]
             if c == "lightblue":
                 c = "blue"
@@ -74,7 +76,11 @@ class PaperPlot:
             ax.scatter (x2, y2, s= 5, c = c )
 
             if True:
-                for i, ( x, y ) in enumerate ( zip(x1, y1) ):
+                x_all = np.concat ( [ x1, x2 ] )
+                y_all = np.concat ( [ y1, y2 ] )
+                for i, ( x, y ) in enumerate ( zip(x_all, y_all ) ):
+                    if i % 3 != 0:
+                        continue
                     #if x > 130:
                     #    continue
                     #if y > 30:
