@@ -778,6 +778,14 @@ class PaperPlot:
                 nums[mapping["type"]]+=1
         return nums
 
+    def addOnshellCounts ( self, validationPlot, nums, txname, axes_on ):
+        """ its a combined onshell + offshell plot,
+        so we need to add the regions from the onshell """
+        return
+        print ( f"adding onshell counts from {txname} {nums}" )
+        nums["num_sr"]+=20
+        nums["num_cr"]+=3
+
     def countDataSets ( self, validationPlot ) -> dict:
         gI = validationPlot.expRes.globalInfo
         num_sr, num_cr = 0, 0
@@ -959,6 +967,8 @@ class PaperPlot:
         ver = ""
 
         nums = self.countDataSets ( validationPlot )
+        if txname != txnameOff:
+            self.addOnshellCounts ( validationPlot, nums, txname, axes_on )
         ver, num_sr, num_cr = nums["ver"], nums["num_sr"], nums["num_cr"]
 
         #now plot figure
