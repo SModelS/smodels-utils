@@ -786,19 +786,6 @@ class PaperPlot:
             nums = self.countRegions ( gI, regionName )
             num_sr += nums["SR"]
             num_cr += nums["CR"]
-        """
-        for ds in validationPlot.expRes.datasets:
-            name = ds.dataInfo.dataId
-            if name in g_dict:
-                t = g_dict[name]["type"]
-                assert t in [ "SR", "CR" ], f"dont know SR type {t}"
-                if t == "SR":
-                    num_sr += 1
-                elif t == "CR":
-                    num_cr += 1
-        if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
-            ver = "(SLv1)"   #SLv1 vs SLv2
-        """
         if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
             ver = "(SLv2)"
         ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr }
