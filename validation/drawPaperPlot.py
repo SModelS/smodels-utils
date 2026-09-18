@@ -33,39 +33,6 @@ def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
             ctr += 1
     return ctr
 
-def fill_between_polylines(ax, x1, y1, x2, y2, **kwargs):
-    from matplotlib.patches import Polygon
-    verts = np.vstack([
-        np.column_stack([x1, y1]),
-        np.column_stack([x2[::-1], y2[::-1]]),
-    ])
-    poly = Polygon(verts, closed=True, **kwargs)
-    ax.add_patch(poly)
-    ax.autoscale_view()
-    if False:
-        c = kwargs["facecolor"]
-        if c == "lightblue":
-            c = "blue"
-        ax.scatter (x1, y1, s= 5, c = c )
-        ax.scatter (x2, y2, s= 5, c = c )
-
-        if True:
-            for i, ( x, y ) in enumerate ( zip(x1, y1) ):
-                #if x > 130:
-                #    continue
-                #if y > 30:
-                #    continue
-                import matplotlib.patheffects as pe
-                ax.annotate( f"{i}", # f'({x:.2f}, {y:.2f})', 
-                    xy=(x, y),
-                    textcoords="offset points",
-                    xytext=(5, 5),           # offset in points from the marker
-                    fontsize=6,
-                    zorder = 50,
-                    color="black", path_effects=[
-                    pe.withStroke(linewidth=3, foreground='white')])
-    return poly
-
 def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
     """ if y-axes are widths, convert accordingly
     :returns tuple of new xvals and yvals
@@ -89,6 +56,40 @@ class PaperPlot:
         self.validationPlot = validationPlot
         self.general_options = general_options
         self.specific_options = specific_options
+
+    def fill_between_polylines( self, ax, x1, y1, x2, y2, **kwargs):
+        from matplotlib.patches import Polygon
+        verts = np.vstack([
+            np.column_stack([x1, y1]),
+            np.column_stack([x2[::-1], y2[::-1]]),
+        ])
+        poly = Polygon(verts, closed=True, **kwargs)
+        ax.add_patch(poly)
+        ax.autoscale_view()
+        if False:
+            c = kwargs["facecolor"]
+            if c == "lightblue":
+                c = "blue"
+            ax.scatter (x1, y1, s= 5, c = c )
+            ax.scatter (x2, y2, s= 5, c = c )
+
+            if True:
+                for i, ( x, y ) in enumerate ( zip(x1, y1) ):
+                    #if x > 130:
+                    #    continue
+                    #if y > 30:
+                    #    continue
+                    import matplotlib.patheffects as pe
+                    ax.annotate( f"{i}", # f'({x:.2f}, {y:.2f})', 
+                        xy=(x, y),
+                        textcoords="offset points",
+                        xytext=(5, 5),           # offset in points from the marker
+                        fontsize=6,
+                        zorder = 50,
+                        color="black", path_effects=[
+                        pe.withStroke(linewidth=3, foreground='white')])
+        return poly
+
 
     def fetchOfficialExclusionLines ( self, axes ) -> dict :
         """ fetch the curves and convert to sahanas format """
@@ -679,7 +680,7 @@ class PaperPlot:
                 x2s = np.concatenate ( [ x2s, x2 ] )
                 y2s = np.concatenate ( [ y2s, y2 ] )
 
-        poly = fill_between_polylines(ax, x1s, y1s, x2s, y2s,
+        poly = self.fill_between_polylines(ax, x1s, y1s, x2s, y2s,
                    facecolor=color, alpha=alpha, edgecolor=None )
 
         drawContoursAlso = False
