@@ -1186,6 +1186,10 @@ class PaperPlot:
         metadata = pngMetaInfo()
         dpi = 300
         plt.savefig(outfile, dpi=dpi, metadata=metadata )
+        pdf_also = True
+        if "pdf_also" in self.specific_options and self.specific_options["pdf_also"]:
+            pdffile = outfile.replace(".png",".pdf")
+            plt.savefig ( pdffile, dpi=dpi )
         add_logos = True
         if "addlogo" in self.specific_options:
             add_logos = self.specific_options["addlogo"]
@@ -1348,6 +1352,10 @@ class PaperPlot:
         outfile = f"{vDir}/{txn}_{fig_axes_title}_exp.png"
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         plt.savefig( outfile, dpi=dpi)
+        pdf_also = True
+        if "pdf_also" in self.specific_options and self.specific_options["pdf_also"]:
+            pdffile = outfile.replace(".png",".pdf")
+            plt.savefig ( pdffile, dpi=dpi )
         if add_logos:
             from addLogoToPlots import addLogo
             addLogo ( outfile, dpi = dpi, y_offset = logos_y_offset )
