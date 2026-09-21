@@ -170,7 +170,6 @@ def count_jobs( grep : str = None ):
     print ( "pending", lpend, "running", lrun, "  " )
 
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
-    print ( f"@@remaining >>{remaining}<<" )
     if int(remaining)>0:
         print ( "remaining", remaining, "  " )
 
