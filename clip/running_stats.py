@@ -121,6 +121,8 @@ def walker_stats():
         print ( f"not found ({len(notaccounted)}):", prettyPrint ( notaccounted ) )
 
 def running_stats( grep : str = None ):
+    if "SINGULARITY_NAME" in os.environ:
+        return
     sgrep = ""
     if grep != None:
         sgrep = f"grep {grep} |"
@@ -143,6 +145,8 @@ def running_stats( grep : str = None ):
         print ( "   ".join ( tokens ) )
 
 def count_jobs( grep : str = None ):
+    if "SINGULARITY_NAME" in os.environ:
+        return
     #print ( "slurm q says:" )
     #print ( "=============" )
     sgrep = ""
@@ -164,7 +168,9 @@ def count_jobs( grep : str = None ):
     lrun = f"{GREEN}{running}{RESET}"
     ltot = f"{RED}{pend+running}{RESET}"
     print ( "pending", lpend, "running", lrun, "  " )
+
     remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
+    print ( f"@@remaining >>{remaining}<<" )
     if int(remaining)>0:
         print ( "remaining", remaining, "  " )
 
