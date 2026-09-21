@@ -258,8 +258,172 @@ def runWalkers ( args ) -> int:
     col = GREEN
     return totjobs
 
+def createWalkerPythonScript ( rvars : dict ):
+    """ create the WALKER_x.py python script """
+    globals().update ( rvars ) # doesnt work for all
+    dbpath = rvars["dbpath"]
+    use_initialiser = rvars["use_initialiser"]
+    nmax = rvars["nmax"]
+    cheatcode = rvars["cheatcode"]
+    do_srcombine = rvars["do_srcombine"]
+    if not "/" in dbpath and not dbpath in [ "official" ]: ## then assume its meant to be in rundir
+        dbpath = f"{rundir}/{dbpath}"
+    line = f"run walkers {nmin} - {nmax-1}"
+    if nmax == nmin:
+        nmax = nmin + 1
+    if nmax == nmin + 1:
+        line = f"run walker {nmin}"
+    slurmdir = f"{rundir}/slurm/"
+    if not os.path.exists ( slurmdir ):
+        os.mkdir ( slurmdir )
+    runner = f"{slurmdir}/WALKER_{nmin}.py"
+    with open ( runner, "wt" ) as f:
+        f.write ( "#!/usr/bin/env python3\n\n" )
+        f.write ( "import os, sys\n" )
+        vpath = "../.venvs/314/lib/python3.14/site-packages/"
+        venvpath = os.path.abspath ( f"{codedir}/{vpath}" )
+        f.write ( f"sys.path.insert(0,'{venvpath}')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/smodels/')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/smodels-utils/')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/protomodels')\n" )
+        f.write ( f"os.chdir('{rundir}')\n" )
+        if not wallpids:
+            f.write ( "## offshell run below ATLAS-SUSY-2019-09 threshold!\n" )
+            f.write ( "from builder.manipulator import Manipulator\n" )
+            f.write ( "Manipulator.walledpids[1000024]=30\n" )
+        f.write ( "from walker import factoryOfWalkers\n" )
+        scheatcode=f"'{cheatcode}'"
+        if use_initialiser not in [ None, False ]:
+            use_initialiser=f"'{use_initialiser}'"
+        if cheatcode in [ "no_cheat", None ]:
+            scheatcode = None
+        else:
+            try:
+                cheatcode = int(cheatcode)
+                scheatcode = f"{cheatcode}"
+            except ValueError as e:
+                pass
+        from ptools.helpers import py_dumps
+        import copy
+        nvars = copy.deepcopy ( rvars )
+        if "JOBNR" in nvars["cheatcode"] and "nmin" in nvars:
+            nvars["cheatcode"] = f"{rvars['rundir']}/Pmodels/pmodel{nvars['nmin']}.dict"
+        drops = [ "query", "query_short", "cancel", "cancel_all", 
+                  "dry_run", "keep", "updater", "uploadTo", "scan",
+                  "yvariable", "llhdscan", "clean", "clean_all", "allscans",
+                  "rewrite", "time", "repeat", "jobnr", "pid" ]
+        for i in drops:
+            nvars.pop ( i )
+        nvars["catch_exceptions"]=True
+        if "disallowN1N1Prod" in nvars:
+            nvars.pop ( "disallowN1N1Prod" )
+        ds = py_dumps ( nvars, indent=4 )
+        f.write ( f"factoryOfWalkers.createWalkers ( {ds} )\n" )
+    os.chmod( runner, 0o755 ) # 1877 is 0o755
+    return runner
+
+def createWalkerContainerScript ( rvars : dict, runner : str ) -> str:
+    """ create the container script """
+    globals().update ( rvars ) # doesnt work for all
+    container = runner.replace(".py",".sh")
+    template = f"{codedir}/smodels-utils/clip/container_template.sh"
+    with open ( template, "rt" ) as f:
+        txt = f.read()
+    txt = txt.replace( "@@SCRIPT@@", runner )
+    with open ( container, "wt" ) as f:
+        f.write ( txt )
+    os.chmod( container, 0o755 ) # 1877 is 0o755
+    return container
+
 def runOneJob ( rvars: dict ):
     """ prepare everything for a single job. this is the central method!
+
+    rvars ( dict ):
+        - pid (int): process id, integer that idenfies the process
+        - nmin (int): id of first walker
+        - nmax (int): id of last walker
+        - cont (str): pickle file to start with, "" means start from SM
+        - dbpath (os.PathLike): path to database
+        - dry_run (bool): if true, then create script but dont run it
+        - keep (bool): keep temporary files, for debugging
+        - time (float): time in hours
+        - cheatcode (Union[str,int]): in case we wish to start with a cheat model
+        - rundir (os.PathLike): the run directory
+        - maxsteps (int): max number of steps
+        - select (str): select for certain results, e.g. "all", "ul", "em",
+                   "txnames:T1,T2"
+        - do_srcombine (bool): if true, then also perform combinations, either via
+                        simplified likelihoods or via pyhf
+        - record_history (bool): if true, turn on the history recorder
+        - test_param_space (bool): If True, walk over the param space keeping constant K and TL
+        - run_mcmc (bool): if true, run mcmc walk without changing dimensions
+        - cap_ssm (float): set the maximum value of the signal strength multipler (default=100)
+        - seed (Union[None,int]): the random seed for the walker
+        - update_hiscores (bool): update the hiscores at the end
+        - stopTeleportationAfter (int): stop teleportation after this step.
+           if -1, dont run teleportation at all.
+        - forbiddenparticles (List[int]): any forbidden pids we dont touch
+        - wallpids (bool): put up mass walls for pids
+        - templateSLHA (os.PathLike): name of the templateSLHA file
+        - allowN1N1Prod (bool): allow N1 N1 production mode
+        - susy_mode (bool): susy mode
+        - use_initialiser (Union[str,bool]): if string, then interpret it as path to database
+    """
+    runner = createWalkerPythonScript ( rvars )
+    container = createWalkerContainerScript ( rvars, runner )
+
+    ram = max ( 10000., 4000. * ( nmax - nmin ) )
+    if rvars["select"]=="all" or "forbiddenparticles" == []:
+        ram = ram * 2.8 ## full database? we need a lot of RAM!
+    else:
+        ram = ram * 1.5 ## lets see how low we can go
+    if rvars["time"]>9: # longer running job, more ram
+        ram=ram*1.1
+    #if "comb" in rundir: ## combinations need more RAM
+    #    ram = ram * 1.2
+    #if "history" in rundir: ## history runs need more RAM
+    #    ram = ram * 1.3
+    if update_hiscores: ## make sure we have a bit more for that
+        ram = ram * 1.2
+    ram=int(ram)
+    proxies = glob.glob ( f"{rundir}/proxy*pcl" )
+    if len(proxies)>0:
+        ram = ram *.8
+    # cmd = [ "srun" ]
+    cmd = [ "sbatch" ]
+    cmd += [ "--error", f"{outputdir}/walk-%j.out",
+             "--output", f"{outputdir}/walk-%j.out" ]
+    cmd += ["--cpus-per-task", "1"]
+
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+    if 8 < time <= 48:
+        qos = "c_medium"
+    cmd += [ "--qos", qos ]
+    cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", container ]
+    scmd =  " ".join ( cmd )
+    scmd = scmd.replace ( basedir, "$BASE" )
+    if dry_run:
+        pprint ( f"{intro}{CYAN}dry_running{RESET} {scmd}", rvars["jobnr"] )
+    else:
+        pprint ( f"{intro}{CYAN}running{RESET} {scmd}", rvars["jobnr"] )
+        a=subprocess.run ( cmd, capture_output=True )
+        sa = str(a)
+        sb = str ( a.stdout.decode().strip() )
+        mkdir ( f"{rvars['rundir']}/jobs/", chdir = False )
+        jobsfile = f"{rvars['rundir']}/jobs/current"
+        with open ( jobsfile, "at" ) as f:
+            jobtxt = sb.replace("Submitted batch job ", "" )
+            f.write ( jobtxt + "\n" )
+        if "Submitted batch job " in sb:
+            sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
+            sb+=RESET
+        pprint ( f"{intro}{sb}", rvars["jobnr"] )
+
+def runOneJobNoContainer ( rvars: dict ):
+    """ prepare everything for a single job. this is the central method,
+    for container-free runs
 
     rvars ( dict ):
         - pid (int): process id, integer that idenfies the process
@@ -375,7 +539,6 @@ def runOneJob ( rvars: dict ):
     cmd += [ "--error", f"{outputdir}/walk-%j.out",
              "--output", f"{outputdir}/walk-%j.out" ]
     cmd += ["--cpus-per-task", "1"]
-    # cmd += ["--cpus-per-task", "3"]
 
     qos = "c_short"
     if time > 48:
@@ -383,10 +546,6 @@ def runOneJob ( rvars: dict ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd += [ "--qos", qos ]
-    # cmd += [ "-n", str(nmax - nmin) ]
-    # cmd += [ "--threads-per-core", str(nmax - nmin) ]
-    # cmd += [ "-N", str(nmax - nmin) ]
-    # cmd += [ "-k" ]
     cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", runner ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
@@ -406,10 +565,7 @@ def runOneJob ( rvars: dict ):
             sb=sb.replace("Submitted batch job ",f"Submitted batch job {YELLOW}" )
             sb+=RESET
         pprint ( f"{intro}{sb}", rvars["jobnr"] )
-        #if not "returncode=0" in sa:
-        #    sa = f"{RED}{sa}{RESET}"
-        # print ( f"returned: {sa}" )
-        # time.sleep( random.uniform ( 0., 1. ) )
+
 
 def produceLLHDScanScript ( pid1 : int, nprocs : int,
         rvars : dict ) -> str:
