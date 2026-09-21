@@ -312,6 +312,9 @@ def runOneJob ( rvars: dict ):
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
+        venvpath = os.path.abspath ( f"{codedir}/../.venvs/314/lib/python3.14/site-packages/" )
+        f.write ( f"sys.path.insert(0,'{venvpath}')\n" )
+        f.write ( f"sys.path.insert(0,'{codedir}/smodels/')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/smodels-utils/')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/protomodels')\n" )
         f.write ( f"os.chdir('{rundir}')\n" )
