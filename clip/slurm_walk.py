@@ -374,9 +374,9 @@ def runOneJob ( rvars: dict ):
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
     if rvars["select"]=="all" or "forbiddenparticles" == []:
-        ram = ram * 1.5 ## full database? we need a lot of RAM!
+        ram = ram * 1.6 ## full database? we need a lot of RAM!
     else:
-        ram = ram * 0.8 ## lets see how low we can go
+        ram = ram * 1.0 ## lets see how low we can go
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.1
     #if "comb" in rundir: ## combinations need more RAM
