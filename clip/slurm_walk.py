@@ -374,9 +374,9 @@ def runOneJob ( rvars: dict ):
 
     ram = max ( 10000., 4000. * ( nmax - nmin ) )
     if rvars["select"]=="all" or "forbiddenparticles" == []:
-        ram = ram * 2.8 ## full database? we need a lot of RAM!
+        ram = ram * 1.5 ## full database? we need a lot of RAM!
     else:
-        ram = ram * 1.5 ## lets see how low we can go
+        ram = ram * 0.8 ## lets see how low we can go
     if rvars["time"]>9: # longer running job, more ram
         ram=ram*1.1
     #if "comb" in rundir: ## combinations need more RAM
@@ -1094,6 +1094,9 @@ def main():
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
+    argparser.add_argument ( '--extrapolation_acceptance',
+                        help='acceptance limit for extrapolation errors [0.0]',
+                        type=float, default=0.0 )
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
