@@ -13,6 +13,20 @@ import argparse,time
 from sympy import var
 from typing import Union, Optional
 
+def filterSLHAStuff():
+    class SuppressInvalidDecayWarning(logging.Filter):
+        def filter(self, record):
+            return not (
+                record.levelno == logging.WARNING
+                and ( "No valid decay found for" in record.getMessage() 
+                or " has a total width/mass =" in record.getMessage() )
+            )
+
+    from smodels.base.smodelsLogging import logger
+    logger.addFilter ( SuppressInvalidDecayWarning() )
+
+filterSLHAStuff()
+
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
 except ImportError as e:
