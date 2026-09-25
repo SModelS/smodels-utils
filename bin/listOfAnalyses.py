@@ -625,7 +625,7 @@ class Lister:
             help='add info about likelihoods' )
         argparser.add_argument ( '-f', '--fastlim', action='store_true',
             help='add fastlim results' )
-        argparser.add_argument ( '--yields_only', action='store_true',
+        argparser.add_argument ( '--include_yields_only', action='store_true',
             help='include yields-only results' )
         argparser.add_argument ( '-k', '--keep', action='store_true',
             help='keep temporary files, like temp_database.dict' )
@@ -670,12 +670,14 @@ class Lister:
             self.dotlessv = ver
         self.ignore = args.ignore ## ignore validation flags
         self.includeFastlim = args.fastlim
-        self.includeYieldsOnly = args.yields_only
+        self.includeYieldsOnly = args.include_yields_only
         self.expRes = self.database.getExpResults ( useNonValidated = self.ignore  )
         if not self.includeSuperseded:
             self.expRes = manips.filterSupersededFromList ( self.expRes )
         if not self.includeFastlim:
             self.expRes = manips.filterFastLimFromList ( self.expRes )
+        if not self.includeYieldsOnly:
+            self.expRes = manips.filterYieldsOnlyFromList ( self.expRes )
         self.backup()
         self.f = open ( filename, "w" )
         self.header()
