@@ -141,11 +141,12 @@ def checkNumpyVersion ():
         print ( f"pip install numpy==1.26.4" )
         sys.exit()
 
-def removeAnaIdSuffices ( anaId : str ) -> str:
+def removeAnaIdSuffices ( anaId : str, extensions : list = \
+        [ "agg", "eff", "ma5", "adl", "strong", "ewk", "multibin", \
+          "hino", "wino", "incl", "trim", "wbplus" ] ) -> str:
     """ given  analysis id <anaId>, remove all kinds of suffices """
-    for i in [ "-agg", "-eff", "-ma5", "-adl", "-strong", "-ewk", "-multibin", \
-               "-hino", "-wino", "-incl", "-trim", "-wbplus" ]:
-        anaId = anaId.replace(i,"")
+    for ext in extensions:
+        anaId = anaId.replace(f"-{ext}","")
     return anaId
 
 def round_to_n ( x : float, n : int ) -> float:

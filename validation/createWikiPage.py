@@ -16,9 +16,24 @@ from smodels.experiment.databaseObj import Database
 from smodels.base.physicsUnits import TeV, fb
 from smodels.base.smodelsLogging import setLogLevel, logger
 from smodels_utils.helper.databaseManipulations import filterSupersededFromList
+from smodels_utils.helper.various import removeAnaIdSuffices
 import subprocess
 from typing import List, Dict
 setLogLevel("debug" )
+
+def filterOldFormatStuff():
+    import logging
+    class SuppressOldFormatWarning(logging.Filter):
+        def filter(self, record):
+            return not (
+                record.levelno == logging.WARNING
+                and "was used in the old format" in record.getMessage()
+            )
+
+    from smodels.base.smodelsLogging import logger
+    logger.addFilter ( SuppressOldFormatWarning() )
+
+filterOldFormatStuff()
 
 ## TGQ12 should be possible
 import smodels.experiment.datasetObj
@@ -158,7 +173,7 @@ This page lists validation plots for all analyses and topologies available in
 the SMS results database that can be validated against official results.
 %s. The list has been created from the
 database version %s, including the Fastlim tarball that is shipped separately.
-There is also a [list of all analyses](ListOfAnalyses%s), 
+There is also a [list of all analyses](ListOfAnalyses%s),
 a list of [all SMS topologies](SmsDictionary%s), and an explicit [comparison of best-SR vs combined-SR](ExclComparison%s) exclusion lines.
 
 The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. If a covariance matrix has been published, we present the combined limit of all signal regions. The experimental upper limits are compared with the theoretical predictions for that signal region.
@@ -210,8 +225,7 @@ CMS are for on- and off-shell at once.
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     for expRes in expResList:
                         Id = expRes.globalInfo.id
-                        Id = Id.replace("-agg","")
-                        Id = Id.replace("-eff","")
+                        Id = removeAnaIdSuffices ( Id, ["agg","eff"] )
                         nResults[exp].add(Id)
             print ( f"[createWikiPage] results at {int(sqrts)} TeV: {len(nResults['CMS'])} CMS, {len(nResults['ATLAS'])} ATLAS")
             for exp in [ "ATLAS", "CMS" ]:
@@ -222,6 +236,7 @@ CMS are for on- and off-shell at once.
                     stpe = tpe.replace ( " ", "" )
 
                     nres, nnewres, nexpres, nnewexpres = set(), set(), set(), set()
+                    n_nexpres, n_newexpres = 0, 0
                     for expRes in expResList:
                         hasTn,hasNewTn=False,False
                         txns, newtxns = [], []
@@ -234,7 +249,7 @@ CMS are for on- and off-shell at once.
                             if not self.ignore_validated and validated in [ "n/a" ]:
                                 continue
                             Id = expRes.globalInfo.id
-                            Idnoagg = Id.replace("-agg","")
+                            Idnoagg = removeAnaIdSuffices ( Id )
                             isNew = self.isNewAnaID ( Id, tn.txName, tpe,
                                                       validated )
                             hasChanged = self.anaHasChanged ( expRes.globalInfo.id, tn.txName, tpe )
@@ -247,15 +262,20 @@ CMS are for on- and off-shell at once.
                                 hasNewTn = True
                                 nnewres.add ( Idnoagg )
                                 newtxns.append ( tname )
-                        if hasTn: nexpres.add ( Idnoagg )
-                        if hasNewTn: nnewexpres.add ( Idnoagg )
+                        if hasTn:
+                            nexpres.add ( Idnoagg )
+                            n_nexpres += len(txns )
+
+                        if hasNewTn:
+                            nnewexpres.add ( Idnoagg )
+                            n_newexpres += len(newtxns)
 
                     if len(nres) > 0:
                         nna = self.getNumber(len(nnewexpres))
                         sanalyses = f"{len(nexpres)} analyses ({nna} new/updated)"
                                      #( len(nexpres), self.getNumber(len(nnewexpres)) )
                         nnr = self.getNumber(len(nnewres))
-                        sresults = f"{len(nres)} results ({nnr} new/updated)"
+                        sresults = f"{n_nexpres} results ({n_newexpres} new/updated)"
 #                                     ( len(nres), self.getNumber(len(nnewres)) )
                         l = f" * [{exp} {tpe}](#{exp}{stpe}{sqrts}): {sanalyses}, {sresults}\n"
                         self.file.write ( l )
