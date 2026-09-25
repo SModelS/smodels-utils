@@ -262,6 +262,9 @@ def filterYieldsOnlyFromList ( expResList : list, invert : bool = False,
     :param invert: if True, then invert the selection, return *only* fastlim
     :param really: if False, then do not actually filter
     :param update: consider entries only after this date (yyyy/mm/dd)
+
+    :returns: results with txnames if invert==False,
+    results with yields only, no txnames if invert==True
     """
     if not really:
         return expResList
