@@ -14,6 +14,7 @@ from sympy import var
 from typing import Union, Optional
 
 def filterSLHAStuff():
+    import logging
     class SuppressInvalidDecayWarning(logging.Filter):
         def filter(self, record):
             return not (
