@@ -165,7 +165,12 @@ def removeNonValidated( db : Database, dirname : str = "database/" ):
                 if not hasTxNames:
                         comment( f"{str(er)[:100]}/{str(dataset)[:100]} has no validated txnames. remove folder." )
                         cmd = f"rm -r '{dataset.path}'"
-                        # runCmd( cmd )
+                        files = glob.glob ( f"{dataset.path}/T*txt" )
+                        # print ( f"@@@ removing {dataset.path}" )
+                        # print ( f"@@@ files are {files}" )
+                        # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+                        if len ( files ) == 0:
+                            runCmd( cmd )
                 if hasTxNames:
                     hasDataSets=True
             if not hasDataSets:
