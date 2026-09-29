@@ -168,7 +168,7 @@ def drawP ( args : dict ):
     metadata = pngMetaInfo()
     dpi = 300
     plt.savefig ( outfile, metadata = metadata, dpi = dpi )
-    add_logo = True
+    add_logo = args["add_logo"]
     if add_logo:
         from validation.addLogoToPlots import addLogo
         addLogo ( outfile, dpi = dpi, y_offset = -140 )
@@ -201,9 +201,12 @@ if __name__ == "__main__":
             help="order of entries ['ATLAS13','CMS13','ATLAS8','CMS8']",
             default="['ATLAS13','CMS13','ATLAS8','CMS8']" )
     ap.add_argument('-m', '--min_bg', type=float,
-            help='minimum number of expected background events [0.]', default=None )
+            help='minimum number of expected background events [0.]', 
+            default=None )
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
+    ap.add_argument('-a', '--add_logo', action="store_true", 
+            help="add a SModelS logo to plot" )
     args = ap.parse_args()
     args.order  = eval(args.order)
     if not args.inputfile.endswith ( ".fudge" ):
