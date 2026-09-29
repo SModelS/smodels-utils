@@ -136,7 +136,9 @@ def drawP ( args : dict ):
                    label="SM hypothesis" )
     handles, labels = plt.gca().get_legend_handles_labels()
     # Reverse both
-    plt.legend(handles[::-1], labels[::-1],loc="lower right")
+    loc = args["legend_location"]
+    # loc = "lower right"
+    plt.legend(handles[::-1], labels[::-1],loc=loc)
     from chelpers import computeT
     Ts = computeT ( allpvalues, None )
     p=Ts["p"]
@@ -207,6 +209,9 @@ if __name__ == "__main__":
             help='number of bins in histogram [10]', default=10)
     ap.add_argument('-a', '--add_logo', action="store_true", 
             help="add a SModelS logo to plot" )
+    ap.add_argument('--legend_location', type=str,
+            help="location of legend [lower right]",
+            default="lower right" )
     args = ap.parse_args()
     args.order  = eval(args.order)
     if not args.inputfile.endswith ( ".fudge" ):
