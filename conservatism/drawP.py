@@ -119,6 +119,11 @@ def drawP ( args : dict ):
     order = args["order"]
     labels_dict = { "CMS8": "CMS, 8 TeV", "CMS13": "CMS, 13 TeV",
              "ATLAS8": "ATLAS, 8 TeV", "ATLAS13": "ATLAS, 13 TeV" }
+    # colors = [ "blue", "tab:blue", "darkred", "tab:red" ]
+    # colors = None
+    colors = args["colors"]
+    if type ( colors ) == str:
+        colors = eval ( args["colors"] )
     labels = order[:]
     # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     for i,label in enumerate(labels):
@@ -129,7 +134,7 @@ def drawP ( args : dict ):
     #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
     ordered_pvalues= [ pvalues[x] for x in order ]
     h = plt.hist ( ordered_pvalues, label = labels,
-                 bins = bins, stacked=True )
+                 bins = bins, color=colors, stacked=True )
     if args["draw_reference"]:
         ex=np.mean(h[0][-1])
         plt.plot ( [0,1], [ex,ex], c="k", linestyle="dotted",
@@ -202,6 +207,9 @@ if __name__ == "__main__":
     ap.add_argument('--order', type=str,
             help="order of entries ['ATLAS13','CMS13','ATLAS8','CMS8']",
             default="['ATLAS13','CMS13','ATLAS8','CMS8']" )
+    ap.add_argument('--colors', type=str,
+            help="colors, e.g. ['red','green','blue','orange']",
+            default=None )
     ap.add_argument('-m', '--min_bg', type=float,
             help='minimum number of expected background events [0.]', 
             default=None )
