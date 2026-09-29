@@ -73,7 +73,16 @@ def addLogoToPng ( filename : str, logo : str|None = None,
     layer.paste(mark, (0, y) )
     #Merge original image and layer and save
     tmpF = tempfile.mktemp(suffix=".png",dir="./")
-    Image.composite(layer, im, layer).save( tmpF )
+    # Save PNG metadata
+    from PIL.PngImagePlugin import PngInfo
+    pnginfo = PngInfo()
+
+    for key, value in im.info.items():
+        pnginfo.add_text(key,str(value))
+    #if isinstance(value, str):
+    #    pnginfo.add_text(key, value)
+
+    Image.composite(layer, im, layer).save( tmpF, pnginfo=pnginfo )
     try:
         os.rename( tmpF, filename)
     except OSError as e:
