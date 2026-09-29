@@ -281,6 +281,7 @@ def filterYieldsOnlyFromList ( expResList : list, invert : bool = False,
             else:
                 dsWithTx.append ( dataset )
                 hasWithTx = True
+        """
         if hasYieldsOnly and hasWithTx:
             eWithTx, eWithoutTx = copy.deepcopy ( e ), copy.deepcopy ( e )
             eWithTx.datasets = dsWithTx
@@ -288,8 +289,12 @@ def filterYieldsOnlyFromList ( expResList : list, invert : bool = False,
             yieldsOnlyList.append ( eWithoutTx )
             filteredList.append ( eWithTx )
             print ( f"[databaseManipulations] expResult {e.globalInfo.id} goes into both pickles!" )
+            if "CMS-SUS-18-004" in e.globalInfo.id:
+                import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
             # sys.exit(-1)
         elif hasYieldsOnly:
+        """
+        if hasYieldsOnly and not hasWithTx:
             yieldsOnlyList.append ( e )
         else:
             filteredList.append ( e )
