@@ -980,7 +980,7 @@ if __name__ == "__main__":
                 "drawPaperPlot": True,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
                 "createSModelSExclJson": True, #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
                 "origValidationFolder": "validation", # folder for the -orig info for ratio- and red-black plots
-                "errorsForR": True, # for the expected UL values, do we want a one-sigma band?
+                "errorsForR": False, # for the expected UL values, do we want a one-sigma band?
                 "nnErrors": False, # shall we get the heteroskedastic errors?
                 "removeMLModels": False, # remove existing ML models, run with full models instead
     }
