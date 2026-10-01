@@ -6,6 +6,7 @@ conservatism estimates """
 
 from typing import Union
 import numpy as np
+from ptools.moreHelpers import namesForSetsOfTopologies
 
 def filterByAnaId ( data : Union[dict,list], dropThese : list ) \
         -> Union[dict,list]:
@@ -39,7 +40,6 @@ def filterByAnalysisGroups ( data : Union[dict,list], dropThese : str ) \
 
     # data is a list
     ret = []
-    from ptools.moreHelpers import namesForSetsOfTopologies
     grouptxns = namesForSetsOfTopologies ( dropThese )[0].split(",")
 
     for entry in data:
@@ -97,7 +97,8 @@ def areTxnsInGroups ( txns : Union[str,tuple],
 
     :returns: true if any of txns is in the group
     """
-    from ptools.moreHelpers import namesForSetsOfTopologies
+    if group in [ "rest", "all" ]:
+        return True
     grouptxns = group
     if type(group)==str:
         grouptxns = namesForSetsOfTopologies ( group )[0].split(",")
@@ -111,20 +112,23 @@ def areTxnsInGroups ( txns : Union[str,tuple],
 def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
     """ split up data by analysis groups (darkmatter,gluinos,...)
     """
-    from smodels_utils.helper.various import getCollaboration
-    groups = [ "darkmatter", "rest",
-        "electroweakinos", "stops" ]
+    # from smodels_utils.helper.various import getCollaboration
+    #groups = [ "darkmatter", "rest",
+    #    "electroweakinos_offshell", "stops" ]
+    groups = [ "electroweakinos_offshell", "longlived", "rest" ]
+    names =  namesForSetsOfTopologies("list") 
+    names[0]["rest"]="rest"
+    # groups = [ k for k,v in names[0].items() ]
     if type(data) == list:
         ret = { x: [] for x in groups }
         for entry in data:
-            coll = getCollaboration ( entry["id"] )
+            # coll = getCollaboration ( entry["id"] )
             #if coll == "CMS":
             #    continue
             hasAdded = False
             txns = entry["txns"]
             for group in groups:
                 inGrp = areTxnsInGroups ( txns, group )
-                # print ( f"@@1 txns {txns} in {group}? {inGrp} hasAdded {hasAdded}" )
                 if inGrp and not hasAdded:
                     ret[group].append ( entry )
                     hasAdded = True
@@ -137,7 +141,7 @@ def splitByAnalysisGroups ( data : Union[dict,list] ) -> dict:
         for x in groups:
             ret[x][ffactor]=[]
         for entry in entries:
-            coll = getCollaboration ( entry["id"] )
+            # coll = getCollaboration ( entry["id"] )
             #if coll == "CMS":
             #    continue
             hasAdded = False

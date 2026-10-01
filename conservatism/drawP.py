@@ -107,11 +107,12 @@ def drawP ( args : dict ):
     data = filterByBG ( data, args["min_bg"], "bg" )
     nSRs = len(data)
     print ( f"[drawP] we are drawing {nSRs} entries" )
-    # splitdata = splitBySqrts ( data )
-    # splitdata = splitByCollaboration ( data )
-    splitdata = splitBySqrtsAndCollaboration ( data )
-    # splitdata = splitByAnalysisGroups ( data )
-    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+    # splitdata = splitBySqrtsAndCollaboration ( data )
+    split_method = args["split_by"]
+    if not split_method in globals():
+        print ( f"[drawP] split_method {split_method} unknown" )
+        import sys; sys.exit()
+    splitdata = globals()[split_method](data)
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
@@ -224,6 +225,9 @@ if __name__ == "__main__":
     ap.add_argument('--legend_location', type=str,
             help="location of legend [lower right]",
             default="lower right" )
+    ap.add_argument('--split_by', type=str,
+            help="split by what criterion [splitBySqrtsAndCollaboration]",
+            default="splitBySqrtsAndCollaboration" )
     args = ap.parse_args()
     args.order  = eval(args.order)
     if not args.inputfile.endswith ( ".fudge" ):
