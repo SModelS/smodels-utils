@@ -140,10 +140,12 @@ def drawP ( args : dict ):
         print ( k )
         anaIds = set ( [ a['id']  for a in v ] )
         if k == "rest":
-            print ( f"... {len(anaIds)}" )
+            print ( f"... {len(anaIds)} more analyses" )
             continue
-        for ana in anaIds:
-            print ( f" --- {ana} more analyses" )
+        s_anaIds = list(anaIds)
+        s_anaIds.sort()
+        for ana in s_anaIds:
+            print ( f" --- {ana}" )
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
