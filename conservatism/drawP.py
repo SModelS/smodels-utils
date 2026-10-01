@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
      splitByCollaboration, splitBySqrtsAndCollaboration, \
-     splitByAnalysisGroups, filterByAnaGroups
+     splitByAnalysisGroups, filterByAnalysisGroups
 from ptools.moreHelpers import namesForSetsOfTopologies
 
 def getPValues ( data : dict, statmodel : str ) -> dict:
@@ -111,6 +111,7 @@ def drawP ( args : dict ):
     # splitdata = splitByCollaboration ( data )
     splitdata = splitBySqrtsAndCollaboration ( data )
     # splitdata = splitByAnalysisGroups ( data )
+    import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
@@ -166,7 +167,8 @@ def drawP ( args : dict ):
     ax = plt.gca()
     nAnas = countAnalyses ( data )
 
-    plt.text(.67, -.12, f"this plot contains {nSRs} SRs from {nAnas} analyses",
+    if args["plotStats"]:
+        plt.text(.67, -.12, f"this plot contains {nSRs} SRs from {nAnas} analyses",
              transform=ax.transAxes, c="grey", fontsize=7 )
     outfile = args["outputfile"].replace("@@FUDGE@@",str(fudge))
     outfile = outfile.replace("@@STATMODEL@@",statmodel)
@@ -216,6 +218,8 @@ if __name__ == "__main__":
     ap.add_argument('-n', '--nbins', type=int,
             help='number of bins in histogram [10]', default=10)
     ap.add_argument('-a', '--add_logo', action="store_true", 
+            help="add a SModelS logo to plot" )
+    ap.add_argument('--plotStats', action="store_true", 
             help="add a SModelS logo to plot" )
     ap.add_argument('--legend_location', type=str,
             help="location of legend [lower right]",

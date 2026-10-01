@@ -25,7 +25,7 @@ def filterByAnaId ( data : Union[dict,list], dropThese : list ) \
             ret.append ( entry )
     return ret
 
-def filterByAnaGroups ( data : Union[dict,list], dropThese : str ) \
+def filterByAnalysisGroups ( data : Union[dict,list], dropThese : str ) \
         -> Union[dict,list]:
     """ filter by analysis groups
     :param dropThese: string describing analysis groups to drop,
