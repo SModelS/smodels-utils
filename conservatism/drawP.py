@@ -23,7 +23,7 @@ def logExecution ():
     for i,a in enumerate(sys.argv):
         if i > 0:
             cmd += " "
-        if "select_t" in prev or "--ti" in prev or "--op" in prev or prev in [ "-O", "-T" ]:
+        if "legend_l" in prev or "select_t" in prev or "--ti" in prev or "--op" in prev or prev in [ "-O", "-T" ]:
             a = f'"{a}"'
         cmd += a
         prev = a
@@ -136,6 +136,14 @@ def drawP ( args : dict ):
         print ( f"[drawP] split_method {split_method} unknown" )
         import sys; sys.exit()
     splitdata = globals()[split_method](data)
+    for k,v in splitdata.items():
+        print ( k )
+        anaIds = set ( [ a['id']  for a in v ] )
+        if k == "rest":
+            print ( f"... {len(anaIds)}" )
+            continue
+        for ana in anaIds:
+            print ( f" --- {ana} more analyses" )
     pvalues = getPValues ( splitdata, statmodel )
     allpvalues = [ x for v in pvalues.values() for x in v ]
     bins = np.linspace(0,1,args["nbins"]+1)
