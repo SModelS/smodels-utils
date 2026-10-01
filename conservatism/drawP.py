@@ -16,6 +16,24 @@ from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
      filterEmptyTxns
 from ptools.moreHelpers import namesForSetsOfTopologies
 
+def logExecution ():
+    """ log the call of the executable """
+    cmd = ""
+    prev=""
+    for i,a in enumerate(sys.argv):
+        if i > 0:
+            cmd += " "
+        if "select_t" in prev or "--ti" in prev or "--op" in prev or prev in [ "-O", "-T" ]:
+            a = f'"{a}"'
+        cmd += a
+        prev = a
+    cmd += "\n"
+    with open ( "drawP.log", "at" ) as f:
+        import time
+        f.write ( f"\n# {time.asctime()}\n" )
+        f.write ( cmd )
+        f.close()
+
 def getPValues ( data : dict, statmodel : str ) -> dict:
     """ extract the right p-values from the entire entries """
     ret = {}
@@ -132,14 +150,17 @@ def drawP ( args : dict ):
     if type ( colors ) == str:
         colors = eval ( args["colors"] )
     labels = order[:]
-    # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
+    newlabels = []
     for i,label in enumerate(labels):
+        if type(label)==tuple:
+            labels_dict[ label[0] ] = label[1]
+            label = label[0]
         if label in labels_dict:
             labels[i]=labels_dict[label]
+        newlabels.append ( label )
     # order = [ "rest", "stops", "electroweakinos", "darkmatter" ]
-    #order = [ "CMS8", "ATLAS8", "CMS13", "ATLAS13" ]
     #order = [ "ATLAS13", "CMS13", "ATLAS8", "CMS8" ]
-    ordered_pvalues= [ pvalues[x] for x in order ]
+    ordered_pvalues= [ pvalues[x] for x in newlabels ]
     h = plt.hist ( ordered_pvalues, label = labels,
                  bins = bins, color=colors, stacked=True )
     if args["draw_reference"]:
@@ -239,3 +260,4 @@ if __name__ == "__main__":
         print ( f"[drawP] inputfile {args.inputfile} needs to have .fudge as extension" )
         sys.exit()
     drawP( vars(args) )
+    logExecution()
