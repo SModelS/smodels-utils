@@ -12,7 +12,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 from chelpers import filterByAnaId, filterByBG, splitBySqrts, \
      splitByCollaboration, splitBySqrtsAndCollaboration, \
-     splitByAnalysisGroups, filterByAnalysisGroups
+     splitByAnalysisGroups, filterByAnalysisGroups, \
+     filterEmptyTxns
 from ptools.moreHelpers import namesForSetsOfTopologies
 
 def getPValues ( data : dict, statmodel : str ) -> dict:
@@ -108,6 +109,7 @@ def drawP ( args : dict ):
         old_d = len(data)
         data = filterByBG ( data, args["min_bg"], "bg" )
         print ( f"[drawP] filtered {old_d} -> {len(data)} with bg>{args['min_bg']}" )
+    data = filterEmptyTxns ( data )
     nSRs = len(data)
     print ( f"[drawP] we are drawing {nSRs} entries" )
     # splitdata = splitBySqrtsAndCollaboration ( data )

@@ -181,6 +181,20 @@ def splitBySqrtsAndCollaboration ( data : Union[dict,list] ) -> dict:
         ret[label].append ( entry )
     return ret
 
+def filterEmptyTxns ( data : Union[dict,list]) -> Union[dict,list]:
+    """ filter out the empty txns
+    """
+    if type(data)==dict:
+        ret = {}
+        for label,entries in data.items():
+            ret[label] = filterEmptyTxns ( entries )
+        return ret
+    ret = []
+    for entry in data:
+        if len(entry["txns"])>0:
+            ret.append ( entry )
+    return ret
+
 def filterByBG ( data : Union[dict,list], min_bg : Union[None,float],
                  filterBy : str = "bg" ) -> Union[dict,list]:
     """ filter the data by expected background yield
