@@ -104,7 +104,10 @@ def drawP ( args : dict ):
         # no filter
         data = data[fudge]
     # data = data[fudge]
-    data = filterByBG ( data, args["min_bg"], "bg" )
+    if args["min_bg"] not in [ 0., None ]:
+        old_d = len(data)
+        data = filterByBG ( data, args["min_bg"], "bg" )
+        print ( f"[drawP] filtered {old_d} -> {len(data)} with bg>{args['min_bg']}" )
     nSRs = len(data)
     print ( f"[drawP] we are drawing {nSRs} entries" )
     # splitdata = splitBySqrtsAndCollaboration ( data )
