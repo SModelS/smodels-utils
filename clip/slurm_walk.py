@@ -372,7 +372,7 @@ def runOneJob ( rvars: dict ):
     runner = createWalkerPythonScript ( rvars )
     container = createWalkerContainerScript ( rvars, runner )
 
-    ram = max ( 10000., 4000. * ( nmax - nmin ) )
+    ram = max ( 11000., 4000. * ( nmax - nmin ) )
     if rvars["select"]=="all" or "forbiddenparticles" == []:
         ram = ram * 1.6 ## full database? we need a lot of RAM!
     else:
