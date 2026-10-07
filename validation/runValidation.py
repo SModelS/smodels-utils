@@ -199,6 +199,7 @@ def drawPaperPlot ( valPlot, general_options : dict,
         of = plot.draw()
     except (RuntimeError,) as e:
         print ( f"[runValidation] RunTimeError when plotting red-and-back plot: {e}" )
+        return False
     if options["show"] and of is not None:
         from validationHelpers import showPlot
         for f in of:
