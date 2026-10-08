@@ -23,6 +23,7 @@ except Exception as e:
     GREEN, YELLOW, RED, RESET = "\033[32m", "\033[33m", "\033[91m", "\033[0m"
     CYAN, MAGENTA, BLUE = "\033[36m", "\033[35m", "\033[34m"
     GREY = "\033[90m"
+LIGHTGREEN = "\x1b[38;2;136;231;136m"
     # ORANGE = "\033[48:2:255:165:0m"
 
 colordict = { "green": GREEN, "yellow": YELLOW, "red": RED, "reset": RESET,
