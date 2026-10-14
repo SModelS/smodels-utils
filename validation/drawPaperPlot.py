@@ -675,7 +675,7 @@ class PaperPlot:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-        if self.specific_options["sort_segments"]:
+        if self.specific_options["sort_within_segments"]:
             x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
         drawBand = True
