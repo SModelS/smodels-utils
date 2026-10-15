@@ -17,8 +17,8 @@ def copy():
 def copySpecial():
     files = [ ".bashrc" ]
     for f in files:
-        source = os.environ["HOME"]
-        dest = f"/scratch-cbe/users/4scratch/{os.environ['USER']}/"
+        source = f'{os.environ["HOME"]}/4scratch/'
+        dest = f"/scratch-cbe/users/{os.environ['USER']}/"
         if os.path.exists ( f"{dest}{f}" ):
             continue
         cmd = f"cp -rf {source}{f} {dest}{f}"
