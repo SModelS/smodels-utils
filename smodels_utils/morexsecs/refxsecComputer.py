@@ -461,7 +461,7 @@ class RefXSecComputer:
         samesignmodes = ( 1000021, 1000023, 1000025 )
         # production of opposite-sign-pid pairs when the particle is within reach
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 2000011, 2000013, 2000015,
-                              1000024, 17, 18
+                              1000024, 17, 18, 6000005, 6000006, 6000007, 6000008
                             )
 
         # associate production
@@ -743,6 +743,10 @@ class RefXSecComputer:
         if pid1 in [ -2000011, -2000013, -2000015 ] and pid2 == -pid1:
             filename = f"xsecslepRslepR{int(sqrts)}.txt"
             order = NLL # 3
+        if abs(pid1) in [ 6000005, 6000006, 6000007, 6000008 ] and pid2 == -pid1:
+            filename = f"xsecVLQ{int(sqrts)}.txt"
+            order = NLO # 2
+            pb = True
         if (pid1 == 17 and pid2 == -17) or (pid1 == -17 and pid2 == 17): 
             #pid1 in [ 17 ] and pid2 == -pid1:
             filename = f"xsecVLLDL{int(sqrts)}.txt"
