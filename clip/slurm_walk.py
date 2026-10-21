@@ -1091,6 +1091,9 @@ def main():
     argparser.add_argument ( '--use_initialiser',
                         help='path to the database dict file, if you want to use an initialiser',
                         type=str, default=False )
+    argparser.add_argument ( '--userprior',
+                        help='path to a python file that contains a "myprior" function (which takes the protomodel and the nll flag and returns a float). That value is added to the prior (nll=True) or multiplied to it (nll=False). The path is put into the run.dict (run environment). The file has to be accessible from the compute nodes [None]',
+                        type=str, default=None )
     argparser.add_argument ( '--stopTeleportationAfter',
                         help='stop teleportation after this step [-1]',
                         type=int, default=-1 )
@@ -1109,6 +1112,15 @@ def main():
     args.yvariable = namer.pid ( args.yvariable )
     if args.use_initialiser in [ "False", "false", "no", None, "None", "none", "" ]:
         args.use_initialiser = False
+    if args.userprior in [ "False", "false", "no", None, "None", "none", "" ]:
+        args.userprior = None
+    else:
+        ## the walkers run in the rundir, so we need an absolute path here
+        args.userprior = os.path.abspath ( os.path.expanduser ( args.userprior ) )
+        if not os.path.exists ( args.userprior ):
+            print ( f"{intro}error: the user prior file {args.userprior} does not exist" )
+            sys.exit()
+        print ( f"{intro}using the user prior from {args.userprior}" )
     if args.yvariable == "-1":
         args.yvariable = -1
     if type(args.llhdscan) == str:
