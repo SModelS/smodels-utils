@@ -628,6 +628,7 @@ decayDict.update({
     'TYYbWbS1': 'Y --> b W- | b S-, S- --> t b',
     'TYYbWtS2': 'Y --> b W- | t S--, S-- --> W- t b',
     'TYYtS2tS2': 'Y --> t S--, S-- --> W- t b',
+    'TX8X8tS2tS2': 'X8 --> t S++, S++ --> W+ t b',
 })
 motherDict.update({
     'TBBbHbH': 'B Bbar',
@@ -672,8 +673,9 @@ motherDict.update({
     'TYYbWbS1': 'Y Ybar',
     'TYYbWtS2': 'Y Ybar',
     'TYYtS2tS2': 'Y Ybar',
+    'TX8X8tS2tS2': 'X8 X8bar',
 })
-prettyParticle.update({'Xbar': '#bar{X}', 'Tbar': '#bar{T}', 'Bbar': '#bar{B}', 'Ybar': '#bar{Y}'})
+prettyParticle.update({'Xbar': '#bar{X}', 'Tbar': '#bar{T}', 'Bbar': '#bar{B}', 'Ybar': '#bar{Y}', 'X8': 'X_{8/3}', 'X8bar': '#bar{X}_{8/3}'})
 # END AUTO-GENERATED VLQ
 
 def latexfy(instr : str, addDollars : bool = False ) -> str:
