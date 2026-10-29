@@ -848,6 +848,27 @@ class PaperPlot:
             r["max_obs_y"], r["max_exp_y"] = max_y, max_y
         return r
 
+    def describe ( self ):
+        """ simple method to describe what i will be doing """
+        print ( f"[drawPaperPlot] starting" )
+        return ## FIXME
+        gen_opts = list ( self.general_options.keys() )
+        gen_opts.sort()
+        print ( f"general options" )
+        print ( f"===============" )
+        for k in gen_opts:
+            v = self.general_options[k]
+            print ( f"  - {k}: {v}" )
+        spe_opts = list ( self.specific_options.keys() )
+        spe_opts.sort()
+        print ( f"specific options" )
+        print ( f"================" )
+        for k in spe_opts:
+            v = self.specific_options[k]
+            print ( f"  - {k}: {v}" )
+        #print ( f"  - {self.general_options}" )
+        #print ( f"  - {self.specific_options}" )
+
     def draw( self, addJitter : bool = True ) -> list:
         """
         Function which holds the generalised plotting parameters
@@ -857,6 +878,7 @@ class PaperPlot:
 
         :returns: filenames of plots
         """
+        self.describe()
         self.addJitter = addJitter
         validationPlot = self.validationPlot
         if validationPlot.isOneDimensional():
