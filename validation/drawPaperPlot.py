@@ -738,6 +738,9 @@ class PaperPlot:
     def pprint ( self, *args ):
         print ( f"[drawPaperPlot] {''.join(map(str,*args))}" )
 
+    def error ( self, *args ):
+        print ( f"[drawPaperPlot] {RED}error: {''.join(map(str,*args))}{RESET}" )
+
     def getStatModel ( self, validationPlot ):
         """ find out which stat model was used, complain if not always
         the same """
@@ -926,16 +929,18 @@ class PaperPlot:
             bestSR_excl_off = self.getCurveFromJson(anaDir, validationFolder,
                     txnameOff, typ="bestSR", axes=axes, eval_axes = eval_axes )
             if not bestSR_excl_off:
-                self.pprint( f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txnameOff}. Not drawing paper plot.")
-                return
+                self.error( f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txnameOff}.")
+                # self.error ( f"not drawing plot" )
+                # return
             bestSR_excl = self.addOffshell(bestSR_excl, bestSR_excl_off)
         else:
             bestSR_excl = self.getCurveFromJson(anaDir, validationFolder, txname,
                     typ="bestSR", axes=axes, eval_axes=eval_axes )
             if not bestSR_excl:
-                self.pprint(f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txname}:{axes}.")
+                self.error(f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txname}:{axes}.")
                 bestSR = False
-                return
+                # self.error ( f"not drawing plot" )
+                # return
         origDir = anaDir.replace("-eff","-CR")
         cr_is = "CR"
         if not os.path.exists ( origDir ):
@@ -1187,7 +1192,7 @@ class PaperPlot:
                     # print("yes gamma 3")
                     sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                     sec_ax.set_yscale('log')
-                self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
+                # self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
@@ -1213,10 +1218,10 @@ class PaperPlot:
 
         txn = txname if txnameOff == "" else txnameOff
         outfile = f"{vDir}/{txn}_{fig_axes_title}_obs.png"
-        self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         from smodels_utils.helper.various import pngMetaInfo
         metadata = pngMetaInfo()
         dpi = 300
+        self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         plt.savefig(outfile, dpi=dpi, metadata=metadata )
         pdf_also = True
         if "pdf_also" in self.specific_options and self.specific_options["pdf_also"]:
