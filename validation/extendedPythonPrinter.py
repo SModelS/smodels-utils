@@ -50,10 +50,16 @@ class ExtendedPyPrinter(PyPrinter):
              resDict['r_nn_p1'] = self._round ( r_obs_p1 )
         if r_obs_m1 != None:
              resDict['r_nn_m1'] = self._round ( r_obs_m1 )
+        """
         eULprior = obj.getUpperLimitOnMu ( evaluationType = apriori )
         eULposterior = obj.getUpperLimitOnMu ( evaluationType = aposteriori )
         resDict['eULprior']=eULprior
         resDict['eULposterior']=eULposterior
+        """
+        eULpre = obj.getUpperLimit ( evaluationType = apriori ).asNumber(fb)
+        eULpost = obj.getUpperLimit ( evaluationType = aposteriori ).asNumber(fb)
+        resDict['eULpre']=eULpre
+        resDict['eULpost']=eULpost
 
     def __init__(self, output : str= 'stdout',
             filename : Optional[PathType]=None,
@@ -85,7 +91,7 @@ class ExtendedPyPrinter(PyPrinter):
                 print ( f"[extendedPythonPrinter] {did} not in tps??" )
                 sys.exit()
             tp = tps[did]
-            
+
             nllE = tp.nll ( evaluationType = apriori )
             resDict['nllE'] = self._round( nllE )
             nllA = tp.nll ( asimov = 0 )
