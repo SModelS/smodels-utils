@@ -318,6 +318,7 @@ def logCall ( jobids : list ):
         return
     f=open(logfile,"at")
     #f.write ( f"# slurm_validate.py-{time.strftime('%H:%M:%S')}\n{line}\n\n" )
+    f.write ( f"\n" )
     f.write ( f"# slurm_validate.py-{time.asctime()}\n" )
     f.write ( f"{line}\n" )
     s_jobids = ','.join(map(str,jobids))
