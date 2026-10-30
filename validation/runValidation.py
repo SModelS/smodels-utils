@@ -8,7 +8,7 @@
 
 __all__ = [ "validatePlot" ]
 
-import sys,os,copy
+import sys,os,copy,shlex
 import argparse,time
 from sympy import var
 from typing import Union, Optional
@@ -163,9 +163,61 @@ def createRedBlackPlot ( expRes, txnameStr, axes, db,
         updateOptions ( pp_specific_options, parser, "drawPaperPlot" )
     drawPaperPlot ( valPlot, options, pp_specific_options )
 
+def _reproduceArg ( value ) -> str:
+    """ format one option value for the reproduce command """
+    if isinstance ( value, bool ):
+        return "true" if value else "false"
+    if value is None:
+        return "none"
+    return shlex.quote ( str ( value ) )
+
+def reproduceCommand ( valPlot, general_options : dict,
+        specific_options : dict ) -> str:
+    """ return the drawPaperPlot.py command that reproduces this plot """
+    from drawPaperPlot import defaultGeneralOptions, defaultSpecificOptions
+    generalDefaults = defaultGeneralOptions()
+    specificDefaults = defaultSpecificOptions()
+    script = os.path.join ( os.path.dirname ( os.path.abspath ( __file__ ) ),
+            "drawPaperPlot.py" )
+    script = "./drawPaperPlot.py"
+    # parts = [ "python3", shlex.quote ( script ),
+    parts = [ shlex.quote ( script ),
+              shlex.quote ( str ( valPlot.expRes.globalInfo.id ) ),
+              shlex.quote ( str ( valPlot.txName ) ),
+              shlex.quote ( str ( valPlot.axes ) ) ]
+    databasePath = getattr ( valPlot, "databasePath", None )
+    if not databasePath:
+        databasePath = general_options.get ( "databasepath" )
+    if databasePath:
+        databasePath = os.path.expanduser ( str ( databasePath ) )
+        parts += [ "-d", shlex.quote ( os.path.abspath ( databasePath ) ) ]
+    parts += [ "--dataselector", "combined" ]
+    kfactor = getattr ( valPlot, "kfactor", 1. )
+    if kfactor not in [ None, 1, 1.0 ]:
+        parts += [ "-k", str ( kfactor ) ]
+    if getattr ( valPlot, "keep", False ):
+        parts.append ( "--keep" )
+    # axis and databasepath are passed as positional/-d arguments
+    skipGeneral = { "axis", "databasepath" }
+    for key in sorted ( general_options ):
+        if key in skipGeneral or key not in generalDefaults:
+            continue
+        value = general_options[key]
+        if value == generalDefaults[key]:
+            continue
+        parts += [ f"--general-{key}", _reproduceArg ( value ) ]
+    for key in sorted ( specific_options ):
+        if key not in specificDefaults:
+            continue
+        value = specific_options[key]
+        if value == specificDefaults[key]:
+            continue
+        parts += [ f"--specific-{key}", _reproduceArg ( value ) ]
+    return " ".join ( parts )
+
 def drawPaperPlot ( valPlot, general_options : dict,
        specific_options : dict ) -> bool:
-    if not options["drawPaperPlot"]:
+    if not general_options["drawPaperPlot"]:
         return
     axis = valPlot.niceAxes
     if not "y" in axis:
@@ -175,6 +227,9 @@ def drawPaperPlot ( valPlot, general_options : dict,
     if not hasattr ( valPlot, "combine" ) or valPlot.combine == False:
         print ( f"[runValidation] this is not an sr-combine plot: skipping production of red-black paper plot." )
         return False
+
+    print ( f"[runValidation] reproduce this plot with:\n"
+            f"{reproduceCommand ( valPlot, general_options, specific_options )}" )
 
     from drawPaperPlot import PaperPlot
     plot = PaperPlot( valPlot, general_options, specific_options )
@@ -201,7 +256,7 @@ def drawPaperPlot ( valPlot, general_options : dict,
     except (RuntimeError,) as e:
         print ( f"[runValidation] RunTimeError when plotting red-and-back plot: {e}" )
         return False
-    if options["show"] and of is not None:
+    if general_options["show"] and of is not None:
         from validationHelpers import showPlot
         for f in of:
             showPlot ( f )
