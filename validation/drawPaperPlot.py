@@ -9,7 +9,7 @@ import os, random
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array
-import json, tokenize, sys
+import json, tokenize, sys, argparse
 import matplotlib.lines as mlines
 from smodels.base.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -1457,3 +1457,328 @@ class PaperPlot:
         outfiles.append ( outfile )
         return outfiles
 
+
+
+def defaultGeneralOptions () -> dict:
+    """ the default general options; keep in sync with the options dict
+    in runValidation.py """
+    return { "prettyPlots": "False", # only pretty plots, only ugly plots, or both
+             "keepTopNSRs": 0, # keep an ordered list of <n> most sensitive signal regions
+             "drawChi2Line": False, # draw an exclusion line derived from chi2 values in green
+             "limitPoints": -1, # limit the number of points to run on
+             "axis": None, # the axes to plot; if not given, take from the database
+             "style": "", # specify a plotting style
+             "plotInverse": False, # 1d plots only, plot ul(mu), not r
+             "limitsOnXSecs": True, # 1d plots only, plot ul, not r
+             "ratioPlots": True, # create ratioplots if possible
+             "bestSRPlots": True, # create best SR plots if meaningful
+             "legendplacement": "automatic", # specify how the legend is placed
+             "weightedAgreementFactor": False, # weight the points for the agreement factor?
+             "extraInfo": False, # add extra info to the plot?
+             "validationFolder": "validation", # folder that stores the validation files
+             "useFullJsonLikelihoods": False, # use the full JSON likelihood files
+             "forceOneD": False, # force the plot to be interpreted as 1d
+             "tempdir": None, # name of the tempdir
+             "timeOut": 5000, # timeout per point, in seconds
+             "pngPlots": True, # also png plots?
+             "recordPlotCreation": False, # record the plot creation?
+             "pdfPlots": True, # also pdf plots?
+             "significances": False, # significance plot instead of ul plot?
+             "continue": False, # continue old productions
+             "ratio_comment": None, # comment in ratio plot
+             "expectationType": "aposteriori",
+             "spey": False, # use spey statistics
+             "writeoutyields": False, # write out the yields, for NNs
+             "databasepath": "../../smodels-database", # SModelS database
+             "minmassgap": 2.0, # the min mass gap in SModelS
+             "minmassgapISR": 1.0, # the min mass gap for ISR in SModelS
+             "sigmacut": 0.000000001, # sigmacut in SModelS
+             "useTevatronCLsConstruction": False, # use tevatron CLs construction
+             "asimovIsExpected": False, # asimov data is expected data
+             "moreNLLs": True, # write out also nllA, nllE, nllEA
+             "maxcond": 1.0, # maximum allowed condition violation in SModelS
+             "promptWidth": 1.1, # particles with width above this value are stable
+             "drawExpected": "auto", # draw expected exclusion lines (True,False,auto)
+             "preliminary": "False", # add label 'preliminary' to plot?
+             "model": "default", # which model to use (default = mssm)
+             "show": False, # show image after producing it?
+             "interpolationType": "cubic", # interpolation type for matplotlib plots
+             "ncpus": -4, # number of processes; zero or negative subtracts from nCPU
+             "drawPaperPlot": True, # draw the red-black paper plot
+             "createSModelSExclJson": True, # create SModelS exclusion JSON file
+             "origValidationFolder": "validation", # folder for the -orig information
+             "errorsForR": False, # one-sigma band for expected UL values
+             "nnErrors": False, # get the heteroskedastic errors
+             "removeMLModels": False, # remove existing ML models, use full models
+             # runValidation derives this from its config file (None means on demand)
+             "generateData": None }
+
+
+def defaultSpecificOptions () -> dict:
+    """ the default PaperPlot-specific options; keep in sync with
+    pp_specific_options in runValidation.py """
+    return { "drawbestsr": False, "drawobsofficialpm1": False,
+             "drawexpofficialpm1": True, "drawobspm1": False,
+             "title_fontsize": 12, "sort_segments": True,
+             "sort_within_segments": False,
+             "max_y": "auto", "min_y": "auto", "min_x": "auto", "max_x": "auto",
+             "style": "default", "remove_segments": None,
+             "addlogo": True, "show_points": False, "pdf_also": False }
+
+
+def _str2bool ( value ):
+    """ convert a command line value to a bool """
+    if isinstance ( value, bool ):
+        return value
+    svalue = str ( value ).strip().lower()
+    if svalue in [ "true", "yes", "1", "on" ]:
+        return True
+    if svalue in [ "false", "no", "0", "off" ]:
+        return False
+    raise argparse.ArgumentTypeError ( f"expected a boolean, got '{value}'" )
+
+
+def _str2drawExpected ( value ):
+    """ convert the drawExpected option, which also accepts 'auto' """
+    svalue = str ( value ).strip().lower()
+    if svalue in [ "true", "yes", "1" ]:
+        return True
+    if svalue in [ "false", "no", "0" ]:
+        return False
+    return value
+
+
+def _str2generateData ( value ):
+    """ convert the generateData option (True, False or None/ondemand) """
+    if value is None or isinstance ( value, bool ):
+        return value
+    svalue = str ( value ).strip().lower()
+    if svalue in [ "true", "yes", "1" ]:
+        return True
+    if svalue in [ "false", "no", "0" ]:
+        return False
+    if svalue in [ "none", "ondemand" ]:
+        return None
+    raise argparse.ArgumentTypeError (
+            f"expected a boolean or 'ondemand', got '{value}'" )
+
+
+def _addOptionArguments ( ap, prefix : str, defaults : dict,
+        description : str ) -> None:
+    """ add one command line argument per option in defaults """
+    group = ap.add_argument_group ( description )
+    for key, default in defaults.items():
+        kwargs = { "dest": f"{prefix}_{key}", "default": default,
+                   "help": f"default: {default!r}" }
+        if key == "drawExpected":
+            kwargs.update ( type = _str2drawExpected, metavar = "BOOL|auto" )
+        elif key == "generateData":
+            kwargs.update ( type = _str2generateData, nargs = "?",
+                    const = True, metavar = "BOOL|ondemand" )
+        elif isinstance ( default, bool ):
+            kwargs.update ( type = _str2bool, nargs = "?", const = True,
+                    metavar = "BOOL" )
+        elif isinstance ( default, int ):
+            kwargs.update ( type = int, metavar = "INT" )
+        elif isinstance ( default, float ):
+            kwargs.update ( type = float, metavar = "FLOAT" )
+        else:
+            kwargs.update ( type = str, metavar = "STR" )
+        group.add_argument ( f"--{prefix}-{key}", **kwargs )
+
+
+def _matchingTxnames ( expRes, txname : str ) -> list:
+    """ return the txname objects of expRes that match txname, without duplicates """
+    txnames, seen = [], set()
+    for tx in expRes.getTxNames():
+        if tx.txName != txname or tx.txName in seen:
+            continue
+        txnames.append ( tx )
+        seen.add ( tx.txName )
+    return txnames
+
+
+def _axesForTxname ( tx ) -> list:
+    """ return the axes of a TxName object, using the same precedence as
+    runValidation """
+    if hasattr ( tx, "_axes" ):
+        return tx._axes if isinstance ( tx._axes, list ) else [ tx._axes ]
+    if hasattr ( tx, "axes" ):
+        return tx.axes if isinstance ( tx.axes, list ) else [ tx.axes ]
+    if hasattr ( tx, "axesMap" ):
+        return tx.axesMap if isinstance ( tx.axesMap, list ) else [ tx.axesMap ]
+    return []
+
+
+def _normalizeAxes ( axes ):
+    """ standardize an axes string the same way runValidation does """
+    try:
+        from sympy import var
+        x, y, z, w = var ( "x y z w" )
+        return str ( eval ( str ( axes ) ) )
+    except Exception:
+        return str ( axes ).strip()
+
+
+def _drawPaperPlot ( valPlot, general_options : dict,
+        specific_options : dict ) -> bool:
+    """ draw the paper plot for an existing validation plot; this mirrors
+    runValidation.drawPaperPlot """
+    if not general_options.get ( "drawPaperPlot", True ):
+        return False
+    axis = valPlot.niceAxes
+    if not "y" in axis:
+        print ( "[drawPaperPlot] axis is 1d, skipping drawPaperPlot" )
+        return False
+    if not hasattr ( valPlot, "combine" ) or valPlot.combine == False:
+        print ( "[drawPaperPlot] this is not an sr-combine plot: skipping "
+                "production of red-black paper plot." )
+        return False
+
+    plot = PaperPlot ( valPlot, general_options, specific_options )
+    if "off" in valPlot.txName:
+        ## add onshell exclusion curves
+        onshellTxName = valPlot.txName.replace ( "off", "" )
+        obs = valPlot.getOfficialCurves ( True, False, onshellTxName )
+        doTransformCoords = False
+        if len ( obs ) == 0 and "x - y" in valPlot.axes:
+            axes = valPlot.axes.replace ( "x - y", "y" )
+            obs = valPlot.getOfficialCurves ( True, False, onshellTxName, axes )
+            doTransformCoords = True
+        valPlot.addToOfficialCurves ( obs, doTransformCoords )
+        exp = valPlot.getOfficialCurves ( True, True, onshellTxName )
+        if len ( exp ) == 0 and "x - y" in valPlot.axes:
+            axes = valPlot.axes.replace ( "x - y", "y" )
+            exp = valPlot.getOfficialCurves ( True, True, onshellTxName, axes )
+        valPlot.addToOfficialCurves ( exp, doTransformCoords )
+
+    try:
+        of = plot.draw()
+    except ( RuntimeError, ) as e:
+        print ( f"[drawPaperPlot] RunTimeError when plotting red-and-black "
+                f"plot: {e}" )
+        return False
+    if general_options.get ( "show" ) and of is not None:
+        from validationHelpers import showPlot
+        for f in of:
+            showPlot ( f )
+    return True
+
+
+def _dataSelection ( dataselector : str ):
+    """ translate a runValidation-style data selector into database filters """
+    if dataselector == "combined":
+        return [ "efficiencyMap" ], [ "all" ], True
+    if dataselector == "efficiencyMap":
+        return [ "efficiencyMap" ], [ "all" ], False
+    if dataselector == "upperLimit":
+        return [ "upperLimit" ], [ "all" ], False
+    if dataselector == "all":
+        return [ "all" ], [ "all" ], False
+    return [ "efficiencyMap" ], [ x.strip() for x in dataselector.split ( "," ) ], False
+
+
+if __name__ == "__main__":
+    generalDefaults = defaultGeneralOptions()
+    specificDefaults = defaultSpecificOptions()
+    ap = argparse.ArgumentParser (
+            description = "Draw the red-black paper plot for a validation plot.",
+            formatter_class = argparse.RawDescriptionHelpFormatter,
+            epilog = "General and PaperPlot-specific options can be set with "
+                     "--general-<name> and --specific-<name>. Their defaults "
+                     "are the same as in runValidation.py." )
+    ap.add_argument ( "analysis", help = "analysis id, e.g. ATLAS-SUSY-2019-09" )
+    ap.add_argument ( "txname", help = "txname, e.g. TChiWZoff" )
+    ap.add_argument ( "axes", nargs = "?", default = None,
+            help = "axes string; if omitted, all axes of the txname are used" )
+    ap.add_argument ( "-d", "--database", default = generalDefaults["databasepath"],
+            help = "path to the SModelS database folder or pickle file "
+                   f"[{generalDefaults['databasepath']}]" )
+    ap.add_argument ( "-D", "--dataselector", default = "combined",
+            choices = [ "combined", "efficiencyMap", "upperLimit", "all" ],
+            help = "database selection, as in runValidation [combined]" )
+    ap.add_argument ( "-k", "--kfactor", type = float, default = 1.0,
+            help = "k-factor [1.0]" )
+    ap.add_argument ( "-f", "--force-build", action = "store_true",
+            help = "force rebuilding the database pickle from the text files" )
+    ap.add_argument ( "--keep", action = "store_true",
+            help = "keep temporary directories" )
+    ap.add_argument ( "-v", "--verbose", default = "info",
+            choices = [ "error", "warning", "info", "debug" ],
+            help = "logging verbosity [info]" )
+    _addOptionArguments ( ap, "general", generalDefaults, "general options" )
+    _addOptionArguments ( ap, "specific", specificDefaults,
+            "PaperPlot-specific options" )
+    args = ap.parse_args()
+
+    general_options = { key : getattr ( args, f"general_{key}" )
+                        for key in generalDefaults }
+    general_options["databasepath"] = args.database
+    specific_options = { key : getattr ( args, f"specific_{key}" )
+                         for key in specificDefaults }
+
+    from smodels.base import smodelsLogging
+    smodelsLogging.setLogLevel ( args.verbose )
+
+    from smodels.experiment.databaseObj import Database
+    import validationObjs, graphsValidationObjs
+    from validationHelpers import getAxisType
+
+    databasePath = os.path.expanduser ( args.database )
+    buPath = databasePath
+    if os.path.isdir ( databasePath ) and \
+            os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
+        buPath = os.path.join ( databasePath, "validation.pcl" )
+    force_load = "txt" if args.force_build else None
+    db = Database ( buPath, force_load, subpickle = True )
+
+    dataTypes, datasetIDs, combine = _dataSelection ( args.dataselector )
+    expResList = db.getExpResults ( [ args.analysis ], datasetIDs,
+            [ args.txname ], dataTypes, useNonValidated = True )
+    if not expResList:
+        print ( f"[drawPaperPlot] no experimental result found for "
+                f"{args.analysis}:{args.txname}" )
+        sys.exit ( 1 )
+    if not combine:
+        print ( "[drawPaperPlot] this is not an sr-combine plot: skipping "
+                "production of red-black paper plot." )
+        sys.exit ( 0 )
+
+    nplots = 0
+    for expRes in expResList:
+        txnames = _matchingTxnames ( expRes, args.txname )
+        if not txnames:
+            continue
+        for tx in txnames:
+            axis = args.axes
+            if axis is None:
+                axis = general_options.get ( "axis" )
+            if axis not in [ None, "None", "" ]:
+                axesList = [ axis ]
+            else:
+                axesList = _axesForTxname ( tx )
+            seenAxes = set()
+            for axes in axesList:
+                axes = _normalizeAxes ( axes )
+                if axes in seenAxes:
+                    continue
+                seenAxes.add ( axes )
+                plotClass = graphsValidationObjs.ValidationPlot \
+                        if getAxisType ( axes ) == "v3" \
+                        else validationObjs.ValidationPlot
+                localOptions = general_options.copy()
+                try:
+                    valPlot = plotClass ( expRes, tx.txName, axes, db,
+                            slhadir = None, options = localOptions,
+                            kfactor = args.kfactor, namedTarball = None,
+                            keep = args.keep, combine = combine )
+                except Exception as e:
+                    print ( f"[drawPaperPlot] could not create validation "
+                            f"plot for {args.txname}:{axes}: {e}" )
+                    continue
+                if _drawPaperPlot ( valPlot, localOptions, specific_options ):
+                    nplots += 1
+    if nplots == 0:
+        print ( f"[drawPaperPlot] no paper plot produced for "
+                f"{args.analysis}:{args.txname}" )
+        sys.exit ( 1 )
