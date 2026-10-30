@@ -781,18 +781,73 @@ class PaperPlot:
                 nums[mapping["type"]]+=1
         return nums
 
+    def getRegionNamesForTxname ( self, expRes, txname : str ) -> list[str]:
+        """ find the region sets that contain datasets for this txname """
+        gI = expRes.globalInfo
+        if not hasattr ( gI, "regionSets" ):
+            return []
+        regionNames = set()
+        for dataset in expRes.datasets:
+            if txname not in [ str(tx) for tx in dataset.txnameList ]:
+                continue
+            dataId = str(dataset.dataInfo.dataId)
+            regionNames.add ( dataId )
+            if hasattr ( gI, "regionMappings" ):
+                for regionName, mapping in gI.regionMappings.items():
+                    aliases = [ str(v) for v in mapping.values() if v is not None ]
+                    if dataId in aliases:
+                        regionNames.add ( regionName )
+        return [ name for name in gI.regionSets.keys()
+                 if regionNames.intersection ( gI.regionSets[name] ) ]
+
     def addOnshellCounts ( self, validationPlot, nums, txname, axes_on ):
         """ its a combined onshell + offshell plot,
         so we need to add the regions from the onshell """
-        return
-        print ( f"adding onshell counts from {txname} {nums}" )
-        nums["num_sr"]+=20
-        nums["num_cr"]+=3
+        offshellRegionName = nums.get ( "regionName" )
+        if offshellRegionName is None:
+            ## the offshell count was not attributed to a single region set,
+            ## so adding onshell regions could count regions twice
+            return
+        db = getattr ( validationPlot, "db", None )
+        if db is None:
+            self.error ( f"cannot determine onshell region counts for {txname}: no database" )
+            return
+        gI = validationPlot.expRes.globalInfo
+        expResults = db.getExpResults ( analysisIDs = [ gI.id ],
+                txnames = [ txname ], useNonValidated = True )
+        if not expResults:
+            self.error ( f"cannot determine onshell region counts for {txname}: no experimental result found" )
+            return
+        onshellExpRes = expResults[0]
+        for expRes in expResults:
+            if expRes.path == validationPlot.expRes.path:
+                onshellExpRes = expRes
+                break
+        else:
+            ## no result in the same folder, try the same data type
+            if validationPlot.expRes.datasets:
+                dataType = validationPlot.expRes.datasets[0].dataInfo.dataType
+                for expRes in expResults:
+                    if expRes.datasets and expRes.datasets[0].dataInfo.dataType == dataType:
+                        onshellExpRes = expRes
+                        break
+        onshellRegionNames = self.getRegionNamesForTxname ( onshellExpRes, txname )
+        if not onshellRegionNames:
+            self.error ( f"cannot determine onshell region counts for {txname}" )
+            return
+        for regionName in onshellRegionNames:
+            if regionName == offshellRegionName:
+                ## on- and offshell use the same region set, already counted
+                continue
+            counts = self.countRegions ( onshellExpRes.globalInfo, regionName )
+            nums["num_sr"] += counts["SR"]
+            nums["num_cr"] += counts["CR"]
 
     def countDataSets ( self, validationPlot ) -> dict:
         gI = validationPlot.expRes.globalInfo
         num_sr, num_cr = 0, 0
         ver = "1bin"
+        regionName = None
         if hasattr ( gI, "statModels" ):
             ver = "(pyhf)" # how to differentiate between simplified and full?
             for srSetName,model_types in gI.statModels.items():
@@ -808,7 +863,6 @@ class PaperPlot:
                 g_dict [ sname ] = region
         if hasattr ( gI, "statModels" ):
             statModel = self.getStatModel ( validationPlot )
-            regionName = None
             for sM,models in gI.statModels.items():
                 for model in models:
                     if statModel == model[1]: ## we found it!
@@ -819,7 +873,8 @@ class PaperPlot:
             num_cr += nums["CR"]
         if hasattr ( validationPlot.expRes.datasets[0].dataInfo, "thirdMoment" ):
             ver = "(SLv2)"
-        ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr }
+        ret = { "ver": ver, "num_sr": num_sr, "num_cr": num_cr,
+                "regionName": regionName }
         return ret
 
     def getRanges ( self, lines ):
@@ -994,7 +1049,7 @@ class PaperPlot:
         ver = ""
 
         nums = self.countDataSets ( validationPlot )
-        if txname != txnameOff:
+        if offshell and txname != txnameOff:
             self.addOnshellCounts ( validationPlot, nums, txname, axes_on )
         ver, num_sr, num_cr = nums["ver"], nums["num_sr"], nums["num_cr"]
 
