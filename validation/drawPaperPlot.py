@@ -97,6 +97,160 @@ class PaperPlot:
         return poly
 
 
+    def _normalizeSegments ( self, x_vals, y_vals ) -> tuple:
+        """ return curves in the canonical form of a list of segments """
+        if len ( x_vals ) == 0:
+            return [], []
+        if not isinstance ( x_vals[0], ( list, tuple, np.ndarray ) ):
+            return [ list ( x_vals ) ], [ list ( y_vals ) ]
+        return x_vals, y_vals
+
+
+    def _maxStep ( self, x_vals, y_vals ) -> float:
+        """ largest distance between consecutive points inside a segment """
+        max_step = 0.
+        for x_val, y_val in zip ( x_vals, y_vals ):
+            for i in range ( 1, len ( x_val ) ):
+                step = np.hypot ( x_val[i] - x_val[i-1],
+                                  y_val[i] - y_val[i-1] )
+                max_step = max ( max_step, float ( step ) )
+        return max_step
+
+
+    def _bandJumpThreshold ( self, curves ) -> float:
+        """ threshold above which a jump between points is a real
+        discontinuity and not just missing interpolation points.
+        Disconnected curve pieces (e.g. on- and offshell parts) should
+        never be connected by the error band. """
+        min_x, max_x = float ( "inf" ), -float ( "inf" )
+        min_y, max_y = float ( "inf" ), -float ( "inf" )
+        max_step = 0.
+        for x_vals, y_vals in curves:
+            max_step = max ( max_step, self._maxStep ( x_vals, y_vals ) )
+            for x_val, y_val in zip ( x_vals, y_vals ):
+                for x, y in zip ( x_val, y_val ):
+                    min_x, max_x = min ( min_x, x ), max ( max_x, x )
+                    min_y, max_y = min ( min_y, y ), max ( max_y, y )
+        if min_x == float ( "inf" ):
+            return 0.
+        span = max ( max_x - min_x, max_y - min_y )
+        return max ( 0.1 * span, 5. * max_step, 1e-9 )
+
+
+    def _splitIntoChunks ( self, x_vals, y_vals, threshold : float ) -> list:
+        """ concatenate the segments and split at discontinuities """
+        all_x, all_y = [], []
+        for x_val, y_val in zip ( x_vals, y_vals ):
+            all_x.extend ( x_val )
+            all_y.extend ( y_val )
+        if len ( all_x ) == 0:
+            return []
+        chunks = []
+        cur_x, cur_y = [ all_x[0] ], [ all_y[0] ]
+        for i in range ( 1, len ( all_x ) ):
+            step = np.hypot ( all_x[i] - all_x[i-1],
+                              all_y[i] - all_y[i-1] )
+            if step > threshold:
+                if len ( cur_x ) > 1:
+                    chunks.append ( ( cur_x, cur_y ) )
+                cur_x, cur_y = [ all_x[i] ], [ all_y[i] ]
+            else:
+                cur_x.append ( all_x[i] )
+                cur_y.append ( all_y[i] )
+        if len ( cur_x ) > 1:
+            chunks.append ( ( cur_x, cur_y ) )
+        return chunks
+
+
+    def _chunkCenter ( self, chunk ) -> tuple:
+        x_val, y_val = chunk
+        return float ( np.mean ( x_val ) ), float ( np.mean ( y_val ) )
+
+
+    def _chunkDistance ( self, chunk1, chunk2 ) -> float:
+        x1, y1 = self._chunkCenter ( chunk1 )
+        x2, y2 = self._chunkCenter ( chunk2 )
+        return np.hypot ( x1 - x2, y1 - y2 )
+
+
+    def _matchChunks ( self, chunks, references ) -> list:
+        """ pair curve chunks with the corresponding reference chunks """
+        if len ( chunks ) == 0 or len ( references ) == 0:
+            return []
+        if len ( chunks ) == len ( references ):
+            return list ( zip ( sorted ( chunks, key = self._chunkCenter ),
+                                sorted ( references, key = self._chunkCenter ) ) )
+        pairs, used = [], set ()
+        for chunk in sorted ( chunks, key = self._chunkCenter ):
+            available = [ ref for ref in references if id ( ref ) not in used ]
+            pool = available if available else references
+            reference = min ( pool,
+                    key = lambda ref: self._chunkDistance ( chunk, ref ) )
+            used.add ( id ( reference ) )
+            pairs.append ( ( chunk, reference ) )
+        # make sure every reference chunk gets at least one band
+        for reference in references:
+            if id ( reference ) in used:
+                continue
+            chunk = min ( chunks,
+                    key = lambda chunk: self._chunkDistance ( chunk, reference ) )
+            pairs.append ( ( chunk, reference ) )
+        return pairs
+
+
+    def _orientChunk ( self, chunk, reference ) -> tuple:
+        """ orient the reference chunk in the same direction as chunk """
+        x_val, y_val = chunk
+        ref_x, ref_y = reference
+        def dist ( x1, y1, x2, y2 ):
+            return np.hypot ( x1 - x2, y1 - y2 )
+        same = dist ( x_val[0], y_val[0], ref_x[0], ref_y[0] ) + \
+               dist ( x_val[-1], y_val[-1], ref_x[-1], ref_y[-1] )
+        swapped = dist ( x_val[0], y_val[0], ref_x[-1], ref_y[-1] ) + \
+                  dist ( x_val[-1], y_val[-1], ref_x[0], ref_y[0] )
+        if swapped < same:
+            return list ( ref_x ) [::-1], list ( ref_y ) [::-1]
+        return reference
+
+
+    def _bandVertices ( self, chunk, reference ) -> np.ndarray:
+        """ polygon between a curve chunk and its reference chunk """
+        x_val, y_val = chunk
+        ref_x, ref_y = reference
+        x_vals = list ( x_val ) + list ( ref_x ) [::-1]
+        y_vals = list ( y_val ) + list ( ref_y ) [::-1]
+        return np.column_stack ( [ x_vals, y_vals ] )
+
+
+    def fill_between_polygons ( self, ax, polygons : list, **kwargs ):
+        """ fill several polygons as one compound path, so overlapping
+        polygons do not get a darker alpha in their overlap region """
+        from matplotlib.path import Path
+        from matplotlib.patches import PathPatch
+        paths = []
+        for verts in polygons:
+            verts = np.asarray ( verts, dtype = float )
+            if len ( verts ) < 3:
+                continue
+            area = .5 * np.sum ( verts[:,0] * np.roll ( verts[:,1], -1 ) -
+                                 np.roll ( verts[:,0], -1 ) * verts[:,1] )
+            if area < 0:
+                verts = verts[::-1]
+            verts = np.vstack ( [ verts, verts[0] ] )
+            codes = np.full ( len ( verts ), Path.LINETO, dtype = np.uint8 )
+            codes[0] = Path.MOVETO
+            codes[-1] = Path.CLOSEPOLY
+            paths.append ( Path ( verts, codes ) )
+        if len ( paths ) == 0:
+            return None
+        path = paths[0] if len ( paths ) == 1 else \
+                Path.make_compound_path ( *paths )
+        poly = PathPatch ( path, **kwargs )
+        ax.add_patch ( poly )
+        ax.autoscale_view()
+        return poly
+
+
     def fetchOfficialExclusionLines ( self, axes ) -> dict :
         """ fetch the curves and convert to sahanas format """
         ret = {}
@@ -278,19 +432,23 @@ class PaperPlot:
 
     def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
                    label : str ):
-        """ plot lines """
+        """ plot lines, return the actually plotted coordinates """
         if len(x_vals)==0:
-            return
+            return x_vals, y_vals
         if type(x_vals[0]) == list:
+            new_x, new_y = [], []
             for x_val, y_val in zip ( x_vals, y_vals ):
                 x_val, y_val = self.removeSegments ( x_val, y_val, label = label )
+                new_x.append ( x_val )
+                new_y.append ( y_val )
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                          label = label )
                 label = ""
-            return
+            return new_x, new_y
         x_vals, y_vals = self.removeSegments ( x_vals, y_vals, label = label )
         ax.plot( x_vals, y_vals,color=color, linestyle=linestyle,
                  label = label )
+        return x_vals, y_vals
 
     def findAxisInExclFile ( self, axis : str, exclfile,
             txname : str, type : str ) -> dict:
@@ -593,14 +751,15 @@ class PaperPlot:
 
     def plotGammaLines ( self, x_vals, y_vals, ax, label, y_label,
            linestyle : Optional[str]=None, color : Optional[str]=None ):
-        """ plot the lines in x_vals and y_vals, but heed widths """
+        """ plot the lines in x_vals and y_vals, but heed widths;
+        return the actually plotted coordinates """
         y_vals = self.add_jitter ( y_vals, self.addJitter )
         if color == None:
             color = "red"
         x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
         if linestyle == None:
             linestyle="solid"
-        self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
+        return self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
     def sortSegments ( self, x_vals, y_vals ) -> tuple:
         """ sort the segments, the ones with the lower x values come first """
@@ -661,7 +820,8 @@ class PaperPlot:
 
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
             y_label, color : Optional[str] = None,
-            alpha : float = .4 ):
+            alpha : float = .4,
+            center_x_vals = None, center_y_vals = None ):
         if len(x_vals1)==0:
             return
         x_vals1, y_vals1 = self.sortArbitrarily ( x_vals1, y_vals1, "1" )
@@ -678,29 +838,47 @@ class PaperPlot:
         if self.specific_options["sort_within_segments"]:
             x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
-        drawBand = True
-        indices = list ( range(max(len(x_vals1),len(x_vals2))) )
-        if not drawBand:
-            indices = []
-        x1s, x2s, y1s, y2s = np.array([]), np.array([]), np.array([]), np.array([])
-        for idx in indices:
-            #if not idx in x_vals2:
-            #    continue
-            if idx < len(x_vals1):
-                x1 = np.array ( x_vals1[idx] )
-                y1 = np.array ( y_vals1[idx] )
-                x1s = np.concatenate ( [ x1s, x1 ] )
-                y1s = np.concatenate ( [ y1s, y1 ] )
+        x_vals1, y_vals1 = self._normalizeSegments ( x_vals1, y_vals1 )
+        x_vals2, y_vals2 = self._normalizeSegments ( x_vals2, y_vals2 )
+        curves = [ ( x_vals1, y_vals1 ), ( x_vals2, y_vals2 ) ]
+        center_chunks = []
+        if center_x_vals is not None and center_y_vals is not None:
+            center_x_vals, center_y_vals = \
+                    self._normalizeSegments ( center_x_vals, center_y_vals )
+            curves.append ( ( center_x_vals, center_y_vals ) )
+        threshold = self._bandJumpThreshold ( curves )
+        chunks1 = self._splitIntoChunks ( x_vals1, y_vals1, threshold )
+        chunks2 = self._splitIntoChunks ( x_vals2, y_vals2, threshold )
+        if center_x_vals is not None and center_y_vals is not None:
+            center_chunks = \
+                    self._splitIntoChunks ( center_x_vals, center_y_vals,
+                                            threshold )
+        polygons = []
+        if len ( center_chunks ) > 0:
+            # Anchor the band on the plotted central line. This also makes
+            # sure that the line is always enclosed, even if the +/-1 sigma
+            # curves cross it due to interpolation.
+            for side_chunks in [ chunks1, chunks2 ]:
+                for chunk, center_chunk in \
+                        self._matchChunks ( side_chunks, center_chunks ):
+                    center_chunk = self._orientChunk ( chunk, center_chunk )
+                    polygons.append ( self._bandVertices ( chunk, center_chunk ) )
+        else:
+            # No central line available: pair up the two uncertainty curves
+            # directly, again without connecting discontinuous pieces.
+            for chunk1, chunk2 in self._matchChunks ( chunks1, chunks2 ):
+                chunk2 = self._orientChunk ( chunk1, chunk2 )
+                polygons.append ( self._bandVertices ( chunk1, chunk2 ) )
+        poly = self.fill_between_polygons ( ax, polygons,
+                   facecolor = color, alpha = alpha, edgecolor = "none" )
 
-            if idx < len(x_vals2):
-                x2 = np.array ( x_vals2[idx] )
-                y2 = np.array ( y_vals2[idx] )
+        if "show_points" in self.specific_options and \
+                self.specific_options["show_points"]:
+            for x_val, y_val in zip ( x_vals1, y_vals1 ):
+                ax.scatter ( x_val, y_val, s = 5, c = color )
+            for x_val, y_val in zip ( x_vals2, y_vals2 ):
+                ax.scatter ( x_val, y_val, s = 5, c = color )
 
-                x2s = np.concatenate ( [ x2s, x2 ] )
-                y2s = np.concatenate ( [ y2s, y2 ] )
-
-        poly = self.fill_between_polylines(ax, x1s, y1s, x2s, y2s,
-                   facecolor=color, alpha=alpha, edgecolor=None )
 
         drawContoursAlso = False
         if drawContoursAlso:
@@ -1192,7 +1370,8 @@ class PaperPlot:
                 # print("yes gamma 3")
                 sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
                 sec_ax.set_yscale('log')
-            self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
+            x_vals, y_vals = self.plotLines ( ax, x_vals, y_vals, "red",
+                    "solid", label )
 
             if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl and \
                     self.specific_options["drawobspm1"]==True:
@@ -1221,7 +1400,8 @@ class PaperPlot:
                 #self.plotLines ( ax, x_valsm1, y_valsm1, "red", "dashed",
                 #        label )
                 self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
-                        None, y_label, color = "tab:red" )
+                        None, y_label, color = "tab:red",
+                        center_x_vals = x_vals, center_y_vals = y_vals )
                 # import sys, IPython; IPython.embed( colors = "neutral" ); sys.exit()
 
         if orig_excl not in [ None, [] ] and "obsExclusion" in orig_excl:
@@ -1408,15 +1588,16 @@ class PaperPlot:
             if cr_is == "orig":
                 label = f"SModelS: orig pyhf"
                 # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
-            self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
-                   linestyle= None, color = "blue" )
+            x_vals, y_vals = self.plotGammaLines ( x_vals, y_vals, ax, label,
+                   y_label, linestyle= None, color = "blue" )
             if "expExclusionP1" in orig_excl and "expExclusionM1" in orig_excl:
                 x_vals1 = orig_excl["expExclusionP1"]["x"]
                 y_vals1 = orig_excl["expExclusionP1"]["y"]
                 x_vals2 = orig_excl["expExclusionM1"]["x"]
                 y_vals2 = orig_excl["expExclusionM1"]["y"]
                 self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
-                        None, y_label, color = "lightblue" )
+                        None, y_label, color = "lightblue",
+                        center_x_vals = x_vals, center_y_vals = y_vals )
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
@@ -1519,7 +1700,7 @@ def defaultSpecificOptions () -> dict:
     pp_specific_options in runValidation.py """
     return { "drawbestsr": False, "drawobsofficialpm1": False,
              "drawexpofficialpm1": True, "drawobspm1": False,
-             "title_fontsize": 12, "sort_segments": True,
+             "title_fontsize": 12, "sort_segments": False,
              "sort_within_segments": False,
              "max_y": "auto", "min_y": "auto", "min_x": "auto", "max_x": "auto",
              "style": "default", "remove_segments": None,
