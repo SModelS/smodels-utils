@@ -381,6 +381,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
         options["folder2"] = opts["origValidationFolder"]
     options["comment"]=opts["ratio_comment"]
     sdbpath = dbpath.replace(f"/scratch-cbe{os.environ['HOME']}","~").replace(f"{os.environ['HOME']}","~")
+    sdbpath = sdbpath.replace(f"/scratch{os.environ['HOME']}","~")
     cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
     if "folder1" in options and options["folder1"]!="validation":
         cmd += f" -f1 {options['folder1']}"
@@ -410,6 +411,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
 
     pathToValDir = os.path.dirname ( os.path.realpath ( __file__ ) )
     pathToValDir = pathToValDir.replace( f'/scratch-cbe{os.environ["HOME"]}', "~" )
+    pathToValDir = pathToValDir.replace( f'/scratch{os.environ["HOME"]}', "~" )
     pathToValDir = pathToValDir.replace( os.environ["HOME"], "~" )
     ratioscriptfile = f"{os.path.dirname(datafile)}/ratios_{txname}_{axis}.sh"
     if not os.path.exists ( ratioscriptfile ) or os.stat ( ratioscriptfile ).st_size < 10:

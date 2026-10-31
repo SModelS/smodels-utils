@@ -281,9 +281,11 @@ def createWalkerPythonScript ( rvars : dict ):
         os.mkdir ( slurmdir )
     runner = f"{slurmdir}/WALKER_{nmin}.py"
     with open ( runner, "wt" ) as f:
-        f.write ( "#!/usr/bin/env python3\n\n" )
+        f.write ( f"#!{os.environ['HOME']}/.venvs/default/bin/python3\n\n" )
+        # f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
-        vpath = "../.venvs/314/lib/python3.14/site-packages/"
+        vpath = "../.venvs/default/lib/python3.13/site-packages/"
+        # vpath = "../.venvs/314/lib/python3.14/site-packages/"
         venvpath = os.path.abspath ( f"{codedir}/{vpath}" )
         f.write ( f"sys.path.insert(0,'{venvpath}')\n" )
         f.write ( f"sys.path.insert(0,'{codedir}/smodels/')\n" )
