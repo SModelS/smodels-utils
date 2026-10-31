@@ -29,7 +29,7 @@ def main():
         nr = oom [ oom.find("starting")+9:oom.find(" @ ") ]
         try:
             nr = int(nr)
-            line = f"./slurm.py -R {rundir} -n {int(nr)} -N {int(nr + 1)}"
+            line = f"./slurm_walk.py -R {rundir} -n {int(nr)} -N {int(nr + 1)}"
             g.write ( f"{line}\n" )
             line = f"rm -rf /scratch-cbe/users/{os.environ['USER']}/outputs/%s" % oof
             g.write ( f"{line}\n\n" )

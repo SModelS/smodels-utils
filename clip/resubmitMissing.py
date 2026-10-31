@@ -26,7 +26,7 @@ def resubmit ( keyw ):
     f=open("submit.sh","wt")
     f.write ( "#!/bin/sh\n" )
     for i in missing:
-        f.write ( f"./slurm.py -R rundir.history -n {int(i)} -N {int(i + 1)}\n" )
+        f.write ( f"./slurm_walk.py -R rundir.history -n {int(i)} -N {int(i + 1)}\n" )
     f.close()
     os.chmod( "submit.sh", 0o755 ) # 1877 is 0o755
 

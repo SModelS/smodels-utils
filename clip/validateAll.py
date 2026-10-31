@@ -42,7 +42,7 @@ class Validator:
 
     def writeSingleTopo ( self, topo, ana, anaType ):
         # print ( "ana", ana, "topo", topo, "type", anaType )
-        exe="./slurm.py"
+        exe="./slurm_validate.py"
         inifile = "combined_1cpu.ini"
         if anaType == "UL":
             inifile = "ul.ini"
