@@ -7,6 +7,9 @@ from typing import Union
 import os
 import subprocess
 
+SQUEUE_FORMAT = "%.8i %.9P %.80j %.8u %.10T %.10M %.6D %R"
+SQUEUE = f'squeue --me -o "{SQUEUE_FORMAT}" --sort=-i'
+
 def readJobIds():
     """ read the job ids from jobs files """
     jobids = set()

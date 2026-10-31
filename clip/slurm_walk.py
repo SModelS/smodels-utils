@@ -10,6 +10,7 @@ sys.path.insert(0,os.path.expanduser("~/git/protomodels"))
 import hashlib, json, subprocess
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, List, Tuple
+from cliphelpers import SQUEUE
 
 from ptools.sparticleNames import SParticleNames
 namer = SParticleNames()
@@ -900,7 +901,7 @@ def logCall ():
     f.close()
 
 def cancelAllRunners():
-    o = subprocess.getoutput ( "slurm q | grep WALKER" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep WALKER" )
     lines = o.split("\n")
     cancelled = []
     for line in lines:
@@ -922,7 +923,7 @@ def cancelAllRunners():
 
 def getMaxJobId() -> int:
     """ get the highest job id """
-    o = subprocess.getoutput ( "slurm q | grep WALKER" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep WALKER" )
     lines = o.split("\n")
     nmax = 0
     for line in lines:
@@ -934,7 +935,7 @@ def getMaxJobId() -> int:
 
 def getMinJobId() -> int:
     """ get the lowest job id """
-    o = subprocess.getoutput ( "slurm q | grep WALKER" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep WALKER" )
     lines = o.split("\n")
     nmin = 1e99
     for line in lines:
@@ -984,7 +985,7 @@ def cancelRangeOfRunners( jrange : str ):
             cancelled.append ( i )
         print ( f"{intro}cancelled {', '.join(map(str,cancelled))}" )
         return
-    o = subprocess.getoutput ( "slurm q | grep WALKER" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep WALKER" )
     lines = o.split("\n")
     running = []
     for line in lines:

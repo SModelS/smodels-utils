@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess, argparse
+from cliphelpers import SQUEUE
 
 def main():
     import argparse
@@ -37,7 +38,7 @@ def main():
         grp = "| grep SERVER"
     if args.run:
         grp = "| grep RUN_"
-    a= subprocess.getoutput ( f"slurm q {grp}" )
+    a= subprocess.getoutput ( f"{SQUEUE} {grp}" )
     if args.dry_run:
         print ( "dry run, but here is what I would do:" )
     print ( "cancelling", end=" " )

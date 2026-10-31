@@ -4,10 +4,11 @@
 
 import subprocess, os
 from typing import Dict
+from cliphelpers import SQUEUE
 
 def getTempDirs() -> Dict:
     import subprocess
-    o = subprocess.getoutput ( "slurm q | grep _V" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _V" )
     lines = o.split("\n")
     D={}
     for line in lines:

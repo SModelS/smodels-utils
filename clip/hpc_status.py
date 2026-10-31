@@ -6,6 +6,7 @@
 import glob, os, time
 from typing import Tuple, Dict
 from smodels_utils.helper.terminalcolors import *
+from cliphelpers import SQUEUE
 
 def getAnalysisTxName ( directory : os.PathLike ) -> Tuple:
     parfile = os.path.join ( directory, "results", "parameter.ini" )
@@ -55,7 +56,7 @@ def sort ( dirs : list ) -> list:
 
 def getJobIds() -> Dict:
     import subprocess
-    o = subprocess.getoutput ( "slurm q | grep _V" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _V" )
     if "not found" in o:
         return {}
     lines = o.split("\n")

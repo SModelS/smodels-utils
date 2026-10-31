@@ -8,6 +8,7 @@ the script to start all results validation jobs with
 import tempfile, argparse, stat, os, math, sys, time, glob, subprocess, shutil
 from smodels_utils.helper.terminalcolors import *
 from typing import Union, Dict
+from cliphelpers import SQUEUE
 
 codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
 outputsdir = f"/scratch-cbe/users/{os.environ['USER']}/outputs/"
@@ -22,7 +23,7 @@ def mkdir ( Dir : os.PathLike ):
         subprocess.getoutput ( cmd )
 
 def cancelAllValidaters():
-    o = subprocess.getoutput ( "slurm q | grep _V" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _V" )
     lines = o.split("\n")
     cancelled = []
     for line in lines:
@@ -37,7 +38,7 @@ def cancelAllValidaters():
 
 def getMaxJobId() -> int:
     """ get the highest job id """
-    o = subprocess.getoutput ( "slurm q | grep _V" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _V" )
     lines = o.split("\n")
     nmax = 0
     for line in lines:
@@ -49,7 +50,7 @@ def getMaxJobId() -> int:
 
 def getMinJobId() -> int:
     """ get the lowest job id """
-    o = subprocess.getoutput ( "slurm q | grep _V" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _V" )
     lines = o.split("\n")
     nmin = 1e99
     for line in lines:
@@ -89,7 +90,7 @@ def cancelRangeOfValidaters( jrange : str ):
             cancelled.append ( i )
         print ( f"[slurm_walk] cancelled {', '.join(map(str,cancelled))}" )
         return
-    o = subprocess.getoutput ( "slurm q | grep _V" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _V" )
     lines = o.split("\n")
     running = []
     for line in lines:

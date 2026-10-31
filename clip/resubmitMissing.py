@@ -3,10 +3,11 @@
 """ check running jobs, write a submission file with missing """
 
 import subprocess, re, os, shutil
+from cliphelpers import SQUEUE
 
 def resubmit ( keyw ):
     """ check for keyword """
-    out = subprocess.getoutput ( f"slurm q | grep {keyw}" )
+    out = subprocess.getoutput ( f"{SQUEUE} | grep {keyw}" )
     lines = out.split ("\n" )
     nrs = set()
     for line in lines:

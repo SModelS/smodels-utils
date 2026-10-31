@@ -9,6 +9,8 @@ try:
 except:
     import subprocess
 
+from cliphelpers import SQUEUE
+
 scratchdir = f"/scratch-cbe/users/{os.environ['USER']}"
 if "EMCREATOR_RUNTIME_PATH" in os.environ:
     scratchdir = os.environ["EMCREATOR_RUNTIME_PATH"]
@@ -56,7 +58,7 @@ def queryStats ( maxsteps : int ):
     
 
 def cancelAllBakers():
-    o = subprocess.getoutput ( "slurm q | grep _B" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _B" )
     lines = o.split("\n")
     cancelled = []
     for line in lines:
@@ -264,7 +266,7 @@ def cancelRangeOfBakers( jrange : str ):
             cancelled.append ( i )
         print ( f"[slurm_bake] cancelled {', '.join(map(str,cancelled))}" )
         return
-    o = subprocess.getoutput ( "slurm q | grep _B" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _B" )
     lines = o.split("\n")
     running = []
     for line in lines:
@@ -283,7 +285,7 @@ def cancelRangeOfBakers( jrange : str ):
 
 def getMaxJobId() -> int:
     """ get the highest job id """
-    o = subprocess.getoutput ( "slurm q | grep _B" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _B" )
     lines = o.split("\n")
     nmax = 0
     for line in lines:
@@ -295,7 +297,7 @@ def getMaxJobId() -> int:
 
 def getMinJobId() -> int:
     """ get the lowest job id """
-    o = subprocess.getoutput ( "slurm q | grep _B" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep _B" )
     lines = o.split("\n")
     nmin = 1e99
     for line in lines:

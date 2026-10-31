@@ -4,7 +4,7 @@ import subprocess, argparse
 import cliphelpers
 
 def missing ( pattern ):
-    cmd = f"slurm q | grep {pattern}"
+    cmd = f"{cliphelpers.SQUEUE} | grep {pattern}"
     o = subprocess.getoutput ( cmd )
     lines = o.split("\n" )
     found = set()

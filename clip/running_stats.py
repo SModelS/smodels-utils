@@ -10,6 +10,7 @@ sys.path.insert(0,os.path.expanduser("~/git/smodels-utils"))
 
 import glob, stat, time, subprocess
 from smodels_utils.helper.terminalcolors import *
+from cliphelpers import SQUEUE
 
 def query_stats( maxsteps : int, short : bool = False ):
     count_jobs()
@@ -27,7 +28,7 @@ def query_stats( maxsteps : int, short : bool = False ):
 def cancelJobsByString ( text : str ):
     """ cancel jobs that have text in their job names """
     print ( f"cancel all jobs that have {text} in their names." )
-    o = subprocess.getoutput ( f"slurm q | grep {text}" )
+    o = subprocess.getoutput ( f"{SQUEUE} | grep {text}" )
     lines = o.split("\n")
     jobids = []
     for line in lines:
@@ -126,7 +127,7 @@ def running_stats( grep : str = None ):
     sgrep = ""
     if grep != None:
         sgrep = f"grep {grep} |"
-    cmd = f"slurm q | {sgrep} head -n 3 | tail -n 2"
+    cmd = f"{SQUEUE} | {sgrep} head -n 3 | tail -n 2"
     lines = subprocess.getoutput ( cmd ).split("\n")
     print ( )
     print ( "most recent jobs:" )
@@ -135,7 +136,7 @@ def running_stats( grep : str = None ):
         tokens = list(filter(None,line.split(" ")))
         print ( "   ".join ( tokens ) )
 
-    cmd = f"slurm q | {sgrep} tail -n 2"
+    cmd = f"{SQUEUE} | {sgrep} tail -n 2"
     lines = subprocess.getoutput ( cmd ).split("\n")
     print ( )
     print ( "longest running jobs:" )
@@ -147,18 +148,18 @@ def running_stats( grep : str = None ):
 def count_jobs( grep : str = None ):
     if "SINGULARITY_NAME" in os.environ:
         return
-    #print ( "slurm q says:" )
+    #print ( "squeue says:" )
     #print ( "=============" )
     sgrep = ""
     if grep != None:
         sgrep = f"grep {grep} |"
-    cmd = f"slurm q | {sgrep} grep PEND | wc -l"
+    cmd = f"{SQUEUE} | {sgrep} grep PEND | wc -l"
     pend = subprocess.getoutput ( cmd )
     try:
         pend = int (pend )
     except:
         pass
-    cmd = f"slurm q | {sgrep} grep RUNNING | wc -l"
+    cmd = f"{SQUEUE} | {sgrep} grep RUNNING | wc -l"
     running = subprocess.getoutput ( cmd )
     try:
         running= int ( running )
@@ -169,12 +170,12 @@ def count_jobs( grep : str = None ):
     ltot = f"{RED}{pend+running}{RESET}"
     print ( "pending", lpend, "running", lrun, "  " )
 
-    remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
+    remaining = subprocess.getoutput ( f"{SQUEUE} | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
     if int(remaining)>0:
         print ( "remaining", remaining, "  " )
 
 def count_dupes():
-    A = subprocess.getoutput ( "slurm q" )
+    A = subprocess.getoutput ( SQUEUE )
     jobs = []
     for a in A.split("\n"):
         tokens = a.split(" ")
