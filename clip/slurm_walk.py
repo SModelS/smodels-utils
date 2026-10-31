@@ -56,7 +56,9 @@ def remove( fname, keep):
 user = "wolfgan.waltenberger"
 if "USER" in os.environ:
     user = os.environ["USER"]
-basedir = f"/scratch-cbe/users/{user}"
+basedir = f"/scratch/users/{user}"
+if not os.path.exists ( basedir ):
+    basedir = f"/scratch-cbe/users/{user}"
 if "RUNDIR" in os.environ:
     basedir = os.environ["RUNDIR"].replace("/rundir","")
 codedir = f"{basedir}/git"
@@ -371,7 +373,7 @@ def runOneJob ( rvars: dict ):
         - use_initialiser (Union[str,bool]): if string, then interpret it as path to database
     """
     runner = createWalkerPythonScript ( rvars )
-    container = createWalkerContainerScript ( rvars, runner )
+    # container = createWalkerContainerScript ( rvars, runner )
 
     ram = max ( 11000., 4000. * ( nmax - nmin ) )
     if rvars["select"]=="all" or "forbiddenparticles" == []:
@@ -402,7 +404,8 @@ def runOneJob ( rvars: dict ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", container ]
+    cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", runner ]
+    # cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", container ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
@@ -1120,7 +1123,7 @@ def main():
         args.userprior = os.path.abspath ( os.path.expanduser ( args.userprior ) )
         if not os.path.exists ( args.userprior ):
             print ( f"{intro}error: the user prior file {args.userprior} does not exist" )
-            sys.exit()
+            # sys.exit()
         print ( f"{intro}using the user prior from {args.userprior}" )
     if args.yvariable == "-1":
         args.yvariable = -1
