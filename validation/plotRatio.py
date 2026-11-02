@@ -658,7 +658,9 @@ def draw ( options : dict ):
             return
             # sys.exit()
     if options["show"]:
-        plt.kittyPlot()
+        from validationHelpers import showPlot
+        showPlot ( figname )
+        #plt.kittyPlot()
 #        plt.show()
     if options["copy"]:
       cmd=f"cp {figname} ~/git/smodels.github.io/plots/"
@@ -750,8 +752,8 @@ def main():
             help="minimum x value, None means auto [None]",
             type=float, default=None )
     argparser.add_argument ( "--zlabel_offset",
-            help="offset of zlabel [.9]",
-            type=float, default=.9 )
+            help="offset of zlabel [.92]",
+            type=float, default=.92 )
     argparser.add_argument ( "-X", "--xmax",
             help="maximum x value, None means auto [None]",
             type=float, default=None )
