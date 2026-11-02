@@ -50,12 +50,6 @@ class ExtendedPyPrinter(PyPrinter):
              resDict['r_nn_p1'] = self._round ( r_obs_p1 )
         if r_obs_m1 != None:
              resDict['r_nn_m1'] = self._round ( r_obs_m1 )
-        """
-        eULprior = obj.getUpperLimitOnMu ( evaluationType = apriori )
-        eULposterior = obj.getUpperLimitOnMu ( evaluationType = aposteriori )
-        resDict['eULprior']=eULprior
-        resDict['eULposterior']=eULposterior
-        """
         eULpre = obj.getUpperLimit ( evaluationType = apriori ).asNumber(fb)
         eULpost = obj.getUpperLimit ( evaluationType = aposteriori ).asNumber(fb)
         resDict['eULpre']=eULpre
