@@ -354,7 +354,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     saxes = saxes.replace('130.0','130').replace('0.0','0')
     output = f"{os.path.dirname(datafile)}/ratios_{txname}_{saxes}.png"
     options = { "show": opts["show"], "output": output,
-                "folder2": "validation" }
+                "folder2": "validation",
+                "expectationType": opts.get ( "expectationType", "aposteriori" ) }
     ana2origtest = f"{os.path.dirname(datafile)}../../../{ana2}-orig"
     ana2origtest = os.path.abspath ( ana2origtest )
     if os.path.exists ( ana2origtest ) and not "-orig" in ana1:

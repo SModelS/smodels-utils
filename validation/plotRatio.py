@@ -78,6 +78,7 @@ def addDefaults ( options : dict ) -> dict:
                  "zmax": None, "title": None, "output": "@eratios_@a_@t@sr.png",
                  "label1": None, "label2": None, "show": False, "meta": False,
                  "copy": False, "SR": None, "comment": None, "zlabel_offset": .9,
+                 "expectationType": "aposteriori",
                 }
     defaults.update(options)
     return defaults
@@ -482,7 +483,10 @@ def draw ( options : dict ):
         if anaId in anaId2:
             title = anaId
     if "eul" in options and options["eul"]==True:
-        title += " (expected)"
+        if str ( options.get ( "expectationType", "" ) ).lower() == "apriori":
+            title += " (pre-fit expected)"
+        else:
+            title += " (expected)"
     else:
         title += " (observed)"
 
@@ -783,6 +787,8 @@ def main():
             help="for the first analysis, use expected, not observed, upper limits" )
     argparser.add_argument ( "-e2", "--eul2", action="store_true",
             help="for the second analysis, use expected, not observed, upper limits" )
+    argparser.add_argument ( "--expectationType", type=str, default="aposteriori",
+            help="expectation type used for expected upper limits [aposteriori]" )
     argparser.add_argument ( "-e", "--efficiencies", action="store_true",
             help="plot ratios of efficencies of best SRs, not ULs" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
