@@ -1596,7 +1596,7 @@ class PaperPlot:
             ox,oy,osize = 0.25,0.8, 12
         expected_label = r"$\bf expected~exclusion$"
         if str ( self.general_options.get ( "expectationType", "" ) ).lower() == "apriori":
-            expected_label = r"$\bf pre-fit~expected~exclusion$"
+            expected_label = r"$\bf pre\textrm{-}fit~expected~exclusion$"
         plt.text( ox, oy, expected_label,
                   transform=fig.transFigure, fontsize = osize )
         plt.legend(loc='best', frameon=True, fontsize = 10)
