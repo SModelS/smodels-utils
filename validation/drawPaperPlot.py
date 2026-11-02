@@ -278,19 +278,23 @@ class PaperPlot:
 
     def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
                    label : str ):
-        """ plot lines """
+        """ plot lines, return the actually plotted coordinates """
         if len(x_vals)==0:
-            return
+            return x_vals, y_vals
         if type(x_vals[0]) == list:
+            new_x, new_y = [], []
             for x_val, y_val in zip ( x_vals, y_vals ):
                 x_val, y_val = self.removeSegments ( x_val, y_val, label = label )
+                new_x.append ( x_val )
+                new_y.append ( y_val )
                 ax.plot( x_val, y_val,color=color, linestyle= linestyle,
                          label = label )
                 label = ""
-            return
+            return new_x, new_y
         x_vals, y_vals = self.removeSegments ( x_vals, y_vals, label = label )
         ax.plot( x_vals, y_vals,color=color, linestyle=linestyle,
                  label = label )
+        return x_vals, y_vals
 
     def findAxisInExclFile ( self, axis : str, exclfile,
             txname : str, type : str ) -> dict:
@@ -600,7 +604,7 @@ class PaperPlot:
         x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
         if linestyle == None:
             linestyle="solid"
-        self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
+        return self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
     def sortSegments ( self, x_vals, y_vals ) -> tuple:
         """ sort the segments, the ones with the lower x values come first """
@@ -659,23 +663,173 @@ class PaperPlot:
             print ( x_vals, y_vals )
         return x_vals, y_vals
 
+    def _asSegments ( self, x_vals, y_vals ) -> list:
+        """ return the curves as a list of (N,2) numpy arrays """
+        if x_vals is None or y_vals is None or len ( x_vals ) == 0:
+            return []
+        if isinstance ( x_vals[0], ( list, tuple, np.ndarray ) ):
+            segments = []
+            for seg_x, seg_y in zip ( x_vals, y_vals ):
+                seg_x = np.asarray ( seg_x, dtype = float ).ravel()
+                seg_y = np.asarray ( seg_y, dtype = float ).ravel()
+                n = min ( len ( seg_x ), len ( seg_y ) )
+                if n > 0:
+                    segments.append ( np.column_stack ( [ seg_x[:n], seg_y[:n] ] ) )
+            return segments
+        seg_x = np.asarray ( x_vals, dtype = float ).ravel()
+        seg_y = np.asarray ( y_vals, dtype = float ).ravel()
+        n = min ( len ( seg_x ), len ( seg_y ) )
+        if n == 0:
+            return []
+        return [ np.column_stack ( [ seg_x[:n], seg_y[:n] ] ) ]
+
+    def _nearestPointOnSegments ( self, point, segments ):
+        """ return the point on any of the segments that is closest to point """
+        best_dist2, best_point = float ( "inf" ), None
+        for segment in segments:
+            if len ( segment ) == 0:
+                continue
+            if len ( segment ) == 1:
+                delta = segment[0] - point
+                dist2 = float ( delta @ delta )
+                candidate = segment[0]
+            else:
+                starts = segment[:-1]
+                ends = segment[1:]
+                directions = ends - starts
+                offsets = point - starts
+                denom = np.einsum ( "ij,ij->i", directions, directions )
+                denom[denom == 0] = 1e-30
+                t = np.clip ( np.einsum ( "ij,ij->i", offsets, directions )
+                              / denom, 0, 1 )
+                projected = starts + t[:, None] * directions
+                dist2s = np.einsum ( "ij,ij->i", projected - point,
+                                     projected - point )
+                idx = int ( np.argmin ( dist2s ) )
+                dist2, candidate = float ( dist2s[idx] ), projected[idx]
+            if dist2 < best_dist2:
+                best_dist2, best_point = dist2, candidate
+        return best_point
+
+    def _segmentsNear ( self, center_segment, side_segments,
+            margin_fraction : float = 0.1 ) -> list:
+        """ keep only the side segments whose bounding box is near the
+        center segment; this drops unrelated islands of the side curve """
+        if len ( center_segment ) == 0:
+            return []
+        cmin, cmax = center_segment.min ( axis = 0 ), center_segment.max ( axis = 0 )
+        margin = margin_fraction * float ( np.linalg.norm ( cmax - cmin ) )
+        near = []
+        for segment in side_segments:
+            if len ( segment ) < 2:
+                continue
+            smin, smax = segment.min ( axis = 0 ), segment.max ( axis = 0 )
+            if np.any ( smax < cmin - margin ) or \
+                    np.any ( smin > cmax + margin ):
+                continue
+            near.append ( segment )
+        if near:
+            return near
+        # fall back to all proper segments
+        return [ segment for segment in side_segments if len ( segment ) >= 2 ]
+
+    def _signedArea ( self, polygon ) -> float:
+        """ signed area of a closed polygon """
+        x_vals, y_vals = polygon[:, 0], polygon[:, 1]
+        return .5 * float ( np.sum ( x_vals * np.roll ( y_vals, -1 ) -
+                         y_vals * np.roll ( x_vals, -1 ) ) )
+
+    def _fillCompoundPolygons ( self, ax, polygons : list, **kwargs ):
+        """ fill several polygons with a single path, so that overlapping
+        parts are not painted twice (and hence do not look darker) """
+        from matplotlib.path import Path
+        from matplotlib.patches import PathPatch
+        vertices, codes = [], []
+        for polygon in polygons:
+            if len ( polygon ) < 3:
+                continue
+            # make all loops wind in the same direction, otherwise
+            # overlapping loops could cancel each other
+            if self._signedArea ( polygon ) < 0:
+                polygon = polygon[::-1]
+            n = len ( polygon )
+            vertices.extend ( polygon.tolist() )
+            vertices.append ( polygon[0].tolist() )
+            codes.extend ( [ Path.MOVETO ] + [ Path.LINETO ] * ( n - 1 ) +
+                           [ Path.CLOSEPOLY ] )
+        if not codes:
+            return None
+        patch = PathPatch ( Path ( np.asarray ( vertices ), codes ), **kwargs )
+        ax.add_patch ( patch )
+        ax.autoscale_view()
+        return patch
+
+    def _plotGuessedErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2,
+            center_x_vals, center_y_vals, ax, color, alpha : float ) -> bool:
+        """ draw a band around the central line, using the points of the
+        +-1 sigma curves that are closest to each central point """
+        center_segments = self._asSegments ( center_x_vals, center_y_vals )
+        side1_segments = self._asSegments ( x_vals1, y_vals1 )
+        side2_segments = self._asSegments ( x_vals2, y_vals2 )
+        if not center_segments or not side1_segments or not side2_segments:
+            return False
+        polygons = []
+        for center_segment in center_segments:
+            if len ( center_segment ) < 2:
+                continue
+            side1 = self._segmentsNear ( center_segment, side1_segments )
+            side2 = self._segmentsNear ( center_segment, side2_segments )
+            for side in ( side1, side2 ):
+                if not side:
+                    continue
+                mapped = []
+                for point in center_segment:
+                    nearest = self._nearestPointOnSegments ( point, side )
+                    if nearest is not None:
+                        mapped.append ( nearest )
+                if len ( mapped ) < 2:
+                    continue
+                mapped = np.asarray ( mapped )
+                polygon = np.vstack ( [ center_segment, mapped[::-1] ] )
+                if len ( polygon ) >= 3:
+                    polygons.append ( polygon )
+        if not polygons:
+            return False
+        self._fillCompoundPolygons ( ax, polygons, facecolor = color,
+                alpha = alpha, edgecolor = "none", linewidth = 0 )
+        return True
+
     def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
             y_label, color : Optional[str] = None,
-            alpha : float = .4 ):
+            alpha : float = .4, center_x_vals = None, center_y_vals = None,
+            guess : bool = False ):
         if len(x_vals1)==0:
             return
         x_vals1, y_vals1 = self.sortArbitrarily ( x_vals1, y_vals1, "1" )
         x_vals2, y_vals2 = self.sortArbitrarily ( x_vals2, y_vals2, "2" )
         x_vals1, y_vals1 = self.removeAllSegments ( x_vals1, y_vals1, "error_band" )
         x_vals2, y_vals2 = self.removeAllSegments ( x_vals2, y_vals2, "error_band" )
-        if self.specific_options["sort_segments"]:
+        # guess_blueband takes precedence over the sort options for this
+        # band: the band is anchored on the central line instead.
+        sort_segments = False if guess else \
+                self.specific_options.get ( "sort_segments", False )
+        sort_within_segments = False if guess else \
+                self.specific_options.get ( "sort_within_segments", False )
+        if sort_segments:
             x_vals1, y_vals1 = self.sortSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortSegments ( x_vals2, y_vals2 )
         if color == None:
             color = "red"
         x_vals1, y_vals1 = yvalsAreWidths ( y_label, x_vals1, y_vals1 )
         x_vals2, y_vals2 = yvalsAreWidths ( y_label, x_vals2, y_vals2 )
-        if self.specific_options["sort_within_segments"]:
+        if guess:
+            # Ignore sort_segments/sort_within_segments: instead anchor
+            # the band on the plotted central line by matching every
+            # central point to its closest +-1 sigma point.
+            if self._plotGuessedErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2,
+                    center_x_vals, center_y_vals, ax, color, alpha ):
+                return
+        if sort_within_segments:
             x_vals1, y_vals1 = self.sortWithinSegments ( x_vals1, y_vals1 )
             x_vals2, y_vals2 = self.sortWithinSegments ( x_vals2, y_vals2 )
         drawBand = True
@@ -1408,15 +1562,19 @@ class PaperPlot:
             if cr_is == "orig":
                 label = f"SModelS: orig pyhf"
                 # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
-            self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
-                   linestyle= None, color = "blue" )
+            center_x_vals, center_y_vals = self.plotGammaLines ( x_vals, y_vals,
+                   ax, label, y_label, linestyle= None, color = "blue" )
             if "expExclusionP1" in orig_excl and "expExclusionM1" in orig_excl:
                 x_vals1 = orig_excl["expExclusionP1"]["x"]
                 y_vals1 = orig_excl["expExclusionP1"]["y"]
                 x_vals2 = orig_excl["expExclusionM1"]["x"]
                 y_vals2 = orig_excl["expExclusionM1"]["y"]
                 self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
-                        None, y_label, color = "lightblue" )
+                        None, y_label, color = "lightblue",
+                        center_x_vals = center_x_vals,
+                        center_y_vals = center_y_vals,
+                        guess = self.specific_options.get ( "guess_blueband",
+                                                            False ) )
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
@@ -1521,6 +1679,7 @@ def defaultSpecificOptions () -> dict:
              "drawexpofficialpm1": True, "drawobspm1": False,
              "title_fontsize": 12, "sort_segments": True,
              "sort_within_segments": False,
+             "guess_blueband": True,
              "max_y": "auto", "min_y": "auto", "min_x": "auto", "max_x": "auto",
              "style": "default", "remove_segments": None,
              "addlogo": True, "show_points": False, "pdf_also": False }
@@ -1709,6 +1868,11 @@ if __name__ == "__main__":
     _addOptionArguments ( ap, "general", generalDefaults, "general options" )
     _addOptionArguments ( ap, "specific", specificDefaults,
             "PaperPlot-specific options" )
+    ap.add_argument ( "--guess_blueband", dest = "guess_blueband",
+            type = _str2bool, nargs = "?", const = True, default = None,
+            help = "guess how to draw the blue error band around the blue "
+                   "central line; ignores sort_segments and "
+                   "sort_within_segments for the blue band [true]" )
     args = ap.parse_args()
 
     general_options = { key : getattr ( args, f"general_{key}" )
@@ -1716,6 +1880,8 @@ if __name__ == "__main__":
     general_options["databasepath"] = args.database
     specific_options = { key : getattr ( args, f"specific_{key}" )
                          for key in specificDefaults }
+    if args.guess_blueband is not None:
+        specific_options["guess_blueband"] = args.guess_blueband
 
     from smodels.base import smodelsLogging
     smodelsLogging.setLogLevel ( args.verbose )
