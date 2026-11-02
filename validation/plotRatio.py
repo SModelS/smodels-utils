@@ -646,7 +646,8 @@ def draw ( options : dict ):
     try:
         from smodels_utils.helper.various import pngMetaInfo
         metadata = pngMetaInfo()
-        plt.savefig ( figname, metadata = metadata )
+        dpi = 300
+        plt.savefig ( figname, dpi = dpi, metadata = metadata )
     except (RuntimeError,FileNotFoundError) as e:
         print ( f"[plotRatio] error when calling savefig: {e}" )
         if "tex" in str(e).lower():

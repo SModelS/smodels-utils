@@ -197,8 +197,11 @@ def reproduceCommand ( valPlot, general_options : dict,
         parts += [ "-k", str ( kfactor ) ]
     if getattr ( valPlot, "keep", False ):
         parts.append ( "--keep" )
-    # axis and databasepath are passed as positional/-d arguments
-    skipGeneral = { "axis", "databasepath" }
+    if general_options.get ( "show", False ):
+        parts.append ( "--show" )
+    # axis and databasepath are passed as positional/-d arguments,
+    # show is passed via the dedicated --show flag above
+    skipGeneral = { "axis", "databasepath", "show" }
     for key in sorted ( general_options ):
         if key in skipGeneral or key not in generalDefaults:
             continue

@@ -1862,6 +1862,8 @@ if __name__ == "__main__":
             help = "force rebuilding the database pickle from the text files" )
     ap.add_argument ( "--keep", action = "store_true",
             help = "keep temporary directories" )
+    ap.add_argument ( "-s", "--show", action = "store_true",
+            help = "show the plots after producing them" )
     ap.add_argument ( "-v", "--verbose", default = "info",
             choices = [ "error", "warning", "info", "debug" ],
             help = "logging verbosity [info]" )
@@ -1878,6 +1880,8 @@ if __name__ == "__main__":
     general_options = { key : getattr ( args, f"general_{key}" )
                         for key in generalDefaults }
     general_options["databasepath"] = args.database
+    if args.show:
+        general_options["show"] = True
     specific_options = { key : getattr ( args, f"specific_{key}" )
                          for key in specificDefaults }
     if args.guess_blueband is not None:
