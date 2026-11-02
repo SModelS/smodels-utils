@@ -1256,7 +1256,7 @@ class PaperPlot:
                 y_label = self.getPrettyAxisLabels(lbl.split("=")[-1].strip())
             else:
                 continue
-        y_label = f"${y_label.replace('$','')}$"
+        # y_label = f"${y_label.replace('$','')}$"
         ax.set_xlabel(x_label,fontsize = 14)
         ax.set_ylabel(y_label,fontsize = 14)
         ax.set_xlim([int(ranges["min_obs_x"]/10)*10,round(ranges["max_obs_x"]+step_x,-1)])
@@ -1723,10 +1723,12 @@ def _str2generateData ( value ):
 
 
 def _addOptionArguments ( ap, prefix : str, defaults : dict,
-        description : str ) -> None:
+        description : str, skip : tuple = () ) -> None:
     """ add one command line argument per option in defaults """
     group = ap.add_argument_group ( description )
     for key, default in defaults.items():
+        if key in skip:
+            continue
         kwargs = { "dest": f"{prefix}_{key}", "default": default,
                    "help": f"default: {default!r}" }
         if key == "drawExpected":
@@ -1867,7 +1869,8 @@ if __name__ == "__main__":
     ap.add_argument ( "-v", "--verbose", default = "info",
             choices = [ "error", "warning", "info", "debug" ],
             help = "logging verbosity [info]" )
-    _addOptionArguments ( ap, "general", generalDefaults, "general options" )
+    _addOptionArguments ( ap, "general", generalDefaults, "general options",
+            skip = ( "show", ) )
     _addOptionArguments ( ap, "specific", specificDefaults,
             "PaperPlot-specific options" )
     ap.add_argument ( "--guess_blueband", dest = "guess_blueband",
@@ -1877,7 +1880,8 @@ if __name__ == "__main__":
                    "sort_within_segments for the blue band [true]" )
     args = ap.parse_args()
 
-    general_options = { key : getattr ( args, f"general_{key}" )
+    general_options = { key : getattr ( args, f"general_{key}",
+                                              generalDefaults[key] )
                         for key in generalDefaults }
     general_options["databasepath"] = args.database
     if args.show:
