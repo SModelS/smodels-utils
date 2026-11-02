@@ -9,7 +9,7 @@
 """
 
 GREEN, YELLOW, RED, RESET, CYAN, MAGENTA, BLUE, ORANGE, LIGHTGREEN, \
-    GREY = [ "" ]*10
+    GREY, PINK = [ "" ]*11
 
 try:
     from colorama import Fore as __c
@@ -26,7 +26,8 @@ except Exception as e:
     # ORANGE = "\033[48:2:255:165:0m"
 
 LIGHTGREEN = "\x1b[38;2;136;231;136m"
+PINK = "\x1b[38;2;255;105;180m"
 
 colordict = { "green": GREEN, "yellow": YELLOW, "red": RED, "reset": RESET,
               "cyan": CYAN, "magenta": MAGENTA, "blue": BLUE, "orange": ORANGE,
-              "lightgreen": LIGHTGREEN, "grey": GREY }
+              "lightgreen": LIGHTGREEN, "grey": GREY, "pink": PINK }

@@ -34,6 +34,15 @@ from validationHelpers import getAxisType, axisV2ToV3
 logger = logging.getLogger(__name__)
 
 
+def printPlotRatio ( msg : str, label : str = "[plotRatio]" ):
+    """ print a message with the plotRatio label in pink
+
+    :param msg: the message to print, without the label
+    :param label: the label to print in pink
+    """
+    print ( f"{PINK}{label}{RESET} {msg}" )
+
+
 def hasDebPkg():
     """ do we have the package installed """
     import distutils.spawn
@@ -91,7 +100,7 @@ def hasAxisInfo ( content ):
         if not "axes" in meta[0]:
             return False
         return meta[0]["axes"]
-    print ( f"[plotRatio] when searching for axis info, what case is this: {meta}" )
+    printPlotRatio ( f"when searching for axis info, what case is this: {meta}" )
     return False
 
 def guessLabel ( label, anaId1, anaId2, valfile1, content1 ):
@@ -126,7 +135,7 @@ def guessLabel ( label, anaId1, anaId2, valfile1, content1 ):
         last = anaId1[p1+1:]
         if not last.isdigit() and not last in [ "eff" ]:
             label = last
-    print ( f"[plotRatio] have been asked to guess the label for {anaId1} re {anaId2}: {label}" )
+    printPlotRatio ( f"have been asked to guess the label for {anaId1} re {anaId2}: {label}" )
     return label
 
 def getCoords ( points : list[list], coord : str ) -> list:
@@ -179,7 +188,7 @@ def draw ( options : dict ):
         content = getValidationFileContent ( ipath1 )
         axis1 = '[[x, y], [x, y]]'
         if not "meta" in content or content["meta"] is None:
-            print ( f"[plotRatio] meta info is missing in {ipath1}. Perhaps rerun validation?" )
+            printPlotRatio ( f"meta info is missing in {ipath1}. Perhaps rerun validation?" )
             #return
             # continue
             # sys.exit()
@@ -187,8 +196,8 @@ def draw ( options : dict ):
             if "axes" in content["meta"]:
                 axis1 = content["meta"]["axes"]
             else:
-                print ( f"[plotRatio] meta 'axes' info is missing in {ipath1}. Perhaps rerun validation?" )
-                print ( f"[plotRatio] {dbpath} {analysis1} {valfile} {options['folder1']}" )
+                printPlotRatio ( f"meta 'axes' info is missing in {ipath1}. Perhaps rerun validation?" )
+                printPlotRatio ( f"{dbpath} {analysis1} {valfile} {options['folder1']}" )
                 #return
                 # sys.exit()
         contents.append ( content )
@@ -200,17 +209,18 @@ def draw ( options : dict ):
         ipath2 = getValidationDataPathName ( dbpath, analysis2, valfile, options["folder2"] )
         content = getValidationFileContent ( ipath2 )
         if not "meta" in content or content["meta"] is None:
-            print ( f"[plotRatio] meta info is missing in {ipath2}. Perhaps rerun validation?" )
+            printPlotRatio ( f"meta info is missing in {ipath2}. Perhaps rerun validation?" )
         axis2 = axis1
         if "meta" in content and content["meta"] is not None and "axes" in content["meta"]:
             axis2 = content["meta"]["axes"]
         contents.append ( content )
+    # print ( f"[plotRatio] plotting ratio for {ipath1} vs {ipath2}" )
     content2 = mergeValidationData ( contents )
     if "meta" in content1 and len(content1["meta"])>0 and "axes" in \
             content1["meta"][0] and not "y" in content1["meta"][0]["axes"]:
         if "eul" in options:
             return
-        print ( f"[plotRatio.py] seems like a 1d plot, delegate to plot1DRatio" )
+        printPlotRatio ( "seems like a 1d plot, delegate to plot1DRatio", "[plotRatio.py]" )
         import plot1DRatio
         plot1DRatio.draw ( options )
         return
@@ -218,7 +228,7 @@ def draw ( options : dict ):
             content2["meta"][0] and not "y" in content2["meta"][0]["axes"]:
         if "eul" in options:
             return
-        print ( f"[plotRatio.py] seems like a 1d plot, delegate to plot1DRatio" )
+        printPlotRatio ( "seems like a 1d plot, delegate to plot1DRatio", "[plotRatio.py]" )
         import plot1DRatio
         plot1DRatio.draw ( options )
         return
@@ -279,7 +289,7 @@ def draw ( options : dict ):
                         if nam == options["SR"]:
                             effs[h]=val
                 else:
-                    print ( f"[plotRatio.py] you specified SR {options['SR']} but no leadingDSes are in validation file {ipath1}. Perhaps rerun validation?" )
+                    printPlotRatio ( f"you specified SR {options['SR']} but no leadingDSes are in validation file {ipath1}. Perhaps rerun validation?", "[plotRatio.py]" )
                     return
                     # sys.exit()
         # uls[ h ] = point["signal" ] / point["UL"]
@@ -346,10 +356,10 @@ def draw ( options : dict ):
                 errmsg = ""
                 if "error" in point:
                     errmsg = f': {point["error"]}'
-                print ( f"[plotRatio] insufficient data to plot point {point['slhafile']}: {errmsg}" )
+                printPlotRatio ( f"insufficient data to plot point {point['slhafile']}: {errmsg}" )
 
     if len(points) == 0:
-        print ( f"[plotRatio] found no legit points but {err_msgs} err msgs in {ipath2}" )
+        printPlotRatio ( f"found no legit points but {err_msgs} err msgs in {ipath2}" )
         return
         # sys.exit()
 
@@ -391,12 +401,12 @@ def draw ( options : dict ):
     xpoints = points[::,0:2]
     vmin, vmax = options["zmin"], options["zmax"]
     if len(xpoints)<3:
-        print ( f"[plotRation] only {len(xpoints)} points for griddata. not plotting" )
+        printPlotRatio ( f"only {len(xpoints)} points for griddata. not plotting" )
         return
     col = griddata ( xpoints, points[::,dim], yx, rescale=True )
     if err_msgs > 0:
         ntot = len( content2["data"] )
-        print ( f"[plotRatio] couldnt find data for {err_msgs}/{ntot} points" )
+        printPlotRatio ( f"couldnt find data for {err_msgs}/{ntot} points" )
 
     #changed colormap to have discrete bins instead of continuous
     try:
@@ -490,7 +500,7 @@ def draw ( options : dict ):
     if getAxisType ( axis1 ) == "v3" and getAxisType ( axis2 ) == "v2":
         axis2 = axisV2ToV3 ( axis2 )
     if axis1 != axis2:
-        print ( f"[plotRatio] error, different axes: {axis1}!={axis2}" )
+        printPlotRatio ( f"error, different axes: {axis1}!={axis2}" )
         # return
         # sys.exit()
     plt.text(.95,.95,axis,transform=fig.transFigure, fontsize=9,
@@ -579,10 +589,10 @@ def draw ( options : dict ):
         # smodels_line = []
         el2 = getSModelSExclusionFromContent ( content1 )
     else:
-        print ( f"[plotRatio] warn: {smodels_root} does exist. Maybe switch to jsons?" )
+        printPlotRatio ( f"warn: {smodels_root} does exist. Maybe switch to jsons?" )
         smodels_line = getSModelSExclusion ( smodels_root )
         el2 = getExclusionLine ( smodels_line )
-    print ( f"[plotRatio] Found SModelS exclusion line with {len(el2)} points." )
+    printPlotRatio ( f"Found SModelS exclusion line with {len(el2)} points." )
     label="SModelS exclsuion"
     for E in el2:
         hasLegend = True
@@ -640,7 +650,7 @@ def draw ( options : dict ):
     if options["comment"] not in [ None, "", "None" ]:
         plt.text ( .1, .025, options["comment"], transform=fig.transFigure, 
                    c="grey", fontsize=12  )
-    print ( f"[plotRatio] Saving to {YELLOW}{figname}{RESET}" )
+    printPlotRatio ( f"Saving to {YELLOW}{figname}{RESET}" )
     if hasLegend:
         plt.legend()
     try:
@@ -649,9 +659,9 @@ def draw ( options : dict ):
         dpi = 300
         plt.savefig ( figname, dpi = dpi, metadata = metadata )
     except (RuntimeError,FileNotFoundError) as e:
-        print ( f"[plotRatio] error when calling savefig: {e}" )
+        printPlotRatio ( f"error when calling savefig: {e}" )
         if "tex" in str(e).lower():
-            print ( f"[plotRatio] consider loading/installing latex, eg via:" )
+            printPlotRatio ( f"consider loading/installing latex, eg via:" )
             # print ( f"ml load texlive/20210324-gcccore-10.2.0 # on the clip cluster" )
             print ( f"ml load texlive/20220321-gcc-12.2.0 # on the clip cluster" )
             print ( f"sudo apt install texlive dvipng # on debian based linux distros" )
@@ -664,12 +674,12 @@ def draw ( options : dict ):
 #        plt.show()
     if options["copy"]:
       cmd=f"cp {figname} ~/git/smodels.github.io/plots/"
-      print ( f"[plotRatio] {cmd}" )
+      printPlotRatio ( f"{cmd}" )
       subprocess.getoutput ( cmd )
     if options["meta"]:
         with open ( "ratios.txt", "at") as f:
             f.write ( f"{figname} {rmean:.2f} +/- {rstd:.2f}\n" )
-    print ( f"[plotRatio] ratio={rmean:.5f} +/- {rstd:.5f} (with {npoints} points)" )
+    printPlotRatio ( f"ratio={rmean:.5f} +/- {rstd:.5f} (with {npoints} points)" )
     plt.clf()
 
 def writeMDPage( copy ):
@@ -810,11 +820,11 @@ def main():
     cmd = "cd ~/git/smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
-        print ( f"[plotRatio] now performing {cmd}: {o}" )
+        printPlotRatio ( f"now performing {cmd}: {o}" )
         o = subprocess.getoutput ( cmd )
     else:
         if args.copy:
-            print ( f"[plotRatio] now you could do:\n{cmd}: {o}" )
+            printPlotRatio ( f"now you could do:\n{cmd}: {o}" )
 
 if __name__ == "__main__":
     main()
