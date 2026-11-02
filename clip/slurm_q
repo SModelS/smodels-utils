@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-SQUEUE_FORMAT = "%.8i %.9P %.80j %.8u %.10T %.10M %.6D %R"
+# SQUEUE_FORMAT = "%.8i %.9P %.80j %.8u %.10T %.10M %.6D %R"
+SQUEUE_FORMAT = "%.8i %.4P %.20j %.10T %.10M %.2D %R"
 SQUEUE = f'squeue --me -o "{SQUEUE_FORMAT}" --sort=-i'
 
 import subprocess
