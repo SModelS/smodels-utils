@@ -158,8 +158,11 @@ def runOnePoint ( p, options ) -> bool:
     fileList, inDir = modelTester.getAllInputFiles(inFile)
     development = False
     timeout = 0
-    modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
-        database, timeout, development, options["inifile"] )
+    if options["dry_run"]:
+        pprint ( f"dry run, skipping production!" )
+    else:
+        modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
+            database, timeout, development, options["inifile"] )
     pprint ( f"{of} done!" )
     unlock ( of )
     return True
