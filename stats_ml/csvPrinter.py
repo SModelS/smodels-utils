@@ -150,7 +150,7 @@ class CsvPrinter(BasicPrinter):
             with open ( filename, "wt" ) as f:
                 f.write ( "{\n" )
                 f.write ( "    'error': 'no entries',\n" )
-                f.write ( f"    'regions': {regions},\n" )
+                f.write ( f"    'regions': {regions}\n" )
                 f.write ( "}\n" )
             print ( f"[csvPrinter] no entries for {basename}" )
             return
