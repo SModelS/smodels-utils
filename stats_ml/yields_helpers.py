@@ -4,7 +4,8 @@
 
 import time
 import sys, os
-pmgit = f"{os.environ['HOME']}/git/protomodels/"
+from pathlib import Path
+pmgit = f"{Path.home()}/git/protomodels/"
 if os.path.exists ( pmgit ):
     sys.path.insert(0,pmgit )
 

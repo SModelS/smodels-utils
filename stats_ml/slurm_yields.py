@@ -68,6 +68,19 @@ def cleanOldScripts ( maxAgeHours : float = 10. ):
         except FileNotFoundError:
             pass
 
+def cleanTempFiles ( outputdir : str ):
+    """ remove all *.temp files in outputdir """
+    tempdir = Path ( outputdir )
+    if not tempdir.exists():
+        return
+    for tempfile in tempdir.glob ( "*.temp" ):
+        try:
+            if tempfile.is_file():
+                tempfile.unlink()
+                print ( f"[slurm_yields] removed temp file {tempfile}" )
+        except FileNotFoundError:
+            pass
+
 def getPoints():
     points = []
     points.append ( { "mN2": 180,  "mC1": 180, "mN1": 157 } )
@@ -104,7 +117,8 @@ def submit ( mN2, mC1, mN1, options ):
     if options.get ( "analysis" ):
         jobname = f"{options['analysis']}_{jobname}"
     # the command that the batch script will run
-    yields_cmd = [ "./yieldsCreator.py" ]
+    # use an absolute interpreter, since the job runs with an empty environment
+    yields_cmd = [ os.path.abspath ( sys.executable ), "./yieldsCreator.py" ]
     yields_cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     yields_cmd += [ "--compute_xsecs" ]
     for option, value in options.items():
@@ -125,12 +139,14 @@ def submit ( mN2, mC1, mN1, options ):
     submitdir.mkdir ( exist_ok = True )
     script = submitdir / f"{jobname}_mN2{mN2}_mC1{mC1}_mN1{mN1}.sh"
     scriptcontent = "#!/bin/bash\n\n"
+    # run everything below under bash with a completely empty environment
+    env = shutil.which ( "env" ) or "/usr/bin/env"
+    scriptcontent += f"exec {shlex.quote(env)} -i /bin/bash <<'CLEAN_ENV_EOF'\n"
     scriptcontent += "# the script removes itself once the job has finished\n"
     scriptcontent += f"script={shlex.quote(os.path.abspath(script))}\n"
-    scriptcontent += "trap 'rm -f \"$script\"' EXIT\n\n"
-    scriptcontent += "# use the user's environment, nothing is exported by sbatch\n"
-    scriptcontent += "source ~/.bashrc\n\n"
+    scriptcontent += "# trap 'rm -f \"$script\"' EXIT\n\n"
     scriptcontent += " ".join ( shlex.quote(i) for i in yields_cmd ) + "\n"
+    scriptcontent += "CLEAN_ENV_EOF\n"
     with open ( script, "wt" ) as f:
         f.write ( scriptcontent )
     os.chmod ( script, 0o755 )
@@ -160,6 +176,9 @@ def submit ( mN2, mC1, mN1, options ):
 
 def runGrid( options : dict ) -> list:
     prepare ( options )
+    rm_temp = bool ( options.pop ( "rm_temp", False ) )
+    if rm_temp:
+        cleanTempFiles ( options["outputdir"] )
     dmMothers = int ( options["dmMothers"] )
     dmN1 = int ( options["dmN1"] )
     minMothers = int ( options["minMothers"] )
@@ -214,6 +233,9 @@ if __name__ == "__main__":
             help='just show the batch jobs', action='store_true')
     ap.add_argument( '--enable_full',
             help='enable full likelihoods', action='store_true')
+    ap.add_argument( '--rm_temp',
+            help='remove all *.temp files in outputdir before running',
+            action='store_true')
     ap.add_argument( '--dmMothers',
             help='dm(mothers) for the grid [50]', type=int, default = 50 )
     ap.add_argument( '--minMothers',

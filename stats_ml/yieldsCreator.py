@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 
 import shutil, os, sys, time, logging
+from pathlib import Path
+
+# make the sibling git checkouts importable without PYTHONPATH
+_gitdir = Path ( __file__ ).resolve().parent.parent.parent
+for _p in ( "smodels", "smodels-utils", "protomodels" ):
+    _d = _gitdir / _p
+    if _d.is_dir():
+        sys.path.insert ( 0, str ( _d ) )
+
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.terminalcolors import PINK, YELLOW, RESET
-from pathlib import Path
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
