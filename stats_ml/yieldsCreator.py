@@ -68,7 +68,7 @@ def createSLHAFile ( masses, txname : str ):
 def addRefXSec ( filename ):
     from smodels_utils.morexsecs.refxsecComputer import RefXSecComputer
     first = True
-    verbose = True
+    verbose = False
     computer = RefXSecComputer( verbose, first )
     version = "1.0.0"
     c = f"produced via yieldsCreator v{version}"
