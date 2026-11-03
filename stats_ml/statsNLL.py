@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
+""" thats the code that gets the true nll, predicted nll, its error,
+    computes pulls
+
+"""
+
 import os, copy, time, sys
 sys.path.insert(0,"../../" )
-sys.path.insert(0,"../../smodels//software/f2022/software/python/3.10.8-gcccore-12.2.0/lib/python3.10/site-packages:" )
+sys.path.insert(0,f"{os.environ['HOME']}/git/protomodels/")
 
 from smodels.experiment.databaseObj import Database
 from smodels.decomposition import decomposer

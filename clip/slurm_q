@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
 # SQUEUE_FORMAT = "%.8i %.9P %.80j %.8u %.10T %.10M %.6D %R"
-SQUEUE_FORMAT = "%.8i %.4P %.20j %.10T %.10M %.2D %R"
+SQUEUE_FORMAT = "%.8i %.2P %.35j %.9T %.6M %.2D %13R"
 SQUEUE = f'squeue --me -o "{SQUEUE_FORMAT}" --sort=-i'
 
 import subprocess
 o = subprocess.getoutput ( SQUEUE )
 print ( o )
+
+states = subprocess.getoutput ( 'squeue --me -h -o "%T"' ).split()
+running = states.count ( "RUNNING" )
+pending = states.count ( "PENDING" )
+print ( f"\nrunning: {running}, pending: {pending}" )

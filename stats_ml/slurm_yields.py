@@ -101,12 +101,14 @@ def submit ( mN2, mC1, mN1, options ):
         jobname = f"{txname}{mN2}_{mN1}"
     if options["enable_full"]:
         jobname = f"f{jobname}"
+    if options.get ( "analysis" ):
+        jobname = f"{options['analysis']}_{jobname}"
     # the command that the batch script will run
     yields_cmd = [ "./yieldsCreator.py" ]
     yields_cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     yields_cmd += [ "--compute_xsecs" ]
     for option, value in options.items():
-        if option in [ "grid", "all", "point", "txname" ]:
+        if option in [ "grid", "all", "point", "txname", "analysis" ]:
             continue
         if type(value)==bool:
             if value == True:
@@ -135,7 +137,7 @@ def submit ( mN2, mC1, mN1, options ):
 
     cmd = []
     if shutil.which ( "sbatch" ) != None:
-        cmd = [ "sbatch", "--export=NONE", "-c", "6", "--time", "479", "--mem", "2G" ]
+        cmd = [ "sbatch", "--export=NIL", "-c", "6", "--time", "479", "--mem", "2G" ]
         cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
         cmd += [ "--error", f"./slurm_logs/%j.out",
@@ -174,6 +176,9 @@ def runGrid( options : dict ) -> list:
     parser = modelTester.getParameters(options["inifile"])
     txname = parser["database"]["txnames"]
     options["txname"]=txname
+    anaids = parser["database"]["analyses"].split(",")
+    anaids = [ x.strip() for x in anaids ]
+    options["analysis"] = anaids[0]
     jobids = []
     if not halfway:
         for mN2 in range(minMothers,maxMothers, dmMothers ):
