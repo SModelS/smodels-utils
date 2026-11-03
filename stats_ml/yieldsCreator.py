@@ -169,8 +169,8 @@ def prepare( options ):
     Path ( options["outputdir"] ).mkdir(exist_ok=True)
 
 def setupSmodelsLogging ( options ):
-    """ write smodels log messages (including debug) to a file,
-        instead of printing them to stdout/stderr """
+    """ write smodels debug and info messages to a file only.
+        warnings and errors are written to the file and printed to stdout """
     from smodels.base.smodelsLogging import logger, setLogLevel
     logfile = options.get ( "logfile" )
     if not logfile:
@@ -189,7 +189,12 @@ def setupSmodelsLogging ( options ):
             ' in %(lineno)s: %(message)s' )
     fileHandler = logging.FileHandler ( logfile, mode="w" )
     fileHandler.setFormatter ( formatter )
+    fileHandler.setLevel ( logging.DEBUG )
     logger.addHandler ( fileHandler )
+    consoleHandler = logging.StreamHandler ( sys.stdout )
+    consoleHandler.setFormatter ( formatter )
+    consoleHandler.setLevel ( logging.WARNING )
+    logger.addHandler ( consoleHandler )
     logger.propagate = False
     setLogLevel ( "debug" )
     pprint ( f"smodels log messages go to {logfile}" )
