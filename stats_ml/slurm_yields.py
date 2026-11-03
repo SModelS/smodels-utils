@@ -4,10 +4,40 @@ import shutil, os, sys, time, shlex
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
+from smodels_utils.helper.terminalcolors import PINK, RESET
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
 from yields_helpers import outputFile, lock, unlock
+
+JOB_PRINT_LIMIT = 3
+_jobPrints = []
+_jobCount = 0
+
+def pprint ( *args, **kwargs ):
+    """ pretty print, with the [slurm_yields] label in pink """
+    print ( f"{PINK}[slurm_yields]{RESET}", *args, **kwargs )
+
+def queueJobPrint ( lines : list ):
+    """ print the first few jobs immediately, queue the rest """
+    global _jobCount
+    _jobCount += 1
+    if _jobCount <= JOB_PRINT_LIMIT:
+        for line in lines:
+            pprint ( line )
+    else:
+        _jobPrints.append ( lines )
+
+def flushJobPrints ():
+    """ print the last queued job, with an ellipsis if jobs were skipped """
+    global _jobCount
+    if _jobPrints:
+        if len ( _jobPrints ) > 1:
+            pprint ( "... (more submissions) ... " )
+        for line in _jobPrints[-1]:
+            pprint ( line )
+        _jobPrints.clear()
+    _jobCount = 0
 
 def logCall ( jobids : list ):
     logfile = f"slurm.log"
@@ -64,7 +94,7 @@ def cleanOldScripts ( maxAgeHours : float = 10. ):
         try:
             if script.is_file() and script.stat().st_mtime < cutoff:
                 script.unlink()
-                print ( f"[slurm_yields] removed old script {script}" )
+                pprint ( f"removed old script {script}" )
         except FileNotFoundError:
             pass
 
@@ -77,7 +107,7 @@ def cleanTempFiles ( outputdir : str ):
         try:
             if tempfile.is_file():
                 tempfile.unlink()
-                print ( f"[slurm_yields] removed temp file {tempfile}" )
+                pprint ( f"removed temp file {tempfile}" )
         except FileNotFoundError:
             pass
 
@@ -98,12 +128,12 @@ def submit ( mN2, mC1, mN1, options ):
     for ext in [ "csv", "json", "err", "temp" ]:
         fn = f"{oFile}.{ext}"
         if os.path.exists ( fn ):
-            print ( f"[slurm_yields] {fn} exists. skipping" )
+            pprint ( f"{fn} exists. skipping" )
             # import sys; sys.exit()
             return
         else:
             pass
-            # print ( f"[slurm_yields] {fn} doesnt exist" )
+            # pprint ( f"{fn} doesnt exist" )
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
     txname = options['txname'][1:]
@@ -140,7 +170,7 @@ def submit ( mN2, mC1, mN1, options ):
     script = submitdir / f"{jobname}_mN2{mN2}_mC1{mC1}_mN1{mN1}.sh"
     scriptcontent = "#!/bin/bash\n\n"
     # run everything below under bash with a completely empty environment
-    env = shutil.which ( "env" ) or "/usr/bin/env"
+    env = "/usr/bin/env" if os.path.exists ( "/usr/bin/env" ) else ( shutil.which ( "env" ) or "env" )
     scriptcontent += f"exec {shlex.quote(env)} -i /bin/bash <<'CLEAN_ENV_EOF'\n"
     scriptcontent += "# the script removes itself once the job has finished\n"
     scriptcontent += f"script={shlex.quote(os.path.abspath(script))}\n"
@@ -159,13 +189,15 @@ def submit ( mN2, mC1, mN1, options ):
         cmd += [ "--error", f"./slurm_logs/%j.out",
                  "--output", f"./slurm_logs/%j.out" ]
     cmd += [ str(script) ]
-    print ( f"[yieldsCreator] {' '.join(cmd)}" )
+    joblines = [ f"{' '.join(cmd)}" ]
     if options["dry_run"]:
+        queueJobPrint ( joblines )
         return
     import subprocess
     lock ( oFile )
     a = subprocess.run ( cmd, stdout = subprocess.PIPE )
-    print ( f'[yieldsCreator] {a.stdout.strip().decode("utf-8")}' )
+    joblines.append ( f'{a.stdout.strip().decode("utf-8")}' )
+    queueJobPrint ( joblines )
     sjobid = str ( a.stdout.strip() ).split(" ")[-1]
     try:
         jobid = int ( sjobid.replace("'","") )
@@ -222,6 +254,7 @@ def runGrid( options : dict ) -> list:
                 jobid = submit ( mN2, mC1, mN1, options )
                 if jobid != None:
                     jobids.append ( jobid )
+    flushJobPrints()
     return jobids
 
 if __name__ == "__main__":

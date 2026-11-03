@@ -13,6 +13,7 @@ def collect ( folder : str ) -> int:
     outfile = f"{case}.csv"
     first = True
     ct_l = 0
+    skipping = 0
     with open ( outfile, "wt" ) as out:
         for fname in files:
             with open ( fname, "rt" ) as f:
@@ -25,13 +26,16 @@ def collect ( folder : str ) -> int:
                         continue
                     tokens = line.split(",")
                     tokens = list ( map ( float, tokens ) )
-                    if any(x>320 for x in tokens[-8:]):
-                        print ( "skipping:", max(tokens[-8:]) )
+                    min_x, max_x = min(tokens[-8:]), max(tokens[-8:])
+                    if max_x > 100*min_x:
+                        # print ( "skipping:", max(tokens[-8:]), tokens )
+                        skipping+=1
                         continue
                     out.write ( clean ( line ) )
                     ct_l += 1
         out.close()
         print ( f"{outfile}: {ct_l} lines" )
+    print ( f"  -- skipped {skipping} lines" )
     return ct_l
 
 def log( n_lines : dict ):
