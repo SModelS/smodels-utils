@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import shutil, os, sys, time
+import shutil, os, sys, time, logging
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
@@ -163,6 +163,33 @@ def prepare( options ):
     Path ( "slha_scan/" ).mkdir(exist_ok=True)
     Path ( options["outputdir"] ).mkdir(exist_ok=True)
 
+def setupSmodelsLogging ( options ):
+    """ write smodels log messages (including debug) to a file,
+        instead of printing them to stdout/stderr """
+    from smodels.base.smodelsLogging import logger, setLogLevel
+    logfile = options.get ( "logfile" )
+    if not logfile:
+        masses = [ options.get ( "mN2" ), options.get ( "mC1" ),
+                   options.get ( "mN1" ) ]
+        tag = ""
+        if all ( m != None for m in masses ):
+            tag = "_" + "_".join ( str(m) for m in masses )
+        logfile = os.path.join ( options["outputdir"], f"smodels{tag}.log" )
+    logfile = os.path.abspath ( logfile )
+    Path ( logfile ).parent.mkdir ( parents=True, exist_ok=True )
+    for handler in logger.handlers[:]:
+        logger.removeHandler ( handler )
+        handler.close()
+    formatter = logging.Formatter ( '%(levelname)s in %(module)s.%(funcName)s()'
+            ' in %(lineno)s: %(message)s' )
+    fileHandler = logging.FileHandler ( logfile, mode="w" )
+    fileHandler.setFormatter ( formatter )
+    logger.addHandler ( fileHandler )
+    logger.propagate = False
+    setLogLevel ( "debug" )
+    print ( f"[yieldsCreator] smodels log messages go to {logfile}" )
+    return logfile
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(description="create points for joaquin" )
@@ -183,7 +210,12 @@ if __name__ == "__main__":
     ap.add_argument( '--outputdir',
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
+    ap.add_argument( '--logfile',
+            help='file for smodels log messages '
+                 '[<outputdir>/smodels_<mN2>_<mC1>_<mN1>.log]',
+            type=str, default = None )
     args = ap.parse_args()
     prepare( vars(args) )
+    setupSmodelsLogging ( vars(args) )
     point = { "mN1": args.mN1, "mN2": args.mN2, "mC1": args.mC1 }
     runOnePoint ( point, vars(args) )
