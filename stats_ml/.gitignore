@@ -1,4 +1,6 @@
 stats
+submit
+slurm_logs/
 stats.all
 results/
 slhafiles/
