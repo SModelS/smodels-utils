@@ -575,9 +575,14 @@ class RefXSecComputer:
         xsecks = self.cast ( xsecs.keys() )
         if self.outOfBounds ( mass, xsecks ):
             return None
-        if type(mass)==float:
-            from scipy.interpolate import interp1d
-            return interp1d ( xsecks, list(xsecs.values()) )( mass )
+        import numbers
+        if isinstance ( mass, numbers.Integral ) or isinstance ( mass, numbers.Real ):
+        # if type(mass) in [ float, int ]:
+            # from scipy.interpolate import interp1d
+            # return interp1d ( xsecks, list(xsecs.values()) )( mass )
+            import numpy as np
+            ret = np.interp ( mass, xsecks, list(xsecs.values()) )
+            return ret
         from scipy.interpolate import griddata
         ret = griddata ( xsecks, list(xsecs.values()), mass )
         return ret
