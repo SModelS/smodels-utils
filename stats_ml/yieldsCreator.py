@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import shutil, os, sys, time, logging
+import shutil, os, sys, time
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
