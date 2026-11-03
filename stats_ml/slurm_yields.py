@@ -54,6 +54,20 @@ def prepare( options ):
     Path ( "slurm_logs/" ).mkdir(exist_ok=True)
     Path ( options["outputdir"] ).mkdir(exist_ok=True)
 
+def cleanOldScripts ( maxAgeHours : float = 10. ):
+    """ remove scripts in the submit folder that are older than maxAgeHours """
+    submitdir = Path ( "submit" )
+    if not submitdir.exists():
+        return
+    cutoff = time.time() - maxAgeHours * 3600
+    for script in submitdir.glob ( "*.sh" ):
+        try:
+            if script.is_file() and script.stat().st_mtime < cutoff:
+                script.unlink()
+                print ( f"[slurm_yields] removed old script {script}" )
+        except FileNotFoundError:
+            pass
+
 def getPoints():
     points = []
     points.append ( { "mN2": 180,  "mC1": 180, "mN1": 157 } )
@@ -108,9 +122,12 @@ def submit ( mN2, mC1, mN1, options ):
     submitdir.mkdir ( exist_ok = True )
     script = submitdir / f"{jobname}_mN2{mN2}_mC1{mC1}_mN1{mN1}.sh"
     scriptcontent = "#!/bin/bash\n\n"
+    scriptcontent += "# the script removes itself once the job has finished\n"
+    scriptcontent += f"script={shlex.quote(os.path.abspath(script))}\n"
+    scriptcontent += "trap 'rm -f \"$script\"' EXIT\n\n"
     scriptcontent += "# use the user's environment, nothing is exported by sbatch\n"
     scriptcontent += "source ~/.bashrc\n\n"
-    scriptcontent += "exec " + " ".join ( shlex.quote(i) for i in yields_cmd ) + "\n"
+    scriptcontent += " ".join ( shlex.quote(i) for i in yields_cmd ) + "\n"
     with open ( script, "wt" ) as f:
         f.write ( scriptcontent )
     os.chmod ( script, 0o755 )
@@ -222,3 +239,4 @@ if __name__ == "__main__":
 
     jobids = runGrid( vars(args) )
     logCall(jobids)
+    cleanOldScripts()
