@@ -144,7 +144,8 @@ def runOnePoint ( p, options ) -> bool:
     if inFile == None:
         unlock ( of )
         return False
-    database = Database ( parser["database"]["path"] )
+    dbpath = os.path.expanduser ( parser["database"]["path"] )
+    database = Database ( dbpath )
     database.getExpResults ( analysisIDs = anaids )
     modelTester.loadDatabaseResults(parser, database)
     if options["enable_full"]:
