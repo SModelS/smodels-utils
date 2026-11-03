@@ -104,6 +104,7 @@ def submit ( mN2, mC1, mN1, options ):
     # the command that the batch script will run
     yields_cmd = [ "./yieldsCreator.py" ]
     yields_cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
+    yields_cmd += [ "--compute_xsecs" ]
     for option, value in options.items():
         if option in [ "grid", "all", "point", "txname" ]:
             continue
