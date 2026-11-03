@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import shutil, os, sys, time
+import shutil, os, sys, time, shlex
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from pathlib import Path
@@ -79,7 +79,6 @@ def submit ( mN2, mC1, mN1, options ):
             # print ( f"[slurm_yields] {fn} doesnt exist" )
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
-    cmd = []
     txname = options['txname'][1:]
     if txname == "SlepSlep":
         txname = "Slep"
@@ -88,26 +87,42 @@ def submit ( mN2, mC1, mN1, options ):
         jobname = f"{txname}{mN2}_{mN1}"
     if options["enable_full"]:
         jobname = f"f{jobname}"
-    if shutil.which ( "sbatch" ) != None:
-        cmd = [ "sbatch", "-c", "6", "--time", "479", "--mem", "2G" ]
-        cmd += [ "--job-name", jobname ]
-        #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
-        cmd += [ "--error", f"./slurm_logs/%j.out",
-                 "--output", f"./slurm_logs/%j.out" ]
-    cmd += [ "./yieldsCreator.py" ]
-    cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
+    # the command that the batch script will run
+    yields_cmd = [ "./yieldsCreator.py" ]
+    yields_cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     for option, value in options.items():
         if option in [ "grid", "all", "point", "txname" ]:
             continue
         if type(value)==bool:
             if value == True:
-                cmd += [ f"--{option}" ]
+                yields_cmd += [ f"--{option}" ]
             else:
                 pass
 #        elif type(value)!=str:
 #            print ( f"[yieldsCreator] option {option} is {type(value)} {value}" )
         else:
-            cmd += [ f"--{option}", str(value) ]
+            yields_cmd += [ f"--{option}", str(value) ]
+
+    # create a small batch script with a unique name, overwriting any old one
+    submitdir = Path ( "submit" )
+    submitdir.mkdir ( exist_ok = True )
+    script = submitdir / f"{jobname}_mN2{mN2}_mC1{mC1}_mN1{mN1}.sh"
+    scriptcontent = "#!/bin/bash\n\n"
+    scriptcontent += "# use the user's environment, nothing is exported by sbatch\n"
+    scriptcontent += "source ~/.bashrc\n\n"
+    scriptcontent += "exec " + " ".join ( shlex.quote(i) for i in yields_cmd ) + "\n"
+    with open ( script, "wt" ) as f:
+        f.write ( scriptcontent )
+    os.chmod ( script, 0o755 )
+
+    cmd = []
+    if shutil.which ( "sbatch" ) != None:
+        cmd = [ "sbatch", "--export=NONE", "-c", "6", "--time", "479", "--mem", "2G" ]
+        cmd += [ "--job-name", jobname ]
+        #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
+        cmd += [ "--error", f"./slurm_logs/%j.out",
+                 "--output", f"./slurm_logs/%j.out" ]
+    cmd += [ str(script) ]
     print ( f"[yieldsCreator] {' '.join(cmd)}" )
     if options["dry_run"]:
         return
