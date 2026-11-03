@@ -3,11 +3,16 @@
 import shutil, os, sys, time, logging
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
+from smodels_utils.helper.terminalcolors import PINK, YELLOW, RESET
 from pathlib import Path
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
 from yields_helpers import outputFile, unlock
+
+def pprint ( *args, **kwargs ):
+    """ pretty print, with the [yieldsCreator] label in pink """
+    print ( f"{PINK}[yieldsCreator]{RESET}", *args, **kwargs )
 
 def getTopLevelDir ():
     """ get the path to smodels-utils/ """
@@ -27,17 +32,17 @@ def getSLHAFile ( masses, txname : str, options ):
     src_d = f"{getTopLevelDir()}/slha"
     src = os.path.abspath ( f"{src_d}/{srcf}" )
     if os.path.exists ( src ):
-        print ( f"[yieldsCreator] found {src}: will use it" )
+        pprint ( f"found {src}: will use it" )
         ## cool, we can just copy
         dest = f"slha_scan/{destf}"
         shutil.copyfile ( src, dest )
         return dest
     else:
         if options["compute_xsecs"]:
-            print ( f"[yieldsCreator] did not find {src}: need to make it" )
+            pprint ( f"did not find {src}: need to make it" )
             return createSLHAFile ( masses, txname )
         else:
-            print ( f"[yieldsCreator] did not find {src}: skip it" )
+            pprint ( f"did not find {src}: skip it" )
             return None
 
 def createSLHAFile ( masses, txname : str ):
@@ -110,10 +115,10 @@ def addXSec ( filename ):
     xargs.colors = None
     xargs.verbosity = 30
     from smodels.tools import xsecComputer
-    print ( f"[yieldsCreator] computing xsecs" )
+    pprint ( f"computing xsecs" )
     xsecComputer.main ( xargs )
     Path ( pythiaCard ).unlink ( missing_ok = True )
-    print ( f"[yieldsCreator] done computing xsecs" )
+    pprint ( f"done computing xsecs" )
 
 def enableFullLlhds ( database, anaids ):
     """ turn on full llhds """
@@ -123,7 +128,7 @@ def enableFullLlhds ( database, anaids ):
             continue
         if not "-orig" in er.globalInfo.id:
             continue
-        print ( f"[yieldsCreator] enable full model for {er.globalInfo.id}" )
+        pprint ( f"{YELLOW}enable full model for {er.globalInfo.id}{RESET}" )
         enableFullLlhdModels ( er.globalInfo )
 
 def runOnePoint ( p, options ) -> bool:
@@ -139,7 +144,7 @@ def runOnePoint ( p, options ) -> bool:
     for particle,mass in p.items():
         if mass == int(mass):
             p[particle]=int(mass)
-    print ( f"[yieldsCreator:{time.asctime()}] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
+    pprint ( f"[{time.asctime()}] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
     inFile = getSLHAFile ( p, txname, options )
     if inFile == None:
         unlock ( of )
@@ -155,7 +160,7 @@ def runOnePoint ( p, options ) -> bool:
     timeout = 0
     modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
         database, timeout, development, options["inifile"] )
-    print ( f"[yieldsCreator] {of} done!" )
+    pprint ( f"{of} done!" )
     unlock ( of )
     return True
 
@@ -187,7 +192,7 @@ def setupSmodelsLogging ( options ):
     logger.addHandler ( fileHandler )
     logger.propagate = False
     setLogLevel ( "debug" )
-    print ( f"[yieldsCreator] smodels log messages go to {logfile}" )
+    pprint ( f"smodels log messages go to {logfile}" )
     return logfile
 
 if __name__ == "__main__":
