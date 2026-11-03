@@ -169,8 +169,10 @@ def runOnePoint ( p, options ) -> bool:
     if options["dry_run"]:
         pprint ( f"dry run, skipping production!" )
     else:
+        pprint ( f"running SModelS" )
         modelTester.testPoints ( fileList , inDir, options["outputdir"], parser,
-            database, timeout, development, options["inifile"] )
+                database, timeout, development, options["inifile"] )
+        pprint ( f" - done running SModelS" )
     pprint ( f"{of} done!" )
     unlock ( of )
     return True
