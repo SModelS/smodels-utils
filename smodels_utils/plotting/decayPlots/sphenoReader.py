@@ -10,6 +10,7 @@ from __future__ import print_function
 
 from pyparsing import Word, nums, ParseException, Optional, alphanums 
 import pyslha
+from pbase.constants import LSP, X2Z, X1W, X3Z, X2W
 import logging
 logger = logging.getLogger(__name__)
 
@@ -37,9 +38,9 @@ class SPhenoReader:
           2000011: "~e_R", 2000012: "~nu_eR",
           2000013: "~mu_R", 2000014: "~nu_muR",
           2000015: "~tau_R", 2000016: "~nu_tauR",
-          1000021: "~g", 1000022: "~chi10",
-          1000024: "~chi1+", 1000023: "~chi20",
-          1000037: "~chi2+", 1000025: "~chi30",
+          1000021: "~g", LSP: "~chi10",
+          X1W: "~chi1+", X2Z: "~chi20",
+          X2W: "~chi2+", X3Z: "~chi30",
           1000035: "~chi40"
         }
         tmp = {}
@@ -132,7 +133,7 @@ class SPhenoReader:
 
     def spin ( self, pid ):
         """ get the spin of pid, assuming SUSY """
-        if pid in [ 1000022, 1000023, 1000024, 1000021, 1000025, 1000035, 1000037 ]:
+        if pid in [ LSP, X2Z, X1W, 1000021, X3Z, 1000035, X2W ]:
             return 0.5
         return 0
         """
@@ -147,7 +148,7 @@ class SPhenoReader:
 
     def fermionic ( self, pid ):
         """ is pid fermionic (in SUSY notation) """
-        if pid in [ 1000022, 1000023, 1000024, 1000021, 1000025, 1000035, 1000037 ]:
+        if pid in [ LSP, X2Z, X1W, 1000021, X3Z, 1000035, X2W ]:
             return True
         return False
         """

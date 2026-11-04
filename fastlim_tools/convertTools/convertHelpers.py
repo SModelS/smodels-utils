@@ -7,6 +7,7 @@ import commands
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools import statistics
+from pbase.constants import LSP
     
 fastlimdir="../fastlim-1.0/analyses_info/8TeV/"
 efficienciesdir="../fastlim-1.0/efficiency_tables/"
@@ -296,15 +297,15 @@ def fastlimPIDsFor(txname):
     
     pidsDict = {}
     
-    pidsDict["GbB1tN1_GbB1tN1"] = [[[1000021,1000005,1000022],[1000021,1000005,1000022]],
-                                    [[1000021,2000005,1000022],[1000021,2000005,1000022]]] 
-    pidsDict["GtT1bN1_GtT1tN1"] = [[[1000021,1000006,1000022],[1000021,1000006,1000022]],
-                                    [[1000021,2000006,1000022],[1000021,2000006,1000022]]]
-    pidsDict["GgN1_GqqN1"] =  [[[1000021,1000022],[1000021,1000022]]]
-    pidsDict["T1tN1_T1tN1"] =  [ [[1000006,1000022], [1000006,1000022]], 
-                                [[2000006,1000022], [2000006,1000022]] ]
-    pidsDict["B1bN1_B1bN1"]  =  [ [[1000005,1000022], [1000005,1000022]], 
-                                [[2000005,1000022], [2000005,1000022]] ]     
+    pidsDict["GbB1tN1_GbB1tN1"] = [[[1000021,1000005,LSP],[1000021,1000005,LSP]],
+                                    [[1000021,2000005,LSP],[1000021,2000005,LSP]]]
+    pidsDict["GtT1bN1_GtT1tN1"] = [[[1000021,1000006,LSP],[1000021,1000006,LSP]],
+                                    [[1000021,2000006,LSP],[1000021,2000006,LSP]]]
+    pidsDict["GgN1_GqqN1"] =  [[[1000021,LSP],[1000021,LSP]]]
+    pidsDict["T1tN1_T1tN1"] =  [ [[1000006,LSP], [1000006,LSP]],
+                                [[2000006,LSP], [2000006,LSP]] ]
+    pidsDict["B1bN1_B1bN1"]  =  [ [[1000005,LSP], [1000005,LSP]],
+                                [[2000005,LSP], [2000005,LSP]] ]
     pidsDict["GgN1_GttN1"] =  pidsDict["GgN1_GqqN1"] 
     pidsDict['GbbN1_GbtN1'] =  pidsDict["GgN1_GqqN1"]
     pidsDict['GqqN1_GttN1'] =  pidsDict["GgN1_GqqN1"] 

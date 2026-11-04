@@ -1144,7 +1144,7 @@ def prettyAxesV3( txn : str, axes : str, dataMap : dict ) -> str:
     # the dataMap looks like {0: (1, 'mass', 1.00E+00 [GeV]),
     #                         1: (3, 'mass', 1.00E+00 [GeV]),
     #                         2: (3, 'totalwidth', 1.00E+00 [GeV]),
-    # the opids look like {'M1': 1000022, 'M0': 1000023, 'm0': 1000024}
+    # the opids look like {'M1': LSP, 'M0': X2Z, 'm0': X1W}
     # the pids look like {'M1': 'm($\\tilde{\\chi}_1^0$)', 'M0': 'm($\\tilde{\\chi}_2^0$)', 'm0': 'm($\\tilde{\\chi}_1^\\pm$)'}
     axisMap = eval ( axes )
     for k,v in axisMap.items():

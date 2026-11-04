@@ -13,6 +13,7 @@ from typing import Union, List, Tuple
 from cliphelpers import SQUEUE
 
 from ptools.sparticleNames import SParticleNames
+from pbase.constants import LSP, X2Z, X1W
 namer = SParticleNames()
 
 intro = f"{CYAN}[slurm_walk]{RESET} "
@@ -295,7 +296,7 @@ def createWalkerPythonScript ( rvars : dict ):
         if not wallpids:
             f.write ( "## offshell run below ATLAS-SUSY-2019-09 threshold!\n" )
             f.write ( "from builder.manipulator import Manipulator\n" )
-            f.write ( "Manipulator.walledpids[1000024]=30\n" )
+            f.write ( f"Manipulator.walledpids[{X1W}]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
         scheatcode=f"'{cheatcode}'"
         if use_initialiser not in [ None, False ]:
@@ -491,7 +492,7 @@ def runOneJobNoContainer ( rvars: dict ):
         if not wallpids:
             f.write ( "## offshell run below ATLAS-SUSY-2019-09 threshold!\n" )
             f.write ( "from builder.manipulator import Manipulator\n" )
-            f.write ( "Manipulator.walledpids[1000024]=30\n" )
+            f.write ( f"Manipulator.walledpids[{X1W}]=30\n" )
         f.write ( "from walker import factoryOfWalkers\n" )
         scheatcode=f"'{cheatcode}'"
         if use_initialiser not in [ None, False ]:
@@ -588,8 +589,8 @@ def produceLLHDScanScript ( pid1 : int, nprocs : int,
     # rundir = rvars["rundir"]
     fname = f"{rundir}/slurm/L{namer.asciiName(pid1)}.sh"
     if yvariable == -1:
-        yvariable = 1000022
-    if yvariable != 1000022:
+        yvariable = LSP
+    if yvariable != LSP:
         yvn = namer.asciiName(yvariable).replace(" ","").replace(",","")
         yvn = yvn.replace("~","m")
         fname = f"{rundir}/slurm/L{namer.asciiName(pid1)}_{yvn}.sh"
@@ -660,7 +661,7 @@ def fetchUnfrozenFromDict( rundir, includeLSP = True ):
     M = D[0]["masses"]
     ret = []
     for k,v in M.items():
-        if not includeLSP and k == 1000022:
+        if not includeLSP and k == LSP:
             continue
         if v < 90000:
             ret.append(k)
@@ -694,7 +695,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
         hasStop = False
         hasSquark = False
         for ssmpid in ssmpids:
-            #if abs(ssmpid) == 1000022:
+            #if abs(ssmpid) == LSP:
             #    continue
             if abs(ssmpid) in [ 1000006, 2000006 ]:
                 hasStop = True
@@ -704,7 +705,7 @@ def fetchUnfrozenSSMsFromDict( rundir ):
                 takeIt = False
         if hasStop and hasSquark:
             takeIt = False
-        if 1000022 in ssmpids or -1000022 in ssmpids:
+        if LSP in ssmpids or -LSP in ssmpids:
             print ( "{intro}in this iteration we ignore LSP production modes!" )
             takeIt = False
         if takeIt:
@@ -773,7 +774,7 @@ def runScanner( pid : Union[str,int], dry_run : bool, time : float, rewrite : bo
             return
         pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
-            pids = [ 1000001, 1000003, 1000006, 1000022 ]
+            pids = [ 1000001, 1000003, 1000006, LSP ]
         for i in pids:
             runScanner ( i, dry_run, time, rewrite, yvariable, rundir, dbpath, select,
                          do_srcombine, uploadTo )
@@ -1043,13 +1044,13 @@ def main():
                     help='filter analysis results, ("all", "em", "ul", "txnames:T1,T2", ... ["all"]',
                     type=str, default="all" )
     argparser.add_argument ( '--forbiddenparticles',
-                    help="Dont touch the particle ids mentioned here, e.g. '1000023,1000024' []",
+                    help=f"Dont touch the particle ids mentioned here, e.g. '{X2Z},{X1W}' []",
                     type=str, default="[]" )
     argparser.add_argument ( '--yvariable', nargs="?",
                     help='run the teststatScanner for ss multipliers (pid,yvariable), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
                     type=str, default="-1" )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?",
-                    help="run the llhd scanner on <pid> / 1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore. can use names, e.g. 'Xt'",
+                    help=f"run the llhd scanner on <pid> / {LSP}, -1 means dont run. 0 means run on all unfrozen pids of hiscore. can use names, e.g. 'Xt'",
                     type=str, default=-1 )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )

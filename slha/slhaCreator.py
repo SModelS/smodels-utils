@@ -27,6 +27,7 @@ from smodels.tools import xsecComputer
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
 from smodels_utils.helper.terminalcolors import *
+from pbase.constants import LSP, X2Z
 import signal
 from typing import Union
 
@@ -123,8 +124,8 @@ class TemplateFile(object):
         ## the tags for the widths are harder to get
         self.findWidthTags( template )
         if "ISR" in self.txName:
-            print ( f"[slhaCreator] this is an ISR topology, adding 1000022 to the mother pids" )
-            self.motherPDGs.append ( 1000022 )
+            print ( f"[slhaCreator] this is an ISR topology, adding {LSP} to the mother pids" )
+            self.motherPDGs.append ( LSP )
         if self.add_pids != None:
             for a in self.add_pids:
                 self.motherPDGs.append( a )
@@ -582,9 +583,9 @@ if __name__ == "__main__":
     argparser.add_argument('-o', '--overwrite', action='store_true',
         help="overwrite existing tarball, default is to append")
     argparser.add_argument('-i', '--ignore_pids', type=str, default=None,
-        help="specify pids you wish to ignore when computing xsecs, e.g. '(1000023,1000023)'.")
+        help=f"specify pids you wish to ignore when computing xsecs, e.g. '({X2Z},{X2Z})'.")
     argparser.add_argument('-A', '--add_pids', type=str, default=None,
-        help="add pids to list of candidate mother pids, e.g. '[1000022]'.")
+        help=f"add pids to list of candidate mother pids, e.g. '[{LSP}]'.")
     argparser.add_argument('--swapBranches', action='store_true',
         help="switch the order of the branches in the slha file name")
     argparser.add_argument('-6', '--pythia6', action='store_true',

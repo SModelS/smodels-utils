@@ -22,6 +22,7 @@ from smodels.statistics.nnInterface import NNUpperLimitComputer
 from smodels_utils.helper.terminalcolors import *
 import warnings
 from ptools.helpers import py_dumps
+from pbase.constants import LSP, X2Z, X1W
 import numpy as np
 
 warnings.filterwarnings(
@@ -60,22 +61,22 @@ def createSLHAFile( doStaus : bool, doEWKinos : bool,
         mList = ( mLSP, mC1, mStau )
         key = abs ( hash ( mList ) )
         exists = keyExists ( key, resultsfolder )
-    masses = { 1000022: mLSP }
-    decays = { 1000022: {} }
+    masses = { LSP: mLSP }
+    decays = { LSP: {} }
     ssms = {}
     if doEWKinos:
-        masses[1000023]= mC1
-        masses[1000024]= mC1
-        decays[1000024]= { ( 1000022, 24 ): 1 }
-        decays[1000023]= { ( 1000022, 24 ): 1 }
-        decays[1000023]= { ( 1000022, 23 ): .5, ( 1000022, 25 ): .5 }
-        ssms[ ( 1000023, 1000024 ) ] = 1
-        ssms[ (-1000024, 1000023 ) ] = 1
-        ssms[ ( 1000023, 1000023 ) ] = 1
-        ssms[ (-1000024, 1000024 ) ] = 1
+        masses[X2Z]= mC1
+        masses[X1W]= mC1
+        decays[X1W]= { ( LSP, 24 ): 1 }
+        decays[X2Z]= { ( LSP, 24 ): 1 }
+        decays[X2Z]= { ( LSP, 23 ): .5, ( LSP, 25 ): .5 }
+        ssms[ ( X2Z, X1W ) ] = 1
+        ssms[ (-X1W, X2Z ) ] = 1
+        ssms[ ( X2Z, X2Z ) ] = 1
+        ssms[ (-X1W, X1W ) ] = 1
     if doStaus:
         masses[1000015]= mStau
-        decays[1000015]= { ( 1000022, 15 ) : 1 }
+        decays[1000015]= { ( LSP, 15 ) : 1 }
         ssms[ ( -1000015, 1000015 ) ] = 1
     pmodel = { "masses": masses, "decays": decays, "ssmultipliers": ssms }
     from protomodels.builder.manipulator import Manipulator

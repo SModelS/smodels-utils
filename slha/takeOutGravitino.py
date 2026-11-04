@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 """ very simple script that replaces gravitinos (1000039) with neutralinos
-    (1000022) """
+    (LSP) """
 
 import subprocess, glob
+from pbase.constants import LSP
 
 def sed ( fname ):
     f = open ( fname, "rt" )
@@ -13,7 +14,7 @@ def sed ( fname ):
     for line in lines:
         if "chi_10" in line:
             continue
-        t = line.replace("1000039","1000022")
+        t = line.replace("1000039", str(LSP))
         newlines.append ( t )
     f = open ( fname, "wt" )
     for newl in newlines:

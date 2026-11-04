@@ -9,6 +9,7 @@ import random
 import pyslha
 import IPython
 import math
+from pbase.constants import LSP, X2Z
 
 def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
     """ process the files, i.e. compute xsecs for them 
@@ -25,7 +26,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
     ## for thscpm6
     if ssmultipliers not in [ None, "", "None", "none" ]:
         ## suppress everything but ( '*200000?', '*100000?' )
-        # D = { ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }
+        # D = { ('*LSP', '*' ): 0., ('*X2Z', '*' ): 0. }
         ssms = f' --ssmultipliers "{str(ssmultipliers)}" '
         # print ( "ssm", ssmultipliers )
     for f in files:
@@ -153,7 +154,7 @@ def main():
     if args.list_ssms:
         print ( "Some sensible -s arguments" )
         print ( "No neutralino production" )
-        print ( "{ ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }" )
+        print ( f"{{ ('*{LSP}', '*' ): 0., ('*{X2Z}', '*' ): 0. }}" )
         print ( "No weakino production" )
         print ( "{ ('*100002?', '*' ): 0. }" )
         sys.exit()

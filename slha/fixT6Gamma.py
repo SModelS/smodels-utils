@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob, subprocess
+from pbase.constants import X2W
 
 def main():
     cmd = "tar xzvf T6Gamma.tar.gz"
@@ -17,7 +18,7 @@ def main():
                     pass
                 else:
                     f.write ( line )
-                if "1000037" in line:
+                if str(X2W) in line:
                     f.write ( "   2000012     1.00000000E+05   # ~nu_eR\n" )
                     f.write ( "   2000014     1.00000000E+05   # ~nu_muR\n" )
                     f.write ( "   2000016     1.00000000E+05   # ~nu_tauR\n" )

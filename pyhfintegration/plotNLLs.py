@@ -23,6 +23,7 @@ from smodels.base.model import Model
 from smodels.base.physicsUnits import GeV, pb, fb
 from smodels.tools.statistics import likelihoodFromLimits
 from smodels_utils.helper import slhaManipulator
+from pbase.constants import LSP, X2Z
         
 def writeToPickle( D ):
     """ write these guys to a pickle file """
@@ -111,8 +112,8 @@ def create():
             # model.updateParticles ( inputFile="../slha/" + f )
             pyfile=pyslha.readSLHAFile ( slhafile )
             masses=pyfile.blocks["MASS"]
-            mmother = masses[1000023]
-            reallsp = masses[1000022]
+            mmother = masses[X2Z]
+            reallsp = masses[LSP]
             xsec = 0.
             for k,xsecs in pyfile.xsections.items():
                 for xs in xsecs.xsecs:

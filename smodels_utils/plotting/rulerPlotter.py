@@ -19,6 +19,7 @@ import logging
 import pyslha
 sys.path.insert(0,"../../../protomodels/" )
 from ptools.sparticleNames import SParticleNames
+from pbase.constants import LSP
 
 mpl.rcParams['figure.dpi'] = 300
 
@@ -347,7 +348,7 @@ class RulerPlot:
                 for d in decays[:1]:
                     ids = d["ids"]
                     br = d["br"]
-                    idBSM = 1000022
+                    idBSM = LSP
                     idNotBSM = []
                     for iD in ids:
                         if abs(iD)>1000000:

@@ -25,6 +25,7 @@ from smodels.base.crossSection import LO, NLO, NLL, NNLL
 from smodels.base import crossSection
 from smodels.base.exceptions import SModelSBaseError as SModelSError
 from smodels import installation as smodelsinstallation
+from pbase.constants import LSP, X2Z, X1W, X3Z, X2W
 
 try:
     from smodels_utils.SModelSUtils import installDirectory
@@ -458,22 +459,22 @@ class RefXSecComputer:
         # print ( "findOpenChannels" )
         channels = []
         # productions of same-sign-pid pairs when the particle is within reach
-        samesignmodes = ( 1000021, 1000023, 1000025 )
+        samesignmodes = ( 1000021, X2Z, X3Z )
         # production of opposite-sign-pid pairs when the particle is within reach
         oppositesignmodes = ( 1000006, 1000005, 1000011, 1000013, 1000015, 2000011, 2000013, 2000015,
-                              1000024, 17, 18, 6000005, 6000006, 6000007, 6000008, 6000009
+                              X1W, 17, 18, 6000005, 6000006, 6000007, 6000008, 6000009
                             )
 
         # associate production
         associateproduction = ( ( 1000001, 1000021 ), 
-                                ( 1000022, 1000023 ), 
-                                ( 1000024, 1000023 ), ( -1000024, 1000023 ), 
-#                                ( 1000024, 1000022 ), ( -1000024, 1000022 ) , # uncomment this line to include C1N1 production
-                                ( 1000023, 1000025 ), ( 1000024, 1000025 ), ( -1000024, 1000025 ) )
+                                ( LSP, X2Z ),
+                                ( X1W, X2Z ), ( -X1W, X2Z ),
+#                                ( X1W, LSP ), ( -X1W, LSP ) , # uncomment this line to include C1N1 production
+                                ( X2Z, X3Z ), ( X1W, X3Z ), ( -X1W, X3Z ) )
         schannel = ( 35, )
         ## production modes to add that needs two different particles
         ## to be unfrozen
-        # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( 1000023, 1000024 ): ( 1000023, 1000024 ), ( -1000023, 1000024 ): ( -1000023, 1000024 ) }
+        # associateproductions = { ( 1000001, 1000021 ): ( 1000001, 1000021 ), ( X2Z, X1W ): ( X2Z, X1W ), ( -X2Z, X1W ): ( -X2Z, X1W ) }
 
         for pid,mass in masses.items():
             #if pid < 999999 and pid not in schannel:
@@ -652,7 +653,7 @@ class RefXSecComputer:
             isEWK=False
             #order = NNLL # 4
             order = (NLL, NNLL) # specify for both
-        if pid1 in [ -1000024 ] and pid2 in [ 1000023, 1000022 ]:
+        if pid1 in [ -X1W ] and pid2 in [ X2Z, LSP ]:
             filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
@@ -665,7 +666,7 @@ class RefXSecComputer:
                 columns["mass"]=(0,1)
                 columns["xsec"]=3
                 pb = True
-        if pid1 in [ 1000023, 1000022 ] and pid2 in [ 1000024 ]:
+        if pid1 in [ X2Z, LSP ] and pid2 in [ X1W ]:
             filename = f"xsecN2C1p{sqrts}.txt"
             order = NLL
             pb = False
@@ -682,7 +683,7 @@ class RefXSecComputer:
                 filename = f"xsecEWKdegenerate{sqrts}.txt"
                 comment = "fully degenerate N1, N2, C1"
                 columns["xsec"]=1
-        if pid1 in [ 1000022 ] and pid2 in [ 1000023 ]:
+        if pid1 in [ LSP ] and pid2 in [ X2Z ]:
             if sqrts == 8:
                 logger.info ( "asking for N2 N1 production for 8 TeV. we only have 13 TeV" )
                 return None, None, None
@@ -699,14 +700,14 @@ class RefXSecComputer:
                 pb = False
             order = NLL
             isEWK=True
-        if pid1 in [ 1000023, 1000025 ] and pid2 in [ 1000023, 1000025 ]:
+        if pid1 in [ X2Z, X3Z ] and pid2 in [ X2Z, X3Z ]:
             if sqrts == 8:
                 print ( f"[refxsecComputer] asking for N2 N1 {(pid1,pid2)} production for 8 TeV. we only have 13 tev" )
                 return None, None, None
             s1, s2 = "N2", "N2"
-            if pid1 == 1000025:
+            if pid1 == X3Z:
                 s1 = "N3"
-            if pid2 == 1000025:
+            if pid2 == X3Z:
                 s2 = "N3"
             self.warn ( f"asked to compute {s1,pid1} {s2,pid2} production xsecs, will recycle the N2 N1 ones!" )
             filename = f"xsecN2N1{int(sqrts)}.txt"
@@ -716,12 +717,12 @@ class RefXSecComputer:
             order = NLL
             pb = False
             isEWK=True
-        if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
+        if pid1 in [ X1W ] and pid2 in [ X3Z ]:
             filename = f"xsecN2C1p{int(sqrts)}.txt"
             order = NLL
             pb = False
             isEWK=True
-        if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
+        if pid1 in [ -X1W ] and pid2 in [ X3Z ]:
             filename = f"xsecN2C1m{int(sqrts)}.txt"
             order = NLL
             isEWK=True
@@ -731,12 +732,12 @@ class RefXSecComputer:
             order = (NLL,NNLL) #3
             columns["xsec"]=1
             pb = True
-        if pid1 in [ -1000024 ] and pid2 == -pid1:
+        if pid1 in [ -X1W ] and pid2 == -pid1:
             filename = f"xsecC1C1{int(sqrts)}.txt"
             pb = False
             order = NLL #3
-        if pid1 in [ -1000024 ] and pid2 in [ 1000023 ] and ewk == "degenerate":
-            ## in this case, the +1000024, 1000023 already contains
+        if pid1 in [ -X1W ] and pid2 in [ X2Z ] and ewk == "degenerate":
+            ## in this case, the +X1W, X2Z already contains
             ## the xsec for C1- N2
             filename = f"xsecEWKdegenerate{sqrts}.txt"
             comment = "fully degenerate N1, N2, C1"

@@ -13,6 +13,7 @@ for _p in ( "smodels", "smodels-utils", "protomodels" ):
 from smodels.matching import modelTester
 from smodels.experiment.databaseObj import Database
 from smodels_utils.helper.terminalcolors import PINK, YELLOW, RESET
+from pbase.constants import X2Z, X1W
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
@@ -92,7 +93,7 @@ def addRefXSec ( filename ):
 
 def addXSec ( filename ):
     from validation.pythiaCardGen import getPythiaCardFor
-    motherPDGs = [ 1000023, 1000024 ]
+    motherPDGs = [ X2Z, X1W ]
     pythiaVersion = 6
     pythiaCard = getPythiaCardFor ( motherPDGs, None, pythiaVersion )
     nprocesses = 2

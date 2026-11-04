@@ -7,6 +7,7 @@ sys.path.append(os.path.join(home,'smodels'))
 
 from smodels.experiment.databaseObj import Database
 import pyslha,tarfile
+from pbase.constants import LSP, X1W
 import ROOT
 
 
@@ -18,8 +19,8 @@ tar = tarfile.open(tarball,"r:gz")
 files = [f for f in tar.getnames() if '.slha' in f]
 
 xM = 1000006
-yM = 1000022
-zM = 1000024
+yM = LSP
+zM = X1W
 
 if zM is None:
     gr = ROOT.TGraph()  #2-D grid

@@ -9,6 +9,7 @@ from smodels.particlesLoader import BSMList
 from smodels.share.models.SMparticles import SMList
 from smodels.base.model import Model
 from combinations.bestCombination import BestCombinationFinder
+from pbase.constants import LSP, X2Z, X1W, X3Z, X2W
 import glob
 import pyslha
 import sys; sys.path.append('.')
@@ -55,18 +56,18 @@ class SModelsOutput(object):
     
     def getMassFromSlhafile(self,file):
         d = pyslha.read(file)
-        self.m_n1 = abs(d.blocks['MASS'].get(1000022))             #neutralino_1
-        self.m_n2 = abs(d.blocks['MASS'].get(1000023))            #neutralino_2
-        self.m_c1 = abs(d.blocks['MASS'].get(1000024))            #chargino_1
-        self.m_n3 = abs(d.blocks['MASS'].get(1000025))            #neutralino_3
+        self.m_n1 = abs(d.blocks['MASS'].get(LSP))             #neutralino_1
+        self.m_n2 = abs(d.blocks['MASS'].get(X2Z))            #neutralino_2
+        self.m_c1 = abs(d.blocks['MASS'].get(X1W))            #chargino_1
+        self.m_n3 = abs(d.blocks['MASS'].get(X3Z))            #neutralino_3
         self.m_n4 = abs(d.blocks['MASS'].get(1000035))            #neutralino_4
-        self.m_c2 = abs(d.blocks['MASS'].get(1000037))            #chargino_2
+        self.m_c2 = abs(d.blocks['MASS'].get(X2W))            #chargino_2
         '''
         if abs(self.m_nlsp - self.m_lsp) < 10.0:
-            if abs(abs(d.blocks['MASS'].get(1000024)) - self.m_lsp) >= 10.0:
-                self.m_nlsp = abs(d.blocks['MASS'].get(1000024))     #chargino_1
+            if abs(abs(d.blocks['MASS'].get(X1W)) - self.m_lsp) >= 10.0:
+                self.m_nlsp = abs(d.blocks['MASS'].get(X1W))     #chargino_1
             else:
-                self.m_nlsp = abs(d.blocks['MASS'].get(1000025))     #neutralino_3
+                self.m_nlsp = abs(d.blocks['MASS'].get(X3Z))     #neutralino_3
         '''
     def getBestCombination(self):
     

@@ -19,6 +19,7 @@
    only), also include the quantum numbers of the new particles in the qNumbers dictionary below.
 
 """
+from pbase.constants import LSP, X2Z, X1W, X3Z, X2W
 
 rEven = {25 : "higgs",
         -25 : "higgs",
@@ -73,11 +74,11 @@ qNumbers={
  35:[0,0,1],
  36:[0,0,1],
  37:[0,3,1],
- 1000024:[1,3,1],
- 1000037:[1,3,1],
- 1000022:[1,0,1],
- 1000023:[1,0,1],
- 1000025:[1,0,1],
+ X1W:[1,3,1],
+ X2W:[1,3,1],
+ LSP:[1,0,1],
+ X2Z:[1,0,1],
+ X3Z:[1,0,1],
  1000035:[1,0,1],
  1000039:[3,0,1],
  1000021:[1,0,8],

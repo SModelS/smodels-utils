@@ -2,6 +2,7 @@
 
 import glob, copy, matplotlib
 import matplotlib.pyplot as plt
+from pbase.constants import X1W
 
 outputFile = 'outputSpecificModels.py'
 slhaFolder = '/home/pascal/SModelS/EWinoData/filter_slha/'
@@ -33,7 +34,7 @@ for ana in outputDict:
             elif 'mu(MX)' in line.split():
                 mu_float = float(line.split()[1])
                 # mu.append(mu_float)
-            elif 'DECAY' in line.split() and '1000024' in line.split():
+            elif 'DECAY' in line.split() and str(X1W) in line.split():
                 wC1_float = float(line.split()[2])
                 ctC1.append(299792458*6.582e-25/wC1_float)
 

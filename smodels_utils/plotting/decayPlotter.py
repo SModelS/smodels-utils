@@ -23,6 +23,7 @@ except ImportError as e:
     pass
 import os
 from ptools import sparticleNames
+from pbase.constants import LSP, X2Z, X1W, X3Z, X2W
 
 def draw( slhafile : os.PathLike, outfile : os.PathLike, options : dict , 
           offset : float = 0., verbosity : str = "info" ):
@@ -83,7 +84,7 @@ def draw( slhafile : os.PathLike, outfile : os.PathLike, options : dict ,
                 tmp.add ( pre*1000000 + post )
 
     if options["weakinos"]:
-        weakinos = { 1000022, 1000023, 1000024, 1000025, 1000035, 1000037 }
+        weakinos = { LSP, X2Z, X1W, X3Z, 1000035, X2W }
         tmp.update ( weakinos )
 
     starters=[]

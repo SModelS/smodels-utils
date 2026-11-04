@@ -4,6 +4,7 @@ import os
 sys.path.insert(0, os.path.expanduser("~/git/smodels-utils"))
 sys.path.insert(0, os.path.expanduser("~/git/smodels"))
 from combinations.combination_sahana.bestCombination import BestCombinationFinder
+from pbase.constants import LSP, X2Z, X1W, X3Z, X2W
 from smodels.tools import runtime
 runtime.modelFile = 'smodels.share.models.mssm'
 from smodels.base.physicsUnits import GeV,fb
@@ -89,12 +90,12 @@ class SModelsOutput(object):
         d = pyslha.read(file)
         
         #EWino Masses
-        self.m_n1 = abs(d.blocks['MASS'].get(1000022))            #neutralino_1
-        self.m_n2 = abs(d.blocks['MASS'].get(1000023))            #neutralino_2
-        self.m_c1 = abs(d.blocks['MASS'].get(1000024))            #chargino_1
-        self.m_n3 = abs(d.blocks['MASS'].get(1000025))            #neutralino_3
+        self.m_n1 = abs(d.blocks['MASS'].get(LSP))            #neutralino_1
+        self.m_n2 = abs(d.blocks['MASS'].get(X2Z))            #neutralino_2
+        self.m_c1 = abs(d.blocks['MASS'].get(X1W))            #chargino_1
+        self.m_n3 = abs(d.blocks['MASS'].get(X3Z))            #neutralino_3
         self.m_n4 = abs(d.blocks['MASS'].get(1000035))            #neutralino_4
-        self.m_c2 = abs(d.blocks['MASS'].get(1000037))            #chargino_2
+        self.m_c2 = abs(d.blocks['MASS'].get(X2W))            #chargino_2
         
         #EWino Parameters
         self.M1 = abs(d.blocks['EXTPAR'].get(1))                  #M1

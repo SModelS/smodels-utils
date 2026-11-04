@@ -3,6 +3,7 @@
 """ correct the neutralino masses in T5GQ """
 
 import glob
+from pbase.constants import LSP
 
 def correct ( filename ):
     print ( "correcting", filename )
@@ -16,9 +17,9 @@ def correct ( filename ):
     newname = filename
     f=open ( newname, "wt" ) 
     for line in lines:
-        if line.startswith("   1000022"):
+        if line.startswith(f"   {LSP}"):
             oldline = line
-            line = f"   1000022     {int(N1)}.0     # ~chi_10\n"
+            line = f"   {LSP}     {int(N1)}.0     # ~chi_10\n"
             print ( "fixing", oldline, "->", line )
         f.write ( line )
     f.close()
