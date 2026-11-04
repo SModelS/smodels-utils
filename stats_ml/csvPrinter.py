@@ -114,8 +114,8 @@ class CsvPrinter(BasicPrinter):
 
         :returns: csv lines, like [ "6.0,1.4,0.3,74.9,....", "..." ]
         """
-        #if len(all_dicts["nn"])<2:
-        #    return []
+        if len(all_dicts)<2:
+            return []
         nlls = all_dicts[0]
         d_yields = all_dicts[1]
         nll_0 = nlls[ "nll_mu0" ]

@@ -26,7 +26,7 @@ def collect ( folder : str ) -> int:
                         continue
                     tokens = line.split(",")
                     tokens = list ( map ( float, tokens ) )
-                    min_x, max_x = min(tokens[-8:]), max(tokens[-8:])
+                    min_x, max_x = min(tokens[-9:-1]), max(tokens[-9:-1])
                     if max_x > 100*min_x:
                         # print ( "skipping:", max(tokens[-8:]), tokens )
                         skipping+=1
