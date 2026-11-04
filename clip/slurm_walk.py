@@ -376,7 +376,10 @@ def runOneJob ( rvars: dict ):
         - use_initialiser (Union[str,bool]): if string, then interpret it as path to database
     """
     runner = createWalkerPythonScript ( rvars )
-    # container = createWalkerContainerScript ( rvars, runner )
+    onOldSystem = False
+    if "/scratch-cbe" in rvars["rundir"]:
+        onOldSystem = True
+        container = createWalkerContainerScript ( rvars, runner )
 
     ram = max ( 11000., 4000. * ( nmax - nmin ) )
     if rvars["select"]=="all" or "forbiddenparticles" == []:
@@ -407,8 +410,10 @@ def runOneJob ( rvars: dict ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd += [ "--qos", qos ]
-    cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", runner ]
-    # cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", container ]
+    if onOldSystem:
+        cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", container ]
+    else:
+        cmd += [ "--mem", f"{ram:d}M", "--time", f"{time*60-1}", runner ]
     scmd =  " ".join ( cmd )
     scmd = scmd.replace ( basedir, "$BASE" )
     if dry_run:
