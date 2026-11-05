@@ -57,8 +57,9 @@ def clearGlobalInfo( filename : str ):
     fname = "/dev/shm/tmp.txt"
     g=open( fname,"wt")
     skip = [ "publishedData", "comment", "private", "checked", "xrange", \
-             "prettyName", "susyProcess", "dataUrl", "validationTarball", "yrange",
+             "susyProcess", "dataUrl", "validationTarball", "yrange",
              "bsmProcess", "resultType" ]
+    #skip.append( "prettyName" )
     #skip.append( "validated" )
     # skip.append( "axes" )
     # skip.append( "figureUrl" )
