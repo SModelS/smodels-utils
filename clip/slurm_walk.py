@@ -16,7 +16,7 @@ from ptools.sparticleNames import SParticleNames
 from pbase.constants import LSP, X2Z, X1W
 namer = SParticleNames()
 
-intro = f"{CYAN}[slurm_walk]{RESET} "
+intro = f"{PINK}[slurm_walk]{RESET} "
 
 
 # Path to store last run info (use home dir)
