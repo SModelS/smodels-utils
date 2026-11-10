@@ -1497,14 +1497,15 @@ class PaperPlot:
         plt.title( title, loc='left', fontsize=12, x=-.12 )
         plt.title( right_title,loc='right', fontsize=12 )
 
+        isPrefitExpected = str ( self.general_options.get ( "expectationType", "" ) ).lower() == "apriori"
         exp_name = analysis.split('-')[0]
-        if "x" in off_excl["expExclusion"]:
+        if not isPrefitExpected and "x" in off_excl["expExclusion"]:
             self.plotLines ( ax, off_excl["expExclusion"]["x"],
                     off_excl["expExclusion"]["y"],
                     "black", "solid", f'{exp_name} official')
 
         plotOffSigmas = self.general_options["errorsForR"]
-        if plotOffSigmas:
+        if plotOffSigmas and not isPrefitExpected:
             for i in [ "expExclusionP1", "expExclusionM1" ]:
                 if i in off_excl and "x" in off_excl[i]:
                     self.plotLines ( ax, off_excl[i]["x"], off_excl[i]["y"],
