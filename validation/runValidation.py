@@ -478,13 +478,44 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
           options["show"], validationPlot )
 
+def copyParfileToValidationDir ( parfile : Optional[str], expRes,
+        options : dict ) -> Optional[str]:
+    """ copy the parameter file to the analysis' validation folder,
+        using the canonical filename 'validation.ini'
+    :param parfile: path to the parameter (.ini) file
+    :param expRes: the ExpResult whose validation folder is used
+    :param options: options dict, used to determine the validation folder
+    :return: path of the copied file, or None if it was not copied
+    """
+    if not parfile:
+        return None
+    if not os.path.isfile ( parfile ):
+        logger.warning ( f"parameter file {parfile} not found, will not copy it to the validation folder" )
+        return None
+    validationFolder = "validation"
+    if "validationFolder" in options and options["validationFolder"]:
+        validationFolder = options["validationFolder"]
+    validationDir = os.path.join ( expRes.path, validationFolder )
+    if not os.path.isdir ( validationDir ):
+        logger.info ( f"Creating validation folder {validationDir}" )
+        os.makedirs ( validationDir, exist_ok = True )
+    dest = os.path.join ( validationDir, "validation.ini" )
+    if os.path.realpath ( parfile ) == os.path.realpath ( dest ):
+        return dest
+    import shutil
+    shutil.copyfile ( parfile, dest )
+    logger.info ( f"copied parameter file {parfile} to {dest}" )
+    return dest
+
 def runForOneResult ( expRes, options : dict,
-                      keep : bool, db ) -> None:
+                      keep : bool, db,
+                      parfile : Optional[str] = None ) -> None:
     """
     Run for one experimental result
     :param options: all flags in the "options" part of the ini file
     :param keep: keep temporary directories
     :param db: database, so we can check if ratio plots are desirable
+    :param parfile: parameter (.ini) file, copied to the validation folder
     """
     expt0 = time.time()
     logger.info( f"--- {GREEN} validating {expRes.globalInfo.id} {RESET}" )
@@ -506,6 +537,7 @@ def runForOneResult ( expRes, options : dict,
     if not txnames:
         logger.warning( f"No valid txnames found for {expRes} (not assigned constraints?)" )
         return
+    copyParfileToValidationDir ( parfile, expRes, options )
     pretty = str(options["prettyPlots"]).lower()
     if pretty in [ "false", "no", "0" ]:
         pretty = False
@@ -745,12 +777,14 @@ def runForOneResult ( expRes, options : dict,
     print( f"{RED}finished {id} validated in {dt:.1f} min {RESET}" )
 
 def run ( expResList : list, options : dict,
-          keep : bool, db ) -> None:
+          keep : bool, db,
+          parfile : Optional[str] = None ) -> None:
     """
     Loop over experimental results and validate plots
     :param options: all flags in the "options" part of the ini file
     :param keep: keep temporary directories
     :param db: database, so we can check if ratio plots are desirable
+    :param parfile: parameter (.ini) file, copied to the validation folder
     """
     for expRes in expResList:
         ## FIXME here we could remove the mlModels entry
@@ -772,12 +806,12 @@ def run ( expResList : list, options : dict,
                     expRes.globalInfo.statModels.pop ( setName )
                 else:
                     expRes.globalInfo.statModels[setName] = newModels
-        runForOneResult ( expRes, options, keep, db )
+        runForOneResult ( expRes, options, keep, db, parfile = parfile )
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          options : dict, tarfiles=None,verbosity : str ='error',
          combine : bool =False, force_load : Optional[str]= None,
-         keep : bool = False ):
+         keep : bool = False, parfile : Optional[str] = None ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -796,6 +830,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param force_load: force loading the text database ("txt"), or the
            binary database ("pcl"), dont force anything if None
     :param keep: keep temporary directories
+    :param parfile: parameter (.ini) file, copied to the validation folder
     """
     databasePath = os.path.expanduser ( databasePath )
 
@@ -852,7 +887,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             options["ncpus"] = 1
 
     tval0 = time.time()
-    run ( expResList, options, keep, db )
+    run ( expResList, options, keep, db, parfile = parfile )
     dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
@@ -1128,4 +1163,5 @@ if __name__ == "__main__":
 
     #Run validation:
     main( analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath, 
-          options, tarfiles,args.verbose.lower(), combine, force_load, args.keep )
+          options, tarfiles,args.verbose.lower(), combine, force_load, args.keep,
+          parfile = args.parfile )
