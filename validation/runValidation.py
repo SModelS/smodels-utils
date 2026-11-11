@@ -408,6 +408,12 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     options["eul"] = True
     options["eul2"] = True
     output = f"{os.path.dirname(datafile)}/expected_ratios_{txname}_{axis}.png"
+    if "folder1" in options and options["folder1"]!="validation":
+        cmd += f" -f1 {options['folder1']}"
+    if "folder2" in options and options["folder2"]!="validation":
+        cmd += f" -f2 {options['folder2']}"
+    if "comment" in options:
+        cmd += f" --comment '{options['comment']}'"
     cmd += f" --output 'expected_ratios_{txname}_{axis}.png'"
     options["output"] = output
     print ( f"[runValidation] {cmd}" )
