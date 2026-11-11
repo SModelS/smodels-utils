@@ -10,8 +10,11 @@ from smodels_utils.helper.terminalcolors import *
 from typing import Union, Dict
 from cliphelpers import SQUEUE
 
-codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
-outputsdir = f"/scratch-cbe/users/{os.environ['USER']}/outputs/"
+codedir = f"/scratch/users/{os.environ['USER']}/git"
+outputsdir = f"/scratch/users/{os.environ['USER']}/outputs/"
+if os.path.exists ( "/scratch-cbe/" ): # old cluster
+    codedir = f"/scratch-cbe/users/{os.environ['USER']}/git"
+    outputsdir = f"/scratch-cbe/users/{os.environ['USER']}/outputs/"
 if "CODEDIR" in os.environ:
     codedir = os.environ["CODEDIR"]
 if "OUTPUTS" in os.environ:
