@@ -248,6 +248,9 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     #
     #if "monkey_patch" in args and args["monkey_patch"]==True:
     #    monkey_patch = "--monkey_patch"
+    python_exe = f"{os.environ['HOME']}/.venvs/default/bin/python3"
+    if not os.path.exists ( python_exe ):
+        python_exe = "/usr/bin/python3"
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
@@ -257,6 +260,7 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
             newline = newline.replace("@@TOPO@@", topo )
             newline = newline.replace("@@ORIGINIFILE@@", inifile  )
             newline = newline.replace("@@KEEP@@", skeep )
+            newline = newline.replace("@@PYTHON_EXE@@", python_exe )
             f.write ( newline )
         f.close()
     tdir = "./temp"
