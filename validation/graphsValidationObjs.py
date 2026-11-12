@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-.. module:: validationObjs
-   :synopsis: Main classes and methods for generating a single validation plot
+.. module:: graphsValidationObjs
+   :synopsis: Validation plot class for v3 (graph/sms-map) mass planes
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
@@ -13,7 +13,7 @@ import logging,os,sys,time,math,numpy,copy
 from smodels.base.smodelsLogging import logger
 from smodels.base.physicsUnits import GeV
 from smodels_utils.helper.various import round_to_n
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Optional
 import numpy as np
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth, \
@@ -78,54 +78,58 @@ class ValidationPlot( ValidationObjsBase ):
         vstr = f"{self.expRes.globalInfo.id}:{self.txName}_{axes}"
         return vstr
 
-    def getVarsDict ( self, roundmass, width, expRes, slhafile ):
-        # print ( "after", slhafile, roundmass )
+    def getVarsDict ( self, roundmass, width, expRes : dict,
+            slhafile : str ) -> Optional[dict]:
+        """ obtain the x/y values for a point using the nodes map.
+
+        :param roundmass: mass vectors from the SModelS output
+        :param width: width vectors from the SModelS output
+        :param expRes: the SModelS result dictionary for this point
+        :param slhafile: name of the corresponding SLHA file
+        :return: dictionary with the x/y values, or None if the point does
+                 not lie on the mass plane
+        """
         mass = [br[:] for br in roundmass]
-        slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
-        origmasses = list(set(slhadata.blocks['MASS'].values()))
+        # make sure the SLHA file is readable; the masses themselves come
+        # from the SModelS output for v3
+        pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
 
         nodesMap = expRes["Nodes Map"]
         parameters = self.constructParameterVector ( mass, width, nodesMap )
         varsDict = self.massPlane.getXYValues( parameters )
         return varsDict
 
-    def getMassesAndWidths ( self, mass, width ):
-        mnw=[]
+    def getMassesAndWidths ( self, mass : list, width : list ) -> list:
+        """ build the parameter list for the efficiency map lookup.
+
+        :param mass: mass vectors
+        :param width: width vectors, or None
+        :return: list of masses, or (mass, width) tuples
+        """
         total = []
         if width == None:
-            mnw = mass
-        else:
-            # br=[]
-            for bm,bw in zip(mass,width):
-                for m,w in zip(bm,bw):
-                    if w == 'stable' or ( type(w) not in [ str ] and w > .08 ):
-                        total.append( m )
-                        # br.append( (m,0.0) )
-                    else:
-                        total.append( (m,w) )
-                # mnw.append(br)
-        # massGeV = addUnit ( mnw, GeV )
+            return total
+        for bm,bw in zip(mass,width):
+            for m,w in zip(bm,bw):
+                if w == 'stable' or ( type(w) not in [ str ] and w > .08 ):
+                    total.append( m )
+                else:
+                    total.append( (m,w) )
         return total
 
-    def getDataMap ( self ):
-        """ obtain the correct data map, i.e. the one corresponding to
-        our txname """
-        ds = self.expRes.datasets[0]
-        ## FIXME need to search
-        for txn in ds.txnameList:
-            if txn.txName == self.txName:
-                return txn.dataMap
-        return None
+    def getDataMap ( self ) -> Optional[dict]:
+        """ obtain the data map corresponding to our txname """
+        txn = self.getTxname()
+        if txn is None:
+            return None
+        return txn.dataMap
 
-    def getSmsMap ( self ):
-        """ obtain the correct sms map, i.e. the one corresponding to
-        our txname """
-        ds = self.expRes.datasets[0]
-        ## FIXME need to search
-        for txn in ds.txnameList:
-            if txn.txName == self.txName:
-                return txn.smsMap
-        return None
+    def getSmsMap ( self ) -> Optional[dict]:
+        """ obtain the sms map corresponding to our txname """
+        txn = self.getTxname()
+        if txn is None:
+            return None
+        return txn.smsMap
 
     def constructParameterVector ( self, masses : list, widths : list,
             nodesMap : dict ) -> list:
@@ -167,11 +171,10 @@ class ValidationPlot( ValidationObjsBase ):
         :returns: dictionary of axes, e.g. { "x": 400, "y": 200 }
         """
         logger.debug ( f"need to find axes for {slhafile} ({self.axes})" )
-        from sympy import var
         x,y,z,w = var ( "x y z w" )
         axesDict = eval ( self.axes )
         from sympy.parsing.sympy_parser import parse_expr
-        from sympy import solve, var, Eq
+        from sympy import solve, Eq
 
         for nr, expr in axesDict.items():
             axesDict[nr]=parse_expr ( str(expr) )
@@ -184,7 +187,7 @@ class ValidationPlot( ValidationObjsBase ):
             return r < 1e-5
         barename = slhafile.replace(".slha","")
         tokens = barename.split("_")
-        txname, numbers = tokens[0], tokens[1:]
+        numbers = tokens[1:]
         eqs = set()
         if len(axesDict) == len(numbers):
             for nr, expr in axesDict.items():
@@ -206,7 +209,7 @@ class ValidationPlot( ValidationObjsBase ):
 
 
 
-    def getDataFromPlanes(self):
+    def getDataFromPlanes(self) -> Optional[bool]:
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
         the relevant data in self.data.  Uses runSModelS.main.
@@ -221,14 +224,12 @@ class ValidationPlot( ValidationObjsBase ):
         fileList = self.runSModelS( outputformat = 3 )
 
         #Define original plot
-        massPlane = MassPlane.fromString(self.txName,self.axes)
+        massPlane = self.massPlane
         if massPlane == None:
             logger.error ( "no mass plane!" )
             return False
         #Now read the output and collect the necessary data
-        slhafiles= os.listdir(self.currentSLHADir)
         ct_nooutput=0
-        slhafiles.sort() ## make sure we also go in the same order
         myglobals = globals()
         myglobals["inf"]=float("inf")
         myglobals["nan"]=float("nan")
@@ -364,18 +365,4 @@ class ValidationPlot( ValidationObjsBase ):
             if Dict:
                 self.data.append(Dict)
 
-        #Remove temporary folder
-        if self.currentSLHADir != self.slhaDir and not self.keep:
-            logger.info ( f"now removing {self.currentSLHADir}" )
-            shutil.rmtree(self.currentSLHADir)
-
-        if self.data == []:
-            logger.error( f"There is no data for {self.expRes.globalInfo.id}/{self.txName}/{self.axes}.\n Are the SLHA files correct? Are the constraints correct?" )
-
-        #Apply k-factors to theory prediction (default is 1)
-        for ipt,pt in enumerate(self.data):
-            if "error" in pt.keys():
-                continue
-            pt['signal'] *= self.kfactor
-            self.data[ipt] = pt
-            self.data[ipt]['kfactor'] = self.kfactor
+        self._finalizeDataFromPlanes()

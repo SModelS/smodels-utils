@@ -37,7 +37,7 @@ complaints = { "NoResultsFor": 0 }
 
 class ProgressBarHandler:
     """ a class to handle everything around the progressbar """
-    def __init__ ( self, pidfile : str = ".p.@@MOTHERPID@@.pid" ):
+    def __init__ ( self, pidfile : str = ".p.@@MOTHERPID@@.pid" ) -> None:
         self.motherpid = os.getpid()
         pidfile = pidfile.replace("@@MOTHERPID@@",f"{self.motherpid}")
         self.pidfile = pidfile
@@ -46,7 +46,7 @@ class ProgressBarHandler:
         # in every run, remove files older than 24 hours
         self.removeStalePidFiles ( 24. )
 
-    def readPid ( self ) -> int:
+    def readPid ( self ) -> Optional[int]:
         """ read the progressbar pid from the pid file """
         if not os.path.exists ( self.pidfile ):
             return None
@@ -61,7 +61,7 @@ class ProgressBarHandler:
             pass
         return None
 
-    def removeStalePidFiles ( self, max_hours : float = 24 ):
+    def removeStalePidFiles ( self, max_hours : float = 24 ) -> None:
         """ all pid files that are older than 24 hours,
         remove them.
         """
@@ -76,7 +76,7 @@ class ProgressBarHandler:
             if dt > max_hours:
                 Path ( fname ).unlink ( missing_ok = True )
 
-    def storePid ( self, pid : int ):
+    def storePid ( self, pid : int ) -> None:
         """ store the pid of the progress bar in self.pidfile,
         so the other process can kill it. """
         cpid = self.readPid ( )
@@ -90,14 +90,15 @@ class ProgressBarHandler:
         f.write ( "}\n" )
         f.close()
 
-    def rmFile ( self ):
+    def rmFile ( self ) -> None:
+        """ remove the pid file, if it exists """
         if os.path.exists ( self.pidfile ):
             try:
                 os.unlink ( self.pidfile )
             except Exception as e:
                 pass
 
-    def killProgressBar ( self ):
+    def killProgressBar ( self ) -> None:
         """ kill the progressbar """
         pid = self.readPid()
         print ( f"\n[ProgressBarHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
@@ -128,24 +129,57 @@ class ValidationObjsBase():
     of their code.
     """
 
-    def super_init ( self, ExptRes, TxNameStr, Axes, db : Database, slhadir=None,
-            databasePath=None, options : dict = {}, kfactor = 1.,
-            namedTarball = None, keep = False, combine = False ):
-        anaID = ExptRes.globalInfo.id
+    def _determineDatabasePath ( self, ExptRes, anaID : str,
+            databasePath : Optional[str] ) -> str:
+        """ determine the SModelS database folder.
+
+        If no explicit path is given, it is guessed from the path of the
+        experimental result.
+
+        :param ExptRes: the experimental result, used to guess the path
+        :param anaID: the analysis id of ExptRes
+        :param databasePath: explicitly given database folder, or None
+        :return: path to the database folder
+        """
         if databasePath:
             if os.path.isdir(databasePath):
-                self.databasePath = databasePath
-            else:
-                logger.error(f"Database folder {databasePath} does not exist")
-                sys.exit()
+                return databasePath
+            logger.error(f"Database folder {databasePath} does not exist")
+            sys.exit()
         #Try to guess the path:
-        else:
-            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
-            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
-            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
-            if not os.path.isdir(self.databasePath):
-                logger.error("Could not define databasePath folder")
-                sys.exit()
+        path = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
+        path = path[:path.rfind('/')]
+        path = path[:path.rfind('/')+1]
+        if not os.path.isdir(path):
+            logger.error("Could not define databasePath folder")
+            sys.exit()
+        return path
+
+    def super_init ( self, ExptRes, TxNameStr : str, Axes : str,
+            db : Database, slhadir : Optional[str] = None,
+            databasePath : Optional[str] = None, options : dict = {},
+            kfactor : float = 1., namedTarball = None, keep : bool = False,
+            combine : bool = False ) -> None:
+        """ initialise the common state of a validation plot object.
+
+        This is called from the subclasses' __init__ and performs the work
+        that is shared between the v2 and v3 (graphs) validation plots.
+
+        :param ExptRes: experimental result to validate
+        :param TxNameStr: txname string, e.g. T2tt
+        :param Axes: axes string describing the plane
+        :param db: database object
+        :param slhadir: folder or tarball containing the SLHA files
+        :param databasePath: database folder, guessed from ExptRes if None
+        :param options: validation options
+        :param kfactor: global k-factor for the theory predictions
+        :param namedTarball: tarball explicitly specified in the database
+        :param keep: keep temporary directories
+        :param combine: combine signal regions instead of using the best one
+        """
+        anaID = ExptRes.globalInfo.id
+        self.databasePath = self._determineDatabasePath ( ExptRes, anaID,
+                                                          databasePath )
         self.expRes = copy.deepcopy(ExptRes)
         self.db = db
         self.ct_nooutput = 0
@@ -175,7 +209,6 @@ class ValidationObjsBase():
         self.outputDir = None # define an output directory
         self.data = []
         self.validationType = "unknown"
-        drawExpected = self.options["drawExpected"]
         self.officialCurves = self.getOfficialCurves( get_all = True,
                 expected = False )
         self.expectedOfficialCurves = self.getOfficialCurves( get_all = True,
@@ -188,29 +221,15 @@ class ValidationObjsBase():
             dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == self.txName]
         self.expRes.datasets = [dataset for dataset in self.expRes.datasets[:] if len(dataset.txnameList) > 0]
 
-        if slhadir: self.setSLHAdir(slhadir)
-        if databasePath:
-            if os.path.isdir(databasePath):
-                self.databasePath = databasePath
-            else:
-                logger.error(f"Database folder {databasePath} does not exist")
-                sys.exit()
-        #Try to guess the path:
-        else:
-            # anaID = ExptRes.globalInfo.id
-            self.databasePath = ExptRes.path[:ExptRes.path.find(f"/{anaID}")]
-            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
-            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
-            if not os.path.isdir(self.databasePath):
-                logger.error("Could not define databasePath folder")
-                sys.exit()
+        if slhadir:
+            self.setSLHAdir(slhadir)
 
         import plottingFuncs ## propagate logging level!
         plottingFuncs.logger.setLevel ( logger.level )
         self.specialInits()
 
     def addToOfficialCurves ( self, curves : list,
-            doTransformCoords : bool = False ):
+            doTransformCoords : bool = False ) -> None:
         """ add the curves to .officialCurves or .expectedOfficialCurves """
         def addCurveTo ( addTo, curve, name ):
             for i,line in enumerate(addTo):
@@ -241,7 +260,7 @@ class ValidationObjsBase():
             name = f"{exp}Exclusion{pm}_"
             addCurveTo (  addTo, curve, name )
 
-    def dictFromExpRes ( self, expRes ) -> dict:
+    def dictFromExpRes ( self, expRes : dict ) -> dict:
         """ given a SModelS expRes dictionary, create a
         first incomplete version of a validation dictionary """
 
@@ -377,7 +396,7 @@ class ValidationObjsBase():
         return addedpoints
 
 
-    def getValidationDir ( self, validationDir : str ) -> str:
+    def getValidationDir ( self, validationDir : Optional[str] ) -> str:
         """ obtain the validation directory, usually,
             self.expRes.path + "/validation" """
         def mkdir ( mydir ):
@@ -394,7 +413,7 @@ class ValidationObjsBase():
         mkdir ( validationDir )
         return validationDir
 
-    def setSLHAdir(self,slhadir : str ):
+    def setSLHAdir(self,slhadir : str ) -> None:
         """
         Defines the folder or .tar.gz file containing all the slha files to be
         used to generate the validation plot
@@ -408,7 +427,7 @@ class ValidationObjsBase():
         else:
             self.slhaDir = slhadir
 
-    def topologyHasWidths ( self ):
+    def topologyHasWidths ( self ) -> bool:
         """ is this a topology with a width-dependency? """
         return "(" in self.axes
 
@@ -530,7 +549,7 @@ class ValidationObjsBase():
             sys.exit()
 
 
-    def getPrettyPlot(self,silentMode : bool = True ):
+    def getPrettyPlot(self,silentMode : bool = True ) -> None:
         """
         Uses the data in self.data and the official exclusion curve
         in self.officialCurves to generate a pretty exclusion plot
@@ -548,7 +567,7 @@ class ValidationObjsBase():
                    looseness = 1.2, options = options )
         self.pretty = True
 
-    def savefig ( self, filename : str, add_logo : bool = False ):
+    def savefig ( self, filename : str, add_logo : bool = False ) -> None:
         """ save the figure, never mind if root or matplotlib """
         dpi = 300
         y_offset = -145
@@ -563,7 +582,7 @@ class ValidationObjsBase():
         addLogo ( filename, dpi = dpi, y_offset = y_offset )
 
     def savePlot( self,validationDir : Union[None,str] = None,
-                  fformat : str = 'png' ):
+                  fformat : str = 'png' ) -> bool:
         """
         Saves the plot in the format specified in the validationDir folder.
         If the folder does not exist, it will be created.
@@ -610,7 +629,7 @@ class ValidationObjsBase():
         return True
 
 
-    def getUglyPlot(self,silentMode : bool = True ):
+    def getUglyPlot(self,silentMode : bool = True ) -> None:
         """
         Uses the data in self.data and the official exclusion curve
         in self.officialCurves to generate the exclusion plot
@@ -626,7 +645,7 @@ class ValidationObjsBase():
         self.pretty = False
 
 
-    def isOneDimensional ( self ) -> bool:
+    def isOneDimensional ( self ) -> Optional[bool]:
         """ are the data one-dimensional """
         if "forceOneD" in self.options and self.options["forceOneD"]:
             # we force 1d plotting mode
@@ -656,12 +675,12 @@ class ValidationObjsBase():
         if len(ys)>0:
             deltay = max(ys)-min(ys)
             if deltay < 1e-17:
-               logger.warn ( f"the range in y values {deltay} is quite small. let me make it a 1d plot!" )
+               logger.warning ( f"the range in y values {deltay} is quite small. let me make it a 1d plot!" )
                return True
         return False
 
 
-    def toPdf ( self, validationDir : str = None ):
+    def toPdf ( self, validationDir : Optional[str] = None ) -> None:
         """ convert from png to pdf (new, for uproot) """
         vDir = self.getValidationDir ( validationDir )
         oldfilename = self.getPlotFileName(vDir,"png")
@@ -682,9 +701,8 @@ class ValidationObjsBase():
     def runSModelS ( self, outputformat : int = 3 ) -> list:
         """ run SModelS proper
         :param outputformat: define if the output is v2 or v3
-        :returns: list of slha files that we ran over (is this true?)
+        :returns: list of slha files that we ran over
         """
-        import os
         self.getSLHAdir()  #Path to the folder containing the SLHA files
         logger.debug( f"SLHA files for validation at {self.currentSLHADir}" )
 
@@ -693,24 +711,7 @@ class ValidationObjsBase():
             fileList, inDir = modelTester.getAllInputFiles(self.currentSLHADir)
         except Exception: ## old version?
             fileList = modelTester.getAllInputFiles(self.currentSLHADir)
-            inDir = slhaDir
-        if self.options["generateData"]==None:
-            self.loadData()
-            tmp = []
-            countSkipped = 0
-            for f in fileList:
-                if f.endswith ( ".tar.gz" ):
-                    continue
-                bf = os.path.basename ( f )
-                if self.slhafileInData ( bf ):
-                    countSkipped += 1
-                else:
-                    tmp.append ( f )
-            if countSkipped > 0:
-                logger.info ( f"skipped a total of {countSkipped} points that are already in final dictionary: generateData was set to 'ondemand'." )
-            fileList = tmp
-        else:
-            self.data = []
+            inDir = self.slhaDir
 
         #Set temporary outputdir:
         outputDir = os.path.join ( self.currentSLHADir, "results" )
@@ -770,13 +771,7 @@ class ValidationObjsBase():
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
 
-        #Select the desired experimental result
-        listOfExpRes = [self.expRes]
-
         """ Test all input points """
-        validationFolder = "validation"
-        if "validationFolder" in self.options:
-            validationFolder = self.options["validationFolder"]
         timeOut = 5000
         if "timeOut" in self.options:
             timeOut = self.options["timeOut"]
@@ -802,11 +797,33 @@ class ValidationObjsBase():
         phandler.killProgressBar()
         return fileList
 
-    def pprint ( self, *args ):
+    def _finalizeDataFromPlanes ( self ) -> None:
+        """ common tail of the getDataFromPlanes implementations.
+
+        Remove the temporary SLHA folder (unless the user asked to keep it),
+        warn if no data was found, and apply the k-factor to the theory
+        predictions.
+        """
+        if self.currentSLHADir != self.slhaDir and not self.keep:
+            logger.info ( f"now removing {self.currentSLHADir}" )
+            shutil.rmtree ( self.currentSLHADir )
+
+        if self.data == []:
+            logger.error ( f"There is no data for {self.expRes.globalInfo.id}/{self.txName}/{self.axes}.\n Are the SLHA files correct? Are the constraints correct?" )
+
+        #Apply k-factors to theory prediction (default is 1)
+        for ipt, pt in enumerate ( self.data ):
+            if "error" in pt.keys():
+                continue
+            pt['signal'] *= self.kfactor
+            self.data[ipt] = pt
+            self.data[ipt]['kfactor'] = self.kfactor
+
+    def pprint ( self, *args ) -> None:
         """ convenience """
         print ( f"[validationObjsBase]", *args )
 
-    def addDictionaryForFailedPoint ( self, smodelsOutput : dict, axes ):
+    def addDictionaryForFailedPoint ( self, smodelsOutput : dict, axes ) -> None:
         """ a point has failed, no "ExptRes" is in smodelsOutput.
         create the dict that describes the failure.
         :returns: empty dictionary if axes not in plane
@@ -836,8 +853,8 @@ class ValidationObjsBase():
         self.data.append ( Dict )
 
     def getWidthsFromSLHAFileName ( self, filename : str ) -> List:
-        """ try to guess the mass vector from the SLHA file name
-        :returns: mass vector
+        """ try to guess the width vector from the SLHA file name
+        :returns: list of widths
         """
         tokens = filename.replace(".slha","").split("_")
         if not tokens[0].startswith ( "T" ):
@@ -993,7 +1010,7 @@ class ValidationObjsBase():
             f.close()
         return parFile
 
-    def getTxname ( self ):
+    def getTxname ( self ) -> Optional[object]:
         """ obtain the correct sms/axes/data maps, i.e. the ones corresponding to
         our txname """
         ds = self.expRes.datasets[0]
@@ -1003,7 +1020,7 @@ class ValidationObjsBase():
                 return txn
         return None
 
-    def removeFromListOfRunningFiles ( self ):
+    def removeFromListOfRunningFiles ( self ) -> None:
         """ remove files listed in fileList to list of running  files """
         fileList = self.willRun
         current = {}
@@ -1075,7 +1092,7 @@ class ValidationObjsBase():
         return shouldRun
 
 
-    def lockFile ( self, lockfile : Union [ None, str ] = None ):
+    def lockFile ( self, lockfile : Union [ None, str ] = None ) -> None:
         """ a locking mechanism """
         if lockfile is None:
             lockfile = self.runningDictLockFile
@@ -1089,7 +1106,7 @@ class ValidationObjsBase():
         from pathlib import Path
         Path ( lockfile ).touch()
 
-    def unlockFile( self, lockfile : Union [ None, str ] = None ):
+    def unlockFile( self, lockfile : Union [ None, str ] = None ) -> None:
         """ a locking mechanism """
         if lockfile is None:
             lockfile = self.runningDictLockFile
@@ -1099,7 +1116,7 @@ class ValidationObjsBase():
             except FileNotFoundError as e:
                 pass
 
-    def getAverageTime ( self ):
+    def getAverageTime ( self ) -> float:
         """ compute the average t spent per point.
         we average only over points with results
         :returns: average time, in seconds
@@ -1250,14 +1267,14 @@ class ValidationObjsBase():
 
         return True
 
-    def show ( self, filename ):
+    def show ( self, filename : str ) -> None:
         """ we were asked to also show <filename> """
         # term = os.environ["TERM"]
         if not self.options["show"]: #  or not term == "xterm-kitty":
             return
         showPlot ( filename )
 
-    def getNiceAxes(self,axesStr):
+    def getNiceAxes(self,axesStr : str) -> str:
         """
         Convert the axes definition format ('[[x,y],[x,y]]')
         to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
@@ -1363,7 +1380,7 @@ class ValidationObjsBase():
             return float("nan")
         return 1.0 - float(pts["wrong"]) / float(pts["total"])
 
-    def computeHulls ( self ):
+    def computeHulls ( self ) -> None:
         """ compute the convex hulls from the Voronoi
             partition, so we can later weight points with the areas of the
             Voronoi cell """

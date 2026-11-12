@@ -27,7 +27,7 @@ import numpy as np
 import pyslha
 import string
 import glob
-from typing import List
+from typing import List, Optional
 from validationObjsBase import ValidationObjsBase
 
 logger.setLevel(level=logging.ERROR)
@@ -156,8 +156,19 @@ class ValidationPlot( ValidationObjsBase ):
         return ret
 
 
-    def getVarsDict ( self, roundmass, width, expRes, slhafile ):
-        # print ( "after", slhafile, roundmass )
+    def getVarsDict ( self, roundmass, width, expRes : dict, slhafile : str ):
+        """ obtain the x/y values for a point from its (rounded) masses.
+
+        The rounded masses from the SModelS output are replaced by the
+        original masses from the SLHA file before evaluating the mass plane.
+
+        :param roundmass: (rounded) mass vectors from the SModelS output
+        :param width: width vectors from the SModelS output, or None
+        :param expRes: the SModelS result dictionary for this point
+        :param slhafile: name of the corresponding SLHA file
+        :return: dictionary with the x/y values, or None if the point does
+                 not lie on the mass plane
+        """
         mass = [br[:] for br in roundmass]
         slhadata = pyslha.readSLHAFile(os.path.join(self.currentSLHADir,slhafile))
         origmasses = list(set(slhadata.blocks['MASS'].values()))
@@ -171,23 +182,34 @@ class ValidationPlot( ValidationObjsBase ):
         varsDict = self.massPlane.getXYValues(mass,width)
         return varsDict
 
-    def getMassesAndWidths ( self, mass, width ):
+    def getMassesAndWidths ( self, mass : list, width : list ) -> list:
+        """ flatten the mass/width vectors into the parameter list expected
+        by the efficiency map lookup.
+
+        :param mass: mass vectors
+        :param width: width vectors
+        :return: flat list of masses and narrow widths
+        """
         massGeV = []
         widthsGeV = []
         for bm,bw in zip(mass,width):
             for m,w in zip(bm,bw):
-                if w == 'stable' or w > .08:
-                    massGeV.append( m )
-                else:
-                    massGeV.append( m )
+                massGeV.append( m )
+                if w != 'stable' and w <= .08:
                     widthsGeV.append( w )
         total = massGeV
         if len(widthsGeV)>0:
             total += widthsGeV
         return total
 
-    def addResultToData ( self, slhafile : str, resultsfile : str ) -> int:
-        """ returns 1 if success else 0 """
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> Optional[int]:
+        """ read one SModelS python result file and add it to self.data.
+
+        :param slhafile: name of the SLHA input file
+        :param resultsfile: path of the SModelS python output file
+        :return: 1 on success, 0 if the point was dropped, None if no
+                 output file was found
+        """
         fout = resultsfile
         if not os.path.isfile(fout):
             if self.ct_nooutput>4:
@@ -264,13 +286,7 @@ class ValidationPlot( ValidationObjsBase ):
         #print ( "expRes", expRes )
         if roundmass is None or "TGQ12" in slhafile:
             ## FIXME, for TGQ12 why cant i use exptres?
-            import inspect
-            frame = inspect.currentframe()
-            line = frame.f_lineno
-            #print ( f"roundmass is not given in validationObjs.py:{line}" )
-            #print ( f"we try to extract the info from the slha file name {slhafile}" )
             roundmass = self.getMassesFromSLHAFileName ( slhafile )
-        mass = [br[:] for br in roundmass]
         varsDict = self.getVarsDict ( roundmass, width, expRes, slhafile )
         if varsDict is None:
             logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {self.massPlane}." )
@@ -316,7 +332,7 @@ class ValidationPlot( ValidationObjsBase ):
         return 0
 
 
-    def getDataFromPlanes(self):
+    def getDataFromPlanes(self) -> Optional[bool]:
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
         the relevant data in self.data.
@@ -333,14 +349,11 @@ class ValidationPlot( ValidationObjsBase ):
         fileList = self.runSModelS( outputformat = 2 )
 
         #Define original plot
-        # massPlane = MassPlane.fromString(self.txName,self.axes)
         if self.massPlane == None:
             logger.error ( "no mass plane!" )
             return False
         #Now read the output and collect the necessary data
-        slhafiles= os.listdir(self.currentSLHADir)
         self.ct_nooutput=0
-        slhafiles.sort() ## make sure we also go in the same order
         for slhafile in fileList: # slhafiles:
             if "recipe" in slhafile:
                 continue
@@ -353,19 +366,5 @@ class ValidationPlot( ValidationObjsBase ):
             fout = os.path.join(self.outputDir,f"{slhafile}.py")
             self.addResultToData ( slhafile, fout )
 
-        #Remove temporary folder
-        if self.currentSLHADir != self.slhaDir and not self.keep:
-            logger.info ( f"now removing {self.currentSLHADir}" )
-            shutil.rmtree(self.currentSLHADir)
-
-        if self.data == []:
-            logger.error( f"There is no data for {self.expRes.globalInfo.id}/{self.txName}/{self.axes}.\n Are the SLHA files correct? Are the constraints correct?" )
-
-        #Apply k-factors to theory prediction (default is 1)
-        for ipt,pt in enumerate(self.data):
-            if "error" in pt.keys():
-                continue
-            pt['signal'] *= self.kfactor
-            self.data[ipt] = pt
-            self.data[ipt]['kfactor'] = self.kfactor
+        self._finalizeDataFromPlanes()
 

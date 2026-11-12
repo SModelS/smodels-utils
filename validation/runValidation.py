@@ -15,7 +15,7 @@ import os
 import shlex
 import sys
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from sympy import var
 
@@ -55,8 +55,23 @@ def starting( expRes, txnameStr : str, axes, pretty ) -> None:
     print( f"{GREEN}starting {expid}:{txnameStr}:{saxes} ({spretty}){RESET}" )
     # logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
 
+def _valPlotKwargs ( options : dict, kfactor : float, namedTarball,
+        keep : bool, combine : bool ) -> dict:
+    """ assemble the keyword arguments shared by all ValidationPlot
+    constructors.
+
+    :param options: validation options
+    :param kfactor: global k-factor for the theory predictions
+    :param namedTarball: tarball explicitly specified in the database
+    :param keep: keep temporary directories
+    :param combine: combine signal regions instead of using the best one
+    :return: dictionary of keyword arguments
+    """
+    return dict ( slhadir = None, options = options, kfactor = kfactor,
+                  namedTarball = namedTarball, keep = keep, combine = combine )
+
 def getValPlotObj ( expRes, txnameStr : str, axes, db, slhadir, options : dict,
-        kfactor, namedTarball, keep : bool, combine : bool ):
+        kfactor, namedTarball, keep : bool, combine : bool ) -> object:
     """
     Instantiate the correct ValidationPlot class (v2 or v3 axes).
 
@@ -75,8 +90,7 @@ def getValPlotObj ( expRes, txnameStr : str, axes, db, slhadir, options : dict,
     :return: ValidationPlot object
     """
     axisType = getAxisType ( axes )
-    kwargs = dict ( slhadir = None, options = options, kfactor = kfactor,
-                    namedTarball = namedTarball, keep = keep, combine = combine )
+    kwargs = _valPlotKwargs ( options, kfactor, namedTarball, keep, combine )
     if axisType == "v3":
         valPlot = graphsValidationObjs.ValidationPlot ( expRes, txnameStr, axes,
                 db, **kwargs )
@@ -85,9 +99,10 @@ def getValPlotObj ( expRes, txnameStr : str, axes, db, slhadir, options : dict,
                 **kwargs )
     return valPlot
 
-def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
-        db, kfactor : float =1., pretty=False, combine : bool =False,
-        namedTarball = None, keep : bool = False ):
+def validatePlot( expRes, txnameStr : str, axes, slhadir, options : dict,
+        db, kfactor : float = 1., pretty : Union[bool, str] = False,
+        combine : bool = False, namedTarball = None,
+        keep : bool = False ) -> Union[object, bool]:
     """
     Creates a validation plot and saves its output.
 
@@ -154,9 +169,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
 
 def createRedBlackPlot ( expRes, txnameStr : str, axes, db,
             slhadir, options : dict, kfactor, namedTarball, keep : bool,
-            combine : bool ):
-    """ create the red-black plots
-    """
+            combine : bool ) -> None:
+    """ create the red-black plots """
     valPlot = getValPlotObj ( expRes, txnameStr, axes = axes , db=db,
             slhadir = None, options = options, kfactor=kfactor,
             namedTarball = namedTarball, keep = keep, combine = combine )
@@ -308,6 +322,33 @@ def _analysisFromDatafile ( dbpath : str, datafile : str ) -> str:
     p2 = ana.rfind ( "/" )
     return ana[p2+1:]
 
+def _shortenHomePath ( path : str ) -> str:
+    """ replace the user's home directory (including the scratch mount
+    points) by '~' in path.
+
+    :param path: path to shorten
+    :return: shortened path
+    """
+    home = os.environ.get ( "HOME" )
+    if not home:
+        return path
+    for prefix in [ f"/scratch-cbe{home}", f"/scratch{home}", home ]:
+        path = path.replace ( prefix, "~" )
+    return path
+
+def _resolveTarballPath ( slhadir : str, rundir : str, fname : str ) -> str:
+    """ return the path of a tarball, preferring the run-specific folder.
+
+    :param slhadir: folder containing the tarballs
+    :param rundir: run-specific subfolder, e.g. '13TeV'
+    :param fname: tarball file name
+    :return: existing path if found, otherwise the fallback path
+    """
+    path = os.path.join ( slhadir, rundir, fname )
+    if not os.path.isfile ( path ):
+        path = os.path.join ( slhadir, fname )
+    return path
+
 def addRange ( axisName : str, opts : dict, xrange, axis : str ) -> dict:
     """ add a range condition to options, overwrite one if already there
     :param axisName: variable, "x" or "y"
@@ -380,8 +421,8 @@ def _ratioPlotCommand ( sdbpath : str, ana1 : str, valfile1 : str,
         cmd += f" --comment '{options['comment']}'"
     return cmd
 
-def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
-       axis ):
+def checkForRatioPlots ( expRes, txname : str, ax, db, combine : bool,
+        opts : dict, datafile : str, axis ) -> bool:
     """ check if we should plot a ratio plot. plot, if we should
     :param txname: the txname
     :param combine: is it a combined result that is asked for?
@@ -443,8 +484,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if "origValidationFolder" in opts:
         options["folder2"] = opts["origValidationFolder"]
     options["comment"]=opts["ratio_comment"]
-    sdbpath = dbpath.replace(f"/scratch-cbe{os.environ['HOME']}","~").replace(f"{os.environ['HOME']}","~")
-    sdbpath = sdbpath.replace(f"/scratch{os.environ['HOME']}","~")
+    sdbpath = _shortenHomePath ( dbpath )
     cmd = _ratioPlotCommand ( sdbpath, ana1, valfile1, ana2, valfile2, options )
     cmd += f" --output 'ratios_{txname}_{axis}.png'"
     options["dbpath"]=dbpath
@@ -467,10 +507,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     print ( f"[runValidation] {cmd}" )
     plotRatio.draw ( options )
 
-    pathToValDir = os.path.dirname ( os.path.realpath ( __file__ ) )
-    pathToValDir = pathToValDir.replace( f'/scratch-cbe{os.environ["HOME"]}', "~" )
-    pathToValDir = pathToValDir.replace( f'/scratch{os.environ["HOME"]}', "~" )
-    pathToValDir = pathToValDir.replace( os.environ["HOME"], "~" )
+    pathToValDir = _shortenHomePath (
+            os.path.dirname ( os.path.realpath ( __file__ ) ) )
     ratioscriptfile = f"{os.path.dirname(datafile)}/ratios_{txname}_{axis}.sh"
     if not os.path.exists ( ratioscriptfile ) or os.stat ( ratioscriptfile ).st_size < 10:
         cmd = _ratioPlotCommand ( sdbpath, ana1, valfile1, ana2, valfile2, options )
@@ -491,8 +529,8 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
 
     return True
 
-def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
-       validationPlot ):
+def checkForBestSRPlots ( expRes, txname : str, ax, db, combine : bool,
+        opts : dict, datafile : str, validationPlot ) -> bool:
     """ check if we should plot a best signal region plot
     :param expRes: the experimental result
     :param txname: the txname
@@ -523,7 +561,8 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     defcolors = None
     from plotBestSRs import plot
     plot( dbpath, ana, valfile, max_x, max_y, output, defcolors, rank, nmax,
-          options["show"], validationPlot )
+          opts["show"], validationPlot )
+    return True
 
 def copyParfileToValidationDir ( parfile : Optional[str], expRes,
         options : dict ) -> Optional[str]:
@@ -638,9 +677,7 @@ def runForOneResult ( expRes, options : dict,
                 if fname_ == "skip": ## we are asked to skip this
                     tarfile = "skip"
                     continue
-                tarfile = os.path.join(slhadir, rundir, fname_ )
-                if not os.path.isfile ( tarfile ):
-                    tarfile = os.path.join(slhadir,fname_ )
+                tarfile = _resolveTarballPath ( slhadir, rundir, fname_ )
                 if not os.path.isfile ( tarfile ):
                     logger.info( f'Missing {tarfile} file for {txnameStr}.' )
             # continue
@@ -685,9 +722,8 @@ def runForOneResult ( expRes, options : dict,
                         hasCorrectAxis_ = True
                         if os.path.join(slhadir,fname_) != tarfile and os.path.join(slhadir,rundir, fname_ ) != tarfile:
                             # different tarfile! change also ltarfile!
-                            tarfile = os.path.join(slhadir,rundir, fname_)
-                            if not os.path.exists ( tarfile ):
-                                tarfile = os.path.join(slhadir,fname_)
+                            tarfile = _resolveTarballPath ( slhadir, rundir,
+                                                            fname_ )
                             ltarfile = tarfile
                 elif isinstance ( namedTarball, list ):
                     # looks like were given multiples
@@ -706,9 +742,8 @@ def runForOneResult ( expRes, options : dict,
                                 hasCorrectAxis_ = True
                                 pnamedTarball = fname_
                                 if os.path.join(slhadir,fname_) != tarfile and os.path.join(slhadir,rundir, fname_ ) != tarfile:
-                                    tarfile = os.path.join(slhadir,rundir, fname_)
-                                    if not os.path.exists ( tarfile ):
-                                        tarfile = os.path.join(slhadir,fname_)
+                                    tarfile = _resolveTarballPath ( slhadir,
+                                            rundir, fname_ )
                                     ltarfile = tarfile
                                 break
                 if fname_ in kfactorDict:
@@ -727,9 +762,8 @@ def runForOneResult ( expRes, options : dict,
                     if not hasCorrectAxis_:
                         pnamedTarball = None
                         if os.path.join(slhadir,f"{txnameStr}.tar.gz") != tarfile and os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz") != tarfile:
-                            tarfile = os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz")
-                            if not os.path.exists ( tarfile ):
-                                tarfile = os.path.join(slhadir,f"{txnameStr}.tar.gz")
+                            tarfile = _resolveTarballPath ( slhadir, rundir,
+                                    f"{txnameStr}.tar.gz" )
                             ltarfile = tarfile
 
                 if tarfile == "skip":
@@ -770,9 +804,8 @@ def runForOneResult ( expRes, options : dict,
                 else:
                     myaxis = str ( eval ( myaxis ) )
                     if compareTwoAxes ( myaxis, ax ):
-                        tarfile = os.path.join(slhadir,rundir,fname_)
-                        if not os.path.exists ( tarfile ):
-                            tarfile = os.path.join(slhadir,fname_)
+                        tarfile = _resolveTarballPath ( slhadir, rundir,
+                                                        fname_ )
                         hasCorrectAxis = True
             if isinstance ( namedTarball, list ):
                 # looks like were given multiples
@@ -792,9 +825,8 @@ def runForOneResult ( expRes, options : dict,
                 pnamedTarball = namedTarball
             if not hasCorrectAxis and pnamedTarball != "skip":
                 pnamedTarball = None
-                tarfile = os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz")
-                if not os.path.exists ( tarfile ):
-                    tarfile = os.path.join(slhadir,f"{txnameStr}.tar.gz")
+                tarfile = _resolveTarballPath ( slhadir, rundir,
+                                                f"{txnameStr}.tar.gz" )
             localopts = _localOptionsWithRanges ( options, txname, ax )
             for p in prettyorugly:
                 validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
