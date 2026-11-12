@@ -7,29 +7,31 @@
               upper limit computed from combining the efficiency maps.
 """
 
-import math, os, numpy, copy, sys, glob, ctypes
-from os import PathLike
-# import setPath
+import glob
+import itertools
+import logging
+import os
+import subprocess
+import time
+import warnings
+
 from smodels_utils.plotting import mpkitty as plt
 import matplotlib
-import time
-import logging
-import subprocess
+import numpy
 from scipy.interpolate import griddata
-import itertools
-import importlib
+
 from smodels_utils.helper import prettyDescriptions
-from smodels_utils.helper.various import getValidationDataPathName
-#from smodels_utils.helper.various import getValidationModule
-from validation.validationHelpers import getValidationFileContent, shortTxName, \
-       mergeExclusionLines, mergeValidationData
-import validationHelpers
-from validation.plottingFuncs import convertNewAxes
 from smodels_utils.helper.terminalcolors import *
-import warnings
-warnings.filterwarnings("ignore")
-from typing import Tuple
+from smodels_utils.helper.various import getValidationDataPathName
+from validation.plottingFuncs import convertNewAxes
+from validation.validationHelpers import getValidationFileContent, shortTxName, \
+       mergeValidationData
+import validationHelpers
 from validationHelpers import getAxisType, axisV2ToV3
+
+from typing import Optional, Tuple, Union
+
+warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ def printPlotRatio ( msg : str, label : str = "[plotRatio]" ):
     print ( f"{PINK}{label}{RESET} {msg}" )
 
 
-def hasDebPkg():
+def hasDebPkg() -> Optional[bool]:
     """ do we have the package installed """
     import distutils.spawn
     dpkg = distutils.spawn.find_executable("dpkg")
@@ -57,14 +59,14 @@ def hasDebPkg():
     return
     #sys.exit(-1)
 
-def axisHash ( axes_ ):
+def axisHash ( axes_ : Union[dict,list] ) -> int:
     ret = 0
     axes = convertNewAxes ( axes_ )
     for ctr,a in enumerate(axes):
         ret += 10**(4*ctr)*int(a)
     return ret
 
-def getSModelSExclusionFromContent ( content ):
+def getSModelSExclusionFromContent ( content : dict ) -> list:
     """ this method should construct a contur line from one of the dictionary files,
     by constructing a contour plot from 'content' """
     # print ( "content", content )
@@ -83,7 +85,7 @@ def addDefaults ( options : dict ) -> dict:
     defaults.update(options)
     return defaults
 
-def hasAxisInfo ( content ):
+def hasAxisInfo ( content : dict ) -> Union[bool,list,dict,None]:
     """ the content of a validation dict file has info about
         the axes? """
     if not "meta" in content:
@@ -104,7 +106,8 @@ def hasAxisInfo ( content ):
     printPlotRatio ( f"when searching for axis info, what case is this: {meta}" )
     return False
 
-def guessLabel ( label, anaId1, anaId2, valfile1, content1 ):
+def guessLabel ( label : Optional[str], anaId1 : str, anaId2 : str,
+        valfile1 : str, content1 : dict ) -> str:
     if label != None:
         return label
     label = "???"
@@ -140,7 +143,7 @@ def guessLabel ( label, anaId1, anaId2, valfile1, content1 ):
     return label
 
 def getCoords ( points : list[list], coord : str ) -> list:
-    """ get only one coordinate of all points 
+    """ get only one coordinate of all points
     :param points: list of lists of points
     :param coord: e.g. "x"
     :returns: list of this coord
@@ -164,7 +167,49 @@ def centerInterval ( vmin : float, vmax : float ) -> Tuple[float,float]:
         vmax = 1.0 + d_lower
     return ( vmin, vmax )
 
-def draw ( options : dict ):
+
+def _isOneDimensional ( content : dict ) -> bool:
+    """ does this validation content describe a one-dimensional plot? """
+    if not "meta" in content:
+        return False
+    meta = content["meta"]
+    return meta is not None and len ( meta ) > 0 and "axes" in meta[0] \
+            and not "y" in meta[0]["axes"]
+
+
+def _delegateTo1DRatio ( contents : list, options : dict ) -> bool:
+    """ if any of the contents belongs to a one-dimensional plot, hand the
+    plotting over to plot1DRatio.
+    :returns: True if the caller should return
+    """
+    if not any ( _isOneDimensional ( c ) for c in contents ):
+        return False
+    if "eul" in options:
+        return True
+    printPlotRatio ( "seems like a 1d plot, delegate to plot1DRatio",
+                     "[plotRatio.py]" )
+    import plot1DRatio
+    plot1DRatio.draw ( options )
+    return True
+
+
+def _ratioOrNan ( numerator : float, denominator : float ) -> float:
+    """ divide, returning nan if the denominator is not positive """
+    if denominator > 0.:
+        return numerator / denominator
+    return float ( "nan" )
+
+
+def _plotOutlinedLine ( px : list, py : list, color : str, label : str,
+        linestyle : str = "-" ) -> None:
+    """ draw an exclusion line with a white underlay """
+    plt.plot ( px, py, color = "white", linestyle = linestyle,
+               linewidth = 4, label = "" )
+    plt.plot ( px, py, color = color, linestyle = linestyle,
+               linewidth = 3, label = label )
+
+
+def draw ( options : dict ) -> None:
     """ plot.
     :param options: a dictionary of various options:
     :option zmin: the minimum z value, e.g. .5
@@ -183,7 +228,7 @@ def draw ( options : dict ):
     options = addDefaults ( options )
     contents = []
     topos = set()
-    axis1, axi2 = None, None
+    axis1, axis2 = None, None
     for valfile in valfile1.split(","):
         ipath1 = getValidationDataPathName ( dbpath, analysis1, valfile, options["folder1"] )
         content = getValidationFileContent ( ipath1 )
@@ -193,7 +238,7 @@ def draw ( options : dict ):
             #return
             # continue
             # sys.exit()
-        else: 
+        else:
             if "axes" in content["meta"]:
                 axis1 = content["meta"]["axes"]
             else:
@@ -217,21 +262,7 @@ def draw ( options : dict ):
         contents.append ( content )
     # print ( f"[plotRatio] plotting ratio for {ipath1} vs {ipath2}" )
     content2 = mergeValidationData ( contents )
-    if "meta" in content1 and len(content1["meta"])>0 and "axes" in \
-            content1["meta"][0] and not "y" in content1["meta"][0]["axes"]:
-        if "eul" in options:
-            return
-        printPlotRatio ( "seems like a 1d plot, delegate to plot1DRatio", "[plotRatio.py]" )
-        import plot1DRatio
-        plot1DRatio.draw ( options )
-        return
-    if "meta" in content2 and len(content2["meta"])>0 and "axes" in \
-            content2["meta"][0] and not "y" in content2["meta"][0]["axes"]:
-        if "eul" in options:
-            return
-        printPlotRatio ( "seems like a 1d plot, delegate to plot1DRatio", "[plotRatio.py]" )
-        import plot1DRatio
-        plot1DRatio.draw ( options )
+    if _delegateTo1DRatio ( [ content1, content2 ], options ):
         return
 
     xlabel, ylabel = options["xlabel"], options["ylabel"]
@@ -244,17 +275,16 @@ def draw ( options : dict ):
 
     hasDebPkg()
     rs,effs={},{}
-    nsr=""
     noaxes = 0
     data1 = content1["data"]
     ul = "UL"
     if "eul" in options and options["eul"]==True:
         ul = "eUL"
-    for ctr,point in enumerate( data1 ):
+    for point in data1:
         if not "axes" in point:
             noaxes+=1
             if noaxes < 5:
-                f1 = imp1.__file__.replace(dbpath,"")
+                f1 = ipath1.replace(dbpath,"")
                 slhapoint = point["slhafile"].replace(".slha","")
                 print ( f"INFO: no axes in {f1}:{slhapoint}" )
             if noaxes == 5:
@@ -263,20 +293,18 @@ def draw ( options : dict ):
         axes_ = point["axes"]
         if axes_ is None:
             continue
-            #print ( f"[plotRatio] the axis field is 'None' in {imp1.__file__}. Will stop." )
+            #print ( f"[plotRatio] the axis field is 'None' in {ipath1}. Will stop." )
             #sys.exit()
         axes = convertNewAxes ( axes_ )
         h = axisHash ( axes )
+        # FIXME: "not 'UL'" is always False, so this never skips points
         if not "UL" and not "efficiency" in point:
             continue
         if "y" in point["axes"] and point["axes"]["x"]<point["axes"]["y"]:
-            ul = None 
+            ul = None
             if "UL" in point:
                 ul = point["UL"]
-            sig = None
-            if "signal" in point:
-                sig = point["signal"]
-            # print ( f"[plotRatio] axes {axes_} list {axes} hash {h} ul {ul} sig {sig}" )
+            # print ( f"[plotRatio] axes {axes_} list {axes} hash {h} ul {ul}" )
         if ul in point and point[ul] != None:
             if type(point[ul])==str:
                 point[ul]=eval(point[ul])
@@ -301,16 +329,16 @@ def draw ( options : dict ):
     points = []
     plotEfficiencies = options["efficiencies"]
 
-    for ctr,point in enumerate(data2):
+    for point in data2:
         axes = convertNewAxes ( point["axes"] )
         if axes == None:
             continue
         h = axisHash ( axes )
         r1 = None
         eff1 = None
-        if h in rs.keys():
+        if h in rs:
             r1 = rs[h]
-        if h in effs.keys():
+        if h in effs:
             eff1 = effs[h]
         hasResult = False
         ul = "UL"
@@ -318,9 +346,7 @@ def draw ( options : dict ):
             ul = "eUL"
         if not plotEfficiencies and r1 and r1>0. and ul in point and point[ul] != None:
             r2 = point["signal"] / point[ul]
-            ratio = float("nan")
-            if r2 > 0.:
-                ratio = r1 / r2
+            ratio = _ratioOrNan ( r1, r2 )
             # print ( f"masses:{axes[0],axes[1]} r={ratio} from r1,r2={r1,r2}" )
             #sys.exit()
             tpl = (axes[0],ratio )
@@ -330,9 +356,7 @@ def draw ( options : dict ):
             hasResult = True
         if plotEfficiencies and eff1 and eff1>=0. and "efficiency" in point and options["SR"] is None: ## best SR!!
             eff2 = point["efficiency"]
-            ratio = float ("nan" )
-            if eff2 > 0.:
-                ratio = eff1 / eff2
+            ratio = _ratioOrNan ( eff1, eff2 )
             points.append ( (axes[0],axes[1],ratio ) )
             hasResult = True
         if plotEfficiencies and eff1 and eff1>=0. and options["SR"] is not None:
@@ -346,9 +370,7 @@ def draw ( options : dict ):
                 for val,nam in point["leadingDSes"]:
                     if nam == sr:
                         eff2 = val
-                ratio = float ("nan" )
-                if eff2 > 0.:
-                    ratio = eff1 / eff2
+                ratio = _ratioOrNan ( eff1, eff2 )
                 points.append ( (axes[0],axes[1],ratio ) )
                 hasResult = True
         if not hasResult:
@@ -412,7 +434,7 @@ def draw ( options : dict ):
     #changed colormap to have discrete bins instead of continuous
     try:
         cm = matplotlib.cm.get_cmap('seismic')
-    except AttributeError as e:
+    except AttributeError:
         cm = plt.colormaps["seismic"]
     plt.rc('text', usetex=True)
     # vmin,vmax= .5, 1.7
@@ -422,7 +444,6 @@ def draw ( options : dict ):
         vmin = abs ( numpy.nanmin ( col )*0.97 ) # - 1.0 )
     vmin, vmax = centerInterval ( vmin, vmax )
 
-    opts = { }
     #print ( "vmax", vmax )
     #if logScale:
     #    vmin = 1e-5
@@ -432,7 +453,7 @@ def draw ( options : dict ):
     else:
         opts = { "vmin": vmin, "vmax": vmax }
 
-    scatter = plt.scatter ( x, y, s=s, c=col, marker="o", cmap=cm, **opts )
+    plt.scatter ( x, y, s=s, c=col, marker="o", cmap=cm, **opts )
     ax = plt.gca()
     fig = plt.gcf()
     plt.ylabel ( ylabel, size=13 )
@@ -446,7 +467,6 @@ def draw ( options : dict ):
     plt.rcParams.update({'font.size': 14})
     #plt.rcParams['xtick.labelsize'] = 14
     #plt.rcParams['ytick.labelsize'] = 14
-    slhafile=content2["data"][0]["slhafile"]
     Dir=os.path.dirname ( ipath1 )
     Dir2=os.path.dirname ( ipath2 )
     # smsrootfile = Dir.replace("validation","sms.root" )
@@ -463,11 +483,8 @@ def draw ( options : dict ):
     if len(topos)==1:
         stopo = f"{''.join(topos)}: {stopo}"
 
-    isEff = False
-    if "-eff" in analysis1 or "-eff" in analysis2:
-        isEff = True
     origAnaId = anaId = analysis1
-    anaId = analysis1.replace("-andre","")
+    anaId = anaId.replace("-andre","")
     anaId = anaId.replace("-old","") # .replace("-eff","")
     # anaId = anaId.replace("-orig","")
     anaId2 = analysis2.replace("-andre","")
@@ -523,17 +540,16 @@ def draw ( options : dict ):
     # plt.colorbar( format="%.1g" )
     el = []
     hasLegend = False
-    axes = None
+    axes = hasAxisInfo ( content1 )
+    if axes in [ None, False ]: # search on
+        axes = hasAxisInfo ( content2 )
+    from smodels_utils.helper import various
+    el1_expected, el2_expected = False, False
+    if "eul" in options and options["eul"] == True:
+        el1_expected = True
+    if "eul2" in options and options["eul2"] == True:
+        el2_expected = True
     for t in topos:
-        axes = hasAxisInfo ( content1 )
-        if axes in [ None, False ]: # search on
-            axes = hasAxisInfo ( content2 )
-        from smodels_utils.helper import various
-        el1_expected, el2_expected = False, False
-        if "eul" in options and options["eul"] == True:
-            el1_expected = True
-        if "eul2" in options and options["eul2"] == True:
-            el2_expected = True
         el = various.getExclusionCurvesFor ( exclusionlines1, t, axes, ranges=ranges, expected = el1_expected )
         el2 = various.getExclusionCurvesFor ( exclusionlines2, t, axes, ranges=ranges, expected = el2_expected )
         label = "official exclusion"
@@ -546,8 +562,6 @@ def draw ( options : dict ):
             #label += f"(+{anaId2})"
         if el is not None and t in el:
             for E in el[t]:
-                name = E["name"]
-                # print ( "name", name )
                 hasLegend = True
                 px = getCoords( E["points"], "x" )
                 if type ( E["points"] ) == dict:
@@ -561,8 +575,7 @@ def draw ( options : dict ):
                 else:
                     py = px
                     px = [ 0. ] * len (py)
-                plt.plot ( px, py, color='white', linestyle='-', linewidth=4, label="" )
-                plt.plot ( px, py, color='k', linestyle='-', linewidth=3, label=label )
+                _plotOutlinedLine ( px, py, "k", label )
                 label = ""
 
         drawRedLines = False
@@ -578,24 +591,16 @@ def draw ( options : dict ):
                     for e in E:
                         px = [ p["x"]  for p in e ]
                         py = [ p["y"]  for p in e ]
-                        plt.plot ( px, py, color='white', linestyle='-', linewidth=4, label="" )
-                        plt.plot ( px, py, color='darkred', linestyle='-', linewidth=3, label=label )
+                        _plotOutlinedLine ( px, py, "darkred", label )
                 else:
                     label = ""
-                    px = E["x"]
-                    plt.plot ( px, E["y"], color='white', linestyle='-', linewidth=4, label="" )
-                    plt.plot ( px, E["y"], color='darkred', linestyle='-', linewidth=3, label=label )
-                    label = ""
+                    _plotOutlinedLine ( E["x"], E["y"], "darkred", label )
     smodels_root = f"{analysis}/{topo}.root"
-    if not os.path.exists ( smodels_root ):
-        # print ( f"[plotRatio] warn: {smodels_root} does not exist. Trying to get the exclusion line directly from the content of the dict file" )
-        # print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
-        # smodels_line = []
-        el2 = getSModelSExclusionFromContent ( content1 )
-    else:
+    if os.path.exists ( smodels_root ):
+        # the old ROOT-based reader has been removed; fall back to the
+        # exclusion line stored in the validation content
         printPlotRatio ( f"warn: {smodels_root} does exist. Maybe switch to jsons?" )
-        smodels_line = getSModelSExclusion ( smodels_root )
-        el2 = getExclusionLine ( smodels_line )
+    el2 = getSModelSExclusionFromContent ( content1 )
     printPlotRatio ( f"Found SModelS exclusion line with {len(el2)} points." )
     label="SModelS exclsuion"
     for E in el2:
@@ -603,16 +608,6 @@ def draw ( options : dict ):
         px = E["x"]
         plt.plot ( px, E["y"], color='grey', linestyle='-', linewidth=4, label=label )
         label=""
-
-    maxx = max(x)
-    maxy = max(y)
-    miny = min(y)
-    if abs ( miny - 10. ) < 3.:
-        miny = 10.15
-    if abs ( maxy - 80. ) < 3.:
-        maxy = 79.9
-    if nsr != "":
-        plt.text ( .90*maxx, miny-.19*(maxy-miny), f"{nsr}", fontsize=14 )
 
     figname = f'{analysis.replace( options["folder1"],"ratio" )}_{topo}_{validationHelpers.getNiceAxes(axes)}.png'
     output = options["output"]
@@ -626,8 +621,7 @@ def draw ( options : dict ):
         sr=f"_{options['SR']}"
 
     figname = figname.replace("@sr",sr)
-    a1, a2 = options["label1"], options["label2"]
-    a1 = guessLabel ( options["label1"], origAnaId, anaId2, valfile, 
+    a1 = guessLabel ( options["label1"], origAnaId, anaId2, valfile,
                       content1 )
     a2 = guessLabel ( options["label2"], anaId2, anaId, valfile2,
                       content2 )
@@ -640,7 +634,7 @@ def draw ( options : dict ):
                horizontalalignment="center", transform=fig.transFigure)
 
     #text about no of SR in combined dataset
-    # plt.text ( .97, .0222, "combination of 9 signal regions", 
+    # plt.text ( .97, .0222, "combination of 9 signal regions",
     #            transform = fig.transFigure, fontsize=10,
     #            horizontalalignment="right" )
     rmean,rstd,npoints =  numpy.nanmean(col), numpy.nanstd(col),len(col)-sum(numpy.isnan(col))
@@ -649,10 +643,10 @@ def draw ( options : dict ):
     x_pos = .97
     if n_digits > 3:
         label = f"$\\bar{{f}}={rmean:.{n_digits}f}\\pm{rstd:.{n_digits}f}$"
-    plt.text ( x_pos, .025, label, transform=fig.transFigure, c="grey", 
+    plt.text ( x_pos, .025, label, transform=fig.transFigure, c="grey",
                fontsize=12, ha="right" )
     if options["comment"] not in [ None, "", "None" ]:
-        plt.text ( .1, .025, options["comment"], transform=fig.transFigure, 
+        plt.text ( .1, .025, options["comment"], transform=fig.transFigure,
                    c="grey", fontsize=12  )
     printPlotRatio ( f"Saving to {YELLOW}{figname}{RESET}" )
     if hasLegend:
@@ -665,10 +659,10 @@ def draw ( options : dict ):
     except (RuntimeError,FileNotFoundError) as e:
         printPlotRatio ( f"error when calling savefig: {e}" )
         if "tex" in str(e).lower():
-            printPlotRatio ( f"consider loading/installing latex, eg via:" )
+            printPlotRatio ( "consider loading/installing latex, eg via:" )
             # print ( f"ml load texlive/20210324-gcccore-10.2.0 # on the clip cluster" )
-            print ( f"ml load texlive/20220321-gcc-12.2.0 # on the clip cluster" )
-            print ( f"sudo apt install texlive dvipng # on debian based linux distros" )
+            print ( "ml load texlive/20220321-gcc-12.2.0 # on the clip cluster" )
+            print ( "sudo apt install texlive dvipng # on debian based linux distros" )
             return
             # sys.exit()
     if options["show"]:
@@ -686,7 +680,7 @@ def draw ( options : dict ):
     printPlotRatio ( f"ratio={rmean:.5f} +/- {rstd:.5f} (with {npoints} points)" )
     plt.clf()
 
-def writeMDPage( copy ):
+def writeMDPage( copy : bool ) -> None:
     """ write the markdown page that lists all plots """
     with open("ratioplots.md","wt") as f:
         # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
@@ -694,7 +688,6 @@ def writeMDPage( copy ):
         f.write ( f"as of {time.asctime()}\n\n" )
         # f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
-        files = glob.glob("ratio_*.png" )
         files = glob.glob("ratios_*.png" )
         files += glob.glob("atlas_*png" )
         files += glob.glob("cms_*png" )
@@ -709,12 +702,11 @@ def writeMDPage( copy ):
                 f.write ( "|\n" )
         if ctr % 2 == 0:
             f.write ( " | |\n" )
-        f.close()
     if copy:
         cmd = "cp ratioplots.md ~/git/smodels.github.io/plots/README.md"
         subprocess.getoutput ( cmd )
 
-def main():
+def main() -> None:
     import argparse
     argparser = argparse.ArgumentParser( description = "ratio plot" )
     argparser.add_argument ( "-v1", "--validationfile1",

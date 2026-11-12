@@ -5,19 +5,19 @@
 
 __all__ = [ "drawPrettyPaperPlot" ]
 
-import os, random
+import argparse
+import json
+import os
+import random
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy import array
-import json, tokenize, sys, argparse
-import matplotlib.lines as mlines
-from smodels.base.physicsUnits import fb, GeV, pb
-from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels_utils.helper.prettyDescriptions import prettyTxname, \
-         prettyAxesV2, prettyDecay
-from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
-import matplotlib.ticker as ticker
+
+from smodels_utils.helper.prettyDescriptions import prettyDecay
 from smodels_utils.helper.terminalcolors import *
+from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
+
 from typing import Union, Optional, Tuple
 
 def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
@@ -39,7 +39,8 @@ def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
     """
     if not "Gamma" in y_label:
         return x_vals, y_vals
-    self.pprint ( f"{RED}FIXME we need to make sure we also deal with the multi-line case here, so i x_vals[0]==list" )
+    print ( f"[drawPaperPlot] {RED}FIXME we need to make sure we also deal "
+            f"with the multi-line case here, so i x_vals[0]==list{RESET}" )
     if type(x_vals[0]) != list:
         return x_vals, y_vals
 
@@ -48,7 +49,7 @@ def yvalsAreWidths ( y_label : str , x_vals : list, y_vals : list ) -> tuple:
     index_max_diff = -1
     if len(y_diff)>0 and max(y_diff)>100:
         index_max_diff = y_diff.index(max(y_diff))+1
-    return x_vals[:index_max_diff], y_vals[_index_max_diff]
+    return x_vals[:index_max_diff], y_vals[index_max_diff]
 
 class PaperPlot:
     def __init__ ( self, validationPlot, general_options : dict,
@@ -57,7 +58,79 @@ class PaperPlot:
         self.general_options = general_options
         self.specific_options = specific_options
 
-    def fill_between_polylines( self, ax, x1, y1, x2, y2, **kwargs):
+    def _newFigure ( self ) -> Tuple:
+        """ create a new figure with the paper-plot defaults """
+        plt.rcParams['text.usetex'] = True
+        plt.rcParams['font.family'] = 'Cambria Math'
+        return plt.subplots ( figsize = ( 5, 4 ) )
+
+    def _addLifetimeAxis ( self, ax, y_label : str ) -> None:
+        """ add the secondary lifetime axis used for width (Gamma) plots """
+        if "Gamma" not in y_label:
+            return
+        sec_ax = ax.secondary_yaxis ( 'right',
+                functions = ( self.widthToLifetime, self.widthToLifetime ) )
+        sec_ax.set_ylabel ( r"$\tau$ [s]", fontsize = 14 )
+        sec_ax.set_yscale ( 'log' )
+
+    def _statModelLabel ( self, validationPlot, default : str ) -> str:
+        """ label describing the statistical model used for the combined
+        curve, e.g. "SModelS: SLv2" or "SModelS: NN" """
+        label = default
+        gI = validationPlot.expRes.globalInfo
+        if not hasattr ( gI, "statModels" ):
+            return label
+        for srSetName, model_types in gI.statModels.items():
+            model_type = model_types[0]
+            mtype = model_type[0]
+            if mtype == "onnx":
+                label = "SModelS: NN"
+            if mtype == "sl":
+                ver = validationPlot.expRes.typeOfStatsModel ( srSetName,
+                        specifySL = True ).replace ( "sl", "SL" )
+                label = f"SModelS: {ver}"
+        return label
+
+    def _setTitles ( self, analysis : str, num_sr : int, num_cr : int,
+            pName : str, fontsize : int ) -> None:
+        """ set the left (analysis and region counts) and right (process)
+        titles of the current axes """
+        nSRs = f"{num_sr} SRs"
+        if num_sr == 1:
+            nSRs = "1 SR"
+        title = f"{analysis}: {nSRs}"
+        if num_cr > 0:
+            title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
+        right_title = pName
+        if self.specific_options["style"] == "sabine":
+            title = f"{analysis}: {pName}"
+            right_title = f"{num_sr} SRs + {num_cr} CRs"
+        plt.title ( title, loc = 'left', fontsize = fontsize, x = -.12 )
+        plt.title ( right_title, loc = 'right', fontsize = fontsize )
+
+    def _addCaption ( self, fig, label : str ) -> None:
+        """ add the "observed exclusion" / "expected exclusion" caption """
+        ox, oy, osize = .55, .65, 10
+        if "style" in self.specific_options and \
+                self.specific_options["style"] == "sabine":
+            ox, oy, osize = 0.25, 0.8, 12
+        plt.text ( ox, oy, label, transform = fig.transFigure,
+                   fontsize = osize )
+
+    def _saveFigure ( self, outfile : str, dpi : int, add_logos : bool,
+            logos_y_offset : int, metadata : Optional[dict] = None ) -> None:
+        """ save the current figure as png (and optionally pdf), and add
+        the logos to the png """
+        plt.savefig ( outfile, dpi = dpi, metadata = metadata )
+        if "pdf_also" in self.specific_options and \
+                self.specific_options["pdf_also"]:
+            plt.savefig ( outfile.replace ( ".png", ".pdf" ), dpi = dpi )
+        if add_logos:
+            from addLogoToPlots import addLogo
+            addLogo ( outfile, dpi = dpi, y_offset = logos_y_offset )
+
+    def fill_between_polylines( self, ax, x1 : np.ndarray, y1 : np.ndarray,
+            x2 : np.ndarray, y2 : np.ndarray, **kwargs ) -> object:
         from matplotlib.patches import Polygon
         verts = np.vstack([
             np.column_stack([x1, y1]),
@@ -97,7 +170,7 @@ class PaperPlot:
         return poly
 
 
-    def fetchOfficialExclusionLines ( self, axes ) -> dict :
+    def fetchOfficialExclusionLines ( self, axes : str ) -> dict :
         """ fetch the curves and convert to sahanas format """
         ret = {}
         def fetchPointsNewFormat ( curves : list, idx : int = 0,
@@ -221,7 +294,8 @@ class PaperPlot:
         values = efile[curve][entry][coord]
         return values
 
-    def add_jitter ( self, y_vals, addJitter : bool, delta : bool = .02 ):
+    def add_jitter ( self, y_vals : list, addJitter : bool,
+            delta : float = .02 ) -> list:
         """ add jitter
         :bool addJitter: if false, then dont add jitter """
         if not addJitter:
@@ -234,7 +308,7 @@ class PaperPlot:
                 y_vals[i]= y * random.uniform(1-delta,1+delta)
         return y_vals
 
-    def isWithinRec ( self, x, y, rec ):
+    def isWithinRec ( self, x : float, y : float, rec : list ) -> bool:
         """ is point x,y with the rectangles rec """
         if type(rec[0][0]) == list: ## multiple rectangles
             for r in rec:
@@ -271,13 +345,11 @@ class PaperPlot:
                 print ( f"[removeSegments] keeping  {x,y}" )
             ret_x.append( x )
             ret_y.append( y )
-            if False and label != None and "official" in label:
-                print ( f"{x,y} survived {label}" )
 
         return ret_x, ret_y
 
-    def plotLines ( self, ax, x_vals, y_vals, color : str, linestyle : str,
-                   label : str ):
+    def plotLines ( self, ax, x_vals : list, y_vals : list, color : str,
+                   linestyle : str, label : str ) -> tuple:
         """ plot lines, return the actually plotted coordinates """
         if len(x_vals)==0:
             return x_vals, y_vals
@@ -297,7 +369,7 @@ class PaperPlot:
         return x_vals, y_vals
 
     def findAxisInExclFile ( self, axis : str, exclfile,
-            txname : str, type : str ) -> dict:
+            txname : str, type : str ) -> Optional[dict]:
         """
         find axis in all variants in exclfile
         :returns: e.g. 'obsExclusion': {'x': [[]], 'y': [[]]}, 'expExclusion': {'x': [[]], 'y': [[]]}}
@@ -346,27 +418,21 @@ class PaperPlot:
 
         if typ == "official":
             vPlot = self.validationPlot
-            excl_x = getCoordsFromValPlot ( vPlot.officialCurves, "x",
-                                            nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( vPlot.officialCurves, "y",
-                                            nSigma = 0 )
-            excl_x = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "x",
-                                            nSigma = 0 )
-            excl_y = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "y",
-                                            nSigma = 0 )
-
-
-            excl_lines = { "obsExclusion":{"x":excl_x,"y":excl_y},
-                           "expExclusion":{"x":expExclusion_x,"y":expExclusion_y}}
+            obs_x = getCoordsFromValPlot ( vPlot.officialCurves, "x",
+                                           nSigma = 0 )
+            obs_y = getCoordsFromValPlot ( vPlot.officialCurves, "y",
+                                           nSigma = 0 )
+            exp_x = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "x",
+                                           nSigma = 0 )
+            exp_y = getCoordsFromValPlot ( vPlot.expectedOfficialCurves, "y",
+                                           nSigma = 0 )
+            excl_lines = { "obsExclusion": { "x": obs_x, "y": obs_y },
+                           "expExclusion": { "x": exp_x, "y": exp_y } }
             return excl_lines
 
         # saxes = str(axes).replace(" ","").replace("'","")
         #if getAxisType(axes) == "v2":
         #    axes = axisV2ToV3(axes)
-        saxes = axes
-
-        excl_lines = {}
-        all_obs_x, all_obs_y, all_exp_x, all_exp_y = [], [], [], []
 
         fname = f"{anaDir}/{validationFolder}/SModelS_ExclusionLines.json"
         if not os.path.exists ( fname ):
@@ -375,11 +441,10 @@ class PaperPlot:
         sfname = self.prettyPath ( fname )
         self.pprint ( f"we have an exclusion curve file: {sfname}" )
 
-        file = open(fname,"r")
-        excl_file = json.load(file)
+        with open ( fname, "r" ) as file:
+            excl_file = json.load ( file )
         saxes = axes.replace(" ","")
         curve = self.findAxisInExclFile ( axes, excl_file, txname, typ )
-        col = CYAN
         if curve is None:
             print(f"[drawPaperPlot] {CYAN}{txname}:{typ}:{saxes} not found in {sfname}{RESET}")
             if "x - y" in axes:
@@ -388,7 +453,6 @@ class PaperPlot:
                 curve = self.findAxisInExclFile ( axes2, excl_file, txname, typ )
             if curve is None:
                 return {}
-                return { "obsExclusion": { "x": [], "y": [] }, "expExclusion": { "y": [], "x": [] } }
         excl_lines = {}
         if "obs_excl" in curve:
             x_ = self.getCoordsFromLine ( curve, "obs_excl", "x" )
@@ -404,16 +468,13 @@ class PaperPlot:
                 continue
             x_ = self.getCoordsFromLine ( curve, i, "x" )
             y_ = self.getCoordsFromLine ( curve, i, "y" )
-            if len(x_)==0:
-                col = RED
-            if False:
-                self.pprint (f"{col}we have exclusion line from {sfname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
             excl_lines[i] = { "x": x_, "y": y_ }
 
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
         return excl_lines
 
-    def coordinateTransform ( self, excl_lines, axes, eval_axes ):
+    def coordinateTransform ( self, excl_lines : dict, axes : str,
+            eval_axes : bool ) -> dict:
         if ('x - y' in axes or 'x-y' in axes) and eval_axes:
             for typ, excl in excl_lines.items():
                 excl_y = []
@@ -426,7 +487,7 @@ class PaperPlot:
         return excl_lines
 
     def getOnshellAxesForOffshell( self, anaDir : os.PathLike, tx_onshell : str,
-            validationFolder : os.PathLike ):
+            validationFolder : os.PathLike ) -> Optional[str]:
         """ i think this about understanding what the axes for the onshell
         version of this offshell topology is, but fixme
         """
@@ -434,10 +495,10 @@ class PaperPlot:
         if not os.path.exists ( fname ):
             self.pprint ( f"{self.prettyPath(fname)} does not exist" )
             return None
-        sm_file = open(fname,"r")
-        file = open(f"{anaDir}/exclusion_lines.json")
-        excl_file = json.load(file)
-        excl_sm = json.load(sm_file)
+        with open ( fname, "r" ) as sm_file, \
+                open ( f"{anaDir}/exclusion_lines.json" ) as excl_file_handle:
+            excl_file = json.load ( excl_file_handle )
+            excl_sm = json.load ( sm_file )
         sm_file_keys = [key for key in excl_sm.keys() if f"{tx_onshell}_" in key]
         check_tx_on = [True for key in sm_file_keys if (f"{tx_onshell}_comb_" in key or f"{tx_onshell}_bestSR_" in key)]
 
@@ -476,9 +537,7 @@ class PaperPlot:
                 # print("[drawPaperPlot] off reverse")
                 excl_off[typ]["x"].reverse()
                 excl_off[typ]["y"].reverse()
-            if official:
-                min_off_y = excl_off[typ]["y"][0]
-
+            # note: the "official" flag and min_off_y are currently unused
             ## FIXME no idea what that does
             if type(excl_off[typ]["y"][0]) != list and excl_off[typ]["y"][-1] < excl_off[typ]["y"][0]:# and official:
                 # print("[drawPaperPlot] yes ")
@@ -506,7 +565,7 @@ class PaperPlot:
 
         return excl_lines
 
-    def getPrettyProcessName( self, txname):
+    def getPrettyProcessName( self, txname : str ) -> str:
         # remove pp->intermediate state
         pName = prettyDecay(txname, latex = True )
         """
@@ -519,19 +578,21 @@ class PaperPlot:
         """
         return pName
 
-    def getPrettyAxisLabels( self, label):
+    def getPrettyAxisLabels( self, label : str ) -> str:
         #print("label = ", label)
-        particle = label.split('m(')[-1]
         particle = label.replace('(','').replace(')','').replace('$','').split('m_')[-1]
         if len(particle) and 'm' in particle[0]:
             label = f"$m_{{{particle[1:]}}}$ [GeV]"
         elif 'Gamma' in particle:
-            if 'Gamma_' not in particle: label = '$\\Gamma_{' + particle.split('Gamma')[-1] + '}$ [GeV]'
-            else: label = f"${particle}$ [GeV]"
-        else : label = f"$m_{{{particle}}}$ [GeV]"
+            if 'Gamma_' not in particle:
+                label = '$\\Gamma_{' + particle.split('Gamma')[-1] + '}$ [GeV]'
+            else:
+                label = f"${particle}$ [GeV]"
+        else :
+            label = f"$m_{{{particle}}}$ [GeV]"
         return label
 
-    def widthToLifetime( self, y):
+    def widthToLifetime( self, y : np.ndarray ) -> np.ndarray:
         shape = y.shape
         #print("y ", y.shape)
         y = y.flatten()
@@ -547,15 +608,15 @@ class PaperPlot:
         #print("yes here")
         return hbar/new_y
 
-    def lifetimeToWidth( self, time):
+    def lifetimeToWidth( self, time : np.ndarray ) -> np.ndarray:
         # unused
         hbar = 6.58*10**(-16)
         time *= 10**9
         return hbar/time
 
 
-    def getExtremeValue( self, excl_line, extreme : str, e_type : str,
-            width : bool = False) -> float:
+    def getExtremeValue( self, excl_line : list, extreme : str,
+            e_type : str, width : bool = False ) -> float:
         """ get the extreme  value
         :param extreme: 'min' or 'max'
         """
@@ -595,8 +656,9 @@ class PaperPlot:
                 #    mini =
                 return mini
 
-    def plotGammaLines ( self, x_vals, y_vals, ax, label, y_label,
-           linestyle : Optional[str]=None, color : Optional[str]=None ):
+    def plotGammaLines ( self, x_vals : list, y_vals : list, ax, label,
+           y_label : str, linestyle : Optional[str]=None,
+           color : Optional[str]=None ) -> tuple:
         """ plot the lines in x_vals and y_vals, but heed widths """
         y_vals = self.add_jitter ( y_vals, self.addJitter )
         if color == None:
@@ -606,13 +668,13 @@ class PaperPlot:
             linestyle="solid"
         return self.plotLines ( ax, x_vals, y_vals, color, linestyle, label )
 
-    def sortSegments ( self, x_vals, y_vals ) -> tuple:
+    def sortSegments ( self, x_vals : list, y_vals : list ) -> tuple:
         """ sort the segments, the ones with the lower x values come first """
         if len(x_vals)==1:
             return x_vals, y_vals
         new_x, new_y = [], []
         dct = {}
-        for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
+        for seg_x, seg_y in zip ( x_vals, y_vals ):
             if len(seg_x)==0:
                 continue
             min_x = min ( seg_x )
@@ -634,36 +696,29 @@ class PaperPlot:
             x_val, y_val = self.removeSegments ( x_val, y_val, label=label )
             nx_vals.append( x_val )
             ny_vals.append( y_val )
-        x_vals, y_vals = nx_vals, ny_vals
         return nx_vals, ny_vals
 
-    def sortWithinSegments ( self, x_vals, y_vals ) -> tuple:
+    def sortWithinSegments ( self, x_vals : list, y_vals : list ) -> tuple:
         """ sort within segments, if the order of the x values is larger to
         smaller, then invert """
         new_x, new_y = [], []
-        for idx, (seg_x, seg_y) in enumerate ( zip ( x_vals, y_vals ) ):
-                n = len(seg_x)
-                x_f, x_m, x_l  = seg_x[0], seg_x[int(n/2)], seg_x[-1]
-                if x_f <= x_m <= x_l: ## right order
-                    new_x.append ( seg_x )
-                    new_y.append ( seg_y )
-                    continue
-                new_x.append ( seg_x[::-1] )
-                new_y.append ( seg_y[::-1] )
+        for seg_x, seg_y in zip ( x_vals, y_vals ):
+            n = len(seg_x)
+            x_f, x_m, x_l  = seg_x[0], seg_x[int(n/2)], seg_x[-1]
+            if x_f <= x_m <= x_l: ## right order
+                new_x.append ( seg_x )
+                new_y.append ( seg_y )
+                continue
+            new_x.append ( seg_x[::-1] )
+            new_y.append ( seg_y[::-1] )
         return new_x, new_y
-    
-    def sortArbitrarily ( self, x_vals, y_vals, label ) -> tuple:
-        return x_vals, y_vals
-        if label == "1":
-            x_vals[0] = x_vals[0][:15]
-            y_vals[0] = y_vals[0][:15]
-        if label == "2":
-            x_vals[-1].append ( 100 )
-            y_vals[-1].append ( 40 )
-            print ( x_vals, y_vals )
+
+    def sortArbitrarily ( self, x_vals : list, y_vals : list,
+            label : str ) -> tuple:
+        """ placeholder for arbitrary reordering; currently a no-op """
         return x_vals, y_vals
 
-    def _asSegments ( self, x_vals, y_vals ) -> list:
+    def _asSegments ( self, x_vals : list, y_vals : list ) -> list:
         """ return the curves as a list of (N,2) numpy arrays """
         if x_vals is None or y_vals is None or len ( x_vals ) == 0:
             return []
@@ -683,7 +738,8 @@ class PaperPlot:
             return []
         return [ np.column_stack ( [ seg_x[:n], seg_y[:n] ] ) ]
 
-    def _nearestPointOnSegments ( self, point, segments ):
+    def _nearestPointOnSegments ( self, point : np.ndarray,
+            segments : list ) -> Optional[np.ndarray]:
         """ return the point on any of the segments that is closest to point """
         best_dist2, best_point = float ( "inf" ), None
         for segment in segments:
@@ -711,7 +767,8 @@ class PaperPlot:
                 best_dist2, best_point = dist2, candidate
         return best_point
 
-    def _segmentsNear ( self, center_segment, side_segments,
+    def _segmentsNear ( self, center_segment : np.ndarray,
+            side_segments : list,
             margin_fraction : float = 0.1 ) -> list:
         """ keep only the side segments whose bounding box is near the
         center segment; this drops unrelated islands of the side curve """
@@ -739,7 +796,8 @@ class PaperPlot:
         return .5 * float ( np.sum ( x_vals * np.roll ( y_vals, -1 ) -
                          y_vals * np.roll ( x_vals, -1 ) ) )
 
-    def _fillCompoundPolygons ( self, ax, polygons : list, **kwargs ):
+    def _fillCompoundPolygons ( self, ax, polygons : list,
+            **kwargs ) -> Optional[object]:
         """ fill several polygons with a single path, so that overlapping
         parts are not painted twice (and hence do not look darker) """
         from matplotlib.path import Path
@@ -764,8 +822,9 @@ class PaperPlot:
         ax.autoscale_view()
         return patch
 
-    def _plotGuessedErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2,
-            center_x_vals, center_y_vals, ax, color, alpha : float ) -> bool:
+    def _plotGuessedErrorBand ( self, x_vals1 : list, y_vals1 : list,
+            x_vals2 : list, y_vals2 : list, center_x_vals : list,
+            center_y_vals : list, ax, color : str, alpha : float ) -> bool:
         """ draw a band around the central line, using the points of the
         +-1 sigma curves that are closest to each central point """
         center_segments = self._asSegments ( center_x_vals, center_y_vals )
@@ -799,10 +858,11 @@ class PaperPlot:
                 alpha = alpha, edgecolor = "none", linewidth = 0 )
         return True
 
-    def plotErrorBand ( self, x_vals1, y_vals1, x_vals2, y_vals2, ax, label,
-            y_label, color : Optional[str] = None,
+    def plotErrorBand ( self, x_vals1 : list, y_vals1 : list, x_vals2 : list,
+            y_vals2 : list, ax, label, y_label : str,
+            color : Optional[str] = None,
             alpha : float = .4, center_x_vals = None, center_y_vals = None,
-            guess : bool = False ):
+            guess : bool = False ) -> None:
         if len(x_vals1)==0:
             return
         x_vals1, y_vals1 = self.sortArbitrarily ( x_vals1, y_vals1, "1" )
@@ -853,8 +913,8 @@ class PaperPlot:
                 x2s = np.concatenate ( [ x2s, x2 ] )
                 y2s = np.concatenate ( [ y2s, y2 ] )
 
-        poly = self.fill_between_polylines(ax, x1s, y1s, x2s, y2s,
-                   facecolor=color, alpha=alpha, edgecolor=None )
+        self.fill_between_polylines ( ax, x1s, y1s, x2s, y2s,
+                   facecolor = color, alpha = alpha, edgecolor = None )
 
         drawContoursAlso = False
         if drawContoursAlso:
@@ -889,13 +949,13 @@ class PaperPlot:
                 max_var = max ( max_var, max_tmp )
         return min_var, max_var
 
-    def pprint ( self, *args ):
+    def pprint ( self, *args ) -> None:
         print ( f"[drawPaperPlot] {''.join(map(str,*args))}" )
 
-    def error ( self, *args ):
+    def error ( self, *args ) -> None:
         print ( f"[drawPaperPlot] {RED}error: {''.join(map(str,*args))}{RESET}" )
 
-    def getStatModel ( self, validationPlot ):
+    def getStatModel ( self, validationPlot ) -> Optional[str]:
         """ find out which stat model was used, complain if not always
         the same """
         validationPlot.loadData()
@@ -954,7 +1014,8 @@ class PaperPlot:
         return [ name for name in gI.regionSets.keys()
                  if regionNames.intersection ( gI.regionSets[name] ) ]
 
-    def addOnshellCounts ( self, validationPlot, nums, txname, axes_on ):
+    def addOnshellCounts ( self, validationPlot, nums : dict, txname : str,
+            axes_on ) -> None:
         """ its a combined onshell + offshell plot,
         so we need to add the regions from the onshell """
         offshellRegionName = nums.get ( "regionName" )
@@ -1031,7 +1092,7 @@ class PaperPlot:
                 "regionName": regionName }
         return ret
 
-    def getRanges ( self, lines ):
+    def getRanges ( self, lines : dict ) -> dict:
         r = {}
         r["min_obs_x"], r["max_obs_x"] = \
             self.getRange( lines, "obsExclusion", "x" )
@@ -1060,21 +1121,21 @@ class PaperPlot:
             r["max_obs_y"], r["max_exp_y"] = max_y, max_y
         return r
 
-    def describe ( self ):
+    def describe ( self ) -> None:
         """ simple method to describe what i will be doing """
-        print ( f"[drawPaperPlot] starting" )
+        print ( "[drawPaperPlot] starting" )
         return ## FIXME
         gen_opts = list ( self.general_options.keys() )
         gen_opts.sort()
-        print ( f"general options" )
-        print ( f"===============" )
+        print ( "general options" )
+        print ( "===============" )
         for k in gen_opts:
             v = self.general_options[k]
             print ( f"  - {k}: {v}" )
         spe_opts = list ( self.specific_options.keys() )
         spe_opts.sort()
-        print ( f"specific options" )
-        print ( f"================" )
+        print ( "specific options" )
+        print ( "================" )
         for k in spe_opts:
             v = self.specific_options[k]
             print ( f"  - {k}: {v}" )
@@ -1094,7 +1155,7 @@ class PaperPlot:
         self.addJitter = addJitter
         validationPlot = self.validationPlot
         if validationPlot.isOneDimensional():
-            print(f"[drawPaperPlot] currently we don't have 1d versions of the pretty plots. exiting." )
+            print("[drawPaperPlot] currently we don't have 1d versions of the pretty plots. exiting." )
             return []
         #get info about the analysis and txname from validationPlot
         analysis = validationPlot.expRes.globalInfo.id
@@ -1198,31 +1259,21 @@ class PaperPlot:
 
         ranges = self.getRanges( lines )
 
-
-        num_sr, num_cr = 0, 0
-        ver = ""
-
         nums = self.countDataSets ( validationPlot )
         if offshell and txname != txnameOff:
             self.addOnshellCounts ( validationPlot, nums, txname, axes_on )
-        ver, num_sr, num_cr = nums["ver"], nums["num_sr"], nums["num_cr"]
+        num_sr, num_cr = nums["num_sr"], nums["num_cr"]
 
         #now plot figure
         # self.pprint("Drawing pretty obs and exp plots")
 
         #--------observed plot-------
-        plt.rcParams['text.usetex'] = True
-        plt.rcParams['font.family'] = 'Cambria Math'
-
-        fig,ax = plt.subplots(figsize=(5,4))
+        fig, ax = self._newFigure()
 
         step_x = int(ranges["max_obs_x"]/100)*10
-        mid_x = 0
         if ranges["max_obs_x"] < -.99:
-            self.pprint ( f"seems like exclusion lines are empty" )
+            self.pprint ( "seems like exclusion lines are empty" )
             return
-        if ranges["max_obs_x"] > -.99:
-            mid_x = int((ranges["max_obs_x"] - ranges["min_obs_x"])/2)
         step_y = int(ranges["max_obs_y"])
 
         x_label, y_label = "",""
@@ -1276,27 +1327,13 @@ class PaperPlot:
         if hasattr ( validationPlot.expRes.globalInfo, "includeCRs" ):
             if validationPlot.expRes.globalInfo.includeCRs == False:
                 num_cr = 0
-        nSRs = f"{num_sr} SRs"
-        if num_sr == 1:
-            nSRs = f"1 SR"
-        title = f"{analysis}: {nSRs}"
-        if num_cr > 0:
-            title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
-        # analysis id on left of title
+        # analysis id on the left, process name on the right
         fs = self.specific_options["title_fontsize"]
-        # processName
-        # pName = prettyTxname(validationPlot.txName, outputtype="latex" )
         ptxname = validationPlot.txName
         if txnameOff == txname + "off":
             ptxname = txname + "on+off"
         pName = self.getPrettyProcessName(ptxname)
-        right_title = pName
-        # process string on right of title
-        if self.specific_options["style"]=="sabine":
-            title = f"{analysis}: {pName}"
-            right_title = f"{num_sr} SRs + {num_cr} CRs"
-        plt.title( title, loc='left', fontsize=fs, x=-.12)
-        plt.title( right_title,loc='right', fontsize=fs)
+        self._setTitles ( analysis, num_sr, num_cr, pName, fs )
 
         #plot excl curves
         exp_name = analysis.split('-')[0]
@@ -1306,8 +1343,7 @@ class PaperPlot:
                    "black", "solid", label = f'{exp_name} official' )
         plotOffSigmas = self.general_options["errorsForR"]
         if plotOffSigmas:
-            for i in [ "obsExclusionP1", "obsExclusionP1", "obsExclusionM1",
-                       "obsExclusionM1" ]:
+            for i in [ "obsExclusionP1", "obsExclusionM1" ]:
                 if i in off_excl and "x" in off_excl[i]:
                     self.plotLines ( ax, off_excl[i]["x"],
                         off_excl[i]["y"], "black", "dotted", None )
@@ -1326,52 +1362,27 @@ class PaperPlot:
             x_vals = comb_excl["obsExclusion"]["x"]
             y_vals = comb_excl["obsExclusion"]["y"]
             y_vals = self.add_jitter ( y_vals, addJitter )
-            label = f"SModelS: comb."
-            gI = validationPlot.expRes.globalInfo
-            # label = f"SModelS: comb. {num_sr} SRs {ver}"
-            if hasattr ( gI, "statModels" ):
-                for srSetName,model_types in gI.statModels.items():
-                    model_type = model_types[0]
-                    mtype = model_type[0]
-                    if mtype == "onnx":
-                        label = f"SModelS: NN"
-                    if mtype == "sl":
-                        ver = validationPlot.expRes.typeOfStatsModel(srSetName, specifySL=True ).replace("sl","SL")
-                        label = f"SModelS: {ver}"
-                # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
+            label = self._statModelLabel ( validationPlot, "SModelS: comb." )
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-            if 'Gamma' in y_label:
-                sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
-                            self.widthToLifetime))
-                # print("yes gamma 3")
-                sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
-                sec_ax.set_yscale('log')
+            self._addLifetimeAxis ( ax, y_label )
             self.plotLines ( ax, x_vals, y_vals, "red", "solid", label )
 
             if "obsExclusionP1" in comb_excl and "obsExclusionM1" in comb_excl and \
                     self.specific_options["drawobspm1"]==True:
                 x_valsp1 = comb_excl["obsExclusionP1"]["x"]
                 if len(x_valsp1) == 0:
-                    print ( f"[drawPaperPlot] asked for red error band but not obsExclusionP1" )
+                    print ( "[drawPaperPlot] asked for red error band but not obsExclusionP1" )
                     return
                 y_valsp1 = comb_excl["obsExclusionP1"]["y"]
                 addJitter = False
                 y_valsp1 = self.add_jitter ( y_valsp1, addJitter, .05 )
-                label = f""
                 x_valsp1, y_valsp1 = yvalsAreWidths ( y_label, x_valsp1, y_valsp1 )
                 # self.plotLines ( ax, x_valsp1, y_valsp1, "red", "dashed", label )
                 x_valsm1 = comb_excl["obsExclusionM1"]["x"]
                 y_valsm1 = comb_excl["obsExclusionM1"]["y"]
                 y_valsm1 = self.add_jitter ( y_valsm1, addJitter, .05 )
-                label = f""
                 x_valsm1, y_valsm1 = yvalsAreWidths ( y_label, x_valsm1, y_valsm1 )
-                if 'Gamma' in y_label:
-                    sec_ax = ax.secondary_yaxis('right',
-                            functions=(self.widthToLifetime,
-                            self.widthToLifetime))
-                    # print("yes gamma 3")
-                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
-                    sec_ax.set_yscale('log')
+                self._addLifetimeAxis ( ax, y_label )
                 #self.plotLines ( ax, x_valsm1, y_valsm1, "red", "dashed",
                 #        label )
                 self.plotErrorBand ( x_valsm1, y_valsm1, x_valsp1, y_valsp1, ax,
@@ -1381,10 +1392,10 @@ class PaperPlot:
         if orig_excl not in [ None, [] ] and "obsExclusion" in orig_excl:
             x_vals = orig_excl["obsExclusion"]["x"]
             y_vals = orig_excl["obsExclusion"]["y"]
-            label = f"SModelS: CR comb."
+            label = "SModelS: CR comb."
             # label = f"SModelS: CR comb. {num_cr} SRs+CRs {ver}"
             if cr_is == "orig":
-                label = f"SModelS: orig pyhf"
+                label = "SModelS: orig pyhf"
                 # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
@@ -1393,14 +1404,9 @@ class PaperPlot:
                 x_vals = orig_excl["obsExclusionP1"]["x"]
                 y_vals = orig_excl["obsExclusionP1"]["y"]
                 y_vals = self.add_jitter ( y_vals, addJitter )
-                label = f"xxx"
+                label = "xxx"
                 x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-                if 'Gamma' in y_label:
-                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
-                                self.widthToLifetime))
-                    # print("yes gamma 3")
-                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
-                    sec_ax.set_yscale('log')
+                self._addLifetimeAxis ( ax, y_label )
                 # self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
 
         if 'Gamma' in y_label:
@@ -1410,11 +1416,7 @@ class PaperPlot:
                       fontsize = 8)
         #if '2018-14' in analysis and 'TStau' in txname:plt.text(0.6,0.6, r"%s GeV"%(massg), transform=fig.transFigure, fontsize = 8)
 
-        ox,oy,osize=.55,.65, 10
-        if "style" in self.specific_options and self.specific_options["style"]=="sabine":
-            ox,oy,osize = 0.25,0.8, 12
-        plt.text( ox, oy, r"$\bf observed~exclusion$",
-                  transform=fig.transFigure, fontsize = osize )
+        self._addCaption ( fig, r"$\bf observed~exclusion$" )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
 
@@ -1431,31 +1433,20 @@ class PaperPlot:
         metadata = pngMetaInfo()
         dpi = 300
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
-        plt.savefig(outfile, dpi=dpi, metadata=metadata )
-        pdf_also = True
-        if "pdf_also" in self.specific_options and self.specific_options["pdf_also"]:
-            pdffile = outfile.replace(".png",".pdf")
-            plt.savefig ( pdffile, dpi=dpi )
         add_logos = True
         if "addlogo" in self.specific_options:
             add_logos = self.specific_options["addlogo"]
         logos_y_offset = -125
-        if add_logos:
-            from addLogoToPlots import addLogo
-            addLogo ( outfile, dpi = dpi, y_offset = logos_y_offset )
+        self._saveFigure ( outfile, dpi, add_logos, logos_y_offset, metadata )
         plt.clf()
         plt.rcdefaults()
         plt.close()
         outfiles.append ( outfile )
 
         #--------expected plot-------
-        plt.rcParams['text.usetex'] = True
-        plt.rcParams['font.family'] = 'Cambria Math'
-
-        fig,ax = plt.subplots(figsize=(5,4))
+        fig, ax = self._newFigure()
 
         step_x = int(ranges["max_exp_x"]/100)*10
-        mid_x = int((ranges["max_exp_x"] - ranges["min_exp_x"])/2)
         step_y = int(ranges["max_exp_y"])
 
         #print("max exp y ", max_exp_y)
@@ -1484,18 +1475,7 @@ class PaperPlot:
             ax.set_ylim([ranges["min_exp_y"],ranges["max_exp_y"]+step_y])
         else: ax.set_ylim([0,round(ranges["max_exp_y"]+step_y,-1)])
 
-        nSRs = f"{num_sr} SRs"
-        if num_sr == 1:
-            nSRs = f"1 SR"
-        title = f"{analysis}: {nSRs}"
-        if num_cr > 0:
-            title = f"{analysis}: {num_sr} SRs + {num_cr} CRs"
-        right_title = pName
-        if self.specific_options["style"]=="sabine":
-            title = f"{analysis}: {pName}"
-            right_title = f"{num_sr} SRs + {num_cr} CRs"
-        plt.title( title, loc='left', fontsize=12, x=-.12 )
-        plt.title( right_title,loc='right', fontsize=12 )
+        self._setTitles ( analysis, num_sr, num_cr, pName, 12 )
 
         isPrefitExpected = str ( self.general_options.get ( "expectationType", "" ) ).lower() == "apriori"
         exp_name = analysis.split('-')[0]
@@ -1515,11 +1495,7 @@ class PaperPlot:
             x_vals = bestSR_excl["expExclusion"]["x"]
             y_vals = bestSR_excl["expExclusion"]["y"]
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-            if "Gamma" in y_label:
-                sec_ax = ax.secondary_yaxis('right',
-                        functions=(self.widthToLifetime, self.widthToLifetime))
-                sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
-                sec_ax.set_yscale('log')
+            self._addLifetimeAxis ( ax, y_label )
             self.plotLines ( ax, x_vals, y_vals, "red", "dashed",
                              "SModelS: best SR")
             plt.tick_params( which='major', axis = 'both', direction = 'in',
@@ -1530,38 +1506,17 @@ class PaperPlot:
         if combSR and "expExclusion" in comb_excl:
             x_vals = comb_excl["expExclusion"]["x"]
             y_vals = comb_excl["expExclusion"]["y"]
-            label = f"SModelS: comb."
-            # label = f"SModelS: comb. {num_sr} SRs {ver}"
-            gI = validationPlot.expRes.globalInfo
-            label = f"SModelS: orig pyhf"
-            if hasattr ( gI, "statModels" ):
-                if hasattr ( gI, "statModels" ):
-                    for srSetName,model_types in gI.statModels.items():
-                        model_type = model_types[0]
-                        mtype = model_type[0]
-                        if mtype == "onnx":
-                            label = f"SModelS: NN"
-                        if mtype == "sl":
-                            ver = validationPlot.expRes.typeOfStatsModel(srSetName, specifySL=True ).replace("sl","SL")
-                            label = f"SModelS: {ver}"
-                # label = f"SModelS: NN {num_sr} SRs + {num_cr} CRs"
+            label = self._statModelLabel ( validationPlot,
+                    "SModelS: orig pyhf" )
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label, color="red" )
-            for i in []: # [ "expExclusionP1", "expExclusionM1" ]:
-                if i in comb_excl:
-                    x_vals = comb_excl[i]["x"]
-                    y_vals = comb_excl[i]["y"]
-                    y_vals = self.add_jitter ( y_vals, addJitter )
-                    linestyle = "dashed"
-                    self.plotGammaLines ( x_vals, y_vals, ax, None, y_label,
-                           linestyle = "dashed", color = "red" )
 
         if orig_excl not in [ None, [], {} ] and "expExclusion" in orig_excl:
             x_vals = orig_excl["expExclusion"]["x"]
             y_vals = orig_excl["expExclusion"]["y"]
-            label = f"SModelS: CR comb."
+            label = "SModelS: CR comb."
             # label = f"SModelS: CR comb. {num_sr} SRs+CRs {ver}"
             if cr_is == "orig":
-                label = f"SModelS: orig pyhf"
+                label = "SModelS: orig pyhf"
                 # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             center_x_vals, center_y_vals = self.plotGammaLines ( x_vals, y_vals,
                    ax, label, y_label, linestyle= None, color = "blue" )
@@ -1586,33 +1541,22 @@ class PaperPlot:
             if "logymin" in self.specific_options:
                 ymin = self.specific_options["logymin"]
             if ylim[0]<1e-10:
-                ax.set_ylim ( .3, ylim[1] )
+                ax.set_ylim ( ymin, ylim[1] )
 
         if massg != "":
             plt.text( 0.6,0.6, rf"{massg} GeV",
                       transform=fig.transFigure, fontsize = 8)
 
-        ox,oy,osize=.55,.65, 10
-        if "style" in self.specific_options and self.specific_options["style"]=="sabine":
-            ox,oy,osize = 0.25,0.8, 12
         expected_label = r"$\bf expected~exclusion$"
         if str ( self.general_options.get ( "expectationType", "" ) ).lower() == "apriori":
             expected_label = r"$\bf pre\textrm{-}fit~expected~exclusion$"
-        plt.text( ox, oy, expected_label,
-                  transform=fig.transFigure, fontsize = osize )
+        self._addCaption ( fig, expected_label )
         plt.legend(loc='best', frameon=True, fontsize = 10)
         plt.tight_layout()
         txn = txname if txnameOff == "" else txnameOff
         outfile = f"{vDir}/{txn}_{fig_axes_title}_exp.png"
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
-        plt.savefig( outfile, dpi=dpi)
-        pdf_also = True
-        if "pdf_also" in self.specific_options and self.specific_options["pdf_also"]:
-            pdffile = outfile.replace(".png",".pdf")
-            plt.savefig ( pdffile, dpi=dpi )
-        if add_logos:
-            from addLogoToPlots import addLogo
-            addLogo ( outfile, dpi = dpi, y_offset = logos_y_offset )
+        self._saveFigure ( outfile, dpi, add_logos, logos_y_offset )
         plt.clf()
         plt.rcdefaults()
         plt.close()
@@ -1689,7 +1633,7 @@ def defaultSpecificOptions () -> dict:
              "addlogo": True, "show_points": False, "pdf_also": False }
 
 
-def _str2bool ( value ):
+def _str2bool ( value : Union[bool,str] ) -> bool:
     """ convert a command line value to a bool """
     if isinstance ( value, bool ):
         return value
@@ -1701,7 +1645,7 @@ def _str2bool ( value ):
     raise argparse.ArgumentTypeError ( f"expected a boolean, got '{value}'" )
 
 
-def _str2drawExpected ( value ):
+def _str2drawExpected ( value : Union[bool,str] ) -> Union[bool,str]:
     """ convert the drawExpected option, which also accepts 'auto' """
     svalue = str ( value ).strip().lower()
     if svalue in [ "true", "yes", "1" ]:
@@ -1711,7 +1655,7 @@ def _str2drawExpected ( value ):
     return value
 
 
-def _str2generateData ( value ):
+def _str2generateData ( value : Optional[Union[bool,str]] ) -> Optional[bool]:
     """ convert the generateData option (True, False or None/ondemand) """
     if value is None or isinstance ( value, bool ):
         return value
@@ -1775,7 +1719,7 @@ def _axesForTxname ( tx ) -> list:
     return []
 
 
-def _normalizeAxes ( axes ):
+def _normalizeAxes ( axes : str ) -> str:
     """ standardize an axes string the same way runValidation does """
     try:
         from sympy import var
@@ -1830,7 +1774,7 @@ def _drawPaperPlot ( valPlot, general_options : dict,
     return True
 
 
-def _dataSelection ( dataselector : str ):
+def _dataSelection ( dataselector : str ) -> Tuple[list[str], list[str], bool]:
     """ translate a runValidation-style data selector into database filters """
     if dataselector == "combined":
         return [ "efficiencyMap" ], [ "all" ], True
