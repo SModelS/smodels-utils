@@ -8,18 +8,25 @@
 
 __all__ = [ "validatePlot" ]
 
-import sys,os,copy,shlex
-import argparse,time
-from sympy import var
-from typing import Union, Optional
+import argparse
+import copy
+import logging
+import os
+import shlex
+import sys
+import time
+from typing import Optional, Tuple
 
-def filterSLHAStuff():
+from sympy import var
+
+def filterSLHAStuff() -> None:
+    """ suppress the (expected) invalid decay warnings from SModelS """
     import logging
     class SuppressInvalidDecayWarning(logging.Filter):
-        def filter(self, record):
+        def filter(self, record) -> bool:
             return not (
                 record.levelno == logging.WARNING
-                and ( "No valid decay found for" in record.getMessage() 
+                and ( "No valid decay found for" in record.getMessage()
                 or " has a total width/mass =" in record.getMessage() )
             )
 
@@ -30,11 +37,12 @@ filterSLHAStuff()
 
 try:
     from ConfigParser import SafeConfigParser, NoOptionError
-except ImportError as e:
+except ImportError:
     from configparser import ConfigParser, NoOptionError
 
 
-def starting( expRes, txnameStr, axes, pretty ):
+def starting( expRes, txnameStr : str, axes, pretty ) -> None:
+    """ announce that we start validating one txname/axes combination """
     from validationHelpers import prettyAxesV3, getAxisType
     atype = getAxisType ( axes )
     saxes = str(axes).replace(" ","")
@@ -43,13 +51,15 @@ def starting( expRes, txnameStr, axes, pretty ):
     spretty = "ugly"
     if pretty:
         spretty = "pretty"
-    id = expRes.globalInfo.id
-    print( f"{GREEN}starting {id}:{txnameStr}:{saxes} ({spretty}){RESET}" )
+    expid = expRes.globalInfo.id
+    print( f"{GREEN}starting {expid}:{txnameStr}:{saxes} ({spretty}){RESET}" )
     # logger.info( f"{GREEN}{expRes.globalInfo.id}:{txnameStr}:{saxes}{RESET}" )
 
-def getValPlotObj ( expRes, txnameStr, axes, db, slhadir, options,
-        kfactor, namedTarball, keep, combine ):
+def getValPlotObj ( expRes, txnameStr : str, axes, db, slhadir, options : dict,
+        kfactor, namedTarball, keep : bool, combine : bool ):
     """
+    Instantiate the correct ValidationPlot class (v2 or v3 axes).
+
     :param expRes: a ExpResult object containing the result to be validated
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
@@ -59,26 +69,25 @@ def getValPlotObj ( expRes, txnameStr, axes, db, slhadir, options,
     :param db: the database object
     :param kfactor: optional global k-factor value to re-scale
                     all theory prediction values
-    :param pretty: If True it will generate "pretty" plots, if "both", will
     :param combine: combine signal regions, or use best signal region
     :param namedTarball: if not None, then this is the name of the tarball explicitly specified in Txname.txt
     :param keep: keep temporary directories
     :return: ValidationPlot object
     """
-    axisType = getAxisType(axes)
-    if axisType=="v3":
-        valPlot = graphsValidationObjs.ValidationPlot(expRes,txnameStr,axes,db,
-                slhadir = None, options = options, kfactor=kfactor,
-                namedTarball = namedTarball, keep = keep, combine = combine )
+    axisType = getAxisType ( axes )
+    kwargs = dict ( slhadir = None, options = options, kfactor = kfactor,
+                    namedTarball = namedTarball, keep = keep, combine = combine )
+    if axisType == "v3":
+        valPlot = graphsValidationObjs.ValidationPlot ( expRes, txnameStr, axes,
+                db, **kwargs )
     else:
-        valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,db,
-                slhadir = None, options = options, kfactor=kfactor,
-                namedTarball = namedTarball, keep = keep, combine = combine )
+        valPlot = validationObjs.ValidationPlot ( expRes, txnameStr, axes, db,
+                **kwargs )
     return valPlot
 
 def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
-        db, kfactor=1., pretty=False, combine=False, namedTarball = None,
-        keep = False ):
+        db, kfactor : float =1., pretty=False, combine : bool =False,
+        namedTarball = None, keep : bool = False ):
     """
     Creates a validation plot and saves its output.
 
@@ -143,8 +152,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,options : dict,
             valPlot.toPdf()
     return valPlot
 
-def createRedBlackPlot ( expRes, txnameStr, axes, db,
-            slhadir, options, kfactor, namedTarball, keep, combine ):
+def createRedBlackPlot ( expRes, txnameStr : str, axes, db,
+            slhadir, options : dict, kfactor, namedTarball, keep : bool,
+            combine : bool ):
     """ create the red-black plots
     """
     valPlot = getValPlotObj ( expRes, txnameStr, axes = axes , db=db,
@@ -171,14 +181,25 @@ def _reproduceArg ( value ) -> str:
         return "none"
     return shlex.quote ( str ( value ) )
 
+def _appendOptionArgs ( parts : list, options : dict, defaults : dict,
+        prefix : str, skip : set = frozenset() ) -> None:
+    """ append all options that differ from their default to the command
+    line 'parts', in sorted order. """
+    for key in sorted ( options ):
+        if key in skip or key not in defaults:
+            continue
+        value = options[key]
+        if value == defaults[key]:
+            continue
+        parts += [ f"--{prefix}-{key}", _reproduceArg ( value ) ]
+
 def reproduceCommand ( valPlot, general_options : dict,
         specific_options : dict ) -> str:
     """ return the drawPaperPlot.py command that reproduces this plot """
     from drawPaperPlot import defaultGeneralOptions, defaultSpecificOptions
     generalDefaults = defaultGeneralOptions()
     specificDefaults = defaultSpecificOptions()
-    script = os.path.join ( os.path.dirname ( os.path.abspath ( __file__ ) ),
-            "drawPaperPlot.py" )
+    # the script is always run from the validation directory
     script = "./drawPaperPlot.py"
     # parts = [ "python3", shlex.quote ( script ),
     parts = [ shlex.quote ( script ),
@@ -202,33 +223,23 @@ def reproduceCommand ( valPlot, general_options : dict,
     # axis and databasepath are passed as positional/-d arguments,
     # show is passed via the dedicated --show flag above
     skipGeneral = { "axis", "databasepath", "show" }
-    for key in sorted ( general_options ):
-        if key in skipGeneral or key not in generalDefaults:
-            continue
-        value = general_options[key]
-        if value == generalDefaults[key]:
-            continue
-        parts += [ f"--general-{key}", _reproduceArg ( value ) ]
-    for key in sorted ( specific_options ):
-        if key not in specificDefaults:
-            continue
-        value = specific_options[key]
-        if value == specificDefaults[key]:
-            continue
-        parts += [ f"--specific-{key}", _reproduceArg ( value ) ]
+    _appendOptionArgs ( parts, general_options, generalDefaults, "general",
+                        skipGeneral )
+    _appendOptionArgs ( parts, specific_options, specificDefaults, "specific" )
     return " ".join ( parts )
 
 def drawPaperPlot ( valPlot, general_options : dict,
        specific_options : dict ) -> bool:
+    """ create the red-and-black paper plot, if requested and applicable """
     if not general_options["drawPaperPlot"]:
-        return
+        return False
     axis = valPlot.niceAxes
     if not "y" in axis:
         ## for now skip the 1d versions
-        print ( f"[runValidation] axis is 1d, skipping drawPaperPlot" )
+        print ( "[runValidation] axis is 1d, skipping drawPaperPlot" )
         return False
     if not hasattr ( valPlot, "combine" ) or valPlot.combine == False:
-        print ( f"[runValidation] this is not an sr-combine plot: skipping production of red-black paper plot." )
+        print ( "[runValidation] this is not an sr-combine plot: skipping production of red-black paper plot." )
         return False
 
     print ( f"[runValidation] reproduce this plot with:\n"
@@ -256,7 +267,7 @@ def drawPaperPlot ( valPlot, general_options : dict,
 
     try:
         of = plot.draw()
-    except (RuntimeError,) as e:
+    except RuntimeError as e:
         print ( f"[runValidation] RunTimeError when plotting red-and-back plot: {e}" )
         return False
     if general_options["show"] and of is not None:
@@ -265,55 +276,109 @@ def drawPaperPlot ( valPlot, general_options : dict,
             showPlot ( f )
     return True
 
-def addRange ( var : str, opts : dict, xrange : str, axis : str ):
+def _splitNamedTarball ( entry : str ) -> Tuple[str, str]:
+    """ split a named-tarball database entry of the form
+    'axis:Tarball.tar.gz' into (axis expression string, tarball file name).
+
+    The tarball file name always starts with a capital 'T' (the txname),
+    which is why the entry is split on 'T'.
+    """
+    tokens = entry.split ( "T" )
+    axis = tokens[0][:-1]  # strip the trailing ':'
+    tarball = "T" + "T".join ( tokens[1:] )
+    return axis, tarball
+
+def _axisFileStem ( axis : str ) -> str:
+    """ turn an axis description into a string that is safe to use
+    inside a file name """
+    return axis.replace ( ",", "" ).replace ( "(", "" ).replace ( ")", "" ).\
+            replace ( "/", "d" ).replace ( "*", "" )
+
+def _sanitizeAxisName ( axis : str ) -> str:
+    """ turn an axis description into a compact file-name friendly string """
+    return str ( axis ).replace ( '0.0', '0' ).replace ( '1.0', '1' ).\
+            replace ( '60.0', '60' ).replace ( '130.0', '130' )
+
+def _analysisFromDatafile ( dbpath : str, datafile : str ) -> str:
+    """ extract the analysis name from the path of a validation data file """
+    ana = datafile.replace ( dbpath, "" )
+    p1 = ana.find ( "validation" )
+    if p1 > 0:
+        ana = ana[:p1-1]
+    p2 = ana.rfind ( "/" )
+    return ana[p2+1:]
+
+def addRange ( axisName : str, opts : dict, xrange, axis : str ) -> dict:
     """ add a range condition to options, overwrite one if already there
-    :param var: variable, "x" or "y"
+    :param axisName: variable, "x" or "y"
+    :param opts: options dictionary to update
     :param xrange: the *range parameter, eg ['[[x,y],[x,y]]:[200,500]',
     '[[x,0.0],[x,0.0]]:[220,520]'], or '[200,500]'
+    :param axis: the axis expression the range should be applied to
+    :return: the updated options dictionary
     """
     ax = eval ( axis )
-    if type(xrange) == list:
+    if isinstance ( xrange, list ):
         hasFound = False
-        if not ":" in xrange:
-            hasFound = True
-        else:
-            for xr in xrange:
-                tokens = xr.split(":")
-                if eval(tokens[0])==ax:
-                    xrange = tokens[1]
-                    logger.info ( f"using {xrange} for {var}range"  )
-                    hasFound=True
-                    break
-        if not hasFound: # we did not find this
-            logger.warning ( f"we did not find axis range for {axis} in {xrange} in database entry {var}range" )
+        for xr in xrange:
+            tokens = xr.split ( ":" )
+            if eval ( tokens[0] ) == ax:
+                xrange = tokens[1]
+                logger.info ( f"using {xrange} for {axisName}range" )
+                hasFound = True
+                break
+        if not hasFound:  # we did not find this axis
+            logger.warning ( f"we did not find axis range for {axis} in {xrange} in database entry {axisName}range" )
             return opts
     else:
-        tokens = xrange.split(":")
-        if eval(tokens[0])==ax:
+        tokens = xrange.split ( ":" )
+        if eval ( tokens[0] ) == ax:
             xrange = tokens[1]
-            logger.info ( f"using {xrange} for {var}range"  )
-            hasFound=True
+            logger.info ( f"using {xrange} for {axisName}range" )
     if "style" in opts:
-        # if xy-axis is already in, we dont overwrite
-        if not f"{var}axis" in opts["style"]:
-            styles = opts["style"].split(";")
-            newstyles=[ f"{var}axis{xrange}" ]
+        # if the xy-axis is already in, we dont overwrite
+        if not f"{axisName}axis" in opts["style"]:
+            styles = opts["style"].split ( ";" )
+            newstyles = [ f"{axisName}axis{xrange}" ]
             for style in styles:
                 style = style.strip()
-                if not f"{var}axis" in style and style !="":
+                if not f"{axisName}axis" in style and style != "":
                     newstyles.append ( style )
-            opts["style"]=";".join(newstyles)
+            opts["style"] = ";".join ( newstyles )
     else:
-        opts["style"]=f"{var}axis{xrange}"
+        opts["style"] = f"{axisName}axis{xrange}"
     return opts
 
-def find_nth(haystack, needle, n):
+def _localOptionsWithRanges ( options : dict, txname, ax : str ) -> dict:
+    """ return a deep copy of 'options' with the x/y ranges of the txname
+    applied for the given axis expression """
+    localopts = copy.deepcopy ( options )
+    if hasattr ( txname, "xrange" ):
+        localopts = addRange ( "x", localopts, txname.xrange, ax )
+    if hasattr ( txname, "yrange" ):
+        localopts = addRange ( "y", localopts, txname.yrange, ax )
+    return localopts
+
+def find_nth ( haystack : str, needle : str, n : int ) -> int:
     """ find the n-th needle in haystack """
-    start = haystack.find(needle)
+    start = haystack.find ( needle )
     while start >= 0 and n > 1:
-        start = haystack.find(needle, start+len(needle))
+        start = haystack.find ( needle, start+len(needle) )
         n -= 1
     return start
+
+def _ratioPlotCommand ( sdbpath : str, ana1 : str, valfile1 : str,
+        ana2 : str, valfile2 : str, options : dict,
+        extra : str = "" ) -> str:
+    """ assemble a plotRatio.py command line from its components """
+    cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}{extra}"
+    if "folder1" in options and options["folder1"] != "validation":
+        cmd += f" -f1 {options['folder1']}"
+    if "folder2" in options and options["folder2"] != "validation":
+        cmd += f" -f2 {options['folder2']}"
+    if "comment" in options:
+        cmd += f" --comment '{options['comment']}'"
+    return cmd
 
 def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
        axis ):
@@ -324,12 +389,11 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     :param datafile: validation file
     :returns: True, if ratioplots were created, else False
     """
-    if opts["ratioPlots"]==False:
+    if opts["ratioPlots"] == False:
         return False
-    axis = axis.replace(",","").replace("(","").replace(")","").\
-                    replace("/","d").replace("*","")
-    if not combine: # if it isnt a combination, we dont want
-        return False # a ratio plot
+    axis = _axisFileStem ( axis )
+    if not combine: # if it isnt a combination, we dont want a ratio plot
+        return False
     anaId = expRes.globalInfo.id
     dashes = anaId.count ( "-" )
     if dashes > 3:
@@ -343,15 +407,10 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if len(ulres)==0:
         return False # we actually do not have an UL result for that
     dbpath = db.subs[0].base
-    ana1 = datafile.replace(dbpath,"")
-    p1 = ana1.find("validation")
-    ana1 = ana1[:p1-1]
-    p2 = ana1.rfind("/")
-    ana1 = ana1[p2+1:]
+    ana1 = _analysisFromDatafile ( dbpath, datafile )
     valfile1 = os.path.basename ( datafile )
     ana2 = anaId # expRes.globalInfo.id
-    saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
-    saxes = saxes.replace('130.0','130').replace('0.0','0')
+    saxes = _sanitizeAxisName ( axis )
     output = f"{os.path.dirname(datafile)}/ratios_{txname}_{saxes}.png"
     options = { "show": opts["show"], "output": output,
                 "folder2": "validation",
@@ -386,13 +445,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     options["comment"]=opts["ratio_comment"]
     sdbpath = dbpath.replace(f"/scratch-cbe{os.environ['HOME']}","~").replace(f"{os.environ['HOME']}","~")
     sdbpath = sdbpath.replace(f"/scratch{os.environ['HOME']}","~")
-    cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
-    if "folder1" in options and options["folder1"]!="validation":
-        cmd += f" -f1 {options['folder1']}"
-    if "folder2" in options and options["folder2"]!="validation":
-        cmd += f" -f2 {options['folder2']}"
-    if "comment" in options:
-        cmd += f" --comment '{options['comment']}'"
+    cmd = _ratioPlotCommand ( sdbpath, ana1, valfile1, ana2, valfile2, options )
     cmd += f" --output 'ratios_{txname}_{axis}.png'"
     options["dbpath"]=dbpath
     options["analysis1"]=ana1
@@ -404,16 +457,11 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     plotRatio.draw ( options )
 
     ## now the expected case
-    cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2} -e1 -e2"
+    cmd = _ratioPlotCommand ( sdbpath, ana1, valfile1, ana2, valfile2, options,
+            " -e1 -e2" )
     options["eul"] = True
     options["eul2"] = True
     output = f"{os.path.dirname(datafile)}/expected_ratios_{txname}_{axis}.png"
-    if "folder1" in options and options["folder1"]!="validation":
-        cmd += f" -f1 {options['folder1']}"
-    if "folder2" in options and options["folder2"]!="validation":
-        cmd += f" -f2 {options['folder2']}"
-    if "comment" in options:
-        cmd += f" --comment '{options['comment']}'"
     cmd += f" --output 'expected_ratios_{txname}_{axis}.png'"
     options["output"] = output
     print ( f"[runValidation] {cmd}" )
@@ -425,7 +473,7 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     pathToValDir = pathToValDir.replace( os.environ["HOME"], "~" )
     ratioscriptfile = f"{os.path.dirname(datafile)}/ratios_{txname}_{axis}.sh"
     if not os.path.exists ( ratioscriptfile ) or os.stat ( ratioscriptfile ).st_size < 10:
-        cmd = f"./plotRatio.py -d {sdbpath} -a1 {ana1} -v1 {valfile1} -a2 {ana2} -v2 {valfile2}"
+        cmd = _ratioPlotCommand ( sdbpath, ana1, valfile1, ana2, valfile2, options )
         print ( f"[runValidation] now producing {ratioscriptfile}" )
         with open ( ratioscriptfile, "wt" ) as f:
             f.write ( "#!/bin/sh\n" )
@@ -434,10 +482,9 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
             f.write ( "\n" )
             scmd = cmd.replace( "./plotRatio.py", f"{pathToValDir}/plotRatio.py" )
             f.write ( f"{scmd}\n\n" )
-            scmd += f" --eul --eul2" # --output 'expected_ratios_{txname}_{axis}.png'"
+            scmd += " --eul --eul2" # --output 'expected_ratios_{txname}_{axis}.png'"
             scmd = scmd.replace ( "output 'ratios_", "output 'expected_ratios_" )
             f.write ( f"{scmd}\n\n" )
-            f.close()
             os.chmod ( ratioscriptfile, 0o755 )
     else:
         print ( f"[runValidation] {YELLOW}NOT overwriting existing {ratioscriptfile}{RESET}" )
@@ -454,10 +501,8 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     :param datafile: validation file
     :returns: True, if ratioplots were created, else False
     """
-    axis = validationPlot.niceAxes
-    axis = axis.replace(",","").replace("(","").replace(")","").\
-                    replace("/","d").replace("*","")
-    if opts["bestSRPlots"]==False:
+    axis = _axisFileStem ( validationPlot.niceAxes )
+    if opts["bestSRPlots"] == False:
         return False
     if combine: # for combined plots, we dont do best SR plots
         return False
@@ -466,17 +511,13 @@ def checkForBestSRPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     if not "y" in axis: # dont make these plots for 1d cases
         return False
     dbpath = db.subs[0].base
-    ana = datafile.replace(dbpath,"")
-    p1 = ana.find("validation")
-    ana = ana[:p1-1]
-    p2 = ana.rfind("/")
-    ana = ana[p2+1:]
+    ana = _analysisFromDatafile ( dbpath, datafile )
     valfile = os.path.basename ( datafile )
     # print ( f"dbpath {dbpath}, ana {ana}, valfile {valfile}" )
     max_x, max_y = None, None
     rank = 1
     nmax = 6
-    saxes = str(axis).replace('0.0','0').replace('1.0','1').replace('60.0','60')
+    saxes = _sanitizeAxisName ( axis )
     output = f"{os.path.dirname(datafile)}/bestSR_{txname}_{saxes}.png"
     logger.info ( f"saving bestSR plot to {YELLOW}{output}{RESET}" )
     defcolors = None
@@ -525,6 +566,8 @@ def runForOneResult ( expRes, options : dict,
     """
     expt0 = time.time()
     logger.info( f"--- {GREEN} validating {expRes.globalInfo.id} {RESET}" )
+    # the symbols used by eval() when parsing axis expressions
+    x, y, z, w = var ( "x y z w" )
     sqrts = expRes.globalInfo.sqrts.asNumber(TeV)
     if sqrts == int(sqrts): ## needed for run-specific tarballs
         sqrts = int(sqrts)
@@ -579,7 +622,7 @@ def runForOneResult ( expRes, options : dict,
         hasCorrectAxis=False
         if options["generateData"] != False:
             tokens = tarfile
-            if type(tokens) == str:
+            if isinstance ( tokens, str ):
                 tokens = [ tarfile ]
             #tokens = tarfile.split(";")
             for tf in tokens:
@@ -587,9 +630,7 @@ def runForOneResult ( expRes, options : dict,
                 #  and not os.path.isfile(tarfile):
                 fname_ = tf
                 if ":" in tf:
-                    fname_ = fname_.split("T")
-                    axis = fname_[0][:-1]
-                    fname_ = 'T' + 'T'.join(fname_[1:])
+                    _, fname_ = _splitNamedTarball ( tf )
                     #if options["axis"] in [ None, "None", "" ]:
                     #    options["axis"] = axis
                 else:
@@ -610,9 +651,8 @@ def runForOneResult ( expRes, options : dict,
             gkfactor = float(kfactorDict[txnameStr.lower()])
 
         if hasattr ( txname, "axesMap" ):
-            x,y,z,w = var("x y z w")
             axes = txname.axesMap
-            if type(axes)==str:
+            if isinstance ( axes, str ):
                 axes = eval ( axes )
             #print ( "eval", eval(axes) )
         #Loop over all axes:
@@ -632,15 +672,12 @@ def runForOneResult ( expRes, options : dict,
             ltarfile = tarfile
             for cax,ax in enumerate(axes):
                 hasCorrectAxis_ = hasCorrectAxis
-                x,y,z,w = var("x y z w")
                 # print ( "ax", ax)
                 ax = str(eval(str(ax))) ## standardize the string
                 kfactor = gkfactor
                 fname_ = "none"
-                if type(namedTarball) == str and ":" in namedTarball:
-                    fname_= namedTarball.split("T")
-                    myaxis = fname_[0][:-1]
-                    fname_ = 'T' + 'T'.join(fname_[1:])
+                if isinstance ( namedTarball, str ) and ":" in namedTarball:
+                    myaxis, fname_ = _splitNamedTarball ( namedTarball )
                     myaxis = str ( eval ( myaxis ) )
                     if axisType == "v3":
                         myaxis = axisV2ToV3 ( myaxis )
@@ -652,13 +689,11 @@ def runForOneResult ( expRes, options : dict,
                             if not os.path.exists ( tarfile ):
                                 tarfile = os.path.join(slhadir,fname_)
                             ltarfile = tarfile
-                elif type(namedTarball) == list:
+                elif isinstance ( namedTarball, list ):
                     # looks like were given multiples
                     for nt in namedTarball:
                         if ":" in nt:
-                            fname_ = nt.split("T")
-                            myaxis = fname_[0][:-1]
-                            fname_ = 'T' + 'T'.join(fname_[1:])
+                            myaxis, fname_ = _splitNamedTarball ( nt )
                             if fname_ == "skip":
                                 # spread the lore, we wish to skip this
                                 pnamedTarball = fname_
@@ -678,21 +713,15 @@ def runForOneResult ( expRes, options : dict,
                                 break
                 if fname_ in kfactorDict:
                     # print ( "namedTarball", namedTarball, "ax", ax )
-                    if type(namedTarball) == str and ":" in namedTarball:
-                        fname_ = namedTarball.split("T")
-                        myaxis = fname_[0][:-1]
-                        fname_ = 'T' + 'T'.join(fname_[1:])
-                        if compareAxes ( myaxis, ax ):
+                    if isinstance ( namedTarball, str ) and ":" in namedTarball:
+                        myaxis, fname_ = _splitNamedTarball ( namedTarball )
+                        if compareTwoAxes ( myaxis, ax ):
                             kfactor = float(kfactorDict[fname_])
                             logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_} axis {myaxis}" )
                     else:
                         kfactor = float(kfactorDict[fname_])
                         logger.info ( f"kfactor {kfactor} given specifically for tarball {fname_}" )
-                localopts = copy.deepcopy ( options )
-                if hasattr ( txname, "xrange" ):
-                    localopts = addRange ( "x", localopts, txname.xrange, ax )
-                if hasattr ( txname, "yrange" ):
-                    localopts = addRange ( "y", localopts, txname.yrange, ax )
+                localopts = _localOptionsWithRanges ( options, txname, ax )
                 if namedTarball != "skip":
                     pnamedTarball = namedTarball
                     if not hasCorrectAxis_:
@@ -706,21 +735,26 @@ def runForOneResult ( expRes, options : dict,
                 if tarfile == "skip":
                     logger.info ( f"skipping {expRes}:{txnameStr}:{ax}" )
                     continue
+                re = None
+                datafile = None
                 for p in prettyorugly:
-                    lkeep = keep
                     if cax < len(axes)-1: ## not the last run!!!
                         keep = True # we keep stuff
                     re = validatePlot(expRes,txnameStr, ax, ltarfile, localopts,
                         db, kfactor, p, combine, namedTarball = pnamedTarball,
                         keep = keep )
+                    if not re:
+                        logger.warning ( f"could not validate {expRes}:{txnameStr}:{ax}, skipping" )
+                        break
                     if re.currentSLHADir != None:
                         ltarfile = re.currentSLHADir ## keep stuff!
                     # if not ":" in namedTarball:
                     localopts["generateData"]=False
-                    oldNamedTarball = pnamedTarball
                     validationDir = re.getValidationDir ( None )
                     datafile = re.getDataFile(validationDir)
 
+                if not re:
+                    continue
                 createRedBlackPlot ( expRes, txnameStr, ax, db, slhadir,
                         options, kfactor, namedTarball, keep, combine )
                 checkForRatioPlots ( expRes, txnameStr, ax, db, combine,
@@ -728,12 +762,9 @@ def runForOneResult ( expRes, options : dict,
                 checkForBestSRPlots ( expRes, txnameStr, ax, db, combine,
                         localopts, datafile, re )
         else: # axis is not None
-            x,y,z = var("x y z")
             ax = str(eval(axis)) ## standardize the string
-            if type(namedTarball) == str and ":" in namedTarball:
-                fname_ = namedTarball.split("T")
-                myaxis = fname_[0][:-1]
-                fname_ = 'T' + 'T'.join(fname_[1:])
+            if isinstance ( namedTarball, str ) and ":" in namedTarball:
+                myaxis, fname_ = _splitNamedTarball ( namedTarball )
                 if fname_ == "skip":
                     tarfile = "skip"
                 else:
@@ -743,13 +774,11 @@ def runForOneResult ( expRes, options : dict,
                         if not os.path.exists ( tarfile ):
                             tarfile = os.path.join(slhadir,fname_)
                         hasCorrectAxis = True
-            if type(namedTarball) == list:
+            if isinstance ( namedTarball, list ):
                 # looks like were given multiples
                 for nt in namedTarball:
                     if ":" in nt:
-                        fname_ = nt.split("T")
-                        myaxis = fname_[0][:-1]
-                        fname_ = 'T' + 'T'.join(fname_[1:])
+                        myaxis, fname_ = _splitNamedTarball ( nt )
                         if fname_ == "skip":
                             tarfile = "skip"
                             continue
@@ -766,11 +795,7 @@ def runForOneResult ( expRes, options : dict,
                 tarfile = os.path.join(slhadir,rundir,f"{txnameStr}.tar.gz")
                 if not os.path.exists ( tarfile ):
                     tarfile = os.path.join(slhadir,f"{txnameStr}.tar.gz")
-            localopts = copy.deepcopy ( options )
-            if hasattr ( txname, "xrange" ):
-                localopts = addRange ( "x", localopts, txname.xrange, ax )
-            if hasattr ( txname, "yrange" ):
-                localopts = addRange ( "y", localopts, txname.yrange, ax )
+            localopts = _localOptionsWithRanges ( options, txname, ax )
             for p in prettyorugly:
                 validatePlot( expRes,txnameStr,ax,tarfile, localopts, db,
                               gkfactor, p, combine, namedTarball = pnamedTarball,
@@ -797,13 +822,11 @@ def run ( expResList : list, options : dict,
         if options["removeMLModels"] and \
                 hasattr ( expRes.globalInfo, "statModels" ):
             logger.info ( f"{RED}removing statModels as requested!{RESET}" )
-            newModels = []
             ### FIXME this is wrong!!
             for setName,model_types in expRes.globalInfo.statModels.items():
                 newModels = []
                 for model_type in model_types:
                     mtype = model_type[0]
-                    mname = model_type[1]
                     if mtype == "onnx":
                         expRes.globalInfo.cachedModels.pop ( model_type )
                     else:
@@ -817,7 +840,7 @@ def run ( expResList : list, options : dict,
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          options : dict, tarfiles=None,verbosity : str ='error',
          combine : bool =False, force_load : Optional[str]= None,
-         keep : bool = False, parfile : Optional[str] = None ):
+         keep : bool = False, parfile : Optional[str] = None ) -> None:
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -857,14 +880,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         if os.path.exists ( os.path.join ( databasePath, "validation.pcl" ) ):
             logger.info ( f"{RED}found a validation.pcl file in {databasePath}! Will use it! Make sure it is not outdated!{RESET}" )
             buPath = os.path.join ( databasePath, "validation.pcl" )
-        import shutil # should actually only be necessary for
-        # the transitional period to ml-spey
         db = Database( buPath, force_load,subpickle = True )
-        if not "validation.pcl" in buPath: # ok so we create a new pickle
-            currentPickle = os.path.join ( buPath, "db30.pcl" )
-            if os.path.exists ( currentPickle ) and False:
-                # per default we do not do this
-                shutil.copyfile ( currentPickle, os.path.join ( databasePath, "validation.pcl" ) )
     except Exception as e:
         logger.error( f"Error loading database at {databasePath}" )
         logger.error( f"Error: {type(e)}, {str(e)}" )
@@ -897,7 +913,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     dt = (time.time()-tval0)/60.
     logger.info( f"\n\n-- Finished validation in {dt:.1f} min." )
 
-def updateOptions ( options : dict, parser, section : str = "options" ):
+def updateOptions ( options : dict, parser, section : str = "options" ) -> None:
     """ update the default options with the content from the config file """
     for option,default in options.items():
         otype = type(default)
@@ -912,7 +928,7 @@ def updateOptions ( options : dict, parser, section : str = "options" ):
                 # if default is none, we assume its actually a string
                 options[option] = parser.get(section,option)
 
-def doGenerate ( parser ):
+def doGenerate ( parser ) -> Optional[bool]:
     """ determine if we do want to force generation of data (True),
     explicitly do not generate any data (False), or generate only on-demand
     (None) """
@@ -956,7 +972,7 @@ if __name__ == "__main__":
     parser = None
     try:
         parser = ConfigParser( inline_comment_prefixes=( ';', ) )
-    except Exception as e:
+    except Exception:
         parser = SafeConfigParser()
     parser.read(args.parfile)
 
@@ -967,7 +983,6 @@ if __name__ == "__main__":
     sys.path.append(utilsPath)
 
     from smodels.experiment.databaseObj import Database
-    from smodels.experiment.expResultObj import ExpResult
     from smodels.base.physicsUnits import TeV
     from validationHelpers import getAxisType, compareTwoAxes, axisV2ToV3
     from smodels.base.smodelsLogging import logger
@@ -975,6 +990,7 @@ if __name__ == "__main__":
 
     from smodels.base import smodelsLogging
     smodelsLogging.setLogLevel( args.verbose )
+    numeric_level = getattr ( logging, args.verbose.upper(), None )
 
     #Selected plots for validation:
     analyses = parser.get("database", "analyses")
@@ -994,7 +1010,7 @@ if __name__ == "__main__":
     dataselector = "upperLimit"
     try:
         dataselector = parser.get("database", "dataselector")
-    except NoOptionError as e:
+    except NoOptionError:
         logger.warning ( "setting 'dataselector' in section 'database' to 'upperLimit'" )
     combine=False
     dataTypes = []
@@ -1017,7 +1033,8 @@ if __name__ == "__main__":
             datasetIDs = ['all']
         elif s == "tpredcomb":
             from validation import useTheoPredCombiner as validationObjs
-            validationObjs.logger.setLevel(level=numeric_level)
+            if numeric_level is not None:
+                validationObjs.logger.setLevel(level=numeric_level)
             dataTypes += ['efficiencyMap']
             datasetIDs = ['all']
         else:
