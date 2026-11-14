@@ -12,13 +12,13 @@
 
 import sys
 import numpy as np
-from sympy import var, Eq, lambdify, solve, N, And, sqrt
+from sympy import var, Eq, lambdify, solve, N, sqrt
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
 import string
 import logging
-from typing import Union, List
+from typing import Any, Dict, List, Optional, Union
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -36,6 +36,21 @@ def _lambdify ( a, b, c, dummify ):
     f.expr = f"{a}: {b}"
     return f
 
+def _isEmptyAxesString ( string : Optional[str] ) -> bool:
+    """Check whether an axes string is empty.
+
+    An error is logged only the first time an empty string is encountered.
+
+    :param string: axes string to check
+    :return: True if the string does not contain an axes definition
+    """
+    if string not in [ "", None, "None" ]:
+        return False
+    if not hasWarned["emptystring"]:
+        logger.error ( "cannot build mass plane from empty string!" )
+        hasWarned["emptystring"] = True
+    return True
+
 class MassPlaneBase(object):
     """
     Holds all information related to one mass plane
@@ -49,6 +64,116 @@ class MassPlaneBase(object):
                          'acceptanceMap',
                         'obsExclusion','obsExclusionP1','obsExclusionM1',
                         'expExclusion','expExclusionP1','expExclusionM1']
+
+    def _initCommon ( self, txDecay ) -> None:
+        """Initialise the state shared by all mass planes.
+
+        :param txDecay: object of type TxDecay
+        """
+        self._txDecay = txDecay
+        self.figureUrl = None
+        self.dataUrl = None
+        self.allInputFiles = []
+        self._exclusionCurves = []
+
+    @classmethod
+    def fromString ( cls, txname, string : str ) -> Optional["MassPlaneBase"]:
+        """Build a mass plane from its string representation.
+
+        :param txname: txname string (e.g. T1)
+        :param string: representation of the axes, e.g. '[[x,y],[x,y]]'
+        :return: mass plane instance, or None for an empty string
+        """
+        if _isEmptyAxesString ( string ):
+            return None
+        return cls._fromParsedString ( txname, eval ( string ) )
+
+    @classmethod
+    def _fromParsedString ( cls, txname, parsed : Any ) -> "MassPlaneBase":
+        """Build a mass plane from an already parsed axes expression.
+
+        :param txname: txname string (e.g. T1)
+        :param parsed: the evaluated axes expression
+        :return: mass plane instance
+        """
+        return cls ( txname, parsed )
+
+    def _defaultDataCoordinateMap ( self ) -> Dict:
+        """Return the default mapping of data columns to plane variables.
+
+        :return: dictionary mapping the plane variables (and 'value') to
+                 column indices
+        """
+        dimensions = len ( self.xvars )
+        coordinateMap = { xv : i for i, xv in enumerate ( allvars[:dimensions] ) }
+        coordinateMap["value"] = -1  # the value column
+        return coordinateMap
+
+    def _makeDataHandler ( self, dataLabel : str, coordinateMap : Dict ) -> DataHandler:
+        """Create the data handler for a non-exclusion data source."""
+        return DataHandler ( dataLabel, coordinateMap, self.xvars,
+                             str ( self._txDecay ) )
+
+    def _makeExclusionHandler ( self, dataLabel : str,
+            coordinateMap : Dict ) -> ExclusionHandler:
+        """Create the data handler for an exclusion-curve data source."""
+        return ExclusionHandler ( dataLabel, coordinateMap, self.xvars )
+
+    def addSource ( self, dataLabel : str, dataFile : str,
+            dataFormat : Optional[str] = None,
+            objectName : Optional[str] = None,
+            index : Union[List, str, int, None] = None,
+            unit = None, coordinateMap : Optional[Dict] = None,
+            scale = None, **args ) -> None:
+        """Defines a single data source for the plane.
+
+        :param dataLabel: String with the dataLabel. Possible data labels are
+                          defined in allowedDataLabels
+                          (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
+        :param dataFile: String with the file path to the data file.
+        :param dataFormat: String with the file format for the data file, e.g.
+                           root, csv, embaked. If None, the file extension is used.
+        :param objectName: String with the object name stored in root-file or cMacro
+        :param index: Index for objects in listOfPrimitives of ROOT.TCanvas.
+                      If a string and a csv file, it specifies the value of the
+                      constraint (see coordinateMap). If a list, entries get added
+                      up. If a dictionary, entries get added up with values as weights.
+        :param unit: String with unit for data (e.g. 'fb', None, 'pb', ...).
+                     Similar to "scale", it can also be used to re-scale the data,
+                     either via a '*' or a '/' symbol.
+        :param coordinateMap: Dictionary with the mapping of txt file columns
+                              to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' : 2}).
+                              'constraint' lists the constraint that needs to match
+                              "index", see index.
+        :param scale: Float to re-scale the data
+        """
+        if dataFormat is None:
+            dataFormat = dataFile.rsplit ( ".", 1 )[-1]
+            print ( f"[massPlaneObjects] setting format to '{dataFormat}'" )
+        self.allInputFiles.append ( dataFile )
+
+        if dataLabel not in self.allowedDataLabels:
+            logger.error ( f"Data label {dataLabel} is not allowed. Try one of: {', '.join(self.allowedDataLabels)}." )
+            sys.exit()
+
+        if "exclusion" not in dataLabel.lower():
+            if not coordinateMap:
+                coordinateMap = self._defaultDataCoordinateMap()
+            dataObject = self._makeDataHandler ( dataLabel, coordinateMap )
+        else:
+            #Define the default 1D coordinate mapping for exclusion curves
+            if not coordinateMap:
+                coordinateMap = { x : 0, y : 1, 'value' : None }
+                if y not in self.xvars:  # 1d data
+                    coordinateMap = { x : 0, 'value' : None }
+            dataObject = self._makeExclusionHandler ( dataLabel, coordinateMap )
+            self._exclusionCurves.append ( dataObject )
+
+        dataObject.dataUrl = self.dataUrl
+        dataObject.setSource ( dataFile, dataFormat, objectName, index, unit,
+                               scale, **args )
+        #Store it as a mass plane attribute:
+        setattr ( self, dataLabel, dataObject )
 
     def setBranch(self,branchNumber, branchMasses):
 
