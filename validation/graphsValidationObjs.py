@@ -273,6 +273,16 @@ class ValidationPlot( ValidationObjsBase ):
             if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
                 dt = smodelsOutput["OutputStatus"]["time spent"]
             res = smodelsOutput['ExptRes']
+            if len(res) > 1:
+                # A single database result can contain several txnames.  When
+                # validating them together, SModelS then reports one ExptRes
+                # per txname.  Select the entry belonging to the txname we are
+                # currently validating; keep the full list if this is
+                # ambiguous (e.g. several datasets for the same txname).
+                matching = [ eR for eR in res
+                             if eR and self.txName in eR.get('TxNames', [] ) ]
+                if len ( matching ) == 1:
+                    res = matching
             expRes = res[0]
             #Double checks (to make sure SModelS ran as expected):
             leadingDSes = {}
