@@ -386,8 +386,8 @@ def main():
             help='number of processes to run [10]',
             type=int, default=10 )
     argparser.add_argument ( '-m', '--model', nargs='?',
-            help='model to use (mssm,nmssm,idm,zprime.slha,omit) [default]',
-            type=str, default="default" )
+            help='model to use (mssm,nmssm,idm,zprime,slha,omit) [omit]',
+            type=str, default="omit" )
     argparser.add_argument ( '--axis', nargs='?',
             help='optionally specify the axis [omit]',
             type=str, default="omit" )
