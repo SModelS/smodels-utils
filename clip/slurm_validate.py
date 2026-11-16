@@ -250,7 +250,9 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     #    monkey_patch = "--monkey_patch"
     python_exe = f"{os.environ['HOME']}/.venvs/default/bin/python3"
     if not os.path.exists ( python_exe ):
-        python_exe = "/usr/bin/python3"
+        python_exe = "/usr/bin/env python3"
+    if os.path.exists ( "/scratch-cbe" ):
+        python_exe = "/usr/bin/env python3"
     with open ( newFile, "wt" ) as f:
         for line in lines:
             newline = line.replace("@@INIFILE@@", newini )
