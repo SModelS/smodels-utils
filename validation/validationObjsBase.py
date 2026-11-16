@@ -102,9 +102,9 @@ class ProgressBarHandler:
     def killProgressBar ( self ) -> None:
         """ kill the progressbar """
         pid = self.readPid()
-        print ( f"\n[ProgressBarHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
         if pid == None:
             return
+        print ( f"\n[ProgressBarHandler] killing progress bar {pid} (mother pid {self.motherpid})" )
         import psutil
         if psutil.pid_exists ( pid ):
             p = psutil.Process ( pid )
