@@ -54,6 +54,9 @@ class ValidationPlot( ValidationObjsBase ):
     :ivar preliminary: if true, write "preliminary" over the plot
     """
 
+    outputFormat : int = 3
+    leadingDSThreshold : int = 1
+
     def __init__( self, ExptRes, TxNameStr : str, Axes, db : Database, slhadir=None,
             databasePath=None, options : dict = {}, kfactor = 1.,
             namedTarball = None, keep = False, combine = False ):
@@ -99,23 +102,39 @@ class ValidationPlot( ValidationObjsBase ):
         varsDict = self.massPlane.getXYValues( parameters )
         return varsDict
 
-    def getMassesAndWidths ( self, mass : list, width : list ) -> list:
-        """ build the parameter list for the efficiency map lookup.
+    def selectResults ( self, res : list ) -> list:
+        """ pick the ExptRes entry belonging to our txname, if unambiguous.
 
-        :param mass: mass vectors
-        :param width: width vectors, or None
-        :return: list of masses, or (mass, width) tuples
+        A single database result can contain several txnames. When
+        validating them together, SModelS reports one ExptRes per txname.
         """
-        total = []
-        if width == None:
-            return total
-        for bm,bw in zip(mass,width):
-            for m,w in zip(bm,bw):
-                if w == 'stable' or ( type(w) not in [ str ] and w > .08 ):
-                    total.append( m )
-                else:
-                    total.append( (m,w) )
-        return total
+        if len(res) > 1:
+            matching = [ eR for eR in res
+                         if eR and self.txName in eR.get('TxNames', [] ) ]
+            if len ( matching ) == 1:
+                return matching
+        return res
+
+    def txNameMatches ( self, expRes : dict ) -> bool:
+        """ in v3 the txname may appear anywhere in the txname list """
+        return self.txName in expRes['TxNames']
+
+    def getMassesAndWidthsForPlane ( self, expRes : dict,
+            slhafile : str ) -> tuple:
+        """ the masses and widths come directly from the SModelS output;
+        the plane is evaluated via the nodes map in getVarsDict. """
+        return expRes["Mass (GeV)"], expRes.get("Width (GeV)")
+
+    def getEfficiencyParameters ( self, mass : list, width : list,
+            expRes : dict ) -> list:
+        """ build the parameter vector for the efficiency map lookup,
+        replacing stable particles by zero. """
+        nodesMap = expRes["Nodes Map"]
+        parameters = self.constructParameterVector ( mass, width, nodesMap )
+        for i,p in enumerate(parameters):
+            if p == "stable":
+                parameters[i] = 0.
+        return parameters
 
     def getDataMap ( self ) -> Optional[dict]:
         """ obtain the data map corresponding to our txname """
@@ -206,173 +225,3 @@ class ValidationPlot( ValidationObjsBase ):
             D = { "x": round_to_n(float(tokens[1]),5),
                   "y": round_to_n(float(tokens[3]),5) }
         return D
-
-
-
-    def getDataFromPlanes(self) -> Optional[bool]:
-        """
-        Runs SModelS on the SLHA files from self.slhaDir and store
-        the relevant data in self.data.  Uses runSModelS.main.
-        Result is stored in self.data
-        """
-        #Get list of SLHA files:
-        if not self.slhaDir:
-            logger.warning("SLHA folder not defined")
-            return False
-
-        # first, run SModelS
-        fileList = self.runSModelS( outputformat = 3 )
-
-        #Define original plot
-        massPlane = self.massPlane
-        if massPlane == None:
-            logger.error ( "no mass plane!" )
-            return False
-        #Now read the output and collect the necessary data
-        ct_nooutput=0
-        myglobals = globals()
-        myglobals["inf"]=float("inf")
-        myglobals["nan"]=float("nan")
-        for slhafile in fileList: # slhafiles:
-            if "recipe" in slhafile:
-                continue
-            if "coordinates" in slhafile:
-                continue
-            if "comment" in slhafile:
-                continue
-            if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
-                continue
-            fout = os.path.join(self.outputDir,f"{slhafile}.py")
-            if not os.path.isfile(fout):
-                if ct_nooutput>4:
-                    ## suppress subsequently same error messages
-                    continue
-                logger.error( f"No SModelS output found for {slhafile} (should be {fout})" )
-                ct_nooutput+=1
-                if ct_nooutput==5:
-                    logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
-                continue
-            ff = open(fout,'r')
-            txt = ff.read()
-            cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
-            try:
-                exec( cmd, myglobals )
-            except SyntaxError as e:
-                if os.path.exists ( fout ):
-                    try:
-                        os.unlink ( fout )
-                    except FileNotFoundError as f:
-                        pass
-                continue
-            ff.close()
-            if not 'ExptRes' in smodelsOutput:
-                axes = self.getXYFromSLHAFileName ( slhafile )
-                self.addDictionaryForFailedPoint ( smodelsOutput, axes )
-                continue
-            dt = None
-            if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
-                dt = smodelsOutput["OutputStatus"]["time spent"]
-            res = smodelsOutput['ExptRes']
-            if len(res) > 1:
-                # A single database result can contain several txnames.  When
-                # validating them together, SModelS then reports one ExptRes
-                # per txname.  Select the entry belonging to the txname we are
-                # currently validating; keep the full list if this is
-                # ambiguous (e.g. several datasets for the same txname).
-                matching = [ eR for eR in res
-                             if eR and self.txName in eR.get('TxNames', [] ) ]
-                if len ( matching ) == 1:
-                    res = matching
-            expRes = res[0]
-            #Double checks (to make sure SModelS ran as expected):
-            leadingDSes = {}
-            if len(res) != 1:
-                logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
-                found_combined=False
-                for eR in res:
-                    if eR == None:
-                        continue
-                    if "DataSetID" in eR and eR["DataSetID"] != None and "combined" in eR["DataSetID"]:
-                        logger.debug ( "found a combined result. will use it." )
-                        found_combined=True
-                        expRes = eR
-                if self.options["keepTopNSRs"] not in [ None, 0 ]:
-                    maxR, expRes = -1., None
-                    for eR in res:
-                        if "r_expected" in eR:
-                            r = eR["r_expected"]
-                            while r in leadingDSes: # make sure it's unique
-                                r = r * .9999
-                            leadingDSes[r]=eR["DataSetID"]
-                            if r>maxR:
-                                maxR = eR["r_expected"]
-                                expRes = eR
-                if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
-                    logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
-                    return False
-            if expRes['AnalysisID'] != self.expRes.globalInfo.id:
-                logger.error( f"Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
-                sys.exit(-1)
-                # return False
-            if self.txName not in expRes['TxNames']: # [0] or len(expRes['TxNames']) != 1:
-                logger.error(f"Something went wrong. Obtained results for the wrong txname: {self.txName} != {expRes['TxNames']}")
-                # sys.exit()
-                # continue
-                # return False
-
-            masses = expRes["Mass (GeV)"]
-            widths = expRes["Width (GeV)"]
-            nodesMap = expRes["Nodes Map"]
-            if masses == None:
-                axes = self.getXYFromSLHAFileName ( slhafile )
-                if len(axes)==0: # drop it, doesnt fall in this plane it seems
-                    continue
-                D = { "slhafile": slhafile, "error": "no result",
-                      "axes": axes, "comment": "masses are None" }
-                self.data.append ( D )
-                continue
-            parameters = self.constructParameterVector ( masses, widths, nodesMap )
-            varsDict = massPlane.getXYValues( parameters )
-            if varsDict in [ None, {} ]:
-                logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {massPlane}." )
-                continue
-            if type(dt) == str:
-                if dt.endswith("s"):
-                    dt=dt[:-1]
-                dt=float(dt)
-            Dict = self.dictFromExpRes ( expRes )
-            Dict['slhafile']=slhafile
-            Dict['axes']=varsDict
-            if type(dt)==float:
-                Dict["t"]=round(dt,3) ## in seconds
-            if len(leadingDSes)>1:
-                s = []
-                n = self.options["keepTopNSRs"]
-                for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
-                    s.append ( (k,v) )
-                Dict["leadingDSes"]= s
-            if expRes['dataType'] == 'efficiencyMap':
-                #Select the correct dataset (best SR):
-                dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
-                if len(dataset)==1:
-                    dataset = dataset[0]
-                else: ## probably the combined case. we take any dataset.
-                    dataset = self.expRes.datasets[0]
-
-                txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                if not "efficiency" in Dict.keys():
-                    try:
-                        for i,p in enumerate(parameters):
-                            if p=="stable":
-                                parameters[i]=0.
-                        eff = txname.txnameData.getValueFor(parameters)
-                        if eff != None:
-                            Dict['efficiency'] = round ( eff, 8 )
-                    except SModelSError as e:
-                        logger.error ( f"could not handle {slhafile}: {e}" )
-                        Dict=None
-            logger.debug(f'expres keys : {expRes.keys()}')
-            if Dict:
-                self.data.append(Dict)
-
-        self._finalizeDataFromPlanes()

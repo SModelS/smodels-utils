@@ -18,6 +18,7 @@ from smodels.statistics.basicStats import NllEvalType, observed, aposteriori
 from smodels.statistics.basicStats import CLsfromNLL
 
 #import logging
+import numpy as np
 import os, time, sys, copy, tarfile, tempfile, random, glob, shutil
 from validationHelpers import getDefaultModel, showPlot, \
          streamlineValidationData, equal_dicts
@@ -128,6 +129,11 @@ class ValidationObjsBase():
     The base class for ValidationPlot and GraphsValidationPlot, as they share much
     of their code.
     """
+
+    ## SModelS output format used by getDataFromPlanes (2 = v2, 3 = v3)
+    outputFormat : int = 2
+    ## minimum number of results before leadingDSes are stored
+    leadingDSThreshold : int = 0
 
     def _determineDatabasePath ( self, ExptRes, anaID : str,
             databasePath : Optional[str] ) -> str:
@@ -797,6 +803,239 @@ class ValidationObjsBase():
         phandler.killProgressBar()
         return fileList
 
+    def getDataFromPlanes ( self ) -> Optional[bool]:
+        """ run SModelS on the SLHA files from self.slhaDir and store the
+        relevant data in self.data.
+
+        The only difference between the v2 and v3 validation plots is the
+        output format used by SModelS, which subclasses specify via their
+        ``outputFormat`` class attribute.
+        """
+        #Get list of SLHA files:
+        if not self.slhaDir:
+            logger.warning("SLHA folder not defined")
+            return False
+
+        # first, run SModelS
+        fileList = self.runSModelS ( outputformat = self.outputFormat )
+
+        #Define original plot
+        if self.massPlane == None:
+            logger.error ( "no mass plane!" )
+            return False
+
+        #Now read the output and collect the necessary data
+        self.ct_nooutput = 0
+        for slhafile in fileList: # slhafiles:
+            if "recipe" in slhafile:
+                continue
+            if "coordinates" in slhafile:
+                continue
+            if "comment" in slhafile:
+                continue
+            if not os.path.isfile(os.path.join(self.currentSLHADir,slhafile)):  #Exclude the results folder
+                continue
+            fout = os.path.join(self.outputDir,f"{slhafile}.py")
+            self.addResultToData ( slhafile, fout )
+
+        self._finalizeDataFromPlanes()
+
+    def _readResultsFile ( self, fout : str ) -> Optional[dict]:
+        """ read and execute one SModelS python output file.
+
+        :param fout: path of the SModelS python output file
+        :return: the smodelsOutput dictionary, or None if the file could
+                 not be read or parsed
+        """
+        logger.debug ( f"reading {fout}" )
+        with open(fout,'rt') as ff:
+            txt = ff.read()
+        cmd = txt.replace('\n','') # .replace("inf,","float('inf'),")
+        myglobals = {}
+        myglobals["inf"]=float("inf")
+        myglobals["nan"]=float("nan")
+        try:
+            exec( cmd, myglobals )
+        except SyntaxError as e:
+            logger.error ( f"when reading {fout}: {e}. will skip" )
+            try:
+                os.unlink ( fout )
+            except FileNotFoundError:
+                pass
+            return None
+        return myglobals.get ( "smodelsOutput" )
+
+    def selectResults ( self, res : list ) -> list:
+        """ hook to select the relevant result(s) from the SModelS output.
+
+        The default keeps all results. The v3 (graph) validation plot
+        overrides this to pick the entry belonging to the current txname
+        when it is unambiguous.
+        """
+        return res
+
+    def txNameMatches ( self, expRes : dict ) -> bool:
+        """ hook: does expRes describe exactly our txname? """
+        return self.txName == expRes['TxNames'][0] and len(expRes['TxNames']) == 1
+
+    def getMassesAndWidthsForPlane ( self, expRes : dict,
+            slhafile : str ) -> tuple:
+        """ hook: mass and width vectors to be run through the mass plane.
+
+        The default (v2) uses the (rounded) masses from the SModelS output,
+        falling back to the SLHA file name if no masses are available.
+        """
+        mass = expRes['Mass (GeV)']
+        width = expRes.get("Width (GeV)")
+        if mass is None or "TGQ12" in slhafile:
+            ## FIXME, for TGQ12 why cant i use exptres?
+            mass = self.getMassesFromSLHAFileName ( slhafile )
+        return mass, width
+
+    def handleMissingMasses ( self, slhafile : str ) -> bool:
+        """ no masses are available in the SModelS output. Try to get the
+        axes from the SLHA file name and store a failed point.
+
+        :returns: True if a point was added to self.data
+        """
+        axes = self.getXYFromSLHAFileName ( slhafile, asDict = True )
+        if axes == None or len(axes) == 0:
+            return False
+        D = { "slhafile": slhafile, "error": "no result",
+              "axes": axes, "comment": "masses are None" }
+        self.data.append ( D )
+        return True
+
+    def getEfficiencyParameters ( self, mass : list, width : list,
+            expRes : dict ) -> list:
+        """ hook: parameter list expected by the efficiency map lookup.
+
+        The default (v2) is the flattened mass/width vector.
+        """
+        return self.getMassesAndWidths ( mass, width )
+
+    def addResultToData ( self, slhafile : str, resultsfile : str ) -> Optional[int]:
+        """ read one SModelS python result file and add it to self.data.
+
+        This is the common implementation for the v2 (validationObjs) and
+        v3 (graphsValidationObjs) validation plots. Subclasses customise it
+        via the hooks selectResults, txNameMatches,
+        getMassesAndWidthsForPlane, getVarsDict and getEfficiencyParameters.
+
+        :param slhafile: name of the SLHA input file
+        :param resultsfile: path of the SModelS python output file
+        :return: 1 on success, 0 if the point was dropped, None if no
+                 output file was found
+        """
+        fout = resultsfile
+        if not os.path.isfile(fout):
+            if self.ct_nooutput>4:
+                ## suppress subsequently same error messages
+                return
+            logger.info( f"No SModelS output found for {slhafile} (should be {fout})" )
+            self.ct_nooutput+=1
+            if self.ct_nooutput==5:
+                logger.info("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
+            return
+        smodelsOutput = self._readResultsFile ( fout )
+        if smodelsOutput is None:
+            return 0
+        if not 'ExptRes' in smodelsOutput:
+            ## still get the masses from the slhafile name
+            axes = self.getXYFromSLHAFileName ( slhafile, asDict = True )
+            self.addDictionaryForFailedPoint ( smodelsOutput, axes )
+            return 1
+        dt = None
+        if "OutputStatus" in smodelsOutput and "time spent" in smodelsOutput["OutputStatus"]:
+            dt = smodelsOutput["OutputStatus"]["time spent"]
+        res = self.selectResults ( smodelsOutput['ExptRes'] )
+        expRes = res[0]
+        #Double checks (to make sure SModelS ran as expected):
+        leadingDSes = {}
+        if len(res) != 1:
+            logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
+            found_combined=False
+            for eR in res:
+                if eR == None:
+                    continue
+                datasetId = eR.get("DataSetID")
+                if datasetId != None and  "combined" in datasetId:
+                    logger.debug ( "found a combined result. will use it." )
+                    found_combined=True
+                    expRes = eR
+            if self.options["keepTopNSRs"] not in [ None, 0 ]:
+                maxR, expRes = -1., None
+                for eR in res:
+                    if eR == None or not "r_expected" in eR:
+                        continue
+                    r = eR["r_expected"]
+                    while r in leadingDSes: # make sure it's unique
+                        r = r * .9999
+                    leadingDSes[r]=eR["DataSetID"]
+                    if r>maxR:
+                        maxR = eR["r_expected"]
+                        expRes = eR
+            if not found_combined and self.options["keepTopNSRs"] in [ None, 0 ]:
+                logger.warning("We have multiple dataset ids, but none is a combined one. Skipping this point." )
+                return 0
+        if expRes == None:
+            return 0
+        if expRes['AnalysisID'] != self.expRes.globalInfo.id:
+            logger.error( f"Something went wrong. Obtained results for the wrong analyses: {expRes['AnalysisID']}!={self.expRes.globalInfo.id}")
+            return 0
+        if not self.txNameMatches ( expRes ):
+            logger.error( f"Something went wrong. Obtained results for the wrong txname: got {expRes['TxNames']} but want {self.txName}")
+            return 0
+
+        mass, width = self.getMassesAndWidthsForPlane ( expRes, slhafile )
+        if mass is None:
+            ## no masses available; try the SLHA file name
+            if self.handleMissingMasses ( slhafile ):
+                return 1
+            return 0
+        varsDict = self.getVarsDict ( mass, width, expRes, slhafile )
+        if varsDict in [ None, {} ]:
+            logger.debug( f"dropping {slhafile}, doesnt fall into the plane of {self.massPlane}." )
+            return 0
+        if type(dt) == str:
+            if dt.endswith("s"):
+                dt=dt[:-1]
+            dt=float(dt)
+        Dict = self.dictFromExpRes ( expRes )
+        Dict['slhafile']=slhafile
+        Dict['axes']=varsDict
+        if type(dt)==float:
+            Dict["t"]=round(dt,3) ## in seconds
+        if len(leadingDSes)>self.leadingDSThreshold:
+            s = []
+            n = self.options["keepTopNSRs"]
+            for k,v in sorted ( leadingDSes.items(), reverse=True )[:n]:
+                s.append ( (k,v) )
+            Dict["leadingDSes"]= s
+        if expRes['dataType'] == 'efficiencyMap':
+            #Select the correct dataset (best SR):
+            dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
+            if len(dataset)==1:
+                dataset = dataset[0]
+            else: ## probably the combined case. we take any dataset.
+                dataset = self.expRes.datasets[0]
+
+            txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
+            if not "efficiency" in Dict.keys():
+                total = self.getEfficiencyParameters ( mass, width, expRes )
+                try:
+                    eff = txname.txnameData.getValueFor(total)
+                    if eff != None:
+                        Dict['efficiency'] = round ( eff, 8 )
+                except (SModelSError,ValueError) as e:
+                    logger.error ( f"could not handle {slhafile}: {e} ({type(e)}) massGeV={total}" )
+                    Dict=None
+        logger.debug(f'expres keys : {expRes.keys()}')
+        if Dict:
+            self.data.append(Dict)
+            return 1
+        return 0
+
     def _finalizeDataFromPlanes ( self ) -> None:
         """ common tail of the getDataFromPlanes implementations.
 
@@ -1394,7 +1633,7 @@ class ValidationObjsBase():
             except Exception as e:
                 x,y=point["axes"][0],point["axes"][1]
             points.append ( [x,y] )
-        xy=numpy.array ( points )
+        xy=np.array ( points )
         logY=False
         if max ( xy[::,1] ) < 1e-6:
             logY=True
