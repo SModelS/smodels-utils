@@ -118,9 +118,15 @@ class PaperPlot:
                    fontsize = osize )
 
     def _saveFigure ( self, outfile : str, dpi : int, add_logos : bool,
-            logos_y_offset : int, metadata : Optional[dict] = None ) -> None:
+            logos_y_offset : int ) -> None:
         """ save the current figure as png (and optionally pdf), and add
         the logos to the png """
+        from smodels_utils.helper.various import pngMetaInfo
+        metadata = pngMetaInfo()
+        db = getattr ( self.validationPlot, "db", None )
+        dbversion = getattr ( db, "databaseVersion", None )
+        if dbversion is not None:
+            metadata["Smodels-database"] = dbversion
         plt.savefig ( outfile, dpi = dpi, metadata = metadata )
         if "pdf_also" in self.specific_options and \
                 self.specific_options["pdf_also"]:
@@ -1429,15 +1435,13 @@ class PaperPlot:
 
         txn = txname if txnameOff == "" else txnameOff
         outfile = f"{vDir}/{txn}_{fig_axes_title}_obs.png"
-        from smodels_utils.helper.various import pngMetaInfo
-        metadata = pngMetaInfo()
         dpi = 300
         self.pprint ( f"saving to {YELLOW}{self.prettyPath(outfile)}{RESET}" )
         add_logos = True
         if "addlogo" in self.specific_options:
             add_logos = self.specific_options["addlogo"]
         logos_y_offset = -125
-        self._saveFigure ( outfile, dpi, add_logos, logos_y_offset, metadata )
+        self._saveFigure ( outfile, dpi, add_logos, logos_y_offset )
         plt.clf()
         plt.rcdefaults()
         plt.close()
