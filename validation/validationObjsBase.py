@@ -1419,10 +1419,11 @@ class ValidationObjsBase():
         import socket
         hostname = socket.gethostname()
         axes = self.axes
-        try:
-            axes = eval ( axes )
-        except Exception as e:
-            pass
+        if type(axes ) == str:
+            try:
+                axes = eval ( axes )
+            except Exception as e:
+                pass
         meta = { "smodelsver": installation.version(), "axes": axes,
                  "npoints": len(self.data), "nerr": nerr, "dt[h]": dt,
                  "expectationType": self.options["expectationType"],
