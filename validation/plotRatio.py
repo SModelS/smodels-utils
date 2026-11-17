@@ -381,7 +381,7 @@ def draw ( options : dict ) -> None:
                     errmsg = f': {point["error"]}'
                 printPlotRatio ( f"insufficient data to plot point {point['slhafile']}: {errmsg}" )
 
-    if len(points) == 0:
+    if len(points) == 0 and ipath2 is not None:
         printPlotRatio ( f"found no legit points but {err_msgs} err msgs in {ipath2}" )
         return
         # sys.exit()
