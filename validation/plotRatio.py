@@ -388,6 +388,8 @@ def draw ( options : dict ) -> None:
 
     points.sort()
     points = numpy.array ( points )
+    if len(points)==0:
+        return
     x = points[::,1].tolist()
     y = points[::,0].tolist()
     # coll = points[::,2].tolist()
