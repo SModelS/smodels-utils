@@ -123,6 +123,64 @@ def queryStats ( maxsteps : Union[None,int] = None ):
             running_stats.running_stats( "_V" )
             print()
 
+def usesHS3 ( analyses : Union[None,str], databasepath : Union[None,str] = None ) -> bool:
+    """ check if any analysis to be validated has an HS3 statistical model.
+
+        HS3 models are announced in the analysis' globalInfo.txt via statModels
+        entries of type hs3/full_hs3 and/or by hs3 json files in the analysis
+        folder. Checking those is cheap; loading the database with SModelS
+        (which would also tell us this) is not.
+
+        :param analyses: comma separated analyses as given to --analyses;
+                         None, "all" or "*" means all analyses in the database
+        :param databasepath: path to the database, as given to --databasepath.
+                             Relative paths are interpreted relative to the
+                             validation folder, just like in runValidation.py.
+        :returns: True if at least one of the selected analyses uses HS3
+    """
+    import re, fnmatch
+    if databasepath is None:
+        databasepath = "../../smodels-database"
+    dbpath = os.path.expandvars ( os.path.expanduser ( databasepath ) )
+    if not os.path.isabs ( dbpath ):
+        dbpath = os.path.abspath ( f"{codedir}/smodels-utils/validation/{dbpath}" )
+    if not os.path.isdir ( dbpath ):
+        print ( f"[slurm_validate.py] cannot look for HS3 models in {dbpath}: assuming none" )
+        return False
+    wanted = None
+    if analyses not in [ None, "", "all", "*" ]:
+        wanted = [ a.strip() for a in analyses.split(",") if a.strip() ]
+    def isSelected ( aid, dirname ):
+        if wanted is None:
+            return True
+        for pattern in wanted:
+            if ( fnmatch.fnmatchcase ( aid, pattern ) or
+                 fnmatch.fnmatchcase ( dirname, pattern ) or
+                 aid.startswith ( pattern ) or
+                 dirname.startswith ( pattern ) ):
+                return True
+        return False
+    for dirpath, dirnames, filenames in os.walk ( dbpath ):
+        dirnames[:] = [ d for d in dirnames if d != ".git" ]
+        dirname = os.path.basename ( dirpath )
+        globalInfo = os.path.join ( dirpath, "globalInfo.txt" )
+        content = ""
+        if os.path.exists ( globalInfo ):
+            with open ( globalInfo, "rt", errors="ignore" ) as f:
+                content = f.read()
+        match = re.search ( r"^\s*id\s*:\s*(\S+)", content, re.MULTILINE )
+        aid = match.group(1) if match else dirname
+        if not isSelected ( aid, dirname ):
+            continue
+        ## e.g. statModels: { 'all': [ ( 'full_hs3', 'hs3_model.json' ) ] }
+        for line in content.splitlines():
+            if "hs3" in line.lower() and "statmodels" in line.lower():
+                return True
+        ## e.g. hs3_model.json or bOnlyFit_postFit__w.hs3.json
+        if glob.glob ( os.path.join ( dirpath, "*hs3*.json" ) ):
+            return True
+    return False
+
 def validate ( args : Dict, idx ) -> Union[None,int]:
     """ run validation with ini file 
     :param inifile: ini file, should reside in smodels-utils/validation/
@@ -285,9 +343,13 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
         cmd += [ "--qos", qos ]
         cmd += [ "--time", f"{time * 60 - 1}" ]
     #ram = 1. * nproc
-    # ram = int ( 12. + .8 * nproc ) # crazy high, no
-    # ram = int ( 5. + .7 * nprocesses )
-    ram = int ( 2.5 + .6 * nprocesses )
+    ## pyhs3 is RAM hungry, but only if the analysis actually uses an HS3 model
+    hasHS3 = usesHS3 ( analyses, databasepath )
+    if hasHS3:
+        ram = int ( 12.0 + 4 * nprocesses )
+    else:
+        ram = int ( 2.5 + .6 * nprocesses )
+    print ( f"[slurm_validate.py] HS3 model: {hasHS3}, requesting {ram}G of RAM" )
     # ncpus = nproc # int(nproc*1.5)
     ncpus = int(nprocesses*2.5)
     cmd += [ "--mem", f"{ram}G" ]
