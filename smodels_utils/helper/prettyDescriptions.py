@@ -1270,17 +1270,20 @@ def prettyAxesV2 ( txname : str, axes : str ) -> Union[None,str]:
     motherList = list(set(getMothers(txname)))
     #Convert to latex for mass:
     motherList = [f"m_{{{latexfy(mother)}}}" for mother in motherList]
-    motherStr = str(motherList).replace(']','').replace('[','')
+    # NB: do not use str(list) here, as it escapes backslashes (repr)!
+    motherStr = ", ".join(motherList)
     #Get intermediate particles:
     interList = list(set(getIntermediates(txname)))
     #Convert to latex for mass:
     interList = [f"m_{{{latexfy(inter)}}}" for inter in interList]
-    interStr = str(interList).replace(']','').replace('[','')
+    # NB: do not use str(list) here, as it escapes backslashes (repr)!
+    interStr = ", ".join(interList)
     #Daugther particles are always trivial:
     daughterList = list(set(getDaughters(txname)))
     #Convert to latex for mass:
     daughterList = [f"m_{{{latexfy(daughter)}}}" for daughter in daughterList]
-    daughterStr = str(daughterList).replace(']','').replace('[','')
+    # NB: do not use str(list) here, as it escapes backslashes (repr)!
+    daughterStr = ", ".join(daughterList)
 
     #Define mass strings for each axes format:
     if len(ax) == 1:
