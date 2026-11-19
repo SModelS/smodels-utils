@@ -147,8 +147,9 @@ def submit ( mN2, mC1, mN1, options ):
     if options.get ( "analysis" ):
         jobname = f"{options['analysis']}_{jobname}"
     # the command that the batch script will run
-    # use an absolute interpreter, since the job runs with an empty environment
-    yields_cmd = [ os.path.abspath ( sys.executable ), "./yieldsCreator.py" ]
+    # use the interpreter from the submission environment (often provided by modules)
+    python_exe = sys.executable
+    yields_cmd = [ python_exe, "./yieldsCreator.py" ]
     yields_cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     yields_cmd += [ "--compute_xsecs" ]
     for option, value in options.items():
@@ -169,14 +170,48 @@ def submit ( mN2, mC1, mN1, options ):
     submitdir.mkdir ( exist_ok = True )
     script = submitdir / f"{jobname}_mN2{mN2}_mC1{mC1}_mN1{mN1}.sh"
     scriptcontent = "#!/bin/bash\n\n"
-    # run everything below under bash with a completely empty environment
-    env = "/usr/bin/env" if os.path.exists ( "/usr/bin/env" ) else ( shutil.which ( "env" ) or "env" )
-    scriptcontent += f"exec {shlex.quote(env)} -i /bin/bash <<'CLEAN_ENV_EOF'\n"
+
     scriptcontent += "# the script removes itself once the job has finished\n"
     scriptcontent += f"script={shlex.quote(os.path.abspath(script))}\n"
     scriptcontent += "# trap 'rm -f \"$script\"' EXIT\n\n"
+
+    # run in the submission directory with the required environment
+    scriptcontent += f"cd {shlex.quote(os.getcwd())}\n"
+
+    # initialize lmod/modules if available and load the Python module used at submit time
+    lmod_cmd = os.environ.get ( "LMOD_CMD" )
+    if lmod_cmd:
+        lmod_init = os.path.join ( os.path.dirname ( os.path.dirname ( lmod_cmd ) ), "init", "bash" )
+        scriptcontent += f'[ -f {shlex.quote(lmod_init)} ] && source {shlex.quote(lmod_init)}\n'
+    scriptcontent += 'if ! type module >/dev/null 2>&1; then\n'
+    scriptcontent += '  for f in /etc/profile.d/z*lmod*.sh /etc/profile.d/*lmod*.sh /etc/profile.d/modules.sh; do\n'
+    scriptcontent += '    [ -f "$f" ] && source "$f"\n'
+    scriptcontent += '  done\n'
+    scriptcontent += 'fi\n'
+
+    py_module = None
+    parts = Path ( python_exe ).parts
+    for i, part in enumerate ( parts ):
+        if part == "python" and i + 1 < len ( parts ):
+            candidate = parts[i + 1]
+            if candidate and candidate[0].isdigit():
+                py_module = f"python/{candidate}"
+                break
+    if py_module is None:
+        for mod in os.environ.get ( "LOADEDMODULES", "" ).split ( ":" ):
+            if mod.lower().startswith ( "python/" ):
+                py_module = mod
+                break
+    if py_module is not None:
+        scriptcontent += f'module load {shlex.quote(py_module)} >/dev/null 2>&1 || true\n'
+
+    # propagate key environment variables from the submission environment
+    for var in ( "PYTHONPATH", "PATH", "LD_LIBRARY_PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL" ):
+        val = os.environ.get ( var )
+        if val:
+            scriptcontent += f"export {var}={shlex.quote(val)}\n"
+
     scriptcontent += " ".join ( shlex.quote(i) for i in yields_cmd ) + "\n"
-    scriptcontent += "CLEAN_ENV_EOF\n"
     with open ( script, "wt" ) as f:
         f.write ( scriptcontent )
     os.chmod ( script, 0o755 )
