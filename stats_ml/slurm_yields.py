@@ -183,7 +183,9 @@ def submit ( mN2, mC1, mN1, options ):
 
     cmd = []
     if shutil.which ( "sbatch" ) != None:
-        cmd = [ "sbatch", "--export=NIL", "-c", "6", "--time", "479", "--mem", "2G" ]
+        # time = 479
+        time = 60*3-1
+        cmd = [ "sbatch", "--export=NIL", "-c", "6", "--time", str(time), "--mem", "2G" ]
         cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
         cmd += [ "--error", f"./slurm_logs/%j.out",
