@@ -10,6 +10,7 @@ __all__ = [ "validatePlot" ]
 
 import argparse
 import copy
+import json
 import logging
 import os
 import shlex
@@ -195,6 +196,19 @@ def _reproduceArg ( value ) -> str:
         return "none"
     return shlex.quote ( str ( value ) )
 
+def _axesArg ( axes ) -> str:
+    """ render the axes argument for the reproduce command.
+
+    Dict axes are printed with double-quoted strings, so shlex.quote can wrap
+    the whole argument in single quotes without escaping every quote.
+    """
+    if not isinstance ( axes, dict ):
+        return str ( axes )
+    def fmt ( value ):
+        return json.dumps ( value ) if isinstance ( value, str ) else str ( value )
+    return "{" + ", ".join ( f"{fmt(k)}: {fmt(v)}"
+            for k, v in axes.items() ) + "}"
+
 def _appendOptionArgs ( parts : list, options : dict, defaults : dict,
         prefix : str, skip : set = frozenset() ) -> None:
     """ append all options that differ from their default to the command
@@ -219,7 +233,7 @@ def reproduceCommand ( valPlot, general_options : dict,
     parts = [ shlex.quote ( script ),
               shlex.quote ( str ( valPlot.expRes.globalInfo.id ) ),
               shlex.quote ( str ( valPlot.txName ) ),
-              shlex.quote ( str ( valPlot.axes ) ) ]
+              shlex.quote ( _axesArg ( valPlot.axes ) ) ]
     databasePath = getattr ( valPlot, "databasePath", None )
     if not databasePath:
         databasePath = general_options.get ( "databasepath" )
