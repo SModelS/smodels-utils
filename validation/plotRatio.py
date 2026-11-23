@@ -471,6 +471,11 @@ def draw ( options : dict ):
             title = anaId2l
         if anaId in anaId2:
             title = anaId
+        if title is None:
+            # neither id is a substring of the other (e.g. comparing two
+            # unrelated siblings via origAnalysis) - fall back to a plain
+            # default instead of leaving title as None
+            title = f"{anaId} vs {anaId2}"
     if "eul" in options and options["eul"]==True:
         title += " (expected)"
     else:

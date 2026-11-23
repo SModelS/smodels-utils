@@ -292,18 +292,30 @@ def checkForRatioPlots ( expRes, txname : str, ax, db, combine, opts, datafile,
     output = f"{os.path.dirname(datafile)}/ratios_{txname}_{saxes}.png"
     options = { "show": opts["show"], "output": output,
                 "folder2": "validation" }
-    ana2origtest = f"{os.path.dirname(datafile)}../../../{ana2}-orig"
-    ana2origtest = os.path.abspath ( ana2origtest )
-    if os.path.exists ( ana2origtest ) and not "-orig" in ana1:
-        ## if an -orig result exists with the same analysis id,
-        ## compare against that one!
-        ana2 = f"{ana2}-orig"
+    origAnalysis = opts.get ( "origAnalysis", None )
+    if origAnalysis not in ( None, "" ):
+        ## explicit override: compare against this analysis instead of the
+        ## auto-detected "<base>-orig". The auto-detection below only ever
+        ## considers a sibling literally named "<base>-orig", so it cannot
+        ## be redirected to a different sibling (e.g. a "-nounc" baseline
+        ## variant) without this escape hatch.
+        ana2 = origAnalysis
         valfile2 = valfile1
         options["label1"]="NN"
         options["label2"]="original"
     else:
-        ana2 = ana2.replace("-orig","")
-        valfile2 = valfile1.replace("_combined","")
+        ana2origtest = f"{os.path.dirname(datafile)}../../../{ana2}-orig"
+        ana2origtest = os.path.abspath ( ana2origtest )
+        if os.path.exists ( ana2origtest ) and not "-orig" in ana1:
+            ## if an -orig result exists with the same analysis id,
+            ## compare against that one!
+            ana2 = f"{ana2}-orig"
+            valfile2 = valfile1
+            options["label1"]="NN"
+            options["label2"]="original"
+        else:
+            ana2 = ana2.replace("-orig","")
+            valfile2 = valfile1.replace("_combined","")
     #options["zmin"]=0.
     #options["zmax"]=2.
     import plotRatio
@@ -980,6 +992,7 @@ if __name__ == "__main__":
                 "drawPaperPlot": True,  ##draw observed and expected exclusion SModelS contours for both bestSR and combined (if present)
                 "createSModelSExclJson": True, #create SModelS Exclusion JSON file, similar to offical exclusion_lines.json file
                 "origValidationFolder": "validation", # folder for the -orig info for ratio- and red-black plots
+                "origAnalysis": None, # override which analysis id ratio plots compare against (default: auto-detect "<base>-orig"); set this to compare against a different sibling, e.g. a "-nounc" baseline variant
                 "errorsForR": False, # for the expected UL values, do we want a one-sigma band?
                 "nnErrors": False, # shall we get the heteroskedastic errors?
                 "removeMLModels": False, # remove existing ML models, run with full models instead
