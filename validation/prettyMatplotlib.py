@@ -404,6 +404,50 @@ def createSModelSExclusionJson( all_lines : dict, validationPlot ):
     file.write ( ds + "\n" )
     file.close()
 
+def addBandGridToJson ( validationPlot, xs : list, ys : list,
+        exp_band_g, obs_band_g ):
+    """ store the (xs, ys, g) grids for the +-1sigma band fill into the same
+    SModelS_ExclusionLines.json createSModelSExclusionJson just wrote, under
+    their own "expBand"/"obsBand" keys (not "expExclusion"/"obsExclusion" -
+    createSModelSExclusionJson's own name-remapping loop keys off "exp"/
+    "obs"/"p1"/"m1" substrings in the dict key it's given, so those names
+    would collide with and silently overwrite the real exclusion lines).
+    g = (r_p1-1)*(r_m1-1) on the (xs,ys) grid: negative wherever the +1sigma
+    and -1sigma surfaces disagree about exclusion - the region a band should
+    fill. See its computation above for why this replaces a polyline-based
+    fill. Written only if there's at least one such point (same emptiness
+    convention as cleanUpPlots), so a flat/undefined band (e.g. no errorsForR
+    data) doesn't bloat the file with meaningless grids (2026-11-24).
+    """
+    import json
+    if not validationPlot.combine: plot_type = "bestSR"
+    else: plot_type = "comb"
+    axes = validationPlot.axes
+    from validationHelpers import getAxisType, axisV2ToV3
+    if getAxisType ( axes ) == "v2":
+        axes = axisV2ToV3 ( axes )
+    plotName = f"{validationPlot.txName}_{plot_type}_{axes}"
+    vDir = validationPlot.getValidationDir (validationDir=None)
+    file_js = "SModelS_ExclusionLines.json"
+    path = f"{vDir}/{file_js}"
+    if not os.path.exists ( path ):
+        return
+    with open ( path, 'r' ) as f:
+        plots = json.load ( f )
+    if plotName not in plots:
+        return
+    xsl, ysl = list ( xs ), list ( ys )
+    if exp_band_g is not None and np.any ( exp_band_g < 0 ):
+        plots[plotName]["expBand"] = { "xs": xsl, "ys": ysl,
+                "g": np.asarray ( exp_band_g ).tolist() }
+    if obs_band_g is not None and np.any ( obs_band_g < 0 ):
+        plots[plotName]["obsBand"] = { "xs": xsl, "ys": ysl,
+                "g": np.asarray ( obs_band_g ).tolist() }
+    from smodels_utils.helper.various import py_dumps
+    ds = py_dumps ( plots, indent=4, stop_at_level = 4, double_quotes = True )
+    with open ( path, 'w' ) as f:
+        f.write ( ds + "\n" )
+
 def cleanUpPlots ( plots : dict ) -> dict:
     """ remove empty entries from the plots directory
 
@@ -795,28 +839,21 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     eT = interpolateOverMissing ( xs, ys, eT, -10., interpolation )
     eT_p1 = interpolateOverMissing ( xs, ys, eT_p1, -10., interpolation )
     eT_m1 = interpolateOverMissing ( xs, ys, eT_m1, -10., interpolation )
-    try:
-        # The +-1sigma surfaces are built from far fewer/noisier points than
-        # the central one (eUL_p1/eUL_m1 vs. eUL), so contouring them raw
-        # tends to pick up small spurious loops wherever the interpolated
-        # surface wobbles across the r=1 level - these show up downstream as
-        # a jagged, self-intersecting band (plotErrorBand/fill_between
-        # draws between same-index segments of the two contours, and a
-        # spurious loop on one side has no sane match on the other). A mild
-        # gaussian smoothing before contouring damps that noise without
-        # visibly moving the central curve (left unsmoothed, since it
-        # wasn't the one reported as noisy). There used to be a
-        # gaussian_filter call here that smoothed a variable (T) nothing
-        # downstream actually reads - a no-op, silently swallowed by a bare
-        # except: pass - this replaces it with one that smooths the arrays
-        # the +-1sigma contour() calls actually use (2026-11-24).
-        from scipy.ndimage import gaussian_filter
-        vT_p1 = gaussian_filter ( vT_p1, 1. )
-        vT_m1 = gaussian_filter ( vT_m1, 1. )
-        eT_p1 = gaussian_filter ( eT_p1, 1. )
-        eT_m1 = gaussian_filter ( eT_m1, 1. )
-    except Exception as e:
-        logger.warning ( f"could not smooth +-1sigma surfaces: {e}" )
+    # No smoothing of the +-1sigma surfaces (tried once, reverted: it still
+    # left contour topology - segment count/order - inconsistent between
+    # the P1 and M1 surfaces, which is what the band fill actually needs to
+    # match on; see band_g below instead, 2026-11-24).
+    #
+    # band_g(x,y) = (eT_p1(x,y)-1)*(eT_m1(x,y)-1): negative wherever the
+    # +1sigma and -1sigma surfaces disagree about exclusion (r>=1) at that
+    # grid point - i.e. exactly the region between the two contour lines,
+    # on however many disconnected branches it has. Filling {band_g<0} with
+    # contourf, directly on this grid, replaces trying to extract the two
+    # contours as polylines and fill between same-index segments (fragile:
+    # nothing guarantees the two contours decompose into the same number of
+    # segments, in the same order - see plotErrorBand in drawPaperPlot.py).
+    exp_band_g = ( eT_p1 - 1. ) * ( eT_m1 - 1. )
+    obs_band_g = ( vT_p1 - 1. ) * ( vT_m1 - 1. )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
@@ -920,6 +957,8 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
                 createSModelSExclusionJsonV1( all_lines, validationPlot )
             else:
                 createSModelSExclusionJson( all_lines, validationPlot )
+                addBandGridToJson( validationPlot, xs, ys,
+                        exp_band_g, obs_band_g )
 
     pName = prettyTxname(validationPlot.txName, outputtype="latex" )
     if pName == None:

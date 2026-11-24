@@ -406,12 +406,33 @@ class PaperPlot:
                 self.pprint (f"{col}we have exclusion line from {sfname} for {i} with: {sum(len(x) for x in x_)} points{RESET}" )
             excl_lines[i] = { "x": x_, "y": y_ }
 
+        for i in ( "expBand", "obsBand" ):
+            if i in curve:
+                excl_lines[i] = curve[i]
+
         excl_lines = self.coordinateTransform ( excl_lines, axes, eval_axes )
         return excl_lines
 
     def coordinateTransform ( self, excl_lines, axes, eval_axes ):
-        if ('x - y' in axes or 'x-y' in axes) and eval_axes:
+        doShear = ( 'x - y' in axes or 'x-y' in axes ) and eval_axes
+        # expBand/obsBand are (xs, ys, g) grids for the +-1sigma band fill
+        # (see prettyMatplotlib.addBandGridToJson), not (x, y) polylines -
+        # turn them into the 2D (X, Y, g) matplotlib.contourf expects here,
+        # applying the same x,y -> x,x-y shear the polylines below get, via
+        # meshgrid rather than per-point (it mixes both axes, so it can't be
+        # done on the 1D ys list alone) (2026-11-24).
+        for typ in ( "expBand", "obsBand" ):
+            if typ not in excl_lines:
+                continue
+            excl = excl_lines[typ]
+            X, Y = np.meshgrid ( np.array ( excl["xs"] ), np.array ( excl["ys"] ) )
+            if doShear:
+                Y = X - Y
+            excl_lines[typ] = { "g": excl["g"], "X": X.tolist(), "Y": Y.tolist() }
+        if doShear:
             for typ, excl in excl_lines.items():
+                if typ in ( "expBand", "obsBand" ):
+                    continue
                 excl_y = []
                 for l_x, l_y in zip ( excl["x"], excl["y"] ):
                     tmp = (np.array ( l_x ) - np.array ( l_y ) ).tolist()
@@ -1333,13 +1354,22 @@ class PaperPlot:
                 # label = f"SModelS: orig pyhf {num_sr} SRs + {num_cr} CRs"
             self.plotGammaLines ( x_vals, y_vals, ax, label, y_label,
                    linestyle= None, color = "blue" )
-            if "expExclusionP1" in orig_excl and "expExclusionM1" in orig_excl:
-                x_vals1 = orig_excl["expExclusionP1"]["x"]
-                y_vals1 = orig_excl["expExclusionP1"]["y"]
-                x_vals2 = orig_excl["expExclusionM1"]["x"]
-                y_vals2 = orig_excl["expExclusionM1"]["y"]
-                self.plotErrorBand ( x_vals1, y_vals1, x_vals2, y_vals2, ax,
-                        None, y_label, color = "lightblue" )
+            if "expBand" in orig_excl:
+                # filled directly from the (X, Y, g) grid - see
+                # prettyMatplotlib.addBandGridToJson and coordinateTransform
+                # above - rather than by extracting the +1sigma/-1sigma
+                # curves as polylines and filling between same-index
+                # segments (plotErrorBand): nothing guarantees those two
+                # curves decompose into the same number of segments in the
+                # same order, and when they don't, that approach stitches
+                # unrelated branches together into a self-intersecting,
+                # triangular mess instead of this band (2026-11-24).
+                X = np.array ( orig_excl["expBand"]["X"] )
+                Y = np.array ( orig_excl["expBand"]["Y"] )
+                g = np.array ( orig_excl["expBand"]["g"] )
+                if np.any ( g < 0 ):
+                    ax.contourf ( X, Y, g, levels=[-np.inf, 0],
+                            colors=[ "lightblue" ], alpha=.4, zorder=-5 )
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
