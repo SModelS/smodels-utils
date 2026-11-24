@@ -795,6 +795,28 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
     eT = interpolateOverMissing ( xs, ys, eT, -10., interpolation )
     eT_p1 = interpolateOverMissing ( xs, ys, eT_p1, -10., interpolation )
     eT_m1 = interpolateOverMissing ( xs, ys, eT_m1, -10., interpolation )
+    try:
+        # The +-1sigma surfaces are built from far fewer/noisier points than
+        # the central one (eUL_p1/eUL_m1 vs. eUL), so contouring them raw
+        # tends to pick up small spurious loops wherever the interpolated
+        # surface wobbles across the r=1 level - these show up downstream as
+        # a jagged, self-intersecting band (plotErrorBand/fill_between
+        # draws between same-index segments of the two contours, and a
+        # spurious loop on one side has no sane match on the other). A mild
+        # gaussian smoothing before contouring damps that noise without
+        # visibly moving the central curve (left unsmoothed, since it
+        # wasn't the one reported as noisy). There used to be a
+        # gaussian_filter call here that smoothed a variable (T) nothing
+        # downstream actually reads - a no-op, silently swallowed by a bare
+        # except: pass - this replaces it with one that smooths the arrays
+        # the +-1sigma contour() calls actually use (2026-11-24).
+        from scipy.ndimage import gaussian_filter
+        vT_p1 = gaussian_filter ( vT_p1, 1. )
+        vT_m1 = gaussian_filter ( vT_m1, 1. )
+        eT_p1 = gaussian_filter ( eT_p1, 1. )
+        eT_m1 = gaussian_filter ( eT_m1, 1. )
+    except Exception as e:
+        logger.warning ( f"could not smooth +-1sigma surfaces: {e}" )
     ax = plt.gca()
     fig = plt.gcf()
     if logY:
@@ -840,11 +862,6 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
             plt.plot ( px, py, c="black", linestyle="dotted",
                        label="exp. excl. (official)" )
     plt.colorbar ( im, label=zlabel, fraction = .046, pad = .04 )
-    try:
-        from scipy.ndimage.filters import gaussian_filter
-        T = gaussian_filter( T, 1. )
-    except:
-        pass
     if not options["significances"]:
         cs = plt.contour( xs, ys, vT, colors="blue", levels=[1.], extent = xtnt, origin="image" )
         ## smodels exclusions dont make sense for the significances plot
@@ -857,14 +874,14 @@ def createPrettyPlot( validationPlot,silentMode : bool , options : dict,
 
         all_lines = { "obs": excl_lines }
 
-        cs_m1 = plt.contour( xs, ys, T_m1, colors="green", 
+        cs_m1 = plt.contour( xs, ys, vT_m1, colors="green",
                 linestyles = "dotted", levels=[1.],
                 extent = xtnt, origin="image",
                 linewidths = 1, alpha = 0.5, zorder = 10 )
         obs_excl_lines_m1 = retrievePoints ( cs_m1 )
         all_lines["obs_m1"] = obs_excl_lines_m1
 
-        cs_p1 = plt.contour( xs, ys, T_p1, colors="green", 
+        cs_p1 = plt.contour( xs, ys, vT_p1, colors="green",
                 linestyles = "dotted", levels=[1.],
                 extent = xtnt, origin="image",
                 linewidths = 1, alpha = 0.5, zorder = 10 )

@@ -682,25 +682,31 @@ class PaperPlot:
         indices = list ( range(max(len(x_vals1),len(x_vals2))) )
         if not drawBand:
             indices = []
-        x1s, x2s, y1s, y2s = np.array([]), np.array([]), np.array([]), np.array([])
+        # Fill each matched (M1, P1) segment pair as its own polygon, rather
+        # than concatenating every segment of x_vals1 into one array and
+        # every segment of x_vals2 into another and filling between those:
+        # for a multi-branch exclusion contour (e.g. the low- and high-
+        # mass-splitting branches of a V-shaped slepton/chargino exclusion,
+        # 2 segments each here) that concatenation stitches spatially
+        # distant branches together with a straight "teleport" line before
+        # closing the polygon, producing the self-intersecting, triangular
+        # band artifacts seen in practice. sortSegments/sortWithinSegments
+        # above already order segments (by descending min-x) and each
+        # segment's own points (low-to-high x) consistently between
+        # x_vals1 and x_vals2, so same-index segments correspond to the
+        # same branch (2026-11-24).
+        poly = None
         for idx in indices:
-            #if not idx in x_vals2:
-            #    continue
-            if idx < len(x_vals1):
-                x1 = np.array ( x_vals1[idx] )
-                y1 = np.array ( y_vals1[idx] )
-                x1s = np.concatenate ( [ x1s, x1 ] )
-                y1s = np.concatenate ( [ y1s, y1 ] )
-
-            if idx < len(x_vals2):
-                x2 = np.array ( x_vals2[idx] )
-                y2 = np.array ( y_vals2[idx] )
-
-                x2s = np.concatenate ( [ x2s, x2 ] )
-                y2s = np.concatenate ( [ y2s, y2 ] )
-
-        poly = self.fill_between_polylines(ax, x1s, y1s, x2s, y2s,
-                   facecolor=color, alpha=alpha, edgecolor=None )
+            if idx >= len(x_vals1) or idx >= len(x_vals2):
+                continue
+            x1 = np.array ( x_vals1[idx] )
+            y1 = np.array ( y_vals1[idx] )
+            x2 = np.array ( x_vals2[idx] )
+            y2 = np.array ( y_vals2[idx] )
+            if len(x1) == 0 or len(x2) == 0:
+                continue
+            poly = self.fill_between_polylines(ax, x1, y1, x2, y2,
+                       facecolor=color, alpha=alpha, edgecolor=None )
 
         drawContoursAlso = False
         if drawContoursAlso:
@@ -1153,19 +1159,12 @@ class PaperPlot:
             x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
             self.plotLines ( ax, x_vals, y_vals, "blue", "solid", label )
 
-            if "obsExclusionP1" in orig_excl:
-                x_vals = orig_excl["obsExclusionP1"]["x"]
-                y_vals = orig_excl["obsExclusionP1"]["y"]
-                y_vals = self.add_jitter ( y_vals, addJitter )
-                label = f"xxx"
-                x_vals, y_vals = yvalsAreWidths ( y_label, x_vals, y_vals )
-                if 'Gamma' in y_label:
-                    sec_ax = ax.secondary_yaxis('right', functions=(self.widthToLifetime,
-                                self.widthToLifetime))
-                    # print("yes gamma 3")
-                    sec_ax.set_ylabel(r"$\tau$ [s]", fontsize=14)
-                    sec_ax.set_yscale('log')
-                self.plotLines ( ax, x_vals, y_vals, "green", "solid", label )
+            # Disabled: this used to draw orig_excl["obsExclusionP1"] as an
+            # extra solid green curve labelled "xxx" - a leftover debug
+            # placeholder label that was never given a real name, drawing
+            # the pyhf baseline's observed +1sigma curve on top of (and
+            # easily mistaken for part of) the "SModelS: orig pyhf" curve
+            # above. Switched off rather than fixed in place (2026-11-24).
 
         if 'Gamma' in y_label:
             ax.set_yscale('log')
