@@ -919,7 +919,13 @@ class PaperPlot:
             if not bestSR_excl:
                 self.pprint(f"No best SR SModelS excl line for {self.prettyPath(anaDir)}:{txname}:{axes}.")
                 bestSR = False
-                return
+                if self.specific_options["drawbestsr"]:
+                    # only abort here if the best-SR curve was actually
+                    # requested; when drawbestsr=False (our "combined"-only
+                    # setup) this used to abort the whole plot - obs/exp
+                    # curves and all - just because the unrequested best-SR
+                    # curve wasn't available (2026-11-24).
+                    return
         origDir = anaDir.replace("-eff","-CR")
         cr_is = "CR"
         if not os.path.exists ( origDir ):
