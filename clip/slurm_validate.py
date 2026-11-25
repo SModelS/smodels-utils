@@ -301,7 +301,6 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     # filename = tempfile.mktemp(prefix="_V",suffix=".sh",dir="")
     filename = os.path.basename ( newini ).replace(".ini",".sh")
     newFile = f"{Dir}/{filename}"
-    print ( f"[slurm_validate.py] creating script at {newFile}" )
     # monkey_patch = ""
     #
     #if "monkey_patch" in args and args["monkey_patch"]==True:
@@ -311,18 +310,29 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
         python_exe = "/usr/bin/env python3"
     if os.path.exists ( "/scratch-cbe" ):
         python_exe = "/usr/bin/env python3"
-    with open ( newFile, "wt" ) as f:
-        for line in lines:
-            newline = line.replace("@@INIFILE@@", newini )
-            newline = newline.replace("@@CODEDIR@@", codedir )
-            # newline = newline.replace("@@MONKEY_PATCH@@", monkey_patch )
-            newline = newline.replace("@@ANALYSES@@", analyses )
-            newline = newline.replace("@@TOPO@@", topo )
-            newline = newline.replace("@@ORIGINIFILE@@", inifile  )
-            newline = newline.replace("@@KEEP@@", skeep )
-            newline = newline.replace("@@PYTHON_EXE@@", python_exe )
-            f.write ( newline )
-        f.close()
+    ## all jobs but the first share binaryIdx 1 and thus the same script.
+    ## Only write it when it does not exist yet (or its contents changed),
+    ## otherwise --repeat would recreate the very same _1.sh over and over.
+    script = ""
+    for line in lines:
+        newline = line.replace("@@INIFILE@@", newini )
+        newline = newline.replace("@@CODEDIR@@", codedir )
+        # newline = newline.replace("@@MONKEY_PATCH@@", monkey_patch )
+        newline = newline.replace("@@ANALYSES@@", analyses )
+        newline = newline.replace("@@TOPO@@", topo )
+        newline = newline.replace("@@ORIGINIFILE@@", inifile  )
+        newline = newline.replace("@@KEEP@@", skeep )
+        newline = newline.replace("@@PYTHON_EXE@@", python_exe )
+        script += newline
+    needToWrite = True
+    if os.path.exists ( newFile ):
+        with open ( newFile, "rt" ) as f:
+            needToWrite = f.read() != script
+    if needToWrite:
+        print ( f"[slurm_validate.py] creating script at {newFile}" )
+        with open ( newFile, "wt" ) as f:
+            f.write ( script )
+            f.close()
     tdir = "./temp"
     if not os.path.exists ( tdir ):
         os.mkdir ( tdir )
@@ -349,7 +359,7 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
         ram = int ( 12.0 + 4 * nprocesses )
     else:
         ram = int ( 2.5 + .6 * nprocesses )
-    print ( f"[slurm_validate.py] HS3 model: {hasHS3}, requesting {ram}G of RAM" )
+    # print ( f"[slurm_validate.py] HS3 model: {hasHS3}, requesting {ram}G of RAM" )
     # ncpus = nproc # int(nproc*1.5)
     ncpus = int(nprocesses*2.5)
     cmd += [ "--mem", f"{ram}G" ]
