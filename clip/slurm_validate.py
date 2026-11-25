@@ -377,8 +377,8 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
         if a.returncode != 0:
             srcode = f": {RED}rcode={a.rcode}{RESET}"
         answer = a.stdout.decode('UTF-8').strip()
-        answer = answer.replace('job ', 'job {GREEN}') + RESET
-        print ( f"[slurm_validate.py] {answer}{srcode}"
+        answer = answer.replace('job ', f'job {GREEN}') + RESET
+        print ( f"[slurm_validate.py] {answer}{srcode}" )
         return jobid
     #cmd = "rm %s" % tmpfile
     #o = subprocess.getoutput ( cmd )
