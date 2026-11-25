@@ -37,8 +37,10 @@ def retrievePoints ( data : list )-> dict:
         if "eUL" in point:
             p["eUL"]=point["eUL"]
             p["er"]=point["signal"]/point["eUL"]
-        r = point["signal"] / point["UL"]
-        p["r"]=r
+        p["r"]=float("nan")
+        if point["UL"] is not None:
+            r = point["signal"] / point["UL"]
+            p["r"]=r
         points[point["axes"]["x"]] = p
     return points
 
