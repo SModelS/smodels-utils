@@ -366,7 +366,7 @@ def validate ( args : Dict, idx ) -> Union[None,int]:
     cmd += [ "-c", f"{ncpus}" ] # allow for 200% per process
     cmd += [ newFile ]
     # cmd += [ "./run_bakery.sh" ]
-    print ( f"[slurm_validate.py] validating {' '.join ( cmd )}" )
+    print ( f"[slurm_validate.py] submitting {' '.join ( cmd )}" )
     if not dry_run:
         a=subprocess.run ( cmd, stdout=subprocess.PIPE )
         sjobid = str ( a.stdout.strip() ).split(" ")[-1]
