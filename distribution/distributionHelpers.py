@@ -59,6 +59,7 @@ def clearGlobalInfo( filename : str ):
     skip = [ "publishedData", "comment", "private", "checked", "xrange", \
              "susyProcess", "dataUrl", "validationTarball", "yrange",
              "bsmProcess", "resultType" ]
+    skip.append ( "modelMeta" )
     #skip.append( "prettyName" )
     #skip.append( "validated" )
     # skip.append( "axes" )
