@@ -20,6 +20,49 @@ from validationHelpers import getAxisType, prettyAxes, axisV2ToV3, getNiceAxes
 
 from typing import Union, Optional, Tuple
 
+## matplotlib's text.usetex option needs a working LaTeX installation. In
+## particular, its LaTeX preamble fails if cm-super (or type1cm) is missing.
+## Probe this once and transparently use matplotlib's own mathtext renderer
+## if LaTeX cannot be used.
+_latexAvailable = None
+
+def _probeLatex () -> bool:
+    """ check whether matplotlib can actually render text with LaTeX """
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from matplotlib.figure import Figure
+
+    rckeys = ( "text.usetex", "font.family", "font.monospace" )
+    saved_rc = { key : plt.rcParams[key] for key in rckeys }
+    try:
+        plt.rcParams["text.usetex"] = True
+        plt.rcParams["font.family"] = "Cambria Math"
+        fig = Figure ( figsize = ( 1, 1 ) )
+        FigureCanvasAgg ( fig )
+        fig.text ( .1, .5, r"$\Gamma$", fontsize = 10 )
+        fig.canvas.draw()
+        return True
+    except Exception as e:
+        reason = str(e)
+        if "cm-super" in reason or "type1cm" in reason:
+            reason = ("LaTeX is missing font packages required by matplotlib "
+                      "(cm-super/type1cm)")
+        else:
+            reason = " ".join ( reason.split() )
+            if len ( reason ) > 200:
+                reason = reason[:200] + "..."
+        print ( f"[drawPaperPlot] {YELLOW}LaTeX rendering is not available "
+                f"({reason}); falling back to mathtext.{RESET}" )
+        return False
+    finally:
+        plt.rcParams.update ( saved_rc )
+
+def _canUseLatex () -> bool:
+    """ return whether LaTeX-labelled plots can be produced (cached) """
+    global _latexAvailable
+    if _latexAvailable is None:
+        _latexAvailable = _probeLatex()
+    return _latexAvailable
+
 def countRegionsOfType ( regions : list, regionType : str = "SR" ) -> int:
     """ count the number of control regions
     :param regionType: one of: SR, CR, VR
@@ -60,8 +103,12 @@ class PaperPlot:
 
     def _newFigure ( self ) -> Tuple:
         """ create a new figure with the paper-plot defaults """
-        plt.rcParams['text.usetex'] = True
-        plt.rcParams['font.family'] = 'Cambria Math'
+        if _canUseLatex():
+            plt.rcParams['text.usetex'] = True
+            plt.rcParams['font.family'] = 'Cambria Math'
+        else:
+            plt.rcParams['text.usetex'] = False
+            plt.rcParams['font.family'] = 'DejaVu Serif'
         return plt.subplots ( figsize = ( 5, 4 ) )
 
     def _addLifetimeAxis ( self, ax, y_label : str ) -> None:
