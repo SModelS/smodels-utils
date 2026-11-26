@@ -13,10 +13,18 @@ from yields_helpers import outputFile, lock, unlock, normalizeMass
 JOB_PRINT_LIMIT = 3
 _jobPrints = []
 _jobCount = 0
+_skipCount = 0
 
 def pprint ( *args, **kwargs ):
     """ pretty print, with the [slurm_yields] label in pink """
     print ( f"{PINK}[slurm_yields]{RESET}", *args, **kwargs )
+
+def queueSkipPrint ( fn : str ):
+    """ print only the first 'exists. skipping' message, count the rest """
+    global _skipCount
+    _skipCount += 1
+    if _skipCount == 1:
+        pprint ( f"{fn} exists. skipping" )
 
 def queueJobPrint ( lines : list ):
     """ print the first few jobs immediately, queue the rest """
@@ -30,13 +38,17 @@ def queueJobPrint ( lines : list ):
 
 def flushJobPrints ():
     """ print the last queued job, with an ellipsis if jobs were skipped """
-    global _jobCount
+    global _jobCount, _skipCount
     if _jobPrints:
         if len ( _jobPrints ) > 1:
             pprint ( "... (more submissions) ... " )
         for line in _jobPrints[-1]:
             pprint ( line )
         _jobPrints.clear()
+    if _skipCount > 1:
+        omitted = _skipCount - 1
+        pprint ( f"... {omitted} more skipping message{'s' if omitted > 1 else ''} omitted" )
+    _skipCount = 0
     _jobCount = 0
 
 def logCall ( jobids : list ):
@@ -131,7 +143,7 @@ def submit ( mN2, mC1, mN1, options ):
     for ext in [ "csv", "json", "err", "temp" ]:
         fn = f"{oFile}.{ext}"
         if os.path.exists ( fn ):
-            pprint ( f"{fn} exists. skipping" )
+            queueSkipPrint ( fn )
             # import sys; sys.exit()
             return
         else:
