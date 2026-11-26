@@ -38,8 +38,24 @@ def collect ( folder : str ) -> int:
     print ( f"  -- skipped {skipping} lines" )
     return ct_l
 
+def read_counts ( logfile : str ) -> dict:
+    counts = {}
+    if not os.path.exists ( logfile ):
+        return counts
+    with open ( logfile, "rt" ) as f:
+        for line in f:
+            key, sep, value = line.strip().rstrip(",").partition(": ")
+            if not sep or key.strip(" '\"") == "time":
+                continue
+            try:
+                counts[key.strip(" '\"")] = int ( value )
+            except ValueError:
+                continue
+    return counts
+
 def log( n_lines : dict ):
     logfile = "collection.log"
+    previous = read_counts ( logfile )
     if os.path.exists ( logfile ):
         backup = "collection.backup"
         shutil.copy ( logfile, backup )
@@ -49,6 +65,17 @@ def log( n_lines : dict ):
         for k, v in n_lines.items():
             f.write ( f"    '{k}': {v},\n" )
         f.write ( "}\n" )
+    if previous:
+        for k, v in n_lines.items():
+            if k in previous:
+                print ( f"  -- {k}: {v - previous[k]:+d} lines vs previous run ({previous[k]} -> {v})" )
+            else:
+                print ( f"  -- {k}: no previous count in {logfile}" )
+        total = sum ( n_lines.values() )
+        previous_total = sum ( previous.values() )
+        print ( f"  -- total: {total - previous_total:+d} lines vs previous run ({previous_total} -> {total})" )
+    else:
+        print ( f"  -- no previous counts found in {logfile}" )
 
 def collectAll():
     folders = sorted ( d for d in glob.glob ( "./full_*" ) if os.path.isdir ( d ) )
