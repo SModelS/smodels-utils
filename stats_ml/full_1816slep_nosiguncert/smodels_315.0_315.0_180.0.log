@@ -1,0 +1,252 @@
+INFO in refxsecComputer.computeForOneFile() in 216: Computing SLHA cross section from slha_scan/TSlepSlep_315_180_315_180.slha, adding to SLHA file.
+DEBUG in refxsecComputer.getXSecsFor() in 637: asking for cross sections for pids=(-1000011, 1000011), 13 TeV
+INFO in refxsecComputer.getXSecsFrom() in 600: getting xsecs from /scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/smodels_utils/morexsecs/tables/xsecslepLslepL13.txt
+DEBUG in refxsecComputer.getXSecsFor() in 637: asking for cross sections for pids=(-2000011, 2000011), 13 TeV
+INFO in refxsecComputer.getXSecsFrom() in 600: getting xsecs from /scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/smodels_utils/morexsecs/tables/xsecslepRslepR13.txt
+DEBUG in refxsecComputer.getXSecsFor() in 637: asking for cross sections for pids=(-1000013, 1000013), 13 TeV
+INFO in refxsecComputer.getXSecsFrom() in 600: getting xsecs from /scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/smodels_utils/morexsecs/tables/xsecslepLslepL13.txt
+DEBUG in refxsecComputer.getXSecsFor() in 637: asking for cross sections for pids=(-2000013, 2000013), 13 TeV
+INFO in refxsecComputer.getXSecsFrom() in 600: getting xsecs from /scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/smodels_utils/morexsecs/tables/xsecslepRslepR13.txt
+INFO in refxsecComputer.addXSecToFile() in 118: I have xsecs: 13 TeV (NLO+NLL):3.72E-03 [pb] (-1000011, 1000011), 13 TeV (NLO+NLL):1.44E-03 [pb] (-2000011, 2000011), 13 TeV (NLO+NLL):3.72E-03 [pb] (-1000013, 1000013), 13 TeV (NLO+NLL):1.44E-03 [pb] (-2000013, 2000013)
+DEBUG in databaseObj.checkPathName() in 865: Try to set the path for the database to: /users/wolfgan.waltenberger/git/smodels-database/
+INFO in databaseObj.loadBinaryFile() in 571: loading binary db file /scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/db3.pcl format version 221
+INFO in databaseObj.loadBinaryFile() in 577: Loaded database from /scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/db3.pcl in 0.5 secs.
+DEBUG in databaseObj.getExpResults() in 1233: ATLAS-SUSY-2018-16 has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_VV_high has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_VV_low has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_tau_high has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_tau_low has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_top_high has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_top_low has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_a has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_b has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_a has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_b has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_a has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_b has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_VV_high has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_VV_low has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_tau_high has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_tau_low has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_top_high has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset CR_ewk_top_low has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_high_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_low_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_ee_med_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_a has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_b has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_high_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_a has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_b has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_f has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_g has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_low_h has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_a has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_b has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_c has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_d has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_e has no txnames
+DEBUG in databaseObj.getExpResults() in 1228: dataset SR_ewk_2l_mm_med_f has no txnames
+DEBUG in databaseObj.mergeLists() in 139: Analysis ATLAS-SUSY-2018-16 in /scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/13TeV/ATLAS/ATLAS-SUSY-2018-16/globalInfo.txt has no datasets. Will remove it.
+INFO in modelTester.testPoints() in 365: Running SModelS for a single file
+INFO in yieldsPrinter.setOutPutFile() in 53: we set output file to full_1816slep_nosiguncert/TSlepSlep_315_180_315_180.json
+INFO in csvPrinter.setOutPutFile() in 55: we set output file to full_1816slep_nosiguncert/TSlepSlep_315_180_315_180.csv
+DEBUG in particlesLoader.getParticlesFromModule() in 215: Trying to load model file: share.models.mssm
+DEBUG in particlesLoader.getParticlesFromModule() in 232: Found model file at /scratch-cbe/users/wolfgan.waltenberger/git/smodels/smodels/share/models/mssm.py
+DEBUG in particlesLoader.getParticlesFromModule() in 215: Trying to load model file: share.models.mssm
+DEBUG in particlesLoader.getParticlesFromModule() in 232: Found model file at /scratch-cbe/users/wolfgan.waltenberger/git/smodels/smodels/share/models/mssm.py
+INFO in model.updateParticles() in 437: Loaded 62 BSM particles
+DEBUG in model.setDecays() in 331: Particle 1000001 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000002 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000001 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000002 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000003 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000004 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000003 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000004 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000005 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000006 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000005 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000006 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000012 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000014 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000015 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000016 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 2000015 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000021 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000022 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000023 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000025 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000035 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000024 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 1000037 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000001 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000002 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000001 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000002 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000003 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000004 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000003 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000004 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000005 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000006 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000005 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000006 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000012 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000014 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000015 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000016 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -2000015 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000021 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000022 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000023 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000025 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000035 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000024 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -1000037 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 37 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 36 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle 35 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -37 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -36 has width below the threshold and will be assumed as stable
+DEBUG in model.setDecays() in 331: Particle -35 has width below the threshold and will be assumed as stable
+DEBUG in decomposer.decompose() in 280: 4 production cross-sections obtained in 0.00 s.
+DEBUG in decomposer.decompose() in 343: 16 cascade topologies trees generated and added to TopoDict in 0.00 s.
+DEBUG in decomposer.decompose() in 357: Compression done in 0.00 s.
+INFO in decomposer.decompose() in 367: Decomposition done in 0.01 s.
+INFO in modelTester.testPoint() in 164: Finished decomposition (7 topologies) in 0.00 min
+DEBUG in databaseObj.mergeLists() in 139: Analysis ATLAS-SUSY-2018-16 in /scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/13TeV/ATLAS/ATLAS-SUSY-2018-16/globalInfo.txt has no datasets. Will remove it.
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+DEBUG in txnameDataObj._returnProjectedValue() in 287: Projected value is None. Projected point not in convex hull?
+INFO in modelTester.testPoint() in 206: Finished theory prediction (0 predictions) in 0.00 min
+INFO in modelTester.testPoint() in 226: Finished coverage in 0.00 min
+INFO in yieldsPrinter.flush() in 56: writing yields to full_1816slep_nosiguncert/TSlepSlep_315_180_315_180.json
+INFO in csvPrinter.flush() in 142: writing yields to full_1816slep_nosiguncert/TSlepSlep_315_180_315_180.csv
+INFO in modelTester.testPoints() in 428: Done in 0.00 min

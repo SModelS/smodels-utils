@@ -17,7 +17,7 @@ from pbase.constants import X2Z, X1W
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
-from yields_helpers import outputFile, unlock
+from yields_helpers import outputFile, unlock, normalizeMass
 
 def pprint ( *args, **kwargs ):
     """ pretty print, with the [yieldsCreator] label in pink """
@@ -151,8 +151,7 @@ def runOnePoint ( p, options ) -> bool:
     options["txname"]=txname
     of = outputFile ( int(p['mN2']), int(p['mC1']), int(p['mN1']), options )
     for particle,mass in p.items():
-        if mass == int(mass):
-            p[particle]=int(mass)
+        p[particle] = normalizeMass ( mass )
     pprint ( f"[{time.asctime()}] run for {p['mN2']}, {p['mC1']}, {p['mN1']}" )
     inFile = getSLHAFile ( p, txname, options )
     if inFile == None:
@@ -192,7 +191,7 @@ def setupSmodelsLogging ( options ):
                    options.get ( "mN1" ) ]
         tag = ""
         if all ( m != None for m in masses ):
-            tag = "_" + "_".join ( str(m) for m in masses )
+            tag = "_" + "_".join ( str(normalizeMass(m)) for m in masses )
         logfile = os.path.join ( options["outputdir"], f"smodels{tag}.log" )
     logfile = os.path.abspath ( logfile )
     Path ( logfile ).parent.mkdir ( parents=True, exist_ok=True )

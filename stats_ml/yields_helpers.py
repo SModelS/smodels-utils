@@ -9,6 +9,16 @@ pmgit = f"{Path.home()}/git/protomodels/"
 if os.path.exists ( pmgit ):
     sys.path.insert(0,pmgit )
 
+def normalizeMass ( mass ):
+    """ return mass as int if it is really an integer, else leave it as is """
+    try:
+        imass = int ( mass )
+    except ( TypeError, ValueError, OverflowError ):
+        return mass
+    if imass == mass:
+        return imass
+    return mass
+
 def lock ( oft : str ):
     if not oft.endswith ( ".temp" ):
         oft += ".temp"

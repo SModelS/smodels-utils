@@ -73,6 +73,7 @@ class YieldsPrinter(BasicPrinter):
             oldGInfo.pop ( "dt[h]" )
         if len(all_dicts)==0:
             return
+        all_dicts["general_info"]["timestamp"] = time.asctime()
         with open ( self.filename, "wt" ) as f:
             d = json.dumps ( all_dicts, indent=4 )
             f.write ( d )

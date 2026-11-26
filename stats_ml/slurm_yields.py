@@ -8,7 +8,7 @@ from smodels_utils.helper.terminalcolors import PINK, RESET
 
 # printers are self-registering
 from stats_ml import yieldsPrinter, csvPrinter
-from yields_helpers import outputFile, lock, unlock
+from yields_helpers import outputFile, lock, unlock, normalizeMass
 
 JOB_PRINT_LIMIT = 3
 _jobPrints = []
@@ -124,6 +124,9 @@ def getPoints():
     return points
 
 def submit ( mN2, mC1, mN1, options ):
+    mN2 = normalizeMass ( mN2 )
+    mC1 = normalizeMass ( mC1 )
+    mN1 = normalizeMass ( mN1 )
     oFile = outputFile ( mN2, mC1, mN1, options )
     for ext in [ "csv", "json", "err", "temp" ]:
         fn = f"{oFile}.{ext}"
@@ -281,9 +284,7 @@ def runGrid( options : dict ) -> list:
     if halfway:
         for mN2 in range( minMothers, maxMothers, dmMothers ):
             for mN1 in range ( minN1, maxN1, dmN1 ):
-                mC1 = (mN2 + mN1)/2.
-                if mC1 == int(mC1):
-                    mC1 = int(mC1)
+                mC1 = normalizeMass ( (mN2 + mN1)/2. )
                 if mC1 - mN1 < min_dm:
                     continue
                 if mN2 - mN1 > max_dm:
