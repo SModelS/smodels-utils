@@ -1448,6 +1448,8 @@ class ValidationObjsBase():
                 meta["commentary"]=txt
         if hasattr ( self.expRes.globalInfo, "resultType" ):
             meta["resultType"]=self.expRes.globalInfo.resultType
+        meta["signalUncertainty"] = getattr ( self.expRes.globalInfo,
+                                              "signalUncertainty", None )
         if hasattr ( self, "getDataMap" ): # V3
             dm = self.getDataMap()
             dmn = {}
