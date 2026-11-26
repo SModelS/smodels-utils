@@ -105,3 +105,4 @@ coords["TXXtWbS2"]={'masses': [[1, 2], [3]], 'widths': None}
 coords["TXXtWtS1"]={'masses': [[1, 2], [3]], 'widths': None}
 coords["TXXtS1bS2"]={'masses': [[1, 2], [3, 4]], 'widths': None}
 coords["TXXbS2bS2"]={'masses': [[1, 2], [3, 4]], 'widths': None}
+coords["TX8X8tS2tS2"]={'masses': [[1, 2], [3, 4]], 'widths': None}

@@ -440,7 +440,9 @@ class PaperPlot:
         return None
 
     def prettyPath ( self, path : str ) -> str:
-        sfname = path.replace( os.environ["HOME"], "~" )
+        sfname = path
+        if sfname.startswith ( os.environ["HOME"] ):
+            sfname = sfname.replace( os.environ["HOME"], "~" )
         return sfname
 
     def getCurveFromJson( self, anaDir : str, validationFolder : str,
