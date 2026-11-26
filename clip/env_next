@@ -1,0 +1,73 @@
+export TERM=xterm
+
+RED="\[$(tput -T xterm setaf 1)\]"
+GREEN="\[$(tput -T xterm setaf 2)\]"
+YELLOW="\[$(tput -T xterm setaf 3)\]"
+BLUE="\[$(tput -T xterm setaf 4)\]"
+MAGENTA="\[$(tput -T xterm setaf 5)\]"
+CYAN="\[$(tput -T xterm setaf 6)\]"
+WHITE="\[$(tput -T xterm setaf 7)\]"
+RESET="\[$(tput -T xterm sgr0)\]"
+ESC=$(printf "\e")
+PEACH="$ESC[48;5;209m"
+
+# Prompt path display: abbreviate the scratch workspace as "~~" (like ~ for $HOME).
+__prompt_path() {
+    local dir=$PWD
+    local scratch=/scratch/users/wolfgan.waltenberger
+    if [[ $dir == "$scratch" ]]; then
+        printf '%s' '~~'
+    elif [[ $dir == "$scratch"/* ]]; then
+        printf '%s' "~~${dir#"$scratch"}"
+    elif [[ -n ${HOME-} && ( $dir == "$HOME" || $dir == "$HOME"/* ) ]]; then
+        printf '%s' "~${dir#"$HOME"}"
+    else
+        printf '%s' "$dir"
+    fi
+}
+
+__bake_prompt_prefix() {
+    if [[ ${CONDA_PREFIX-} == "/users/wolfgan.waltenberger/.conda/envs/bakery-environment" ]]; then
+        printf '%s' "[bake] "
+    fi
+}
+
+source /users/wolfgan.waltenberger/.venvs/default/bin/activate
+export GIT_PROMPT_CONDA_DEFAULT_ENV=0
+export GIT_PROMPT_SHOW_VIRTUAL_ENV=0
+export CONDA_CHANGEPS1=false
+export OUTPUTS=/scratch/users/wolfgan.waltenberger/outputs/
+conda activate /users/wolfgan.waltenberger/opt/gsl
+
+# The conda texlive-core package in the gsl environment is incomplete (it
+# cannot build the pdflatex format).  Use the working TinyTeX installation.
+if [ -d "$HOME/.pytinytex/bin/x86_64-linux" ]; then
+    export PATH="$HOME/.pytinytex/bin/x86_64-linux:$PATH"
+fi
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias psgrep='ps waux | head -n 1;ps waux | grep'
+
+if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then                               
+    GIT_PROMPT_ONLY_IN_REPO=1                                                       
+    GIT_PROMPT_THEME=Solarized_NoExitState # _Extravagant                           
+    GIT_PROMPT_END="> "                                                             
+    GIT_PROMPT_SHOW_VIRTUAL_ENV=0
+    GIT_PROMPT_CONDA_DEFAULT_ENV=0
+    GIT_PROMPT_START="\$(__bake_prompt_prefix)${RED}${HOSTNAME%%.*}:${YELLOW}\$(__prompt_path)${RESET}"       
+    GIT_PROMPT_SHOW_UNTRACKED_FILES=no                                              
+    GIT_PROMPT_SHOW_CHANGED_FILES_COUNT=0
+    GIT_PROMPT_IGNORE_STASH=1                                                     
+    source "$HOME/.bash-git-prompt/gitprompt.sh"                                    
+fi
+
+export PS1="\$(__bake_prompt_prefix)$RED\h:$YELLOW\$(__prompt_path)> $RESET"
+
+ml load Boost/1.88.0-GCC-14.3.0
+# ml load R-bundle-CRAN/2025.11-foss-2025b
+export PYTHONPATH=~/git/smodels/:~/git/smodels-utils/:~/git/protomodels/
+shopt -s globstar
+alias lhtail='ls -ltrh | tail'
+alias l='ls -lah'
+alias vi='vim'
