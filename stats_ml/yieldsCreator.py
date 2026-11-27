@@ -192,7 +192,11 @@ def setupSmodelsLogging ( options ):
         tag = ""
         if all ( m != None for m in masses ):
             tag = "_" + "_".join ( str(normalizeMass(m)) for m in masses )
-        logfile = os.path.join ( options["outputdir"], f"smodels{tag}.log" )
+        txname = options.get ( "txname" )
+        if txname is None:
+            parser = modelTester.getParameters ( options["inifile"] )
+            txname = parser["database"]["txnames"]
+        logfile = os.path.join ( options["outputdir"], f"{txname}{tag}.log" )
     logfile = os.path.abspath ( logfile )
     Path ( logfile ).parent.mkdir ( parents=True, exist_ok=True )
     for handler in logger.handlers[:]:
