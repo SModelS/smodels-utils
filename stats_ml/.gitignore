@@ -4,3 +4,4 @@ slurm_logs/
 stats.all
 results/
 slhafiles/
+full_*

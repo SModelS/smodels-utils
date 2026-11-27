@@ -140,7 +140,7 @@ def submit ( mN2, mC1, mN1, options ):
     mC1 = normalizeMass ( mC1 )
     mN1 = normalizeMass ( mN1 )
     oFile = outputFile ( mN2, mC1, mN1, options )
-    for ext in [ "csv", "json", "err", "temp" ]:
+    for ext in [ "err", "temp" ]:
         fn = f"{oFile}.{ext}"
         if os.path.exists ( fn ):
             queueSkipPrint ( fn )
@@ -149,6 +149,21 @@ def submit ( mN2, mC1, mN1, options ):
         else:
             pass
             # pprint ( f"{fn} doesnt exist" )
+    csvFile = f"{oFile}.csv"
+    jsonFile = f"{oFile}.json"
+    csvExists = os.path.exists ( csvFile )
+    jsonExists = os.path.exists ( jsonFile )
+    if csvExists and jsonExists:
+        queueSkipPrint ( csvFile )
+        return
+    # a lone result file is incomplete: discard it and resubmit the point
+    for fn, exists in [ ( csvFile, csvExists ), ( jsonFile, jsonExists ) ]:
+        if exists:
+            try:
+                os.remove ( fn )
+                pprint ( f"removed incomplete result {fn}" )
+            except FileNotFoundError:
+                pass
     for m in [ "mN1", "mC1", "mN2" ]:
         options.pop(m,None)
     txname = options['txname'][1:]
