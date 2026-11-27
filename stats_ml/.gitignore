@@ -5,3 +5,5 @@ stats.all
 results/
 slhafiles/
 full_*
+slha_scan
+slurm.log
