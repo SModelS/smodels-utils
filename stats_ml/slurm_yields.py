@@ -205,6 +205,24 @@ def submit ( mN2, mC1, mN1, options ):
     scriptcontent += f"script={shlex.quote(os.path.abspath(script))}\n"
     scriptcontent += "# trap 'rm -f \"$script\"' EXIT\n\n"
 
+    # a killed job must not leave a stale lock file behind
+    tempFile = os.path.abspath ( f"{oFile}.temp" )
+    killLog = os.path.abspath ( "slurm.kills" )
+    scriptcontent += "# remove the lock on termination and log the incident\n"
+    scriptcontent += f"tempfile={shlex.quote(tempFile)}\n"
+    scriptcontent += f"killlog={shlex.quote(killLog)}\n"
+    scriptcontent += "cleanup() {\n"
+    scriptcontent += "    if [ -f \"$tempfile\" ]; then\n"
+    scriptcontent += "        printf '%s | job=%s | signal=%s | removed %s\\n' \"$(date '+%F %T')\" \"${SLURM_JOB_ID:-none}\" \"$1\" \"$tempfile\" >> \"$killlog\"\n"
+    scriptcontent += "        rm -f \"$tempfile\"\n"
+    scriptcontent += "    fi\n"
+    scriptcontent += "}\n"
+    scriptcontent += "on_signal() { cleanup \"$1\"; exit 1; }\n"
+    scriptcontent += "trap 'on_signal TERM' TERM\n"
+    scriptcontent += "trap 'on_signal HUP' HUP\n"
+    scriptcontent += "trap 'on_signal INT' INT\n"
+    scriptcontent += "trap 'cleanup EXIT' EXIT\n\n"
+
     # run in the submission directory with the required environment
     scriptcontent += f"cd {shlex.quote(os.getcwd())}\n"
 
