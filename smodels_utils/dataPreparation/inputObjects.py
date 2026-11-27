@@ -529,9 +529,9 @@ class DataSetInput(Locker):
 
                 ul = ( comp.getUpperLimitOnMu() / lumi ).asNumber ( fb )
                 try:
-                    ulExpected = ( comp.getUpperLimitOnMu( expected=aposteriori ) / lumi ).asNumber ( fb )
-                except Exception as e:
                     ulExpected = ( comp.getUpperLimitOnMu ( evaluationType=aposteriori ) / lumi ).asNumber ( fb )
+                except Exception as e:
+                    ulExpected = ( comp.getUpperLimitOnMu( expected=aposteriori ) / lumi ).asNumber ( fb )
                 if type(ul) == type(None):
                     ul = ( comp.getUpperLimitOnMu( m, ) / lumi ).asNumber ( fb )
                 ul, ulExpected = round_list(( ul, ulExpected ), 4)
