@@ -183,7 +183,7 @@ def submit ( mN2, mC1, mN1, options ):
     yields_cmd += [ "--mN1", f"{mN1}", "--mC1", f"{mC1}", "--mN2", f"{mN2}" ]
     yields_cmd += [ "--compute_xsecs" ]
     for option, value in options.items():
-        if option in [ "grid", "all", "point", "txname", "analysis" ]:
+        if option in [ "grid", "all", "point", "txname", "analysis", "time" ]:
             continue
         if type(value)==bool:
             if value == True:
@@ -266,9 +266,7 @@ def submit ( mN2, mC1, mN1, options ):
 
     cmd = []
     if shutil.which ( "sbatch" ) != None:
-        # time = 479
-        time = 60*4-1
-        cmd = [ "sbatch", "--export=NIL", "-c", "6", "--time", str(time), "--mem", "2G" ]
+        cmd = [ "sbatch", "--export=NIL", "-c", "6", "--time", str(options["time"]), "--mem", "2G" ]
         cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]
         cmd += [ "--error", f"./slurm_logs/%j.out",
@@ -379,6 +377,8 @@ if __name__ == "__main__":
     ap.add_argument( '--outputdir',
             help='output directory [yields_results]',
             type=str, default = "yields_results" )
+    ap.add_argument( '--time',
+            help='job time limit in minutes [299]', type=int, default = 5*60-1 )
     args = ap.parse_args()
 
     jobids = runGrid( vars(args) )
