@@ -249,7 +249,7 @@ def submit ( mN2, mC1, mN1, options ):
     cmd = []
     if shutil.which ( "sbatch" ) != None:
         # time = 479
-        time = 60*3-1
+        time = 60*4-1
         cmd = [ "sbatch", "--export=NIL", "-c", "6", "--time", str(time), "--mem", "2G" ]
         cmd += [ "--job-name", jobname ]
         #cmd = [ "sbatch", "-c", "2", "--time", "479" ]

@@ -17,7 +17,7 @@ from smodels.base.smodelsLogging import logger
 
 import sys
 sys.path.insert(0,".")
-from .yieldsWriter import yieldsToDicts, formatMu
+from .yieldsWriter import yieldsToDicts, formatMu, validateCachedNlls
 
 class CsvPrinter(BasicPrinter):
     """ Printer class exclusively to print signal yields
@@ -87,26 +87,22 @@ class CsvPrinter(BasicPrinter):
         self.pyhfNames = pyhfNames
         return regions
 
+    def getPrediction ( self ):
+        """ the -orig prediction that the csv values are taken from """
+        for tp in self.toPrint:
+            if "-orig" in tp.dataset.globalInfo.id:
+                return tp
+        return None
+
     def getDicts ( self, mus : list ) -> dict:
         """ get the dictionaries from yieldsToDicts
 
         :returns: a dictionary
         """
-        for tp in self.toPrint:
-            anaId = tp.dataset.globalInfo.id
-            # we only need the -orig entries
-            if not "-orig" in anaId:
-                continue
-            """
-            if False and not "-orig" in anaId:
-                print ( f"[csvPrinter] anaId {anaId} has no -orig, skip it" )
-                continue
-            """
-            dicts = yieldsToDicts ( tp, mus=mus, expected_also = True )
-            return dicts
-        return {}
-        #    all_dicts[label] = dicts
-        #return all_dicts
+        tp = self.getPrediction()
+        if tp is None:
+            return {}
+        return yieldsToDicts ( tp, mus=mus, expected_also = True )
 
     def getCsvLines ( self, all_dicts : dict, mus : list ) -> list[str]:
         """ create the csv lines from dicts
@@ -144,6 +140,12 @@ class CsvPrinter(BasicPrinter):
         regions = self.getRegions()
 
         all_dicts = self.getDicts( mus )
+        # the nlls are shared with the json printer: verify before reusing them
+        tp = self.getPrediction()
+        if tp is not None and not validateCachedNlls ( tp, mus ):
+            logger.warning ( "cached nlls differ from freshly computed ones, "
+                             "recomputing all values" )
+            all_dicts = self.getDicts( mus )
         basename = self.filename.replace(".csv","")
         if len(all_dicts)==0:
             filename = f"{basename}.err"
