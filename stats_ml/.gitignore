@@ -7,3 +7,7 @@ slhafiles/
 full_*
 slha_scan
 slurm.log
+collection.log
+collection.backup
+slurm_jobids.log
+
