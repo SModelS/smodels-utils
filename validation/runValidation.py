@@ -9,6 +9,7 @@
 __all__ = [ "validatePlot" ]
 
 import argparse
+import ast
 import copy
 import json
 import logging
@@ -200,8 +201,15 @@ def _axesArg ( axes ) -> str:
     """ render the axes argument for the reproduce command.
 
     Dict axes are printed with double-quoted strings, so shlex.quote can wrap
-    the whole argument in single quotes without escaping every quote.
+    the whole argument in single quotes without escaping every quote. Axes are
+    usually passed around as strings, so parse those first when they hold a
+    dict literal.
     """
+    if isinstance ( axes, str ):
+        try:
+            axes = ast.literal_eval ( axes )
+        except ( SyntaxError, ValueError ):
+            return axes
     if not isinstance ( axes, dict ):
         return str ( axes )
     def fmt ( value ):

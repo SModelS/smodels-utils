@@ -1,0 +1,14 @@
+#!/bin/sh
+
+ME=wolfgan.waltenberger
+
+squeue -h -o '%u %T' -r | awk '
+{ total[$1]++; n[$1 " " $2]++; seen[$1]=1 }
+END {
+  printf "%-24s %8s %8s\n", "USER", "ALL", "ACTIVE"
+  for (u in seen)
+    printf "%-24s %8d %8d\n", u, total[u], n[u " RUNNING"]
+}' | { read h; echo "$h"; sort -k2 -nr; } \
+   | awk -v user="$ME" '
+BEGIN { green="\033[32m"; reset="\033[0m" }
+{ if ($1 == user) print green $0 reset; else print $0 }'
