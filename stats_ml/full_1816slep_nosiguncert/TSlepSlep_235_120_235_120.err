@@ -1,4 +1,0 @@
-{
-    'error': 'no entries',
-    'regions': ['nLL_exp_mu0', 'nLL_exp_mu1', 'nLL_obs_mu0', 'nLL_obs_mu1', 'nLLA_exp_mu0', 'nLLA_exp_mu1', 'nLLA_obs_mu0', 'nLLA_obs_mu1', 'mu']
-}
